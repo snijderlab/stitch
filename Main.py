@@ -52,11 +52,16 @@ print(all_chunks)
 ## Building the graph
 # Generating all overlaps
 
-overlaps = set() # A set because every overlap should only be generated once
+overlaps_raw = []
 
 for chunk in all_chunks:
-    overlaps.add(chunk[0:-1])
-    overlaps.add(chunk[1:])
+    overlaps_raw.append(chunk[0:-1])
+    overlaps_raw.append(chunk[1:])
+
+overlaps = []
+
+for overlap in set(overlaps_raw):
+    overlaps.append((overlap, overlaps_raw.count(overlap)))
 
 print("All overlaps " + str(len(overlaps)))
 print(overlaps)
@@ -66,35 +71,45 @@ print(overlaps)
 graph = []
 
 for overlap in overlaps:
-    graph.append((overlap, []))
+    graph.append({"seq": overlap[0], "multiplicity": overlap[1], "edges": []})
 
 # Connect the nodes based on the chunks
 
 for chunk in all_chunks:
     for node in graph:
-        if node[0] == chunk[0:-1]:
+        if node["seq"] == chunk[0:-1]:
             for index, node2 in enumerate(graph):
-                if node2[0] == chunk[1:]:
-                    node[1].append(index)
+                if node2["seq"] == chunk[1:]:
+                    node["edges"].append(index)
 
 print("Graph")
 print(graph)
 
 ## Finding paths
 # Naïve algorithm
+sequences = []
 
-current_node = graph[0]
+for i in range(0, len(graph)):
+    current_node = graph[i]
+    if current_node["multiplicity"] > 0:
+        sequence = current_node["seq"][0:-1]
 
-sequence = current_node[0][0:-1]
-
-while True:
-    sequence += current_node[0][-1]
-    if len(current_node[1]) > 0:
-        current_node = graph[current_node[1][0]]
+        while True:
+            if current_node["multiplicity"] > 0:
+                sequence += current_node["seq"][-1] 
+                current_node["multiplicity"] -= 1
+                if len(current_node["edges"]) > 0:
+                    current_node = graph[current_node["edges"][0]]
+                else:
+                    break
+            else:
+                break
+        
+        sequences.append(sequence)
     else:
         break
 
 ## Returning output
 
-print("Sequence")
-print(sequence)
+print("Sequences")
+print(sequences)
