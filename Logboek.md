@@ -8,7 +8,7 @@ Overleg gehad over de aanpak waarbij verzonnen is wat het programma moet gaan do
 
 Begonnen met een overleg over de stand van zaken om te beslissen waar ik me vandaag op ga focussen. Overleg geweest met andere mensen uit de onderzoeksgroep over het toevoegen van mijn tool aan de repository van de groep. Ik heb de code van vorige week naar C# vertaald. Deze code is uitgewerkt en is meer mogelijkheden voor instellen bijgemaakt (eigen alfabetten bijvoorbeeld). Ik heb meegeluisterd naar het praatje over onderzoek aan de interne klok van rode bloedcellen door een onderzoeksgroeplid. Ik ben toegelaten tot de repository van de onderzoeksgroep om daar mijn code aan toe te voegen. Ik ben begonnen met het documenteren van alle code, min intentie is dit de volgende keer af te maken en daarna bij te houden. Mijn onderzoeksvraag is vastgesteld op "sequence assembly" en dan het schrjven van code ervoo of het verifiëren van code/software paketten en/of het maken van protocollen hiervoor.
 
-Volgende keer: Documentatie afmaken, Samenvoegen van gevonden paden, Alfabet nog generieker maken en maa kijken waar ik aam toe kom.
+Volgende keer: Documentatie afmaken, Samenvoegen van gevonden paden / consesus sequenties, Alfabet nog generieker maken, testdata genereren en kijken waar ik aam toe kom.
 
 # TODO
 
