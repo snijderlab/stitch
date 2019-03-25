@@ -6,19 +6,26 @@ using System.Text;
 
 namespace AssemblyNameSpace
 {
+    /// <summary> A Class to be able to run the code from the commandline. </summary>
     class ToRunWithCommandLine
     {
         static void Main()
         {
-            var test = new Assembly();
+            var test = new Assembler();
             test.OpenReads();
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
+            test.GraphInfo();
         }
     }
-    public class Assembly
+    /// <summary> The Class with all code to assemble Peptide sequences. </summary>
+    public class Assembler
     {
+        /// <value> The reads fed into the Assembler, as opened by OpenReads. </value>
         List<AminoAcid[]> reads = new List<AminoAcid[]>();
+        /// <value> The De Bruijn graph used by the Assembler. </value>
+        Node[] graph;
+        /// <value> The lengh of the chunks used to create the De Bruijn graph. </value>
         private int chunk_length;
         public int Chunk_length
         {
@@ -27,10 +34,18 @@ namespace AssemblyNameSpace
         }
         private int[,] scoring_matrix;
         private char[] alphabet;
-
+        private int minimum_homology;
+        public int Minimum_homology
+        {
+            get { return minimum_homology; }
+            set { minimum_homology = value; }
+        }
+        // A struct to function as a wrapper for AminoAcid information, so custom alphabets can be used in an efficiënt way
         private struct AminoAcid
         {
-            private Assembly parent;
+            // The Assembler used to create the AminoAcd, used to get the information of the alphabet
+            private Assembler parent;
+            // The code (index of the char in the alpabet array of the parent)
             private int code;
             public int Code
             {
@@ -39,30 +54,17 @@ namespace AssemblyNameSpace
                     return code;
                 }
             }
-            public AminoAcid(Assembly asm, char input)
+
+            // The creator 
+            public AminoAcid(Assembler asm, char input)
             {
                 parent = asm;
                 code = asm.getIndexInAlphabet(input);
             }
+            // Some default functions to integrate normal behaviour
             public override string ToString()
             {
                 return parent.alphabet[code].ToString();
-            }
-            public override bool Equals(object obj)
-            {
-                return obj is AminoAcid && this == (AminoAcid)obj;
-            }
-            public override int GetHashCode()
-            {
-                return this.code.GetHashCode();
-            }
-            public static bool operator ==(AminoAcid x, AminoAcid y)
-            {
-                return x.Code == y.Code;
-            }
-            public static bool operator !=(AminoAcid x, AminoAcid y)
-            {
-                return !(x == y);
             }
             public static string ArrayToString(AminoAcid[] array)
             {
@@ -72,6 +74,10 @@ namespace AssemblyNameSpace
                     builder.Append(aa.ToString());
                 }
                 return builder.ToString();
+            }
+            public override bool Equals(object obj)
+            {
+                return obj is AminoAcid && this == (AminoAcid)obj;
             }
             public static bool ArrayEquals(AminoAcid[] left, AminoAcid[] right)
             {
@@ -86,46 +92,106 @@ namespace AssemblyNameSpace
                 }
                 return true;
             }
+            public static bool operator ==(AminoAcid x, AminoAcid y)
+            {
+                return x.Code == y.Code;
+            }
+            public static bool operator !=(AminoAcid x, AminoAcid y)
+            {
+                return !(x == y);
+            }
+            public override int GetHashCode()
+            {
+                return this.code.GetHashCode();
+            }
+            // Calculating homology, using the scoring matrix of the parent Assembler
+            public int Homology(AminoAcid right)
+            {
+                return parent.scoring_matrix[this.Code, right.Code];
+            }
+            public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right)
+            {
+                int score = 0;
+                if (left.Length != right.Length)
+                    return 0;
+                for (int i = 0; i < left.Length; i++)
+                {
+                    score += left[i].Homology(right[i]);
+                }
+                return score;
+            }
         }
+        // A struct for Nodes in the graph
         private struct Node
         {
+            // Members and poperties to hold the information of the Node
             private AminoAcid[] sequence;
             public AminoAcid[] Sequence { get { return sequence; } }
             private int multiplicity;
             public int Multiplicity { get { return multiplicity; } }
-            private List<int> edges;
+            private List<ValueTuple<int, int, int>> edges;
+
+            // The creator
             public Node(AminoAcid[] seq, int multi)
             {
                 sequence = seq;
                 multiplicity = multi;
-                edges = new List<int>();
+                edges = new List<ValueTuple<int, int, int>>();
             }
-            public void AddEdge(int target)
-            {
-                edges.Add(target);
-            }
-            public int EdgeAt(int i)
-            {
-                return edges[i];
-            }
-            public void CheckOut()
+
+            // To visit the node to keep track how many times it was visited
+            public void Visit()
             {
                 multiplicity -= 1;
+            }
+
+            // Methods to interact with the edges
+            public void AddEdge(int target, int score1, int score2)
+            {
+                edges.Add((target, score1, score2));
+            }
+            public ValueTuple<int, int, int> EdgeAt(int i)
+            {
+                return edges[i];
             }
             public bool HasEdges()
             {
                 return edges.Count > 0;
             }
+            public int EdgesCount()
+            {
+                return edges.Count;
+            }
+            public ValueTuple<int, int, int> MaxEdge()
+            {
+                if (!HasEdges())
+                    throw new Exception("Cannot give an edge if this node has no edges");
+                var output = edges[0];
+                int value = output.Item2 + output.Item3;
+                int max = value;
+                for (int i = 1; i < edges.Count; i++)
+                {
+                    value = edges[i].Item2 + edges[i].Item3;
+                    if (value > max)
+                    {
+                        max = value;
+                        output = edges[i];
+                    }
+                }
+                return output;
+            }
         }
-        public Assembly(int chunk_length_input = 5)
+        // The creator, to set up the default values
+        public Assembler(int chunk_length_input = 5, int minimum_homology_input = 3)
         {
             // Sest the chunk length and sets the alpabet usng the defaults
 
-            if (chunk_length_input > 0)
-                chunk_length = chunk_length_input;
+            chunk_length = chunk_length_input;
+            minimum_homology = minimum_homology_input;
 
             SetAlphabet();
         }
+        // Find the index of the given character in the alphabet
         private int getIndexInAlphabet(char c)
         {
             for (int i = 0; i < alphabet.Length; i++)
@@ -137,7 +203,8 @@ namespace AssemblyNameSpace
             }
             return -1;
         }
-        public void SetAlphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU" )
+        // Set the alphabet of the assembler
+        public void SetAlphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
         {
             alphabet = input.ToCharArray();
 
@@ -154,6 +221,7 @@ namespace AssemblyNameSpace
                 }
             }
         }
+        // To open a file with reads (should always be run before trying to assemble)
         public void OpenReads(string input_file = "examples/001/reads.txt")
         {
             // Getting input
@@ -190,6 +258,7 @@ namespace AssemblyNameSpace
                 reads.Add(acids);
             }
         }
+        // Assemble the reads into the graph, this is logically (one of) the last metods to run on an Assembler, all settings should be defined before running this.
         public void Assemble()
         {
             // Generate all chunks
@@ -243,7 +312,7 @@ namespace AssemblyNameSpace
             // Create a node for every possible overlap (one amino acid shifted)
 
             // Implement the graph as a adjecency list (aray)
-            var graph = new Node[overlaps.Count];
+            graph = new Node[overlaps.Count];
 
             int index = 0;
             overlaps.ForEach(overlap =>
@@ -258,13 +327,16 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < graph.Length; i++)
                 {
-                    if (AminoAcid.ArrayEquals(graph[i].Sequence, chunk.SubArray(0, chunk_length - 1)))
+                    int first_homology = AminoAcid.ArrayHomology(graph[i].Sequence, chunk.SubArray(0, chunk_length - 1));
+                    if (first_homology > minimum_homology)
                     {
                         for (int j = 0; j < graph.Length; j++)
                         {
-                            if (i != j && AminoAcid.ArrayEquals(graph[j].Sequence, chunk.SubArray(1, chunk_length - 1)))
+                            int second_homology = AminoAcid.ArrayHomology(graph[j].Sequence, chunk.SubArray(1, chunk_length - 1));
+                            if (i != j && second_homology > minimum_homology)
                             {
-                                graph[i].AddEdge(j);
+                                Console.WriteLine("Add edge");
+                                graph[i].AddEdge(j, first_homology, second_homology);
                             }
                         }
                     }
@@ -289,11 +361,13 @@ namespace AssemblyNameSpace
 
                     while (current_node.Multiplicity > 0)
                     {
+                        //Console.WriteLine($"Found node with connectivity {current_node.EdgesCount()} maximum homoloy {(current_node.HasEdges() ? current_node.MaxEdge().ToString() : "none")}");
+
                         sequence.Add(current_node.Sequence.ElementAt(chunk_length - 2));
-                        current_node.CheckOut();
+                        current_node.Visit();
                         if (current_node.HasEdges())
                         {
-                            current_node = graph[current_node.EdgeAt(0)];
+                            current_node = graph[current_node.MaxEdge().Item1];
                         }
                         else
                         {
@@ -313,9 +387,22 @@ namespace AssemblyNameSpace
                 Console.WriteLine(AminoAcid.ArrayToString(sequence));
             }
         }
+        // Outputs some information about the graph the help validate the output of the graph
+        public void GraphInfo() {
+            if (graph == null) {
+                Console.WriteLine("No graph build (yet)");
+                return;
+            }
+            Console.WriteLine($"Number of nodes: {graph.Length}");
+            Console.WriteLine($"Number of edges: {graph.Aggregate(0.0, (a, b) => a + b.EdgesCount())}");
+            Console.WriteLine($"Mean Connectivity: {graph.Aggregate(0.0, (a, b) => a + b.EdgesCount()) / graph.Length}");
+            Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0.0, (a, b) => (a > b.EdgesCount()) ? a : b.EdgesCount() )}");
+        }
     }
+    // A class to store exension methods to help in the process of coding
     static class HelperFunctionality
     {
+        // To copy a subarray to a new array
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
             T[] result = new T[length];
