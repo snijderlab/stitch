@@ -10,6 +10,10 @@ Begonnen met een overleg over de stand van zaken om te beslissen waar ik me vand
 
 Volgende keer: Documentatie afmaken, Samenvoegen van gevonden paden / consesus sequenties, Alfabet nog generieker maken, testdata genereren en kijken waar ik aam toe kom.
 
+## 26-03-2019
+
+Ik heb in de avond de documentatie van de bestaande code afgemaakt zodat ik maandag gewoon aan het werk kan. Mijn doel is vanaf nu deze documenteerstijl vol te houden zodat deze code ook door andere begrepen kan worden en op de lange termijn bruikbaar blijft.
+
 # TODO
 
 [-] Homologie
