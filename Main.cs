@@ -4,9 +4,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
+/// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
+/// from reads of a massspectrometer. 
+/// The software is build by Douwe Schulte and was started on 25-03-2019.
+/// It is build in collaboration with and under supervision of Joost Snijder,
+/// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
+
 namespace AssemblyNameSpace
 {
-    /// <summary> A Class to be able to run the code from the commandline. </summary>
+    /// <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
+    /// This will be rewritten when the code is moved to its new repository </summary>
     class ToRunWithCommandLine
     {
         static void Main()
@@ -37,7 +44,7 @@ namespace AssemblyNameSpace
         /// As such this matrix is rectangular. </value>
         private int[,] scoring_matrix;
         /// <value> The alphabet used for alignment. The default value is all the amino acids in order of
-        /// natural obundance in prokaryotes to make finding the right amino acid a little bit faster. </value>
+        /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </value>
         private char[] alphabet;
         /// <value> The private member to store the minimum homology value in. </value>
         private int minimum_homology;
@@ -102,7 +109,7 @@ namespace AssemblyNameSpace
                 return obj is AminoAcid && this == (AminoAcid)obj;
             }
             /// <summary> To check for equality of arrays of AminoAcids. </summary>
-            /// <remarks> Implemented as a shortcicuiting loop with the equals operator (==). </remarks>
+            /// <remarks> Implemented as a shortcircuiting loop with the equals operator (==). </remarks>
             /// <param name="left"> The first object to check equality with. </param>
             /// <param name="right"> The second object to check equality with. </param>
             public static bool ArrayEquals(AminoAcid[] left, AminoAcid[] right)
@@ -276,7 +283,7 @@ namespace AssemblyNameSpace
         /// <summary> Set the alphabet of the assembler. </summary>
         /// <param name="rules"> A list of rules implemented as tuples containing the chars to connect, 
         /// the value to put into the matrix and whether or not the rule should be bidirectional (the value
-        ///  in the matrix is the same boths ways). </param>
+        ///  in the matrix is the same both ways). </param>
         /// <param name="diagonals_value"> The value to place on the diagonals of the matrix. </param>
         /// <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
         /// the best case scenario has the most used characters at the front of the string. </param>
@@ -390,7 +397,7 @@ namespace AssemblyNameSpace
 
             // Create a node for every possible overlap (one amino acid shifted)
 
-            // Implement the graph as a adjecency list (aray)
+            // Implement the graph as a adjacency list (array)
             graph = new Node[overlaps.Count];
 
             int index = 0;
@@ -429,7 +436,7 @@ namespace AssemblyNameSpace
             var sequences = new List<AminoAcid[]>();
 
 
-            // Try for every node to walk as far as possible to find the seqence
+            // Try for every node to walk as far as possible to find the sequence
             for (int i = 0; i < graph.Length; i++)
             {
                 var current_node = graph[i];
@@ -440,7 +447,7 @@ namespace AssemblyNameSpace
 
                     while (current_node.Multiplicity > 0)
                     {
-                        //Console.WriteLine($"Found node with connectivity {current_node.EdgesCount()} maximum homoloy {(current_node.HasEdges() ? current_node.MaxEdge().ToString() : "none")}");
+                        //Console.WriteLine($"Found node with connectivity {current_node.EdgesCount()} maximum homology {(current_node.HasEdges() ? current_node.MaxEdge().ToString() : "none")}");
 
                         sequence.Add(current_node.Sequence.ElementAt(chunk_length - 2));
                         current_node.Visit();
@@ -480,7 +487,7 @@ namespace AssemblyNameSpace
             Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0.0, (a, b) => (a > b.EdgesCount()) ? a : b.EdgesCount())}");
         }
     }
-    /// <summary> A class to store exension methods to help in the process of coding. </summary>
+    /// <summary> A class to store extension methods to help in the process of coding. </summary>
     static class HelperFunctionality
     {
         /// <summary> To copy a subarray to a new array. </summary>
