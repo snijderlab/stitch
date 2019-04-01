@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Diagnostics;
 
 /// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
 /// from reads of a massspectrometer. 
@@ -18,11 +19,12 @@ namespace AssemblyNameSpace
     {
         static void Main()
         {
-            var test = new Assembler();
-            test.OpenReads();
+            var test = new Assembler(5, 4);
+            //test.SetAlphabet({('L', 'I', 1, true), ('K', 'Q', 1, true)});
+            test.OpenReads("examples/001/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
-            test.GraphInfo();
+            test.OutputReport();
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -32,13 +34,13 @@ namespace AssemblyNameSpace
         List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <value> The De Bruijn graph used by the Assembler. </value>
         Node[] graph;
-        /// <value> The length of the chunks used to create the De Bruijn graph. Private member where it is stored. </value>
-        private int chunk_length;
-        /// <value> The length of the chunks used to create the De Bruijn graph. Get and Set is public. </value>
-        public int Chunk_length
+        /// <value> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </value>
+        private int kmer_length;
+        /// <value> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </value>
+        public int Kmer_length
         {
-            get { return chunk_length; }
-            set { chunk_length = value; }
+            get { return kmer_length; }
+            set { kmer_length = value; }
         }
         /// <value> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </value>
@@ -56,6 +58,7 @@ namespace AssemblyNameSpace
             get { return minimum_homology; }
             set { minimum_homology = value; }
         }
+        private MetaInformation meta_data;
         /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
         /// be used in an efficient way </summary>
         private struct AminoAcid
@@ -175,16 +178,24 @@ namespace AssemblyNameSpace
             private AminoAcid[] sequence;
             /// <value> The sequence of the Node. Only has a getter. </value>
             public AminoAcid[] Sequence { get { return sequence; } }
-            /// <value> The member to store the multiplicity (amount of chunks which 
-            /// result in the same overlaps) in. </value>
+            /// <value> The member to store the multiplicity (amount of k-mers which 
+            /// result in the same (k-1)-mers in. </value>
             private int multiplicity;
-            /// <value> The multiplicity, amount of chunks which 
-            /// result in the same overlaps, of the Node. Only has a getter. </value>
+            /// <value> The multiplicity, amount of k-mers which 
+            /// result in the same (k-1)-mers, of the Node. Only has a getter. </value>
             public int Multiplicity { get { return multiplicity; } }
-            /// <value> The list of edges of this Node. The tuples contain the index 
+            /// <value> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. </value>
-            private List<ValueTuple<int, int, int>> edges;
+            private List<ValueTuple<int, int, int>> forwardEdges;
+            /// <value> The list of edges to this Node. The tuples contain the index 
+            /// of the Node where the edge goes to, the homology with the first Node 
+            /// and the homology with the second Node in this order. </value>
+            private List<ValueTuple<int, int, int>> backwardEdges;
+            /// <value> Wheter or not this node was visited. Private member to save the value. </value>
+            bool visited;
+            /// <value> Whether or not this node was visited. </value>
+            public bool Visited {get{return this.visited;}}
 
             /// <summary> The creator of Nodes. </summary>
             /// <param name="seq"> The sequence of this Node. </param>
@@ -194,75 +205,112 @@ namespace AssemblyNameSpace
             {
                 sequence = seq;
                 multiplicity = multi;
-                edges = new List<ValueTuple<int, int, int>>();
+                forwardEdges = new List<ValueTuple<int, int, int>>();
+                backwardEdges = new List<ValueTuple<int, int, int>>();
+                this.visited = false;
             }
 
             /// <summary> To visit the node to keep track how many times it was visited </summary>
             public void Visit()
             {
-                // I should add a new member "visited" to count the visits and not remove this information.
-                multiplicity -= 1;
+                Console.WriteLine("This node is now visited");
+                this.visited = true;
             }
 
-            /// <summary> To add an edge to the Node. </summary>
+            /// <summary> To add a forward edge to the Node. </summary>
             /// <param name="target"> The index of the Node where this edge goes to. </param>
             /// <param name="score1"> The homology of the edge with the first Node. </param>
             /// <param name="score2"> The homology of the edge with the second Node. </param>
-            public void AddEdge(int target, int score1, int score2)
+            public void AddForwardEdge(int target, int score1, int score2)
             {
-                edges.Add((target, score1, score2));
+                forwardEdges.Add((target, score1, score2));
             }
-            /// <summary> Retrieves the edge at the specified index. </summary>
-            /// <param name="i"> The index. </param>
-            /// <returns> It returns the index 
-            /// of the Node where the edge goes to, the homology with the first Node 
-            /// and the homology with the second Node in this order. </returns>
-            public ValueTuple<int, int, int> EdgeAt(int i)
+            /// <summary> To add a backward edge to the Node. </summary>
+            /// <param name="target"> The index of the Node where this edge comes from. </param>
+            /// <param name="score1"> The homology of the edge with the first Node. </param>
+            /// <param name="score2"> The homology of the edge with the second Node. </param>
+            public void AddBackwardEdge(int target, int score1, int score2)
             {
-                return edges[i];
+                backwardEdges.Add((target, score1, score2));
             }
-            /// <summary> To check if the Node has edges. </summary>
-            public bool HasEdges()
+            /// <summary> To check if the Node has forward edges. </summary>
+            public bool HasForwardEdges()
             {
-                return edges.Count > 0;
+                return forwardEdges.Count > 0;
             }
-            /// <summary> To get the amount of edges. </summary>
+            /// <summary> To check if the Node has backward edges. </summary>
+            public bool HasBackwardEdges()
+            {
+                return backwardEdges.Count > 0;
+            }
+            /// <summary> To get the amount of edges (forward and backward). </summary>
             /// <remarks> O(1) runtime </remarks>
             public int EdgesCount()
             {
-                return edges.Count;
+                return forwardEdges.Count + backwardEdges.Count;
             }
-            /// <summary> Gets the edge with the highest total homology of all 
+            /// <summary> Gets the forward edge with the highest total homology of all 
             /// edges in this Node. </summary>
             /// <returns> It returns the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. </returns>
-            /// <exception cref="Exception"> It will result in an Exception if the Node has no edges. </exception>
-            public ValueTuple<int, int, int> MaxEdge()
+            /// <exception cref="Exception"> It will result in an Exception if the Node has no forward edges. </exception>
+            public ValueTuple<int, int, int> MaxForwardEdge()
             {
-                if (!HasEdges())
+                if (!HasForwardEdges())
                     throw new Exception("Cannot give an edge if this node has no edges");
-                var output = edges[0];
+                var output = forwardEdges[0];
                 int value = output.Item2 + output.Item3;
                 int max = value;
-                for (int i = 1; i < edges.Count; i++)
+                for (int i = 0; i < forwardEdges.Count; i++)
                 {
-                    value = edges[i].Item2 + edges[i].Item3;
+                    value = forwardEdges[i].Item2 + forwardEdges[i].Item3;
                     if (value > max)
                     {
                         max = value;
-                        output = edges[i];
+                        output = forwardEdges[i];
+                    }
+                }
+                return output;
+            }
+            /// <summary> Gets the backward edge with the highest total homology of all 
+            /// edges in this Node. </summary>
+            /// <returns> It returns the index 
+            /// of the Node where the edge goes to, the homology with the first Node 
+            /// and the homology with the second Node in this order. </returns>
+            /// <exception cref="Exception"> It will result in an Exception if the Node has no backward edges. </exception>
+            public ValueTuple<int, int, int> MaxBackwardEdge()
+            {
+                if (!HasBackwardEdges())
+                    throw new Exception("Cannot give an edge if this node has no edges");
+                var output = backwardEdges[0];
+                int value = output.Item2 + output.Item3;
+                int max = value;
+                for (int i = 0; i < backwardEdges.Count; i++)
+                {
+                    value = backwardEdges[i].Item2 + backwardEdges[i].Item3;
+                    if (value > max)
+                    {
+                        max = value;
+                        output = backwardEdges[i];
                     }
                 }
                 return output;
             }
         }
+        /// <summary> A struct to hold meta information about the assembly to keep it organised 
+        /// and to report back to the user. </summary>
+        private struct MetaInformation {
+            public long total_time, pre_time, graph_time, path_time;
+            public int reads, kmers, kmin1_mers, sequences;
+        }
+
         /// <summary> The creator, to set up the default values. Also sets the alphabet. </summary>
-        /// <param name="chunk_length_input"> The lengths of the chunks. </param>
+        /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
-        public Assembler(int chunk_length_input = 5, int minimum_homology_input = 3)
+        public Assembler(int kmer_length_input, int minimum_homology_input)
         {
-            chunk_length = chunk_length_input;
+            kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input;
 
             SetAlphabet();
@@ -307,7 +355,7 @@ namespace AssemblyNameSpace
         /// <summary> To open a file with reads (should always be run before trying to assemble). 
         /// It will save the reads in the current Assembler object. </summary>
         /// <param name="input_file"> The path to the file to read from. </param>
-        public void OpenReads(string input_file = "examples/001/reads.txt")
+        public void OpenReads(string input_file)
         {
             // Getting input
             // For now just use a minimal implementation, reads separated b whitespace
@@ -323,8 +371,6 @@ namespace AssemblyNameSpace
                 if (line[0] != '#')
                     reads_string.AddRange(line.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
             });
-
-            Console.WriteLine($"Number of reads: {reads_string.Count}");
 
             reads = new List<AminoAcid[]>();
             AminoAcid[] acids;
@@ -342,118 +388,128 @@ namespace AssemblyNameSpace
 
                 reads.Add(acids);
             }
+            meta_data.reads = reads.Count;
         }
         /// <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
         /// run on an Assembler, all settings should be defined before running this. </summary>
         public void Assemble()
         {
-            // Generate all chunks
-            // All chunks of length (chunk_length)
+            // Start the stopwatch to be able to say how long the program ran
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
 
-            var chunks = new List<AminoAcid[]>();
+            // Generate all k-mers
+            // All k-mers of length (kmer_length)
+
+            var kmers = new List<AminoAcid[]>();
 
             foreach (AminoAcid[] read in reads)
             {
-                if (read.Length > chunk_length)
+                if (read.Length > kmer_length)
                 {
-                    for (int i = 0; i < read.Length - chunk_length; i++)
+                    for (int i = 0; i < read.Length - kmer_length; i++)
                     {
-                        AminoAcid[] chunk = read.SubArray(i, chunk_length);
-                        chunks.Add(chunk);
-                        chunks.Add(chunk.Reverse().ToArray()); //Also add the reverse
+                        AminoAcid[] kmer = read.SubArray(i, kmer_length);
+                        kmers.Add(kmer);
+                        kmers.Add(kmer.Reverse().ToArray()); //Also add the reverse
                     }
                 }
-                else if (read.Length == chunk_length)
+                else if (read.Length == kmer_length)
                 {
-                    chunks.Add(read);
+                    kmers.Add(read);
                 }
                 else
                 {
                     Console.WriteLine($"A read is no long enough: {AminoAcid.ArrayToString(read)}");
                 }
             }
-
-            Console.WriteLine($"Number of chunks: {chunks.Count}");
+            meta_data.kmers = kmers.Count;
 
             // Building the graph
-            // Generating all overlaps
+            // Generating all (k-1)-mers
 
-            var overlaps_raw = new List<AminoAcid[]>();
+            var kmin1_mers_raw = new List<AminoAcid[]>();
 
-            chunks.ForEach(chunk =>
+            kmers.ForEach(kmer =>
             {
-                overlaps_raw.Add(chunk.SubArray(0, chunk_length - 1));
-                overlaps_raw.Add(chunk.SubArray(1, chunk_length - 1));
+                kmin1_mers_raw.Add(kmer.SubArray(0, kmer_length - 1));
+                kmin1_mers_raw.Add(kmer.SubArray(1, kmer_length - 1));
             });
 
-            var overlaps = new List<ValueTuple<AminoAcid[], int>>();
+            var kmin1_mers = new List<ValueTuple<AminoAcid[], int>>();
 
-            overlaps_raw.GroupBy(i => i).ToList().ForEach(overlap =>
+            kmin1_mers_raw.GroupBy(i => i).ToList().ForEach(kmin1_mer =>
             {
-                overlaps.Add((overlap.Key, overlaps.Count()));
+                kmin1_mers.Add((kmin1_mer.Key, kmin1_mers.Count()));
             });
 
-            Console.WriteLine($"Number of overlaps: {overlaps.Count}");
+            meta_data.kmin1_mers = kmin1_mers.Count;
 
-            // Create a node for every possible overlap (one amino acid shifted)
+            // Create a node for every possible (k-1)-mer (one amino acid shifted)
 
             // Implement the graph as a adjacency list (array)
-            graph = new Node[overlaps.Count];
+            graph = new Node[kmin1_mers.Count];
 
             int index = 0;
-            overlaps.ForEach(overlap =>
+            kmin1_mers.ForEach(kmin1_mer =>
             {
-                graph[index] = new Node(overlap.Item1, overlap.Item2);
+                graph[index] = new Node(kmin1_mer.Item1, kmin1_mer.Item2);
                 index++;
             });
 
-            // Connect the nodes based on the chunks
+            meta_data.pre_time = stopWatch.ElapsedMilliseconds;
 
-            chunks.ForEach(chunk =>
+            // Connect the nodes based on the k-mers
+            int k = 0;
+            kmers.ForEach(kmer =>
             {
+                k++;
+                if (k % 100 == 0) {
+                    Console.WriteLine($"Adding edges... added {k} k-mers");
+                }
                 for (int i = 0; i < graph.Length; i++)
                 {
-                    int first_homology = AminoAcid.ArrayHomology(graph[i].Sequence, chunk.SubArray(0, chunk_length - 1));
-                    if (first_homology > minimum_homology)
+                    int first_homology = AminoAcid.ArrayHomology(graph[i].Sequence, kmer.SubArray(0, kmer_length - 1));
+                    if (first_homology >= minimum_homology)
                     {
                         for (int j = 0; j < graph.Length; j++)
                         {
-                            int second_homology = AminoAcid.ArrayHomology(graph[j].Sequence, chunk.SubArray(1, chunk_length - 1));
-                            if (i != j && second_homology > minimum_homology)
+                            int second_homology = AminoAcid.ArrayHomology(graph[j].Sequence, kmer.SubArray(1, kmer_length - 1));
+                            if (i != j && second_homology >= minimum_homology)
                             {
-                                Console.WriteLine("Add edge");
-                                graph[i].AddEdge(j, first_homology, second_homology);
+                                graph[i].AddForwardEdge(j, first_homology, second_homology);
+                                graph[j].AddBackwardEdge(i, first_homology, second_homology);
                             }
                         }
                     }
                 }
             });
 
-            Console.WriteLine("Built graph");
+            meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
+            Console.WriteLine($"Built graph");
 
             // Finding paths
-
             var sequences = new List<AminoAcid[]>();
-
 
             // Try for every node to walk as far as possible to find the sequence
             for (int i = 0; i < graph.Length; i++)
             {
-                var current_node = graph[i];
+                var start_node = graph[i];
+                var current_node = start_node;
 
-                if (current_node.Multiplicity > 0)
+                if (!current_node.Visited)
                 {
-                    List<AminoAcid> sequence = current_node.Sequence.SubArray(0, chunk_length - 2).ToList();
+                    Console.WriteLine($"This node is visited: {current_node.Visited}");
+                    List<AminoAcid> sequence = new List<AminoAcid>(); //current_node.Sequence.SubArray(0, kmer_length - 2).ToList();
 
-                    while (current_node.Multiplicity > 0)
+                    // Forward
+                    while (!current_node.Visited)
                     {
-                        //Console.WriteLine($"Found node with connectivity {current_node.EdgesCount()} maximum homology {(current_node.HasEdges() ? current_node.MaxEdge().ToString() : "none")}");
-
-                        sequence.Add(current_node.Sequence.ElementAt(chunk_length - 2));
+                        sequence.Add(current_node.Sequence.ElementAt(kmer_length - 2));
                         current_node.Visit();
-                        if (current_node.HasEdges())
+                        if (current_node.HasForwardEdges())
                         {
-                            current_node = graph[current_node.MaxEdge().Item1];
+                            current_node = graph[current_node.MaxForwardEdge().Item1];
                         }
                         else
                         {
@@ -461,30 +517,83 @@ namespace AssemblyNameSpace
                         }
                     }
 
-                    sequences.Add(sequence.ToArray());
+                    // Backward
+
+                    var backward_sequence = new List<AminoAcid>();
+
+                    current_node = start_node;
+
+                    while (!current_node.Visited)
+                    {
+                        backward_sequence.Add(current_node.Sequence.ElementAt(kmer_length - 2));
+                        current_node.Visit();
+                        if (current_node.HasBackwardEdges())
+                        {
+                            current_node = graph[current_node.MaxBackwardEdge().Item1];
+                        }
+                        else
+                        {
+                            break;
+                        }
+                    }
+
+                    // Add the forward sequence to the backward sequence to rebuild the whole sequence
+                    backward_sequence.Reverse();
+                    backward_sequence.AddRange(sequence.Skip(1));
+
+                    // Save the sequence
+                    sequences.Add(backward_sequence.ToArray());
                 }
             }
 
             // Returning output
 
+            stopWatch.Stop();
+            meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
+            meta_data.sequences = sequences.Count;
+            meta_data.total_time = stopWatch.ElapsedMilliseconds;
+
             Console.WriteLine("-- Sequences --");
+
+            // Find the maximum length (for testing purposes)
+            //List<int> lengths = sequences.Select(seq => (int) seq.Count()).ToList();
+            //int max_length = lengths.Max();
+            //int max_index = lengths.IndexOf(max_length);
+            //Console.WriteLine(AminoAcid.ArrayToString(sequences[max_index]));
+
+            // Return all sequences
             foreach (AminoAcid[] sequence in sequences)
             {
                 Console.WriteLine(AminoAcid.ArrayToString(sequence));
             }
         }
-        /// <summary> Outputs some information about the graph the help validate the output of the graph. </summary>
-        public void GraphInfo()
+        /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
+        public void OutputReport()
         {
+            Console.WriteLine($"= General information =");
+            Console.WriteLine($"Number of reads: {meta_data.reads}");
+            Console.WriteLine($"K (length of k-mer): {kmer_length}");
+            Console.WriteLine($"Minimum homology: {minimum_homology}");
+            Console.WriteLine($"Number of k-mers: {meta_data.kmers}");
+            Console.WriteLine($"Number of (k-1)-mers: {meta_data.kmin1_mers}");
+            Console.WriteLine($"Number of sequences found: {meta_data.sequences}");
             if (graph == null)
             {
                 Console.WriteLine("No graph build (yet)");
-                return;
+            } else {
+                Console.WriteLine($"= Graph information =");
+                Console.WriteLine($"Number of nodes: {graph.Length}");
+                long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
+                Console.WriteLine($"Number of edges: {number_edges}");
+                Console.WriteLine($"Mean Connectivity: {number_edges / graph.Length}");
+                Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0L, (a, b) => (a > b.EdgesCount()) ? a : b.EdgesCount()) / 2L}");
+                Console.WriteLine($"= Runtime information =");
+                Console.WriteLine($"The program took {meta_data.total_time} ms to assemble the sequence");
+                Console.WriteLine("With this breakup of times");
+                Console.WriteLine($"  {meta_data.pre_time} ms for pre work (creating k-mers and k-1-mers)");
+                Console.WriteLine($"  {meta_data.graph_time} ms for linking the graph");
+                Console.WriteLine($"  {meta_data.path_time} ms for finding the paths through the graph");
             }
-            Console.WriteLine($"Number of nodes: {graph.Length}");
-            Console.WriteLine($"Number of edges: {graph.Aggregate(0.0, (a, b) => a + b.EdgesCount())}");
-            Console.WriteLine($"Mean Connectivity: {graph.Aggregate(0.0, (a, b) => a + b.EdgesCount()) / graph.Length}");
-            Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0.0, (a, b) => (a > b.EdgesCount()) ? a : b.EdgesCount())}");
         }
     }
     /// <summary> A class to store extension methods to help in the process of coding. </summary>

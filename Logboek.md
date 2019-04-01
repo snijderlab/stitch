@@ -14,11 +14,20 @@ Volgende keer: Documentatie afmaken, Samenvoegen van gevonden paden / consesus s
 
 Ik heb in de avond de documentatie van de bestaande code afgemaakt zodat ik maandag gewoon aan het werk kan. Mijn doel is vanaf nu deze documenteerstijl vol te houden zodat deze code ook door andere begrepen kan worden en op de lange termijn bruikbaar blijft.
 
+## 01-04-2019
+
+Ik heb 's ochtends twee nieuwe test cases gemaakt een van lengte 200 en een van lengte 1000. Hierna was er overleg over hoe het ervoor stond, hier kwam uit dat het eigenlijk best wel goed ging en de volgende prioriteit was om het padvindalgoritme te verbeteren. Hier ben ik dan ook mee aan de slag gegaan. Het algemene idee is om in de graaf te beginnen en dan vooruit en achteruit (in de sequentie) te lopen en steeds de beste homologie te nemen hierdoor zou het pad vinden een heel stuk preciezer moeten worden en vooral minder sequenties moeten geven en meer lange sequenties waar we echt iets aan hebben. Hierbij moet nog wel nagedacht worden over wat er gebeurt met nodes die twee keer voorkomen in de sequentie en dat soort dingen. Ook ben ik begonnen met meer meten over het algoritme door de looptijd te meten van verschillende onderdelen.
+
+Volgende keer: mappen van read index naar k-meren, vooruitrekenen met homologie van kmeren, padvindalgoritme uitzoeken waarom Visited niet werkt.
+
 # TODO
 
-[-] Homologie
-[-] Pathfinding
+## Priority
+[ ] Pathfinding
 [ ] Unittests
+
+## Later
+[x] Homologie
 [ ] Alfabet voor massa's (nog meer generieke code)
 [ ] Massainformatie ook gebruiken
     Of als er alleen de massa van een dipeptide bekend is
