@@ -18,7 +18,15 @@ Ik heb in de avond de documentatie van de bestaande code afgemaakt zodat ik maan
 
 Ik heb 's ochtends twee nieuwe test cases gemaakt een van lengte 200 en een van lengte 1000. Hierna was er overleg over hoe het ervoor stond, hier kwam uit dat het eigenlijk best wel goed ging en de volgende prioriteit was om het padvindalgoritme te verbeteren. Hier ben ik dan ook mee aan de slag gegaan. Het algemene idee is om in de graaf te beginnen en dan vooruit en achteruit (in de sequentie) te lopen en steeds de beste homologie te nemen hierdoor zou het pad vinden een heel stuk preciezer moeten worden en vooral minder sequenties moeten geven en meer lange sequenties waar we echt iets aan hebben. Hierbij moet nog wel nagedacht worden over wat er gebeurt met nodes die twee keer voorkomen in de sequentie en dat soort dingen. Ook ben ik begonnen met meer meten over het algoritme door de looptijd te meten van verschillende onderdelen.
 
-Volgende keer: mappen van read index naar k-meren, vooruitrekenen met homologie van kmeren, padvindalgoritme uitzoeken waarom Visited niet werkt.
+Volgende keer: mappen van read index naar k-meren om het na assembly weer aan de ruwe data te kunnen associëren, vooruitrekenen met homologie van k-meren, padvindalgoritme uitzoeken waarom Visited niet werkt.
+
+## 08-04-2019
+
+Overleg: Mss toch de te kleine reads gebruiken na het assembleren om de sequentie te onderbouwen. Werken aan multifurcaties in het padvinden.
+
+Ik heb me gestort op het verbeteren van het padvind algoritme en de looptijd door de precompute truc die ik de vorige keer verzonnen heb. Het padvind algoritme is al een stuk beter geworden, het levert in testcase 001 het goede pad, in 002 zit een stuk symetrische sequentie waar het algortime nog niet goed mee overweg kan (tenzij de K groter gekozen wordt dan het symetrische gedeelte). Ik heb aangepast dat Node nu een class is, waardoor het een reference type is, waardoor aanpassingen die ik eraan maak ook daadwerkelijk effect hebben (dat is waarom Visited niet werkte...). Door de precompute truc is de looptijd van 244503 ms waarvan 242699 ms graph linking naar 19978 ms waarvan 18343 ms graph linking voor test case 002, oftewel een versnelling van meer dan 10×! Ik heb een nieuw test case aangemaakt (004) die twee eiwitten door elkaar heeft, deze worden alletwee door het algortime herkent en beide gegeven (alleen is er op een stuk te weinig overlap om het aan elkaar te plakken). De output sequenties worden nu gefilterd op het zijn van een stricte subsequentie van een grotere sequentie (zowel vooruit als andersom), waardoor alleen de echt verschillende sequenties nog weergegeven worden.
+
+Volgende keer: alle duplicaten uit de (k-1)-meren halen, de gecondenseerde graaf echt maken, associëren van reads met output, en test data genereren.
 
 # TODO
 
