@@ -19,9 +19,9 @@ namespace AssemblyNameSpace
     {
         static void Main()
         {
-            var test = new Assembler(5, 4);
+            var test = new Assembler(8, 5);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.OpenReads("examples/001/reads.txt");
+            test.OpenReads("examples/006/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputReport();
@@ -34,6 +34,8 @@ namespace AssemblyNameSpace
         List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <value> The De Bruijn graph used by the Assembler. </value>
         Node[] graph;
+        /// <value> The condensed graph used to store the output of the assembly. </value>
+        List<CondensedNode> condensed_graph;
         /// <value> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </value>
         private int kmer_length;
         /// <value> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </value>
@@ -193,7 +195,7 @@ namespace AssemblyNameSpace
             /// <value> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
-            public List<ValueTuple<int, int, int>> ForwardEdges {get{return forwardEdges;}}
+            public List<ValueTuple<int, int, int>> ForwardEdges { get { return forwardEdges; } }
             /// <value> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
@@ -202,18 +204,9 @@ namespace AssemblyNameSpace
             /// <value> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
-            public List<ValueTuple<int, int, int>> BackwardEdges {get{return backwardEdges;}}
-            /// <value> The amount of times this node was visited. Private member to save the value. </value>
-            private int visited;
-            /// <value> Whether or not this node can be visited (if there are enough copies of this node). </value>
-            public bool CanVisit
-            {
-                get
-                {
-                    //Console.WriteLine($"Node visited: {visited} will return this.");
-                    return visited <= 0;
-                }
-            }
+            public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
+            /// <value> Wether or not this node is visited yet. </value>
+            public bool Visited;
             private int max_forward_score;
             private int max_backward_score;
             private int edge_include_limit;
@@ -228,23 +221,10 @@ namespace AssemblyNameSpace
                 multiplicity = multi;
                 forwardEdges = new List<ValueTuple<int, int, int>>();
                 backwardEdges = new List<ValueTuple<int, int, int>>();
-                visited = multiplicity;
+                Visited = false;
                 max_forward_score = 0;
                 max_backward_score = 0;
                 edge_include_limit = edge_include_limit_input;
-            }
-
-            /// <summary> To visit the node to keep track how many times it was visited </summary>
-            public void Visit()
-            {
-                //Console.WriteLine($"This node is now visited, it was visited? {visited} {this.visited}");
-                this.visited -= 1;
-                //Console.WriteLine($"Is this node now visited? {visited} {this.visited}");
-            }
-            /// <summary> To account for the fact that the algorithm will visit the start node of a path twice. </summary>
-            public void UnVisit()
-            {
-                this.visited += 1;
             }
 
             /// <summary> To add a forward edge to the Node. Wil only be added if the score is high enough. </summary>
@@ -254,14 +234,18 @@ namespace AssemblyNameSpace
             public void AddForwardEdge(int target, int score1, int score2)
             {
                 int score = score1 + score2;
-                if (score <= max_forward_score || score >= max_forward_score - edge_include_limit) {
+                if (score <= max_forward_score && score >= max_forward_score - edge_include_limit)
+                {
                     forwardEdges.Add((target, score1, score2));
-                } else if (score > max_forward_score) {
+                    return;
+                }
+                if (score > max_forward_score)
+                {
                     max_forward_score = score;
                     forwardEdges.Add((target, score1, score2));
                     filterForwardEdges();
                 }
-                
+
             }
             /// <summary> To add a backward edge to the Node. </summary>
             /// <param name="target"> The index of the Node where this edge comes from. </param>
@@ -270,19 +254,29 @@ namespace AssemblyNameSpace
             public void AddBackwardEdge(int target, int score1, int score2)
             {
                 int score = score1 + score2;
-                if (score <= max_backward_score || score >= max_backward_score - edge_include_limit) {
+                if (score <= max_backward_score && score >= max_backward_score - edge_include_limit)
+                {
                     backwardEdges.Add((target, score1, score2));
-                } else if (score > max_backward_score) {
+                    return;
+                }
+                if (score > max_backward_score)
+                {
                     max_backward_score = score;
                     backwardEdges.Add((target, score1, score2));
                     filterBackwardEdges();
                 }
             }
-            private void filterForwardEdges() {
+            private void filterForwardEdges()
+            {
+                Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
                 forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
+                Console.Write($"{forwardEdges.Count}.");
             }
-            private void filterBackwardEdges() {
+            private void filterBackwardEdges()
+            {
+                //Console.Write($"Filtered forward edges from {backwardEdges.Count} to ");
                 backwardEdges = backwardEdges.Where(i => i.Item2 + i.Item3 >= max_backward_score - edge_include_limit).ToList();
+                //Console.Write($"{backwardEdges.Count}.");
             }
             /// <summary> To check if the Node has forward edges. </summary>
             public bool HasForwardEdges()
@@ -357,12 +351,23 @@ namespace AssemblyNameSpace
             public int reads, kmers, kmin1_mers, sequences;
         }
         /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
-        private class CondensedNode {
+        private class CondensedNode
+        {
+            public int Index;
+            public bool Visited;
             public List<AminoAcid> Sequence;
             public List<ValueTuple<int, CondensedNode>> ForwardEdges;
             public List<ValueTuple<int, CondensedNode>> BackwardEdges;
+            public CondensedNode(List<AminoAcid> sequence, int index)
+            {
+                Sequence = sequence;
+                Index = index;
+                ForwardEdges = new List<(int, CondensedNode)>();
+                BackwardEdges = new List<(int, CondensedNode)>();
+                Visited = false;
+            }
         }
-        
+
         /// <summary> The creator, to set up the default values. Also sets the alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
@@ -500,10 +505,12 @@ namespace AssemblyNameSpace
 
             var kmin1_mers = new List<ValueTuple<AminoAcid[], int>>();
 
-            kmin1_mers_raw.GroupBy(i => i).ToList().ForEach(kmin1_mer =>
+            /* kmin1_mers_raw.GroupBy(i => i).ToList().ForEach(kmin1_mer =>
             {
                 kmin1_mers.Add((kmin1_mer.Key, kmin1_mers.Count()));
-            });
+            }); */
+
+            kmin1_mers = (from ele in kmin1_mers_raw group ele by ele into ele_group select (ele_group.Key, ele_group.Count())).ToList();
             // TODO should save the amount of duplicates
             meta_data.kmin1_mers = kmin1_mers.Count;
 
@@ -577,7 +584,79 @@ namespace AssemblyNameSpace
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
             Console.WriteLine($"Built graph");
 
-            // Finding paths
+            // Create a condensed graph to keep the information
+
+            condensed_graph = new List<CondensedNode>();
+            //Queue graph_building_queue = new Queue();
+
+            for (int i = 0; i < graph.Length; i++)
+            {
+                var start_node = graph[i];
+
+                if (!start_node.Visited)
+                {
+                    var forward_node = start_node;
+                    var backward_node = start_node;
+
+                    List<AminoAcid> forward_sequence = new List<AminoAcid>();
+                    List<AminoAcid> backward_sequence = new List<AminoAcid>();
+
+                    List<int> forward_nodes = new List<int>();
+                    List<int> backward_nodes = new List<int>();
+
+                    bool forward_found = false;
+                    bool backward_found = false;
+
+                    // Walk forwards
+                    while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count == 1)
+                    {
+                        forward_node.Visited = true;
+                        forward_found = true;
+                        forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
+                        forward_node = graph[forward_node.ForwardEdges[0].Item1];
+                    } 
+                    forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
+
+                    if (forward_node.ForwardEdges.Count() > 1) {
+                        forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
+                    }
+                    if (forward_node.BackwardEdges.Count() > 1) {
+                        forward_nodes = (from node in forward_node.BackwardEdges select node.Item1).ToList();
+                    }                    
+
+                    // Walk backwards
+                    while (backward_node.ForwardEdges.Count == 1 && backward_node.BackwardEdges.Count == 1)
+                    {
+                        backward_node.Visited = true;
+                        backward_found = true;
+                        backward_sequence.Add(backward_node.Sequence.ElementAt(0));
+                        backward_node = graph[backward_node.ForwardEdges[0].Item1];
+                    }
+                    backward_sequence.Add(backward_node.Sequence.ElementAt(0));
+
+                    if (backward_node.ForwardEdges.Count() > 1) {
+                        backward_nodes = (from node in backward_node.ForwardEdges select node.Item1).ToList();
+                    }
+                    if (backward_node.BackwardEdges.Count() > 1) {
+                        backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
+                    }  
+
+                    Console.WriteLine($"Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
+
+                    backward_sequence.Reverse();
+                    backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
+                    backward_sequence.AddRange(forward_sequence);
+
+                    Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
+                    Console.WriteLine($"Stopped because \nforward node had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
+                    Console.WriteLine($"Forward edges: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    Console.WriteLine($"Backward edges: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+
+                    condensed_graph.Add(new CondensedNode(backward_sequence, i));
+                }
+            }
+
+            /* // Finding paths
             var sequences_raw = new List<AminoAcid[]>();
 
             // Try for every node to walk as far as possible to find the sequence
@@ -653,12 +732,12 @@ namespace AssemblyNameSpace
                 {
                     Console.WriteLine($"Skipped node {i} in finding sequences.");
                 }
-            }
+            } */
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
             // Filtering of the sequences
-
+/* 
             var sequences = new List<AminoAcid[]>();
 
             sequences_raw.Sort((x, y) => y.Length.CompareTo(x.Length));
@@ -676,7 +755,7 @@ namespace AssemblyNameSpace
                             save = false;
                             break;
                         }
-                       
+
                     }
                     // If this sequence is a subsequence of another saved sequence, do not save it
                     else if (sequence.Length < saved_sequence.Length)
@@ -694,16 +773,16 @@ namespace AssemblyNameSpace
                     }
                 }
                 if (save) sequences.Add(sequence);
-            }
+            } */
 
             // Returning output
 
             stopWatch.Stop();
             meta_data.sequence_filter_time = stopWatch.ElapsedMilliseconds - meta_data.path_time - meta_data.graph_time - meta_data.pre_time;
-            meta_data.sequences = sequences.Count;
+            meta_data.sequences = 0;//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
 
-            Console.WriteLine("-- Sequences --");
+            /* Console.WriteLine("-- Sequences --");
 
             // Find the maximum length (for testing purposes)
             //List<int> lengths = sequences.Select(seq => (int) seq.Count()).ToList();
@@ -715,7 +794,7 @@ namespace AssemblyNameSpace
             foreach (AminoAcid[] sequence in sequences)
             {
                 Console.WriteLine(AminoAcid.ArrayToString(sequence));
-            }
+            } */
         }
         /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
         public void OutputReport()
