@@ -2,13 +2,13 @@
 
 ## General plan
 
-I want to build software to be able to find the amino acid sequence of a protein based on mass spectrometry data. The article will be describing the general algorithm used in the software and will be stating some details about the verification of the software based on wetlab praticals and will give the sequence of an "unknown" protein to indicate the use of the software.
+To build software to be able to find the amino acid sequence of a protein based on mass spectrometry data. The article will be describing the general algorithm used in the software and will be stating some details about the verification of the software based on wetlab praticals and will give the sequence of an "unknown" protein to indicate the use of the software. Also it will provide the reader with an optimised protocol including why some permutations of the original protocol where benificial.
 
 ## Research question
 
-How can mass spectrometry data be used to find the sequence of a protein using software? (Keep it on antibodies)
+How can mass spectrometry data be used to find the sequence of an antibody using software?
 
-To aid in the bulk identification of proteins in samples, especially in the sequencing of antibodies.
+To aid in the bulk identification of proteins in samples, especially in the sequencing of antibodies. The software should be generic but it is easier to keep it focussed on antibodies because that is what it will be mainly used for.
 
 ## Planning
 
@@ -37,23 +37,32 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 
 ### Wetlab
 
-1. Measure three well known antibodies
+1. Measure three well known antibodies, all three as single protein solutions and all thee in one sequence
    1. To optimise the protocol
+      1. Finding the right proteases, from a list of proteases in the freezer find which combination is the best for the software
+      1. Finding the right fragmentation technique, try some different techniques and find which gives the best result in quality but also in throughput
    1. To use as verification of the software
 1. Measure one unknown antibody with the protocol from step 1
 
 ### Finish software
 
 ##### Needed
+1. Bug elimination, delete duplicates of k-mers
 1. Create useful output (finish the graph compression)
+   1. Coverage, of reads for every position in the sequence
+   1. Also generate a human friendly version (html or something like that)
 1. Use the output from the mass spectrometry as input
 1. Runtime analysis 
    1. To find possible optimisations in the algorithm
    1. To be able to estimate runtimes for larger datasets
+1. Theoretical test data
+   1. Theoretical antibodies, from database IgG
+   1. Little script to generate a test sample from the sequence
+      1. Subsets of reads, with length filters
+      1. Polyclonal solutions
 
 ##### Would be nice
-1. Using masses instead or in conjunction with amino acid information
-1. Associate reads (and k-mers) with output, to make the output verifiable for humans
+1. Using masses instead of or in conjunction to amino acid information, will be very hard, should not be considered for the software in this release
 
 ### Article
 
