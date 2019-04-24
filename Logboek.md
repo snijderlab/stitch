@@ -34,6 +34,8 @@ Begin van het echte project. 's Ochtends begonnen met een planning voor het labw
 
 Volgende keer (qua code): geconderseerde graaf maken, associëren reads met output, test data genereren, denken hoe de output visueel gemaakt kan worden.
 
+Volgende keer (vrijdag): protocol doorspreken, basics doornemen
+
 # TODO
 
 ## Priority
