@@ -1,4 +1,4 @@
-# Research project DOuwe Schulte march - july 2019
+# Planning Research Project - Douwe Schulte - March to July 2019
 
 ## General plan
 
