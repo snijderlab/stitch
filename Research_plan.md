@@ -1,4 +1,4 @@
-# Research project DOuwe Schulte march - july 2019
+# Planning Research Project - Douwe Schulte - March to July 2019
 
 ## General plan
 
@@ -12,10 +12,10 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 
 ## Planning
 
-3.5 days of preliminairy work on the software before the course started
-1 week of project planning and prework
-3 weeks of wetlab to generate the mass spec data used to test the software
-2 weeks to finish the software 
+3.5 days of preliminairy work on the software before the course started\
+1 week of project planning and prework\
+3 weeks of wetlab to generate the mass spec data used to test the software\
+2 weeks to finish the software\
 5 weeks to write the article
 
 
@@ -37,8 +37,8 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 
 ### Wetlab
 
-1. Measure three well known antibody and try to find the best way to prepare them for the mass spectroscopy. 
-1. Measure one unknown antibody with the protocol from step 1.
+1. Measure three well known antibodies and try to find the best way to prepare them for the mass spectroscopy
+1. Measure one unknown antibody with the protocol from step 1
 
 ### Finish software
 
