@@ -12,9 +12,9 @@ I want to build software to be able to find the amino acid sequence of a protein
 2 half weeks to finish the software 
 5 half weeks to write the article 
 
-+-------+-------------+
-| Date  | Description |
-+-------+-------------+
+
+| Monday | Description |
+|--------|-------------|
 | 22-04 | Start week - project planning |
 | 29-04 | Wetlab & Give feedback on butterflies article (03-05) |
 | 06-05 | Wetlab |
