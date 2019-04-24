@@ -19,9 +19,9 @@ namespace AssemblyNameSpace
     {
         static void Main()
         {
-            var test = new Assembler(8, 5);
+            var test = new Assembler(6, 5);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.OpenReads("examples/006/reads.txt");
+            test.OpenReads("examples/005/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputReport();
@@ -205,7 +205,7 @@ namespace AssemblyNameSpace
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
             public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
-            /// <value> Wether or not this node is visited yet. </value>
+            /// <value> Whether or not this node is visited yet. </value>
             public bool Visited;
             private int max_forward_score;
             private int max_backward_score;
@@ -236,7 +236,14 @@ namespace AssemblyNameSpace
                 int score = score1 + score2;
                 if (score <= max_forward_score && score >= max_forward_score - edge_include_limit)
                 {
-                    forwardEdges.Add((target, score1, score2));
+                    bool inlist = false;
+                    foreach (var edge in forwardEdges) {
+                        if (edge.Item1 == target) {
+                            inlist = true;
+                            break;
+                        }
+                    }
+                    if (!inlist) forwardEdges.Add((target, score1, score2));
                     return;
                 }
                 if (score > max_forward_score)
@@ -256,7 +263,14 @@ namespace AssemblyNameSpace
                 int score = score1 + score2;
                 if (score <= max_backward_score && score >= max_backward_score - edge_include_limit)
                 {
-                    backwardEdges.Add((target, score1, score2));
+                    bool inlist = false;
+                    foreach (var edge in backwardEdges) {
+                        if (edge.Item1 == target) {
+                            inlist = true;
+                            break;
+                        }
+                    }
+                    if (!inlist) backwardEdges.Add((target, score1, score2));
                     return;
                 }
                 if (score > max_backward_score)
@@ -356,14 +370,14 @@ namespace AssemblyNameSpace
             public int Index;
             public bool Visited;
             public List<AminoAcid> Sequence;
-            public List<ValueTuple<int, CondensedNode>> ForwardEdges;
-            public List<ValueTuple<int, CondensedNode>> BackwardEdges;
-            public CondensedNode(List<AminoAcid> sequence, int index)
+            public List<int> ForwardEdges;
+            public List<int> BackwardEdges;
+            public CondensedNode(List<AminoAcid> sequence, int index, List<int> forward_edges, List<int> backward_edges)
             {
                 Sequence = sequence;
                 Index = index;
-                ForwardEdges = new List<(int, CondensedNode)>();
-                BackwardEdges = new List<(int, CondensedNode)>();
+                ForwardEdges = forward_edges;
+                BackwardEdges = backward_edges;
                 Visited = false;
             }
         }
@@ -503,6 +517,8 @@ namespace AssemblyNameSpace
                 kmin1_mers_raw.Add(kmer.SubArray(1, kmer_length - 1));
             });
 
+            kmin1_mers_raw.ForEach(x => Console.WriteLine(AminoAcid.ArrayToString(x)));
+
             var kmin1_mers = new List<ValueTuple<AminoAcid[], int>>();
 
             /* kmin1_mers_raw.GroupBy(i => i).ToList().ForEach(kmin1_mer =>
@@ -510,9 +526,20 @@ namespace AssemblyNameSpace
                 kmin1_mers.Add((kmin1_mer.Key, kmin1_mers.Count()));
             }); */
 
-            kmin1_mers = (from ele in kmin1_mers_raw group ele by ele into ele_group select (ele_group.Key, ele_group.Count())).ToList();
+            foreach (var kmin1_mer in kmin1_mers_raw) {
+                bool inlist = false;
+                foreach (var saved in kmin1_mers) {
+                    if (AminoAcid.ArrayEquals(kmin1_mer, saved.Item1)) {
+                        inlist = true;
+                        break;
+                    }
+                }
+                if (!inlist) kmin1_mers.Add((kmin1_mer, 1));
+            }
             // TODO should save the amount of duplicates
             meta_data.kmin1_mers = kmin1_mers.Count;
+
+            Console.WriteLine($"K-1-mers raw {kmin1_mers_raw.Count()} K-1-mers deduplicated {kmin1_mers.Count()}");
 
             // Create a node for every possible (k-1)-mer (one amino acid shifted)
 
@@ -553,12 +580,8 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < graph.Length; i++)
                 {
                     // Find the homology of the prefix and postfix
-                    int first_homology = AminoAcid.ArrayHomology(graph[i].Sequence, prefix);
-                    int second_homology = AminoAcid.ArrayHomology(graph[i].Sequence, postfix);
-
-                    // Save the results in the arrays
-                    prefix_matches[i] = first_homology;
-                    postfix_matches[i] = second_homology;
+                    prefix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, prefix);
+                    postfix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, postfix);
                 }
 
                 //Console.WriteLine("Computed pre and post fixes");
@@ -573,7 +596,7 @@ namespace AssemblyNameSpace
                         {
                             if (i != j && postfix_matches[j] >= minimum_homology)
                             {
-                                graph[i].AddForwardEdge(j, prefix_matches[i], postfix_matches[i]);
+                                graph[i].AddForwardEdge(j, prefix_matches[j], postfix_matches[j]);
                                 graph[j].AddBackwardEdge(i, prefix_matches[i], postfix_matches[i]);
                             }
                         }
@@ -591,6 +614,7 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < graph.Length; i++)
             {
+                // Start at every node if it is not visited yet try to build a path from it 
                 var start_node = graph[i];
 
                 if (!start_node.Visited)
@@ -607,53 +631,66 @@ namespace AssemblyNameSpace
                     bool forward_found = false;
                     bool backward_found = false;
 
-                    // Walk forwards
-                    while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count == 1)
+                    int forward_node_index = i;
+                    int backward_node_index = i;
+
+                    // Walk forwards until a multifucation in the path is found
+                    while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count <= 1)
                     {
                         forward_node.Visited = true;
                         forward_found = true;
-                        forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
-                        forward_node = graph[forward_node.ForwardEdges[0].Item1];
+                        forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2)); // Last amino acid of the sequence
+                        forward_node_index = forward_node.ForwardEdges[0].Item1;
+                        forward_node = graph[forward_node_index];
                     } 
                     forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
+                    forward_found = true;
 
                     if (forward_node.ForwardEdges.Count() > 1) {
                         forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
                     }
                     if (forward_node.BackwardEdges.Count() > 1) {
-                        forward_nodes = (from node in forward_node.BackwardEdges select node.Item1).ToList();
+                        forward_nodes.AddRange(from node in forward_node.BackwardEdges select node.Item1);
                     }                    
 
                     // Walk backwards
-                    while (backward_node.ForwardEdges.Count == 1 && backward_node.BackwardEdges.Count == 1)
+                    while (backward_node.ForwardEdges.Count <= 1 && backward_node.BackwardEdges.Count == 1)
                     {
                         backward_node.Visited = true;
                         backward_found = true;
                         backward_sequence.Add(backward_node.Sequence.ElementAt(0));
-                        backward_node = graph[backward_node.ForwardEdges[0].Item1];
+                        backward_node_index = backward_node.BackwardEdges[0].Item1;
+                        backward_node = graph[backward_node_index];
                     }
                     backward_sequence.Add(backward_node.Sequence.ElementAt(0));
+                    backward_node.Visited = true;
 
                     if (backward_node.ForwardEdges.Count() > 1) {
                         backward_nodes = (from node in backward_node.ForwardEdges select node.Item1).ToList();
                     }
                     if (backward_node.BackwardEdges.Count() > 1) {
-                        backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
+                        backward_nodes.AddRange(from node in backward_node.BackwardEdges select node.Item1);
                     }  
 
-                    Console.WriteLine($"Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
+                    Console.WriteLine($"\n==Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
 
                     backward_sequence.Reverse();
                     backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
                     backward_sequence.AddRange(forward_sequence);
 
                     Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
-                    Console.WriteLine($"Stopped because \nforward node had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
-                    Console.WriteLine($"Forward edges: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    Console.WriteLine($"Backward edges: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    Console.WriteLine($"Stopped because \nforward node {forward_node_index} had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node {backward_node_index} had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
+                    Console.WriteLine($"Forward edges - forwards: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    Console.WriteLine($"Forward edges - backwards: {forward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
 
-                    condensed_graph.Add(new CondensedNode(backward_sequence, i));
+                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_nodes, backward_nodes));
                 }
+            }
+
+            foreach (var node in condensed_graph) {
+                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
             }
 
             /* // Finding paths
