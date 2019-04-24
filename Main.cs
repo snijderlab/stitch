@@ -19,9 +19,9 @@ namespace AssemblyNameSpace
     {
         static void Main()
         {
-            var test = new Assembler(6, 5);
+            var test = new Assembler(4, 3);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.OpenReads("examples/005/reads.txt");
+            test.OpenReads("examples/007/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputReport();
@@ -282,9 +282,9 @@ namespace AssemblyNameSpace
             }
             private void filterForwardEdges()
             {
-                Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
+                //Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
                 forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
-                Console.Write($"{forwardEdges.Count}.");
+                //Console.Write($"{forwardEdges.Count}.");
             }
             private void filterBackwardEdges()
             {
@@ -362,7 +362,7 @@ namespace AssemblyNameSpace
         private struct MetaInformation
         {
             public long total_time, pre_time, graph_time, path_time, sequence_filter_time;
-            public int reads, kmers, kmin1_mers, sequences;
+            public int reads, kmers, kmin1_mers, kmin1_mers_raw, sequences;
         }
         /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
         private class CondensedNode
@@ -517,31 +517,25 @@ namespace AssemblyNameSpace
                 kmin1_mers_raw.Add(kmer.SubArray(1, kmer_length - 1));
             });
 
-            kmin1_mers_raw.ForEach(x => Console.WriteLine(AminoAcid.ArrayToString(x)));
+            meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
 
             var kmin1_mers = new List<ValueTuple<AminoAcid[], int>>();
 
-            /* kmin1_mers_raw.GroupBy(i => i).ToList().ForEach(kmin1_mer =>
-            {
-                kmin1_mers.Add((kmin1_mer.Key, kmin1_mers.Count()));
-            }); */
-
             foreach (var kmin1_mer in kmin1_mers_raw) {
                 bool inlist = false;
-                foreach (var saved in kmin1_mers) {
-                    if (AminoAcid.ArrayEquals(kmin1_mer, saved.Item1)) {
+                for (int i = 0; i < kmin1_mers.Count(); i++) {
+                    if (AminoAcid.ArrayEquals(kmin1_mer, kmin1_mers[i].Item1)) {
+                        kmin1_mers[i] = (kmin1_mers[i].Item1, kmin1_mers[i].Item2 + 1); // Update multiplicity
                         inlist = true;
                         break;
                     }
                 }
-                if (!inlist) kmin1_mers.Add((kmin1_mer, 1));
+                if (!inlist) kmin1_mers.Add((kmin1_mer, 1)); 
             }
-            // TODO should save the amount of duplicates
+            
             meta_data.kmin1_mers = kmin1_mers.Count;
 
-            Console.WriteLine($"K-1-mers raw {kmin1_mers_raw.Count()} K-1-mers deduplicated {kmin1_mers.Count()}");
-
-            // Create a node for every possible (k-1)-mer (one amino acid shifted)
+            // Create a node for every possible (k-1)-mer
 
             // Implement the graph as a adjacency list (array)
             graph = new Node[kmin1_mers.Count];
@@ -607,14 +601,20 @@ namespace AssemblyNameSpace
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
             Console.WriteLine($"Built graph");
 
+            // Print graph
+
+            for (int i = 0; i < graph.Length; i++) {
+                var node = graph[i];
+                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence)} Index: {i} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+            }
+
             // Create a condensed graph to keep the information
 
             condensed_graph = new List<CondensedNode>();
-            //Queue graph_building_queue = new Queue();
 
             for (int i = 0; i < graph.Length; i++)
             {
-                // Start at every node if it is not visited yet try to build a path from it 
+                // Start at every node, if it is not visited yet try to build a path from it 
                 var start_node = graph[i];
 
                 if (!start_node.Visited)
@@ -627,37 +627,30 @@ namespace AssemblyNameSpace
 
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
-
-                    bool forward_found = false;
-                    bool backward_found = false;
-
+                    
+                    // Debug purposes can be deleted later
                     int forward_node_index = i;
                     int backward_node_index = i;
 
-                    // Walk forwards until a multifucation in the path is found
+                    // Walk forwards until a multifurcartion in the path is found or the end is reached
                     while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count <= 1)
                     {
                         forward_node.Visited = true;
-                        forward_found = true;
                         forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2)); // Last amino acid of the sequence
                         forward_node_index = forward_node.ForwardEdges[0].Item1;
                         forward_node = graph[forward_node_index];
                     } 
                     forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
-                    forward_found = true;
+                    forward_node.Visited = true;
 
-                    if (forward_node.ForwardEdges.Count() > 1) {
+                    if (forward_node.ForwardEdges.Count() > 0) {
                         forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
-                    }
-                    if (forward_node.BackwardEdges.Count() > 1) {
-                        forward_nodes.AddRange(from node in forward_node.BackwardEdges select node.Item1);
-                    }                    
+                    }                  
 
                     // Walk backwards
                     while (backward_node.ForwardEdges.Count <= 1 && backward_node.BackwardEdges.Count == 1)
                     {
                         backward_node.Visited = true;
-                        backward_found = true;
                         backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                         backward_node_index = backward_node.BackwardEdges[0].Item1;
                         backward_node = graph[backward_node_index];
@@ -665,15 +658,13 @@ namespace AssemblyNameSpace
                     backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                     backward_node.Visited = true;
 
-                    if (backward_node.ForwardEdges.Count() > 1) {
-                        backward_nodes = (from node in backward_node.ForwardEdges select node.Item1).ToList();
-                    }
-                    if (backward_node.BackwardEdges.Count() > 1) {
-                        backward_nodes.AddRange(from node in backward_node.BackwardEdges select node.Item1);
+                    if (backward_node.BackwardEdges.Count() > 0) {
+                        backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
                     }  
 
                     Console.WriteLine($"\n==Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
 
+                    // Build the final sequence
                     backward_sequence.Reverse();
                     backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
                     backward_sequence.AddRange(forward_sequence);
@@ -689,159 +680,28 @@ namespace AssemblyNameSpace
                 }
             }
 
+            // Print the condensed graph
             foreach (var node in condensed_graph) {
                 Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
             }
 
-            /* // Finding paths
-            var sequences_raw = new List<AminoAcid[]>();
-
-            // Try for every node to walk as far as possible to find the sequence
-            for (int i = 0; i < graph.Length; i++)
-            {
-                var start_node = graph[i];
-                var current_node = start_node;
-
-                if (!current_node.CanVisit)
-                {
-                    List<AminoAcid> sequence = new List<AminoAcid>(); //current_node.Sequence.ToList();
-                    int amount_found = 0;
-
-                    // Forward
-                    while (!current_node.CanVisit)
-                    {
-                        amount_found++;
-                        sequence.Add(current_node.Sequence.ElementAt(kmer_length - 2));
-                        current_node.Visit();
-                        //Console.WriteLine($"Is this node visited now? {current_node.Visited}");
-                        if (current_node.HasForwardEdges())
-                        {
-                            current_node = graph[current_node.MaxForwardEdge().Item1];
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    // Backward
-                    var forward_node = current_node;
-
-                    var backward_sequence = new List<AminoAcid>();
-
-                    current_node = start_node;
-
-                    current_node.UnVisit();
-
-                    while (!current_node.CanVisit)
-                    {
-                        amount_found++;
-                        backward_sequence.Add(current_node.Sequence.ElementAt(0));
-                        current_node.Visit();
-                        if (current_node.HasBackwardEdges())
-                        {
-                            current_node = graph[current_node.MaxBackwardEdge().Item1];
-                        }
-                        else
-                        {
-                            break;
-                        }
-                    }
-
-                    if (amount_found > 2)
-                    {
-                        // Add the forward sequence to the backward sequence to rebuild the whole sequence
-                        //Console.WriteLine($"Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(current_node.Sequence)}\nForward: {AminoAcid.ArrayToString(sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
-                        backward_sequence.Reverse();
-                        backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
-                        backward_sequence.AddRange(sequence);
-                        //Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
-
-                        // Save the sequence
-                        sequences_raw.Add(backward_sequence.ToArray());
-                    }
-                    else
-                    {
-                        Console.WriteLine($"Could not find any nodes connected to: {AminoAcid.ArrayToString(current_node.Sequence)}");
-                    }
-                }
-                else
-                {
-                    Console.WriteLine($"Skipped node {i} in finding sequences.");
-                }
-            } */
-
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
-
-            // Filtering of the sequences
-/* 
-            var sequences = new List<AminoAcid[]>();
-
-            sequences_raw.Sort((x, y) => y.Length.CompareTo(x.Length));
-
-            foreach (AminoAcid[] sequence in sequences_raw)
-            {
-                bool save = true;
-                foreach (AminoAcid[] saved_sequence in sequences)
-                {
-                    // If this sequence is already in the saved sequences, do not save it
-                    if (sequence.Length == saved_sequence.Length)
-                    {
-                        if (AminoAcid.ArrayEquals(sequence, saved_sequence) || AminoAcid.ArrayEquals(sequence.Reverse().ToArray(), saved_sequence))
-                        {
-                            save = false;
-                            break;
-                        }
-
-                    }
-                    // If this sequence is a subsequence of another saved sequence, do not save it
-                    else if (sequence.Length < saved_sequence.Length)
-                    {
-                        var sequence_reverse = sequence.Reverse().ToArray();
-                        for (int i = 0; i < saved_sequence.Length - sequence.Length + 1; i++)
-                        {
-                            var subarray = saved_sequence.SubArray(i, sequence.Length);
-                            if (AminoAcid.ArrayEquals(sequence, subarray) || AminoAcid.ArrayEquals(sequence_reverse, subarray))
-                            {
-                                save = false;
-                                break;
-                            }
-                        }
-                    }
-                }
-                if (save) sequences.Add(sequence);
-            } */
-
-            // Returning output
 
             stopWatch.Stop();
             meta_data.sequence_filter_time = stopWatch.ElapsedMilliseconds - meta_data.path_time - meta_data.graph_time - meta_data.pre_time;
-            meta_data.sequences = 0;//sequences.Count;
+            meta_data.sequences = condensed_graph.Count();//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
-
-            /* Console.WriteLine("-- Sequences --");
-
-            // Find the maximum length (for testing purposes)
-            //List<int> lengths = sequences.Select(seq => (int) seq.Count()).ToList();
-            //int max_length = lengths.Max();
-            //int max_index = lengths.IndexOf(max_length);
-            //Console.WriteLine(AminoAcid.ArrayToString(sequences[max_index]));
-
-            // Return all sequences
-            foreach (AminoAcid[] sequence in sequences)
-            {
-                Console.WriteLine(AminoAcid.ArrayToString(sequence));
-            } */
         }
         /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
         public void OutputReport()
         {
-            Console.WriteLine($"= General information =");
+            Console.WriteLine($"\n= General information =");
             Console.WriteLine($"Number of reads: {meta_data.reads}");
             Console.WriteLine($"K (length of k-mer): {kmer_length}");
             Console.WriteLine($"Minimum homology: {minimum_homology}");
             Console.WriteLine($"Number of k-mers: {meta_data.kmers}");
             Console.WriteLine($"Number of (k-1)-mers: {meta_data.kmin1_mers}");
+            Console.WriteLine($"Number of duplicate (k-1)-mers: {meta_data.kmin1_mers_raw - meta_data.kmin1_mers}");
             Console.WriteLine($"Number of sequences found: {meta_data.sequences}");
             if (graph == null)
             {
@@ -849,19 +709,26 @@ namespace AssemblyNameSpace
             }
             else
             {
-                Console.WriteLine($"= Graph information =");
+                Console.WriteLine($"\n= de Bruijn Graph information =");
                 Console.WriteLine($"Number of nodes: {graph.Length}");
                 long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
                 Console.WriteLine($"Number of edges: {number_edges}");
-                Console.WriteLine($"Mean Connectivity: {number_edges / graph.Length}");
-                Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0L, (a, b) => (a > b.EdgesCount()) ? a : b.EdgesCount()) / 2L}");
-                Console.WriteLine($"= Runtime information =");
+                Console.WriteLine($"Mean Connectivity: {(double) number_edges / graph.Length}");
+                Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}");
+
+                Console.WriteLine($"\n= Condensed Graph information =");
+                Console.WriteLine($"Number of nodes: {condensed_graph.Count()}");
+                number_edges = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L;
+                Console.WriteLine($"Number of edges: {number_edges}");
+                Console.WriteLine($"Mean Connectivity: {(double) number_edges / condensed_graph.Count()}");
+                Console.WriteLine($"Highest Connectivity: {condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}");
+                Console.WriteLine($"\n= Runtime information =");
                 Console.WriteLine($"The program took {meta_data.total_time} ms to assemble the sequence");
                 Console.WriteLine("With this breakup of times");
                 Console.WriteLine($"  {meta_data.pre_time} ms for pre work (creating k-mers and k-1-mers)");
                 Console.WriteLine($"  {meta_data.graph_time} ms for linking the graph");
                 Console.WriteLine($"  {meta_data.path_time} ms for finding the paths through the graph");
-                Console.WriteLine($"  {meta_data.sequence_filter_time} ms for filtering the sequences to only keep the usefull");
+                Console.WriteLine($"  {meta_data.sequence_filter_time} ms for filtering the sequences to only keep the useful");
             }
         }
     }
