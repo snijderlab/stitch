@@ -38,8 +38,8 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 ### Wetlab
 
 1. Measure three well known antibodies
-  1. To optimise the protocol
-  1. To use as verification of the software
+   1. To optimise the protocol
+   1. To use as verification of the software
 1. Measure one unknown antibody with the protocol from step 1
 
 ### Finish software
@@ -48,8 +48,8 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 1. Create useful output (finish the graph compression)
 1. Use the output from the mass spectroscopy as input
 1. Runtime analysis 
-  1. To find possible optimisations in the algorithm
-  1. To be able to estimate runtimes for larger datasets
+   1. To find possible optimisations in the algorithm
+   1. To be able to estimate runtimes for larger datasets
 
 ##### Would be nice
 1. Using masses instead or in conjunction with amino acid information
@@ -62,8 +62,8 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 1. Figurify the algorithm to make it at least a little bit understandable to non-programmers
 1. Compare the software with commercially available softwares to get a feeling for the usefulness of the software
 1. Plan / tips
-  1. To find the best protocol for the wetlab part
-  1. How to find the best settings for the software
+   1. To find the best protocol for the wetlab part
+   1. How to find the best settings for the software
 1. Conclusion on the usefulness of the software
 1. Discussion what are the weakspots of the method (wetlab + software)
 
