@@ -12,11 +12,11 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 
 ## Planning
 
-3.5 days of preliminairy work on the software before the course started
-1 half week of project planning and prework
-3 half weeks of wetlab to generate the mass spec data used to test the software
-2 half weeks to finish the software 
-5 half weeks to write the article 
+3.5 days of preliminairy work on the software before the course started\
+1 half week of project planning and prework\
+3 half weeks of wetlab to generate the mass spec data used to test the software\
+2 half weeks to finish the software\
+5 half weeks to write the article
 
 
 | Monday | Description |
