@@ -28,6 +28,10 @@ Ik heb me gestort op het verbeteren van het padvind algoritme en de looptijd doo
 
 Volgende keer: alle duplicaten uit de (k-1)-meren halen, de gecondenseerde graaf echt maken, associëren van reads met output, en test data genereren.
 
+## 24-04-2019
+
+Begin van het echte project.
+
 # TODO
 
 ## Priority
