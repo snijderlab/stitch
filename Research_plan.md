@@ -2,21 +2,21 @@
 
 ## General plan
 
-I want to build software to be able to find the amino acid sequence of a protein based on mass spectroscopy data. The paper will be describing the general algorithm used in the software and will be stating some details about the trustworthynes of the software based on wetlab praticals and will give the sequence of an "unknown" protein to really do a thorough test.
+I want to build software to be able to find the amino acid sequence of a protein based on mass spectroscopy data. The paper will be describing the general algorithm used in the software and will be stating some details about the verification of the software based on wetlab praticals and will give the sequence of an "unknown" protein to really do a thorough test.
 
 ## Research question
 
-How can mass spectroscopy data be used to find the sequence of a protein using software.
+How can mass spectroscopy data be used to find the sequence of a protein using software?
 
 To aid in the bulk identification of proteins in samples, especially in the sequencing of antibodies.
 
 ## Planning
 
 3.5 days of preliminairy work on the software before the course started
-1 half week of project planning and prework
-3 half weeks of wetlab to generate the mass spec data used to test the software
-2 half weeks to finish the software 
-5 half weeks to write the article 
+1 week of project planning and prework
+3 weeks of wetlab to generate the mass spec data used to test the software
+2 weeks to finish the software 
+5 weeks to write the article
 
 
 | Monday | Description |
@@ -43,7 +43,7 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 ### Finish software
 
 #### Needed
-1. Create usefull output (finish the graph compression)
+1. Create useful output (finish the graph compression)
 1. Use the output from the mass spectroscopy as input
 1. Runtime analysis to find "weakspots" in the algorithm and to be able to estimate runtimes for larger datasets
 
