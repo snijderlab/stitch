@@ -1,0 +1,23 @@
+1 Node: Seq: MKLPEVAAGVQSARFSVEDSHTIDNPGNRIL Index: 0 Forward edges: 0  Backward edges: 1  58
+3 Node: Seq: EKQLGCTYLMKLPE Index: 42 Forward edges: 2  62 76 Backward edges: 0
+5 Node: Seq: DVECTRSVE Index: 72 Forward edges: 0  Backward edges: 0
+7 Node: Seq: MKLPEKLIR Index: 76 Forward edges: 0  Backward edges: 1  58
+
+# prot 1
+EKQLGCTYLMKLPEVAAGVQSARFSVEDSHTIDNPGNRIL
+33333333333333
+         1111111111111111111111111111111
+# prot 2
+              ---------
+EKQLGCTYLMKLPEKLIRDVECTRSVEDSHTIDNPGNRIL
+         777777777555555555
+33333333333333
+
+Node: Seq: LPEVAAGVQSARFSVE Index: 0 Forward edges: 1  8 Backward edges: 1  70
+Node: Seq: EVSFRASQVGAAVEPL Index: 2 Forward edges: 1  71 Backward edges: 1  9
+Node: Seq: SVEDSHTIDNPGNRILKEPL Index: 8 Forward edges: 1  71 Backward edges: 2  4 92
+Node: Seq: LPEKLIRNGPNDITHSDEVS Index: 9 Forward edges: 2  5 93 Backward edges: 1  70
+Node: Seq: EKQLGCTYLMKLPE Index: 50 Forward edges: 2  31 84 Backward edges: 0
+Node: Seq: EPLKMLYTCGLQKE Index: 52 Forward edges: 0  Backward edges: 2  32 85
+Node: Seq: DVECTRSVE Index: 76 Forward edges: 1  8 Backward edges: 0
+Node: Seq: EVSRTCEVD Index: 78 Forward edges: 0  Backward edges: 1  9
