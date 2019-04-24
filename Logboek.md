@@ -30,7 +30,7 @@ Volgende keer: alle duplicaten uit de (k-1)-meren halen, de gecondenseerde graaf
 
 ## 24-04-2019
 
-Begin van het echte project.
+Begin van het echte project. 's Ochtends begonnen met een planning voor het labwerk en hoe het project gaat lopen. Daarna heb ik wat literatuurstudie gedaan om te kijken wat er te vinden is in dit veld. Hierna hebben we besproken wat de planning is en hoe het project er globaal uit gaat zien.
 
 # TODO
 
@@ -49,7 +49,20 @@ Begin van het echte project.
 [ ] Algoritme verifieren / in kaart brengen
     Testen hoe het algoritme zich gedraagt zodat er bekend is hoeveel data nodig is om het algoritme met een goed resultaat uit te kunnen voeren.
 
-# Referenties
+# References
+
+Useful articles to use in the writing of the article.
 
 * De Bruijn graphs introduction: https://www.ncbi.nlm.nih.gov/pmc/articles/PMC5531759/
 * Immunoglobulin facts Book: https://books.google.nl/books?id=3GN3V7UJ8isC&lpg=PP1&pg=PP1&redir_esc=y#v=onepage&q&f=false
+* Old article about using ms to get protein sequences: https://doi.org/10.1073/pnas.83.17.6233
+* Book about protein sequencing protocols: https://www.mobt3ath.com/uplode/book/book-24853.pdf
+* Article (2008) about protein sequencing of antibodies: https://doi.org/10.1038/nbt1208-1336
+* Article about a piece of learing software for protein sequencing of antibodies: https://doi.org/10.1021/ac048788h
+* Article about software used in determining small sequences (peaks):  https://doi.org/10.1002/rcm.1196
+   * With useful comparisons to see how that should be done
+* Article about own software: https://doi.org/10.1021/ac070039n
+   * With useful comparisons to see how that should be done, and with many software products which I should use to compare with
+* Article descibing nearly exactly the same algorithm as my software (pTA): https://doi.org/10.1074/mcp.O116.065417
+* Article describing a novel way to use de Bruijn graphs to use long error prone reads: https://doi.org/10.1073/pnas.1604560113
+* Article describing the general advancements in protein sequencing of the last years: https://doi.org/10.1002/mas.21406
