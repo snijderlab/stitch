@@ -4,6 +4,12 @@
 
 I want to build software to be able to find the amino acid sequence of a protein based on mass spectroscopy data. The paper will be describing the general algorithm used in the software and will be stating some details about the trustworthynes of the software based on wetlab praticals and will give the sequence of an "unknown" protein to really do a thorough test.
 
+## Research question
+
+How can mass spectroscopy data be used to find the sequence of a protein using software.
+
+To aid in the bulk identification of proteins in samples, especially in the sequencing of antibodies.
+
 ## Planning
 
 3.5 days of preliminairy work on the software before the course started
