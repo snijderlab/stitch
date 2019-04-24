@@ -37,8 +37,8 @@ To aid in the bulk identification of proteins in samples, especially in the sequ
 
 ### Wetlab
 
-1. Measure three well known antibody and try to find the best way to prepare them for the mass spectroscopy. 
-1. Measure one unknown antibody with the protocol from step 1.
+1. Measure three well known antibodies and try to find the best way to prepare them for the mass spectroscopy
+1. Measure one unknown antibody with the protocol from step 1
 
 ### Finish software
 
