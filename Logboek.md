@@ -32,9 +32,13 @@ Volgende keer: alle duplicaten uit de (k-1)-meren halen, de gecondenseerde graaf
 
 Begin van het echte project. 's Ochtends begonnen met een planning voor het labwerk en hoe het project gaat lopen. Daarna heb ik wat literatuurstudie gedaan om te kijken wat er te vinden is in dit veld. Hierna hebben we besproken wat de planning is en hoe het project er globaal uit gaat zien. In de middag heb ik het foutje van de duplicate (k-1)-meren uit de code gehaald en gewerkt aan de gecondenseerde graaf. De duplicaten eruit halen maakte dat de code het weer veel beter deed en ook veel sneller. De gecondenseerde graaf begint een beetje te werken, al moet er nog goed onderzocht worden hoe deze zich gedraagt onder uitdagender omstandigheden. Hiervoor heb ik een nieuwe testcase gemaakt 007 deze bevat twee eiwitten met een gelijk begin en einde maar met een stuk niet oerlappend in het midden, dit zou een heel karakterestieke gecondenseerde graaf op moeten leveren, maar deze ben ik nog niet tegengekomen.
 
-Volgende keer (qua code): geconderseerde graaf maken, associëren reads met output, test data genereren, denken hoe de output visueel gemaakt kan worden.
+Volgende keer (qua code): gecondenseerde graaf maken, associëren reads met output, test data genereren, denken hoe de output visueel gemaakt kan worden.
 
 Volgende keer (vrijdag): protocol doorspreken, basics doornemen
+
+## 26-04-2019
+
+Begin van de dag hebben we het protocol doorgesproken en gekeken wat we eraan wilden veranderen. Hierna heb ik een spreadsheet gemaakt om uit te rekenen hoeveel we van alle stoffen nodig hebben om daar niet meer over na te hoeven denken tijdens het uitvoerwerk.
 
 # TODO
 

@@ -10,7 +10,6 @@ using System.Diagnostics;
 /// The software is build by Douwe Schulte and was started on 25-03-2019.
 /// It is build in collaboration with and under supervision of Joost Snijder,
 /// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
-
 namespace AssemblyNameSpace
 {
     /// <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
@@ -60,7 +59,11 @@ namespace AssemblyNameSpace
             get { return minimum_homology; }
             set { minimum_homology = value; }
         }
+        /// <value> The limit to include edges when filtering on highest edges. It will be used to include 
+        /// not only the highest but (depending on the value) a couple more edges. </value>
         private int edge_include_limit;
+        /// <value> To contain meta information about how the program ran to make informed decisions on 
+        /// how to choose the values of variables and to aid in debugging. </value>
         private MetaInformation meta_data;
         /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
         /// be used in an efficient way </summary>
@@ -207,13 +210,18 @@ namespace AssemblyNameSpace
             public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
             /// <value> Whether or not this node is visited yet. </value>
             public bool Visited;
+            /// <value> Highest score yet for forward edges, used in filtering only the highest edges. </value>
             private int max_forward_score;
+            /// <value> Highest score yet for backward edges, used in filtering only the highest edges. </value>
             private int max_backward_score;
+            /// <value> The limit to include edges when filtering on highest edges. It will be used to include 
+            /// not only the highest but (depending on the value) a couple more edges. </value>
             private int edge_include_limit;
 
             /// <summary> The creator of Nodes. </summary>
             /// <param name="seq"> The sequence of this Node. </param>
             /// <param name="multi"> The multiplicity of this Node. </param>
+            /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
             /// <remarks> It will initialize the edges list. </remarks>
             public Node(AminoAcid[] seq, int multi, int edge_include_limit_input)
             {
@@ -382,9 +390,10 @@ namespace AssemblyNameSpace
             }
         }
 
-        /// <summary> The creator, to set up the default values. Also sets the alphabet. </summary>
+        /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
+        /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
         public Assembler(int kmer_length_input, int minimum_homology_input, int edge_include_limit_input = 0)
         {
             kmer_length = kmer_length_input;
