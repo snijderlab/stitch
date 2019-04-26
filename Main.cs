@@ -24,7 +24,7 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            var test = new Assembler(4, 3);
+            var test = new Assembler(5, 4);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
             test.OpenReads("examples/007/reads.txt");
             Console.WriteLine("Now starting on the assembly");
@@ -435,6 +435,8 @@ namespace AssemblyNameSpace
         {
             /// <summary> The index this node. The index is defined as the index in the adjecency list of the de Bruijn graph. </summary>
             public int Index;
+            public int ForwardIndex;
+            public int BackwardIndex;
             /// <summary> Whether or not this node is visited yet. </summary>
             public bool Visited;
             /// <summary> The sequence of this node. It is the longest constant sequence to be 
@@ -449,10 +451,12 @@ namespace AssemblyNameSpace
             /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/></param>
             /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/></param>
             /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/></param>
-            public CondensedNode(List<AminoAcid> sequence, int index, List<int> forward_edges, List<int> backward_edges)
+            public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges)
             {
                 Sequence = sequence;
                 Index = index;
+                ForwardIndex = forward_index;
+                BackwardIndex = backward_index;
                 ForwardEdges = forward_edges;
                 BackwardEdges = backward_edges;
                 Visited = false;
@@ -756,14 +760,99 @@ namespace AssemblyNameSpace
                     Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
                     Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
 
-                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_nodes, backward_nodes));
+                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes));
+                }
+            }
+
+            // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
+            foreach (var node in condensed_graph) {
+                List<int> forward = new List<int>(node.ForwardEdges);
+                node.ForwardEdges.Clear();
+                foreach (var FWE in forward) {
+                    foreach (var BWE in graph[FWE].BackwardEdges) {
+                        for (int node2 = 0; node2 < condensed_graph.Count(); node2++) {
+                            if (BWE.Item1 == condensed_graph[node2].BackwardIndex) {
+                                bool inlist = false;
+                                foreach (var e in node.ForwardEdges) {
+                                    if (e == node2) {
+                                        inlist = true;
+                                        break;
+                                    }
+                                }
+                                if (!inlist) node.ForwardEdges.Add(node2);
+                            }
+                        }
+                    }
+                }
+                List<int> backward = new List<int>(node.BackwardEdges);
+                node.BackwardEdges.Clear();
+                foreach (var BWE in backward) {
+                    foreach (var FWE in graph[BWE].ForwardEdges) {
+                        for (int node2 = 0; node2 < condensed_graph.Count(); node2++) {
+                            if (FWE.Item1 == condensed_graph[node2].ForwardIndex) {
+                                bool inlist = false;
+                                foreach (var e in node.BackwardEdges) {
+                                    if (e == node2) {
+                                        inlist = true;
+                                        break;
+                                    }
+                                }
+                                if (!inlist) node.BackwardEdges.Add(node2);
+                            }
+                        }
+                    }
                 }
             }
 
             // Print the condensed graph
             foreach (var node in condensed_graph) {
-                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
+                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} FWIndex: {node.ForwardIndex} BWIndex: {node.BackwardIndex} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
             }
+
+            // Print a condensed way of the condensed graph
+            /*List<String> sequences = new List<string>();
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                if (i.BackwardEdges.Count() == 0) {
+                    StringBuilder sequence = new StringBuilder();
+                    CondensedNode current_node = i;
+
+                    while (true) {
+                        sequence.Append(AminoAcid.ArrayToString(current_node.Sequence));
+                        int forward_edges = current_node.ForwardEdges.Count();
+
+                        if (forward_edges > 1) {
+
+                        } else if (forward_edges == 1) {
+                            current_node = current_node.ForwardEdges[0];
+                        } else {
+                            sequence.Append("end");
+                            break;
+                        }
+                    }
+                    sequences.Add(sequence.ToString());
+                }
+            }
+
+            foreach (var seq in sequences) {
+                Console.WriteLine(seq);
+            }*/
+
+            // Generate a dot file to use in graphviz
+
+            Console.WriteLine("digraph {\n\tnode [fontname=\"Roboto\", shape=box, color=\"grey\"];\n\tgraph [rankdir=\"LR\"];");
+
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                if (condensed_graph[i].BackwardEdges.Count() > 0) {
+                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\"]");
+                } else {
+                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", color=\"black\"]");
+                }
+                foreach (var fwe in condensed_graph[i].ForwardEdges) {
+                    Console.WriteLine($"\ti{i} -> i{fwe}");
+                }
+            }
+
+            Console.WriteLine("}");
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
@@ -826,6 +915,10 @@ namespace AssemblyNameSpace
             T[] result = new T[length];
             Array.Copy(data, index, result, 0, length);
             return result;
+        }
+        public static IList<T> Clone<T>(this IList<T> listToClone) where T: ICloneable
+        {
+            return listToClone.Select(item => (T)item.Clone()).ToList();
         }
     }
 }

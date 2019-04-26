@@ -38,7 +38,11 @@ Volgende keer (vrijdag): protocol doorspreken, basics doornemen
 
 ## 26-04-2019
 
-Begin van de dag hebben we het protocol doorgesproken en gekeken wat we eraan wilden veranderen. Hierna heb ik een spreadsheet gemaakt om uit te rekenen hoeveel we van alle stoffen nodig hebben om daar niet meer over na te hoeven denken tijdens het uitvoerwerk.
+Begin van de dag hebben we het protocol doorgesproken en gekeken wat we eraan wilden veranderen. Hierna heb ik een spreadsheet gemaakt om uit te rekenen hoeveel we van alle stoffen nodig hebben om daar niet meer over na te hoeven denken tijdens het uitvoerwerk. Daarna heb ik Sandcastle geinstaleerd en gebruikt om documentatie van mijn code mee te maken, deze wees mij op nog niet geheel volledige documentatie dus deze heb ik afgemaakt. Deze documentatie is bedoelt voor mij om mij te helpen overzicht te houden en voor mensen die na mij een keer de code willen lezen/begrijpen/gebruiken. 's Middags heb ik de gecondenseerde graaf afgemaakt, nu is de uiteindelijke graaf inderdaad wat ik wilde dat dezezou worden. Ook heb ik gespeeld met het visueel weergeven hiervan hiervoor heb ik gebruik gemaakt van "graphviz" wat een specifiek programeertaaltje heeft voor het weergeven van grafen en hiervoor dus vrij geschikt lijkt.
+
+Volgende keer (qua code): denken hoe de output visueel beter gemaakt kan worden, overlapende stukjes bij de graaf eruit halen, associëren reads met output, test data genereren.
+
+Volgende keer (maandag): eerste praktisch werk, een antilichaam proberen om te kijken hoe en of het allemaal werkt.
 
 # TODO
 
