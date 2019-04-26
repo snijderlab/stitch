@@ -5,17 +5,23 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 
-/// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
-/// from reads of a massspectrometer. 
-/// The software is build by Douwe Schulte and was started on 25-03-2019.
-/// It is build in collaboration with and under supervision of Joost Snijder,
-/// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
 namespace AssemblyNameSpace
 {
+    /// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
+    /// from reads of a massspectrometer. 
+    /// The software is build by Douwe Schulte and was started on 25-03-2019.
+    /// It is build in collaboration with and under supervision of Joost Snijder,
+    /// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
+    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
+    class NamespaceDoc
+    {
+    }
     /// <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
     /// This will be rewritten when the code is moved to its new repository </summary>
     class ToRunWithCommandLine
     {
+        /// <summary> The method that will be run if the code is run from the command line. 
+        /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
             var test = new Assembler(4, 3);
@@ -29,52 +35,55 @@ namespace AssemblyNameSpace
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
     public class Assembler
     {
-        /// <value> The reads fed into the Assembler, as opened by OpenReads. </value>
+        /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         List<AminoAcid[]> reads = new List<AminoAcid[]>();
-        /// <value> The De Bruijn graph used by the Assembler. </value>
+        /// <summary> The De Bruijn graph used by the Assembler. </summary>
         Node[] graph;
-        /// <value> The condensed graph used to store the output of the assembly. </value>
+        /// <summary> The condensed graph used to store the output of the assembly. </summary>
         List<CondensedNode> condensed_graph;
-        /// <value> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </value>
+        /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
         private int kmer_length;
-        /// <value> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </value>
+        /// <summary> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </summary>
+        /// <value> The length of the k-mers. </value>
         public int Kmer_length
         {
             get { return kmer_length; }
             set { kmer_length = value; }
         }
-        /// <value> The matrix used for scoring of the alignment between two characters in the alphabet. 
-        /// As such this matrix is rectangular. </value>
+        /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
+        /// As such this matrix is rectangular. </summary>
         private int[,] scoring_matrix;
-        /// <value> The alphabet used for alignment. The default value is all the amino acids in order of
-        /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </value>
+        /// <summary> The alphabet used for alignment. The default value is all the amino acids in order of
+        /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
         private char[] alphabet;
-        /// <value> The private member to store the minimum homology value in. </value>
+        /// <summary> The private member to store the minimum homology value in. </summary>
         private int minimum_homology;
-        /// <value> The minimum homology value of an edge to include it in the graph. Lowering the limit 
+        /// <summary> The minimum homology value of an edge to include it in the graph. Lowering the limit 
         /// could result in a longer sequence retrieved from the algorithm but would also greatly increase
-        /// the computational cost of the calculation. </value>
+        /// the computational cost of the calculation. </summary>
+        /// <value> The minimum homology before including an edge in the graph. </value>
         public int Minimum_homology
         {
             get { return minimum_homology; }
             set { minimum_homology = value; }
         }
-        /// <value> The limit to include edges when filtering on highest edges. It will be used to include 
-        /// not only the highest but (depending on the value) a couple more edges. </value>
+        /// <summary> The limit to include edges when filtering on highest edges. It will be used to include 
+        /// not only the highest but (depending on the value) a couple more edges. </summary>
         private int edge_include_limit;
-        /// <value> To contain meta information about how the program ran to make informed decisions on 
-        /// how to choose the values of variables and to aid in debugging. </value>
+        /// <summary> To contain meta information about how the program ran to make informed decisions on 
+        /// how to choose the values of variables and to aid in debugging. </summary>
         private MetaInformation meta_data;
         /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
         /// be used in an efficient way </summary>
         private struct AminoAcid
         {
-            /// <value> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </value>
+            /// <summary> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </summary>
             private Assembler parent;
-            /// <value> The code (index of the char in the alpabet array of the parent). </value>
+            /// <summary> The code (index of the char in the alpabet array of the parent). </summary>
             private int code;
-            /// <value> The code (index of the char in the alpabet array of the parent). Gives only a Get option. 
-            /// The only way to change it is in the creator. </value>
+            /// <summary> The code (index of the char in the alpabet array of the parent). Gives only a Get option. 
+            /// The only way to change it is in the creator. </summary>
+            /// <value> The code of this AminoAcid. </value>
             public int Code
             {
                 get
@@ -94,6 +103,7 @@ namespace AssemblyNameSpace
             }
             /// <summary> Will create a string of this AminoAcid. Consiting of the character used to 
             /// create this AminoAcid. </summary>
+            /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
             public override string ToString()
             {
                 return parent.alphabet[code].ToString();
@@ -113,14 +123,16 @@ namespace AssemblyNameSpace
             /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
             /// <remarks> Implemented as the equals operator (==). </remarks>
             /// <param name="obj"> The object to check equality with. </param>
+            /// <returns> Returns true when the Amino Acids are equal. </returns>
             public override bool Equals(object obj)
             {
                 return obj is AminoAcid && this == (AminoAcid)obj;
             }
             /// <summary> To check for equality of arrays of AminoAcids. </summary>
-            /// <remarks> Implemented as a shortcircuiting loop with the equals operator (==). </remarks>
+            /// <remarks> Implemented as a short circuiting loop with the equals operator (==). </remarks>
             /// <param name="left"> The first object to check equality with. </param>
             /// <param name="right"> The second object to check equality with. </param>
+            /// <returns> Returns true when the aminoacid arrays are equal. </returns>
             public static bool ArrayEquals(AminoAcid[] left, AminoAcid[] right)
             {
                 if (left.Length != right.Length)
@@ -136,17 +148,24 @@ namespace AssemblyNameSpace
             }
             /// <summary> To check for equality of AminoAcids. </summary>
             /// <remarks> Implemented as a check for equality of the Code of both AminoAcids. </remarks>
+            /// <param name="x"> The first AminoAcid to test. </param>
+            /// <param name="y"> The second AminoAcid to test. </param>
+            /// <returns> Returns true when the Amino Acids are equal. </returns>
             public static bool operator ==(AminoAcid x, AminoAcid y)
             {
                 return x.Code == y.Code;
             }
             /// <summary> To check for inequality of AminoAcids. </summary>
             /// <remarks> Implemented as a a reverse of the equals operator. </remarks>
+            /// <param name="x"> The first AminoAcid to test. </param>
+            /// <param name="y"> The second AminoAcid to test. </param>
+            /// <returns> Returns false when the Amino Acids are equal. </returns>
             public static bool operator !=(AminoAcid x, AminoAcid y)
             {
                 return !(x == y);
             }
             /// <summary> To get a hashcode for this AminoAcid. </summary>
+            /// <returns> Returns the hascode of the AminoAcid. </returns>
             public override int GetHashCode()
             {
                 return this.code.GetHashCode();
@@ -155,6 +174,10 @@ namespace AssemblyNameSpace
             /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             /// <c>b.Homology(a)</c>. </remarks>
+            /// <param name="right"> The other AminoAcid to use. </param>
+            /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
+            /// See <see cref="Assembler.scoring_matrix"/> for the scoring matrix.
+            /// See <see cref="Assembler.SetAlphabet"/> on how to change the scoring matrix.
             public int Homology(AminoAcid right)
             {
                 return parent.scoring_matrix[this.Code, right.Code];
@@ -165,6 +188,7 @@ namespace AssemblyNameSpace
             /// over the AminoAcids and returns the sum of the homology value between those. </remarks>
             /// <param name="left"> The first object to calculate homology with. </param>
             /// <param name="right"> The second object to calculate homology with. </param>
+            /// <returns> Returns the homology bewteen the two aminoacid arrays. </returns>
             public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right)
             {
                 int score = 0;
@@ -180,42 +204,49 @@ namespace AssemblyNameSpace
         /// <summary> Nodes in the graph with a sequence length of K-1. </summary>
         private class Node
         {
-            /// <value> The member to store the sequence information in. </value>
+            /// <summary> The member to store the sequence information in. </summary>
             private AminoAcid[] sequence;
-            /// <value> The sequence of the Node. Only has a getter. </value>
+            /// <summary> The sequence of the Node. Only has a getter. </summary>
+            /// <value> The sequence of this node. </value>
             public AminoAcid[] Sequence { get { return sequence; } }
-            /// <value> The member to store the multiplicity (amount of k-mers which 
-            /// result in the same (k-1)-mers in. </value>
+            /// <summary> The member to store the multiplicity (amount of k-mers which 
+            /// result in the same (k-1)-mers in. </summary>
             private int multiplicity;
-            /// <value> The multiplicity, amount of k-mers which 
-            /// result in the same (k-1)-mers, of the Node. Only has a getter. </value>
+            /// <summary> The multiplicity, amount of k-mers which 
+            /// result in the same (k-1)-mers, of the Node. Only has a getter. </summary>
+            /// <value> The amount of time an equal (k-1)-mer was found in the set of 
+            /// generated k-mers, this tells something about the amount of reads that 
+            /// have the overlap over this sequence, and about the amount of equal
+            /// parts of the sequence in other places of the protein. </value>
             public int Multiplicity { get { return multiplicity; } }
-            /// <value> The list of edges from this Node. The tuples contain the index 
+            /// <summary> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
-            /// member to store the list. </value>
+            /// member to store the list. </summary>
             private List<ValueTuple<int, int, int>> forwardEdges;
+            /// <summary> The list of edges going from this node. </summary>
             /// <value> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
             public List<ValueTuple<int, int, int>> ForwardEdges { get { return forwardEdges; } }
-            /// <value> The list of edges to this Node. The tuples contain the index 
+            /// <summary> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
-            /// member to store the list. </value>
+            /// member to store the list. </summary>
             private List<ValueTuple<int, int, int>> backwardEdges;
+            /// <summary> The list of edges going to this node. </summary>
             /// <value> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
             public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
-            /// <value> Whether or not this node is visited yet. </value>
+            /// <summary> Whether or not this node is visited yet. </summary>
             public bool Visited;
-            /// <value> Highest score yet for forward edges, used in filtering only the highest edges. </value>
+            /// <summary> Highest score yet for forward edges, used in filtering only the highest edges. </summary>
             private int max_forward_score;
-            /// <value> Highest score yet for backward edges, used in filtering only the highest edges. </value>
+            /// <summary> Highest score yet for backward edges, used in filtering only the highest edges. </summary>
             private int max_backward_score;
-            /// <value> The limit to include edges when filtering on highest edges. It will be used to include 
-            /// not only the highest but (depending on the value) a couple more edges. </value>
+            /// <summary> The limit to include edges when filtering on highest edges. It will be used to include 
+            /// not only the highest but (depending on the value) a couple more edges. </summary>
             private int edge_include_limit;
 
             /// <summary> The creator of Nodes. </summary>
@@ -288,12 +319,18 @@ namespace AssemblyNameSpace
                     filterBackwardEdges();
                 }
             }
+            /// <summary> Filters the forward edges based on the highest score found yet and the edge include limit. </summary>
+            /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
+            /// See <see cref="Node.max_forward_score"/> for the highest score.
             private void filterForwardEdges()
             {
                 //Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
                 forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
                 //Console.Write($"{forwardEdges.Count}.");
             }
+            /// <summary> Filters the backward edges based on the highest score found yet and the edge include limit. </summary>
+            /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
+            /// See <see cref="Node.max_backward_score"/> for the highest score.
             private void filterBackwardEdges()
             {
                 //Console.Write($"Filtered forward edges from {backwardEdges.Count} to ");
@@ -301,17 +338,20 @@ namespace AssemblyNameSpace
                 //Console.Write($"{backwardEdges.Count}.");
             }
             /// <summary> To check if the Node has forward edges. </summary>
+            /// <returns> Returns true if the node has forward edges. </returns>
             public bool HasForwardEdges()
             {
                 return forwardEdges.Count > 0;
             }
             /// <summary> To check if the Node has backward edges. </summary>
+            /// <returns> Returns true if the node has backward edges. </returns>
             public bool HasBackwardEdges()
             {
                 return backwardEdges.Count > 0;
             }
             /// <summary> To get the amount of edges (forward and backward). </summary>
             /// <remarks> O(1) runtime </remarks>
+            /// <returns> The amount of edges (forwards and backwards). </returns>
             public int EdgesCount()
             {
                 return forwardEdges.Count + backwardEdges.Count;
@@ -369,17 +409,46 @@ namespace AssemblyNameSpace
         /// and to report back to the user. </summary>
         private struct MetaInformation
         {
-            public long total_time, pre_time, graph_time, path_time, sequence_filter_time;
-            public int reads, kmers, kmin1_mers, kmin1_mers_raw, sequences;
+            /// <summary> The total time needed to run Assemble(). See <see cref="Assembler.Assemble"/></summary>
+            public long total_time;
+            /// <summary> The needed to do the pre work, creating k-mers and (k-1)-mers. See <see cref="Assembler.Assemble"/></summary>
+            public long pre_time;
+            /// <summary> The time needed the build the graph. See <see cref="Assembler.Assemble"/></summary>
+            public long graph_time;
+            /// <summary> The time needed to find the path through the de Bruijn graph. See <see cref="Assembler.Assemble"/></summary>
+            public long path_time;
+            /// <summary> The time needed to filter the sequences. See <see cref="Assembler.Assemble"/></summary>
+            public long sequence_filter_time;
+            /// <summary> The amount of reads used by the program. See <see cref="Assembler.Assemble"/>. See <see cref="Assembler.OpenReads"/></summary>
+            public int reads;
+            /// <summary> The amount of k-mers generated. See <see cref="Assembler.Assemble"/></summary>
+            public int kmers;
+            /// <summary> The amount of (k-1)-mers generated. See <see cref="Assembler.Assemble"/></summary>
+            public int kmin1_mers;
+            /// <summary> The amount of (k-1)-mers generated, before removing all duplicates. See <see cref="Assembler.Assemble"/></summary>
+            public int kmin1_mers_raw;
+            /// <summary> The number of sequences found. See <see cref="Assembler.Assemble"/></summary>
+            public int sequences;
         }
         /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
         private class CondensedNode
         {
+            /// <summary> The index this node. The index is defined as the index in the adjecency list of the de Bruijn graph. </summary>
             public int Index;
+            /// <summary> Whether or not this node is visited yet. </summary>
             public bool Visited;
+            /// <summary> The sequence of this node. It is the longest constant sequence to be 
+            /// found in the de Bruijn graph starting at the Index. See <see cref="CondensedNode.Index"/></summary>
             public List<AminoAcid> Sequence;
+            /// <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
             public List<int> ForwardEdges;
+            /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
             public List<int> BackwardEdges;
+            /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
+            /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/></param>
+            /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/></param>
+            /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/></param>
+            /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/></param>
             public CondensedNode(List<AminoAcid> sequence, int index, List<int> forward_edges, List<int> backward_edges)
             {
                 Sequence = sequence;
@@ -403,7 +472,8 @@ namespace AssemblyNameSpace
             SetAlphabet();
         }
         /// <summary> Find the index of the given character in the alphabet. </summary>
-        /// <param name="c"> The character to lot op. </param>
+        /// <param name="c"> The character to look op. </param>
+        /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
         private int getIndexInAlphabet(char c)
         {
             for (int i = 0; i < alphabet.Length; i++)
@@ -415,6 +485,7 @@ namespace AssemblyNameSpace
             }
             return -1;
         }
+
         /// <summary> Set the alphabet of the assembler. </summary>
         /// <param name="rules"> A list of rules implemented as tuples containing the chars to connect, 
         /// the value to put into the matrix and whether or not the rule should be bidirectional (the value
@@ -748,6 +819,7 @@ namespace AssemblyNameSpace
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
         /// <param name="length"> The length of the created subarray. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
         /// <returns> Returns a new array with clones of the original array. </returns>
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {

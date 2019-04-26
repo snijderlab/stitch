@@ -1,7 +1,7 @@
 # AssemblyNameSpace Namespace
  
 
-\[Missing <summary> documentation for "N:AssemblyNameSpace"\]
+This is a project to build a piece of software that is able to rebuild a protein sequence from reads of a massspectrometer. The software is build by Douwe Schulte and was started on 25-03-2019. It is build in collaboration with and under supervision of Joost Snijder, from the group "Massspectrometry and Proteomics" at the university of Utrecht.
 
 
 ## Classes
