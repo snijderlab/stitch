@@ -839,13 +839,13 @@ namespace AssemblyNameSpace
 
             // Generate a dot file to use in graphviz
 
-            Console.WriteLine("digraph {\n\tnode [fontname=\"Roboto\", shape=box, color=\"grey\"];\n\tgraph [rankdir=\"LR\"];");
+            Console.WriteLine("digraph {\n\tnode [fontname=\"Roboto\", shape=cds];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee];\n");
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
                 if (condensed_graph[i].BackwardEdges.Count() > 0) {
                     Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\"]");
                 } else {
-                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", color=\"black\"]");
+                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", style=filled, fillcolor=\"grey\", color=\"grey\"]");
                 }
                 foreach (var fwe in condensed_graph[i].ForwardEdges) {
                     Console.WriteLine($"\ti{i} -> i{fwe}");
