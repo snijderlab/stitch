@@ -802,6 +802,12 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
+                if (node.BackwardEdges.Count() == 1) {
+                    node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
+                }
+                if (node.ForwardEdges.Count() == 1) {
+                    node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
+                }
             }
 
             // Print the condensed graph
