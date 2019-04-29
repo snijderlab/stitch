@@ -30,7 +30,7 @@ namespace AssemblyNameSpace
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputGraph("examples/005/graph.dot");
-            test.OutputReport();
+            test.OutputReport("examples/005/meta.html");
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -825,7 +825,7 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
-        /// <summary> Creates a dot file to be used in graphviz to generate a nice plot. </summary>
+        /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
         /// <param name="filename"> The file to output to. </param>
         public void OutputGraph(string filename = "graph.dot") {
             // Generate a dot file to use in graphviz
@@ -866,43 +866,97 @@ namespace AssemblyNameSpace
             }
         }
         /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
-        public void OutputReport()
+        /// <param name="filename"> The file to output to. </param>
+        public void OutputReport(string filename = "metainformation.html")
         {
-            Console.WriteLine($"\n= General information =");
-            Console.WriteLine($"Number of reads: {meta_data.reads}");
-            Console.WriteLine($"K (length of k-mer): {kmer_length}");
-            Console.WriteLine($"Minimum homology: {minimum_homology}");
-            Console.WriteLine($"Number of k-mers: {meta_data.kmers}");
-            Console.WriteLine($"Number of (k-1)-mers: {meta_data.kmin1_mers}");
-            Console.WriteLine($"Number of duplicate (k-1)-mers: {meta_data.kmin1_mers_raw - meta_data.kmin1_mers}");
-            Console.WriteLine($"Number of sequences found: {meta_data.sequences}");
+            long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
+            long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L;
+
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine($@"
+= General information =
+Number of reads: {meta_data.reads}
+K (length of k-mer): {kmer_length}
+Minimum homology: {minimum_homology}
+Number of k-mers: {meta_data.kmers}
+Number of (k-1)-mers: {meta_data.kmin1_mers}
+Number of duplicate (k-1)-mers: {meta_data.kmin1_mers_raw - meta_data.kmin1_mers}
+Number of sequences found: {meta_data.sequences}");
             if (graph == null)
             {
-                Console.WriteLine("No graph build (yet)");
+                buffer.AppendLine("No graph build (yet)");
             }
             else
             {
-                Console.WriteLine($"\n= de Bruijn Graph information =");
-                Console.WriteLine($"Number of nodes: {graph.Length}");
-                long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
-                Console.WriteLine($"Number of edges: {number_edges}");
-                Console.WriteLine($"Mean Connectivity: {(double) number_edges / graph.Length}");
-                Console.WriteLine($"Highest Connectivity: {graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}");
+                buffer.AppendLine($@"
+= de Bruijn Graph information =
+Number of nodes: {graph.Length}
+Number of edges: {number_edges}
+Mean Connectivity: {(double) number_edges / graph.Length}
+Highest Connectivity: {graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}
+               
+= Condensed Graph information =
+Number of nodes: {condensed_graph.Count()}
+Number of edges: {number_edges_condensed}
+Mean Connectivity: {(double) number_edges / condensed_graph.Count()}
+Highest Connectivity: {condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}
 
-                Console.WriteLine($"\n= Condensed Graph information =");
-                Console.WriteLine($"Number of nodes: {condensed_graph.Count()}");
-                number_edges = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L;
-                Console.WriteLine($"Number of edges: {number_edges}");
-                Console.WriteLine($"Mean Connectivity: {(double) number_edges / condensed_graph.Count()}");
-                Console.WriteLine($"Highest Connectivity: {condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}");
-                Console.WriteLine($"\n= Runtime information =");
-                Console.WriteLine($"The program took {meta_data.total_time} ms to assemble the sequence");
-                Console.WriteLine("With this breakup of times");
-                Console.WriteLine($"  {meta_data.pre_time} ms for pre work (creating k-mers and k-1-mers)");
-                Console.WriteLine($"  {meta_data.graph_time} ms for linking the graph");
-                Console.WriteLine($"  {meta_data.path_time} ms for finding the paths through the graph");
-                Console.WriteLine($"  {meta_data.sequence_filter_time} ms for filtering the sequences to only keep the useful");
+= Runtime information =
+The program took {meta_data.total_time} ms to assemble the sequence
+With this breakup of times
+  {meta_data.pre_time} ms for pre work (creating k-mers and k-1-mers)
+  {meta_data.graph_time} ms for linking the graph
+  {meta_data.path_time} ms for finding the paths through the graph
+  {meta_data.sequence_filter_time} ms for filtering the sequences to only keep the useful");
             }
+
+            Console.Write(buffer.ToString());
+
+            string html = $@"
+<html>
+<body>
+<h3>General information</h3>
+<table>
+<tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{kmer_length}</td></tr>
+<tr><td>Minimum homology</td><td>{minimum_homology}</td></tr>
+<tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
+<tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
+<tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
+<tr><td>Number of sequences found</td><td>{meta_data.sequences}</td></tr>
+</table>
+
+<h3>de Bruijn Graph information</h3>
+<table>
+<tr><td>Number of nodes</td><td>{graph.Length}</td></tr>
+<tr><td>Number of edges</td><td>{number_edges}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double) number_edges / graph.Length}</td></tr>
+<tr><td>Highest Connectivity</td><td>{graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}</td></tr>
+</table>
+
+<h3>Condensed Graph information</h3>
+<table>
+<tr><td>Number of nodes</td><td>{condensed_graph.Count()}</td></tr>
+<tr><td>Number of edges</td><td>{number_edges_condensed}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double) number_edges / condensed_graph.Count()}</td></tr>
+<tr><td>Highest Connectivity</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
+</table>
+
+<h3>Runtime information</h3>
+<table>
+<tr><td>Total time</td><td>{meta_data.total_time} ms</td></tr>
+<tr><td>Pre work</td><td>{meta_data.pre_time} ms</td></tr>
+<tr><td>Linking graph</td><td>{meta_data.graph_time} ms</td></tr>
+<tr><td>Finding paths</td><td>{meta_data.path_time} ms</td></tr>
+<tr><td>Filtering sequences</td><td>{meta_data.sequence_filter_time} ms</td></tr>
+</table>
+</body>
+</html>";
+
+            StreamWriter sw = File.CreateText(filename);
+            sw.Write(html);
+            sw.Close();
         }
     }
     /// <summary> A class to store extension methods to help in the process of coding. </summary>
