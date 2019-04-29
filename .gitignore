@@ -1,2 +1,5 @@
 *.exe
 *.log
+examples/*/*.png
+examples/*/*.dot
+examples/*/*.svg

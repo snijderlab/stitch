@@ -24,11 +24,12 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            var test = new Assembler(5, 4);
+            var test = new Assembler(8, 6);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.OpenReads("examples/007/reads.txt");
+            test.OpenReads("examples/005/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
+            test.OutputGraph("examples/005/graph.dot");
             test.OutputReport();
         }
     }
@@ -765,6 +766,7 @@ namespace AssemblyNameSpace
             }
 
             // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
+            int node_index = 0;
             foreach (var node in condensed_graph) {
                 List<int> forward = new List<int>(node.ForwardEdges);
                 node.ForwardEdges.Clear();
@@ -802,12 +804,13 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
-                if (node.BackwardEdges.Count() == 1) {
+                if (node.BackwardEdges.Where(a => a != node_index).Count() == 1) {
                     node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
                 }
-                if (node.ForwardEdges.Count() == 1) {
+                if (node.ForwardEdges.Where(a => a != node_index).Count() == 1) {
                     node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
                 }
+                node_index++;
             }
 
             // Print the condensed graph
@@ -815,57 +818,52 @@ namespace AssemblyNameSpace
                 Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} FWIndex: {node.ForwardIndex} BWIndex: {node.BackwardIndex} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
             }
 
-            // Print a condensed way of the condensed graph
-            /*List<String> sequences = new List<string>();
-            for (int i = 0; i < condensed_graph.Count(); i++) {
-                if (i.BackwardEdges.Count() == 0) {
-                    StringBuilder sequence = new StringBuilder();
-                    CondensedNode current_node = i;
-
-                    while (true) {
-                        sequence.Append(AminoAcid.ArrayToString(current_node.Sequence));
-                        int forward_edges = current_node.ForwardEdges.Count();
-
-                        if (forward_edges > 1) {
-
-                        } else if (forward_edges == 1) {
-                            current_node = current_node.ForwardEdges[0];
-                        } else {
-                            sequence.Append("end");
-                            break;
-                        }
-                    }
-                    sequences.Add(sequence.ToString());
-                }
-            }
-
-            foreach (var seq in sequences) {
-                Console.WriteLine(seq);
-            }*/
-
-            // Generate a dot file to use in graphviz
-
-            Console.WriteLine("digraph {\n\tnode [fontname=\"Roboto\", shape=cds, fontcolor=\"blue\", color=\"blue\"];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee, color=\"blue\"];\n");
-
-            for (int i = 0; i < condensed_graph.Count(); i++) {
-                if (condensed_graph[i].BackwardEdges.Count() > 0) {
-                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\"]");
-                } else {
-                    Console.WriteLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", style=filled, fillcolor=\"blue\", fontcolor=\"white\"]");
-                }
-                foreach (var fwe in condensed_graph[i].ForwardEdges) {
-                    Console.WriteLine($"\ti{i} -> i{fwe}");
-                }
-            }
-
-            Console.WriteLine("}");
-
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
             stopWatch.Stop();
             meta_data.sequence_filter_time = stopWatch.ElapsedMilliseconds - meta_data.path_time - meta_data.graph_time - meta_data.pre_time;
             meta_data.sequences = condensed_graph.Count();//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
+        }
+        /// <summary> Creates a dot file to be used in graphviz to generate a nice plot. </summary>
+        /// <param name="filename"> The file to output to. </param>
+        public void OutputGraph(string filename = "graph.dot") {
+            // Generate a dot file to use in graphviz
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine("digraph {\n\tnode [fontname=\"Roboto\", shape=cds, fontcolor=\"blue\", color=\"blue\"];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee, color=\"blue\"];\n");
+
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                if (condensed_graph[i].BackwardEdges.Count() > 0) {
+                    buffer.AppendLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\"]");
+                } else {
+                    buffer.AppendLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", style=filled, fillcolor=\"blue\", fontcolor=\"white\"]");
+                }
+                foreach (var fwe in condensed_graph[i].ForwardEdges) {
+                    buffer.AppendLine($"\ti{i} -> i{fwe}");
+                }
+            }
+
+            buffer.AppendLine("}");
+
+            // Write .dot to a file
+            
+            StreamWriter sw = File.CreateText(filename);
+            sw.Write(buffer.ToString());
+            sw.Close();
+
+            // Generate PNG and SVG files
+
+            try
+            {
+                Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
+                Process.Start("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
+                Process.Start("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e.Message);
+            }
         }
         /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
         public void OutputReport()
