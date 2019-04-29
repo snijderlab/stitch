@@ -44,6 +44,12 @@ Volgende keer (qua code): denken hoe de output visueel beter gemaakt kan worden,
 
 Volgende keer (maandag): eerste praktisch werk, een antilichaam proberen om te kijken hoe en of het allemaal werkt.
 
+## 29-04-2019
+
+De ochtend hebben we de eerste pilot gestart in het lab (zie labjournaal voor meer details). In de middag tijdes de protease stap heb ik doorgewerkt aan de software, hierbij heb ik het programma zo gemaakt dat deze een ander programma (graphviz) aanroept om grafen mooi weer te geven. Het doel is deze te gaan gebruiken in de uiteindelijke output van het programma. Ook ben ik begonnen met het plannen van de uiteindelijke output met welke informatie er nodig is en hoe het eruit moet gaan zien.
+
+Volgende keer (qua code): denken hoe de output visueel beter gemaakt kan worden en wat de uiteindelijke output moet worden, associëren reads met output, test data genereren, verzinnen hoe de verificatie te quantificeren.
+
 # TODO
 
 ## Priority

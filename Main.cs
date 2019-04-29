@@ -30,7 +30,7 @@ namespace AssemblyNameSpace
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputGraph("examples/005/graph.dot");
-            test.OutputReport("examples/005/meta.html");
+            test.CreateReport("examples/005/report.html");
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -865,53 +865,12 @@ namespace AssemblyNameSpace
                 Console.WriteLine(e.Message);
             }
         }
-        /// <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
-        /// <param name="filename"> The file to output to. </param>
-        public void OutputReport(string filename = "metainformation.html")
+        /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        public string HTMLMetaInformation()
         {
             long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
             long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L;
-
-            var buffer = new StringBuilder();
-
-            buffer.AppendLine($@"
-= General information =
-Number of reads: {meta_data.reads}
-K (length of k-mer): {kmer_length}
-Minimum homology: {minimum_homology}
-Number of k-mers: {meta_data.kmers}
-Number of (k-1)-mers: {meta_data.kmin1_mers}
-Number of duplicate (k-1)-mers: {meta_data.kmin1_mers_raw - meta_data.kmin1_mers}
-Number of sequences found: {meta_data.sequences}");
-            if (graph == null)
-            {
-                buffer.AppendLine("No graph build (yet)");
-            }
-            else
-            {
-                buffer.AppendLine($@"
-= de Bruijn Graph information =
-Number of nodes: {graph.Length}
-Number of edges: {number_edges}
-Mean Connectivity: {(double) number_edges / graph.Length}
-Highest Connectivity: {graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}
-               
-= Condensed Graph information =
-Number of nodes: {condensed_graph.Count()}
-Number of edges: {number_edges_condensed}
-Mean Connectivity: {(double) number_edges / condensed_graph.Count()}
-Highest Connectivity: {condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}
-
-= Runtime information =
-The program took {meta_data.total_time} ms to assemble the sequence
-With this breakup of times
-  {meta_data.pre_time} ms for pre work (creating k-mers and k-1-mers)
-  {meta_data.graph_time} ms for linking the graph
-  {meta_data.path_time} ms for finding the paths through the graph
-  {meta_data.sequence_filter_time} ms for filtering the sequences to only keep the useful");
-            }
-
-            Console.Write(buffer.ToString());
 
             string html = $@"
 <html>
@@ -954,6 +913,27 @@ With this breakup of times
 </body>
 </html>";
 
+            return html;
+        }
+        public void CreateReport(string filename = "report.html") {
+            string graphpath = Path.GetDirectoryName(filename).ToString() + "graph.svg";
+            string svg = "<p>Not found " + graphpath + "</p>";
+            if (File.Exists(graphpath)) svg = File.ReadAllText(graphpath);
+            string timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+            string html = $@"<html>
+<head>
+<title>Report Protein Sequence Run</title>
+</head>
+<body>
+<h1>Report Protein Sequence Run</h1>
+<p>Generated at {timestamp}</p>
+<h2>Graph</h2>
+{svg}
+<h2>Simplified graph</h2>
+<h2>Table</h2>
+<h2>Meta Information<h2>
+{this.HTMLMetaInformation()}
+</body>";
             StreamWriter sw = File.CreateText(filename);
             sw.Write(html);
             sw.Close();
