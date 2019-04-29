@@ -46,9 +46,11 @@ Volgende keer (maandag): eerste praktisch werk, een antilichaam proberen om te k
 
 ## 29-04-2019
 
-De ochtend hebben we de eerste pilot gestart in het lab (zie labjournaal voor meer details). In de middag tijdes de protease stap heb ik doorgewerkt aan de software, hierbij heb ik het programma zo gemaakt dat deze een ander programma (graphviz) aanroept om grafen mooi weer te geven. Het doel is deze te gaan gebruiken in de uiteindelijke output van het programma. Ook ben ik begonnen met het plannen van de uiteindelijke output met welke informatie er nodig is en hoe het eruit moet gaan zien.
+De ochtend hebben we de eerste pilot gestart in het lab (zie labjournaal voor meer details). In de middag tijdes de protease stap heb ik doorgewerkt aan de software, hierbij heb ik het programma zo gemaakt dat deze een ander programma (graphviz) aanroept om grafen mooi weer te geven. Het doel is deze te gaan gebruiken in de uiteindelijke output van het programma. Ook ben ik begonnen met het plannen van de uiteindelijke output met welke informatie er nodig is en hoe het eruit moet gaan zien. In de middag is het protocol verder gevolgd waardoor de samples op de huis tuin en keuken massaspectrometer konden aan het eind van de dag, deze data zal tegen dinsdag bekend zijn en zullen we woensdag doornemen. Qua code ben ik begonnen met een html bestand maken met de uiteindelijke report, maar hier is nog veel werk aan.
 
 Volgende keer (qua code): denken hoe de output visueel beter gemaakt kan worden en wat de uiteindelijke output moet worden, associëren reads met output, test data genereren, verzinnen hoe de verificatie te quantificeren.
+
+Volgende keer (woensdag): doornemen data eerste run, kijkenof/wanneer het op het andere apparaat kan.
 
 # TODO
 
