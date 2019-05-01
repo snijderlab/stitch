@@ -24,14 +24,14 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            int testnumber = 3;
-            var test = new Assembler(15, 12);
+            int testnumber = 5;
+            var test = new Assembler(10,8);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
             test.OpenReads($"examples/{testnumber:D3}/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputGraph($"examples/{testnumber:D3}/graph.dot");
-            test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.GraphMode.Simple);
+            test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.Mode.Simple);
             test.CreateReport($"examples/{testnumber:D3}/report.html");
         }
     }
@@ -212,16 +212,11 @@ namespace AssemblyNameSpace
             /// <summary> The sequence of the Node. Only has a getter. </summary>
             /// <value> The sequence of this node. </value>
             public AminoAcid[] Sequence { get { return sequence; } }
-            /// <summary> The member to store the multiplicity (amount of k-mers which 
-            /// result in the same (k-1)-mers in. </summary>
-            private int multiplicity;
-            /// <summary> The multiplicity, amount of k-mers which 
-            /// result in the same (k-1)-mers, of the Node. Only has a getter. </summary>
-            /// <value> The amount of time an equal (k-1)-mer was found in the set of 
-            /// generated k-mers, this tells something about the amount of reads that 
-            /// have the overlap over this sequence, and about the amount of equal
-            /// parts of the sequence in other places of the protein. </value>
-            public int Multiplicity { get { return multiplicity; } }
+            /// <summary> Where the (k-1)-mer sequence comes from. </summary>
+            private List<int> origins;
+            /// <summary> The indexes of the reads where this (k-1)-mere originated from. </summary>
+            /// <value> A list of indexes of the list of reads. </value>
+            public List<int> Origins { get { return origins; } }
             /// <summary> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
@@ -254,13 +249,13 @@ namespace AssemblyNameSpace
 
             /// <summary> The creator of Nodes. </summary>
             /// <param name="seq"> The sequence of this Node. </param>
-            /// <param name="multi"> The multiplicity of this Node. </param>
+            /// <param name="origin"> The origin(s) of this (k-1)-mer. </param>
             /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
             /// <remarks> It will initialize the edges list. </remarks>
-            public Node(AminoAcid[] seq, int multi, int edge_include_limit_input)
+            public Node(AminoAcid[] seq, List<int> origin, int edge_include_limit_input)
             {
                 sequence = seq;
-                multiplicity = multi;
+                origins = origin;
                 forwardEdges = new List<ValueTuple<int, int, int>>();
                 backwardEdges = new List<ValueTuple<int, int, int>>();
                 Visited = false;
@@ -451,6 +446,8 @@ namespace AssemblyNameSpace
             public List<int> ForwardEdges;
             /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
             public List<int> BackwardEdges;
+            /// <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
+            public List<int> Origins;
             /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
             /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/></param>
             /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/></param>
@@ -458,7 +455,8 @@ namespace AssemblyNameSpace
             /// <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="CondensedNode.BackwardIndex"/></param>
             /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/></param>
             /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/></param>
-            public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges)
+            /// <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="CondensedNode.Origins"/></param>
+            public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<int> origins)
             {
                 Sequence = sequence;
                 Index = index;
@@ -466,6 +464,7 @@ namespace AssemblyNameSpace
                 BackwardIndex = backward_index;
                 ForwardEdges = forward_edges;
                 BackwardEdges = backward_edges;
+                Origins = origins;
                 Visited = false;
             }
         }
@@ -572,27 +571,29 @@ namespace AssemblyNameSpace
             // Generate all k-mers
             // All k-mers of length (kmer_length)
 
-            var kmers = new List<AminoAcid[]>();
+            var kmers = new List<(AminoAcid[], int)>();
+            AminoAcid[] read;
 
-            foreach (AminoAcid[] read in reads)
+            for (int r = 0; r < reads.Count(); r++)
             {
+                read = reads[r];
                 if (read.Length > kmer_length)
                 {
                     for (int i = 0; i < read.Length - kmer_length + 1; i++)
                     {
                         AminoAcid[] kmer = read.SubArray(i, kmer_length);
-                        kmers.Add(kmer);
-                        kmers.Add(kmer.Reverse().ToArray()); //Also add the reverse
+                        kmers.Add((kmer, r));
+                        kmers.Add((kmer.Reverse().ToArray(), r)); //Also add the reverse
                     }
                 }
                 else if (read.Length == kmer_length)
                 {
-                    kmers.Add(read);
-                    kmers.Add(read.Reverse().ToArray()); //Also add the reverse
+                    kmers.Add((read, r));
+                    kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
                 }
                 else
                 {
-                    Console.WriteLine($"A read is no long enough: {AminoAcid.ArrayToString(read)}");
+                    Console.WriteLine($"A read is not long enough: {AminoAcid.ArrayToString(read)}");
                 }
             }
             meta_data.kmers = kmers.Count;
@@ -600,28 +601,28 @@ namespace AssemblyNameSpace
             // Building the graph
             // Generating all (k-1)-mers
 
-            var kmin1_mers_raw = new List<AminoAcid[]>();
+            var kmin1_mers_raw = new List<(AminoAcid[], int)>();
 
             kmers.ForEach(kmer =>
             {
-                kmin1_mers_raw.Add(kmer.SubArray(0, kmer_length - 1));
-                kmin1_mers_raw.Add(kmer.SubArray(1, kmer_length - 1));
+                kmin1_mers_raw.Add((kmer.Item1.SubArray(0, kmer_length - 1), kmer.Item2));
+                kmin1_mers_raw.Add((kmer.Item1.SubArray(1, kmer_length - 1), kmer.Item2));
             });
 
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
 
-            var kmin1_mers = new List<ValueTuple<AminoAcid[], int>>();
+            var kmin1_mers = new List<ValueTuple<AminoAcid[], List<int>>>();
 
             foreach (var kmin1_mer in kmin1_mers_raw) {
                 bool inlist = false;
                 for (int i = 0; i < kmin1_mers.Count(); i++) {
-                    if (AminoAcid.ArrayEquals(kmin1_mer, kmin1_mers[i].Item1)) {
-                        kmin1_mers[i] = (kmin1_mers[i].Item1, kmin1_mers[i].Item2 + 1); // Update multiplicity
+                    if (AminoAcid.ArrayEquals(kmin1_mer.Item1, kmin1_mers[i].Item1)) {
+                        kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update multiplicity
                         inlist = true;
                         break;
                     }
                 }
-                if (!inlist) kmin1_mers.Add((kmin1_mer, 1)); 
+                if (!inlist) kmin1_mers.Add((kmin1_mer.Item1, new List<int>(kmin1_mer.Item2))); 
             }
             
             meta_data.kmin1_mers = kmin1_mers.Count;
@@ -656,8 +657,8 @@ namespace AssemblyNameSpace
                     Console.WriteLine($"Adding edges... added {k} k-mers");
                 }
 
-                prefix = kmer.SubArray(0, kmer_length - 1);
-                postfix = kmer.SubArray(1, kmer_length - 1);
+                prefix = kmer.Item1.SubArray(0, kmer_length - 1);
+                postfix = kmer.Item1.SubArray(1, kmer_length - 1);
 
                 //Console.WriteLine("Computing pre and post fixes");
 
@@ -718,6 +719,8 @@ namespace AssemblyNameSpace
 
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
+
+                    HashSet<int> origins = new HashSet<int>(start_node.Origins);
                     
                     // Debug purposes can be deleted later
                     int forward_node_index = i;
@@ -729,10 +732,13 @@ namespace AssemblyNameSpace
                         forward_node.Visited = true;
                         forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2)); // Last amino acid of the sequence
                         forward_node_index = forward_node.ForwardEdges[0].Item1;
+                        foreach (int o in forward_node.Origins) origins.Add(o);
+
                         forward_node = graph[forward_node_index];
                     } 
                     forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
                     forward_node.Visited = true;
+                    foreach (int o in forward_node.Origins) origins.Add(o);
 
                     if (forward_node.ForwardEdges.Count() > 0) {
                         forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
@@ -744,10 +750,13 @@ namespace AssemblyNameSpace
                         backward_node.Visited = true;
                         backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                         backward_node_index = backward_node.BackwardEdges[0].Item1;
+                        foreach (int o in backward_node.Origins) origins.Add(o);
+
                         backward_node = graph[backward_node_index];
                     }
                     backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                     backward_node.Visited = true;
+                    foreach (int o in backward_node.Origins) origins.Add(o);
 
                     if (backward_node.BackwardEdges.Count() > 0) {
                         backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
@@ -767,7 +776,9 @@ namespace AssemblyNameSpace
                     Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
                     Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
 
-                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes));
+                    List<int> originslist = origins.ToList();
+                    originslist.Sort();
+                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, originslist));
                 }
             }
 
@@ -831,16 +842,16 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
-        /// <summary> An enum to input the type of graph to generate. </summary>
-        public enum GraphMode {
-            /// <summary> Will generate a graph with extended information, can become a bit clutered with large datasets. </summary>
+        /// <summary> An enum to input the type to generate. </summary>
+        public enum Mode {
+            /// <summary> Will generate with extended information, can become a bit cluttered with large datasets. </summary>
             Extended,
-            /// <summary> Will generate a graph with condesed information, will give easier overview but details have to be lokked up. </summary>
+            /// <summary> Will generate with condesed information, will give easier overview but details have to be looked up. </summary>
             Simple}
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
         /// <param name="filename"> The file to output to. </param>
         /// <param name="mode"> The mode to use to generate the graph. </param>
-        public void OutputGraph(string filename = "graph.dot", GraphMode mode = GraphMode.Extended) {
+        public void OutputGraph(string filename = "graph.dot", Mode mode = Mode.Extended) {
             // Generate a dot file to use in graphviz
             var buffer = new StringBuilder();
 
@@ -848,8 +859,8 @@ namespace AssemblyNameSpace
             string label, style;
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
-                if (mode == GraphMode.Extended) label = AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray());
-                else label = GetCondensedNodeIdentifier(i);
+                if (mode == Mode.Extended) label = AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray());
+                else label = GetCondensedNodeLink(i);
                 if (condensed_graph[i].BackwardEdges.Count() == 0) style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
                 else style = "";
                 buffer.AppendLine($"\ti{i} [label=\"{label}\"{style}]");
@@ -880,45 +891,105 @@ namespace AssemblyNameSpace
                 Console.WriteLine(e.Message);
             }
         }
-        /// <summary> Returns a table containing all the contigs of a alignment. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        public string CreateContigsTable()
+        public string CreateReadsTable() 
         {
-            // Generate a dot file to use in graphviz
-            var buffer = new StringBuilder();
+             var buffer = new StringBuilder();
 
-            buffer.AppendLine(@"<table>
+            buffer.AppendLine(@"<table id=""reads-table"">
 <tr>
-    <th>Identifier</th>
-    <th>Sequence</th>
-    <th>Length</th>
-    <th>Forks to</th>
-    <th>Forks from</th>
-    <th>Based on</th>
+    <th onclick=""sortTable('reads-table', 0, 'id')"">Identifier</th>
+    <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
 </tr>");
             string id;
 
-            for (int i = 0; i < condensed_graph.Count(); i++) {
-                id = GetCondensedNodeIdentifier(i);
-                buffer.AppendLine($@"<tr id='{id}'>
-    <td>{id}</td>
-    <td>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
-    <td>{condensed_graph[i].Sequence.Count()}</td>
-    <td>{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " I" + b.ToString("D4"))}</td>
-    <td>{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " I" + b.ToString("D4"))}</td>
-    <td>Not implemented yet</td>
-<tr>");
+            for (int i = 0; i < reads.Count(); i++) {
+                id = $"R{i:D4}";
+                buffer.AppendLine($@"<tr>
+    <td><a href=""#{id}"">{id}</a></td>
+    <td>{AminoAcid.ArrayToString(reads[i])}</td>
+</tr>");
             }
 
             buffer.AppendLine("</table>");
 
             return buffer.ToString();
         }
+        /// <summary> Returns a table containing all the contigs of a alignment. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        public string CreateContigsTable()
+        {
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine(@"<table id=""contigs-table"">
+<tr>
+    <th onclick=""sortTable('contigs-table', 0, 'id')"">Identifier</th>
+    <th onclick=""sortTable('contigs-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('contigs-table', 2, 'number')"">Length</th>
+    <th onclick=""sortTable('contigs-table', 3, 'string')"">Forks to</th>
+    <th onclick=""sortTable('contigs-table', 4, 'string')"">Forks from</th>
+    <th onclick=""sortTable('contigs-table', 5, 'string')"">Based on</th>
+</tr>");
+            string id;
+
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                id = GetCondensedNodeLink(i);
+                buffer.AppendLine($@"<tr>
+    <td>{id}</td>
+    <td>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
+    <td>{condensed_graph[i].Sequence.Count()}</td>
+    <td>{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
+    <td>{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
+    <td>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</td>
+</tr>");
+            }
+
+            buffer.AppendLine("</table>");
+
+            return buffer.ToString();
+        }
+        /// <summary> Returns a list of asides for details viewing. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        public string CreateAsides()
+        {
+            var buffer = new StringBuilder();
+            string id;
+
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                id = $"I{i:D4}";
+                buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
+    <h1>Contig: {id}</h1>
+    <h2>Sequence</h2>
+    <p>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</p>
+    <h2>Sequence Length</h2>
+    <p>{condensed_graph[i].Sequence.Count()}</p>
+    <h2>Based on</h2>
+    <p>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
+    <h2>Reads Alignment</h4>
+    <pre>Not implemented yet</pre>
+</div>");
+            }
+            for (int i = 0; i < reads.Count(); i++) {
+                id = $"R{i:D4}";
+                buffer.AppendLine($@"<div id=""{id}"" class=""info-block read-info"">
+    <h1>Read: {id}</h1>
+    <h2>Sequence</h2>
+    <p>{AminoAcid.ArrayToString(reads[i])}</p>
+</div>");
+            }
+
+            return buffer.ToString();
+        }
         /// <summary> Returns the string representation of the human friendly identifier of a node. </summary>
-        /// <param name="index"> The index in the condensed graph of the condesend node. </param>
+        /// <param name="index"> The index in the condensed graph of the condensed node. </param>
         /// <returns> A string to be used where humans can see it. </returns>
-        private string GetCondensedNodeIdentifier(int index) {
-            return $"I{index:D4}";
+        private string GetCondensedNodeLink(int index) {
+            return $"<a href=\"#I{index:D4}\" class=\"info-link contig-link\">I{index:D4}</a>";
+        }
+        /// <summary> Returns the string representation of the human friendly identifier of a read. </summary>
+        /// <param name="index"> The index in the readslist. </param>
+        /// <returns> A string to be used where humans can see it. </returns>
+        private string GetReadLink(int index) {
+            return $"<a href=\"#R{index:D4}\" class=\"info-link read-link\">R{index:D4}</a>";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -977,25 +1048,32 @@ namespace AssemblyNameSpace
             string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
             if (File.Exists(graphpath)) svg = File.ReadAllText(graphpath);
 
+            // Could also be done as an img, but that is much less nice
+            // <img src='graph.png' alt='Extended graph of the results' srcset='graph.svg'>
+
             string simplegraphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\simplegraph.svg";
             string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
             if (File.Exists(simplegraphpath)) simplesvg = File.ReadAllText(simplegraphpath);
 
-            string timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
+            string stylesheet = "/* Could not find the stylesheet */";
+            if (File.Exists("styles.css")) stylesheet = File.ReadAllText("styles.css");
+
+            string script = "// Could not find the script";
+            if (File.Exists("script.js")) script = File.ReadAllText("script.js");
+
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string html = $@"<html>
 <head>
 <title>Report Protein Sequence Run</title>
 <style>
-svg {{
-    max-width: 100%;
-    height: auto;
-}}
-table {{
-    max-width: 100%;
-}}
+{stylesheet}
 </style>
+<script>
+{script}
+</script>
 </head>
 <body>
+<div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 <h2>Graph</h2>
@@ -1004,8 +1082,14 @@ table {{
 {simplesvg}
 <h2>Table</h2>
 {CreateContigsTable()}
+<h2>Reads Table</h2>
+{CreateReadsTable()}
 <h2>Meta Information<h2>
-{this.HTMLMetaInformation()}
+{HTMLMetaInformation()}
+</div>
+<div class=""aside"">
+{CreateAsides()}
+</div>
 </body>";
             StreamWriter sw = File.CreateText(filename);
             sw.Write(html);
