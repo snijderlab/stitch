@@ -30,6 +30,7 @@ svg {
 table {
     border-collapse: collapse;
     max-width: 100%;
+    table-layout: fixed;
 }
 td, th {
     border: 1px solid #aaa;
@@ -48,4 +49,9 @@ th.asc::after {
 }
 th.dsc::after {
     content: "v"
+}
+td.seq {
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }

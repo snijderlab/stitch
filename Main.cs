@@ -24,8 +24,8 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            int testnumber = 5;
-            var test = new Assembler(10,8);
+            int testnumber = 7;
+            var test = new Assembler(6,5);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
             test.OpenReads($"examples/{testnumber:D3}/reads.txt");
             Console.WriteLine("Now starting on the assembly");
@@ -822,10 +822,12 @@ namespace AssemblyNameSpace
                     }
                 }
                 if (node.BackwardEdges.Where(a => a != node_index).Count() == 1) {
-                    node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
+                    //TODO commented this out because test 5 gave empty sequences, need to find that cause
+                    //node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
                 }
                 if (node.ForwardEdges.Where(a => a != node_index).Count() == 1) {
-                    node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
+                    //TODO commented this out because test 5 gave empty sequences, need to find that cause
+                    //node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
                 }
                 node_index++;
             }
@@ -899,6 +901,7 @@ namespace AssemblyNameSpace
 <tr>
     <th onclick=""sortTable('reads-table', 0, 'id')"">Identifier</th>
     <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('reads-table', 2, 'number')"">Sequence Length</th>
 </tr>");
             string id;
 
@@ -906,7 +909,8 @@ namespace AssemblyNameSpace
                 id = $"R{i:D4}";
                 buffer.AppendLine($@"<tr>
     <td><a href=""#{id}"">{id}</a></td>
-    <td>{AminoAcid.ArrayToString(reads[i])}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
+    <td>{AminoAcid.ArrayToString(reads[i]).Count()}</td>
 </tr>");
             }
 
@@ -935,7 +939,7 @@ namespace AssemblyNameSpace
                 id = GetCondensedNodeLink(i);
                 buffer.AppendLine($@"<tr>
     <td>{id}</td>
-    <td>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
     <td>{condensed_graph[i].Sequence.Count()}</td>
     <td>{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
     <td>{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
@@ -974,6 +978,8 @@ namespace AssemblyNameSpace
     <h1>Read: {id}</h1>
     <h2>Sequence</h2>
     <p>{AminoAcid.ArrayToString(reads[i])}</p>
+    <h2>Sequence Length</h2>
+    <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
 </div>");
             }
 
