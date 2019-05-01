@@ -299,7 +299,13 @@
             <summary> Nodes in the condensed graph with a variable sequence length. </summary>
         </member>
         <member name="F:AssemblyNameSpace.Assembler.CondensedNode.Index">
-            <summary> The index this node. The index is defined as the index in the adjecency list of the de Bruijn graph. </summary>
+            <summary> The index this node. The index is defined as the index of the startnode in the adjecency list of the de Bruijn graph. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.CondensedNode.ForwardIndex">
+            <summary> The index of the last node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardIndex">
+            <summary> The index of the first node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
         </member>
         <member name="F:AssemblyNameSpace.Assembler.CondensedNode.Visited">
             <summary> Whether or not this node is visited yet. </summary>
@@ -314,10 +320,12 @@
         <member name="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardEdges">
             <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.CondensedNode.#ctor(System.Collections.Generic.List{AssemblyNameSpace.Assembler.AminoAcid},System.Int32,System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32})">
+        <member name="M:AssemblyNameSpace.Assembler.CondensedNode.#ctor(System.Collections.Generic.List{AssemblyNameSpace.Assembler.AminoAcid},System.Int32,System.Int32,System.Int32,System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32})">
             <summary> Creates a condensed node to be used in the condensed graph. </summary>
             <param name="sequence"> The sequence of this node. See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.Sequence"/></param>
             <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.Index"/></param>
+            <param name="forward_index"> The index of the last node of the sequence (going from back to forth). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.ForwardIndex"/></param>
+            <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardIndex"/></param>
             <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.ForwardEdges"/></param>
             <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardEdges"/></param>
         </member>
@@ -350,8 +358,36 @@
             <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
             run on an Assembler, all settings should be defined before running this. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.OutputReport">
-            <summary> Outputs some information about the assembly the help validate the output of the assembly. </summary>
+        <member name="T:AssemblyNameSpace.Assembler.GraphMode">
+            <summary> An enum to input the type of graph to generate. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.GraphMode.Extended">
+            <summary> Will generate a graph with extended information, can become a bit clutered with large datasets. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.GraphMode.Simple">
+            <summary> Will generate a graph with condesed information, will give easier overview but details have to be lokked up. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.OutputGraph(System.String,AssemblyNameSpace.Assembler.GraphMode)">
+            <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
+            <param name="filename"> The file to output to. </param>
+            <param name="mode"> The mode to use to generate the graph. </param>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CreateContigsTable">
+            <summary> Returns a table containing all the contigs of a alignment. </summary>
+            <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.GetCondensedNodeIdentifier(System.Int32)">
+            <summary> Returns the string representation of the human friendly identifier of a node. </summary>
+            <param name="index"> The index in the condensed graph of the condesend node. </param>
+            <returns> A string to be used where humans can see it. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.HTMLMetaInformation">
+            <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
+            <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CreateReport(System.String)">
+            <summary> Creates an HTML report to view the results and metadata. </summary>
+            <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         </member>
         <member name="T:AssemblyNameSpace.HelperFunctionality">
             <summary> A class to store extension methods to help in the process of coding. </summary>

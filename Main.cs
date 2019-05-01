@@ -24,13 +24,15 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            var test = new Assembler(8, 6);
+            int testnumber = 3;
+            var test = new Assembler(15, 12);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.OpenReads("examples/005/reads.txt");
+            test.OpenReads($"examples/{testnumber:D3}/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
-            test.OutputGraph("examples/005/graph.dot");
-            test.CreateReport("examples/005/report.html");
+            test.OutputGraph($"examples/{testnumber:D3}/graph.dot");
+            test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.GraphMode.Simple);
+            test.CreateReport($"examples/{testnumber:D3}/report.html");
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -434,9 +436,11 @@ namespace AssemblyNameSpace
         /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
         private class CondensedNode
         {
-            /// <summary> The index this node. The index is defined as the index in the adjecency list of the de Bruijn graph. </summary>
+            /// <summary> The index this node. The index is defined as the index of the startnode in the adjecency list of the de Bruijn graph. </summary>
             public int Index;
+            /// <summary> The index of the last node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
             public int ForwardIndex;
+            /// <summary> The index of the first node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
             public int BackwardIndex;
             /// <summary> Whether or not this node is visited yet. </summary>
             public bool Visited;
@@ -450,6 +454,8 @@ namespace AssemblyNameSpace
             /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
             /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/></param>
             /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/></param>
+            /// <param name="forward_index"> The index of the last node of the sequence (going from back to forth). See <see cref="CondensedNode.ForwardIndex"/></param>
+            /// <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="CondensedNode.BackwardIndex"/></param>
             /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/></param>
             /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/></param>
             public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges)
@@ -825,20 +831,29 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();//sequences.Count;
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
+        /// <summary> An enum to input the type of graph to generate. </summary>
+        public enum GraphMode {
+            /// <summary> Will generate a graph with extended information, can become a bit clutered with large datasets. </summary>
+            Extended,
+            /// <summary> Will generate a graph with condesed information, will give easier overview but details have to be lokked up. </summary>
+            Simple}
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
         /// <param name="filename"> The file to output to. </param>
-        public void OutputGraph(string filename = "graph.dot") {
+        /// <param name="mode"> The mode to use to generate the graph. </param>
+        public void OutputGraph(string filename = "graph.dot", GraphMode mode = GraphMode.Extended) {
             // Generate a dot file to use in graphviz
             var buffer = new StringBuilder();
 
             buffer.AppendLine("digraph {\n\tnode [fontname=\"Roboto\", shape=cds, fontcolor=\"blue\", color=\"blue\"];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee, color=\"blue\"];\n");
+            string label, style;
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
-                if (condensed_graph[i].BackwardEdges.Count() > 0) {
-                    buffer.AppendLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\"]");
-                } else {
-                    buffer.AppendLine($"\ti{i} [label=\"" + AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray()) + "\", style=filled, fillcolor=\"blue\", fontcolor=\"white\"]");
-                }
+                if (mode == GraphMode.Extended) label = AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray());
+                else label = GetCondensedNodeIdentifier(i);
+                if (condensed_graph[i].BackwardEdges.Count() == 0) style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
+                else style = "";
+                buffer.AppendLine($"\ti{i} [label=\"{label}\"{style}]");
+
                 foreach (var fwe in condensed_graph[i].ForwardEdges) {
                     buffer.AppendLine($"\ti{i} -> i{fwe}");
                 }
@@ -864,6 +879,46 @@ namespace AssemblyNameSpace
             {
                 Console.WriteLine(e.Message);
             }
+        }
+        /// <summary> Returns a table containing all the contigs of a alignment. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        public string CreateContigsTable()
+        {
+            // Generate a dot file to use in graphviz
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine(@"<table>
+<tr>
+    <th>Identifier</th>
+    <th>Sequence</th>
+    <th>Length</th>
+    <th>Forks to</th>
+    <th>Forks from</th>
+    <th>Based on</th>
+</tr>");
+            string id;
+
+            for (int i = 0; i < condensed_graph.Count(); i++) {
+                id = GetCondensedNodeIdentifier(i);
+                buffer.AppendLine($@"<tr id='{id}'>
+    <td>{id}</td>
+    <td>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
+    <td>{condensed_graph[i].Sequence.Count()}</td>
+    <td>{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " I" + b.ToString("D4"))}</td>
+    <td>{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " I" + b.ToString("D4"))}</td>
+    <td>Not implemented yet</td>
+<tr>");
+            }
+
+            buffer.AppendLine("</table>");
+
+            return buffer.ToString();
+        }
+        /// <summary> Returns the string representation of the human friendly identifier of a node. </summary>
+        /// <param name="index"> The index in the condensed graph of the condesend node. </param>
+        /// <returns> A string to be used where humans can see it. </returns>
+        private string GetCondensedNodeIdentifier(int index) {
+            return $"I{index:D4}";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -898,7 +953,7 @@ namespace AssemblyNameSpace
 <table>
 <tr><td>Number of nodes</td><td>{condensed_graph.Count()}</td></tr>
 <tr><td>Number of edges</td><td>{number_edges_condensed}</td></tr>
-<tr><td>Mean Connectivity</td><td>{(double) number_edges / condensed_graph.Count()}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double) number_edges_condensed / condensed_graph.Count()}</td></tr>
 <tr><td>Highest Connectivity</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
 </table>
 
@@ -915,14 +970,30 @@ namespace AssemblyNameSpace
 
             return html;
         }
+        /// <summary> Creates an HTML report to view the results and metadata. </summary>
+        /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         public void CreateReport(string filename = "report.html") {
-            string graphpath = Path.GetDirectoryName(filename).ToString() + "graph.svg";
-            string svg = "<p>Not found " + graphpath + "</p>";
+            string graphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\graph.svg";
+            string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
             if (File.Exists(graphpath)) svg = File.ReadAllText(graphpath);
+
+            string simplegraphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\simplegraph.svg";
+            string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
+            if (File.Exists(simplegraphpath)) simplesvg = File.ReadAllText(simplegraphpath);
+
             string timestamp = DateTime.Now.ToString("yyyy-MM-ddTHH:mm:ss");
             string html = $@"<html>
 <head>
 <title>Report Protein Sequence Run</title>
+<style>
+svg {{
+    max-width: 100%;
+    height: auto;
+}}
+table {{
+    max-width: 100%;
+}}
+</style>
 </head>
 <body>
 <h1>Report Protein Sequence Run</h1>
@@ -930,7 +1001,9 @@ namespace AssemblyNameSpace
 <h2>Graph</h2>
 {svg}
 <h2>Simplified graph</h2>
+{simplesvg}
 <h2>Table</h2>
+{CreateContigsTable()}
 <h2>Meta Information<h2>
 {this.HTMLMetaInformation()}
 </body>";
@@ -953,10 +1026,6 @@ namespace AssemblyNameSpace
             T[] result = new T[length];
             Array.Copy(data, index, result, 0, length);
             return result;
-        }
-        public static IList<T> Clone<T>(this IList<T> listToClone) where T: ICloneable
-        {
-            return listToClone.Select(item => (T)item.Clone()).ToList();
         }
     }
 }

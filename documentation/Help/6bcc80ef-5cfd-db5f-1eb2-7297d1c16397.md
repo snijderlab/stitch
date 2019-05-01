@@ -15,4 +15,8 @@ A Class to be able to run the code from the commandline. To be able to test it e
 ## Structures
 &nbsp;<table><tr><th></th><th>Structure</th><th>Description</th></tr><tr><td>![Private structure](media/privstructure.gif "Private structure")</td><td><a href="6c08d832-b4a6-5a74-e503-fb03127f8c59">Assembler.AminoAcid</a></td><td>
 A struct to function as a wrapper for AminoAcid information, so custom alphabets can be used in an efficient way</td></tr><tr><td>![Private structure](media/privstructure.gif "Private structure")</td><td><a href="4767f8b5-e52e-522b-5527-d518969305dd">Assembler.MetaInformation</a></td><td>
-A struct to hold meta information about the assembly to keep it organised and to report back to the user.</td></tr></table>&nbsp;
+A struct to hold meta information about the assembly to keep it organised and to report back to the user.</td></tr></table>
+
+## Enumerations
+&nbsp;<table><tr><th></th><th>Enumeration</th><th>Description</th></tr><tr><td>![Public enumeration](media/pubenumeration.gif "Public enumeration")</td><td><a href="3abd5377-cd76-4c1a-ec3c-d847b785f98b">Assembler.GraphMode</a></td><td>
+An enum to input the type of graph to generate.</td></tr></table>&nbsp;
