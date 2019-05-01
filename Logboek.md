@@ -50,9 +50,21 @@ De ochtend hebben we de eerste pilot gestart in het lab (zie labjournaal voor me
 
 Volgende keer (qua code): denken hoe de output visueel beter gemaakt kan worden en wat de uiteindelijke output moet worden, associëren reads met output, test data genereren, verzinnen hoe de verificatie te quantificeren.
 
-Volgende keer (woensdag): doornemen data eerste run, kijkenof/wanneer het op het andere apparaat kan.
+Volgende keer (woensdag): doornemen data eerste run, kijken of/wanneer het op het andere apparaat kan.
+
+## 01-05-2019
+
+We hebben de resultaten van maandag doorgesproken en het gehad over de algemene theorie van MS/MS etc. Er bleek dat ik een rekenfoutje gemaakt had waardoor de antilichaamconcentratie in het eindmengsel 1 miljoen keer hoger was ingeschat, maar de tweede run die Joost gisteren (30-04-2019) gedaan heeft was wel goed gelukt (200 keer meer antilichaam geinjecteerd door het niet te verdunnen en meer te injecteren). Uit de resultaten bleek dat het mengsel goed genoeg is om op een betere MS te runnen, dus dat gaat hopelijk binnekort lukken. Ook bleek dat alfalytic protease niet gelukt was, we hebben geen idee waarom niet maar gaan het de volgende keer gewoon weer proberen. 's Middags ben ik begonnen aan het report, hiervoor worden nu HTML pagina's gemaakt waar al wat interactiviteit in zit zodat mensen makkelijker kunnen zien wat de output is.
+
+Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data genereren, verzinnen hoe de verificatie te quantificeren.
+
+Volgende keer (vrijdag): algemene theorie fragmentatie doornemen.
 
 # TODO
+
+## Small things
+[ ] Loading the SVG when ready (so waiting when not)
+[ ] Build aligments with the reads per contig
 
 ## Priority
 [ ] Pathfinding
