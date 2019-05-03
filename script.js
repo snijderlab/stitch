@@ -48,3 +48,35 @@ function sortTable(id, column_number, type) {
         }
     }
 }
+
+window.onhashchange = function(ev) {
+    var target = window.location.href.split("#")[1];
+    var number = Number(target.slice(1));
+
+    console.log(target);
+
+    var els = document.getElementsByClassName("selected")
+    while (els[0]) {
+        els[0].classList.remove('selected')
+    }
+
+    if (target[0] == 'I') {
+        document.getElementById("node" + number).classList.add("selected");
+        document.getElementById("simple-node" + number).classList.add("selected");
+        document.getElementById("table-i" + number).classList.add("selected");
+    } else if (target[0] == 'R') {
+        document.getElementById("reads-table-r" + number).classList.add("selected");
+    }
+    console.log(number);
+    console.log(document.getElementById("node" + number));
+}
+
+function Select(prefix, number) {
+    window.location.href = "#" + prefix + lpad(number.toString(), '0', 4);
+}
+
+function lpad(str, padString, length) {
+    while (str.length < length)
+        str = padString + str;
+    return str;
+}

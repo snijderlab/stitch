@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Diagnostics;
+using System.Text.RegularExpressions;
 
 namespace AssemblyNameSpace
 {
@@ -862,9 +863,11 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
                 if (mode == Mode.Extended) label = AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray());
-                else label = GetCondensedNodeLink(i);
+                else label = $"I{i:D4}";
+
                 if (condensed_graph[i].BackwardEdges.Count() == 0) style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
                 else style = "";
+
                 buffer.AppendLine($"\ti{i} [label=\"{label}\"{style}]");
 
                 foreach (var fwe in condensed_graph[i].ForwardEdges) {
@@ -885,29 +888,53 @@ namespace AssemblyNameSpace
             try
             {
                 Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
-                Process.Start("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
-                Process.Start("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
+                Console.WriteLine("-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"");
+
+                Process png = new Process();
+                png.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
+                png.StartInfo.RedirectStandardError = true;
+                png.StartInfo.UseShellExecute = false;
+
+                Process svg = new Process();
+                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
+                svg.StartInfo.RedirectStandardError = true;
+                svg.StartInfo.UseShellExecute = false;
+                
+                png.Start();
+                svg.Start();
+
+                png.WaitForExit();
+                svg.WaitForExit();
+
+                var pngstderr = png.StandardError.ReadToEnd();
+                if (pngstderr != "") {
+                    Console.WriteLine("PNG ERROR: " + pngstderr);
+                }
+                var svgstderr = svg.StandardError.ReadToEnd();
+                if (svgstderr != "") {
+                    Console.WriteLine("SVG ERROR: " + svgstderr);
+                }
             }
             catch (Exception e)
             {
-                Console.WriteLine(e.Message);
+                Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
             }
         }
         public string CreateReadsTable() 
         {
              var buffer = new StringBuilder();
 
-            buffer.AppendLine(@"<table id=""reads-table"">
+            buffer.AppendLine(@"<table id=""reads-table"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('reads-table', 0, 'id')"">Identifier</th>
+    <th onclick=""sortTable('reads-table', 0, 'id')"" class=""smallcell"">Identifier</th>
     <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('reads-table', 2, 'number')"">Sequence Length</th>
+    <th onclick=""sortTable('reads-table', 2, 'number')"" class=""smallcell"">Sequence Length</th>
 </tr>");
             string id;
 
             for (int i = 0; i < reads.Count(); i++) {
                 id = GetReadLink(i);
-                buffer.AppendLine($@"<tr>
+                buffer.AppendLine($@"<tr id=""reads-table-r{i}"">
     <td class=""center"">{id}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
     <td class=""center"">{AminoAcid.ArrayToString(reads[i]).Count()}</td>
@@ -924,20 +951,20 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
-            buffer.AppendLine(@"<table id=""contigs-table"">
+            buffer.AppendLine(@"<table id=""contigs-table"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('contigs-table', 0, 'id')"">Identifier</th>
+    <th onclick=""sortTable('contigs-table', 0, 'id')"" class=""smallcell"">Identifier</th>
     <th onclick=""sortTable('contigs-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('contigs-table', 2, 'number')"">Length</th>
-    <th onclick=""sortTable('contigs-table', 3, 'string')"">Forks to</th>
-    <th onclick=""sortTable('contigs-table', 4, 'string')"">Forks from</th>
+    <th onclick=""sortTable('contigs-table', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('contigs-table', 3, 'string')"" class=""smallcell"">Forks to</th>
+    <th onclick=""sortTable('contigs-table', 4, 'string')"" class=""smallcell"">Forks from</th>
     <th onclick=""sortTable('contigs-table', 5, 'string')"">Based on</th>
 </tr>");
             string id;
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
                 id = GetCondensedNodeLink(i);
-                buffer.AppendLine($@"<tr>
+                buffer.AppendLine($@"<tr id=""table-i{i}"">
     <td class=""center"">{id}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
     <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
@@ -1033,13 +1060,41 @@ namespace AssemblyNameSpace
 </table>
 
 <h3>Runtime information</h3>
-<table>
-<tr><td>Total time</td><td>{meta_data.total_time} ms</td></tr>
-<tr><td>Pre work</td><td>{meta_data.pre_time} ms</td></tr>
-<tr><td>Linking graph</td><td>{meta_data.graph_time} ms</td></tr>
-<tr><td>Finding paths</td><td>{meta_data.path_time} ms</td></tr>
-<tr><td>Filtering sequences</td><td>{meta_data.sequence_filter_time} ms</td></tr>
-</table>";
+<p>Total time: {meta_data.total_time} ms</p>
+<div class=""runtime"">
+<div class=""pre-work"" style=""flex:{meta_data.pre_time}"">
+    <p>Pre</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Pre work</span>
+        <span class=""runtime-time"">{meta_data.pre_time} ms</span>
+        <span class=""runtime-desc"">Work done on generating k-mers and (k-1)-mers.</span>
+    </div>
+</div>
+<div class=""linking-graph"" style=""flex:{meta_data.graph_time}"">
+    <p>Linking</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Linking graph</span>
+        <span class=""runtime-time"">{meta_data.graph_time} ms</span>
+        <span class=""runtime-desc"">Work done to build the de Bruijn graph.</span>
+    </div>
+</div>
+<div class=""finding-paths"" style=""flex:{meta_data.path_time}"">
+    <p>Path</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Finding paths</span>
+        <span class=""runtime-time"">{meta_data.path_time} ms</span>
+        <span class=""runtime-desc"">Work done to find the paths through the graph.</span>
+    </div>
+</div>
+<div class=""filtering-sequences"" style=""flex:{meta_data.sequence_filter_time}"">
+    <p>Filtering</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Filtering sequences</span>
+        <span class=""runtime-time"">{meta_data.sequence_filter_time} ms</span>
+        <span class=""runtime-desc"">Work done to filter the final sequences.</span>
+    </div>
+</div>
+</div>";
 
             return html;
         }
@@ -1048,14 +1103,20 @@ namespace AssemblyNameSpace
         public void CreateReport(string filename = "report.html") {
             string graphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\graph.svg";
             string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
-            if (File.Exists(graphpath)) svg = File.ReadAllText(graphpath);
+            if (File.Exists(graphpath)) {
+                svg = File.ReadAllText(graphpath);
+                svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"node\">\\s*<title>i([0-9]+)", "id=\"node$1\" class=\"node\" onclick=\"Select('I', $1)\"><title>Node $1");
+            }
 
             // Could also be done as an img, but that is much less nice
             // <img src='graph.png' alt='Extended graph of the results' srcset='graph.svg'>
 
             string simplegraphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\simplegraph.svg";
             string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
-            if (File.Exists(simplegraphpath)) simplesvg = File.ReadAllText(simplegraphpath);
+            if (File.Exists(simplegraphpath)) {
+                simplesvg = File.ReadAllText(simplegraphpath);
+                simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"node\">\\s*<title>i([0-9]+)", "id=\"simple-node$1\" class=\"node\" onclick=\"Select('I', $1)\"><title>Node $1");
+            }
 
             string stylesheet = "/* Could not find the stylesheet */";
             if (File.Exists("styles.css")) stylesheet = File.ReadAllText("styles.css");
@@ -1066,6 +1127,7 @@ namespace AssemblyNameSpace
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             string html = $@"<html>
 <head>
+<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
 <title>Report Protein Sequence Run</title>
 <style>
 {stylesheet}
@@ -1078,19 +1140,37 @@ namespace AssemblyNameSpace
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
-<h2>Graph</h2>
-{svg}
-<h2>Simplified graph</h2>
-{simplesvg}
-<h2>Table</h2>
-{CreateContigsTable()}
-<h2>Reads Table</h2>
-{CreateReadsTable()}
-<h2>Meta Information<h2>
-{HTMLMetaInformation()}
+
+<input type=""checkbox"" id=""graph-collapsable""/>
+<label for=""graph-collapsable"">Graph</label>
+<div class=""collapsable"">{svg}</div>
+
+<input type=""checkbox"" id=""simple-graph-collapsable""/>
+<label for=""simple-graph-collapsable"">Simplified Graph</label>
+<div class=""collapsable"">{simplesvg}</div>
+
+<input type=""checkbox"" id=""table-collapsable""/>
+<label for=""table-collapsable"">Table</label>
+<div class=""collapsable"">{CreateContigsTable()}</div>
+
+<input type=""checkbox"" id=""reads-table-collapsable""/>
+<label for=""reads-table-collapsable"">Reads Table</label>
+<div class=""collapsable"">{CreateReadsTable()}</div>
+
+<input type=""checkbox"" id=""meta-collapsable""/>
+<label for=""meta-collapsable"">Meta Information</label>
+<div class=""collapsable meta-collapsable"">{HTMLMetaInformation()}</div>
+
+<div class=""footer"">
+    <p>Code written in 2019</p>
+    <p>Made by the Hecklab</p>
+</div>
+
 </div>
 <div class=""aside"">
+<div class=""aside-wrapper"">
 {CreateAsides()}
+</div>
 </div>
 </body>";
             StreamWriter sw = File.CreateText(filename);

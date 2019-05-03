@@ -64,6 +64,8 @@ Volgende keer (vrijdag): algemene theorie fragmentatie doornemen.
 
 We hebben de samples voor de Fusion voorbereid en besproken wat er anders is dan oon de Orbitrap 3. Sinds de vorige keer heeft Joost al de samples op de Fusion geladen, maar de methode was iets te kort ingesteld waardoor er niet genoeg details overbleven om echt goede analyse op te doen, daarom is er nu voor een 2x langere gradient gekozen in het LC systeem. 's Middags heb ik gezocht naar een script voor in silico digest, na veel gepruts wil ik met regex een heel simpele eigen variant schrijven, dat blijkt makkelijker dan andermans code hergebruiken omdat deze vaak veel te veel kan. Ook hebben we het protocol voor as maandag besproken en wijzigingen doorgevoerd van de afgelopen maandag.
 
+'s Avonds thuis kon ik mezelf niet inhouden en heb ik doorgewerkt aan het report om het interactiev en fancy te maken.
+
 Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data genereren, verzinnen hoe de verificatie te quantificeren, output to JSON.
 
 Volgende keer (maandag): praktisch werk

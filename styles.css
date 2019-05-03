@@ -1,64 +1,138 @@
 body {
     display: grid;
-    grid-template-columns: 2fr 1fr;
+    grid-template-columns: 20px 2fr 20px 1fr;
+    grid-template-areas: ". main . aside";
     font-family: "Roboto", sans-serif;
     margin: 0;
+    color: #333;
 }
+
+@media (max-width: 1200px) {
+    body {
+        grid-template-columns: 10px 4fr 10px 3fr;
+        grid-template-areas: ". main . aside";
+    }
+}
+
+@media (max-width: 800px) {
+    body {
+        grid-template-columns: 5px 1fr 5px 1fr;
+        grid-template-areas: ". main . aside";
+    }
+}
+
 svg {
     max-width: 100%;
     height: auto;
+    margin: 0 auto;
 }
-.report, .aside {
+
+.report,
+.aside {
     padding: 0.5em;
     min-height: 100vh;
 }
 
-.aside {
-    background-color: #aaa;
+.report {
+    grid-area: main;
 }
 
+.aside {
+    grid-area: aside;
+    background-color: rgba(0, 0, 255, 0.5);
+}
+
+.aside-wrapper {
+    position: fixed;
+    top: 0;
+}
+
+h1 {
+    color: blue;
+    font-size: 3em;
+}
+
+
 /* Showing of contig info */
-.aside>div {
+
+.aside-wrapper>div {
     display: none;
 }
+
 .info-block:target {
     display: block;
 }
 
 
 /* Table*/
+
 table {
     border-collapse: collapse;
     max-width: 100%;
     table-layout: fixed;
 }
-td, th {
-    border: 1px solid #aaa;
+
+.widetable {
+    width: 100%;
+}
+
+@media (min-width: 800px) {
+    .smallcell {
+        width: 10%;
+    }
+}
+
+td,
+th {
+    border: 1px solid rgba(0, 0, 255, 0.5);
     padding: 0.1rem;
 }
+
+th:first-child {
+    border-left-width: 1px;
+}
+
 td.center {
     text-align: center;
 }
+
 th {
-    color: white;
-    background: #333;
+    color: blue;
+    background: white;
+    border: 2px solid blue;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
+
 th::after {
     margin-left: 0.25em;
-    color: #999;
+    color: rgba(0, 0, 255, 0.5);
     display: inline-block;
 }
+
 th[onclick]::after {
     content: "\21f3";
 }
+
 th.asc::after {
     content: "\21e7";
 }
+
+th.dsc::after {
+    content: "\21e9";
+}
+
 td.seq {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
 }
+
+tr.selected {
+    background-color: rgba(255, 0, 0, 0.25);
+}
+
 .info-link {
     display: inline-block;
     color: blue;
@@ -69,7 +143,157 @@ td.seq {
     border-radius: 0.25em;
     font-size: 0.8em;
 }
+
 .info-link:hover {
     color: red;
     border-color: red;
+}
+
+
+/* Collapsable regions */
+
+label {
+    display: block;
+    font-size: 2em;
+    color: white;
+    background-color: blue;
+    padding: 0.1em 0.25em;
+    display: block;
+    border-radius: 0.1em;
+    margin-top: 0.5em;
+}
+
+label::after {
+    content: "+";
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    color: rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    font-size: 0.5em;
+    padding: 0.1em 0.4em;
+    float: right;
+    margin: 0.4em 0;
+    font-family: "Roboto Mono", monospace;
+}
+
+input:checked+label {
+    border-radius: 0.1em 0.1em 0 0;
+}
+
+input:checked~label::after {
+    content: "-";
+}
+
+.collapsable {
+    display: none;
+    border-left: 2px solid blue;
+}
+
+input[type="checkbox"] {
+    display: none;
+}
+
+input:checked+label+.collapsable {
+    display: block;
+}
+
+
+/* Meta data */
+
+.meta-collapsable {
+    padding-left: 0.25em;
+}
+
+.meta-collapsable h3:first-child {
+    margin-top: 0;
+    padding-top: 0.15em;
+}
+
+
+/* Graphs */
+
+svg text {
+    transform: translate(-5px, 1px);
+}
+
+svg .selected polygon {
+    fill: red !important;
+    stroke: red;
+}
+
+svg .selected text {
+    fill: white;
+}
+
+
+/* Runtime */
+
+.runtime {
+    display: flex;
+    flex-direction: row;
+    padding-bottom: 1em;
+}
+
+.runtime>div {
+    background-color: blue;
+    margin-left: 5px;
+    min-width: 2em;
+}
+
+.runtime p {
+    color: white;
+    margin: 0.1em;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.runtime>div:nth-child(odd) {
+    background-color: rgba(0, 0, 255, 0.5);
+}
+
+.runtime>div:first-child {
+    margin-left: 0;
+}
+
+.runtime-hover {
+    display: none;
+    position: absolute;
+    width: 150px;
+    border: 1px solid blue;
+    padding: 0.2em;
+    background-color: white;
+    transform: translate(10px, -10px);
+}
+
+.runtime-hover span {
+    display: block;
+}
+
+.runtime-title {
+    font-weight: 500;
+}
+
+.runtime-time {
+    color: #777;
+}
+
+.runtime-desc {
+    margin-top: 0.5em;
+    font-size: 0.75em;
+    font-style: italic;
+}
+
+.runtime>div:hover .runtime-hover {
+    display: block;
+}
+
+
+/* footer */
+
+.footer {
+    margin: 3em 0;
+}
+
+.footer p {
+    color: #999;
 }
