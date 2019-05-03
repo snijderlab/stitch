@@ -56,9 +56,17 @@ Volgende keer (woensdag): doornemen data eerste run, kijken of/wanneer het op he
 
 We hebben de resultaten van maandag doorgesproken en het gehad over de algemene theorie van MS/MS etc. Er bleek dat ik een rekenfoutje gemaakt had waardoor de antilichaamconcentratie in het eindmengsel 1 miljoen keer hoger was ingeschat, maar de tweede run die Joost gisteren (30-04-2019) gedaan heeft was wel goed gelukt (200 keer meer antilichaam geinjecteerd door het niet te verdunnen en meer te injecteren). Uit de resultaten bleek dat het mengsel goed genoeg is om op een betere MS te runnen, dus dat gaat hopelijk binnekort lukken. Ook bleek dat alfalytic protease niet gelukt was, we hebben geen idee waarom niet maar gaan het de volgende keer gewoon weer proberen. 's Middags ben ik begonnen aan het report, hiervoor worden nu HTML pagina's gemaakt waar al wat interactiviteit in zit zodat mensen makkelijker kunnen zien wat de output is.
 
-Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data genereren, verzinnen hoe de verificatie te quantificeren.
+Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data genereren, verzinnen hoe de verificatie te quantificeren, output to JSON.
 
 Volgende keer (vrijdag): algemene theorie fragmentatie doornemen.
+
+## 03-05-2019
+
+We hebben de samples voor de Fusion voorbereid en besproken wat er anders is dan oon de Orbitrap 3. Sinds de vorige keer heeft Joost al de samples op de Fusion geladen, maar de methode was iets te kort ingesteld waardoor er niet genoeg details overbleven om echt goede analyse op te doen, daarom is er nu voor een 2x langere gradient gekozen in het LC systeem. 's Middags heb ik gezocht naar een script voor in silico digest, na veel gepruts wil ik met regex een heel simpele eigen variant schrijven, dat blijkt makkelijker dan andermans code hergebruiken omdat deze vaak veel te veel kan. Ook hebben we het protocol voor as maandag besproken en wijzigingen doorgevoerd van de afgelopen maandag.
+
+Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data genereren, verzinnen hoe de verificatie te quantificeren, output to JSON.
+
+Volgende keer (maandag): praktisch werk
 
 # TODO
 

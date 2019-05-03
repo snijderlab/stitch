@@ -1,6 +1,6 @@
 body {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 2fr 1fr;
     font-family: "Roboto", sans-serif;
     margin: 0;
 }
@@ -34,24 +34,42 @@ table {
 }
 td, th {
     border: 1px solid #aaa;
+    padding: 0.1rem;
+}
+td.center {
+    text-align: center;
 }
 th {
     color: white;
     background: #333;
 }
-th::after, th::before {
-    padding: 5px;
-    background: #222;
-    color: #777;
+th::after {
+    margin-left: 0.25em;
+    color: #999;
+    display: inline-block;
+}
+th[onclick]::after {
+    content: "\21f3";
 }
 th.asc::after {
-    content: "^";
-}
-th.dsc::after {
-    content: "v"
+    content: "\21e7";
 }
 td.seq {
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+}
+.info-link {
+    display: inline-block;
+    color: blue;
+    text-decoration: none;
+    border: 1px solid blue;
+    padding: 0.05em 0.1em;
+    margin: 0.1em;
+    border-radius: 0.25em;
+    font-size: 0.8em;
+}
+.info-link:hover {
+    color: red;
+    border-color: red;
 }

@@ -906,11 +906,11 @@ namespace AssemblyNameSpace
             string id;
 
             for (int i = 0; i < reads.Count(); i++) {
-                id = $"R{i:D4}";
+                id = GetReadLink(i);
                 buffer.AppendLine($@"<tr>
-    <td><a href=""#{id}"">{id}</a></td>
+    <td class=""center"">{id}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
-    <td>{AminoAcid.ArrayToString(reads[i]).Count()}</td>
+    <td class=""center"">{AminoAcid.ArrayToString(reads[i]).Count()}</td>
 </tr>");
             }
 
@@ -938,11 +938,11 @@ namespace AssemblyNameSpace
             for (int i = 0; i < condensed_graph.Count(); i++) {
                 id = GetCondensedNodeLink(i);
                 buffer.AppendLine($@"<tr>
-    <td>{id}</td>
+    <td class=""center"">{id}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
-    <td>{condensed_graph[i].Sequence.Count()}</td>
-    <td>{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
-    <td>{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
+    <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
+    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
+    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
     <td>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</td>
 </tr>");
             }
@@ -1005,8 +1005,6 @@ namespace AssemblyNameSpace
             long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L;
 
             string html = $@"
-<html>
-<body>
 <h3>General information</h3>
 <table>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
@@ -1041,9 +1039,7 @@ namespace AssemblyNameSpace
 <tr><td>Linking graph</td><td>{meta_data.graph_time} ms</td></tr>
 <tr><td>Finding paths</td><td>{meta_data.path_time} ms</td></tr>
 <tr><td>Filtering sequences</td><td>{meta_data.sequence_filter_time} ms</td></tr>
-</table>
-</body>
-</html>";
+</table>";
 
             return html;
         }

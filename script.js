@@ -15,7 +15,7 @@ function sortTable(id, column_number, type) {
         rows = table.getElementsByTagName("TR");
         /* Loop through all table rows (except the
         first, which contains table headers): */
-        for (i = 1; i < (rows.length - 2); i++) {
+        for (i = 1; i < (rows.length - 1); i++) {
             shouldSwitch = false;
 
             x = rows[i].getElementsByTagName("TD")[column_number];
