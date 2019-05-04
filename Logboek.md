@@ -70,6 +70,10 @@ Volgende keer (qua code): alignment reads/contig, load SVG when ready, test data
 
 Volgende keer (maandag): praktisch werk
 
+## 04-05-2019
+
+Ik heb zelf wat werk gestoken in het aanpasbaar maken van de breedte van de zijbalk. De kleuren heb ik geupdated en wat kleine dingetjes gemaakt.
+
 # TODO
 
 ## Small things

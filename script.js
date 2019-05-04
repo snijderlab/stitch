@@ -80,3 +80,47 @@ function lpad(str, padString, length) {
         str = padString + str;
     return str;
 }
+
+var dragging = false;
+
+function Setup() {
+    document.getElementById("aside-handle").addEventListener('mousedown', function(ev) {
+        dragging = true;
+        document.body.classList.add("dragging");
+        pauseEvent(ev);
+    })
+}
+
+document.addEventListener('mousemove', function(ev) {
+    if (dragging) {
+        width = window.innerWidth - ev.screenX;
+        document.getElementById("aside").style.flexBasis = width.toString() + "px";
+
+        if (width < 200) {
+            document.body.classList.add("only-main");
+        } else {
+            document.body.classList.remove("only-main");
+        }
+
+        if (ev.screenX < 200) {
+            document.body.classList.add("only-aside");
+        } else {
+            document.body.classList.remove("only-aside");
+        }
+
+        pauseEvent(ev);
+    }
+})
+
+document.addEventListener('mouseup', function() {
+    dragging = false;
+    document.body.classList.remove("dragging");
+})
+
+function pauseEvent(e) {
+    if (e.stopPropagation) e.stopPropagation();
+    if (e.preventDefault) e.preventDefault();
+    e.cancelBubble = true;
+    e.returnValue = false;
+    return false;
+}

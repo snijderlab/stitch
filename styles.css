@@ -1,54 +1,105 @@
+/* --color-primary: #19bdff;
+    --color-primary-light: #C5EEFF;
+    --color-primary-dark: #0C5E7F;
+    --color-secondary: #E64200;
+    --color-secondary-light: #F8CFBF;
+    --color-secondary-dark: #732100;*/
+
+* {
+    --color-primary: #2642B5;
+    --color-primary-light: #C8CFEC;
+    --color-primary-dark: #13215A;
+    --color-secondary: #D9BD4A;
+    --color-secondary-light: #F5EED1;
+    --color-secondary-dark: #6C5E25;
+    --color-dark: #333;
+    --color-light: #999;
+}
+
 body {
-    display: grid;
-    grid-template-columns: 20px 2fr 20px 1fr;
-    grid-template-areas: ". main . aside";
+    display: flex;
+    flex-direction: row;
     font-family: "Roboto", sans-serif;
     margin: 0;
-    color: #333;
+    color: var(--color-dark);
 }
 
-@media (max-width: 1200px) {
-    body {
-        grid-template-columns: 10px 4fr 10px 3fr;
-        grid-template-areas: ". main . aside";
-    }
-}
-
-@media (max-width: 800px) {
-    body {
-        grid-template-columns: 5px 1fr 5px 1fr;
-        grid-template-areas: ". main . aside";
-    }
-}
-
-svg {
-    max-width: 100%;
-    height: auto;
-    margin: 0 auto;
+.dragging {
+    cursor: ew-resize;
 }
 
 .report,
 .aside {
-    padding: 0.5em;
     min-height: 100vh;
 }
 
 .report {
-    grid-area: main;
+    flex: 3;
+    padding: 0 1em;
+}
+
+.only-aside .report {
+    display: none;
+}
+
+.aside-handle {
+    flex: 0 1 0.25em;
+    background-color: var(--color-dark);
+    max-width: 0.25em;
+    cursor: ew-resize;
+}
+
+.only-aside .aside-handle,
+.only-main .aside-handle,
+.dragging .aside-handle,
+.aside-handle:hover {
+    flex: 0 1 0.5em;
+    max-width: 0.5em;
+}
+
+.handle {
+    color: white;
+    padding: 0.5em 0.2em;
+    cursor: ew-resize;
+    background-color: var(--color-dark);
+    margin-left: -0.5em;
+    margin-top: -1em;
+    border-radius: 0.25em;
+    font-size: 0.75em;
+    font-family: "Roboto Mono", "Roboto", monospace;
+    width: 14px;
+    display: none;
+    z-index: 1;
+    position: fixed;
+    top: 50vh;
+}
+
+.dragging .handle,
+.aside-handle:hover .handle {
+    display: block;
 }
 
 .aside {
-    grid-area: aside;
-    background-color: rgba(0, 0, 255, 0.5);
+    flex: 0 1 500px;
+    background-color: var(--color-primary-light);
+}
+
+.only-aside .aside {
+    flex-grow: 1;
+}
+
+.only-main .aside {
+    display: none;
 }
 
 .aside-wrapper {
     position: fixed;
     top: 0;
+    padding: 0.5em;
 }
 
 h1 {
-    color: blue;
+    color: var(--color-primary);
     font-size: 3em;
 }
 
@@ -84,7 +135,7 @@ table {
 
 td,
 th {
-    border: 1px solid rgba(0, 0, 255, 0.5);
+    border: 1px solid var(--color-primary-light);
     padding: 0.1rem;
 }
 
@@ -97,9 +148,9 @@ td.center {
 }
 
 th {
-    color: blue;
+    color: var(--color-primary);
     background: white;
-    border: 2px solid blue;
+    border: 2px solid var(--color-primary);
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -107,7 +158,7 @@ th {
 
 th::after {
     margin-left: 0.25em;
-    color: rgba(0, 0, 255, 0.5);
+    color: var(--color-primary-light);
     display: inline-block;
 }
 
@@ -130,14 +181,14 @@ td.seq {
 }
 
 tr.selected {
-    background-color: rgba(255, 0, 0, 0.25);
+    background-color: var(--color-secondary-light);
 }
 
 .info-link {
     display: inline-block;
-    color: blue;
+    color: var(--color-primary);
     text-decoration: none;
-    border: 1px solid blue;
+    border: 1px solid var(--color-primary);
     padding: 0.05em 0.1em;
     margin: 0.1em;
     border-radius: 0.25em;
@@ -145,8 +196,8 @@ tr.selected {
 }
 
 .info-link:hover {
-    color: red;
-    border-color: red;
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
 }
 
 
@@ -156,7 +207,7 @@ label {
     display: block;
     font-size: 2em;
     color: white;
-    background-color: blue;
+    background-color: var(--color-primary);
     padding: 0.1em 0.25em;
     display: block;
     border-radius: 0.1em;
@@ -165,8 +216,8 @@ label {
 
 label::after {
     content: "+";
-    border: 1px solid rgba(255, 255, 255, 0.75);
-    color: rgba(255, 255, 255, 0.75);
+    border: 1px solid var(--color-primary-light);
+    color: var(--color-primary-light);
     border-radius: 50%;
     font-size: 0.5em;
     padding: 0.1em 0.4em;
@@ -179,13 +230,13 @@ input:checked+label {
     border-radius: 0.1em 0.1em 0 0;
 }
 
-input:checked~label::after {
+input:checked+label::after {
     content: "-";
 }
 
 .collapsable {
     display: none;
-    border-left: 2px solid blue;
+    border-left: 2px solid var(--color-primary);
 }
 
 input[type="checkbox"] {
@@ -211,13 +262,50 @@ input:checked+label+.collapsable {
 
 /* Graphs */
 
+svg {
+    max-width: 100%;
+    height: auto;
+    margin: 0 auto;
+}
+
 svg text {
     transform: translate(-5px, 1px);
 }
 
+svg .node {
+    cursor: pointer;
+}
+
+svg .node polygon {
+    fill: white;
+    stroke: var(--color-primary);
+}
+
+svg .node text {
+    fill: var(--color-primary);
+}
+
+svg .start-node polygon {
+    fill: var(--color-primary);
+}
+
+svg .start-node text {
+    fill: white;
+}
+
+svg .edge {
+    transform: translate(-2px, 0);
+}
+
+svg .edge polygon,
+svg .edge path {
+    stroke: var(--color-primary);
+    fill: var(--color-primary);
+}
+
 svg .selected polygon {
-    fill: red !important;
-    stroke: red;
+    fill: var(--color-secondary);
+    stroke: var(--color-secondary);
 }
 
 svg .selected text {
@@ -234,7 +322,7 @@ svg .selected text {
 }
 
 .runtime>div {
-    background-color: blue;
+    background-color: var(--color-primary);
     margin-left: 5px;
     min-width: 2em;
 }
@@ -248,7 +336,7 @@ svg .selected text {
 }
 
 .runtime>div:nth-child(odd) {
-    background-color: rgba(0, 0, 255, 0.5);
+    background-color: var(--color-primary-light);
 }
 
 .runtime>div:first-child {
@@ -259,7 +347,7 @@ svg .selected text {
     display: none;
     position: absolute;
     width: 150px;
-    border: 1px solid blue;
+    border: 1px solid var(--color-primary);
     padding: 0.2em;
     background-color: white;
     transform: translate(10px, -10px);
@@ -274,7 +362,7 @@ svg .selected text {
 }
 
 .runtime-time {
-    color: #777;
+    color: var(--color-light);
 }
 
 .runtime-desc {
@@ -295,5 +383,5 @@ svg .selected text {
 }
 
 .footer p {
-    color: #999;
+    color: var(--color-light);
 }

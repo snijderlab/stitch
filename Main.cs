@@ -1105,7 +1105,12 @@ namespace AssemblyNameSpace
             string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
             if (File.Exists(graphpath)) {
                 svg = File.ReadAllText(graphpath);
-                svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"node\">\\s*<title>i([0-9]+)", "id=\"node$1\" class=\"node\" onclick=\"Select('I', $1)\"><title>Node $1");
+                // Give the filled nodes (start node) the correct class
+                svg = Regex.Replace(svg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+                // Give the nodes the correct ID
+                svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
+                // Strip all <title> tags
+                svg = Regex.Replace(svg, "<title>[^<]*</title>", "");
             }
 
             // Could also be done as an img, but that is much less nice
@@ -1115,7 +1120,12 @@ namespace AssemblyNameSpace
             string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
             if (File.Exists(simplegraphpath)) {
                 simplesvg = File.ReadAllText(simplegraphpath);
-                simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"node\">\\s*<title>i([0-9]+)", "id=\"simple-node$1\" class=\"node\" onclick=\"Select('I', $1)\"><title>Node $1");
+                // Give the filled nodes (start node) the correct class
+                simplesvg = Regex.Replace(simplesvg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+                // Give the nodes the correct ID
+                simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"simple-node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
+                // Strip all <title> tags
+                simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
             }
 
             string stylesheet = "/* Could not find the stylesheet */";
@@ -1136,7 +1146,7 @@ namespace AssemblyNameSpace
 {script}
 </script>
 </head>
-<body>
+<body onload=""Setup()"">
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
@@ -1167,7 +1177,10 @@ namespace AssemblyNameSpace
 </div>
 
 </div>
-<div class=""aside"">
+<div class=""aside-handle"" id=""aside-handle"">
+<span class=""handle"">&lt;&gt;</span>
+</div>
+<div class=""aside"" id=""aside"">
 <div class=""aside-wrapper"">
 {CreateAsides()}
 </div>
