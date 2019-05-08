@@ -24,6 +24,15 @@ body {
     color: var(--color-dark);
 }
 
+h1, h2, h3, h4 {
+    font-weight: 500;
+}
+
+h1 {
+    color: var(--color-primary);
+    font-size: 3em;
+}
+
 .dragging {
     cursor: ew-resize;
 }
@@ -62,7 +71,7 @@ body {
     padding: 0.5em 0.2em;
     cursor: ew-resize;
     background-color: var(--color-dark);
-    margin-left: -0.5em;
+    margin-left: -0.4em;
     margin-top: -1em;
     border-radius: 0.25em;
     font-size: 0.75em;
@@ -72,6 +81,7 @@ body {
     z-index: 1;
     position: fixed;
     top: 50vh;
+    font-weight: 500;
 }
 
 .dragging .handle,
@@ -96,11 +106,11 @@ body {
     position: fixed;
     top: 0;
     padding: 0.5em;
+    padding-top: 0;
 }
 
-h1 {
-    color: var(--color-primary);
-    font-size: 3em;
+.aside-seq {
+    word-break: break-all;
 }
 
 
@@ -300,6 +310,9 @@ svg .edge {
 svg .edge polygon,
 svg .edge path {
     stroke: var(--color-primary);
+}
+
+svg .edge polygon {
     fill: var(--color-primary);
 }
 

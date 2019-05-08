@@ -5,6 +5,9 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace AssemblyNameSpace
 {
@@ -21,19 +24,67 @@ namespace AssemblyNameSpace
     /// This will be rewritten when the code is moved to its new repository </summary>
     class ToRunWithCommandLine
     {
+        static BlockingCollection<(int, int, string, string, string)> inputQueue = new BlockingCollection<(int, int, string, string, string)>();
         /// <summary> The method that will be run if the code is run from the command line. 
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
+            /*
             int testnumber = 7;
             var test = new Assembler(6,5);
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
+            test.SetAlphabet("examples/Default alphabet.csv");
             test.OpenReads($"examples/{testnumber:D3}/reads.txt");
             Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputGraph($"examples/{testnumber:D3}/graph.dot");
             test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.Mode.Simple);
             test.CreateReport($"examples/{testnumber:D3}/report.html");
+            */
+            
+            int threadCount = 4;
+            Task[] workers = new Task[threadCount];
+
+            for (int i = 0; i < threadCount; ++i)
+            {
+                int workerId = i;
+                Task task = new Task(() => worker(workerId));
+                workers[i] = task;
+                task.Start();
+            }
+
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            string csvfile = @"generate_tests\Results\runs.csv";
+            File.WriteAllText(csvfile, "sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Total runtime;\n");
+
+            int count = 0;
+            foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
+                count++;
+                inputQueue.Add((10, 8, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + ".html", csvfile));
+            }
+            inputQueue.CompleteAdding();
+            Task.WaitAll(workers);
+            stopwatch.Stop();
+            Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
+        }
+
+        static void worker(int workerId)
+        {
+            Console.WriteLine("Worker {0} is starting.", workerId);
+
+            foreach (var workItem in inputQueue.GetConsumingEnumerable())
+            {
+                Console.WriteLine("Starting on: " + workItem.Item3);
+                var assm = new Assembler(workItem.Item1,workItem.Item2);
+                assm.OpenReads(workItem.Item3);
+                assm.Assemble();
+                assm.CreateReport(workItem.Item4);
+                assm.CreateCSVLine(workItem.Item3, workItem.Item5);
+            }
+
+            Console.WriteLine("Worker {0} is stopping.", workerId);
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -523,6 +574,45 @@ namespace AssemblyNameSpace
                 }
             }
         }
+        public void SetAlphabet(string filename) {
+            string[] input = new string[]{};
+            try {
+                input = File.ReadAllLines(filename);
+            } catch {
+                throw new Exception($"Could not open the file: {filename}");
+            }
+            int rows = input.Length; 
+            List<string[]> array = new List<string[]>();
+
+            foreach (string line in input) {
+                array.Add(line.Split(new char[]{';',','}).Select(x => x.Trim(new char[]{' ','\n','\r','\t','-','.'})).ToArray());
+            }
+
+            int columns = input[0].Length;
+
+            if (rows != columns) {
+                throw new Exception($"The amount of rows ({rows}) is not equal to the amount of columns ({columns}).");
+            } else {
+                alphabet = String.Join("", input[0].Substring(1)).ToCharArray();
+                scoring_matrix = new int[columns - 1, columns - 1];
+                bool succesful = true;
+
+                for (int i = 0; i < columns - 1; i++) {
+                    for (int j = 0; j < columns - 1; j++) {
+                        try {
+                            scoring_matrix[i, j] = Int32.Parse(array[i+1][j+1]);
+                        } catch {
+                            Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
+                            succesful = false;
+                        }
+                    }
+                }
+
+                if (!succesful) {
+                    throw new Exception("The reading on the alphabet file was not succesfull, see stdout for detauled error messages.");
+                }
+            }
+        }
         /// <summary> To open a file with reads (should always be run before trying to assemble). 
         /// It will save the reads in the current Assembler object. </summary>
         /// <param name="input_file"> The path to the file to read from. </param>
@@ -851,37 +941,47 @@ namespace AssemblyNameSpace
             Extended,
             /// <summary> Will generate with condesed information, will give easier overview but details have to be looked up. </summary>
             Simple}
-        /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
+        /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended ans a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
-        /// <param name="mode"> The mode to use to generate the graph. </param>
-        public void OutputGraph(string filename = "graph.dot", Mode mode = Mode.Extended) {
+        public void OutputGraph(string filename = "graph.dot") {
             // Generate a dot file to use in graphviz
             var buffer = new StringBuilder();
+            var simplebuffer = new StringBuilder();
 
-            buffer.AppendLine("digraph {\n\tnode [fontname=\"Roboto\", shape=cds, fontcolor=\"blue\", color=\"blue\"];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee, color=\"blue\"];\n");
-            string label, style;
+            string header = "digraph {\n\tnode [fontname=\"Roboto\", shape=cds, fontcolor=\"blue\", color=\"blue\"];\n\tgraph [rankdir=\"LR\"];\n\t edge [arrowhead=vee, color=\"blue\"];\n";
+            buffer.AppendLine(header);
+            simplebuffer.AppendLine(header);
+            string style;
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
-                if (mode == Mode.Extended) label = AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray());
-                else label = $"I{i:D4}";
-
                 if (condensed_graph[i].BackwardEdges.Count() == 0) style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
                 else style = "";
 
-                buffer.AppendLine($"\ti{i} [label=\"{label}\"{style}]");
+                buffer.AppendLine($"\ti{i} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
+                simplebuffer.AppendLine($"\ti{i} [label=\"I{i:D4}\"{style}]");
 
                 foreach (var fwe in condensed_graph[i].ForwardEdges) {
                     buffer.AppendLine($"\ti{i} -> i{fwe}");
+                    simplebuffer.AppendLine($"\ti{i} -> i{fwe}");
                 }
             }
 
             buffer.AppendLine("}");
+            simplebuffer.AppendLine("}");
 
             // Write .dot to a file
+
+            string path = Path.ChangeExtension(filename, "");
+            string simplefilename = new string(path.Take(path.Length -1).ToArray()) + "-simple.dot";
             
             StreamWriter sw = File.CreateText(filename);
+            StreamWriter swsimple = File.CreateText(simplefilename);
+
             sw.Write(buffer.ToString());
+            swsimple.Write(simplebuffer.ToString());
+
             sw.Close();
+            swsimple.Close();
 
             // Generate PNG and SVG files
 
@@ -899,20 +999,42 @@ namespace AssemblyNameSpace
                 svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.UseShellExecute = false;
+
+                Process simplepng = new Process();
+                simplepng.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "png") + "\"" );
+                simplepng.StartInfo.RedirectStandardError = true;
+                simplepng.StartInfo.UseShellExecute = false;
+
+                Process simplesvg = new Process();
+                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"" );
+                simplesvg.StartInfo.RedirectStandardError = true;
+                simplesvg.StartInfo.UseShellExecute = false;
                 
                 png.Start();
                 svg.Start();
+                simplepng.Start();
+                simplesvg.Start();
 
                 png.WaitForExit();
                 svg.WaitForExit();
+                simplepng.WaitForExit();
+                simplesvg.WaitForExit();
 
                 var pngstderr = png.StandardError.ReadToEnd();
                 if (pngstderr != "") {
-                    Console.WriteLine("PNG ERROR: " + pngstderr);
+                    Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
                 }
                 var svgstderr = svg.StandardError.ReadToEnd();
                 if (svgstderr != "") {
-                    Console.WriteLine("SVG ERROR: " + svgstderr);
+                    Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
+                }
+                var simplepngstderr = simplepng.StandardError.ReadToEnd();
+                if (simplepngstderr != "") {
+                    Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
+                }
+                var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
+                if (simplesvgstderr != "") {
+                    Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
             }
             catch (Exception e)
@@ -990,7 +1112,7 @@ namespace AssemblyNameSpace
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig: {id}</h1>
     <h2>Sequence</h2>
-    <p>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</p>
     <h2>Sequence Length</h2>
     <p>{condensed_graph[i].Sequence.Count()}</p>
     <h2>Based on</h2>
@@ -1004,7 +1126,7 @@ namespace AssemblyNameSpace
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block read-info"">
     <h1>Read: {id}</h1>
     <h2>Sequence</h2>
-    <p>{AminoAcid.ArrayToString(reads[i])}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(reads[i])}</p>
     <h2>Sequence Length</h2>
     <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
 </div>");
@@ -1057,6 +1179,8 @@ namespace AssemblyNameSpace
 <tr><td>Number of edges</td><td>{number_edges_condensed}</td></tr>
 <tr><td>Mean Connectivity</td><td>{(double) number_edges_condensed / condensed_graph.Count()}</td></tr>
 <tr><td>Highest Connectivity</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
+<tr><td>Average sequence length</td><td>{condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))/condensed_graph.Count()}</td></tr>
+<tr><td>Total sequence length</td><td>{condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))}</td></tr>
 </table>
 
 <h3>Runtime information</h3>
@@ -1098,10 +1222,28 @@ namespace AssemblyNameSpace
 
             return html;
         }
+        public void CreateCSVLine(string ID, string filename = "report.csv") {
+            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | total runtime 
+            int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
+            int totalnodes = condensed_graph.Count();
+            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{totallength / totalnodes};{totallength};{meta_data.total_time};\n";
+            
+            if (File.Exists(filename)) {
+                File.AppendAllText(filename, line);
+            } else {
+                StreamWriter sw = File.CreateText(filename);
+                sw.Write(line);
+                sw.Close();
+            }
+        }
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
         /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         public void CreateReport(string filename = "report.html") {
-            string graphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\graph.svg";
+            string graphoutputpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + $"\\graph{DateTime.Now.ToString("HH-mm-ss_fffffff")}.dot";
+            Console.WriteLine(graphoutputpath);
+            OutputGraph(graphoutputpath);
+
+            string graphpath = Path.ChangeExtension(graphoutputpath, "svg");
             string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
             if (File.Exists(graphpath)) {
                 svg = File.ReadAllText(graphpath);
@@ -1116,7 +1258,7 @@ namespace AssemblyNameSpace
             // Could also be done as an img, but that is much less nice
             // <img src='graph.png' alt='Extended graph of the results' srcset='graph.svg'>
 
-            string simplegraphpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + "\\simplegraph.svg";
+            string simplegraphpath = new string(Path.ChangeExtension(graphoutputpath, "").Take(Path.ChangeExtension(graphoutputpath, "").Length - 1).ToArray()) + "-simple.svg";
             string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
             if (File.Exists(simplegraphpath)) {
                 simplesvg = File.ReadAllText(simplegraphpath);
