@@ -56,14 +56,32 @@ namespace GenerateTestsNS {
                 task.Start();
             }
 
-            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Thermolysin", "nonspecific", 0.01)};
-            var percents = new double[] {1.0, 0.75, 0.5};
+            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Thermolysin", "nonspecific", 0.01), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0), ("GluC", "(?<=E)", 1.0)};
+            var percents = new double[] {1.0}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
             int count = 0;
             
             foreach (var file in Directory.GetFiles(@"Test mAB\")) {
                 count++;
-                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + ".txt";
+                // All proteases
+                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all.txt";
                 inputQueue.Add((file, outputpath, prots, percents));
+
+                // Runs 6 times
+                for (int i = 0; i < prots.Count(); i++) {
+                    // Runs (6 - (i-1)) times
+                    for (int j = i+1; j < prots.Count(); j++) {
+                        // Dual sets - 720 pieces
+                        outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-{prots[i].Item1},{prots[j].Item1}.txt";
+                        inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[i], prots[j]}, percents));
+                        
+                        // Triple sets
+                        // Runs (6 - (6 - (i-1)))
+                        //for (int k = j+1; k < prots.Count(); k++) {
+                        //    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-{prots[i].Item1},{prots[j].Item1},{prots[k].Item1}.txt";
+                        //    inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[i], prots[j], prots[k]}, percents));
+                        //}
+                    }
+                }
             }
             inputQueue.CompleteAdding();
             Task.WaitAll(workers);
@@ -76,8 +94,8 @@ namespace GenerateTestsNS {
 
             foreach (var workItem in inputQueue.GetConsumingEnumerable())
             {
-                Console.WriteLine("Starting on: " + workItem.Item3);
-                GenerateTests.GenerateTest(inputQueue.Item1, inputQueue.Item2, inputQueue.Item3, inputQueue.Item4, 5, 40, true);
+                Console.WriteLine("Starting on: " + workItem.Item2);
+                GenerateTests.GenerateTest(workItem.Item1, workItem.Item2, workItem.Item3, workItem.Item4, 5, 40, true);
             }
 
             Console.WriteLine("Worker {0} is stopping.", workerId);

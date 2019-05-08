@@ -35,14 +35,14 @@ namespace AssemblyNameSpace
             //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
             test.SetAlphabet("examples/Default alphabet.csv");
             test.OpenReads($"examples/{testnumber:D3}/reads.txt");
-            Console.WriteLine("Now starting on the assembly");
+            // Console.WriteLine("Now starting on the assembly");
             test.Assemble();
             test.OutputGraph($"examples/{testnumber:D3}/graph.dot");
             test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.Mode.Simple);
             test.CreateReport($"examples/{testnumber:D3}/report.html");
             */
             
-            int threadCount = 4;
+            int threadCount = 4; //Increase if it feels like not 100% CPU usage
             Task[] workers = new Task[threadCount];
 
             for (int i = 0; i < threadCount; ++i)
@@ -57,12 +57,20 @@ namespace AssemblyNameSpace
             stopwatch.Start();
 
             string csvfile = @"generate_tests\Results\runs.csv";
-            File.WriteAllText(csvfile, "sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Total runtime;\n");
+            StreamWriter sw = File.CreateText(csvfile);
+            sw.Write("sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;\n");
+            sw.Close();
 
             int count = 0;
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
-                inputQueue.Add((10, 8, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + ".html", csvfile));
+                // Runs ten times
+                for (int k = 5; k < 15; k++) {
+                    // Runs four times
+                    for (int mh = 1; mh < 5; mh++) {
+                        inputQueue.Add((k, k-mh, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + ".html", csvfile));
+                    }
+                }
             }
             inputQueue.CompleteAdding();
             Task.WaitAll(workers);
@@ -72,7 +80,7 @@ namespace AssemblyNameSpace
 
         static void worker(int workerId)
         {
-            Console.WriteLine("Worker {0} is starting.", workerId);
+            // Console.WriteLine("Worker {0} is starting.", workerId);
 
             foreach (var workItem in inputQueue.GetConsumingEnumerable())
             {
@@ -84,7 +92,7 @@ namespace AssemblyNameSpace
                 assm.CreateCSVLine(workItem.Item3, workItem.Item5);
             }
 
-            Console.WriteLine("Worker {0} is stopping.", workerId);
+            // Console.WriteLine("Worker {0} is stopping.", workerId);
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
@@ -134,18 +142,10 @@ namespace AssemblyNameSpace
         {
             /// <summary> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </summary>
             private Assembler parent;
-            /// <summary> The code (index of the char in the alpabet array of the parent). </summary>
-            private int code;
-            /// <summary> The code (index of the char in the alpabet array of the parent). Gives only a Get option. 
+            /// <summary> The code (index of the char in the alpabet array of the parent).
             /// The only way to change it is in the creator. </summary>
             /// <value> The code of this AminoAcid. </value>
-            public int Code
-            {
-                get
-                {
-                    return code;
-                }
-            }
+            public int Code;
 
             /// <summary> The creator of AminoAcids. </summary>
             /// <param name="asm"> The Assembler that this AminoAcid is used in, to get the alphabet. </param>
@@ -154,14 +154,14 @@ namespace AssemblyNameSpace
             public AminoAcid(Assembler asm, char input)
             {
                 parent = asm;
-                code = asm.getIndexInAlphabet(input);
+                Code = asm.getIndexInAlphabet(input);
             }
             /// <summary> Will create a string of this AminoAcid. Consiting of the character used to 
             /// create this AminoAcid. </summary>
             /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
             public override string ToString()
             {
-                return parent.alphabet[code].ToString();
+                return parent.alphabet[Code].ToString();
             }
             /// <summary> Will create a string of an array of AminoAcids. </summary>
             /// <param name="array"> The array to create a string from. </param>
@@ -223,7 +223,7 @@ namespace AssemblyNameSpace
             /// <returns> Returns the hascode of the AminoAcid. </returns>
             public override int GetHashCode()
             {
-                return this.code.GetHashCode();
+                return this.Code.GetHashCode();
             }
             /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. </summary>
             /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
@@ -374,18 +374,18 @@ namespace AssemblyNameSpace
             /// See <see cref="Node.max_forward_score"/> for the highest score.
             private void filterForwardEdges()
             {
-                //Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
+                //// Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
                 forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
-                //Console.Write($"{forwardEdges.Count}.");
+                //// Console.Write($"{forwardEdges.Count}.");
             }
             /// <summary> Filters the backward edges based on the highest score found yet and the edge include limit. </summary>
             /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
             /// See <see cref="Node.max_backward_score"/> for the highest score.
             private void filterBackwardEdges()
             {
-                //Console.Write($"Filtered forward edges from {backwardEdges.Count} to ");
+                //// Console.Write($"Filtered forward edges from {backwardEdges.Count} to ");
                 backwardEdges = backwardEdges.Where(i => i.Item2 + i.Item3 >= max_backward_score - edge_include_limit).ToList();
-                //Console.Write($"{backwardEdges.Count}.");
+                //// Console.Write($"{backwardEdges.Count}.");
             }
             /// <summary> To check if the Node has forward edges. </summary>
             /// <returns> Returns true if the node has forward edges. </returns>
@@ -602,7 +602,7 @@ namespace AssemblyNameSpace
                         try {
                             scoring_matrix[i, j] = Int32.Parse(array[i+1][j+1]);
                         } catch {
-                            Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
+                            // Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
                             succesful = false;
                         }
                     }
@@ -684,7 +684,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    Console.WriteLine($"A read is not long enough: {AminoAcid.ArrayToString(read)}");
+                    // Console.WriteLine($"A read is not long enough: {AminoAcid.ArrayToString(read)}");
                 }
             }
             meta_data.kmers = kmers.Count;
@@ -745,13 +745,13 @@ namespace AssemblyNameSpace
                 k++;
                 if (k % 100 == 0)
                 {
-                    Console.WriteLine($"Adding edges... added {k} k-mers");
+                    // Console.WriteLine($"Adding edges... added {k} k-mers");
                 }
 
                 prefix = kmer.Item1.SubArray(0, kmer_length - 1);
                 postfix = kmer.Item1.SubArray(1, kmer_length - 1);
 
-                //Console.WriteLine("Computing pre and post fixes");
+                //// Console.WriteLine("Computing pre and post fixes");
 
                 // Precompute the homology with every node to speed up computation
                 for (int i = 0; i < graph.Length; i++)
@@ -761,14 +761,14 @@ namespace AssemblyNameSpace
                     postfix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, postfix);
                 }
 
-                //Console.WriteLine("Computed pre and post fixes");
+                //// Console.WriteLine("Computed pre and post fixes");
 
                 // Test for pre and post fixes for every node
                 for (int i = 0; i < graph.Length; i++)
                 {
                     if (prefix_matches[i] >= minimum_homology)
                     {
-                        //Console.WriteLine($"Found a prefix match at {i} with score {prefix_matches[i]} and postfix score {postfix_matches[i]}");
+                        //// Console.WriteLine($"Found a prefix match at {i} with score {prefix_matches[i]} and postfix score {postfix_matches[i]}");
                         for (int j = 0; j < graph.Length; j++)
                         {
                             if (i != j && postfix_matches[j] >= minimum_homology)
@@ -782,13 +782,13 @@ namespace AssemblyNameSpace
             });
 
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
-            Console.WriteLine($"Built graph");
+            // Console.WriteLine($"Built graph");
 
             // Print graph
 
             for (int i = 0; i < graph.Length; i++) {
                 var node = graph[i];
-                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence)} Index: {i} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                // Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence)} Index: {i} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
             }
 
             // Create a condensed graph to keep the information
@@ -811,7 +811,7 @@ namespace AssemblyNameSpace
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
 
-                    HashSet<int> origins = new HashSet<int>(start_node.Origins);
+                    List<int> origins = new List<int>(start_node.Origins);
                     
                     // Debug purposes can be deleted later
                     int forward_node_index = i;
@@ -853,21 +853,26 @@ namespace AssemblyNameSpace
                         backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
                     }  
 
-                    Console.WriteLine($"\n==Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
+                    // Console.WriteLine($"\n==Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
 
                     // Build the final sequence
                     backward_sequence.Reverse();
                     backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
                     backward_sequence.AddRange(forward_sequence);
 
-                    Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
-                    Console.WriteLine($"Stopped because \nforward node {forward_node_index} had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node {backward_node_index} had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
-                    Console.WriteLine($"Forward edges - forwards: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    Console.WriteLine($"Forward edges - backwards: {forward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    // Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
+                    // Console.WriteLine($"Stopped because \nforward node {forward_node_index} had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node {backward_node_index} had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
+                    // Console.WriteLine($"Forward edges - forwards: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    // Console.WriteLine($"Forward edges - backwards: {forward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    // Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
+                    // Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
 
-                    List<int> originslist = origins.ToList();
+                    List<int> originslist = new List<int>();
+                    foreach (int origin in origins) {
+                        if (!originslist.Contains(origin)) {
+                            originslist.Add(origin);
+                        }
+                    }
                     originslist.Sort();
                     condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, originslist));
                 }
@@ -925,7 +930,7 @@ namespace AssemblyNameSpace
 
             // Print the condensed graph
             foreach (var node in condensed_graph) {
-                Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} FWIndex: {node.ForwardIndex} BWIndex: {node.BackwardIndex} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
+                // Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} FWIndex: {node.ForwardIndex} BWIndex: {node.BackwardIndex} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
             }
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
@@ -987,8 +992,8 @@ namespace AssemblyNameSpace
 
             try
             {
-                Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
-                Console.WriteLine("-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"");
+                // Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
+                // Console.WriteLine("-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"");
 
                 Process png = new Process();
                 png.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
@@ -1022,24 +1027,24 @@ namespace AssemblyNameSpace
 
                 var pngstderr = png.StandardError.ReadToEnd();
                 if (pngstderr != "") {
-                    Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
+                    // Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
                 }
                 var svgstderr = svg.StandardError.ReadToEnd();
                 if (svgstderr != "") {
-                    Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
+                    // Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
                 var simplepngstderr = simplepng.StandardError.ReadToEnd();
                 if (simplepngstderr != "") {
-                    Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
+                    // Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
                 }
                 var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                 if (simplesvgstderr != "") {
-                    Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
+                    // Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
             }
             catch (Exception e)
             {
-                Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
+                // Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
             }
         }
         public string CreateReadsTable() 
@@ -1169,7 +1174,7 @@ namespace AssemblyNameSpace
 <table>
 <tr><td>Number of nodes</td><td>{graph.Length}</td></tr>
 <tr><td>Number of edges</td><td>{number_edges}</td></tr>
-<tr><td>Mean Connectivity</td><td>{(double) number_edges / graph.Length}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double) number_edges / graph.Length:F3}</td></tr>
 <tr><td>Highest Connectivity</td><td>{graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double) a : (double) b.EdgesCount()) / 2D}</td></tr>
 </table>
 
@@ -1177,9 +1182,9 @@ namespace AssemblyNameSpace
 <table>
 <tr><td>Number of nodes</td><td>{condensed_graph.Count()}</td></tr>
 <tr><td>Number of edges</td><td>{number_edges_condensed}</td></tr>
-<tr><td>Mean Connectivity</td><td>{(double) number_edges_condensed / condensed_graph.Count()}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double) number_edges_condensed / condensed_graph.Count():F3}</td></tr>
 <tr><td>Highest Connectivity</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double) b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
-<tr><td>Average sequence length</td><td>{condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))/condensed_graph.Count()}</td></tr>
+<tr><td>Average sequence length</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a + b.Sequence.Count()))/condensed_graph.Count():F3}</td></tr>
 <tr><td>Total sequence length</td><td>{condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))}</td></tr>
 </table>
 
@@ -1223,10 +1228,10 @@ namespace AssemblyNameSpace
             return html;
         }
         public void CreateCSVLine(string ID, string filename = "report.csv") {
-            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | total runtime 
+            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | Mean connectivity | total runtime 
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{totallength / totalnodes};{totallength};{meta_data.total_time};\n";
+            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};\n";
             
             if (File.Exists(filename)) {
                 File.AppendAllText(filename, line);
@@ -1240,7 +1245,7 @@ namespace AssemblyNameSpace
         /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         public void CreateReport(string filename = "report.html") {
             string graphoutputpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + $"\\graph{DateTime.Now.ToString("HH-mm-ss_fffffff")}.dot";
-            Console.WriteLine(graphoutputpath);
+            // Console.WriteLine(graphoutputpath);
             OutputGraph(graphoutputpath);
 
             string graphpath = Path.ChangeExtension(graphoutputpath, "svg");
