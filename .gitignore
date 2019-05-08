@@ -4,3 +4,9 @@ examples/*/*.png
 examples/*/*.dot
 examples/*/*.svg
 examples/*/*.html
+generate_tests/*.png
+generate_tests/*.dot
+generate_tests/*.svg
+generate_tests/*.html
+generate_tests/Generated/*.*
+generate_tests/Results/*.*
