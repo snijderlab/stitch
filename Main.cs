@@ -42,55 +42,79 @@ namespace AssemblyNameSpace
             test.CreateReport($"examples/{testnumber:D3}/report.html");
             */
             
-            int threadCount = 4; //Increase if it feels like not 100% CPU usage
-            Task[] workers = new Task[threadCount];
+            // int threadCount = 4; //Increase if it feels like not 100% CPU usage
+            // Task[] workers = new Task[threadCount];
 
-            for (int i = 0; i < threadCount; ++i)
-            {
-                int workerId = i;
-                Task task = new Task(() => worker(workerId));
-                workers[i] = task;
-                task.Start();
-            }
+            // for (int i = 0; i < threadCount; ++i)
+            // {
+            //     int workerId = i;
+            //     Task task = new Task(worker);
+            //     workers[i] = task;
+            //     task.Start();
+            // }
 
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             string csvfile = @"generate_tests\Results\runs.csv";
             StreamWriter sw = File.CreateText(csvfile);
-            sw.Write("sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;\n");
+            sw.Write("sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;\n");
             sw.Close();
 
             int count = 0;
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
+                // if (count < 4) continue;
                 // Runs ten times
-                for (int k = 5; k < 15; k++) {
-                    // Runs four times
-                    for (int mh = 1; mh < 5; mh++) {
-                        inputQueue.Add((k, k-mh, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + ".html", csvfile));
+                for (int k = 5; k <= 15; k++) {
+                    // Runs three times
+                    for (int mh = 1; mh <= 3 && k-mh > 3; mh++) {
+                        inputQueue.Add((k, k-mh, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-{k-mh}.html", csvfile));
+                        // Console.WriteLine("Starting on: " + file + $" k:{k} mh: {mh}");
+                        // var assm = new Assembler(k,k-mh);
+                        // assm.OpenReads(file);
+                        // assm.Assemble();
+                        // assm.CreateReport(@"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-{k-mh}.html");
+                        // assm.CreateCSVLine(file, csvfile);
                     }
                 }
             }
             inputQueue.CompleteAdding();
-            Task.WaitAll(workers);
+            //Task.WaitAll(workers);
+
+            Parallel.ForEach(inputQueue, (i) => worker(i));
+
             stopwatch.Stop();
             Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
         }
 
-        static void worker(int workerId)
+        static void worker((int, int, string, string, string) workItem)
         {
             // Console.WriteLine("Worker {0} is starting.", workerId);
 
-            foreach (var workItem in inputQueue.GetConsumingEnumerable())
-            {
+            // foreach (var workItem in inputQueue.GetConsumingEnumerable())
+            // {
+                try {
                 Console.WriteLine("Starting on: " + workItem.Item3);
                 var assm = new Assembler(workItem.Item1,workItem.Item2);
                 assm.OpenReads(workItem.Item3);
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
                 assm.CreateCSVLine(workItem.Item3, workItem.Item5);
-            }
+                } catch (Exception e) {
+                    bool stuck = true;
+                    string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
+                    while (stuck) {
+                        try {
+                            File.AppendAllText(workItem.Item5, line);
+                            stuck = false;
+                        } catch {
+                            // try again
+                        }
+                    }
+                    Console.WriteLine("ERROR: " + e.Message);
+                }
+            // }
 
             // Console.WriteLine("Worker {0} is stopping.", workerId);
         }
@@ -98,6 +122,7 @@ namespace AssemblyNameSpace
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
     public class Assembler
     {
+        static int counter = 0;
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
@@ -469,6 +494,8 @@ namespace AssemblyNameSpace
             public long path_time;
             /// <summary> The time needed to filter the sequences. See <see cref="Assembler.Assemble"/></summary>
             public long sequence_filter_time;
+             /// <summary> The time needed to draw the graphs. See <see cref="Assembler.OutputGraph"/></summary>
+            public long drawingtime;
             /// <summary> The amount of reads used by the program. See <see cref="Assembler.Assemble"/>. See <see cref="Assembler.OpenReads"/></summary>
             public int reads;
             /// <summary> The amount of k-mers generated. See <see cref="Assembler.Assemble"/></summary>
@@ -995,52 +1022,56 @@ namespace AssemblyNameSpace
                 // Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
                 // Console.WriteLine("-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"");
 
-                Process png = new Process();
-                png.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
-                png.StartInfo.RedirectStandardError = true;
-                png.StartInfo.UseShellExecute = false;
+                // Process png = new Process();
+                // png.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
+                // png.StartInfo.RedirectStandardError = true;
+                // png.StartInfo.UseShellExecute = false;
 
                 Process svg = new Process();
                 svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.UseShellExecute = false;
 
-                Process simplepng = new Process();
-                simplepng.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "png") + "\"" );
-                simplepng.StartInfo.RedirectStandardError = true;
-                simplepng.StartInfo.UseShellExecute = false;
+                // Process simplepng = new Process();
+                // simplepng.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "png") + "\"" );
+                // simplepng.StartInfo.RedirectStandardError = true;
+                // simplepng.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
                 simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"" );
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.UseShellExecute = false;
                 
-                png.Start();
+                // png.Start();
                 svg.Start();
-                simplepng.Start();
+                // simplepng.Start();
                 simplesvg.Start();
 
-                png.WaitForExit();
+                // png.WaitForExit();
                 svg.WaitForExit();
-                simplepng.WaitForExit();
+                // simplepng.WaitForExit();
                 simplesvg.WaitForExit();
 
-                var pngstderr = png.StandardError.ReadToEnd();
-                if (pngstderr != "") {
-                    // Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
-                }
+                // var pngstderr = png.StandardError.ReadToEnd();
+                // if (pngstderr != "") {
+                //     // Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
+                // }
                 var svgstderr = svg.StandardError.ReadToEnd();
                 if (svgstderr != "") {
                     // Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
-                var simplepngstderr = simplepng.StandardError.ReadToEnd();
-                if (simplepngstderr != "") {
-                    // Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
-                }
+                // var simplepngstderr = simplepng.StandardError.ReadToEnd();
+                // if (simplepngstderr != "") {
+                //     // Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
+                // }
                 var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                 if (simplesvgstderr != "") {
                     // Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
+                // png.Kill();
+                svg.Kill();
+                // simplepng.Kill();
+                simplesvg.Kill();
             }
             catch (Exception e)
             {
@@ -1189,7 +1220,7 @@ namespace AssemblyNameSpace
 </table>
 
 <h3>Runtime information</h3>
-<p>Total time: {meta_data.total_time} ms</p>
+<p>Total time: {meta_data.total_time + meta_data.drawingtime} ms</p>
 <div class=""runtime"">
 <div class=""pre-work"" style=""flex:{meta_data.pre_time}"">
     <p>Pre</p>
@@ -1223,6 +1254,14 @@ namespace AssemblyNameSpace
         <span class=""runtime-desc"">Work done to filter the final sequences.</span>
     </div>
 </div>
+<div class=""drawing"" style=""flex:{meta_data.drawingtime}"">
+    <p>Filtering</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Drawing the graphs</span>
+        <span class=""runtime-time"">{meta_data.drawingtime} ms</span>
+        <span class=""runtime-desc"">Work done by graphviz (dot) to draw the graphs.</span>
+    </div>
+</div>
 </div>";
 
             return html;
@@ -1231,10 +1270,18 @@ namespace AssemblyNameSpace
             // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | Mean connectivity | total runtime 
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};\n";
+            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};\n";
             
             if (File.Exists(filename)) {
-                File.AppendAllText(filename, line);
+                bool stuck = true;
+                while (stuck) {
+                    try {
+                        File.AppendAllText(filename, line);
+                        stuck = false;
+                    } catch {
+                        // try again
+                    }
+                }
             } else {
                 StreamWriter sw = File.CreateText(filename);
                 sw.Write(line);
@@ -1244,7 +1291,11 @@ namespace AssemblyNameSpace
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
         /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         public void CreateReport(string filename = "report.html") {
-            string graphoutputpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + $"\\graph{DateTime.Now.ToString("HH-mm-ss_fffffff")}.dot";
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            string graphoutputpath = graphoutputpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
+
             // Console.WriteLine(graphoutputpath);
             OutputGraph(graphoutputpath);
 
@@ -1282,6 +1333,9 @@ namespace AssemblyNameSpace
             if (File.Exists("script.js")) script = File.ReadAllText("script.js");
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            stopwatch.Stop();
+            meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
+
             string html = $@"<html>
 <head>
 <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">

@@ -34,7 +34,7 @@ using System.Threading.Tasks;
 
 namespace GenerateTestsNS {
     class ToRunWithCommandLine {
-        static BlockingCollection<(string, string, List<(string, string, double)>, double[])> inputQueue = new BlockingCollection<(string, string, List<(string, string, double)>, double[])>();
+        static BlockingCollection<(string, string, List<(string, string, double)>, double[], bool)> inputQueue = new BlockingCollection<(string, string, List<(string, string, double)>, double[], bool)>();
         static void Main() {
             /*Console.WriteLine("Generate samples");
             var seqs = new List<(string, string)> {("Prot#1", "EKQLGCTYLMKLPEVAAGVQSARFSVEDSHTIDNPGNRIL"), ("Prot#1 with variable mid", "EKQLGCTYLMKLPEKLIRDVECTRSVEDSHTIDNPGNRIL")};
@@ -45,7 +45,7 @@ namespace GenerateTestsNS {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            int threadCount = 4;
+            int threadCount = 8;
             Task[] workers = new Task[threadCount];
 
             for (int i = 0; i < threadCount; ++i)
@@ -56,31 +56,24 @@ namespace GenerateTestsNS {
                 task.Start();
             }
 
-            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Thermolysin", "nonspecific", 0.01), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0), ("GluC", "(?<=E)", 1.0)};
-            var percents = new double[] {1.0}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
+            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Thermolysin", "nonspecific", 0.01), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
+            var percents = new double[] {1.0, 0.75, 0.5}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
             int count = 0;
             
             foreach (var file in Directory.GetFiles(@"Test mAB\")) {
                 count++;
                 // All proteases
-                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all.txt";
-                inputQueue.Add((file, outputpath, prots, percents));
+                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all-Missed.txt";
+                inputQueue.Add((file, outputpath, prots, percents, true));
+                outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all-NotMissed.txt";
+                inputQueue.Add((file, outputpath, prots, percents, false));
 
-                // Runs 6 times
-                for (int i = 0; i < prots.Count(); i++) {
-                    // Runs (6 - (i-1)) times
-                    for (int j = i+1; j < prots.Count(); j++) {
-                        // Dual sets - 720 pieces
-                        outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-{prots[i].Item1},{prots[j].Item1}.txt";
-                        inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[i], prots[j]}, percents));
-                        
-                        // Triple sets
-                        // Runs (6 - (6 - (i-1)))
-                        //for (int k = j+1; k < prots.Count(); k++) {
-                        //    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-{prots[i].Item1},{prots[j].Item1},{prots[k].Item1}.txt";
-                        //    inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[i], prots[j], prots[k]}, percents));
-                        //}
-                    }
+                // All combinations tryp + chym + wildcard
+                for (int i = 2; i < prots.Count(); i++) {
+                    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}-Missed.txt";
+                    inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[0], prots[1], prots[i]}, percents, true));
+                    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}-NotMissed.txt";
+                    inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[0], prots[1], prots[i]}, percents, false));
                 }
             }
             inputQueue.CompleteAdding();
@@ -95,7 +88,7 @@ namespace GenerateTestsNS {
             foreach (var workItem in inputQueue.GetConsumingEnumerable())
             {
                 Console.WriteLine("Starting on: " + workItem.Item2);
-                GenerateTests.GenerateTest(workItem.Item1, workItem.Item2, workItem.Item3, workItem.Item4, 5, 40, true);
+                GenerateTests.GenerateTest(workItem.Item1, workItem.Item2, workItem.Item3, workItem.Item4, 5, 40, workItem.Item5);
             }
 
             Console.WriteLine("Worker {0} is stopping.", workerId);
