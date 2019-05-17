@@ -24,10 +24,21 @@ namespace AssemblyNameSpace
     /// This will be rewritten when the code is moved to its new repository </summary>
     class ToRunWithCommandLine
     {
-        static BlockingCollection<(int, int, string, string, string)> inputQueue = new BlockingCollection<(int, int, string, string, string)>();
+        static List<(int, int, string, string, string, string)> inputQueue = new List<(int, int, string, string, string, string)>();
         /// <summary> The method that will be run if the code is run from the command line. 
         /// This exists because the code needs to be tested. </summary>
         static void Main()
+        {
+            //var assm = new Assembler(8, 7);
+            //assm.SetAlphabet("examples\\Default alphabet.csv");
+            //assm.OpenReads("generate_tests\\Generated\\reads-IgG1-K-001-all-50,00.txt");
+            //assm.Assemble();
+            //assm.CreateReport("report.html");
+            //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
+            RunGenerated();
+        }
+
+        static void RunGenerated() 
         {
             /*
             int testnumber = 7;
@@ -68,18 +79,18 @@ namespace AssemblyNameSpace
                 // Runs ten times
                 for (int k = 5; k <= 15; k++) {
                     // Runs three times
-                    for (int mh = 1; mh <= 3 && k-mh > 3; mh++) {
-                        inputQueue.Add((k, k-mh, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-{k-mh}.html", csvfile));
+                    //for (int mh = 1; mh <= 3 && k-mh > 3; mh++) {
+                        inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
+                        inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Commom errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
                         // Console.WriteLine("Starting on: " + file + $" k:{k} mh: {mh}");
                         // var assm = new Assembler(k,k-mh);
                         // assm.OpenReads(file);
                         // assm.Assemble();
                         // assm.CreateReport(@"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-{k-mh}.html");
                         // assm.CreateCSVLine(file, csvfile);
-                    }
+                    //}
                 }
             }
-            inputQueue.CompleteAdding();
             //Task.WaitAll(workers);
 
             Parallel.ForEach(inputQueue, (i) => worker(i));
@@ -88,7 +99,7 @@ namespace AssemblyNameSpace
             Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
         }
 
-        static void worker((int, int, string, string, string) workItem)
+        static void worker((int, int, string, string, string, string) workItem)
         {
             // Console.WriteLine("Worker {0} is starting.", workerId);
 
@@ -97,10 +108,12 @@ namespace AssemblyNameSpace
                 try {
                 Console.WriteLine("Starting on: " + workItem.Item3);
                 var assm = new Assembler(workItem.Item1,workItem.Item2);
+                assm.SetAlphabet(workItem.Item6);
                 assm.OpenReads(workItem.Item3);
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
-                assm.CreateCSVLine(workItem.Item3, workItem.Item5);
+                // Add contigs coverage to csv file
+                assm.CreateCSVLine(workItem.Item3, workItem.Item5, File.ReadAllLines(workItem.Item3)[0].Trim("# \t\n\r".ToCharArray()), workItem.Item6, Path.GetFullPath(workItem.Item4));
                 } catch (Exception e) {
                     bool stuck = true;
                     string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
@@ -112,7 +125,7 @@ namespace AssemblyNameSpace
                             // try again
                         }
                     }
-                    Console.WriteLine("ERROR: " + e.Message);
+                    Console.WriteLine("ERROR: " + e.Message + "\nSTACKTRACE: " + e.StackTrace);
                 }
             // }
 
@@ -124,7 +137,7 @@ namespace AssemblyNameSpace
     {
         static int counter = 0;
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
-        List<AminoAcid[]> reads = new List<AminoAcid[]>();
+        public List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         Node[] graph;
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
@@ -163,7 +176,7 @@ namespace AssemblyNameSpace
         private MetaInformation meta_data;
         /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
         /// be used in an efficient way </summary>
-        private struct AminoAcid
+        public struct AminoAcid
         {
             /// <summary> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </summary>
             private Assembler parent;
@@ -260,7 +273,12 @@ namespace AssemblyNameSpace
             /// See <see cref="Assembler.SetAlphabet"/> on how to change the scoring matrix.
             public int Homology(AminoAcid right)
             {
-                return parent.scoring_matrix[this.Code, right.Code];
+                try {
+                    return parent.scoring_matrix[this.Code, right.Code];
+                } catch (Exception e) {
+                    Console.WriteLine($"Got an error for this code {this.Code} and that code {right.Code}");
+                    throw e;
+                }
             }
             /// <summary> Calculating homology between two arrays of AminoAcids, using the scoring matrix 
             /// of the parent Assembler. </summary>
@@ -572,6 +590,7 @@ namespace AssemblyNameSpace
                     return i;
                 }
             }
+            Console.WriteLine($"Could not find '{c}' in the alphabet: '{alphabet}'");
             return -1;
         }
 
@@ -615,12 +634,12 @@ namespace AssemblyNameSpace
                 array.Add(line.Split(new char[]{';',','}).Select(x => x.Trim(new char[]{' ','\n','\r','\t','-','.'})).ToArray());
             }
 
-            int columns = input[0].Length;
+            int columns = array[0].Length;
 
             if (rows != columns) {
                 throw new Exception($"The amount of rows ({rows}) is not equal to the amount of columns ({columns}).");
             } else {
-                alphabet = String.Join("", input[0].Substring(1)).ToCharArray();
+                alphabet = String.Join("", array[0].SubArray(1, columns-1)).ToCharArray();
                 scoring_matrix = new int[columns - 1, columns - 1];
                 bool succesful = true;
 
@@ -629,11 +648,19 @@ namespace AssemblyNameSpace
                         try {
                             scoring_matrix[i, j] = Int32.Parse(array[i+1][j+1]);
                         } catch {
-                            // Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
+                            //Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
                             succesful = false;
                         }
                     }
                 }
+
+                //Console.WriteLine(alphabet);
+                //for (int i = 0; i < columns-1; i++) {
+                //    for (int j = 0; j <  columns-1; j++) {
+                //        //Console.Write($"\t{scoring_matrix[i, j]}");
+                //    }
+                //   // Console.Write("\n");
+                //}
 
                 if (!succesful) {
                     throw new Exception("The reading on the alphabet file was not succesfull, see stdout for detauled error messages.");
@@ -1075,7 +1102,7 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                // Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
+                //Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
             }
         }
         public string CreateReadsTable() 
@@ -1154,7 +1181,7 @@ namespace AssemblyNameSpace
     <h2>Based on</h2>
     <p>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
     <h2>Reads Alignment</h4>
-    <pre>Not implemented yet</pre>
+    {CreateReadsAlignment(condensed_graph[i])}
 </div>");
             }
             for (int i = 0; i < reads.Count(); i++) {
@@ -1167,6 +1194,67 @@ namespace AssemblyNameSpace
     <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
 </div>");
             }
+
+            return buffer.ToString();
+        }
+        private string CreateReadsAlignment(CondensedNode node) {
+            string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
+            List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
+            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, scoring_matrix, true));
+            //Console.WriteLine("Seq: " + sequence);
+
+            // Find a bit more efficient packing of reads on the sequence
+            var placed = new List<List<(string, int, int, int)>>();
+            while (positions.Count() > 0) {
+                var current = positions.Dequeue();
+                //Console.WriteLine(current);
+                bool fit = false;
+                for (int i = 0; i < placed.Count() && !fit; i++) {
+                    // Find if it fits in this row
+                    bool clashes = false;
+                    for (int j = 0; j < placed[i].Count() && !clashes; j++) {
+                        if ((current.Item2 + 1 > placed[i][j].Item2 && current.Item2 - 1 < placed[i][j].Item3) 
+                         || (current.Item3 + 1 > placed[i][j].Item2 && current.Item3 - 1 < placed[i][j].Item3) 
+                         || (current.Item2 - 1 < placed[i][j].Item2 && current.Item3 + 1 > placed[i][j].Item3)) {
+                             clashes = true;
+                        }
+                    }
+                    if (!clashes) {
+                        placed[i].Add(current);
+                        fit = true;
+                    }
+                }
+                if (!fit) {
+                    placed.Add(new List<(string, int, int, int)>{current});
+                }
+            }
+
+            var buffer = new StringBuilder();
+            buffer.AppendLine("<div class=\"reads-alignment\">");
+
+            const int bucketsize = 5;
+            for (int pos = 0; pos <= sequence.Length / bucketsize; pos++) {
+                // Add the sequence and the number to tell the position
+                string number = ((pos+1)*bucketsize).ToString();
+                buffer.Append($"<p><span class=\"number\">{String.Concat(Enumerable.Repeat("&nbsp;", bucketsize-number.Length))}{number}</span><br><span class=\"seq\">{sequence.Substring(pos*bucketsize, Math.Min(bucketsize, sequence.Length - pos*bucketsize))}</span><br>");
+                
+                // Add every niveau in order
+                foreach (var line in placed) {
+                    for (int i = pos*bucketsize; i < pos*bucketsize+bucketsize; i++) {
+                        string result = "&nbsp;";
+                        foreach(var read in line) {
+                            if (i >= read.Item2 && i < read.Item3) {
+                                result = $"<a href=\"#R{read.Item4:D4}\" class=\"align-link\">{read.Item1[i - read.Item2]}</a>";
+                            }
+                        }
+                        buffer.Append(result);
+                    }
+                    buffer.Append("<br>");
+                }
+                buffer.Append("</p>");
+            }
+
+            buffer.AppendLine("</div>");
 
             return buffer.ToString();
         }
@@ -1266,11 +1354,45 @@ namespace AssemblyNameSpace
 
             return html;
         }
-        public void CreateCSVLine(string ID, string filename = "report.csv") {
-            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | Mean connectivity | total runtime 
+        public void CreateCSVLine(string ID, string filename = "report.csv", string path_to_template = null, string extra = "", string path_to_report = "") {
+            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | Mean connectivity | total runtime | Drawing time | Coverage Heavy | Coverage Light
+            string coverage = "";
+            if (path_to_template != null) {
+                var fastafile = File.ReadAllText(path_to_template);
+                var raw_sequences = Regex.Split(fastafile, ">");
+                var seqs = new List<string> ();
+
+                foreach (string seq in raw_sequences) {
+                    var seq_lines = seq.Split("\n".ToCharArray());
+                    string sequence = "";
+                    for (int i = 1; i < seq_lines.Length; i++) {
+                        sequence += seq_lines[i].Trim("\r\n\t 0123456789".ToCharArray());
+                    }
+                    if (sequence != "") seqs.Add(sequence);
+                }
+
+                string[] reads_array = reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray();
+                string[] contigs_array = condensed_graph.Select(x => Assembler.AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
+                if (seqs.Count() == 2) {
+                    var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], reads_array);
+                    var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], reads_array);
+                    var coverage_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], contigs_array);
+                    var coverage_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], contigs_array);
+
+                    coverage = $"{coverage_reads_heavy.Item1};{coverage_reads_heavy.Item2};{coverage_reads_light.Item1};{coverage_reads_light.Item2};{coverage_contigs_heavy.Item1};{coverage_contigs_heavy.Item2};{coverage_contigs_light.Item1};{coverage_contigs_light.Item2};";
+                } else {
+                    Console.WriteLine($"Not an antibody fasta file: {path_to_template}");
+                }
+            }
+
+            string link = "";
+            if (path_to_report != "") {
+                link = $"=HYPERLINK(\"{path_to_report}\");";
+            }
+            
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};\n";
+            string line = $"{ID};{extra};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
             
             if (File.Exists(filename)) {
                 bool stuck = true;
@@ -1405,6 +1527,96 @@ namespace AssemblyNameSpace
         {
             T[] result = new T[length];
             Array.Copy(data, index, result, 0, length);
+            return result;
+        }
+        /// <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
+        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
+        /// correctly aligned reads as an Int as the second item. </returns>
+        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
+        /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
+        /// <param name="template"> The template to match against. </param>
+        /// <param name="sequences"> The sequences to match with. </param>
+        public static (double, int) MultipleSequenceAlignmentToTemplate(string template, string[] sequences) 
+        {
+            // Keep track of all places already covered
+            bool[] covered = new bool[template.Length];
+            int correct_reads = 0;
+
+            foreach (string seq in sequences) {
+                bool found = false;
+                for (int i = 0; i < template.Length; i++) {
+                    // Try aligning on this position
+                    bool hit = true;
+                    for (int j = 0; j < seq.Length && hit; j++) {
+                        if (i+j > template.Length - 1 || template[i+j] != seq[j]) {
+                            hit = false;
+                        }
+                    }
+
+                    // The alignment succeeded, record this in the covered array
+                    if (hit) {
+                        for (int k = 0; k < seq.Length; k++) {
+                            covered[i+k] = true;
+                        }
+                        found = true;
+                    }
+                }
+                if (found == true) {
+                    correct_reads += 1;
+                }
+            }
+
+            int hits = 0;
+            foreach (bool b in covered) {
+                if (b) hits++;
+            }
+
+            return ((double)hits/covered.Length, correct_reads);
+        }
+        /// <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
+        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
+        /// correctly aligned reads as an Int as the second item. </returns>
+        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
+        /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
+        /// <param name="template"> The template to match against. </param>
+        /// <param name="sequences"> The sequences to match with. </param>
+        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, char[] alphabet, int[,] scoring_matrix, bool reverse = false) 
+        {
+            // Keep track of all places already covered
+            var result = new List<(string, int, int, int)>();
+
+            foreach (var current in sequences) {
+                string seq = current.Item1;
+                for (int i = -seq.Length + 1; i < template.Length; i++) {
+                    // Try aligning on this position
+                    bool hit = true;
+                    int score_fw_t = 0;
+                    int score_bw_t = 0;
+                    for (int j = 0; j < seq.Length && hit; j++) {
+                        if (i+j >= template.Length) {
+                            break;
+                        }
+                        if (i+j >= 0) {
+                            //Console.WriteLine($"i {i} j{j} l{seq.Length} t{template.Length}");
+                            int score_fw = scoring_matrix[Array.IndexOf(alphabet, template[i+j]), Array.IndexOf(alphabet, seq[j])];
+                            int score_bw = scoring_matrix[Array.IndexOf(alphabet, template[i+j]), Array.IndexOf(alphabet, seq[seq.Length-j-1])];
+                            score_fw_t += score_fw;
+                            score_bw_t += score_bw;
+
+                            if (score_fw < 1 && score_bw < 1) {
+                                hit = false;
+                            }
+                        }
+                    }
+
+                    // The alignment succeeded
+                    if (hit) {
+                        if (score_fw_t >= score_bw_t && score_fw_t > 2) result.Add((seq, i, i+seq.Length, current.Item2));
+                        else if (score_bw_t > 2) result.Add((new string(seq.Reverse().ToArray()), i, i+seq.Length, current.Item2));
+                    }
+                }
+            }
+
             return result;
         }
     }

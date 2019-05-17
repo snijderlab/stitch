@@ -36,6 +36,11 @@ namespace GenerateTestsNS {
     class ToRunWithCommandLine {
         static BlockingCollection<(string, string, List<(string, string, double)>, double[], bool)> inputQueue = new BlockingCollection<(string, string, List<(string, string, double)>, double[], bool)>();
         static void Main() {
+            //GenerateTests.GenerateTest("Test mAB\\IgG1-K-001.txt", "Generated\\reads-IgG1-K-001-Aspecific-NotMissed.txt", new List<(string, string, double)>{("Aspecific", "nonspecific", 0.002)}, new double[]{0.5, 0.75, 1.0}, 5, 40, false);
+            GenerateRuns();
+        }
+        static void GenerateRuns() 
+        {
             /*Console.WriteLine("Generate samples");
             var seqs = new List<(string, string)> {("Prot#1", "EKQLGCTYLMKLPEVAAGVQSARFSVEDSHTIDNPGNRIL"), ("Prot#1 with variable mid", "EKQLGCTYLMKLPEKLIRDVECTRSVEDSHTIDNPGNRIL")};
             //var prots = new string[] {".(?:(?<![KR](?!P)).)*"};
@@ -56,23 +61,19 @@ namespace GenerateTestsNS {
                 task.Start();
             }
 
-            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Thermolysin", "nonspecific", 0.01), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
-            var percents = new double[] {1.0, 0.75, 0.5}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
+            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Aspecific", "nonspecific", 0.004), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
+            var percents = new double[] {1.0, 0.75, 0.5, 0.25}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
             int count = 0;
             
             foreach (var file in Directory.GetFiles(@"Test mAB\")) {
                 count++;
                 // All proteases
-                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all-Missed.txt";
-                inputQueue.Add((file, outputpath, prots, percents, true));
-                outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all-NotMissed.txt";
+                string outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + "-all.txt";
                 inputQueue.Add((file, outputpath, prots, percents, false));
 
                 // All combinations tryp + chym + wildcard
                 for (int i = 2; i < prots.Count(); i++) {
-                    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}-Missed.txt";
-                    inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[0], prots[1], prots[i]}, percents, true));
-                    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}-NotMissed.txt";
+                    outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}.txt";
                     inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[0], prots[1], prots[i]}, percents, false));
                 }
             }
@@ -109,13 +110,14 @@ namespace GenerateTestsNS {
                  }
                  if (identifier != "" && sequence != "") seqs.Add((identifier, sequence));
              }
-             GenerateTest(seqs, filename, proteases, percents, minlength, maxlength, missedcleavages);
+             GenerateTest(seqs, filename, proteases, percents, minlength, maxlength, missedcleavages, fastafilename);
          }
-        public static void GenerateTest(List<(string, string)> sequences, string filename, List<(string, string, double)> proteases, double[] percents, int minlength, int maxlength, bool missedcleavages) {
+        public static void GenerateTest(List<(string, string)> sequences, string filename, List<(string, string, double)> proteases, double[] percents, int minlength, int maxlength, bool missedcleavages, string fastafilename = null) {
             var buffers = new StringBuilder[percents.Length];
             for (int i = 0; i < percents.Length; i++)
             {
                 buffers[i] = new StringBuilder();
+                if (fastafilename != null) buffers[i].AppendLine($"# generate_tests\\{fastafilename}");
             }
 
             Random random = new Random();

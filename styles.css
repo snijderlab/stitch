@@ -388,6 +388,27 @@ svg .selected text {
     display: block;
 }
 
+/* reads alignment */
+
+.reads-alignment p {
+    display: inline-block;
+    font-family: "Roboto Mono", monospace;
+}
+
+.reads-alignment .seq {
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.reads-alignment .number {
+    color: var(--color-secondary);
+}
+
+.align-link {
+    color: var(--color-primary-dark);
+    text-decoration: none;
+}
+
 
 /* footer */
 
