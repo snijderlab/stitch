@@ -22,6 +22,8 @@ body {
     font-family: "Roboto", sans-serif;
     margin: 0;
     color: var(--color-dark);
+    height: 100vh;
+    overflow: hidden;
 }
 
 h1, h2, h3, h4 {
@@ -40,6 +42,7 @@ h1 {
 .report,
 .aside {
     min-height: 100vh;
+    overflow-y: scroll;
 }
 
 .report {
@@ -103,8 +106,6 @@ h1 {
 }
 
 .aside-wrapper {
-    position: fixed;
-    top: 0;
     padding: 0.5em;
     padding-top: 0;
 }
