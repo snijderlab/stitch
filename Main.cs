@@ -25,9 +25,9 @@ namespace AssemblyNameSpace
     /// This will be rewritten when the code is moved to its new repository </summary>
     class ToRunWithCommandLine
     {
+        /// <summary> The list of all tasks to be done. To be able to run them in parallel. </summary>
         static List<(int, int, string, string, string, string)> inputQueue = new List<(int, int, string, string, string, string)>();
-        /// <summary> The method that will be run if the code is run from the command line. 
-        /// This exists because the code needs to be tested. </summary>
+        /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
             var assm = new Assembler(8, 7);
@@ -45,37 +45,15 @@ namespace AssemblyNameSpace
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
         }
-
+        /// <summary> To run a batch of assemblies in parallel. </summary>
         static void RunGenerated() 
         {
-            /*
-            int testnumber = 7;
-            var test = new Assembler(6,5);
-            //test.SetAlphabet({('L', 'I', 1, false), ('K', 'Q', 1, true)});
-            test.SetAlphabet("examples/Default alphabet.csv");
-            test.OpenReads($"examples/{testnumber:D3}/reads.txt");
-            // Console.WriteLine("Now starting on the assembly");
-            test.Assemble();
-            test.OutputGraph($"examples/{testnumber:D3}/graph.dot");
-            test.OutputGraph($"examples/{testnumber:D3}/simplegraph.dot", Assembler.Mode.Simple);
-            test.CreateReport($"examples/{testnumber:D3}/report.html");
-            */
-            
-            // int threadCount = 4; //Increase if it feels like not 100% CPU usage
-            // Task[] workers = new Task[threadCount];
-
-            // for (int i = 0; i < threadCount; ++i)
-            // {
-            //     int workerId = i;
-            //     Task task = new Task(worker);
-            //     workers[i] = task;
-            //     task.Start();
-            // }
-
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
             string csvfile = @"generate_tests\Results\runs.csv";
+
+            // Write the correct header to the CSV file
             StreamWriter sw = File.CreateText(csvfile);
             sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link;\n");
             sw.Close();
@@ -83,69 +61,57 @@ namespace AssemblyNameSpace
             int count = 0;
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
-                // if (count < 4) continue;
-                // Runs ten times
                 for (int k = 5; k <= 15; k++) {
-                    // Runs three times
-                    //for (int mh = 1; mh <= 3 && k-mh > 3; mh++) {
-                        inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
-                        inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Commom errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
-                        // Console.WriteLine("Starting on: " + file + $" k:{k} mh: {mh}");
-                        // var assm = new Assembler(k,k-mh);
-                        // assm.OpenReads(file);
-                        // assm.Assemble();
-                        // assm.CreateReport(@"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-{k-mh}.html");
-                        // assm.CreateCSVLine(file, csvfile);
-                    //}
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Commom errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
                 }
             }
-            //Task.WaitAll(workers);
 
+            // Run all tasks in parallel
             Parallel.ForEach(inputQueue, (i) => worker(i));
 
             stopwatch.Stop();
             Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
         }
-
+        /// <summary> The function to operate on the list of tasks to by run in parallel. </summary>
+        /// <param name="workItem"> The task to perform. </param>
         static void worker((int, int, string, string, string, string) workItem)
         {
-            // Console.WriteLine("Worker {0} is starting.", workerId);
-
-            // foreach (var workItem in inputQueue.GetConsumingEnumerable())
-            // {
-                try {
+            try {
                 Console.WriteLine("Starting on: " + workItem.Item3);
                 var assm = new Assembler(workItem.Item1,workItem.Item2);
                 assm.SetAlphabet(workItem.Item6);
                 assm.OpenReads(workItem.Item3);
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
-                // Add contigs coverage to csv file
+                // Add the meta information to the CSV file
                 assm.CreateCSVLine(workItem.Item3, workItem.Item5, File.ReadAllLines(workItem.Item3)[0].Trim("# \t\n\r".ToCharArray()), workItem.Item6, Path.GetFullPath(workItem.Item4));
-                } catch (Exception e) {
-                    bool stuck = true;
-                    string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
-                    while (stuck) {
-                        try {
-                            File.AppendAllText(workItem.Item5, line);
-                            stuck = false;
-                        } catch {
-                            // try again
-                        }
-                    }
-                    Console.WriteLine("ERROR: " + e.Message + "\nSTACKTRACE: " + e.StackTrace);
-                }
-            // }
+            } catch (Exception e) {
+                bool stuck = true;
+                string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
 
-            // Console.WriteLine("Worker {0} is stopping.", workerId);
+                while (stuck) {
+                    try {
+                        // Add the error to the CSV file
+                        File.AppendAllText(workItem.Item5, line);
+                        stuck = false;
+                    } catch {
+                        // try again
+                    }
+                }
+                Console.WriteLine("ERROR: " + e.Message + "\nSTACKTRACE: " + e.StackTrace);
+            }
         }
     }
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
     public class Assembler
     {
+        /// <summary> A counter to give all generated graphs a unique filename. Invaluable in batch processing. </summary>
         static int counter = 0;
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
+        /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
+        /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         public List<PeaksMeta> peaks_reads = null;
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         Node[] graph;
@@ -272,14 +238,14 @@ namespace AssemblyNameSpace
             {
                 return this.Code.GetHashCode();
             }
-            /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. </summary>
+            /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
+            /// See <see cref="Assembler.scoring_matrix"/> for the scoring matrix.
+            /// See <see cref="Assembler.SetAlphabet"/> on how to change the scoring matrix.</summary>
             /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             /// <c>b.Homology(a)</c>. </remarks>
             /// <param name="right"> The other AminoAcid to use. </param>
             /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-            /// See <see cref="Assembler.scoring_matrix"/> for the scoring matrix.
-            /// See <see cref="Assembler.SetAlphabet"/> on how to change the scoring matrix.
             public int Homology(AminoAcid right)
             {
                 try {
@@ -426,18 +392,14 @@ namespace AssemblyNameSpace
             /// See <see cref="Node.max_forward_score"/> for the highest score.
             private void filterForwardEdges()
             {
-                //// Console.Write($"Filtered forward edges from {forwardEdges.Count} to ");
                 forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
-                //// Console.Write($"{forwardEdges.Count}.");
             }
             /// <summary> Filters the backward edges based on the highest score found yet and the edge include limit. </summary>
             /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
             /// See <see cref="Node.max_backward_score"/> for the highest score.
             private void filterBackwardEdges()
             {
-                //// Console.Write($"Filtered forward edges from {backwardEdges.Count} to ");
                 backwardEdges = backwardEdges.Where(i => i.Item2 + i.Item3 >= max_backward_score - edge_include_limit).ToList();
-                //// Console.Write($"{backwardEdges.Count}.");
             }
             /// <summary> To check if the Node has forward edges. </summary>
             /// <returns> Returns true if the node has forward edges. </returns>
@@ -629,6 +591,8 @@ namespace AssemblyNameSpace
                 }
             }
         }
+        /// <summary> Set the alphabet based on a CSV file. </summary>
+        /// <param name="filename"> Name of the file. </param>
         public void SetAlphabet(string filename) {
             string[] input = new string[]{};
             try {
@@ -657,22 +621,13 @@ namespace AssemblyNameSpace
                         try {
                             scoring_matrix[i, j] = Int32.Parse(array[i+1][j+1]);
                         } catch {
-                            //Console.WriteLine($"Could not convert {array[i+1][j+1]} to a reasonable number");
                             succesful = false;
                         }
                     }
                 }
 
-                //Console.WriteLine(alphabet);
-                //for (int i = 0; i < columns-1; i++) {
-                //    for (int j = 0; j <  columns-1; j++) {
-                //        //Console.Write($"\t{scoring_matrix[i, j]}");
-                //    }
-                //   // Console.Write("\n");
-                //}
-
                 if (!succesful) {
-                    throw new Exception("The reading on the alphabet file was not succesfull, see stdout for detauled error messages.");
+                    throw new Exception("The reading on the alphabet file was not succesfull, see stdout for detailed error messages.");
                 }
             }
         }
@@ -714,27 +669,48 @@ namespace AssemblyNameSpace
             }
             meta_data.reads = reads.Count;
         }
+        /// <summary> A struct to hold metainformation from PEAKS data. </summary>
         public struct PeaksMeta {
+            /// <summary> The scan identifier of the peptide. </summary>
             public string ScanID;
+            /// <summary> The sequence with modifications of the peptide. </summary>
             public string Original_tag;
+            /// <summary> The confidence score of the peptide. </summary>
             public int Confidence;
+            /// <summary> m/z of the peptide. </summary>
             public double Mass_over_charge;
+            /// <summary> z of the peptide. </summary>
             public int Charge;
+            /// <summary> Retention time of the peptide. </summary>
             public double Retention_time;
+            /// <summary> Mass of the peptide.</summary>
             public double Mass;
+            /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million;
+            /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications;
+            /// <summary> Local confidence scores of the peptide. </summary>
             public string Local_confidence;
+            /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode;
+            /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans;
+            /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
+            /// <param name="line"> The CSV line to parse. </param>
+            /// <param name="separator"> The separator used in CSV. </param>
+            /// <param name="decimalseparator"> The separator used in decimals. </param>
             public PeaksMeta(string line, char separator, char decimalseparator) {
                 try {
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
                     string[] fields = line.Split(separator);
+
+                    // Weird artefact of PEAKS data where an extra field is introduced after the Retention Time
                     int offset = 0;
                     if (fields.Length == 15) {
                         offset = 1;
                     }
+
+                    // Assign all values
                     ScanID = fields[0];
                     Original_tag = fields[1];
                     Confidence = Convert.ToInt32(fields[3].Replace(decimalseparator, current_decimal_separator));
@@ -746,11 +722,15 @@ namespace AssemblyNameSpace
                     Post_translational_modifications = fields[10+offset];
                     Local_confidence = fields[11+offset];
                     Fragmentation_mode = fields[13+offset];
+
+                    // Initialise list
                     Other_scans = new List<string>();
                 } catch (Exception e) {
                     throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}");
                 }
             }
+            /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
+            /// <returns> Returns an HTML string with the metainformation. </returns>
             public string ToHTML() {
                 return $@"<h2>Meta Information from PEAKS</h2>
 <h3>Scan Identifier</h3>
@@ -777,6 +757,11 @@ namespace AssemblyNameSpace
 <p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>";
             }
         }
+        /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
+        /// <param name="input_file"> Path to the CSV file. </param>
+        /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
+        /// <param name="separator"> CSV separator used. </param>
+        /// <param name="decimalseparator"> Separator used in decimals. </param>
         public void OpenReadsPeaks(string input_file, int cutoffscore, char separator = ',', char decimalseparator = '.')
         {
             if (!File.Exists(input_file))
@@ -848,10 +833,6 @@ namespace AssemblyNameSpace
                     kmers.Add((read, r));
                     kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
                 }
-                else
-                {
-                    // Console.WriteLine($"A read is not long enough: {AminoAcid.ArrayToString(read)}");
-                }
             }
             meta_data.kmers = kmers.Count;
 
@@ -901,23 +882,14 @@ namespace AssemblyNameSpace
             // Connect the nodes based on the k-mers
 
             // Initialize the array to save computations
-            int k = 0;
             int[] prefix_matches = new int[graph.Length];
             int[] postfix_matches = new int[graph.Length];
             AminoAcid[] prefix, postfix;
 
             kmers.ForEach(kmer =>
             {
-                k++;
-                if (k % 100 == 0)
-                {
-                    // Console.WriteLine($"Adding edges... added {k} k-mers");
-                }
-
                 prefix = kmer.Item1.SubArray(0, kmer_length - 1);
                 postfix = kmer.Item1.SubArray(1, kmer_length - 1);
-
-                //// Console.WriteLine("Computing pre and post fixes");
 
                 // Precompute the homology with every node to speed up computation
                 for (int i = 0; i < graph.Length; i++)
@@ -927,14 +899,11 @@ namespace AssemblyNameSpace
                     postfix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, postfix);
                 }
 
-                //// Console.WriteLine("Computed pre and post fixes");
-
                 // Test for pre and post fixes for every node
                 for (int i = 0; i < graph.Length; i++)
                 {
                     if (prefix_matches[i] >= minimum_homology)
                     {
-                        //// Console.WriteLine($"Found a prefix match at {i} with score {prefix_matches[i]} and postfix score {postfix_matches[i]}");
                         for (int j = 0; j < graph.Length; j++)
                         {
                             if (i != j && postfix_matches[j] >= minimum_homology)
@@ -948,7 +917,6 @@ namespace AssemblyNameSpace
             });
 
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
-            // Console.WriteLine($"Built graph");
 
             // Print graph
 
@@ -1019,19 +987,10 @@ namespace AssemblyNameSpace
                         backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
                     }  
 
-                    // Console.WriteLine($"\n==Sequences:\nBackward: {AminoAcid.ArrayToString(backward_sequence.ToArray())} last element {AminoAcid.ArrayToString(backward_node.Sequence)}\nForward: {AminoAcid.ArrayToString(forward_sequence.ToArray())} last element {AminoAcid.ArrayToString(forward_node.Sequence)}\nStart node: {AminoAcid.ArrayToString(start_node.Sequence)}");
-
                     // Build the final sequence
                     backward_sequence.Reverse();
                     backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
                     backward_sequence.AddRange(forward_sequence);
-
-                    // Console.WriteLine($"Result: {AminoAcid.ArrayToString(backward_sequence.ToArray())}");
-                    // Console.WriteLine($"Stopped because \nforward node {forward_node_index} had {forward_node.ForwardEdges.Count} forward edges and {forward_node.BackwardEdges.Count} backward edges\nbackward node {backward_node_index} had {backward_node.ForwardEdges.Count} forward edges and {backward_node.BackwardEdges.Count} backward edges");
-                    // Console.WriteLine($"Forward edges - forwards: {forward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    // Console.WriteLine($"Forward edges - backwards: {forward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    // Console.WriteLine($"Backward edges - forwards: {backward_node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-                    // Console.WriteLine($"Backward edges - backwards: {backward_node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
 
                     List<int> originslist = new List<int>();
                     foreach (int origin in origins) {
@@ -1094,25 +1053,20 @@ namespace AssemblyNameSpace
                 node_index++;
             }
 
-            // Print the condensed graph
-            foreach (var node in condensed_graph) {
-                // Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence.ToArray())} Index: {node.Index} FWIndex: {node.ForwardIndex} BWIndex: {node.BackwardIndex} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + b.ToString())}");
-            }
-
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
             stopWatch.Stop();
             meta_data.sequence_filter_time = stopWatch.ElapsedMilliseconds - meta_data.path_time - meta_data.graph_time - meta_data.pre_time;
-            meta_data.sequences = condensed_graph.Count();//sequences.Count;
+            meta_data.sequences = condensed_graph.Count();
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
         /// <summary> An enum to input the type to generate. </summary>
         public enum Mode {
             /// <summary> Will generate with extended information, can become a bit cluttered with large datasets. </summary>
             Extended,
-            /// <summary> Will generate with condesed information, will give easier overview but details have to be looked up. </summary>
+            /// <summary> Will generate with condensed information, will give easier overview but details have to be looked up. </summary>
             Simple}
-        /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended ans a simple variant. </summary>
+        /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
         public void OutputGraph(string filename = "graph.dot") {
             // Generate a dot file to use in graphviz
@@ -1154,62 +1108,34 @@ namespace AssemblyNameSpace
             sw.Close();
             swsimple.Close();
 
-            // Generate PNG and SVG files
-
+            // Generate SVG files of the graph
             try
             {
-                // Console.WriteLine(Path.ChangeExtension(Path.GetFullPath(filename), "png"));
-                // Console.WriteLine("-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"");
-
-                // Process png = new Process();
-                // png.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "png") + "\"" );
-                // png.StartInfo.RedirectStandardError = true;
-                // png.StartInfo.UseShellExecute = false;
-
                 Process svg = new Process();
                 svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.UseShellExecute = false;
-
-                // Process simplepng = new Process();
-                // simplepng.StartInfo = new ProcessStartInfo("dot", "-Tpng " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "png") + "\"" );
-                // simplepng.StartInfo.RedirectStandardError = true;
-                // simplepng.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
                 simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"" );
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.UseShellExecute = false;
                 
-                // png.Start();
                 svg.Start();
-                // simplepng.Start();
                 simplesvg.Start();
 
-                // png.WaitForExit();
                 svg.WaitForExit();
-                // simplepng.WaitForExit();
                 simplesvg.WaitForExit();
 
-                // var pngstderr = png.StandardError.ReadToEnd();
-                // if (pngstderr != "") {
-                //     // Console.WriteLine("EXTENDED PNG ERROR: " + pngstderr);
-                // }
                 var svgstderr = svg.StandardError.ReadToEnd();
                 if (svgstderr != "") {
-                    // Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
+                    Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
-                // var simplepngstderr = simplepng.StandardError.ReadToEnd();
-                // if (simplepngstderr != "") {
-                //     // Console.WriteLine("SIMPLE PNG ERROR: " + simplepngstderr);
-                // }
                 var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                 if (simplesvgstderr != "") {
-                    // Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
+                    Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
-                // png.Kill();
                 svg.Kill();
-                // simplepng.Kill();
                 simplesvg.Kill();
             }
             catch (Exception e)
@@ -1217,6 +1143,8 @@ namespace AssemblyNameSpace
                 //Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
             }
         }
+        /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
+        /// <returns> Returns an HTML string. </returns>
         public string CreateReadsTable() 
         {
              var buffer = new StringBuilder();
@@ -1311,17 +1239,17 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+        /// <summary> Create a reads alignment to display in the sidebar. </summary>
+        /// <returns> Returns an HTML string. </returns>
         private string CreateReadsAlignment(CondensedNode node) {
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
             var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, scoring_matrix, true));
-            //Console.WriteLine("Seq: " + sequence);
 
             // Find a bit more efficient packing of reads on the sequence
             var placed = new List<List<(string, int, int, int)>>();
             while (positions.Count() > 0) {
                 var current = positions.Dequeue();
-                //Console.WriteLine(current);
                 bool fit = false;
                 for (int i = 0; i < placed.Count() && !fit; i++) {
                     // Find if it fits in this row
@@ -1367,7 +1295,6 @@ namespace AssemblyNameSpace
                 }
                 buffer.Append("</p>");
             }
-
             buffer.AppendLine("</div>");
 
             return buffer.ToString();
@@ -1460,10 +1387,17 @@ namespace AssemblyNameSpace
 
             return html;
         }
+        /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
+        /// <param name="ID">ID of the run to recognise it in the CSV file. </param>
+        /// <param name="filename"> The file to which to append the CSV line to. </param>
+        /// <param name="path_to_template"> The path to the original fasta file, to get extra information. </param>
+        /// <param name="extra"> Extra field to fill in own information. Created for holding the alphabet. </param>
+        /// <param name="path_to_report"> The path to the report to add a hyperlink to the CSV file. </param>
         public void CreateCSVLine(string ID, string filename = "report.csv", string path_to_template = null, string extra = "", string path_to_report = "") {
-            // ID |  K | minH | Contigs | Avg Contiglength | Sum contiglength | Mean connectivity | total runtime | Drawing time | Coverage Heavy | Coverage Light
+            // If the original sequence is known, calculate the coverage
             string coverage = "";
             if (path_to_template != null) {
+                // Get the sequences
                 var fastafile = File.ReadAllText(path_to_template);
                 var raw_sequences = Regex.Split(fastafile, ">");
                 var seqs = new List<string> ();
@@ -1477,8 +1411,10 @@ namespace AssemblyNameSpace
                     if (sequence != "") seqs.Add(sequence);
                 }
 
+                // Calculate the coverage
                 string[] reads_array = reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray();
                 string[] contigs_array = condensed_graph.Select(x => Assembler.AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
+
                 if (seqs.Count() == 2) {
                     var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], reads_array);
                     var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], reads_array);
@@ -1491,6 +1427,7 @@ namespace AssemblyNameSpace
                 }
             }
 
+            // If the path to the report is known create a hyperlink
             string link = "";
             if (path_to_report != "") {
                 link = $"=HYPERLINK(\"{path_to_report}\");";
@@ -1501,6 +1438,7 @@ namespace AssemblyNameSpace
             string line = $"{ID};{extra};{meta_data.reads};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
             
             if (File.Exists(filename)) {
+                // TO account for multithreading and multiple workers trying to append to the file at the same time
                 bool stuck = true;
                 while (stuck) {
                     try {
@@ -1686,6 +1624,9 @@ namespace AssemblyNameSpace
         /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
         /// <param name="template"> The template to match against. </param>
         /// <param name="sequences"> The sequences to match with. </param>
+        /// <param name="alphabet"> The alphabet used to match (when none is given defaults to pure character identity). </param>
+        /// <param name="scoring_matrix"> The scoring matrix used in conjunction with the alphabet to match (when none is given defaults to pure character identity). </param>
+        /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, char[] alphabet, int[,] scoring_matrix, bool reverse = false) 
         {
             // Keep track of all places already covered

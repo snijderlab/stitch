@@ -13,10 +13,11 @@ A class to store extension methods to help in the process of coding.</td></tr><t
 A Class to be able to run the code from the commandline. To be able to test it easily. This will be rewritten when the code is moved to its new repository</td></tr></table>
 
 ## Structures
-&nbsp;<table><tr><th></th><th>Structure</th><th>Description</th></tr><tr><td>![Private structure](media/privstructure.gif "Private structure")</td><td><a href="6c08d832-b4a6-5a74-e503-fb03127f8c59">Assembler.AminoAcid</a></td><td>
+&nbsp;<table><tr><th></th><th>Structure</th><th>Description</th></tr><tr><td>![Public structure](media/pubstructure.gif "Public structure")</td><td><a href="6c08d832-b4a6-5a74-e503-fb03127f8c59">Assembler.AminoAcid</a></td><td>
 A struct to function as a wrapper for AminoAcid information, so custom alphabets can be used in an efficient way</td></tr><tr><td>![Private structure](media/privstructure.gif "Private structure")</td><td><a href="4767f8b5-e52e-522b-5527-d518969305dd">Assembler.MetaInformation</a></td><td>
-A struct to hold meta information about the assembly to keep it organised and to report back to the user.</td></tr></table>
+A struct to hold meta information about the assembly to keep it organised and to report back to the user.</td></tr><tr><td>![Public structure](media/pubstructure.gif "Public structure")</td><td><a href="d66b6033-d585-8fda-e7ad-b8d171d844c1">Assembler.PeaksMeta</a></td><td>
+A struct to hold metainformation from PEAKS data.</td></tr></table>
 
 ## Enumerations
-&nbsp;<table><tr><th></th><th>Enumeration</th><th>Description</th></tr><tr><td>![Public enumeration](media/pubenumeration.gif "Public enumeration")</td><td><a href="3abd5377-cd76-4c1a-ec3c-d847b785f98b">Assembler.GraphMode</a></td><td>
-An enum to input the type of graph to generate.</td></tr></table>&nbsp;
+&nbsp;<table><tr><th></th><th>Enumeration</th><th>Description</th></tr><tr><td>![Public enumeration](media/pubenumeration.gif "Public enumeration")</td><td><a href="3569f288-4b74-5243-a90f-43746a48923c">Assembler.Mode</a></td><td>
+An enum to input the type to generate.</td></tr></table>&nbsp;

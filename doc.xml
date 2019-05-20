@@ -15,15 +15,31 @@
             <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
             This will be rewritten when the code is moved to its new repository </summary>
         </member>
+        <member name="F:AssemblyNameSpace.ToRunWithCommandLine.inputQueue">
+            <summary> The list of all tasks to be done. To be able to run them in parallel. </summary>
+        </member>
         <member name="M:AssemblyNameSpace.ToRunWithCommandLine.Main">
-            <summary> The method that will be run if the code is run from the command line. 
-            This exists because the code needs to be tested. </summary>
+            <summary> The method that will be run if the code is run from the command line. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ToRunWithCommandLine.RunGenerated">
+            <summary> To run a batch of assemblies in parallel. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ToRunWithCommandLine.worker(System.ValueTuple{System.Int32,System.Int32,System.String,System.String,System.String,System.String})">
+            <summary> The function to operate on the list of tasks to by run in parallel. </summary>
+            <param name="workItem"> The task to perform. </param>
         </member>
         <member name="T:AssemblyNameSpace.Assembler">
             <summary> The Class with all code to assemble Peptide sequences. </summary>
         </member>
+        <member name="F:AssemblyNameSpace.Assembler.counter">
+            <summary> A counter to give all generated graphs a unique filename. Invaluable in batch processing. </summary>
+        </member>
         <member name="F:AssemblyNameSpace.Assembler.reads">
             <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.peaks_reads">
+            <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
+            with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         </member>
         <member name="F:AssemblyNameSpace.Assembler.graph">
             <summary> The De Bruijn graph used by the Assembler. </summary>
@@ -70,11 +86,8 @@
         <member name="F:AssemblyNameSpace.Assembler.AminoAcid.parent">
             <summary> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </summary>
         </member>
-        <member name="F:AssemblyNameSpace.Assembler.AminoAcid.code">
-            <summary> The code (index of the char in the alpabet array of the parent). </summary>
-        </member>
-        <member name="P:AssemblyNameSpace.Assembler.AminoAcid.Code">
-            <summary> The code (index of the char in the alpabet array of the parent). Gives only a Get option. 
+        <member name="F:AssemblyNameSpace.Assembler.AminoAcid.Code">
+            <summary> The code (index of the char in the alpabet array of the parent).
             The only way to change it is in the creator. </summary>
             <value> The code of this AminoAcid. </value>
         </member>
@@ -126,14 +139,14 @@
             <returns> Returns the hascode of the AminoAcid. </returns>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.AminoAcid.Homology(AssemblyNameSpace.Assembler.AminoAcid)">
-            <summary> Calculating homology, using the scoring matrix of the parent Assembler. </summary>
+            <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
+            See <see cref="F:AssemblyNameSpace.Assembler.scoring_matrix"/> for the scoring matrix.
+            See <see cref="M:AssemblyNameSpace.Assembler.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)"/> on how to change the scoring matrix.</summary>
             <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             <c>b.Homology(a)</c>. </remarks>
             <param name="right"> The other AminoAcid to use. </param>
             <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-            See <see cref="F:AssemblyNameSpace.Assembler.scoring_matrix"/> for the scoring matrix.
-            See <see cref="M:AssemblyNameSpace.Assembler.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)"/> on how to change the scoring matrix.
         </member>
         <member name="M:AssemblyNameSpace.Assembler.AminoAcid.ArrayHomology(AssemblyNameSpace.Assembler.AminoAcid[],AssemblyNameSpace.Assembler.AminoAcid[])">
             <summary> Calculating homology between two arrays of AminoAcids, using the scoring matrix 
@@ -154,17 +167,12 @@
             <summary> The sequence of the Node. Only has a getter. </summary>
             <value> The sequence of this node. </value>
         </member>
-        <member name="F:AssemblyNameSpace.Assembler.Node.multiplicity">
-            <summary> The member to store the multiplicity (amount of k-mers which 
-            result in the same (k-1)-mers in. </summary>
+        <member name="F:AssemblyNameSpace.Assembler.Node.origins">
+            <summary> Where the (k-1)-mer sequence comes from. </summary>
         </member>
-        <member name="P:AssemblyNameSpace.Assembler.Node.Multiplicity">
-            <summary> The multiplicity, amount of k-mers which 
-            result in the same (k-1)-mers, of the Node. Only has a getter. </summary>
-            <value> The amount of time an equal (k-1)-mer was found in the set of 
-            generated k-mers, this tells something about the amount of reads that 
-            have the overlap over this sequence, and about the amount of equal
-            parts of the sequence in other places of the protein. </value>
+        <member name="P:AssemblyNameSpace.Assembler.Node.Origins">
+            <summary> The indexes of the reads where this (k-1)-mere originated from. </summary>
+            <value> A list of indexes of the list of reads. </value>
         </member>
         <member name="F:AssemblyNameSpace.Assembler.Node.forwardEdges">
             <summary> The list of edges from this Node. The tuples contain the index 
@@ -203,10 +211,10 @@
             <summary> The limit to include edges when filtering on highest edges. It will be used to include 
             not only the highest but (depending on the value) a couple more edges. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.Node.#ctor(AssemblyNameSpace.Assembler.AminoAcid[],System.Int32,System.Int32)">
+        <member name="M:AssemblyNameSpace.Assembler.Node.#ctor(AssemblyNameSpace.Assembler.AminoAcid[],System.Collections.Generic.List{System.Int32},System.Int32)">
             <summary> The creator of Nodes. </summary>
             <param name="seq"> The sequence of this Node. </param>
-            <param name="multi"> The multiplicity of this Node. </param>
+            <param name="origin"> The origin(s) of this (k-1)-mer. </param>
             <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
             <remarks> It will initialize the edges list. </remarks>
         </member>
@@ -280,6 +288,9 @@
         <member name="F:AssemblyNameSpace.Assembler.MetaInformation.sequence_filter_time">
             <summary> The time needed to filter the sequences. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/></summary>
         </member>
+        <member name="F:AssemblyNameSpace.Assembler.MetaInformation.drawingtime">
+            <summary> The time needed to draw the graphs. See <see cref="M:AssemblyNameSpace.Assembler.OutputGraph(System.String)"/></summary>
+        </member>
         <member name="F:AssemblyNameSpace.Assembler.MetaInformation.reads">
             <summary> The amount of reads used by the program. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/>. See <see cref="M:AssemblyNameSpace.Assembler.OpenReads(System.String)"/></summary>
         </member>
@@ -320,7 +331,10 @@
         <member name="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardEdges">
             <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.CondensedNode.#ctor(System.Collections.Generic.List{AssemblyNameSpace.Assembler.AminoAcid},System.Int32,System.Int32,System.Int32,System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32})">
+        <member name="F:AssemblyNameSpace.Assembler.CondensedNode.Origins">
+            <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CondensedNode.#ctor(System.Collections.Generic.List{AssemblyNameSpace.Assembler.AminoAcid},System.Int32,System.Int32,System.Int32,System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32},System.Collections.Generic.List{System.Int32})">
             <summary> Creates a condensed node to be used in the condensed graph. </summary>
             <param name="sequence"> The sequence of this node. See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.Sequence"/></param>
             <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.Index"/></param>
@@ -328,6 +342,7 @@
             <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardIndex"/></param>
             <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.ForwardEdges"/></param>
             <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.BackwardEdges"/></param>
+            <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="F:AssemblyNameSpace.Assembler.CondensedNode.Origins"/></param>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.#ctor(System.Int32,System.Int32,System.Int32)">
             <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
@@ -349,41 +364,125 @@
             <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
             the best case scenario has the most used characters at the front of the string. </param>
         </member>
+        <member name="M:AssemblyNameSpace.Assembler.SetAlphabet(System.String)">
+            <summary> Set the alphabet based on a CSV file. </summary>
+            <param name="filename"> Name of the file. </param>
+        </member>
         <member name="M:AssemblyNameSpace.Assembler.OpenReads(System.String)">
             <summary> To open a file with reads (should always be run before trying to assemble). 
             It will save the reads in the current Assembler object. </summary>
             <param name="input_file"> The path to the file to read from. </param>
         </member>
+        <member name="T:AssemblyNameSpace.Assembler.PeaksMeta">
+            <summary> A struct to hold metainformation from PEAKS data. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.ScanID">
+            <summary> The scan identifier of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Original_tag">
+            <summary> The sequence with modifications of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Confidence">
+            <summary> The confidence score of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Mass_over_charge">
+            <summary> m/z of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Charge">
+            <summary> z of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Retention_time">
+            <summary> Retention time of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Mass">
+            <summary> Mass of the peptide.</summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Parts_per_million">
+            <summary> PPM of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Post_translational_modifications">
+            <summary> Posttranslational Modifications of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Local_confidence">
+            <summary> Local confidence scores of the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Fragmentation_mode">
+            <summary> Fragmentation mode used to generate the peptide. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Assembler.PeaksMeta.Other_scans">
+            <summary> Other scans giving the same sequence. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.PeaksMeta.#ctor(System.String,System.Char,System.Char)">
+            <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
+            <param name="line"> The CSV line to parse. </param>
+            <param name="separator"> The separator used in CSV. </param>
+            <param name="decimalseparator"> The separator used in decimals. </param>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.PeaksMeta.ToHTML">
+            <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
+            <returns> Returns an HTML string with the metainformation. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.OpenReadsPeaks(System.String,System.Int32,System.Char,System.Char)">
+            <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
+            <param name="input_file"> Path to the CSV file. </param>
+            <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
+            <param name="separator"> CSV separator used. </param>
+            <param name="decimalseparator"> Separator used in decimals. </param>
+        </member>
         <member name="M:AssemblyNameSpace.Assembler.Assemble">
             <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
             run on an Assembler, all settings should be defined before running this. </summary>
         </member>
-        <member name="T:AssemblyNameSpace.Assembler.GraphMode">
-            <summary> An enum to input the type of graph to generate. </summary>
+        <member name="T:AssemblyNameSpace.Assembler.Mode">
+            <summary> An enum to input the type to generate. </summary>
         </member>
-        <member name="F:AssemblyNameSpace.Assembler.GraphMode.Extended">
-            <summary> Will generate a graph with extended information, can become a bit clutered with large datasets. </summary>
+        <member name="F:AssemblyNameSpace.Assembler.Mode.Extended">
+            <summary> Will generate with extended information, can become a bit cluttered with large datasets. </summary>
         </member>
-        <member name="F:AssemblyNameSpace.Assembler.GraphMode.Simple">
-            <summary> Will generate a graph with condesed information, will give easier overview but details have to be lokked up. </summary>
+        <member name="F:AssemblyNameSpace.Assembler.Mode.Simple">
+            <summary> Will generate with condensed information, will give easier overview but details have to be looked up. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.OutputGraph(System.String,AssemblyNameSpace.Assembler.GraphMode)">
-            <summary> Creates a dot file and uses it in graphviz to generate a nice plot. </summary>
+        <member name="M:AssemblyNameSpace.Assembler.OutputGraph(System.String)">
+            <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
             <param name="filename"> The file to output to. </param>
-            <param name="mode"> The mode to use to generate the graph. </param>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CreateReadsTable">
+            <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
+            <returns> Returns an HTML string. </returns>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.CreateContigsTable">
             <summary> Returns a table containing all the contigs of a alignment. </summary>
             <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.GetCondensedNodeIdentifier(System.Int32)">
+        <member name="M:AssemblyNameSpace.Assembler.CreateAsides">
+            <summary> Returns a list of asides for details viewing. </summary>
+            <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CreateReadsAlignment(AssemblyNameSpace.Assembler.CondensedNode)">
+            <summary> Create a reads alignment to display in the sidebar. </summary>
+            <returns> Returns an HTML string. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.GetCondensedNodeLink(System.Int32)">
             <summary> Returns the string representation of the human friendly identifier of a node. </summary>
-            <param name="index"> The index in the condensed graph of the condesend node. </param>
+            <param name="index"> The index in the condensed graph of the condensed node. </param>
+            <returns> A string to be used where humans can see it. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.GetReadLink(System.Int32)">
+            <summary> Returns the string representation of the human friendly identifier of a read. </summary>
+            <param name="index"> The index in the readslist. </param>
             <returns> A string to be used where humans can see it. </returns>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.HTMLMetaInformation">
             <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
             <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.CreateCSVLine(System.String,System.String,System.String,System.String,System.String)">
+            <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
+            <param name="ID">ID of the run to recognise it in the CSV file. </param>
+            <param name="filename"> The file to which to append the CSV line to. </param>
+            <param name="path_to_template"> The path to the original fasta file, to get extra information. </param>
+            <param name="extra"> Extra field to fill in own information. Created for holding the alphabet. </param>
+            <param name="path_to_report"> The path to the report to add a hyperlink to the CSV file. </param>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.CreateReport(System.String)">
             <summary> Creates an HTML report to view the results and metadata. </summary>
@@ -399,6 +498,27 @@
             <param name="length"> The length of the created subarray. </param>
             <typeparam name="T"> The type of the elements in the array. </typeparam>
             <returns> Returns a new array with clones of the original array. </returns>
+        </member>
+        <member name="M:AssemblyNameSpace.HelperFunctionality.MultipleSequenceAlignmentToTemplate(System.String,System.String[])">
+            <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
+            <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
+            correctly aligned reads as an Int as the second item. </returns>
+            <remark> This code does not account for small defects in reads, it will only align perfect matches 
+            and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
+            <param name="template"> The template to match against. </param>
+            <param name="sequences"> The sequences to match with. </param>
+        </member>
+        <member name="M:AssemblyNameSpace.HelperFunctionality.MultipleSequenceAlignmentToTemplate(System.String,System.Collections.Generic.List{System.ValueTuple{System.String,System.Int32}},System.Char[],System.Int32[0:,0:],System.Boolean)">
+            <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
+            <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
+            correctly aligned reads as an Int as the second item. </returns>
+            <remark> This code does not account for small defects in reads, it will only align perfect matches 
+            and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
+            <param name="template"> The template to match against. </param>
+            <param name="sequences"> The sequences to match with. </param>
+            <param name="alphabet"> The alphabet used to match (when none is given defaults to pure character identity). </param>
+            <param name="scoring_matrix"> The scoring matrix used in conjunction with the alphabet to match (when none is given defaults to pure character identity). </param>
+            <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         </member>
     </members>
 </doc>
