@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
+using System.Globalization;
 
 namespace AssemblyNameSpace
 {
@@ -29,13 +30,20 @@ namespace AssemblyNameSpace
         /// This exists because the code needs to be tested. </summary>
         static void Main()
         {
-            //var assm = new Assembler(8, 7);
+            var assm = new Assembler(8, 7);
             //assm.SetAlphabet("examples\\Default alphabet.csv");
             //assm.OpenReads("generate_tests\\Generated\\reads-IgG1-K-001-all-50,00.txt");
+            assm.OpenReadsPeaks(@"C:\Users\douwe\Documents\Research Project\Pilot Herceptin Digest 29-04 HCD PEAKS\de novo peptides.csv", 99);
+            //for (int i = 0; i < assm.reads.Count(); i++) {
+            //    Console.WriteLine(assm.reads[i]);
+            //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
+            //}   
+            assm.Assemble();
+            assm.CreateReport("report.html");
             //assm.Assemble();
             //assm.CreateReport("report.html");
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
-            RunGenerated();
+            //RunGenerated();
         }
 
         static void RunGenerated() 
@@ -69,7 +77,7 @@ namespace AssemblyNameSpace
 
             string csvfile = @"generate_tests\Results\runs.csv";
             StreamWriter sw = File.CreateText(csvfile);
-            sw.Write("sep=;\nID;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;\n");
+            sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link;\n");
             sw.Close();
 
             int count = 0;
@@ -138,6 +146,7 @@ namespace AssemblyNameSpace
         static int counter = 0;
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
+        public List<PeaksMeta> peaks_reads = null;
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         Node[] graph;
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
@@ -673,7 +682,7 @@ namespace AssemblyNameSpace
         public void OpenReads(string input_file)
         {
             // Getting input
-            // For now just use a minimal implementation, reads separated b whitespace
+            // For now just use a minimal implementation, reads separated by whitespace
 
             if (!File.Exists(input_file))
                 throw new Exception("The specified file does not exist, file asked for: " + input_file);
@@ -703,6 +712,109 @@ namespace AssemblyNameSpace
 
                 reads.Add(acids);
             }
+            meta_data.reads = reads.Count;
+        }
+        public struct PeaksMeta {
+            public string ScanID;
+            public string Original_tag;
+            public int Confidence;
+            public double Mass_over_charge;
+            public int Charge;
+            public double Retention_time;
+            public double Mass;
+            public double Parts_per_million;
+            public string Post_translational_modifications;
+            public string Local_confidence;
+            public string Fragmentation_mode;
+            public List<string> Other_scans;
+            public PeaksMeta(string line, char separator, char decimalseparator) {
+                try {
+                    char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
+                    string[] fields = line.Split(separator);
+                    int offset = 0;
+                    if (fields.Length == 15) {
+                        offset = 1;
+                    }
+                    ScanID = fields[0];
+                    Original_tag = fields[1];
+                    Confidence = Convert.ToInt32(fields[3].Replace(decimalseparator, current_decimal_separator));
+                    Mass_over_charge = Convert.ToDouble(fields[5].Replace(decimalseparator, current_decimal_separator));
+                    Charge = Convert.ToInt32(fields[6].Replace(decimalseparator, current_decimal_separator));
+                    Retention_time = Convert.ToDouble(fields[7].Replace(decimalseparator, current_decimal_separator));
+                    Mass = Convert.ToDouble(fields[8+offset].Replace(decimalseparator, current_decimal_separator));
+                    Parts_per_million = Convert.ToDouble(fields[9+offset].Replace(decimalseparator, current_decimal_separator));
+                    Post_translational_modifications = fields[10+offset];
+                    Local_confidence = fields[11+offset];
+                    Fragmentation_mode = fields[13+offset];
+                    Other_scans = new List<string>();
+                } catch (Exception e) {
+                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}");
+                }
+            }
+            public string ToHTML() {
+                return $@"<h2>Meta Information from PEAKS</h2>
+<h3>Scan Identifier</h3>
+<p>{ScanID}</p>
+<h3>Confidence score</h3>
+<p>{Confidence}</p>
+<h3>Mass charge ratio</h3>
+<p>{Mass_over_charge}</p>
+<h3>Mass</h3>
+<p>{Mass}</p>
+<h3>Charge</h3>
+<p>{Charge}</p>
+<h3>Retention Time</h3>
+<p>{Retention_time}</p>
+<h3>Original Sequence</h3>
+<p>{Original_tag}</p>
+<h3>Posttranslational Modifications</h3>
+<p>{Post_translational_modifications}</p>
+<h3>Local Confidence</h3>
+<p>{Local_confidence}</p>
+<h3>Fragmentation Mode</h3>
+<p>{Fragmentation_mode}</p>
+<h3>Also found in scans</h3>
+<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>";
+            }
+        }
+        public void OpenReadsPeaks(string input_file, int cutoffscore, char separator = ',', char decimalseparator = '.')
+        {
+            if (!File.Exists(input_file))
+                throw new Exception("The specified file does not exist, file asked for: " + input_file);
+
+            List<string> lines = File.ReadLines(input_file).ToList();
+            reads = new List<AminoAcid[]>();
+            peaks_reads = new List<PeaksMeta>();
+
+            int linenumber = 0;
+            lines.ForEach(line =>
+            {
+                linenumber++;
+                if (linenumber != 1) {
+                    try {
+                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator);
+                        if (meta.Confidence >= cutoffscore) {
+                            char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
+
+                            AminoAcid[] acids = new AminoAcid[tag.Length];
+
+                            for (int i = 0; i < tag.Length; i++)
+                            {
+                                acids[i] = new AminoAcid(this, tag[i]);
+                            }
+
+                            if (reads.Where(x => AminoAcid.ArrayEquals(x, acids)).Count() == 0) {
+                                reads.Add(acids);
+                                peaks_reads.Add(meta);
+                            } else {
+                                int pos = reads.FindIndex(x => AminoAcid.ArrayEquals(x, acids));
+                                peaks_reads[pos].Other_scans.Add(meta.ScanID);
+                            }
+                        }
+                    } catch (Exception e) {
+                        Console.WriteLine($"ERROR while importing from PEAKS csv on line {linenumber}\n{e.Message}");
+                    }
+            }});
             meta_data.reads = reads.Count;
         }
         /// <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
@@ -1186,12 +1298,14 @@ namespace AssemblyNameSpace
             }
             for (int i = 0; i < reads.Count(); i++) {
                 id = $"R{i:D4}";
+                string meta = peaks_reads == null ? "" : peaks_reads[i].ToHTML();
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block read-info"">
     <h1>Read: {id}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(reads[i])}</p>
     <h2>Sequence Length</h2>
     <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
+    {meta}
 </div>");
             }
 
@@ -1334,16 +1448,8 @@ namespace AssemblyNameSpace
         <span class=""runtime-desc"">Work done to find the paths through the graph.</span>
     </div>
 </div>
-<div class=""filtering-sequences"" style=""flex:{meta_data.sequence_filter_time}"">
-    <p>Filtering</p>
-    <div class=""runtime-hover"">
-        <span class=""runtime-title"">Filtering sequences</span>
-        <span class=""runtime-time"">{meta_data.sequence_filter_time} ms</span>
-        <span class=""runtime-desc"">Work done to filter the final sequences.</span>
-    </div>
-</div>
 <div class=""drawing"" style=""flex:{meta_data.drawingtime}"">
-    <p>Filtering</p>
+    <p>Drawing</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Drawing the graphs</span>
         <span class=""runtime-time"">{meta_data.drawingtime} ms</span>
@@ -1392,7 +1498,7 @@ namespace AssemblyNameSpace
             
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{extra};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
+            string line = $"{ID};{extra};{meta_data.reads};{kmer_length};{minimum_homology};{totalnodes};{(double) totallength/ totalnodes};{totallength};{(double) condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count() ) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
             
             if (File.Exists(filename)) {
                 bool stuck = true;

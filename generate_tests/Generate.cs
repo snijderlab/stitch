@@ -61,7 +61,7 @@ namespace GenerateTestsNS {
                 task.Start();
             }
 
-            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Aspecific", "nonspecific", 0.004), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
+            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Aspecific", "nonspecific", 0.007), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
             var percents = new double[] {1.0, 0.75, 0.5, 0.25}; //new double[] {1.0, 0.9, 0.8, 0.7, 0.6, 0.5};
             int count = 0;
             

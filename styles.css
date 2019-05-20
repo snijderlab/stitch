@@ -339,6 +339,7 @@ svg .selected text {
     background-color: var(--color-primary);
     margin-left: 5px;
     min-width: 2em;
+    position: relative;
 }
 
 .runtime p {
@@ -365,6 +366,7 @@ svg .selected text {
     padding: 0.2em;
     background-color: white;
     transform: translate(10px, -10px);
+    z-index: 100;
 }
 
 .runtime-hover span {

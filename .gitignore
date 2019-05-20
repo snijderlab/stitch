@@ -1,5 +1,6 @@
 *.exe
 *.log
+*.zip
 examples/*/*.png
 examples/*/*.dot
 examples/*/*.svg
