@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
             var assm = new Assembler(8, 7);
             //assm.SetAlphabet("examples\\Default alphabet.csv");
             //assm.OpenReads("generate_tests\\Generated\\reads-IgG1-K-001-all-50,00.txt");
-            assm.OpenReadsPeaks(@"C:\Users\douwe\Documents\Research Project\Pilot Herceptin Digest 29-04 HCD PEAKS\de novo peptides.csv", 99);
+            assm.OpenReadsPeaks(@"C:\Users\douwe\Documents\Research Project\Pilot Herceptin Digest 29-04 HCD PEAKS\de novo peptides.csv", 99, 90);
             //for (int i = 0; i < assm.reads.Count(); i++) {
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
@@ -683,6 +683,8 @@ namespace AssemblyNameSpace
             public int Charge;
             /// <summary> Retention time of the peptide. </summary>
             public double Retention_time;
+            /// <summary> Area of the peak of the peptide.</summary>
+            public double Area;
             /// <summary> Mass of the peptide.</summary>
             public double Mass;
             /// <summary> PPM of the peptide. </summary>
@@ -704,12 +706,6 @@ namespace AssemblyNameSpace
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
                     string[] fields = line.Split(separator);
 
-                    // Weird artefact of PEAKS data where an extra field is introduced after the Retention Time
-                    int offset = 0;
-                    if (fields.Length == 15) {
-                        offset = 1;
-                    }
-
                     // Assign all values
                     ScanID = fields[0];
                     Original_tag = fields[1];
@@ -717,11 +713,16 @@ namespace AssemblyNameSpace
                     Mass_over_charge = Convert.ToDouble(fields[5].Replace(decimalseparator, current_decimal_separator));
                     Charge = Convert.ToInt32(fields[6].Replace(decimalseparator, current_decimal_separator));
                     Retention_time = Convert.ToDouble(fields[7].Replace(decimalseparator, current_decimal_separator));
-                    Mass = Convert.ToDouble(fields[8+offset].Replace(decimalseparator, current_decimal_separator));
-                    Parts_per_million = Convert.ToDouble(fields[9+offset].Replace(decimalseparator, current_decimal_separator));
-                    Post_translational_modifications = fields[10+offset];
-                    Local_confidence = fields[11+offset];
-                    Fragmentation_mode = fields[13+offset];
+                    try {
+                        Area = Convert.ToDouble(fields[8].Replace(decimalseparator, current_decimal_separator));
+                    } catch {
+                        Area = -1;
+                    }
+                    Mass = Convert.ToDouble(fields[9].Replace(decimalseparator, current_decimal_separator));
+                    Parts_per_million = Convert.ToDouble(fields[10].Replace(decimalseparator, current_decimal_separator));
+                    Post_translational_modifications = fields[11];
+                    Local_confidence = fields[12];
+                    Fragmentation_mode = fields[14];
 
                     // Initialise list
                     Other_scans = new List<string>();
@@ -745,6 +746,8 @@ namespace AssemblyNameSpace
 <p>{Charge}</p>
 <h3>Retention Time</h3>
 <p>{Retention_time}</p>
+<h3>Area</h3>
+<p>{Area}</p>
 <h3>Original Sequence</h3>
 <p>{Original_tag}</p>
 <h3>Posttranslational Modifications</h3>
@@ -760,9 +763,11 @@ namespace AssemblyNameSpace
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
         /// <param name="input_file"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
+        /// <param name="localcutoffscore"> Score used to filter patches in peptides with high enough confidence 
+        /// to be used contrary their low gloabl confidence, lower will be discarded. </param>
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
-        public void OpenReadsPeaks(string input_file, int cutoffscore, char separator = ',', char decimalseparator = '.')
+        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, char separator = ',', char decimalseparator = '.')
         {
             if (!File.Exists(input_file))
                 throw new Exception("The specified file does not exist, file asked for: " + input_file);
@@ -794,6 +799,36 @@ namespace AssemblyNameSpace
                             } else {
                                 int pos = reads.FindIndex(x => AminoAcid.ArrayEquals(x, acids));
                                 peaks_reads[pos].Other_scans.Add(meta.ScanID);
+                            }
+                        }
+                        // Find local patches of high enough confidence
+                        else {
+                            char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
+                            int[] confidences = meta.Local_confidence.Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
+                            
+                            bool patch = false;
+                            int startpos = 0;
+                            for (int i = 0; i < confidences.Length; i++) {
+                                if (!patch && confidences[i] >= localcutoffscore) {
+                                    // Found a potential starting position
+                                    startpos = i;
+                                    patch = true;
+                                } else if (patch && confidences[i] < localcutoffscore) {
+                                    // Ends a patch
+                                    patch = false; 
+                                    if (i - startpos >= kmer_length) {
+                                        // Long enough use it for assembly
+                                        AminoAcid[] acids = new AminoAcid[i - startpos];
+
+                                        for (int j = startpos; j < i; j++)
+                                        {
+                                            acids[j-startpos] = new AminoAcid(this, tag[j]);
+                                        }
+
+                                        reads.Add(acids);
+                                        peaks_reads.Add(meta);
+                                    }
+                                }
                             }
                         }
                     } catch (Exception e) {
