@@ -30,10 +30,10 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            var assm = new Assembler(8, 7);
-            //assm.SetAlphabet("examples\\Default alphabet.csv");
+            var assm = new Assembler(7, 6);
+            assm.SetAlphabet("examples\\Common errors alphabet.csv");
             //assm.OpenReads("generate_tests\\Generated\\reads-IgG1-K-001-all-50,00.txt");
-            assm.OpenReadsPeaks(@"C:\Users\douwe\Documents\Research Project\Pilot Herceptin Digest 29-04 HCD PEAKS\de novo peptides.csv", 99, 90);
+            assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
             //for (int i = 0; i < assm.reads.Count(); i++) {
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
@@ -63,7 +63,7 @@ namespace AssemblyNameSpace
                 count++;
                 for (int k = 5; k <= 15; k++) {
                     inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
-                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Commom errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
                 }
             }
 
@@ -749,7 +749,7 @@ namespace AssemblyNameSpace
 <h3>Area</h3>
 <p>{Area}</p>
 <h3>Original Sequence</h3>
-<p>{Original_tag}</p>
+<p class=""seq"">{Original_tag}</p>
 <h3>Posttranslational Modifications</h3>
 <p>{Post_translational_modifications}</p>
 <h3>Local Confidence</h3>

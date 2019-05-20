@@ -114,6 +114,10 @@ h1 {
     word-break: break-all;
 }
 
+.seq {
+    word-break: break-all;
+}
+
 
 /* Showing of contig info */
 
