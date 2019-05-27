@@ -89,6 +89,18 @@ function Setup() {
         document.body.classList.add("dragging");
         pauseEvent(ev);
     })
+
+    var elements = document.getElementsByClassName("align-link");
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener('mouseover', enterHoverOver);
+        elements[i].addEventListener('mouseout', exitHoverOver);
+    }
+
+    var elements = document.getElementById("aside").getElementsByClassName("read-link");
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener('mouseover', enterHoverOver);
+        elements[i].addEventListener('mouseout', exitHoverOver);
+    }
 }
 
 document.addEventListener('mousemove', function(ev) {
@@ -123,4 +135,33 @@ function pauseEvent(e) {
     e.cancelBubble = true;
     e.returnValue = false;
     return false;
+}
+
+function enterHoverOver(e) {
+    var id = e.target.href;
+    var target = window.location.href.split("#")[1];
+    var aside = document.getElementById(target);
+    var elements = aside.getElementsByClassName("align-link");
+    for (var i = 0; i < elements.length; i++) {
+        if (elements[i].href == id) {
+            elements[i].classList.add('hover');
+        } else {
+            elements[i].classList.remove('hover');
+        }
+    }
+    var elements = aside.getElementsByClassName("read-link");
+    for (var i = 0; i < elements.length; i++) {
+        if (elements[i].href == id) {
+            elements[i].classList.add('hover');
+        } else {
+            elements[i].classList.remove('hover');
+        }
+    }
+}
+
+function exitHoverOver(e) {
+    var elements = document.getElementsByClassName("hover");
+    while (elements.length > 0) {
+        elements[0].classList.remove('hover');
+    }
 }

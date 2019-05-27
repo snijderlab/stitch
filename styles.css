@@ -32,7 +32,7 @@ h1, h2, h3, h4 {
 
 h1 {
     color: var(--color-primary);
-    font-size: 3em;
+    font-size: 2rem;
 }
 
 .dragging {
@@ -397,9 +397,20 @@ svg .selected text {
 
 /* reads alignment */
 
+.reads-alignment {
+    display: flex;
+    flex-wrap: wrap;
+}
+
+.align-block {
+    display: flex;
+    flex-direction: column;
+}
+
 .reads-alignment p {
-    display: inline-block;
     font-family: "Roboto Mono", monospace;
+    order: 2;
+    margin-top: 5px;
 }
 
 .reads-alignment .seq {
@@ -416,6 +427,30 @@ svg .selected text {
     text-decoration: none;
 }
 
+.coverage-depth-wrapper {
+    height: 50px;
+    order: 1;
+    display: flex;
+    align-items: flex-end;
+}
+
+.coverage-depth-bar {
+    height: calc(var(--value) / var(--max-value) * 50px);
+    background-color: var(--color-primary-dark);
+    width: calc(1ch - 2px);
+    display: inline-block;
+    margin: 0 1px;
+}
+
+.align-link.hover {
+    color: var(--color-secondary);
+    font-weight: 500;
+}
+
+.read-link.hover {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
+}
 
 /* footer */
 

@@ -30,20 +30,82 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            var assm = new Assembler(7, 6);
+            var assm = new Assembler(9);
             assm.SetAlphabet("examples\\Common errors alphabet.csv");
-            //assm.OpenReads("generate_tests\\Generated\\reads-IgG1-K-001-all-50,00.txt");
-            assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
+            //assm.OpenReads("generate_tests\\Generated\\reads-Mix-all-100,00.txt");
+            assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
+            //assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
+            /*assm.OpenReadsPeaks(new List<(string, string)>{
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_aLP_1_DENOVO_2\de novo peptides.csv", "aLP"),
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Elast_1_DENOVO_2\de novo peptides.csv", "Ela"),
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Chym_1_DENOVO_2\de novo peptides.csv", "Chym"),
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_LysC_1_DENOVO_2\de novo peptides.csv", "LysC"),
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_TL_1_DENOVO_2\de novo peptides.csv", "TL"),
+                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Tryp_1_DENOVO_2\de novo peptides.csv", "Tryp")
+                }, 99, 90);*/
             //for (int i = 0; i < assm.reads.Count(); i++) {
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
             //}   
             assm.Assemble();
             assm.CreateReport("report.html");
-            //assm.Assemble();
-            //assm.CreateReport("report.html");
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
+            //RunContigsLengthBatch();
+        }
+        static void RunContigsLengthBatch() {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            string csvfile = @"generate_tests\Results_contigs_length\runs-contigs-length-batch.csv";
+
+            // Write the correct header to the CSV file
+            StreamWriter sw = File.CreateText(csvfile);
+            sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link; Contigs Length\n");
+            sw.Close();
+
+            int count = 0;
+            foreach (var file in Directory.GetFiles(@"generate_tests\Generated_contigs_length_batch")) {
+                if (!file.Contains("Mix")) {
+                    count++;
+                    for (int k = 5; k <= 10; k++) {
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv"));
+                    }
+                }
+            }
+
+            // Run all tasks in parallel
+            Parallel.ForEach(inputQueue, (i) => worker(i));
+
+            stopwatch.Stop();
+            Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
+        }
+        static void RunDepthCoverageBatch() {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            string csvfile = @"generate_tests\Results\runs-contigs-length-batch.csv";
+
+            // Write the correct header to the CSV file
+            StreamWriter sw = File.CreateText(csvfile);
+            sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link; Contigs Length\n");
+            sw.Close();
+
+            int count = 0;
+            foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
+                if (!file.Contains("Mix")) {
+                    count++;
+                    for (int k = 5; k <= 15; k++) {
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv"));
+                    }
+                }
+            }
+
+            // Run all tasks in parallel
+            Parallel.ForEach(inputQueue, (i) => worker(i));
+
+            stopwatch.Stop();
+            Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
         }
         /// <summary> To run a batch of assemblies in parallel. </summary>
         static void RunGenerated() 
@@ -61,7 +123,7 @@ namespace AssemblyNameSpace
             int count = 0;
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
-                for (int k = 5; k <= 15; k++) {
+                for (int k = 5; k <= 15; k++) {         
                     inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
                     inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
                 }
@@ -85,7 +147,7 @@ namespace AssemblyNameSpace
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
                 // Add the meta information to the CSV file
-                assm.CreateCSVLine(workItem.Item3, workItem.Item5, File.ReadAllLines(workItem.Item3)[0].Trim("# \t\n\r".ToCharArray()), workItem.Item6, Path.GetFullPath(workItem.Item4));
+                assm.CreateCSVLine(workItem.Item3, workItem.Item5, File.ReadAllLines(workItem.Item3)[0].Trim("# \t\n\r".ToCharArray()), workItem.Item6, Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
             } catch (Exception e) {
                 bool stuck = true;
                 string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
@@ -541,10 +603,10 @@ namespace AssemblyNameSpace
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
         /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
-        public Assembler(int kmer_length_input, int minimum_homology_input, int edge_include_limit_input = 0)
+        public Assembler(int kmer_length_input, int minimum_homology_input = -1, int edge_include_limit_input = 0)
         {
             kmer_length = kmer_length_input;
-            minimum_homology = minimum_homology_input;
+            minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
             edge_include_limit = edge_include_limit_input;
 
             SetAlphabet();
@@ -701,13 +763,13 @@ namespace AssemblyNameSpace
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
-            public PeaksMeta(string line, char separator, char decimalseparator) {
+            public PeaksMeta(string line, char separator, char decimalseparator, string prefix = "") {
                 try {
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
                     string[] fields = line.Split(separator);
 
                     // Assign all values
-                    ScanID = fields[0];
+                    ScanID = prefix + fields[0];
                     Original_tag = fields[1];
                     Confidence = Convert.ToInt32(fields[3].Replace(decimalseparator, current_decimal_separator));
                     Mass_over_charge = Convert.ToDouble(fields[5].Replace(decimalseparator, current_decimal_separator));
@@ -760,21 +822,30 @@ namespace AssemblyNameSpace
 <p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>";
             }
         }
+        /// <summary> Opens a bunch of peaks files at once. </summary>
+        public void OpenReadsPeaks(List<(string, string)> files, int cutoffscore, int localcutoffscore, char separator = ',', char decimalseparator = '.') {
+            foreach (var file in files) {
+                OpenReadsPeaks(file.Item1, cutoffscore, localcutoffscore, file.Item2, separator, decimalseparator);
+                Console.WriteLine($"Opened file {file.Item2} now on {reads.Count()} reads");
+            }
+        }
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
         /// <param name="input_file"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
         /// <param name="localcutoffscore"> Score used to filter patches in peptides with high enough confidence 
         /// to be used contrary their low gloabl confidence, lower will be discarded. </param>
+        /// <param name="prefix"> A prefix to add to identifiers to make it easier to find the original 
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
-        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, char separator = ',', char decimalseparator = '.')
+        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, string prefix = "", char separator = ',', char decimalseparator = '.')
         {
             if (!File.Exists(input_file))
                 throw new Exception("The specified file does not exist, file asked for: " + input_file);
 
             List<string> lines = File.ReadLines(input_file).ToList();
-            reads = new List<AminoAcid[]>();
-            peaks_reads = new List<PeaksMeta>();
+            if (reads == null) reads = new List<AminoAcid[]>();
+            if (peaks_reads == null) peaks_reads = new List<PeaksMeta>();
+            //int offset_in_reads = reads.Count();
 
             int linenumber = 0;
             lines.ForEach(line =>
@@ -782,8 +853,9 @@ namespace AssemblyNameSpace
                 linenumber++;
                 if (linenumber != 1) {
                     try {
-                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator);
+                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator, prefix);
                         if (meta.Confidence >= cutoffscore) {
+                            
                             char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
 
                             AminoAcid[] acids = new AminoAcid[tag.Length];
@@ -792,14 +864,15 @@ namespace AssemblyNameSpace
                             {
                                 acids[i] = new AminoAcid(this, tag[i]);
                             }
-
+                        
                             if (reads.Where(x => AminoAcid.ArrayEquals(x, acids)).Count() == 0) {
                                 reads.Add(acids);
                                 peaks_reads.Add(meta);
                             } else {
                                 int pos = reads.FindIndex(x => AminoAcid.ArrayEquals(x, acids));
-                                peaks_reads[pos].Other_scans.Add(meta.ScanID);
+                                peaks_reads[pos].Other_scans.Add(prefix + meta.ScanID);
                             }
+                            
                         }
                         // Find local patches of high enough confidence
                         else {
@@ -832,7 +905,7 @@ namespace AssemblyNameSpace
                             }
                         }
                     } catch (Exception e) {
-                        Console.WriteLine($"ERROR while importing from PEAKS csv on line {linenumber}\n{e.Message}");
+                        Console.WriteLine($"ERROR while importing from PEAKS csv on line {prefix}{linenumber}\n{e.Message}");
                     }
             }});
             meta_data.reads = reads.Count;
@@ -952,13 +1025,6 @@ namespace AssemblyNameSpace
             });
 
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
-
-            // Print graph
-
-            for (int i = 0; i < graph.Length; i++) {
-                var node = graph[i];
-                // Console.WriteLine($"Node: Seq: {AminoAcid.ArrayToString(node.Sequence)} Index: {i} Forward edges: {node.ForwardEdges.Count()} {node.ForwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())} Backward edges: {node.BackwardEdges.Count()} {node.BackwardEdges.Aggregate<(int, int, int), string>("", (a, b) => a + " " + b.ToString())}");
-            }
 
             // Create a condensed graph to keep the information
 
@@ -1095,12 +1161,6 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
-        /// <summary> An enum to input the type to generate. </summary>
-        public enum Mode {
-            /// <summary> Will generate with extended information, can become a bit cluttered with large datasets. </summary>
-            Extended,
-            /// <summary> Will generate with condensed information, will give easier overview but details have to be looked up. </summary>
-            Simple}
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
         public void OutputGraph(string filename = "graph.dot") {
@@ -1249,14 +1309,12 @@ namespace AssemblyNameSpace
                 id = $"I{i:D4}";
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig: {id}</h1>
-    <h2>Sequence</h2>
+    <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</p>
-    <h2>Sequence Length</h2>
-    <p>{condensed_graph[i].Sequence.Count()}</p>
-    <h2>Based on</h2>
-    <p>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
     <h2>Reads Alignment</h4>
     {CreateReadsAlignment(condensed_graph[i])}
+    <h2>Based on</h2>
+    <p>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
 </div>");
             }
             for (int i = 0; i < reads.Count(); i++) {
@@ -1309,12 +1367,14 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             buffer.AppendLine("<div class=\"reads-alignment\">");
 
+            int max_depth = 0;
             const int bucketsize = 5;
             for (int pos = 0; pos <= sequence.Length / bucketsize; pos++) {
                 // Add the sequence and the number to tell the position
                 string number = ((pos+1)*bucketsize).ToString();
-                buffer.Append($"<p><span class=\"number\">{String.Concat(Enumerable.Repeat("&nbsp;", bucketsize-number.Length))}{number}</span><br><span class=\"seq\">{sequence.Substring(pos*bucketsize, Math.Min(bucketsize, sequence.Length - pos*bucketsize))}</span><br>");
+                buffer.Append($"<div class='align-block'><p><span class=\"number\">{String.Concat(Enumerable.Repeat("&nbsp;", bucketsize-number.Length))}{number}</span><br><span class=\"seq\">{sequence.Substring(pos*bucketsize, Math.Min(bucketsize, sequence.Length - pos*bucketsize))}</span><br>");
                 
+                int[] depth = new int[bucketsize];
                 // Add every niveau in order
                 foreach (var line in placed) {
                     for (int i = pos*bucketsize; i < pos*bucketsize+bucketsize; i++) {
@@ -1322,17 +1382,23 @@ namespace AssemblyNameSpace
                         foreach(var read in line) {
                             if (i >= read.Item2 && i < read.Item3) {
                                 result = $"<a href=\"#R{read.Item4:D4}\" class=\"align-link\">{read.Item1[i - read.Item2]}</a>";
+                                depth[i-pos*bucketsize]++;
                             }
                         }
                         buffer.Append(result);
                     }
                     buffer.Append("<br>");
                 }
-                buffer.Append("</p>");
+                buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+                for (int i = 0; i < bucketsize; i++) {
+                    if (depth[i] > max_depth) max_depth = depth[i];
+                    buffer.Append($"<span class='coverage-depth-bar' style='--value:{depth[i]}'></span>");
+                }
+                buffer.Append("</div></div>");
             }
             buffer.AppendLine("</div>");
 
-            return buffer.ToString();
+            return buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>");
         }
         /// <summary> Returns the string representation of the human friendly identifier of a node. </summary>
         /// <param name="index"> The index in the condensed graph of the condensed node. </param>
@@ -1428,7 +1494,7 @@ namespace AssemblyNameSpace
         /// <param name="path_to_template"> The path to the original fasta file, to get extra information. </param>
         /// <param name="extra"> Extra field to fill in own information. Created for holding the alphabet. </param>
         /// <param name="path_to_report"> The path to the report to add a hyperlink to the CSV file. </param>
-        public void CreateCSVLine(string ID, string filename = "report.csv", string path_to_template = null, string extra = "", string path_to_report = "") {
+        public void CreateCSVLine(string ID, string filename = "report.csv", string path_to_template = null, string extra = "", string path_to_report = "", bool extended = false) {
             // If the original sequence is known, calculate the coverage
             string coverage = "";
             if (path_to_template != null) {
@@ -1450,13 +1516,29 @@ namespace AssemblyNameSpace
                 string[] reads_array = reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray();
                 string[] contigs_array = condensed_graph.Select(x => Assembler.AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
 
-                if (seqs.Count() == 2) {
+                if (seqs.Count() == 2 && !extended) {
                     var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], reads_array);
                     var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], reads_array);
                     var coverage_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], contigs_array);
                     var coverage_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], contigs_array);
 
                     coverage = $"{coverage_reads_heavy.Item1};{coverage_reads_heavy.Item2};{coverage_reads_light.Item1};{coverage_reads_light.Item2};{coverage_contigs_heavy.Item1};{coverage_contigs_heavy.Item2};{coverage_contigs_light.Item1};{coverage_contigs_light.Item2};";
+                } else if (seqs.Count() == 2 && extended) {
+                    // Filter only assembled contigs
+                    contigs_array = condensed_graph.Where(n => n.Origins.Count() > 1).Select(n => AminoAcid.ArrayToString(n.Sequence.ToArray())).ToArray();
+
+                    var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], reads_array);
+                    var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], reads_array);
+                    var coverage_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], contigs_array);
+                    var coverage_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], contigs_array);
+
+                    // Create list of unique mapped peptides
+                    List<string> correct_contigs = new List<string>(coverage_contigs_heavy.Item2);
+                    foreach (var x in coverage_contigs_light.Item2) {
+                        if (!correct_contigs.Contains(x)) correct_contigs.Add(x);
+                    }
+
+                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
                 } else {
                     Console.WriteLine($"Not an antibody fasta file: {path_to_template}");
                 }
@@ -1464,7 +1546,7 @@ namespace AssemblyNameSpace
 
             // If the path to the report is known create a hyperlink
             string link = "";
-            if (path_to_report != "") {
+            if (path_to_report != "" && !extended) {
                 link = $"=HYPERLINK(\"{path_to_report}\");";
             }
             
@@ -1653,8 +1735,54 @@ namespace AssemblyNameSpace
             return ((double)hits/covered.Length, correct_reads);
         }
         /// <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
-        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
-        /// correctly aligned reads as an Int as the second item. </returns>
+        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the  
+        /// correctly aligned reads as an array as the second item and the depth of coverage as the third item. </returns>
+        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
+        /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
+        /// <param name="template"> The template to match against. </param>
+        /// <param name="sequences"> The sequences to match with. </param>
+        public static (double, string[], double) MultipleSequenceAlignmentToTemplateExtended(string template, string[] sequences) 
+        {
+            // Keep track of all places already covered
+            bool[] covered = new bool[template.Length];
+            int total_placed_reads_length = 0;
+            List<string> placed_sequences = new List<string>();
+
+            foreach (string seq in sequences) {
+                bool found = false;
+                for (int i = 0; i < template.Length; i++) {
+                    // Try aligning on this position
+                    bool hit = true;
+                    for (int j = 0; j < seq.Length && hit; j++) {
+                        if (i+j > template.Length - 1 || template[i+j] != seq[j]) {
+                            hit = false;
+                        }
+                    }
+
+                    // The alignment succeeded, record this in the covered array
+                    if (hit) {
+                        for (int k = 0; k < seq.Length; k++) {
+                            covered[i+k] = true;
+                        }
+                        found = true;
+                        total_placed_reads_length += seq.Length;
+                    }
+                }
+                if (found == true) {
+                    placed_sequences.Add(seq);
+                }
+            }
+
+            int hits = 0;
+            foreach (bool b in covered) {
+                if (b) hits++;
+            }
+
+            return ((double)hits/covered.Length, placed_sequences.ToArray(), (double)total_placed_reads_length / template.Length);
+        }
+        /// <summary> This aligns a list of sequences to a template sequence based on the alphabet given. </summary>
+        /// <returns> Returns a list of tuples with the sequences as first item, startinposition as second item, 
+        /// end position as third item and identifier from the given list as fourth item. </returns>
         /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
         /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
         /// <param name="template"> The template to match against. </param>

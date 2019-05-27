@@ -16,8 +16,9 @@ namespace GenerateTestsNS {
         static List<(string, string, List<(string, string, double)>, double[], bool)> inputQueue = new List<(string, string, List<(string, string, double)>, double[], bool)>();
         /// <summary> The Main function which is run if the code is compiled. </summary>
         static void Main() {
-            //GenerateTests.GenerateTest("Test mAB\\IgG1-K-001.txt", "Generated\\reads-IgG1-K-001-Aspecific-NotMissed.txt", new List<(string, string, double)>{("Aspecific", "nonspecific", 0.002)}, new double[]{0.5, 0.75, 1.0}, 5, 40, false);
-            GenerateRuns();
+            //GenerateTests.GenerateTest("Test mAB\\Mix-all.txt", "Generated\\reads-Mix-all.txt", new List<(string, string, double)>{("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Aspecific", "nonspecific", 0.02), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)}, new double[]{0.25, 0.5, 0.75, 1.0}, 5, 40, false);
+            //GenerateRuns();
+            GenerateRunsContigLengthBatch();
         }
         /// <summary> A function to generate a lot of tests in bulk. It first creates a list of all tests to be generated.
         /// Then processes this list in parallel to generate these tests. </summary>
@@ -40,6 +41,30 @@ namespace GenerateTestsNS {
                 for (int i = 2; i < prots.Count(); i++) {
                     outputpath = "Generated/reads-" + Path.GetFileNameWithoutExtension(file) + $"-Trypsin,Chymotrypsin,{prots[i].Item1}.txt";
                     inputQueue.Add((file, outputpath, new List<(string, string, double)>{prots[0], prots[1], prots[i]}, percents, false));
+                }
+            }
+
+            // Excecute all tasks in parrallel
+            Parallel.ForEach(inputQueue, (i) => worker(i));
+
+            stopwatch.Stop();
+            Console.WriteLine($"Generated {count*percents.Length} samples in {stopwatch.ElapsedMilliseconds} ms");
+        }
+        static void GenerateRunsContigLengthBatch() 
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            var prots = new List<(string, string, double)> {("Trypsin", "(?<=K|R)(?!P)", 1.0), ("Chymotrypsin", "(?<=W|Y|F|M|L)", 1.0), ("LysC", "(?<=K)", 1.0), ("Aspecific", "nonspecific", 0.007), ("Alfalytic protease", "(?<=T|A|S|V)", 1.0)};
+            var percents = new double[] {1.0};
+            
+            int count = 0;
+            foreach (var file in Directory.GetFiles(@"Test mAB\")) {
+                for (int k = 0; k < 30; k++) {
+                    count++;
+                    // All proteases
+                    string outputpath = "Generated_contigs_length_batch/reads-" + Path.GetFileNameWithoutExtension(file) + "-all-" + k.ToString() + ".txt";
+                    inputQueue.Add((file, outputpath, prots, percents, false));
                 }
             }
 

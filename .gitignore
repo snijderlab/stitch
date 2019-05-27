@@ -11,3 +11,8 @@ generate_tests/*.svg
 generate_tests/*.html
 generate_tests/Generated/*.*
 generate_tests/Results/*.*
+generate_tests/Generated_contigs_length_batch/*.*
+generate_tests/Results_contigs_length/*.*
+generate_tests/Results Mix/*.*
+report.html
+graph-1*
