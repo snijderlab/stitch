@@ -118,6 +118,10 @@ h1 {
     word-break: break-all;
 }
 
+.prefix, .postfix {
+    color: grey;
+}
+
 
 /* Showing of contig info */
 

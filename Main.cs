@@ -30,19 +30,19 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            var assm = new Assembler(9);
-            assm.SetAlphabet("examples\\Common errors alphabet.csv");
-            //assm.OpenReads("generate_tests\\Generated\\reads-Mix-all-100,00.txt");
-            assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
+            var assm = new Assembler(8);
+            assm.SetAlphabet("Common errors alphabet.csv");
+            //assm.OpenReads(@"generate_tests\Generated\reads-mix-perfect.txt");
+            //assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
             //assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
-            /*assm.OpenReadsPeaks(new List<(string, string)>{
+            assm.OpenReadsPeaks(new List<(string, string)>{
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_aLP_1_DENOVO_2\de novo peptides.csv", "aLP"),
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Elast_1_DENOVO_2\de novo peptides.csv", "Ela"),
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Chym_1_DENOVO_2\de novo peptides.csv", "Chym"),
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_LysC_1_DENOVO_2\de novo peptides.csv", "LysC"),
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_TL_1_DENOVO_2\de novo peptides.csv", "TL"),
                 (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Tryp_1_DENOVO_2\de novo peptides.csv", "Tryp")
-                }, 99, 90);*/
+                }, 99, 90);
             //for (int i = 0; i < assm.reads.Count(); i++) {
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
@@ -205,9 +205,6 @@ namespace AssemblyNameSpace
             get { return minimum_homology; }
             set { minimum_homology = value; }
         }
-        /// <summary> The limit to include edges when filtering on highest edges. It will be used to include 
-        /// not only the highest but (depending on the value) a couple more edges. </summary>
-        private int edge_include_limit;
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         private MetaInformation meta_data;
@@ -341,59 +338,56 @@ namespace AssemblyNameSpace
         {
             /// <summary> The member to store the sequence information in. </summary>
             private AminoAcid[] sequence;
+
             /// <summary> The sequence of the Node. Only has a getter. </summary>
             /// <value> The sequence of this node. </value>
             public AminoAcid[] Sequence { get { return sequence; } }
+
             /// <summary> Where the (k-1)-mer sequence comes from. </summary>
             private List<int> origins;
+
             /// <summary> The indexes of the reads where this (k-1)-mere originated from. </summary>
             /// <value> A list of indexes of the list of reads. </value>
             public List<int> Origins { get { return origins; } }
+
             /// <summary> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
             /// member to store the list. </summary>
             private List<ValueTuple<int, int, int>> forwardEdges;
+
             /// <summary> The list of edges going from this node. </summary>
             /// <value> The list of edges from this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
             public List<ValueTuple<int, int, int>> ForwardEdges { get { return forwardEdges; } }
+
             /// <summary> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. The private 
             /// member to store the list. </summary>
             private List<ValueTuple<int, int, int>> backwardEdges;
+
             /// <summary> The list of edges going to this node. </summary>
             /// <value> The list of edges to this Node. The tuples contain the index 
             /// of the Node where the edge goes to, the homology with the first Node 
             /// and the homology with the second Node in this order. Only has a getter. </value>
             public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
+
             /// <summary> Whether or not this node is visited yet. </summary>
             public bool Visited;
-            /// <summary> Highest score yet for forward edges, used in filtering only the highest edges. </summary>
-            private int max_forward_score;
-            /// <summary> Highest score yet for backward edges, used in filtering only the highest edges. </summary>
-            private int max_backward_score;
-            /// <summary> The limit to include edges when filtering on highest edges. It will be used to include 
-            /// not only the highest but (depending on the value) a couple more edges. </summary>
-            private int edge_include_limit;
 
             /// <summary> The creator of Nodes. </summary>
             /// <param name="seq"> The sequence of this Node. </param>
             /// <param name="origin"> The origin(s) of this (k-1)-mer. </param>
-            /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
             /// <remarks> It will initialize the edges list. </remarks>
-            public Node(AminoAcid[] seq, List<int> origin, int edge_include_limit_input)
+            public Node(AminoAcid[] seq, List<int> origin)
             {
                 sequence = seq;
                 origins = origin;
                 forwardEdges = new List<ValueTuple<int, int, int>>();
                 backwardEdges = new List<ValueTuple<int, int, int>>();
                 Visited = false;
-                max_forward_score = 0;
-                max_backward_score = 0;
-                edge_include_limit = edge_include_limit_input;
             }
 
             /// <summary> To add a forward edge to the Node. Wil only be added if the score is high enough. </summary>
@@ -402,26 +396,15 @@ namespace AssemblyNameSpace
             /// <param name="score2"> The homology of the edge with the second Node. </param>
             public void AddForwardEdge(int target, int score1, int score2)
             {
-                int score = score1 + score2;
-                if (score <= max_forward_score && score >= max_forward_score - edge_include_limit)
-                {
-                    bool inlist = false;
-                    foreach (var edge in forwardEdges) {
-                        if (edge.Item1 == target) {
-                            inlist = true;
-                            break;
-                        }
+                bool inlist = false;
+                foreach (var edge in forwardEdges) {
+                    if (edge.Item1 == target) {
+                        inlist = true;
+                        break;
                     }
-                    if (!inlist) forwardEdges.Add((target, score1, score2));
-                    return;
                 }
-                if (score > max_forward_score)
-                {
-                    max_forward_score = score;
-                    forwardEdges.Add((target, score1, score2));
-                    filterForwardEdges();
-                }
-
+                if (!inlist) forwardEdges.Add((target, score1, score2));
+                return;
             }
             /// <summary> To add a backward edge to the Node. </summary>
             /// <param name="target"> The index of the Node where this edge comes from. </param>
@@ -429,39 +412,15 @@ namespace AssemblyNameSpace
             /// <param name="score2"> The homology of the edge with the second Node. </param>
             public void AddBackwardEdge(int target, int score1, int score2)
             {
-                int score = score1 + score2;
-                if (score <= max_backward_score && score >= max_backward_score - edge_include_limit)
-                {
-                    bool inlist = false;
-                    foreach (var edge in backwardEdges) {
-                        if (edge.Item1 == target) {
-                            inlist = true;
-                            break;
-                        }
+                bool inlist = false;
+                foreach (var edge in backwardEdges) {
+                    if (edge.Item1 == target) {
+                        inlist = true;
+                        break;
                     }
-                    if (!inlist) backwardEdges.Add((target, score1, score2));
-                    return;
                 }
-                if (score > max_backward_score)
-                {
-                    max_backward_score = score;
-                    backwardEdges.Add((target, score1, score2));
-                    filterBackwardEdges();
-                }
-            }
-            /// <summary> Filters the forward edges based on the highest score found yet and the edge include limit. </summary>
-            /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
-            /// See <see cref="Node.max_forward_score"/> for the highest score.
-            private void filterForwardEdges()
-            {
-                forwardEdges = forwardEdges.Where(i => i.Item2 + i.Item3 >= max_forward_score - edge_include_limit).ToList();
-            }
-            /// <summary> Filters the backward edges based on the highest score found yet and the edge include limit. </summary>
-            /// See <see cref="Assembler.edge_include_limit"/> for the edge include limit.
-            /// See <see cref="Node.max_backward_score"/> for the highest score.
-            private void filterBackwardEdges()
-            {
-                backwardEdges = backwardEdges.Where(i => i.Item2 + i.Item3 >= max_backward_score - edge_include_limit).ToList();
+                if (!inlist) backwardEdges.Add((target, score1, score2));
+                return;
             }
             /// <summary> To check if the Node has forward edges. </summary>
             /// <returns> Returns true if the node has forward edges. </returns>
@@ -572,6 +531,8 @@ namespace AssemblyNameSpace
             /// <summary> The sequence of this node. It is the longest constant sequence to be 
             /// found in the de Bruijn graph starting at the Index. See <see cref="CondensedNode.Index"/></summary>
             public List<AminoAcid> Sequence;
+            public List<AminoAcid> Prefix;
+            public List<AminoAcid> Postfix;
             /// <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
             public List<int> ForwardEdges;
             /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
@@ -602,12 +563,10 @@ namespace AssemblyNameSpace
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
-        /// <param name="edge_include_limit_input"> The limit to include edges when filtering. </param>
-        public Assembler(int kmer_length_input, int minimum_homology_input = -1, int edge_include_limit_input = 0)
+        public Assembler(int kmer_length_input, int minimum_homology_input = -1)
         {
             kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
-            edge_include_limit = edge_include_limit_input;
 
             SetAlphabet();
         }
@@ -924,6 +883,8 @@ namespace AssemblyNameSpace
             var kmers = new List<(AminoAcid[], int)>();
             AminoAcid[] read;
 
+             Console.WriteLine($"Found {meta_data.reads} reads");
+
             for (int r = 0; r < reads.Count(); r++)
             {
                 read = reads[r];
@@ -943,6 +904,7 @@ namespace AssemblyNameSpace
                 }
             }
             meta_data.kmers = kmers.Count;
+            Console.WriteLine($"Found {meta_data.kmers} kmers");
 
             // Building the graph
             // Generating all (k-1)-mers
@@ -956,6 +918,7 @@ namespace AssemblyNameSpace
             });
 
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
+            Console.WriteLine($"Found {meta_data.kmin1_mers_raw} raw (k-1)-mers");
 
             var kmin1_mers = new List<ValueTuple<AminoAcid[], List<int>>>();
 
@@ -972,6 +935,7 @@ namespace AssemblyNameSpace
             }
             
             meta_data.kmin1_mers = kmin1_mers.Count;
+            Console.WriteLine($"Found {meta_data.kmin1_mers} (k-1)-mers");
 
             // Create a node for every possible (k-1)-mer
 
@@ -981,7 +945,7 @@ namespace AssemblyNameSpace
             int index = 0;
             kmin1_mers.ForEach(kmin1_mer =>
             {
-                graph[index] = new Node(kmin1_mer.Item1, kmin1_mer.Item2, edge_include_limit);
+                graph[index] = new Node(kmin1_mer.Item1, kmin1_mer.Item2);
                 index++;
             });
 
@@ -1061,6 +1025,9 @@ namespace AssemblyNameSpace
                         foreach (int o in forward_node.Origins) origins.Add(o);
 
                         forward_node = graph[forward_node_index];
+
+                        // To account for possible cycles 
+                        if (forward_node_index == i) break;
                     } 
                     forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
                     forward_node.Visited = true;
@@ -1079,6 +1046,9 @@ namespace AssemblyNameSpace
                         foreach (int o in backward_node.Origins) origins.Add(o);
 
                         backward_node = graph[backward_node_index];
+
+                        // To account for possible cycles 
+                        if (backward_node_index == i) break;
                     }
                     backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                     backward_node.Visited = true;
@@ -1105,8 +1075,8 @@ namespace AssemblyNameSpace
             }
 
             // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
-            int node_index = 0;
-            foreach (var node in condensed_graph) {
+            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++) {
+                var node = condensed_graph[node_index];
                 List<int> forward = new List<int>(node.ForwardEdges);
                 node.ForwardEdges.Clear();
                 foreach (var FWE in forward) {
@@ -1143,15 +1113,18 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
-                if (node.BackwardEdges.Where(a => a != node_index).Count() == 1) {
-                    //TODO commented this out because test 5 gave empty sequences, need to find that cause
-                    //node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
+                if (!node.BackwardEdges.Contains(node_index) && !node.ForwardEdges.Contains(node_index)) {
+                    if (node.BackwardEdges.Count() == 1) {
+                        //TODO commented this out because test 5 gave empty sequences, need to find that cause
+                        node.Prefix = node.Sequence.Take(kmer_length - 1).ToList();
+                        node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
+                    }
+                    if (node.ForwardEdges.Count() == 1) {
+                        //TODO commented this out because test 5 gave empty sequences, need to find that cause
+                        node.Postfix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 1).ToList();
+                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
+                    }
                 }
-                if (node.ForwardEdges.Where(a => a != node_index).Count() == 1) {
-                    //TODO commented this out because test 5 gave empty sequences, need to find that cause
-                    //node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
-                }
-                node_index++;
             }
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
@@ -1307,10 +1280,15 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < condensed_graph.Count(); i++) {
                 id = $"I{i:D4}";
+                string prefix = "";
+                if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
+                string postfix = "";
+                if (condensed_graph[i].Postfix != null) postfix = AminoAcid.ArrayToString(condensed_graph[i].Postfix.ToArray());
+
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig: {id}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</p>
+    <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='postfix'>{postfix}</span></p>
     <h2>Reads Alignment</h4>
     {CreateReadsAlignment(condensed_graph[i])}
     <h2>Based on</h2>
