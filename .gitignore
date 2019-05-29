@@ -1,6 +1,7 @@
 *.exe
 *.log
 *.zip
+*.dot
 examples/*/*.png
 examples/*/*.dot
 examples/*/*.svg
@@ -14,5 +15,7 @@ generate_tests/Results/*.*
 generate_tests/Generated_contigs_length_batch/*.*
 generate_tests/Results_contigs_length/*.*
 generate_tests/Results Mix/*.*
+generate_tests/Experimental results/*.html
+generate_tests/Experimental results/*.csv
 report.html
 graph-1*

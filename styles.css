@@ -118,7 +118,7 @@ h1 {
     word-break: break-all;
 }
 
-.prefix, .postfix {
+.prefix, .suffix {
     color: grey;
 }
 

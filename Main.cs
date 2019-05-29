@@ -26,32 +26,65 @@ namespace AssemblyNameSpace
     class ToRunWithCommandLine
     {
         /// <summary> The list of all tasks to be done. To be able to run them in parallel. </summary>
-        static List<(int, int, string, string, string, string)> inputQueue = new List<(int, int, string, string, string, string)>();
+        static List<(int, int, string, string, string, string, string)> inputQueue = new List<(int, int, string, string, string, string, string)>();
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            var assm = new Assembler(8);
-            assm.SetAlphabet("Common errors alphabet.csv");
+            //var assm = new Assembler(8, 7);
+            //assm.SetAlphabet("Fusion alphabet.csv");
             //assm.OpenReads(@"generate_tests\Generated\reads-mix-perfect.txt");
             //assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
             //assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
-            assm.OpenReadsPeaks(new List<(string, string)>{
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_aLP_1_DENOVO_2\de novo peptides.csv", "aLP"),
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Elast_1_DENOVO_2\de novo peptides.csv", "Ela"),
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Chym_1_DENOVO_2\de novo peptides.csv", "Chym"),
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_LysC_1_DENOVO_2\de novo peptides.csv", "LysC"),
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_TL_1_DENOVO_2\de novo peptides.csv", "TL"),
-                (@"Z:\users\5803969\Benchmarking\190524_MAbs-denovo_PEAKS_export\190520_MAb-tests_F1_HCD_1446_Tryp_1_DENOVO_2\de novo peptides.csv", "Tryp")
-                }, 99, 90);
+            /*assm.OpenReadsPeaks(new List<(string, string)>{
+                (@"Z:\users\5803969\Benchmarking\190529_MAbs-denovo_PEAKS_export\190528_F1_131-2a_ETHCD_01_DENOVO_7\de novo peptides.csv", "ETHCD"),
+                (@"Z:\users\5803969\Benchmarking\190529_MAbs-denovo_PEAKS_export\190528_F1_131-2a_HCD_01_DENOVO_7\de novo peptides.csv", "HCD")
+                }, 99, 90, Assembler.PeaksFormat.NewFormat());*/
             //for (int i = 0; i < assm.reads.Count(); i++) {
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
             //}   
-            assm.Assemble();
-            assm.CreateReport("report.html");
+            //assm.Assemble();
+            //assm.CreateReport("report.html");
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
             //RunContigsLengthBatch();
+            RunExperimentalBatch();
+        }
+         static void RunExperimentalBatch() {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            string csvfile = @"generate_tests\Experimental results\runs.csv";
+
+            // Write the correct header to the CSV file
+            StreamWriter sw = File.CreateText(csvfile);
+            sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link; Contigs Length\n");
+            sw.Close();
+
+            int count = 0;
+            foreach (var dir in Directory.GetDirectories(@"Z:\users\5803969\Benchmarking\190529_MAbs-denovo_PEAKS_export\")) {
+                var file = dir + @"\de novo peptides.csv";
+                string sequencefile = null;
+                if (file.Contains("1446")) {
+                    sequencefile = @"generate_tests\Experimental results\1446.txt";
+                }
+                if (file.Contains("Her")) {
+                    sequencefile = @"generate_tests\Experimental results\her.txt";
+                }
+                if (file.Contains("CAMP")) {
+                    sequencefile = @"generate_tests\Experimental results\camp.txt";
+                }
+                count++;
+                for (int k = 7; k <= 9; k++) {
+                    inputQueue.Add((k, -2, file, @"generate_tests\Experimental results\" + Path.GetFileName(Path.GetDirectoryName(file)) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "Fusion alphabet.csv", sequencefile));
+                }
+            }
+
+            // Run all tasks in parallel
+            Parallel.ForEach(inputQueue, (i) => worker(i));
+
+            stopwatch.Stop();
+            Console.WriteLine($"Assembled {count} files in {stopwatch.ElapsedMilliseconds} ms");
         }
         static void RunContigsLengthBatch() {
             var stopwatch = new Stopwatch();
@@ -69,7 +102,7 @@ namespace AssemblyNameSpace
                 if (!file.Contains("Mix")) {
                     count++;
                     for (int k = 5; k <= 10; k++) {
-                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv"));
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
                     }
                 }
             }
@@ -96,7 +129,7 @@ namespace AssemblyNameSpace
                 if (!file.Contains("Mix")) {
                     count++;
                     for (int k = 5; k <= 15; k++) {
-                        inputQueue.Add((k, -1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv"));
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
                     }
                 }
             }
@@ -124,8 +157,8 @@ namespace AssemblyNameSpace
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
                 for (int k = 5; k <= 15; k++) {         
-                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv"));
-                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv"));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv", ""));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv", ""));
                 }
             }
 
@@ -137,17 +170,21 @@ namespace AssemblyNameSpace
         }
         /// <summary> The function to operate on the list of tasks to by run in parallel. </summary>
         /// <param name="workItem"> The task to perform. </param>
-        static void worker((int, int, string, string, string, string) workItem)
+        static void worker((int, int, string, string, string, string, string) workItem)
         {
             try {
                 Console.WriteLine("Starting on: " + workItem.Item3);
-                var assm = new Assembler(workItem.Item1,workItem.Item2);
+                var assm = new Assembler(workItem.Item1, workItem.Item2 < 0 ? workItem.Item1-1 : workItem.Item2);
                 assm.SetAlphabet(workItem.Item6);
-                assm.OpenReads(workItem.Item3);
+                if (workItem.Item2 == -2) {
+                    assm.OpenReadsPeaks(workItem.Item3, 99, 90, Assembler.PeaksFormat.NewFormat());
+                } else {
+                    assm.OpenReads(workItem.Item3);
+                }
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
                 // Add the meta information to the CSV file
-                assm.CreateCSVLine(workItem.Item3, workItem.Item5, File.ReadAllLines(workItem.Item3)[0].Trim("# \t\n\r".ToCharArray()), workItem.Item6, Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
+                assm.CreateCSVLine(workItem.Item3, workItem.Item5, workItem.Item7, workItem.Item6, Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
             } catch (Exception e) {
                 bool stuck = true;
                 string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
@@ -186,7 +223,6 @@ namespace AssemblyNameSpace
         public int Kmer_length
         {
             get { return kmer_length; }
-            set { kmer_length = value; }
         }
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </summary>
@@ -203,8 +239,8 @@ namespace AssemblyNameSpace
         public int Minimum_homology
         {
             get { return minimum_homology; }
-            set { minimum_homology = value; }
         }
+        private int duplicate_threshold;
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         private MetaInformation meta_data;
@@ -325,6 +361,7 @@ namespace AssemblyNameSpace
             {
                 int score = 0;
                 if (left.Length != right.Length)
+                    // Throw exception?
                     return 0;
                 for (int i = 0; i < left.Length; i++)
                 {
@@ -441,54 +478,6 @@ namespace AssemblyNameSpace
             {
                 return forwardEdges.Count + backwardEdges.Count;
             }
-            /// <summary> Gets the forward edge with the highest total homology of all 
-            /// edges in this Node. </summary>
-            /// <returns> It returns the index 
-            /// of the Node where the edge goes to, the homology with the first Node 
-            /// and the homology with the second Node in this order. </returns>
-            /// <exception cref="Exception"> It will result in an Exception if the Node has no forward edges. </exception>
-            public ValueTuple<int, int, int> MaxForwardEdge()
-            {
-                if (!HasForwardEdges())
-                    throw new Exception("Cannot give an edge if this node has no edges");
-                var output = forwardEdges[0];
-                int value = output.Item2 + output.Item3;
-                int max = value;
-                for (int i = 0; i < forwardEdges.Count; i++)
-                {
-                    value = forwardEdges[i].Item2 + forwardEdges[i].Item3;
-                    if (value > max)
-                    {
-                        max = value;
-                        output = forwardEdges[i];
-                    }
-                }
-                return output;
-            }
-            /// <summary> Gets the backward edge with the highest total homology of all 
-            /// edges in this Node. </summary>
-            /// <returns> It returns the index 
-            /// of the Node where the edge goes to, the homology with the first Node 
-            /// and the homology with the second Node in this order. </returns>
-            /// <exception cref="Exception"> It will result in an Exception if the Node has no backward edges. </exception>
-            public ValueTuple<int, int, int> MaxBackwardEdge()
-            {
-                if (!HasBackwardEdges())
-                    throw new Exception("Cannot give an edge if this node has no edges");
-                var output = backwardEdges[0];
-                int value = output.Item2 + output.Item3;
-                int max = value;
-                for (int i = 0; i < backwardEdges.Count; i++)
-                {
-                    value = backwardEdges[i].Item2 + backwardEdges[i].Item3;
-                    if (value > max)
-                    {
-                        max = value;
-                        output = backwardEdges[i];
-                    }
-                }
-                return output;
-            }
         }
         /// <summary> A struct to hold meta information about the assembly to keep it organised 
         /// and to report back to the user. </summary>
@@ -532,7 +521,7 @@ namespace AssemblyNameSpace
             /// found in the de Bruijn graph starting at the Index. See <see cref="CondensedNode.Index"/></summary>
             public List<AminoAcid> Sequence;
             public List<AminoAcid> Prefix;
-            public List<AminoAcid> Postfix;
+            public List<AminoAcid> Suffix;
             /// <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
             public List<int> ForwardEdges;
             /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
@@ -563,10 +552,11 @@ namespace AssemblyNameSpace
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
-        public Assembler(int kmer_length_input, int minimum_homology_input = -1)
+        public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input = -1)
         {
             kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
+            duplicate_threshold = duplicate_threshold_input;
 
             SetAlphabet();
         }
@@ -690,65 +680,115 @@ namespace AssemblyNameSpace
             }
             meta_data.reads = reads.Count;
         }
+        public class PeaksFormat {
+            public int fraction, source_file, feature, scan, peptide, tag_length, alc, length, mz, z, rt, area, mass, ppm, ptm, local_confidence, tag, mode = -1;
+            public static PeaksFormat OldFormat() {
+                PeaksFormat pf = new PeaksFormat();
+                pf.scan = 0;
+                pf.peptide = 1;
+                pf.tag_length = 2;
+                pf.alc = 3;
+                pf.length = 4;
+                pf.mz = 5;
+                pf.z = 6;
+                pf.rt = 7;
+                pf.area = 8;
+                pf.mass = 9;
+                pf.ppm = 10;
+                pf.ptm = 11;
+                pf.local_confidence = 12;
+                pf.tag = 13;
+                pf.mode = 14;
+                return pf;
+            }
+            public static PeaksFormat NewFormat() {
+                PeaksFormat pf = new PeaksFormat();
+                pf.fraction = 0;
+                pf.source_file = 1;
+                pf.feature = 2;
+                pf.peptide = 3;
+                pf.scan =  4;
+                pf.tag_length = 5;
+                pf.alc = 6;
+                pf.length = 7;
+                pf.mz = 8;
+                pf.z = 9;
+                pf.rt = 10;
+                pf.area = 11;
+                pf.mass = 12;
+                pf.ppm = 13;
+                pf.ptm = 14;
+                pf.local_confidence = 15;
+                pf.tag = 16;
+                pf.mode = 17;
+                return pf;
+            }
+        }
         /// <summary> A struct to hold metainformation from PEAKS data. </summary>
-        public struct PeaksMeta {
+        public class PeaksMeta {
+            public string Fraction = null;
+            public string Source_File = null;
+            public string Feature = null;
             /// <summary> The scan identifier of the peptide. </summary>
-            public string ScanID;
+            public string ScanID = null;
             /// <summary> The sequence with modifications of the peptide. </summary>
-            public string Original_tag;
+            public string Original_tag = null;
             /// <summary> The confidence score of the peptide. </summary>
-            public int Confidence;
+            public int Confidence = -1;
             /// <summary> m/z of the peptide. </summary>
-            public double Mass_over_charge;
+            public double Mass_over_charge = -1;
             /// <summary> z of the peptide. </summary>
-            public int Charge;
+            public int Charge = -1;
             /// <summary> Retention time of the peptide. </summary>
-            public double Retention_time;
+            public double Retention_time = -1;
             /// <summary> Area of the peak of the peptide.</summary>
-            public double Area;
+            public double Area = -1;
             /// <summary> Mass of the peptide.</summary>
-            public double Mass;
+            public double Mass = -1;
             /// <summary> PPM of the peptide. </summary>
-            public double Parts_per_million;
+            public double Parts_per_million = -1;
             /// <summary> Posttranslational Modifications of the peptide. </summary>
-            public string Post_translational_modifications;
+            public string Post_translational_modifications = null;
             /// <summary> Local confidence scores of the peptide. </summary>
-            public string Local_confidence;
+            public string Local_confidence = null;
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
-            public string Fragmentation_mode;
+            public string Fragmentation_mode = null;
             /// <summary> Other scans giving the same sequence. </summary>
-            public List<string> Other_scans;
+            public List<string> Other_scans = null;
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
-            public PeaksMeta(string line, char separator, char decimalseparator, string prefix = "") {
+            public PeaksMeta(string line, char separator, char decimalseparator, PeaksFormat pf, string prefix = "") {
                 try {
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
                     string[] fields = line.Split(separator);
 
                     // Assign all values
-                    ScanID = prefix + fields[0];
-                    Original_tag = fields[1];
-                    Confidence = Convert.ToInt32(fields[3].Replace(decimalseparator, current_decimal_separator));
-                    Mass_over_charge = Convert.ToDouble(fields[5].Replace(decimalseparator, current_decimal_separator));
-                    Charge = Convert.ToInt32(fields[6].Replace(decimalseparator, current_decimal_separator));
-                    Retention_time = Convert.ToDouble(fields[7].Replace(decimalseparator, current_decimal_separator));
-                    try {
-                        Area = Convert.ToDouble(fields[8].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.fraction >= 0) Fraction = fields[pf.fraction];
+                    if (pf.source_file >= 0) Source_File = fields[pf.source_file];
+                    if (pf.feature >= 0) Feature = fields[pf.feature];
+                    if (pf.scan >= 0) ScanID = prefix + fields[pf.scan];
+                    if (pf.peptide >= 0) Original_tag = fields[pf.peptide];
+                    if (pf.alc >= 0) Confidence = Convert.ToInt32(fields[pf.alc].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.mz >= 0) Mass_over_charge = Convert.ToDouble(fields[pf.mz].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.z >= 0) Charge = Convert.ToInt32(fields[pf.z].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.rt >= 0) Retention_time = Convert.ToDouble(fields[pf.rt].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.area >= 0) {try {
+                        Area = Convert.ToDouble(fields[pf.area].Replace(decimalseparator, current_decimal_separator));
                     } catch {
                         Area = -1;
-                    }
-                    Mass = Convert.ToDouble(fields[9].Replace(decimalseparator, current_decimal_separator));
-                    Parts_per_million = Convert.ToDouble(fields[10].Replace(decimalseparator, current_decimal_separator));
-                    Post_translational_modifications = fields[11];
-                    Local_confidence = fields[12];
-                    Fragmentation_mode = fields[14];
+                    }}
+                    if (pf.mass >= 0) Mass = Convert.ToDouble(fields[pf.mass].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.ppm >= 0) Parts_per_million = Convert.ToDouble(fields[pf.ppm].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.ptm >= 0) Post_translational_modifications = fields[pf.ptm];
+                    if (pf.local_confidence >= 0) Local_confidence = fields[pf.local_confidence];
+                    if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
 
                     // Initialise list
                     Other_scans = new List<string>();
                 } catch (Exception e) {
-                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}");
+                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
                 }
             }
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
@@ -782,9 +822,9 @@ namespace AssemblyNameSpace
             }
         }
         /// <summary> Opens a bunch of peaks files at once. </summary>
-        public void OpenReadsPeaks(List<(string, string)> files, int cutoffscore, int localcutoffscore, char separator = ',', char decimalseparator = '.') {
+        public void OpenReadsPeaks(List<(string, string)> files, int cutoffscore, int localcutoffscore, PeaksFormat pf, char separator = ',', char decimalseparator = '.') {
             foreach (var file in files) {
-                OpenReadsPeaks(file.Item1, cutoffscore, localcutoffscore, file.Item2, separator, decimalseparator);
+                OpenReadsPeaks(file.Item1, cutoffscore, localcutoffscore, pf, file.Item2, separator, decimalseparator);
                 Console.WriteLine($"Opened file {file.Item2} now on {reads.Count()} reads");
             }
         }
@@ -796,7 +836,7 @@ namespace AssemblyNameSpace
         /// <param name="prefix"> A prefix to add to identifiers to make it easier to find the original 
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
-        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, string prefix = "", char separator = ',', char decimalseparator = '.')
+        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, PeaksFormat pf, string prefix = "", char separator = ',', char decimalseparator = '.')
         {
             if (!File.Exists(input_file))
                 throw new Exception("The specified file does not exist, file asked for: " + input_file);
@@ -812,7 +852,7 @@ namespace AssemblyNameSpace
                 linenumber++;
                 if (linenumber != 1) {
                     try {
-                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator, prefix);
+                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator, pf, prefix);
                         if (meta.Confidence >= cutoffscore) {
                             
                             char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
@@ -920,13 +960,14 @@ namespace AssemblyNameSpace
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
             Console.WriteLine($"Found {meta_data.kmin1_mers_raw} raw (k-1)-mers");
 
-            var kmin1_mers = new List<ValueTuple<AminoAcid[], List<int>>>();
+            var kmin1_mers = new List<(AminoAcid[], List<int>)>();
 
             foreach (var kmin1_mer in kmin1_mers_raw) {
                 bool inlist = false;
                 for (int i = 0; i < kmin1_mers.Count(); i++) {
-                    if (AminoAcid.ArrayEquals(kmin1_mer.Item1, kmin1_mers[i].Item1)) {
-                        kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update multiplicity
+                    // TODO Deduplicate using alphabet
+                    if (AminoAcid.ArrayHomology(kmin1_mer.Item1, kmin1_mers[i].Item1) >= duplicate_threshold) {
+                        kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update origins
                         inlist = true;
                         break;
                     }
@@ -955,20 +996,20 @@ namespace AssemblyNameSpace
 
             // Initialize the array to save computations
             int[] prefix_matches = new int[graph.Length];
-            int[] postfix_matches = new int[graph.Length];
-            AminoAcid[] prefix, postfix;
+            int[] suffix_matches = new int[graph.Length];
+            AminoAcid[] prefix, suffix;
 
             kmers.ForEach(kmer =>
             {
                 prefix = kmer.Item1.SubArray(0, kmer_length - 1);
-                postfix = kmer.Item1.SubArray(1, kmer_length - 1);
+                suffix = kmer.Item1.SubArray(1, kmer_length - 1);
 
                 // Precompute the homology with every node to speed up computation
                 for (int i = 0; i < graph.Length; i++)
                 {
-                    // Find the homology of the prefix and postfix
+                    // Find the homology of the prefix and suffix
                     prefix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, prefix);
-                    postfix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, postfix);
+                    suffix_matches[i] = AminoAcid.ArrayHomology(graph[i].Sequence, suffix);
                 }
 
                 // Test for pre and post fixes for every node
@@ -978,10 +1019,10 @@ namespace AssemblyNameSpace
                     {
                         for (int j = 0; j < graph.Length; j++)
                         {
-                            if (i != j && postfix_matches[j] >= minimum_homology)
+                            if (i != j && suffix_matches[j] >= minimum_homology)
                             {
-                                graph[i].AddForwardEdge(j, prefix_matches[j], postfix_matches[j]);
-                                graph[j].AddBackwardEdge(i, prefix_matches[i], postfix_matches[i]);
+                                graph[i].AddForwardEdge(j, prefix_matches[j], suffix_matches[j]);
+                                graph[j].AddBackwardEdge(i, prefix_matches[i], suffix_matches[i]);
                             }
                         }
                     }
@@ -990,7 +1031,7 @@ namespace AssemblyNameSpace
 
             meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
 
-            // Create a condensed graph to keep the information
+            // Create a condensed graph
 
             condensed_graph = new List<CondensedNode>();
 
@@ -1011,6 +1052,8 @@ namespace AssemblyNameSpace
                     List<int> backward_nodes = new List<int>();
 
                     List<int> origins = new List<int>(start_node.Origins);
+
+                    // TODO check why equal contigs could possible be in the graph twice (based on alphabet but NOT identity)
                     
                     // Debug purposes can be deleted later
                     int forward_node_index = i;
@@ -1121,7 +1164,7 @@ namespace AssemblyNameSpace
                     }
                     if (node.ForwardEdges.Count() == 1) {
                         //TODO commented this out because test 5 gave empty sequences, need to find that cause
-                        node.Postfix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 1).ToList();
+                        node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 1).ToList();
                         node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
                     }
                 }
@@ -1282,13 +1325,13 @@ namespace AssemblyNameSpace
                 id = $"I{i:D4}";
                 string prefix = "";
                 if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
-                string postfix = "";
-                if (condensed_graph[i].Postfix != null) postfix = AminoAcid.ArrayToString(condensed_graph[i].Postfix.ToArray());
+                string suffix = "";
+                if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
 
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig: {id}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
-    <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='postfix'>{postfix}</span></p>
+    <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
     <h2>Reads Alignment</h4>
     {CreateReadsAlignment(condensed_graph[i])}
     <h2>Based on</h2>
@@ -1516,7 +1559,7 @@ namespace AssemblyNameSpace
                         if (!correct_contigs.Contains(x)) correct_contigs.Add(x);
                     }
 
-                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
+                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{coverage_contigs_heavy.Item3};{coverage_contigs_light.Item3};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item1};{coverage_reads_light.Item1};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
                 } else {
                     Console.WriteLine($"Not an antibody fasta file: {path_to_template}");
                 }
@@ -1555,7 +1598,14 @@ namespace AssemblyNameSpace
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            string graphoutputpath = graphoutputpath = Path.GetDirectoryName(Path.GetFullPath(filename)).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
+            var fullpath = filename;
+            try {
+                fullpath = Path.GetFullPath(filename);
+            } catch {
+                //
+            }
+
+            string graphoutputpath = Path.GetDirectoryName(fullpath).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
 
             // Console.WriteLine(graphoutputpath);
             OutputGraph(graphoutputpath);
