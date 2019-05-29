@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using static AssemblyNameSpace.OpenReads;
 
 namespace AssemblyNameSpace
 {
@@ -30,7 +31,10 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            //var assm = new Assembler(8, 7);
+            var assm = new Assembler(8, 7);
+            assm.GiveReadsPeaks(OpenReads.Peaks(@"C:\Users\Douwe\Downloads\de novo peptides.csv", 90, 99, FileFormat.Peaks.OldFormat(), 8));
+            assm.Assemble();
+            assm.CreateReport();
             //assm.SetAlphabet("Fusion alphabet.csv");
             //assm.OpenReads(@"generate_tests\Generated\reads-mix-perfect.txt");
             //assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
@@ -48,7 +52,7 @@ namespace AssemblyNameSpace
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
             //RunContigsLengthBatch();
-            RunExperimentalBatch();
+            //RunExperimentalBatch();
         }
          static void RunExperimentalBatch() {
             var stopwatch = new Stopwatch();
@@ -177,9 +181,9 @@ namespace AssemblyNameSpace
                 var assm = new Assembler(workItem.Item1, workItem.Item2 < 0 ? workItem.Item1-1 : workItem.Item2);
                 assm.SetAlphabet(workItem.Item6);
                 if (workItem.Item2 == -2) {
-                    assm.OpenReadsPeaks(workItem.Item3, 99, 90, Assembler.PeaksFormat.NewFormat());
+                    assm.GiveReadsPeaks(OpenReads.Peaks(workItem.Item3, 99, 90, FileFormat.Peaks.NewFormat(), workItem.Item1));
                 } else {
-                    assm.OpenReads(workItem.Item3);
+                    assm.GiveReads(OpenReads.Simple(workItem.Item3));
                 }
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
@@ -211,7 +215,7 @@ namespace AssemblyNameSpace
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
-        public List<PeaksMeta> peaks_reads = null;
+        public List<MetaData.Peaks> peaks_reads = null;
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         Node[] graph;
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
@@ -642,272 +646,19 @@ namespace AssemblyNameSpace
                 }
             }
         }
-        /// <summary> To open a file with reads (should always be run before trying to assemble). 
-        /// It will save the reads in the current Assembler object. </summary>
-        /// <param name="input_file"> The path to the file to read from. </param>
-        public void OpenReads(string input_file)
-        {
-            // Getting input
-            // For now just use a minimal implementation, reads separated by whitespace
-
-            if (!File.Exists(input_file))
-                throw new Exception("The specified file does not exist, file asked for: " + input_file);
-
-            List<string> lines = File.ReadLines(input_file).ToList();
-            List<string> reads_string = new List<string>();
-
-            lines.ForEach(line =>
-            {
-                if (line[0] != '#')
-                    reads_string.AddRange(line.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
-            });
-
-            reads = new List<AminoAcid[]>();
-            AminoAcid[] acids;
-            char[] chars;
-
-            foreach (string read in reads_string)
-            {
-                acids = new AminoAcid[read.Length];
-                chars = read.ToCharArray();
-
-                for (int i = 0; i < chars.Length; i++)
-                {
-                    acids[i] = new AminoAcid(this, chars[i]);
-                }
-
-                reads.Add(acids);
-            }
-            meta_data.reads = reads.Count;
+        public void GiveReads(List<string> reads_i) {
+            reads = reads_i.Select(x => StringToSequence(x)).ToList();
         }
-        public class PeaksFormat {
-            public int fraction, source_file, feature, scan, peptide, tag_length, alc, length, mz, z, rt, area, mass, ppm, ptm, local_confidence, tag, mode = -1;
-            public static PeaksFormat OldFormat() {
-                PeaksFormat pf = new PeaksFormat();
-                pf.scan = 0;
-                pf.peptide = 1;
-                pf.tag_length = 2;
-                pf.alc = 3;
-                pf.length = 4;
-                pf.mz = 5;
-                pf.z = 6;
-                pf.rt = 7;
-                pf.area = 8;
-                pf.mass = 9;
-                pf.ppm = 10;
-                pf.ptm = 11;
-                pf.local_confidence = 12;
-                pf.tag = 13;
-                pf.mode = 14;
-                return pf;
-            }
-            public static PeaksFormat NewFormat() {
-                PeaksFormat pf = new PeaksFormat();
-                pf.fraction = 0;
-                pf.source_file = 1;
-                pf.feature = 2;
-                pf.peptide = 3;
-                pf.scan =  4;
-                pf.tag_length = 5;
-                pf.alc = 6;
-                pf.length = 7;
-                pf.mz = 8;
-                pf.z = 9;
-                pf.rt = 10;
-                pf.area = 11;
-                pf.mass = 12;
-                pf.ppm = 13;
-                pf.ptm = 14;
-                pf.local_confidence = 15;
-                pf.tag = 16;
-                pf.mode = 17;
-                return pf;
-            }
+        public void GiveReadsPeaks(List<(string, MetaData.Peaks)> reads_i) {
+            reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
+            peaks_reads = reads_i.Select(x => x.Item2).ToList();
         }
-        /// <summary> A struct to hold metainformation from PEAKS data. </summary>
-        public class PeaksMeta {
-            public string Fraction = null;
-            public string Source_File = null;
-            public string Feature = null;
-            /// <summary> The scan identifier of the peptide. </summary>
-            public string ScanID = null;
-            /// <summary> The sequence with modifications of the peptide. </summary>
-            public string Original_tag = null;
-            /// <summary> The confidence score of the peptide. </summary>
-            public int Confidence = -1;
-            /// <summary> m/z of the peptide. </summary>
-            public double Mass_over_charge = -1;
-            /// <summary> z of the peptide. </summary>
-            public int Charge = -1;
-            /// <summary> Retention time of the peptide. </summary>
-            public double Retention_time = -1;
-            /// <summary> Area of the peak of the peptide.</summary>
-            public double Area = -1;
-            /// <summary> Mass of the peptide.</summary>
-            public double Mass = -1;
-            /// <summary> PPM of the peptide. </summary>
-            public double Parts_per_million = -1;
-            /// <summary> Posttranslational Modifications of the peptide. </summary>
-            public string Post_translational_modifications = null;
-            /// <summary> Local confidence scores of the peptide. </summary>
-            public string Local_confidence = null;
-            /// <summary> Fragmentation mode used to generate the peptide. </summary>
-            public string Fragmentation_mode = null;
-            /// <summary> Other scans giving the same sequence. </summary>
-            public List<string> Other_scans = null;
-            /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
-            /// <param name="line"> The CSV line to parse. </param>
-            /// <param name="separator"> The separator used in CSV. </param>
-            /// <param name="decimalseparator"> The separator used in decimals. </param>
-            public PeaksMeta(string line, char separator, char decimalseparator, PeaksFormat pf, string prefix = "") {
-                try {
-                    char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
-                    string[] fields = line.Split(separator);
-
-                    // Assign all values
-                    if (pf.fraction >= 0) Fraction = fields[pf.fraction];
-                    if (pf.source_file >= 0) Source_File = fields[pf.source_file];
-                    if (pf.feature >= 0) Feature = fields[pf.feature];
-                    if (pf.scan >= 0) ScanID = prefix + fields[pf.scan];
-                    if (pf.peptide >= 0) Original_tag = fields[pf.peptide];
-                    if (pf.alc >= 0) Confidence = Convert.ToInt32(fields[pf.alc].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.mz >= 0) Mass_over_charge = Convert.ToDouble(fields[pf.mz].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.z >= 0) Charge = Convert.ToInt32(fields[pf.z].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.rt >= 0) Retention_time = Convert.ToDouble(fields[pf.rt].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.area >= 0) {try {
-                        Area = Convert.ToDouble(fields[pf.area].Replace(decimalseparator, current_decimal_separator));
-                    } catch {
-                        Area = -1;
-                    }}
-                    if (pf.mass >= 0) Mass = Convert.ToDouble(fields[pf.mass].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.ppm >= 0) Parts_per_million = Convert.ToDouble(fields[pf.ppm].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.ptm >= 0) Post_translational_modifications = fields[pf.ptm];
-                    if (pf.local_confidence >= 0) Local_confidence = fields[pf.local_confidence];
-                    if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
-
-                    // Initialise list
-                    Other_scans = new List<string>();
-                } catch (Exception e) {
-                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
-                }
+        AminoAcid[] StringToSequence(string input) {
+            AminoAcid[] output = new AminoAcid[input.Length];
+            for (int i = 0; i < input.Length; i++) {
+                output[i] = new AminoAcid(this, input[i]);
             }
-            /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
-            /// <returns> Returns an HTML string with the metainformation. </returns>
-            public string ToHTML() {
-                return $@"<h2>Meta Information from PEAKS</h2>
-<h3>Scan Identifier</h3>
-<p>{ScanID}</p>
-<h3>Confidence score</h3>
-<p>{Confidence}</p>
-<h3>Mass charge ratio</h3>
-<p>{Mass_over_charge}</p>
-<h3>Mass</h3>
-<p>{Mass}</p>
-<h3>Charge</h3>
-<p>{Charge}</p>
-<h3>Retention Time</h3>
-<p>{Retention_time}</p>
-<h3>Area</h3>
-<p>{Area}</p>
-<h3>Original Sequence</h3>
-<p class=""seq"">{Original_tag}</p>
-<h3>Posttranslational Modifications</h3>
-<p>{Post_translational_modifications}</p>
-<h3>Local Confidence</h3>
-<p>{Local_confidence}</p>
-<h3>Fragmentation Mode</h3>
-<p>{Fragmentation_mode}</p>
-<h3>Also found in scans</h3>
-<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>";
-            }
-        }
-        /// <summary> Opens a bunch of peaks files at once. </summary>
-        public void OpenReadsPeaks(List<(string, string)> files, int cutoffscore, int localcutoffscore, PeaksFormat pf, char separator = ',', char decimalseparator = '.') {
-            foreach (var file in files) {
-                OpenReadsPeaks(file.Item1, cutoffscore, localcutoffscore, pf, file.Item2, separator, decimalseparator);
-                Console.WriteLine($"Opened file {file.Item2} now on {reads.Count()} reads");
-            }
-        }
-        /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
-        /// <param name="input_file"> Path to the CSV file. </param>
-        /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
-        /// <param name="localcutoffscore"> Score used to filter patches in peptides with high enough confidence 
-        /// to be used contrary their low gloabl confidence, lower will be discarded. </param>
-        /// <param name="prefix"> A prefix to add to identifiers to make it easier to find the original 
-        /// <param name="separator"> CSV separator used. </param>
-        /// <param name="decimalseparator"> Separator used in decimals. </param>
-        public void OpenReadsPeaks(string input_file, int cutoffscore, int localcutoffscore, PeaksFormat pf, string prefix = "", char separator = ',', char decimalseparator = '.')
-        {
-            if (!File.Exists(input_file))
-                throw new Exception("The specified file does not exist, file asked for: " + input_file);
-
-            List<string> lines = File.ReadLines(input_file).ToList();
-            if (reads == null) reads = new List<AminoAcid[]>();
-            if (peaks_reads == null) peaks_reads = new List<PeaksMeta>();
-            //int offset_in_reads = reads.Count();
-
-            int linenumber = 0;
-            lines.ForEach(line =>
-            {
-                linenumber++;
-                if (linenumber != 1) {
-                    try {
-                        PeaksMeta meta = new PeaksMeta(line, separator, decimalseparator, pf, prefix);
-                        if (meta.Confidence >= cutoffscore) {
-                            
-                            char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
-
-                            AminoAcid[] acids = new AminoAcid[tag.Length];
-
-                            for (int i = 0; i < tag.Length; i++)
-                            {
-                                acids[i] = new AminoAcid(this, tag[i]);
-                            }
-                        
-                            if (reads.Where(x => AminoAcid.ArrayEquals(x, acids)).Count() == 0) {
-                                reads.Add(acids);
-                                peaks_reads.Add(meta);
-                            } else {
-                                int pos = reads.FindIndex(x => AminoAcid.ArrayEquals(x, acids));
-                                peaks_reads[pos].Other_scans.Add(prefix + meta.ScanID);
-                            }
-                            
-                        }
-                        // Find local patches of high enough confidence
-                        else {
-                            char[] tag = meta.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray();
-                            int[] confidences = meta.Local_confidence.Split(' ').Select(x => Convert.ToInt32(x)).ToArray();
-                            
-                            bool patch = false;
-                            int startpos = 0;
-                            for (int i = 0; i < confidences.Length; i++) {
-                                if (!patch && confidences[i] >= localcutoffscore) {
-                                    // Found a potential starting position
-                                    startpos = i;
-                                    patch = true;
-                                } else if (patch && confidences[i] < localcutoffscore) {
-                                    // Ends a patch
-                                    patch = false; 
-                                    if (i - startpos >= kmer_length) {
-                                        // Long enough use it for assembly
-                                        AminoAcid[] acids = new AminoAcid[i - startpos];
-
-                                        for (int j = startpos; j < i; j++)
-                                        {
-                                            acids[j-startpos] = new AminoAcid(this, tag[j]);
-                                        }
-
-                                        reads.Add(acids);
-                                        peaks_reads.Add(meta);
-                                    }
-                                }
-                            }
-                        }
-                    } catch (Exception e) {
-                        Console.WriteLine($"ERROR while importing from PEAKS csv on line {prefix}{linenumber}\n{e.Message}");
-                    }
-            }});
-            meta_data.reads = reads.Count;
+            return output;
         }
         /// <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
         /// run on an Assembler, all settings should be defined before running this. </summary>

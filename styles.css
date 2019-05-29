@@ -26,7 +26,10 @@ body {
     overflow: hidden;
 }
 
-h1, h2, h3, h4 {
+h1,
+h2,
+h3,
+h4 {
     font-weight: 500;
 }
 
@@ -118,7 +121,8 @@ h1 {
     word-break: break-all;
 }
 
-.prefix, .suffix {
+.prefix,
+.suffix {
     color: grey;
 }
 
@@ -399,6 +403,7 @@ svg .selected text {
     display: block;
 }
 
+
 /* reads alignment */
 
 .reads-alignment {
@@ -436,6 +441,7 @@ svg .selected text {
     order: 1;
     display: flex;
     align-items: flex-end;
+    justify-content: space-around;
 }
 
 .coverage-depth-bar {
@@ -455,6 +461,31 @@ svg .selected text {
     color: var(--color-secondary);
     border-color: var(--color-secondary);
 }
+
+
+/* Original seuquence peaks */
+
+.original-sequence {
+    display: flex;
+}
+
+.original-sequence>div {
+    width: 1ch;
+}
+
+.modification {
+    font-size: 0.5em;
+    margin: 0;
+    margin-top: -2em;
+    padding: 0;
+    writing-mode: vertical-rl;
+    text-orientation: mixed;
+}
+
+.original-sequence p {
+    font-family: "Roboto Mono", monospace;
+}
+
 
 /* footer */
 
