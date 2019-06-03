@@ -1,1 +1,1 @@
-csc Main.cs OpenReads.cs
+csc Main.cs OpenReads.cs Struct.cs Reporting.cs -o

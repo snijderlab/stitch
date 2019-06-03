@@ -12,31 +12,39 @@ using System.Globalization;
 
 namespace AssemblyNameSpace
 {
-    public static class OpenReads {
+    /// <summary>
+    /// To contain all logic for the reading of reads out of files.
+    /// </summary>
+    public static class OpenReads
+    {
         /// <summary> To open a file with reads. It assumes a very basic format,
         /// namely sequences separated with whitespace (space, tab or newline)
-        /// with the possibility to specify comments as lines strating with a 
+        /// with the possibility to specify comments as lines starting with a 
         /// specific character (standard '#').  </summary>
         /// <param name="input_file"> The path to the file to read from. </param>
         /// <param name="comment_char"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static List<string> Simple(string input_file, char comment_char = '#')
+        public static List<(string, MetaData.None)> Simple(string input_file, char comment_char = '#')
         {
-            var reads = new List<string>();
+            var reads = new List<(string, MetaData.None)>();
 
             if (!File.Exists(input_file))
                 throw new Exception($"The specified file does not exist: {input_file}");
 
             List<string> lines;
-            try {
+            try
+            {
                 lines = File.ReadLines(input_file).ToList();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new Exception($"The specified file could not be read: {e.Message}");
             }
 
-            foreach (var line in lines) {
+            foreach (var line in lines)
+            {
                 if (line[0] != comment_char)
-                    reads.AddRange(line.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries));
+                    reads.AddRange(line.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => (x, new MetaData.None())));
             }
 
             return reads;
@@ -55,27 +63,36 @@ namespace AssemblyNameSpace
                 throw new Exception($"The specified file does not exist: {input_file}");
 
             List<string> lines;
-            try {
+            try
+            {
                 lines = File.ReadLines(input_file).ToList();
-            } catch (Exception e) {
+            }
+            catch (Exception e)
+            {
                 throw new Exception($"The specified file could not be read: {e.Message}");
             }
             string identifier = "";
             var sequence = new StringBuilder();
 
-            foreach (var line in lines) {
-                if (line[0] == '>') {
-                    if (identifier != "") {
+            foreach (var line in lines)
+            {
+                if (line[0] == '>')
+                {
+                    if (identifier != "")
+                    {
                         // Flush last sequence to list
                         reads.Add((sequence.ToString(), new MetaData.Fasta(identifier)));
                     }
                     identifier = line.Substring(1).Trim();
                     sequence = new StringBuilder();
-                } else {
+                }
+                else
+                {
                     sequence.Append(line.Trim().Where(x => Char.IsLetter(x)));
                 }
             }
-            if (identifier != "") {
+            if (identifier != "")
+            {
                 // Flush last sequence to list
                 reads.Add((sequence.ToString(), new MetaData.Fasta(identifier)));
             }
@@ -114,38 +131,51 @@ namespace AssemblyNameSpace
             var reads = new List<(string, MetaData.Peaks)>();
 
             int linenumber = 0;
-            foreach (var line in lines) {
+            foreach (var line in lines)
+            {
                 linenumber++;
-                if (linenumber != 1) {
-                    try {
+                if (linenumber != 1)
+                {
+                    try
+                    {
                         var meta = new MetaData.Peaks(line, separator, decimalseparator, peaksformat, prefix);
-                        if (meta.Confidence >= cutoffscore) {
-                            if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0) {
+                        if (meta.Confidence >= cutoffscore)
+                        {
+                            if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
+                            {
                                 reads.Add((meta.Cleaned_sequence, meta));
-                            } else {
+                            }
+                            else
+                            {
                                 int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
                                 reads[pos].Item2.Other_scans.Add(prefix + meta.ScanID);
                             }
                         }
                         // Find local patches of high enough confidence
-                        else {
+                        else
+                        {
                             bool patch = false;
                             int startpos = 0;
-                            for (int i = 0; i < meta.Local_confidence.Length; i++) {
-                                if (!patch && meta.Local_confidence[i] >= localcutoffscore) {
+                            for (int i = 0; i < meta.Local_confidence.Length; i++)
+                            {
+                                if (!patch && meta.Local_confidence[i] >= localcutoffscore)
+                                {
                                     // Found a potential starting position
                                     startpos = i;
                                     patch = true;
-                                } else if (patch && meta.Local_confidence[i] < localcutoffscore) {
+                                }
+                                else if (patch && meta.Local_confidence[i] < localcutoffscore)
+                                {
                                     // Ends a patch
-                                    patch = false; 
-                                    if (i - startpos >= min_length_patch) {
+                                    patch = false;
+                                    if (i - startpos >= min_length_patch)
+                                    {
                                         // Long enough use it for assembly
                                         char[] chunk = new char[i - startpos];
 
                                         for (int j = startpos; j < i; j++)
                                         {
-                                            chunk[j-startpos] = meta.Cleaned_sequence[j];
+                                            chunk[j - startpos] = meta.Cleaned_sequence[j];
                                         }
 
                                         reads.Add((new string(chunk), meta));
@@ -153,7 +183,9 @@ namespace AssemblyNameSpace
                                 }
                             }
                         }
-                    } catch (Exception e) {
+                    }
+                    catch (Exception e)
+                    {
                         Console.WriteLine($"ERROR while importing from PEAKS csv on line {prefix}{linenumber}\n{e.Message}");
                     }
                 }
@@ -161,23 +193,54 @@ namespace AssemblyNameSpace
             return reads;
         }
     }
-    public interface IMetaData {
+    /// <summary>
+    /// The interface which proper metadata instances should implement.
+    /// </summary>
+    public interface IMetaData
+    {
         string ToHTML();
     }
-    public static class MetaData {
-        public class Fasta : IMetaData {
+    /// <summary>
+    /// A class to hold all metadata handling in one place.
+    /// </summary>
+    public static class MetaData
+    {
+        /// <summary>
+        /// A metadata instance to contain no metadata so reads without metadata can also be handeled.
+        /// </summary>
+        public class None : IMetaData
+        {
+            public None() { }
+            public string ToHTML()
+            {
+                return "";
+            }
+        }
+        /// <summary> A struct to hold metainformation from fasta data. </summary>
+        public class Fasta : IMetaData
+        {
+            /// <summary>
+            /// The identifier from the fasta file.
+            /// </summary>
             public string Identifier;
-            public Fasta(string identifier) {
+            /// <summary>
+            /// To create a new metadata instance with this metadata.
+            /// </summary>
+            /// <param name="identifier">The fasta identifier.</param>
+            public Fasta(string identifier)
+            {
                 this.Identifier = identifier;
             }
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
-            public string ToHTML() {
+            public string ToHTML()
+            {
                 return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>";
             }
         }
         /// <summary> A struct to hold metainformation from PEAKS data. </summary>
-        public class Peaks : IMetaData  {
+        public class Peaks : IMetaData
+        {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
             /// <summary> The source file out of wich the peptide was generated. </summary>
@@ -216,8 +279,10 @@ namespace AssemblyNameSpace
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
-            public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, string prefix = "") {
-                try {
+            public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, string prefix = "")
+            {
+                try
+                {
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
                     string[] fields = line.Split(separator);
 
@@ -226,7 +291,8 @@ namespace AssemblyNameSpace
                     if (pf.source_file >= 0) Source_File = fields[pf.source_file];
                     if (pf.feature >= 0) Feature = fields[pf.feature];
                     if (pf.scan >= 0) ScanID = prefix + fields[pf.scan];
-                    if (pf.peptide >= 0) {
+                    if (pf.peptide >= 0)
+                    {
                         Original_tag = fields[pf.peptide];
                         Cleaned_sequence = new string(Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
                     }
@@ -234,51 +300,66 @@ namespace AssemblyNameSpace
                     if (pf.mz >= 0) Mass_over_charge = Convert.ToDouble(fields[pf.mz].Replace(decimalseparator, current_decimal_separator));
                     if (pf.z >= 0) Charge = Convert.ToInt32(fields[pf.z].Replace(decimalseparator, current_decimal_separator));
                     if (pf.rt >= 0) Retention_time = Convert.ToDouble(fields[pf.rt].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.area >= 0) {try {
-                        Area = Convert.ToDouble(fields[pf.area].Replace(decimalseparator, current_decimal_separator));
-                    } catch {
-                        Area = -1;
-                    }}
+                    if (pf.area >= 0)
+                    {
+                        try
+                        {
+                            Area = Convert.ToDouble(fields[pf.area].Replace(decimalseparator, current_decimal_separator));
+                        }
+                        catch
+                        {
+                            Area = -1;
+                        }
+                    }
                     if (pf.mass >= 0) Mass = Convert.ToDouble(fields[pf.mass].Replace(decimalseparator, current_decimal_separator));
                     if (pf.ppm >= 0) Parts_per_million = Convert.ToDouble(fields[pf.ppm].Replace(decimalseparator, current_decimal_separator));
                     if (pf.ptm >= 0) Post_translational_modifications = fields[pf.ptm];
-                    if (pf.local_confidence >= 0) {
+                    if (pf.local_confidence >= 0)
+                    {
                         Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                        if (Local_confidence.Length != Cleaned_sequence.Length) 
+                        if (Local_confidence.Length != Cleaned_sequence.Length)
                             throw new Exception("The length of the sequence and amount of local score do not match.");
                     }
                     if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
 
                     // Initialise list
                     Other_scans = new List<string>();
-                } catch (Exception e) {
+                }
+                catch (Exception e)
+                {
                     throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
                 }
             }
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
-            public string ToHTML() {
+            public string ToHTML()
+            {
                 var output = new StringBuilder();
                 output.Append("<h2>Meta Information from PEAKS</h2>");
 
                 // Look for each field if it is defined, otherwise leave it out
-                if (ScanID != null) 
+                if (ScanID != null)
                     output.Append($"<h3>Scan Identifier</h3>\n<p>{ScanID}</p>");
 
-                if (Original_tag != null && Local_confidence != null) {
+                if (Original_tag != null && Local_confidence != null)
+                {
                     output.Append($"<h3>Original Sequence (length={Original_tag.Length})</h3>\n<div class='original-sequence' style='--max-value:100'>");
                     int original_offset = 0;
 
-                    for (int i = 0; i < Cleaned_sequence.Length; i++) {
+                    for (int i = 0; i < Cleaned_sequence.Length; i++)
+                    {
                         output.Append($"<div><div class='coverage-depth-wrapper'><span class='coverage-depth-bar' style='--value:{Local_confidence[i]}'></span></div><p>{Cleaned_sequence[i]}</p>");
 
-                        if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset+1] == '(') {
+                        if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
+                        {
                             output.Append("<p class='modification'>");
                             original_offset += 2;
-                            while (Original_tag[original_offset] != ')') {
+                            while (Original_tag[original_offset] != ')')
+                            {
                                 output.Append(Original_tag[original_offset]);
-                                original_offset++; 
-                                if (original_offset > Original_tag.Length - 2) {
+                                original_offset++;
+                                if (original_offset > Original_tag.Length - 2)
+                                {
                                     break;
                                 }
                             }
@@ -289,37 +370,37 @@ namespace AssemblyNameSpace
                     }
                     output.Append("</div>");
                 }
-                if (Post_translational_modifications != null) 
+                if (Post_translational_modifications != null)
                     output.Append($"<h3>Posttranslational Modifications</h3>\n<p>{Post_translational_modifications}</p>");
 
-                if (Source_File != null) 
+                if (Source_File != null)
                     output.Append($"<h3>Source File</h3>\n<p>{Source_File}</p>");
 
-                if (Fraction != null) 
+                if (Fraction != null)
                     output.Append($"<h3>Fraction</h3>\n<p>{Fraction}</p>");
 
-                if (Feature != null) 
+                if (Feature != null)
                     output.Append($"<h3>Scan Feature</h3>\n<p>{Feature}</p>");
 
-                if (Confidence >= 0) 
+                if (Confidence >= 0)
                     output.Append($"<h3>Confidence score</h3>\n<p>{Confidence}</p>");
 
-                if (Mass_over_charge >= 0) 
+                if (Mass_over_charge >= 0)
                     output.Append($"<h3>Mass Charge Ratio</h3>\n<p>{Mass_over_charge}</p>");
 
-                if (Mass >= 0) 
+                if (Mass >= 0)
                     output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
 
-                if (Charge >= 0) 
+                if (Charge >= 0)
                     output.Append($"<h3>Charge</h3>\n<p>{Charge}</p>");
 
-                if (Retention_time >= 0) 
+                if (Retention_time >= 0)
                     output.Append($"<h3>Retention Time</h3>\n<p>{Retention_time}</p>");
 
-                if (Area >= 0) 
+                if (Area >= 0)
                     output.Append($"<h3>Area</h3>\n<p>{Area}</p>");
 
-                if (Parts_per_million >= 0) 
+                if (Parts_per_million >= 0)
                     output.Append($"<h3>Parts Per Million</h3>\n<p>{Parts_per_million}</p>");
 
                 if (Fragmentation_mode != null)
@@ -327,15 +408,18 @@ namespace AssemblyNameSpace
 
                 if (Other_scans.Count() > 0)
                     output.Append($"<h3>Also found in scans</h3>\n<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>");
-                
+
                 return output.ToString();
             }
         }
     }
-    public class FileFormat {
-        public class Peaks {
+    public class FileFormat
+    {
+        public class Peaks
+        {
             public int fraction, source_file, feature, scan, peptide, tag_length, alc, length, mz, z, rt, area, mass, ppm, ptm, local_confidence, tag, mode = -1;
-            public static FileFormat.Peaks OldFormat() {
+            public static FileFormat.Peaks OldFormat()
+            {
                 var pf = new FileFormat.Peaks();
                 pf.scan = 0;
                 pf.peptide = 1;
@@ -354,13 +438,14 @@ namespace AssemblyNameSpace
                 pf.mode = 14;
                 return pf;
             }
-            public static FileFormat.Peaks NewFormat() {
+            public static FileFormat.Peaks NewFormat()
+            {
                 var pf = new FileFormat.Peaks();
                 pf.fraction = 0;
                 pf.source_file = 1;
                 pf.feature = 2;
                 pf.peptide = 3;
-                pf.scan =  4;
+                pf.scan = 4;
                 pf.tag_length = 5;
                 pf.alc = 6;
                 pf.length = 7;
@@ -376,7 +461,8 @@ namespace AssemblyNameSpace
                 pf.mode = 17;
                 return pf;
             }
-            public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode) {
+            public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
+            {
                 var pf = new FileFormat.Peaks();
                 pf.fraction = fraction;
                 pf.source_file = source_file;
