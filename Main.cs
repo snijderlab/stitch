@@ -102,10 +102,11 @@ namespace AssemblyNameSpace
             sw.Close();
 
             int count = 0;
-            foreach (var file in Directory.GetFiles(@"generate_tests\Generated_contigs_length_batch")) {
-                if (!file.Contains("Mix")) {
+            foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
+                if (!file.Contains("Mix") && !file.Contains("mix")) {
                     count++;
-                    for (int k = 5; k <= 10; k++) {
+                    for (int k = 5; k <= 15; k++) {
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
                         inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
                     }
                 }
@@ -1310,7 +1311,10 @@ namespace AssemblyNameSpace
                         if (!correct_contigs.Contains(x)) correct_contigs.Add(x);
                     }
 
-                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{coverage_contigs_heavy.Item3};{coverage_contigs_light.Item3};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item1};{coverage_reads_light.Item1};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
+                    var coverage_correct_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], correct_contigs);
+                    var coverage_correct_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], correct_contigs);
+
+                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{coverage_contigs_heavy.Item3};{coverage_contigs_light.Item3};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item1};{coverage_reads_light.Item1};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{coverage_correct_contigs_heavy.Item1};{coverage_correct_contigs_light.Item1};{coverage_correct_contigs_heavy.Item3};{coverage_correct_contigs_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
                 } else {
                     Console.WriteLine($"Not an antibody fasta file: {path_to_template}");
                 }
