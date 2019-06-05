@@ -27,14 +27,14 @@ namespace AssemblyNameSpace
     class ToRunWithCommandLine
     {
         /// <summary> The list of all tasks to be done. To be able to run them in parallel. </summary>
-        static List<(int, int, string, string, string, string, string)> inputQueue = new List<(int, int, string, string, string, string, string)>();
+        static List<(int, int, string, string, string, string, string, bool)> inputQueue = new List<(int, int, string, string, string, string, string, bool)>();
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            var assm = new Assembler(8, 7);
-            assm.GiveReadsPeaks(OpenReads.Peaks(@"C:\Users\Douwe\Downloads\de novo peptides.csv", 90, 99, FileFormat.Peaks.OldFormat(), 8));
-            assm.Assemble();
-            assm.CreateReport();
+            //var assm = new Assembler(8, 7);
+            //assm.GiveReadsPeaks(OpenReads.Peaks(@"C:\Users\Douwe\Downloads\de novo peptides.csv", 90, 99, FileFormat.Peaks.OldFormat(), 8));
+            //assm.Assemble();
+            //assm.CreateReport();
             //assm.SetAlphabet("Fusion alphabet.csv");
             //assm.OpenReads(@"generate_tests\Generated\reads-mix-perfect.txt");
             //assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
@@ -52,7 +52,7 @@ namespace AssemblyNameSpace
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
             //RunContigsLengthBatch();
-            //RunExperimentalBatch();
+            RunExperimentalBatch();
         }
          static void RunExperimentalBatch() {
             var stopwatch = new Stopwatch();
@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
 
             // Write the correct header to the CSV file
             StreamWriter sw = File.CreateText(csvfile);
-            sw.Write("sep=;\nID;Type;Test;Proteases;Percentage;Alphabet;Reads;K;Minimum Homology;Contigs;Avg Sequence length (per contig);Total sequence length;Mean Connectivity;Total runtime;Drawing Time;Reads Coverage Heavy; Reads Correct Heavy;Reads Coverage Light;Reads Correct Light;Contigs Coverage Heavy; Contigs Correct Heavy; Contigs Coverage Light; Contigs Correct Light; Link; Contigs Length\n");
+            sw.Write("sep=;\nAntibody;Fragmentation method;K;Minimal Homology;Contigs;Avg sequence length;Total Sequence length;mean Connectivity;Total runtime;Drawing time;Contigs Coverage Heavy;Contigs Coverage Light;Contigs Coverage Depth Heavy;Contigs Coverage Depth Light;Total Mapped Contigs;Correct Contigs;Reads Coverage Heavy;Reads Coverage Light;Reads Coverage Depth Heavy;Reads Coverage Depth Light;Correct Contigs Coverage Heavy;Correct Contigs Coverage Light;Correct Contigs Coverage Depth Heavy;Correct Contigs Coverage Depth Light;Contigs Length\n");
             sw.Close();
 
             int count = 0;
@@ -79,8 +79,9 @@ namespace AssemblyNameSpace
                     sequencefile = @"generate_tests\Experimental results\camp.txt";
                 }
                 count++;
-                for (int k = 7; k <= 9; k++) {
-                    inputQueue.Add((k, -2, file, @"generate_tests\Experimental results\" + Path.GetFileName(Path.GetDirectoryName(file)) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "Fusion alphabet.csv", sequencefile));
+                for (int k = 6; k <= 10; k++) {
+                    inputQueue.Add((k, -2, file, @"generate_tests\Experimental results\" + Path.GetFileName(Path.GetDirectoryName(file)) + $"-{k}-Default alphabet-Contigs Length-Reverse.html", csvfile, "Fusion alphabet.csv", sequencefile, true));
+                    inputQueue.Add((k, -2, file, @"generate_tests\Experimental results\" + Path.GetFileName(Path.GetDirectoryName(file)) + $"-{k}-Default alphabet-Contigs Length-No Reverse.html", csvfile, "Fusion alphabet.csv", sequencefile, false));
                 }
             }
 
@@ -106,8 +107,8 @@ namespace AssemblyNameSpace
                 if (!file.Contains("Mix") && !file.Contains("mix")) {
                     count++;
                     for (int k = 5; k <= 15; k++) {
-                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
-                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "Default alphabet.csv", File.ReadAllLines(file)[0].Trim("# \t\n\r".ToCharArray()),true));
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results_contigs_length\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet-Contigs Length.html", csvfile, "Common errors alphabet.csv", File.ReadAllLines(file)[0].Trim("# \t\n\r".ToCharArray()), true));
                     }
                 }
             }
@@ -134,7 +135,7 @@ namespace AssemblyNameSpace
                 if (!file.Contains("Mix")) {
                     count++;
                     for (int k = 5; k <= 15; k++) {
-                        inputQueue.Add((k, -1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", ""));
+                        inputQueue.Add((k, -1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet-Contigs Length.html", csvfile, "examples\\Default alphabet.csv", "", true));
                     }
                 }
             }
@@ -162,8 +163,8 @@ namespace AssemblyNameSpace
             foreach (var file in Directory.GetFiles(@"generate_tests\Generated")) {
                 count++;
                 for (int k = 5; k <= 15; k++) {         
-                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv", ""));
-                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv", ""));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Default alphabet.html", csvfile, "examples\\Default alphabet.csv", "", true));
+                    inputQueue.Add((k, k-1, file, @"generate_tests\Results\" + Path.GetFileNameWithoutExtension(file) + $"-{k}-Common errors alphabet.html", csvfile, "examples\\Common errors alphabet.csv", "", true));
                 }
             }
 
@@ -175,11 +176,12 @@ namespace AssemblyNameSpace
         }
         /// <summary> The function to operate on the list of tasks to by run in parallel. </summary>
         /// <param name="workItem"> The task to perform. </param>
-        static void worker((int, int, string, string, string, string, string) workItem)
+        static void worker((int, int, string, string, string, string, string, bool) workItem)
         {
             try {
                 Console.WriteLine("Starting on: " + workItem.Item3);
-                var assm = new Assembler(workItem.Item1, workItem.Item2 < 0 ? workItem.Item1-1 : workItem.Item2);
+                int min_score = workItem.Item2 < 0 ? workItem.Item1-1 : workItem.Item2;
+                var assm = new Assembler(workItem.Item1, min_score, min_score, workItem.Item8);
                 assm.SetAlphabet(workItem.Item6);
                 if (workItem.Item2 == -2) {
                     assm.GiveReadsPeaks(OpenReads.Peaks(workItem.Item3, 99, 90, FileFormat.Peaks.NewFormat(), workItem.Item1));
@@ -249,6 +251,10 @@ namespace AssemblyNameSpace
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         private MetaInformation meta_data;
+        /// <summary>
+        /// To determine if reads should also be added in reverse.
+        /// </summary>
+        private bool reverse;
         /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
         /// be used in an efficient way </summary>
         public struct AminoAcid
@@ -557,11 +563,12 @@ namespace AssemblyNameSpace
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
-        public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input = -1)
+        public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input = -1, bool should_reverse = true)
         {
             kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
             duplicate_threshold = duplicate_threshold_input;
+            reverse = should_reverse;
 
             SetAlphabet();
         }
@@ -686,13 +693,13 @@ namespace AssemblyNameSpace
                     {
                         AminoAcid[] kmer = read.SubArray(i, kmer_length);
                         kmers.Add((kmer, r));
-                        kmers.Add((kmer.Reverse().ToArray(), r)); //Also add the reverse
+                        if (reverse) kmers.Add((kmer.Reverse().ToArray(), r)); //Also add the reverse
                     }
                 }
                 else if (read.Length == kmer_length)
                 {
                     kmers.Add((read, r));
-                    kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
+                    if (reverse) kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
                 }
             }
             meta_data.kmers = kmers.Count;
@@ -975,12 +982,12 @@ namespace AssemblyNameSpace
             try
             {
                 Process svg = new Process();
-                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
+                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg \"" + Path.GetFullPath(filename) + "\" -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"" );
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
-                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"" );
+                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg \"" + Path.GetFullPath(simplefilename) + "\" -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"" );
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.UseShellExecute = false;
                 
@@ -1311,8 +1318,8 @@ namespace AssemblyNameSpace
                         if (!correct_contigs.Contains(x)) correct_contigs.Add(x);
                     }
 
-                    var coverage_correct_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], correct_contigs);
-                    var coverage_correct_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], correct_contigs);
+                    var coverage_correct_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], correct_contigs.ToArray());
+                    var coverage_correct_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], correct_contigs.ToArray());
 
                     coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{coverage_contigs_heavy.Item3};{coverage_contigs_light.Item3};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item1};{coverage_reads_light.Item1};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{coverage_correct_contigs_heavy.Item1};{coverage_correct_contigs_light.Item1};{coverage_correct_contigs_heavy.Item3};{coverage_correct_contigs_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
                 } else {
