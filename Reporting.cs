@@ -34,7 +34,7 @@ namespace AssemblyNameSpace
     {
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
-        void OutputGraph(string filename = "graph.dot")
+        (string, string) CreateGraph()
         {
             // Generate a dot file to use in graphviz
             var buffer = new StringBuilder();
@@ -64,6 +64,7 @@ namespace AssemblyNameSpace
             simplebuffer.AppendLine("}");
 
             // Write .dot to a file
+            /*
 
             string path = Path.ChangeExtension(filename, "");
             string simplefilename = new string(path.Take(path.Length - 1).ToArray()) + "-simple.dot";
@@ -75,39 +76,46 @@ namespace AssemblyNameSpace
             swsimple.Write(simplebuffer.ToString());
 
             sw.Close();
-            swsimple.Close();
+            swsimple.Close();*/
 
             // Generate SVG files of the graph
             try
             {
                 Process svg = new Process();
-                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
+                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
-                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
+                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.UseShellExecute = false;
 
                 svg.Start();
                 simplesvg.Start();
 
+                svg.StandardInput.Write(buffer.ToString());
+                svg.StandardInput.Close();
+                simplesvg.StandardInput.Write(simplebuffer.ToString());
+                simplesvg.StandardInput.Close();
+
                 svg.WaitForExit();
                 simplesvg.WaitForExit();
 
                 var svgstderr = svg.StandardError.ReadToEnd();
+                var svggraph = svg.StandardOutput.ReadToEnd();
                 if (svgstderr != "")
                 {
                     Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
                 var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
+                var simplesvggraph = simplesvg.StandardOutput.ReadToEnd();
                 if (simplesvgstderr != "")
                 {
                     Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
-                svg.Kill();
-                simplesvg.Kill();
+
+                return (svggraph, simplesvggraph);
             }
             catch (Exception e)
             {
@@ -405,39 +413,25 @@ namespace AssemblyNameSpace
                 //
             }
 
-            string graphoutputpath = Path.GetDirectoryName(fullpath).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
+            //string graphoutputpath = Path.GetDirectoryName(fullpath).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
 
             // Console.WriteLine(graphoutputpath);
-            OutputGraph(graphoutputpath);
+            string svg, simplesvg;
+            (svg, simplesvg) = CreateGraph();
 
-            string graphpath = Path.ChangeExtension(graphoutputpath, "svg");
-            string svg = "<p>Graph not found, searched at:" + graphpath + "</p>";
-            if (File.Exists(graphpath))
-            {
-                svg = File.ReadAllText(graphpath);
-                // Give the filled nodes (start node) the correct class
-                svg = Regex.Replace(svg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
-                // Give the nodes the correct ID
-                svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
-                // Strip all <title> tags
-                svg = Regex.Replace(svg, "<title>[^<]*</title>", "");
-            }
+            // Give the filled nodes (start node) the correct class
+            svg = Regex.Replace(svg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+            // Give the nodes the correct ID
+            svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
+            // Strip all <title> tags
+            svg = Regex.Replace(svg, "<title>[^<]*</title>", "");
 
-            // Could also be done as an img, but that is much less nice
-            // <img src='graph.png' alt='Extended graph of the results' srcset='graph.svg'>
-
-            string simplegraphpath = new string(Path.ChangeExtension(graphoutputpath, "").Take(Path.ChangeExtension(graphoutputpath, "").Length - 1).ToArray()) + "-simple.svg";
-            string simplesvg = "<p>Simple graph not found, searched at:" + simplegraphpath + "</p>";
-            if (File.Exists(simplegraphpath))
-            {
-                simplesvg = File.ReadAllText(simplegraphpath);
-                // Give the filled nodes (start node) the correct class
-                simplesvg = Regex.Replace(simplesvg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
-                // Give the nodes the correct ID
-                simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"simple-node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
-                // Strip all <title> tags
-                simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
-            }
+            // Give the filled nodes (start node) the correct class
+            simplesvg = Regex.Replace(simplesvg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+            // Give the nodes the correct ID
+            simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"simple-node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
+            // Strip all <title> tags
+            simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
 
             string stylesheet = "/* Could not find the stylesheet */";
             if (File.Exists("styles.css")) stylesheet = File.ReadAllText("styles.css");

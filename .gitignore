@@ -17,5 +17,7 @@ generate_tests/Results_contigs_length/*.*
 generate_tests/Results Mix/*.*
 generate_tests/Experimental results/*.html
 generate_tests/Experimental results/*.csv
+generate_tests/Experimental results/*.dot
+generate_tests/Experimental results/*.svg
 report.html
 graph-1*
