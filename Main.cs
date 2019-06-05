@@ -191,7 +191,7 @@ namespace AssemblyNameSpace
                 assm.Assemble();
                 assm.CreateReport(workItem.Item4);
                 // Add the meta information to the CSV file
-                assm.CreateCSVLine(workItem.Item3, workItem.Item5, workItem.Item7, workItem.Item6, Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
+                assm.CreateCSVLine(workItem.Item3, workItem.Item5, workItem.Item7, workItem.Item6 + (workItem.Item8 ? " - Reverse" : " - No Reverse"), Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
             } catch (Exception e) {
                 bool stuck = true;
                 string line = $"{workItem.Item3};{workItem.Item1};{workItem.Item2};Error: {e.Message}";
@@ -1305,7 +1305,7 @@ namespace AssemblyNameSpace
                     coverage = $"{coverage_reads_heavy.Item1};{coverage_reads_heavy.Item2};{coverage_reads_light.Item1};{coverage_reads_light.Item2};{coverage_contigs_heavy.Item1};{coverage_contigs_heavy.Item2};{coverage_contigs_light.Item1};{coverage_contigs_light.Item2};";
                 } else if (seqs.Count() == 2 && extended) {
                     // Filter only assembled contigs
-                    contigs_array = condensed_graph.Where(n => n.Origins.Count() > 1).Select(n => AminoAcid.ArrayToString(n.Sequence.ToArray())).ToArray();
+                    contigs_array = condensed_graph.Where(n => n.Origins.Count() > 1).Select(n => (n.Prefix != null ? AminoAcid.ArrayToString(n.Prefix.ToArray()) : "" ) + AminoAcid.ArrayToString(n.Sequence.ToArray()) + (n.Suffix != null ? AminoAcid.ArrayToString(n.Suffix.ToArray()) : "")).ToArray();
 
                     var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], reads_array);
                     var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], reads_array);
