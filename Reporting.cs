@@ -12,16 +12,20 @@ using System.Globalization;
 
 namespace AssemblyNameSpace
 {
-    public abstract class Report
+    abstract class Report
     {
-        private List<CondensedNode> condensed_graph;
-        private Node[] graph;
-        private MetaInformation meta_data;
-        public Report(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data)
+        protected List<CondensedNode> condensed_graph;
+        protected Node[] graph;
+        protected MetaInformation meta_data;
+        protected List<AminoAcid[]> reads;
+        protected List<MetaData.Peaks> peaks_reads;
+        public Report(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input)
         {
             condensed_graph = condensed_graph_input;
             graph = graph_input;
             meta_data = meta_data_input;
+            reads = reads_input;
+            peaks_reads = peaks_reads_input;
         }
         public abstract string Create();
         public void Save(string filename) {
@@ -30,8 +34,9 @@ namespace AssemblyNameSpace
             sw.Close();
         }
     }
-    public class HTMLReport : Report
+    class HTMLReport : Report
     {
+        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base (condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {}
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
         (string, string) CreateGraph()
@@ -84,34 +89,44 @@ namespace AssemblyNameSpace
                 Process svg = new Process();
                 svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
                 svg.StartInfo.RedirectStandardError = true;
+                svg.StartInfo.RedirectStandardInput = true;
+                svg.StartInfo.RedirectStandardOutput = true;
                 svg.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
                 simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
                 simplesvg.StartInfo.RedirectStandardError = true;
+                simplesvg.StartInfo.RedirectStandardInput = true;
+                simplesvg.StartInfo.RedirectStandardOutput = true;
                 simplesvg.StartInfo.UseShellExecute = false;
 
                 svg.Start();
                 simplesvg.Start();
 
-                svg.StandardInput.Write(buffer.ToString());
-                svg.StandardInput.Close();
-                simplesvg.StandardInput.Write(simplebuffer.ToString());
-                simplesvg.StandardInput.Close();
+                StreamWriter svgwriter = svg.StandardInput;
+                svgwriter.WriteLine(buffer.ToString());
+                svgwriter.Write(0x4);
+                svgwriter.Close();
 
-                svg.WaitForExit();
-                simplesvg.WaitForExit();
+                StreamWriter simplesvgwriter = simplesvg.StandardInput;
+                simplesvgwriter.WriteLine(buffer.ToString());
+                simplesvgwriter.Write(0x4);
+                simplesvgwriter.Close();
 
-                var svgstderr = svg.StandardError.ReadToEnd();
+                //svg.WaitForExit();
+                //simplesvg.WaitForExit();
+
                 var svggraph = svg.StandardOutput.ReadToEnd();
-                if (svgstderr != "")
+                if (svggraph == "")
                 {
+                    var svgstderr = svg.StandardError.ReadToEnd();
                     Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
-                var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
+                
                 var simplesvggraph = simplesvg.StandardOutput.ReadToEnd();
-                if (simplesvgstderr != "")
+                if (simplesvggraph == "")
                 {
+                    var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                     Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
 
@@ -119,7 +134,7 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                //Console.WriteLine("Generic Expection when trying call dot to build graph: " + e.Message);
+                throw new Exception("Generic Expection when trying call dot to build graph: " + e.Message);
             }
         }
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
@@ -331,8 +346,8 @@ namespace AssemblyNameSpace
 <h3>General information</h3>
 <table>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
-<tr><td>K (length of k-mer)</td><td>{kmer_length}</td></tr>
-<tr><td>Minimum homology</td><td>{minimum_homology}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{meta_data.kmer_length}</td></tr>
+<tr><td>Minimum homology</td><td>{meta_data.minimum_homology}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
 <tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
@@ -398,20 +413,20 @@ namespace AssemblyNameSpace
         }
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
         /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
-        string Create()
+        public override string Create()
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            var fullpath = filename;
-            try
+            //var fullpath = filename;
+            /*try
             {
                 fullpath = Path.GetFullPath(filename);
             }
             catch
             {
                 //
-            }
+            }*/
 
             //string graphoutputpath = Path.GetDirectoryName(fullpath).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
 
@@ -477,7 +492,7 @@ namespace AssemblyNameSpace
 
 <input type=""checkbox"" id=""meta-collapsable""/>
 <label for=""meta-collapsable"">Meta Information</label>
-<div class=""collapsable meta-collapsable"">{HTMLMetaInformation()}</div>
+<div class=""collapsable meta-collapsable"">{MetaInformation()}</div>
 
 <div class=""footer"">
     <p>Code written in 2019</p>
@@ -499,7 +514,8 @@ namespace AssemblyNameSpace
     }
     class CSVReport : Report
     {
-        public string Create() {
+        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base (condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {}
+        public override string Create() {
             return "";
         }
         /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
@@ -531,8 +547,8 @@ namespace AssemblyNameSpace
                 }
 
                 // Calculate the coverage
-                string[] reads_array = reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray();
-                string[] contigs_array = condensed_graph.Select(x => Assembler.AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
+                string[] reads_array = reads.Select(x => AminoAcid.ArrayToString(x)).ToArray();
+                string[] contigs_array = condensed_graph.Select(x => AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
 
                 if (seqs.Count() == 2 && !extended)
                 {
@@ -577,7 +593,7 @@ namespace AssemblyNameSpace
 
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{extra};{meta_data.reads};{kmer_length};{minimum_homology};{totalnodes};{(double)totallength / totalnodes};{totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
+            string line = $"{ID};{extra};{meta_data.reads};{meta_data.kmer_length};{meta_data.minimum_homology};{totalnodes};{(double)totallength / totalnodes};{totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
 
             if (File.Exists(filename))
             {

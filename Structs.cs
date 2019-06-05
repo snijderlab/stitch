@@ -16,8 +16,6 @@ namespace AssemblyNameSpace
     /// be used in an efficient way </summary>
     public struct AminoAcid
     {
-        /// <summary> The Assembler used to create the AminoAcd, used to get the information of the alphabet. </summary>
-        private Assembler parent;
         /// <summary> The code (index of the char in the alpabet array of the parent).
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
@@ -27,9 +25,8 @@ namespace AssemblyNameSpace
         /// <param name="asm"> The Assembler that this AminoAcid is used in, to get the alphabet. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
         /// <returns> Returns a reference to the new AminoAcid. </returns>
-        public AminoAcid(Assembler asm, char input)
+        public AminoAcid(char input)
         {
-            parent = asm;
             Code = Alphabet.getIndexInAlphabet(input);
         }
         /// <summary> Will create a string of this AminoAcid. Consiting of the character used to 
@@ -37,7 +34,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
         public override string ToString()
         {
-            return parent.alphabet[Code].ToString();
+            return Alphabet.alphabet[Code].ToString();
         }
         /// <summary> Will create a string of an array of AminoAcids. </summary>
         /// <param name="array"> The array to create a string from. </param>
@@ -113,7 +110,7 @@ namespace AssemblyNameSpace
         {
             try
             {
-                return parent.scoring_matrix[this.Code, right.Code];
+                return Alphabet.scoring_matrix[this.Code, right.Code];
             }
             catch (Exception e)
             {
@@ -142,7 +139,7 @@ namespace AssemblyNameSpace
         }
     }
     /// <summary> Nodes in the graph with a sequence length of K-1. </summary>
-    private class Node
+    public class Node
     {
         /// <summary> The member to store the sequence information in. </summary>
         private AminoAcid[] sequence;
@@ -256,7 +253,7 @@ namespace AssemblyNameSpace
     }
     /// <summary> A struct to hold meta information about the assembly to keep it organised 
     /// and to report back to the user. </summary>
-    private struct MetaInformation
+    public struct MetaInformation
     {
         /// <summary> The total time needed to run Assemble(). See <see cref="Assembler.Assemble"/></summary>
         public long total_time;
@@ -280,9 +277,11 @@ namespace AssemblyNameSpace
         public int kmin1_mers_raw;
         /// <summary> The number of sequences found. See <see cref="Assembler.Assemble"/></summary>
         public int sequences;
+        public int kmer_length;
+        public int minimum_homology;
     }
     /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
-    private class CondensedNode
+    public class CondensedNode
     {
         /// <summary> The index this node. The index is defined as the index of the startnode in the adjecency list of the de Bruijn graph. </summary>
         public int Index;
@@ -323,18 +322,18 @@ namespace AssemblyNameSpace
             Visited = false;
         }
     }
-    private static class Alphabet
+    static class Alphabet
     {
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </summary>
-        private static int[,] scoring_matrix;
+        public static int[,] scoring_matrix;
         /// <summary> The alphabet used for alignment. The default value is all the amino acids in order of
         /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
-        private static char[] alphabet;
+        public static char[] alphabet;
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look op. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
-        public int getIndexInAlphabet(char c)
+        public static int getIndexInAlphabet(char c)
         {
             for (int i = 0; i < alphabet.Length; i++)
             {
@@ -354,7 +353,7 @@ namespace AssemblyNameSpace
         /// <param name="diagonals_value"> The value to place on the diagonals of the matrix. </param>
         /// <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
         /// the best case scenario has the most used characters at the front of the string. </param>
-        public void SetAlphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
+        public static void SetAlphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
         {
             alphabet = input.ToCharArray();
 
@@ -375,7 +374,7 @@ namespace AssemblyNameSpace
         }
         /// <summary> Set the alphabet based on a CSV file. </summary>
         /// <param name="filename"> Name of the file. </param>
-        public void SetAlphabet(string filename)
+        public static void SetAlphabet(string filename)
         {
             string[] input = new string[] { };
             try

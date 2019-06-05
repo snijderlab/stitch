@@ -30,13 +30,13 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
-            //var assm = new Assembler(8, 7);
+            var assm = new Assembler(8, 7);
             //assm.GiveReadsPeaks(OpenReads.Peaks(@"C:\Users\Douwe\Downloads\de novo peptides.csv", 90, 99, FileFormat.Peaks.OldFormat(), 8));
             //assm.Assemble();
             //assm.CreateReport();
             //assm.SetAlphabet("Fusion alphabet.csv");
             //assm.OpenReads(@"generate_tests\Generated\reads-mix-perfect.txt");
-            //assm.OpenReads(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt");
+            assm.GiveReads(OpenReads.Simple(@"generate_tests\Generated\reads-IgG1-K-001-Trypsin,Chymotrypsin,Alfalytic protease-100,00.txt"));
             //assm.OpenReadsPeaks(@"Z:\users\5803969\Benchmarking\190520_MAb-denovo_F1_HCD_Herc_001_DENOVO_7\de novo peptides.csv", 99, 95);
             /*assm.OpenReadsPeaks(new List<(string, string)>{
                 (@"Z:\users\5803969\Benchmarking\190529_MAbs-denovo_PEAKS_export\190528_F1_131-2a_ETHCD_01_DENOVO_7\de novo peptides.csv", "ETHCD"),
@@ -46,11 +46,13 @@ namespace AssemblyNameSpace
             //    Console.WriteLine(assm.reads[i]);
             //    Console.WriteLine(assm.peaks_reads[i].ToHTML());
             //}   
-            //assm.Assemble();
+            assm.Assemble();
+            var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
+            htmlreport.Save("report.html");
             //assm.CreateReport("report.html");
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
-            RunContigsLengthBatch();
+            //RunContigsLengthBatch();
             //RunExperimentalBatch();
         }
         static void RunExperimentalBatch()
@@ -206,11 +208,11 @@ namespace AssemblyNameSpace
                     assm.GiveReads(OpenReads.Simple(workItem.Item3));
                 }
                 assm.Assemble();
-                var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data);
+                var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
                 htmlreport.Save(workItem.Item4);
                 //assm.CreateReport(workItem.Item4);
                 // Add the meta information to the CSV file
-                var csvreport = new CSVReport(assm.condensed_graph, assm.graph, assm.meta_data);
+                var csvreport = new CSVReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
                 csvreport.CreateCSVLine(workItem.Item3, workItem.Item5, workItem.Item7, workItem.Item6, Path.GetFullPath(workItem.Item4), workItem.Item2 < 0);
             }
             catch (Exception e)
@@ -238,17 +240,15 @@ namespace AssemblyNameSpace
     /// <summary> The Class with all code to assemble Peptide sequences. </summary>
     public class Assembler
     {
-        /// <summary> A counter to give all generated graphs a unique filename. Invaluable in batch processing. </summary>
-        static int counter = 0;
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         public List<MetaData.Peaks> peaks_reads = null;
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
-        Node[] graph;
+        public Node[] graph;
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
-        List<CondensedNode> condensed_graph;
+        public List<CondensedNode> condensed_graph;
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
         private int kmer_length;
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </summary>
@@ -270,7 +270,7 @@ namespace AssemblyNameSpace
         private int duplicate_threshold;
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
-        private MetaInformation meta_data;
+        public MetaInformation meta_data;
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
@@ -279,6 +279,9 @@ namespace AssemblyNameSpace
             kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
             duplicate_threshold = duplicate_threshold_input;
+            meta_data = new MetaInformation();
+            meta_data.kmer_length = kmer_length;
+            meta_data.minimum_homology = minimum_homology;
 
             Alphabet.SetAlphabet();
         }
@@ -296,7 +299,7 @@ namespace AssemblyNameSpace
             AminoAcid[] output = new AminoAcid[input.Length];
             for (int i = 0; i < input.Length; i++)
             {
-                output[i] = new AminoAcid(this, input[i]);
+                output[i] = new AminoAcid(input[i]);
             }
             return output;
         }
