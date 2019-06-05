@@ -53,7 +53,7 @@ namespace AssemblyNameSpace
             //Console.WriteLine($"Percentage coverage: {HelperFunctionality.MultipleSequenceAlignmentToTemplate("QVQLVESGGGVVQPGRSLRLSCAASGFSFSNYGMHWVRQAPGKGLEWVALIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVKFNWYVDGVEVHNAKTKPREEQYNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKAKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGK", assm.reads.Select(x => Assembler.AminoAcid.ArrayToString(x)).ToArray())}");
             //RunGenerated();
             //RunContigsLengthBatch();
-            RunExperimentalBatch();
+            //RunExperimentalBatch();
         }
         static void RunExperimentalBatch()
         {
@@ -194,7 +194,7 @@ namespace AssemblyNameSpace
                 Console.WriteLine("Starting on: " + workItem.Item3);
                 int min_score = workItem.Item2 < 0 ? workItem.Item1-1 : workItem.Item2;
                 var assm = new Assembler(workItem.Item1, min_score, min_score, workItem.Item8);
-                assm.SetAlphabet(workItem.Item6);
+                Alphabet.SetAlphabet(workItem.Item6);
                 if (workItem.Item2 == -2) {
                     assm.GiveReadsPeaks(OpenReads.Peaks(workItem.Item3, 99, 90, FileFormat.Peaks.NewFormat(), workItem.Item1));
                 }
@@ -266,6 +266,7 @@ namespace AssemblyNameSpace
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         public MetaInformation meta_data;
+        private bool reverse;
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
