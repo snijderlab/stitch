@@ -31,6 +31,9 @@ namespace AssemblyNameSpace
         /// <summary> The method that will be run if the code is run from the command line. </summary>
         static void Main()
         {
+            // Build using .NET Core
+            // https://opensource.com/article/17/5/cross-platform-console-apps
+            
             var assm = new Assembler(8, 7);
             assm.GiveReadsPeaks(OpenReads.Peaks(@"C:\Users\Douwe\Downloads\de novo peptides.csv", 90, 99, FileFormat.Peaks.OldFormat(), 8));
             assm.Assemble();

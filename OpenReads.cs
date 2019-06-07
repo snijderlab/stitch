@@ -165,6 +165,11 @@ namespace AssemblyNameSpace
         string ToHTML();
     }
     public static class MetaData {
+        public class None : IMetaData {
+            public string ToHTML() {
+                return "";
+            }
+        }
         public class Fasta : IMetaData {
             public string Identifier;
             public Fasta(string identifier) {
