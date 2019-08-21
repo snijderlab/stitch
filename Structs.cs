@@ -376,15 +376,20 @@ namespace AssemblyNameSpace
         /// <param name="filename"> Name of the file. </param>
         public static void SetAlphabet(string filename)
         {
-            string[] input = new string[] { };
             try
             {
-                input = File.ReadAllLines(filename);
+                SetAlphabetData(File.ReadAllText(filename));
             }
             catch
             {
                 throw new Exception($"Could not open the file: {filename}");
             }
+        }
+        /// <summary> Set the alphabet based on data in csv format. </summary>
+        /// <param name="input"> The csv data. </param>
+        public static void SetAlphabetData(string data)
+        {
+            var input = data.Split('\n');
             int rows = input.Length;
             List<string[]> array = new List<string[]>();
 
