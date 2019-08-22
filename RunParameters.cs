@@ -215,8 +215,7 @@ namespace AssemblyNameSpace
         public string Data; //Prelookup paths to get the data
         public string Name;
     }
-    public abstract class ReportParameter { }
-    public class HTML : ReportParameter
+    public abstract class ReportParameter
     {
         public string Path;
         public string CreateName(SingleRun r)
@@ -237,18 +236,15 @@ namespace AssemblyNameSpace
             return output.ToString();
         }
     }
+    public class HTML : ReportParameter { }
     public class CSV : ReportParameter
     {
-        public string Path;
         public string GetID(SingleRun r)
         {
             throw new Exception("Creating ID's for CSV not supported yet");
         }
     }
-    public class FASTQ : ReportParameter
-    {
-        public string Path;
-    }
+    public class FASTQ : ReportParameter { }
     public class SingleRun
     {
         public int ID;
@@ -325,7 +321,9 @@ namespace AssemblyNameSpace
                             csvreport.CreateCSVLine(c.GetID(this), c.Path);
                             break;
                         case FASTQ f:
-                            throw new Exception("FASTQ not supported yet");
+                            var fastqreport = new FASTQReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
+                            fastqreport.Save(f.CreateName(this));
+                            break;
                     }
                 }
             }

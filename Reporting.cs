@@ -28,7 +28,8 @@ namespace AssemblyNameSpace
             peaks_reads = peaks_reads_input;
         }
         public abstract string Create();
-        public void Save(string filename) {
+        public void Save(string filename)
+        {
             StreamWriter sw = File.CreateText(filename);
             sw.Write(Create());
             sw.Close();
@@ -36,7 +37,7 @@ namespace AssemblyNameSpace
     }
     class HTMLReport : Report
     {
-        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base (condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {}
+        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
         (string, string) CreateGraph()
@@ -122,7 +123,7 @@ namespace AssemblyNameSpace
                     var svgstderr = svg.StandardError.ReadToEnd();
                     Console.WriteLine("EXTENDED SVG ERROR: " + svgstderr);
                 }
-                
+
                 var simplesvggraph = simplesvg.StandardOutput.ReadToEnd();
                 if (simplesvggraph == "")
                 {
@@ -514,8 +515,9 @@ namespace AssemblyNameSpace
     }
     class CSVReport : Report
     {
-        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base (condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {}
-        public override string Create() {
+        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
+        public override string Create()
+        {
             return "";
         }
         /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
@@ -618,6 +620,52 @@ namespace AssemblyNameSpace
                 sw.Write(line);
                 sw.Close();
             }
+        }
+    }
+    class FASTQReport : Report
+    {
+        public FASTQReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
+        public override string Create()
+        {
+            string phredlookup = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
+            var buffer = new StringBuilder();
+            foreach (var node in condensed_graph)
+            {
+                buffer.AppendLine($"@{node.Index}");
+                buffer.AppendLine(AminoAcid.ArrayToString(node.Sequence.ToArray()));
+                buffer.AppendLine("+"); //Stupid FASTQ thingy, could add the identifier again but there is really no point in that
+                buffer.AppendLine(CalculateScore(node).Select(i => phredlookup[i]));
+            }
+            return buffer.ToString();
+        }
+        /// <summary> Create a reads alignment and calculates depth of coverage. </summary>
+        /// <returns> Returns a score per base. </returns>
+        int[] CalculateScore(CondensedNode node)
+        {
+            string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
+            List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, true);
+
+            // Calculate the depth on every position
+            int[] depth = new int[sequence.Length];
+            for (int pos = 0; pos < sequence.Length; pos++)
+            {
+                foreach (var read in positions)
+                {
+                    if (pos >= read.Item2 && pos < read.Item3)
+                    {
+                        depth[pos]++;
+                    }
+                }
+            }
+
+            // Calculate the Phred score for every position
+            int basescore = 3;
+            for (int i = 0; i < sequence.Length; i++) {
+                depth[i] = basescore + (depth[i]-1)*Math.Min(3,basescore);
+            }
+
+            return depth;
         }
     }
 }

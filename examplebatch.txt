@@ -78,6 +78,6 @@ Name	: Normal
 <-
 
 -Report-----------------
-HTML	->
+FASTQ	->
 Path	: report-reads-02-{id}-{datetime}.html
 <-
