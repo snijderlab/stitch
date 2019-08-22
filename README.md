@@ -1,16 +1,16 @@
-# Amino Acid Alignment using De Bruijn graphs.
+# Amino Acid Alignment using De Bruijn graphs
 
 # Batch Files
 
 ## Introduction
 
-Batch files are used to aggregate all information for one run of the program. These files can be edited wih any plain text editor. There is no specific extension required by the program so .txt is recommended because these will automatically be opened by an editor in plain text.
+Batch files are used to aggregate all information for one run of the program. These files can be edited wih any plain text editor. There is no specific extension required by the program so `.txt` is recommended because these will automatically be opened by an editor in plain text.
 
 ## Structure
 
-The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimeter ( ':' for single valued parameters or '->' for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Paramater names and ost values are not case specific.
+The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimeter ( `:` for single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Paramater names and ost values are not case specific.
 
-Lines starting with a hypen '-' are considered comments and disregarded.
+Lines starting with a hypen `-` are considered comments and disregarded.
 
 ### All parameters
 
@@ -37,7 +37,7 @@ Runname: MyFirstTestRun
 Runname: Monoclonal Antibodies From Rabits
 ```
 
-##### Runtype (s)
+##### Runtype (s) (**TODO**)
 
 If the inputs in this run should be ran apart from each other trough the assembler (`apart`), or be grouped together into one heap of data (`group`).
 
@@ -140,7 +140,7 @@ Step: 2
 
 ##### MinimalHomoloy (s)
 
-The minimal homology to use, tis is he minimal score before an edge is included in the De Buijn graph. This value is mainly depending on the alphabet used.
+The minimal homology to use, this is the minimal score before an edge is included in the De Buijn graph. This value is mainly depending on the alphabet used.
 
 It can be defined as a constant value or as a calculation based on K (**TODO**).
 
@@ -291,7 +291,7 @@ The path of reports can be generated dnamically, very usefull if a batch files c
 For now the code does not generate any missing folders (but chrashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO**)
 
 Key | Explanation
---- | --- | ---
+--- | --- 
 {id} | A unique numerical ID of the run (automatically generated)
 {k} | The value of K of the run
 {mh} | The value of MinimalHomology of the run
@@ -299,10 +299,12 @@ Key | Explanation
 {alph} | The name of the alphabet used
 {data} | The name of the input data used
 {name} | The name of the run
+{date} | The date of today (**TODO**)
+{time} | The current time (**TODO**)
 
 _Examples_
 ```
--To be sure sure of unique names
+-To be sure of unique names
 Path: Folder/Structure/Report-{id}.html
 
 -More advanced naming scheme
@@ -310,4 +312,64 @@ Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 
 -Not functional yet (does no create the folders) but would be nice
 Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fastq
+```
+
+### Example Batch File
+
+```
+------| Assemble |------
+
+-Run Info---------------
+Version	: 0
+Runname	: Example
+Runtype : Apart
+
+-Input------------------
+Reads	->
+Path    : examples\001\reads.txt
+Name    : 001
+<-
+Reads	->
+Path    : examples\003\reads.txt
+Name    : 003
+<-
+
+-Parameters-------------
+K	    : 8, 10
+Minimalhomology: 7
+duplicatethreshold: 7
+Reverse	: both
+Alphabet->
+Data	->
+*;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
+L;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+S;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+A;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+E;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+G;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+V;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+R;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+K;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0
+T;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0
+P;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0
+D;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0
+I;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0
+N;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0
+Q;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0
+F;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0
+Y;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0
+H;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0
+M;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0
+C;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0
+W;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0
+O;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0
+U;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1
+<-
+Name	: Normal
+<-
+
+-Report-----------------
+HTML	->
+Path	: report-reads-02-{data}-{k}.html
+<-
 ```
