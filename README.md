@@ -37,14 +37,14 @@ Runname: MyFirstTestRun
 Runname: Monoclonal Antibodies From Rabits
 ```
 
-##### Runtype (s) (**TODO**)
+##### Runtype (s)
 
-If the inputs in this run should be ran apart from each other trough the assembler (`apart`), or be grouped together into one heap of data (`group`).
+If the inputs in this run should be ran separate from each other trough the assembler (`Separate`), or be grouped together into one heap of data (`Group`).
 
 _Examples_
 ```
-Runtype: apart
-Runtype: group
+Runtype: Separate
+Runtype: Group
 ```
 
 #### Input
@@ -299,8 +299,9 @@ Key | Explanation
 {alph} | The name of the alphabet used
 {data} | The name of the input data used
 {name} | The name of the run
-{date} | The date of today (**TODO**)
-{time} | The current time (**TODO**)
+{date} | The date of today in the format yyyy-mm-dd
+{time} | The current time in the format hh-mm-ss
+{datetime} | The current date and time in the format yyyy-mm-dd@hh-mm-ss
 
 _Examples_
 ```

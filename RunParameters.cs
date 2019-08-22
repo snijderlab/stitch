@@ -18,18 +18,20 @@ namespace AssemblyNameSpace
     public class RunParameters
     {
         public string Runname;
+        public RuntypeValue Runtype;
         public List<DataParameter> Input;
         public KValue K;
         public ReverseValue Reverse;
-        public List<KArithmatic> MinHomology;
+        public List<KArithmatic> MinimalHomology;
         public List<KArithmatic> DuplicateThreshold;
         public List<AlphabetValue> Alphabet;
         public List<ReportParameter> Report;
-        public RunParameters() {
+        public RunParameters()
+        {
             Runname = "";
             Input = new List<DataParameter>();
-            Reverse = new One(true);
-            MinHomology = new List<KArithmatic>();
+            Reverse = ReverseValue.True;
+            MinimalHomology = new List<KArithmatic>();
             DuplicateThreshold = new List<KArithmatic>();
             Alphabet = new List<AlphabetValue>();
             Report = new List<ReportParameter>();
@@ -41,10 +43,13 @@ namespace AssemblyNameSpace
             var reverselist = new List<bool>();
             switch (Reverse)
             {
-                case One o:
-                    reverselist.Add(o.Value);
+                case ReverseValue.True:
+                    reverselist.Add(true);
                     break;
-                case Both b:
+                case ReverseValue.False:
+                    reverselist.Add(false);
+                    break;
+                case ReverseValue.Both:
                     reverselist.Add(true);
                     reverselist.Add(false);
                     break;
@@ -68,22 +73,30 @@ namespace AssemblyNameSpace
                     }
                     break;
             }
-            
+
             int id = 0;
-            foreach (var input in Input)
+            foreach (var minimalHomology in MinimalHomology)
             {
-                foreach (var minHomology in MinHomology)
+                foreach (var duplicateThreshold in DuplicateThreshold)
                 {
-                    foreach (var duplicateThreshold in DuplicateThreshold)
+                    foreach (var alphabet in Alphabet)
                     {
-                        foreach (var alphabet in Alphabet)
+                        foreach (var reverse in reverselist)
                         {
-                            foreach (var reverse in reverselist)
+                            foreach (var k in klist)
                             {
-                                foreach (var k in klist)
+                                if (Runtype == RuntypeValue.Group)
                                 {
                                     id++;
-                                    output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minHomology.GetValue(k), reverse, alphabet, Report));
+                                    output.Add(new SingleRun(id, Runname, Input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Report));
+                                }
+                                else
+                                {
+                                    foreach (var input in Input)
+                                    {
+                                        id++;
+                                        output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Report));
+                                    }
                                 }
                             }
                         }
@@ -93,7 +106,13 @@ namespace AssemblyNameSpace
             return output;
         }
     }
-    public abstract class DataParameter { 
+    public enum RuntypeValue
+    {
+        Separate,
+        Group
+    }
+    public abstract class DataParameter
+    {
         public string Name;
     }
     public class Peaks : DataParameter
@@ -105,7 +124,8 @@ namespace AssemblyNameSpace
         public int MinLengthPatch;
         public char Separator;
         public char DecimalSeparator;
-        public Peaks() {
+        public Peaks()
+        {
             Cutoffscore = 99;
             LocalCutoffscore = 90;
             FileFormat = AssemblyNameSpace.FileFormat.Peaks.NewFormat();
@@ -117,20 +137,22 @@ namespace AssemblyNameSpace
     public class Reads : DataParameter
     {
         public string Path;
-        public Reads() {}
+        public Reads() { }
     }
     public abstract class KValue { }
     public class Single : KValue
     {
         public int Value;
-        public Single(int value) {
+        public Single(int value)
+        {
             Value = value;
         }
     }
     public class Multiple : KValue
     {
         public int[] Values;
-        public Multiple(int[] values) {
+        public Multiple(int[] values)
+        {
             Values = values;
         }
     }
@@ -139,21 +161,17 @@ namespace AssemblyNameSpace
         public int Start;
         public int End;
         public int Step;
-        public Range() {
-            Start = 0;
-            End = 1;
+        public Range()
+        {
             Step = 1;
         }
     }
-    public abstract class ReverseValue { }
-    public class One : ReverseValue
+    public enum ReverseValue
     {
-        public bool Value;
-        public One(bool value) {
-            Value = value;
-        }
+        True,
+        False,
+        Both
     }
-    public class Both : ReverseValue { }
     public abstract class KArithmatic
     {
         public abstract int GetValue(int k);
@@ -165,7 +183,8 @@ namespace AssemblyNameSpace
         {
             return Value;
         }
-        public Simple(int value) {
+        public Simple(int value)
+        {
             Value = value;
         }
     }
@@ -175,16 +194,19 @@ namespace AssemblyNameSpace
         public override int GetValue(int k)
         {
             var expression = Value.ToLower();
-            if (expression[0] == 'K' && expression[1] == '-') {
-                return k - Convert.ToInt32(expression.Remove(0,2).Trim());
+            if (expression[0] == 'K' && expression[1] == '-')
+            {
+                return k - Convert.ToInt32(expression.Remove(0, 2).Trim());
             }
-            if (expression[0] == 'K' && expression[1] == '+') {
-                return k + Convert.ToInt32(expression.Remove(0,2).Trim());
+            if (expression[0] == 'K' && expression[1] == '+')
+            {
+                return k + Convert.ToInt32(expression.Remove(0, 2).Trim());
             }
             throw new Exception("Calculation not supported yet");
             //return 0; // Have to insert logic to calculate value
         }
-        public Calculation(string value) {
+        public Calculation(string value)
+        {
             Value = value;
         }
     }
@@ -197,7 +219,8 @@ namespace AssemblyNameSpace
     public class HTML : ReportParameter
     {
         public string Path;
-        public string CreateName(SingleRun r) {
+        public string CreateName(SingleRun r)
+        {
             var output = new StringBuilder(Path);
 
             output.Replace("{id}", r.ID.ToString());
@@ -205,8 +228,11 @@ namespace AssemblyNameSpace
             output.Replace("{mh}", r.MinimalHomology.ToString());
             output.Replace("{dt}", r.DuplicateThreshold.ToString());
             output.Replace("{alph}", r.Alphabet.Name);
-            output.Replace("{data}", r.Input.Name);
+            output.Replace("{data}", r.Input.Count() == 1 ? r.Input[0].Name : "Group");
             output.Replace("{name}", r.Runname);
+            output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
+            output.Replace("{time}", DateTime.Now.ToString("hh-mm-ss"));
+            output.Replace("{datetime}", DateTime.Now.ToString("yyyy-MM-dd@hh-mm-ss"));
 
             return output.ToString();
         }
@@ -227,21 +253,33 @@ namespace AssemblyNameSpace
     {
         public int ID;
         public string Runname;
-        public DataParameter Input;
+        public List<DataParameter> Input;
         public int K;
         public int MinimalHomology;
         public int DuplicateThreshold;
         public bool Reverse;
         public AlphabetValue Alphabet;
         public List<ReportParameter> Report;
-        public SingleRun(int id, string runname, DataParameter input, int k, int duplicateThreshold, int minHomology, bool reverse, AlphabetValue alphabet, List<ReportParameter> report)
+        public SingleRun(int id, string runname, DataParameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<ReportParameter> report)
+        {
+            ID = id;
+            Runname = runname;
+            Input = new List<DataParameter> { input };
+            K = k;
+            DuplicateThreshold = duplicateThreshold;
+            MinimalHomology = minimalHomology;
+            Reverse = reverse;
+            Alphabet = alphabet;
+            Report = report;
+        }
+        public SingleRun(int id, string runname, List<DataParameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<ReportParameter> report)
         {
             ID = id;
             Runname = runname;
             Input = input;
             K = k;
             DuplicateThreshold = duplicateThreshold;
-            MinimalHomology = minHomology;
+            MinimalHomology = minimalHomology;
             Reverse = reverse;
             Alphabet = alphabet;
             Report = report;
@@ -251,7 +289,7 @@ namespace AssemblyNameSpace
             return $@"  Runname     : {Runname}
     Input       : {Input.ToString()}
     K           : {K}
-    MinHomology    : {MinimalHomology}
+    MinimalHomology    : {MinimalHomology}
     Reverse     : {Reverse.ToString()}
     Alphabet    : {Alphabet.ToString()}";
         }
@@ -261,14 +299,17 @@ namespace AssemblyNameSpace
             {
                 var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse);
                 AssemblyNameSpace.Alphabet.SetAlphabetData(Alphabet.Data);
-                switch (Input)
+                foreach (var input in Input)
                 {
-                    case Peaks p:
-                        assm.GiveReadsPeaks(OpenReads.Peaks(p.Path, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Name, p.Separator, p.DecimalSeparator));
-                        break;
-                    case Reads r:
-                        assm.GiveReads(OpenReads.Simple(r.Path));
-                        break;
+                    switch (input)
+                    {
+                        case Peaks p:
+                            assm.GiveReadsPeaks(OpenReads.Peaks(p.Path, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Name, p.Separator, p.DecimalSeparator));
+                            break;
+                        case Reads r:
+                            assm.GiveReads(OpenReads.Simple(r.Path));
+                            break;
+                    }
                 }
                 assm.Assemble();
                 foreach (var report in Report)
@@ -290,7 +331,10 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                Console.WriteLine("ERROR: " + e.Message + "\nSTACKTRACE: " + e.StackTrace + "\nRUNPARAMETERS:\n" + Display());
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("ERROR: " + e.Message);
+                Console.ResetColor();
+                Console.WriteLine("STACKTRACE: " + e.StackTrace + "\nRUNPARAMETERS:\n" + Display());
             }
         }
     }

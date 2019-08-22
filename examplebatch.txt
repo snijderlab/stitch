@@ -3,6 +3,7 @@
 -Run Info---------------
 Version	: 0
 Runname	: Test
+Runtype : Separate
 
 -Input------------------
 Reads	->
@@ -15,7 +16,7 @@ Name: 003
 <-
 
 -Parameters-------------
-K	: 8, 10
+K	: 8, 10, 15, 20
 Minimalhomology: 7
 duplicatethreshold: 7
 Reverse	: both
@@ -78,5 +79,5 @@ Name	: Normal
 
 -Report-----------------
 HTML	->
-Path	: report-reads-02-{id}.html
+Path	: report-reads-02-{id}-{datetime}.html
 <-

@@ -81,7 +81,7 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
-                            throw new Exception($"A name should be followed by an delimiter (':' or '->'). Name: {name.ToString()} Content left: {content}");
+                            throw new ParseException($"Parameter {name.ToString()} should be followed by an delimiter (':' or '->')");
                         }
                         break;
                 }
@@ -97,7 +97,23 @@ namespace AssemblyNameSpace
                         output.Runname = pair.GetValue();
                         break;
                     case "version":
-                        //skip for now
+                        if (pair.GetValue() != "0")
+                        {
+                            throw new ParseException("The specified version does not exist");
+                        }
+                        break;
+                    case "runtype":
+                        switch (pair.GetValue().ToLower())
+                        {
+                            case "separate":
+                                output.Runtype = RuntypeValue.Separate;
+                                break;
+                            case "group":
+                                output.Runtype = RuntypeValue.Group;
+                                break;
+                            default:
+                                throw new ParseException($"Unknown option for Runtype: {pair.GetValue()}");
+                        }
                         break;
                     case "peaks":
                         var settings = new Peaks();
@@ -110,13 +126,13 @@ namespace AssemblyNameSpace
                                     settings.Path = setting.GetValue();
                                     break;
                                 case "cutoffscore":
-                                    settings.Cutoffscore = Convert.ToInt32(setting.GetValue());
+                                    settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks Cutoffscore");
                                     break;
                                 case "localcutoffscore":
-                                    settings.LocalCutoffscore = Convert.ToInt32(setting.GetValue());
+                                    settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks LocalCutoffscore");
                                     break;
                                 case "minlengthpatch":
-                                    settings.MinLengthPatch = Convert.ToInt32(setting.GetValue());
+                                    settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks MinLengthPatch");
                                     break;
                                 case "name":
                                     settings.Name = setting.GetValue();
@@ -138,11 +154,11 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        throw new Exception("Unknown file format for Peaks (choose 'old' or 'new')");
+                                        throw new ParseException("Unknown file format for Peaks (choose 'old' or 'new')");
                                     }
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in PEAKS definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in PEAKS definition: {setting.Name}");
                             }
                         }
 
@@ -163,7 +179,7 @@ namespace AssemblyNameSpace
                                     rsettings.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in Reads definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in Reads definition: {setting.Name}");
                             }
                         }
 
@@ -171,7 +187,7 @@ namespace AssemblyNameSpace
                         break;
 
                     case "k":
-                        if (pair.Value is Multiple)
+                        if (!pair.IsSingle())
                         {
                             var ksettings = new Range();
 
@@ -180,33 +196,40 @@ namespace AssemblyNameSpace
                                 switch (setting.Name)
                                 {
                                     case "start":
-                                        ksettings.Start = Convert.ToInt32(setting.GetValue());
+                                        ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), "range K Start");
                                         break;
                                     case "end":
-                                        ksettings.End = Convert.ToInt32(setting.GetValue());
+                                        ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), "range K End");
                                         break;
                                     case "step":
-                                        ksettings.Step = Convert.ToInt32(setting.GetValue());
+                                        ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), "range K Step");
                                         break;
                                     default:
-                                        throw new Exception($"Unknown key in K definition: {setting.Name}");
+                                        throw new ParseException($"Unknown key in K definition: {setting.Name}");
                                 }
                             }
-                            output.K = ksettings;
+                            if (ksettings.Start != 0 && ksettings.End != 0)
+                            {
+                                output.K = ksettings;
+                            }
+                            else
+                            {
+                                throw new ParseException("A range of K should be set with a start and an end value");
+                            }
                             break;
                         }
                         else
                         {
                             try
                             {
-                                output.K = new AssemblyNameSpace.Single(Convert.ToInt32(pair.GetValue()));
+                                output.K = new AssemblyNameSpace.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value"));
                             }
                             catch
                             {
                                 var values = new List<int>();
                                 foreach (string value in pair.GetValue().Split(",".ToCharArray()))
                                 {
-                                    values.Add(Convert.ToInt32(value));
+                                    values.Add(ParseHelper.ConvertToInt(value, "multiple K values"));
                                 }
                                 output.K = new AssemblyNameSpace.Multiple(values.ToArray());
                             }
@@ -225,27 +248,27 @@ namespace AssemblyNameSpace
                     case "minimalhomology":
                         try
                         {
-                            output.MinHomology.Add(new AssemblyNameSpace.Simple(Convert.ToInt32(pair.GetValue())));
+                            output.MinimalHomology.Add(new AssemblyNameSpace.Simple(Convert.ToInt32(pair.GetValue())));
                         }
                         catch
                         {
-                            output.MinHomology.Add(new AssemblyNameSpace.Calculation(pair.GetValue()));
+                            output.MinimalHomology.Add(new AssemblyNameSpace.Calculation(pair.GetValue()));
                         }
                         break;
                     case "reverse":
                         switch (pair.GetValue().ToLower())
                         {
                             case "true":
-                                output.Reverse = new One(true);
+                                output.Reverse = ReverseValue.True;
                                 break;
                             case "false":
-                                output.Reverse = new One(false);
+                                output.Reverse = ReverseValue.False;
                                 break;
                             case "both":
-                                output.Reverse = new Both();
+                                output.Reverse = ReverseValue.Both;
                                 break;
                             default:
-                                throw new Exception($"Unknown option in Reverse definition: {pair.GetValue()}");
+                                throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()}");
                         }
                         break;
                     case "alphabet":
@@ -265,7 +288,7 @@ namespace AssemblyNameSpace
                                     asettings.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in Alphabet definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}");
                             }
                         }
                         output.Alphabet.Add(asettings);
@@ -281,7 +304,7 @@ namespace AssemblyNameSpace
                                     hsettings.Path = setting.GetValue();
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in HTML definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in HTML definition: {setting.Name}");
                             }
                         }
                         output.Report.Add(hsettings);
@@ -297,7 +320,7 @@ namespace AssemblyNameSpace
                                     csettings.Path = setting.GetValue();
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in CSV definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in CSV definition: {setting.Name}");
                             }
                         }
                         output.Report.Add(csettings);
@@ -313,21 +336,23 @@ namespace AssemblyNameSpace
                                     fsettings.Path = setting.GetValue();
                                     break;
                                 default:
-                                    throw new Exception($"Unknown key in FASTQ definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in FASTQ definition: {setting.Name}");
                             }
                         }
                         output.Report.Add(fsettings);
                         break;
                     default:
-                        throw new Exception($"Unknown key {pair.Name}");
+                        throw new ParseException($"Unknown key {pair.Name}");
                 }
             }
 
-            if (output.DuplicateThreshold.Count() == 0) {
+            if (output.DuplicateThreshold.Count() == 0)
+            {
                 output.DuplicateThreshold.Add(new Calculation("K-1"));
             }
-            if (output.MinHomology.Count() == 0) {
-                output.MinHomology.Add(new Calculation("K-1"));
+            if (output.MinimalHomology.Count() == 0)
+            {
+                output.MinimalHomology.Add(new Calculation("K-1"));
             }
 
             return output;
@@ -377,11 +402,30 @@ namespace AssemblyNameSpace
                 }
                 return value;
             }
+            public static int ConvertToInt(string input, string origin)
+            {
+                try
+                {
+                    return Convert.ToInt32(input);
+                }
+                catch (FormatException)
+                {
+                    throw new ParseException($"The value '{input}' is not a valid number, this should be a number in the context of {origin}.");
+                }
+                catch (OverflowException)
+                {
+                    throw new ParseException($"The value '{input}' is outside the bounds of an int32, in the context of {origin}.");
+                }
+                catch
+                {
+                    throw new ParseException($"Some unkown ParseException occured while '{input}' was cnverted to an int32, this should be a number in the context of {origin}.");
+                }
+            }
         }
         class KeyValue
         {
             public string Name;
-            public Value Value;
+            ValueType Value;
             public KeyValue(string name, string value)
             {
                 Name = name;
@@ -390,7 +434,7 @@ namespace AssemblyNameSpace
             public KeyValue(string name, List<KeyValue> values)
             {
                 Name = name;
-                Value = new Multiple(values);
+                Value = new KeyValue.Multiple(values);
             }
             public string GetValue()
             {
@@ -400,7 +444,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    throw new Exception($"This KeyValue pair has multiple values. Key {Name}");
+                    throw new ParseException($"Parameter {Name} has multiple values but should have a single value.");
                 }
             }
             public List<KeyValue> GetValues()
@@ -411,26 +455,36 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    throw new Exception($"This KeyValue pair has a single value. Key {Name} Value {GetValue()}");
+                    throw new ParseException($"Parameter {Name} has a single value but should have multiple values. Value {GetValue()}");
+                }
+            }
+            public bool IsSingle()
+            {
+                return Value is Single;
+            }
+
+            abstract class ValueType { }
+            class Single : ValueType
+            {
+                public string Value;
+                public Single(string value)
+                {
+                    Value = value;
+                }
+            }
+            class Multiple : ValueType
+            {
+                public List<KeyValue> Values;
+                public Multiple(List<KeyValue> values)
+                {
+                    Values = values;
                 }
             }
         }
-        abstract class Value { }
-        class Single : Value
-        {
-            public string Value;
-            public Single(string value)
-            {
-                Value = value;
-            }
-        }
-        class Multiple : Value
-        {
-            public List<KeyValue> Values;
-            public Multiple(List<KeyValue> values)
-            {
-                Values = values;
-            }
-        }
+    }
+    class ParseException : Exception
+    {
+        public ParseException(string msg)
+            : base(msg) { }
     }
 }

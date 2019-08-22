@@ -35,7 +35,19 @@ namespace AssemblyNameSpace
             stopwatch.Start();
 
             string filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
-            RunParameters inputparams = ParseCommandFile.Batch(filename);
+            RunParameters inputparams = new RunParameters();
+            try
+            {
+                inputparams = ParseCommandFile.Batch(filename);
+            }
+            catch (ParseException e)
+            {
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"{e.Message}");
+                Console.ResetColor();
+                Console.WriteLine("The program now terminates.");
+                return;
+            }
             Console.WriteLine("Parsed file");
             var runs = inputparams.CreateRuns();
 
