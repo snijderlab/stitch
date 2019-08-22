@@ -118,8 +118,8 @@ namespace AssemblyNameSpace
                                 case "minlengthpatch":
                                     settings.MinLengthPatch = Convert.ToInt32(setting.GetValue());
                                     break;
-                                case "prefix":
-                                    settings.Prefix = setting.GetValue();
+                                case "name":
+                                    settings.Name = setting.GetValue();
                                     break;
                                 case "separator":
                                     settings.Separator = setting.GetValue().First();
@@ -150,7 +150,24 @@ namespace AssemblyNameSpace
                         break;
 
                     case "reads":
-                        output.Input.Add(new Reads(pair.GetValue()));
+                        var rsettings = new Reads();
+
+                        foreach (var setting in pair.GetValues())
+                        {
+                            switch (setting.Name)
+                            {
+                                case "path":
+                                    rsettings.Path = setting.GetValue();
+                                    break;
+                                case "name":
+                                    rsettings.Name = setting.GetValue();
+                                    break;
+                                default:
+                                    throw new Exception($"Unknown key in Reads definition: {setting.Name}");
+                            }
+                        }
+
+                        output.Input.Add(rsettings);
                         break;
 
                     case "k":

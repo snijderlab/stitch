@@ -2,6 +2,13 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Globalization;
 
 namespace AssemblyNameSpace
 {
@@ -86,7 +93,9 @@ namespace AssemblyNameSpace
             return output;
         }
     }
-    public abstract class DataParameter { }
+    public abstract class DataParameter { 
+        public string Name;
+    }
     public class Peaks : DataParameter
     {
         public string Path;
@@ -94,7 +103,6 @@ namespace AssemblyNameSpace
         public int LocalCutoffscore;
         public FileFormat.Peaks FileFormat;
         public int MinLengthPatch;
-        public string Prefix;
         public char Separator;
         public char DecimalSeparator;
         public Peaks() {
@@ -104,15 +112,12 @@ namespace AssemblyNameSpace
             MinLengthPatch = 3;
             Separator = ',';
             DecimalSeparator = '.';
-            Prefix = "";
         }
     }
     public class Reads : DataParameter
     {
         public string Path;
-        public Reads(string path) {
-            Path = path;
-        }
+        public Reads() {}
     }
     public abstract class KValue { }
     public class Single : KValue
@@ -193,7 +198,17 @@ namespace AssemblyNameSpace
     {
         public string Path;
         public string CreateName(SingleRun r) {
-            return Path.Replace("{k}", r.K.ToString()).Replace("{num}", r.ID.ToString());
+            var output = new StringBuilder(Path);
+
+            output.Replace("{id}", r.ID.ToString());
+            output.Replace("{k}", r.K.ToString());
+            output.Replace("{mh}", r.MinimalHomology.ToString());
+            output.Replace("{dt}", r.DuplicateThreshold.ToString());
+            output.Replace("{alph}", r.Alphabet.Name);
+            output.Replace("{data}", r.Input.Name);
+            output.Replace("{name}", r.Runname);
+
+            return output.ToString();
         }
     }
     public class CSV : ReportParameter
@@ -214,7 +229,7 @@ namespace AssemblyNameSpace
         public string Runname;
         public DataParameter Input;
         public int K;
-        public int MinHomology;
+        public int MinimalHomology;
         public int DuplicateThreshold;
         public bool Reverse;
         public AlphabetValue Alphabet;
@@ -226,7 +241,7 @@ namespace AssemblyNameSpace
             Input = input;
             K = k;
             DuplicateThreshold = duplicateThreshold;
-            MinHomology = minHomology;
+            MinimalHomology = minHomology;
             Reverse = reverse;
             Alphabet = alphabet;
             Report = report;
@@ -236,7 +251,7 @@ namespace AssemblyNameSpace
             return $@"  Runname     : {Runname}
     Input       : {Input.ToString()}
     K           : {K}
-    MinHomology    : {MinHomology}
+    MinHomology    : {MinimalHomology}
     Reverse     : {Reverse.ToString()}
     Alphabet    : {Alphabet.ToString()}";
         }
@@ -244,12 +259,12 @@ namespace AssemblyNameSpace
         {
             try
             {
-                var assm = new Assembler(K, DuplicateThreshold, MinHomology, Reverse);
+                var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse);
                 AssemblyNameSpace.Alphabet.SetAlphabetData(Alphabet.Data);
                 switch (Input)
                 {
                     case Peaks p:
-                        assm.GiveReadsPeaks(OpenReads.Peaks(p.Path, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Prefix, p.Separator, p.DecimalSeparator));
+                        assm.GiveReadsPeaks(OpenReads.Peaks(p.Path, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Name, p.Separator, p.DecimalSeparator));
                         break;
                     case Reads r:
                         assm.GiveReads(OpenReads.Simple(r.Path));

@@ -5,8 +5,14 @@ Version	: 0
 Runname	: Test
 
 -Input------------------
-Reads	: examples\001\reads.txt
-Reads	: examples\003\reads.txt
+Reads	->
+Path: examples\001\reads.txt
+Name: 001
+<-
+Reads	->
+Path: examples\003\reads.txt
+Name: 003
+<-
 
 -Parameters-------------
 K	: 8, 10
@@ -72,5 +78,5 @@ Name	: Normal
 
 -Report-----------------
 HTML	->
-Path	: report-reads-02-{num}.html
+Path	: report-reads-02-{id}.html
 <-
