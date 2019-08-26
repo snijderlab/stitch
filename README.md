@@ -1,5 +1,14 @@
 # Amino Acid Alignment using De Bruijn graphs
 
+# Structure
+
+In the 'source' folder all C# files are contained, including the assets needed to build the executable ('source/assets'). The Build.bat file builds the executable (it is located in the root folder). The 'examples' folder contains some examples which can be run to see what the program is up to. In the 'documentation' folder a generated documentation can be found for the software.
+
+# Examples
+
+Examples 001 through 007 are simple generated reads and sequences.
+Example 008 is an example of real world data gotten with PEAKS.
+
 # Batch Files
 
 ## Introduction
@@ -14,7 +23,7 @@ Lines starting with a hypen `-` are considered comments and disregarded.
 
 ### All parameters
 
-Here is a list of all parameters and their possible values.
+Here is a list of all parameters and their possible values. An 's' after the name indicates it is a single valued parameter, an 'm' indicates it is a multiple valued parameter.
 
 #### Run Info
 
@@ -239,11 +248,12 @@ Name	: Normal
 
 ##### HTML (m)
 
-To generate an HTML report.
+To generate an HTML report. This report displays the graph retrieved from the assembly, a list of all contigs (nodes in the De Bruijn graph), a list of all reads used to assemble and some metadata about the run, the reads and the contigs.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)
+DotDistribution | To use a `global` install of the Dot engine or the included one. | `included`
 
 _Example_
 ```
@@ -269,7 +279,7 @@ Path: Report.csv
 
 ##### FASTA (m)
 
-To generate an FASTA file with all path, with a score for each path.
+To generate an FASTA file with all path, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---

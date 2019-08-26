@@ -20,7 +20,6 @@ namespace AssemblyNameSpace
             var parsed = new List<KeyValue>();
             while (content.Length > 0)
             {
-                Console.WriteLine($"{content.Length} chars to do still");
                 switch (content.First())
                 {
                     case '-':
@@ -89,6 +88,8 @@ namespace AssemblyNameSpace
             // Now all key values are saved in 'parsed'
             var output = new RunParameters();
 
+            bool versionspecified = false;
+
             foreach (var pair in parsed)
             {
                 switch (pair.Name)
@@ -101,6 +102,7 @@ namespace AssemblyNameSpace
                         {
                             throw new ParseException("The specified version does not exist");
                         }
+                        versionspecified = true;
                         break;
                     case "runtype":
                         switch (pair.GetValue().ToLower())
@@ -303,6 +305,20 @@ namespace AssemblyNameSpace
                                 case "path":
                                     hsettings.Path = setting.GetValue();
                                     break;
+                                case "dotdistribution":
+                                    if (setting.GetValue().ToLower() == "global")
+                                    {
+                                        hsettings.UseIncludedDotDistribution = false;
+                                    }
+                                    else if (setting.GetValue().ToLower() == "included")
+                                    {
+                                        hsettings.UseIncludedDotDistribution = true;
+                                    }
+                                    else
+                                    {
+                                        throw new ParseException($"Unknown option in HTML DotDistribution definition: {setting.Name} (the only valid options: 'global' and 'included')");
+                                    }
+                                    break;
                                 default:
                                     throw new ParseException($"Unknown key in HTML definition: {setting.Name}");
                             }
@@ -356,6 +372,9 @@ namespace AssemblyNameSpace
             if (output.MinimalHomology.Count() == 0)
             {
                 output.MinimalHomology.Add(new Calculation("K-1"));
+            }
+            if (!versionspecified) {
+                throw new ParseException($"There is no version specified of the batch file; This is needed to handle different versions in different ways.");
             }
 
             return output;

@@ -1,0 +1,26 @@
+# MetaInformation Fields
+ 
+
+The <a href="d0e73d2f-7721-7f22-e999-c1b9d612e2c9">MetaInformation</a> type exposes the following members.
+
+
+## Fields
+&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="0a835a3f-9f71-5e1a-caf8-82487e15276d">drawingtime</a></td><td>
+The time needed to draw the graphs. See [!:Assembler.OutputGraph]</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="71cde5c3-8c48-42e9-9384-b5481a060774">graph_time</a></td><td>
+The time needed the build the graph. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="b7ed535d-b010-275a-fc46-29f5885ae374">kmer_length</a></td><td /></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="4b790935-85c4-3fc7-e852-cdc98a20e174">kmers</a></td><td>
+The amount of k-mers generated. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="064b0fca-77be-597e-14bc-9c2308ad8bf6">kmin1_mers</a></td><td>
+The amount of (k-1)-mers generated. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="fb66ed10-6fec-45d6-623a-56a3e9d604e9">kmin1_mers_raw</a></td><td>
+The amount of (k-1)-mers generated, before removing all duplicates. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="2c05021d-5630-dc87-f0cb-d5c1e2dd1c46">minimum_homology</a></td><td /></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="dfa7ead9-fc70-317b-7e9f-6b4562d6a906">path_time</a></td><td>
+The time needed to find the path through the de Bruijn graph. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="e4bef972-0d0c-d26b-3717-df8edff50238">pre_time</a></td><td>
+The needed to do the pre work, creating k-mers and (k-1)-mers. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="011ca4ca-ab5b-5f55-cf3d-0ba96b80f2cc">reads</a></td><td>
+The amount of reads used by the program. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a>. See [!:Assembler.OpenReads]</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="91e8132d-2152-c553-d8db-40265a43b587">sequence_filter_time</a></td><td>
+The time needed to filter the sequences. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="da779972-66cb-cd2e-1fcf-a35e0307f232">sequences</a></td><td>
+The number of sequences found. See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="163ec78e-055a-c4bc-96b3-37661be833ca">total_time</a></td><td>
+The total time needed to run Assemble(). See <a href="3b15cb13-a567-503e-0a54-1b79a5e9b70a">Assemble()</a></td></tr></table>&nbsp;
+<a href="#metainformation-fields">Back to Top</a>
+
+## See Also
+
+
+#### Reference
+<a href="d0e73d2f-7721-7f22-e999-c1b9d612e2c9">MetaInformation Structure</a><br /><a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace Namespace</a><br />

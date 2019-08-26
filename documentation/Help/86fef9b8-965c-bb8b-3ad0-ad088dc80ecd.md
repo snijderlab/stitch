@@ -1,0 +1,29 @@
+# ParseCommandFile.ParseHelper Class
+ 
+
+\[Missing <summary> documentation for "T:AssemblyNameSpace.ParseCommandFile.ParseHelper"\]
+
+
+## Inheritance Hierarchy
+<a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">System.Object</a><br />&nbsp;&nbsp;AssemblyNameSpace.ParseCommandFile.ParseHelper<br />
+**Namespace:**&nbsp;<a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace</a><br />**Assembly:**&nbsp;Main (in Main.exe) Version: 0.0.0.0
+
+## Syntax
+
+**C#**<br />
+``` C#
+private static class ParseHelper
+```
+
+The ParseCommandFile.ParseHelper type exposes the following members.
+
+
+## Methods
+&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="58295850-0cc0-8e2d-7f3c-3de2538c32b7">ConvertToInt</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="6daaf6be-33c3-643e-0554-187888112aed">Name</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="1f4e6804-5ac1-a429-c621-1a81c723162a">SkipLine</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="21200295-9ebc-ba26-fef4-3ff68167d6b9">UntilSequence</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="96eb6854-9d74-7fd5-f41b-a89b33ffd288">Value</a></td><td /></tr></table>&nbsp;
+<a href="#parsecommandfile.parsehelper-class">Back to Top</a>
+
+## See Also
+
+
+#### Reference
+<a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace Namespace</a><br />

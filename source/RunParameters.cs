@@ -194,11 +194,11 @@ namespace AssemblyNameSpace
         public override int GetValue(int k)
         {
             var expression = Value.ToLower();
-            if (expression[0] == 'K' && expression[1] == '-')
+            if (expression[0] == 'k' && expression[1] == '-')
             {
                 return k - Convert.ToInt32(expression.Remove(0, 2).Trim());
             }
-            if (expression[0] == 'K' && expression[1] == '+')
+            if (expression[0] == 'k' && expression[1] == '+')
             {
                 return k + Convert.ToInt32(expression.Remove(0, 2).Trim());
             }
@@ -236,7 +236,9 @@ namespace AssemblyNameSpace
             return output.ToString();
         }
     }
-    public class HTML : ReportParameter { }
+    public class HTML : ReportParameter { 
+        public bool UseIncludedDotDistribution = true;
+    }
     public class CSV : ReportParameter
     {
         public string GetID(SingleRun r)
@@ -315,7 +317,7 @@ namespace AssemblyNameSpace
                     switch (report)
                     {
                         case HTML h:
-                            var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
+                            var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads, h.UseIncludedDotDistribution);
                             htmlreport.Save(h.CreateName(this));
                             break;
                         case CSV c:

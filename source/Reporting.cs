@@ -37,7 +37,10 @@ namespace AssemblyNameSpace
     }
     class HTMLReport : Report
     {
-        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
+        bool UseIncludedDotDistribution;
+        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, bool useincludeddotdistribution) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {
+            UseIncludedDotDistribution = useincludeddotdistribution;
+         }
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         /// <param name="filename"> The file to output to. </param>
         (string, string) CreateGraph()
@@ -92,14 +95,14 @@ namespace AssemblyNameSpace
             try
             {
                 Process svg = new Process();
-                svg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
+                svg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.RedirectStandardInput = true;
                 svg.StartInfo.RedirectStandardOutput = true;
                 svg.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
-                simplesvg.StartInfo = new ProcessStartInfo("dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
+                simplesvg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.RedirectStandardInput = true;
                 simplesvg.StartInfo.RedirectStandardOutput = true;
@@ -453,11 +456,11 @@ namespace AssemblyNameSpace
             // Strip all <title> tags
             simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
 
-            string stylesheet = "/* Could not find the stylesheet */";
-            if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("styles.css");
+            string stylesheet = "// Could not find the stylesheet";
+            if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
 
             string script = "// Could not find the script";
-            if (File.Exists("assets/script.js")) script = File.ReadAllText("script.js");
+            if (File.Exists("assets/script.js")) script = File.ReadAllText("assets/script.js");
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             stopwatch.Stop();

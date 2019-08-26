@@ -2,22 +2,3 @@
 *.log
 *.zip
 *.dot
-examples/*/*.png
-examples/*/*.dot
-examples/*/*.svg
-examples/*/*.html
-generate_tests/*.png
-generate_tests/*.dot
-generate_tests/*.svg
-generate_tests/*.html
-generate_tests/Generated/*.*
-generate_tests/Results/*.*
-generate_tests/Generated_contigs_length_batch/*.*
-generate_tests/Results_contigs_length/*.*
-generate_tests/Results Mix/*.*
-generate_tests/Experimental results/*.html
-generate_tests/Experimental results/*.csv
-generate_tests/Experimental results/*.dot
-generate_tests/Experimental results/*.svg
-report.html
-graph-1*

@@ -116,7 +116,7 @@ namespace AssemblyNameSpace
         /// lower will be discarded. </param>
         /// <param name="peaksformat"> The peaksformat to use, this depends on the 
         /// version of peaks used to generate the CSV's. </param>
-        /// <param name="min_length_patch"> The minimal length of a patch
+        /// <param name="min_length_patch"> The minimal length of a patch. </param>
         /// <param name="prefix"> A prefix to add to identifiers to make it easier to
         /// find the original </param>
         /// <param name="separator"> CSV separator used. </param>
