@@ -12,13 +12,39 @@ using System.Globalization;
 
 namespace AssemblyNameSpace
 {
+    /// <summary>
+    /// To be a basepoint for any reporting options, handling all the metadata.
+    /// </summary>
     abstract class Report
     {
+        /// <summary>
+        /// The condensed graph.
+        /// </summary>
         protected List<CondensedNode> condensed_graph;
+        /// <summary>
+        /// The noncondesed graph.
+        /// </summary>
         protected Node[] graph;
+        /// <summary>
+        /// The metadata of the run.
+        /// </summary>
         protected MetaInformation meta_data;
+        /// <summary>
+        /// The reads used as input in the run.
+        /// </summary>
         protected List<AminoAcid[]> reads;
+        /// <summary>
+        /// Possebly the reads from PEAKS used in the run.
+        /// </summary>
         protected List<MetaData.Peaks> peaks_reads;
+        /// <summary>
+        /// To create a report, gets all metadata.
+        /// </summary>
+        /// <param name="condensed_graph_input">The condesed graph.</param>
+        /// <param name="graph_input">The noncondesed graph.</param>
+        /// <param name="meta_data_input">The metadata.</param>
+        /// <param name="reads_input">The reads.</param>
+        /// <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
         public Report(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input)
         {
             condensed_graph = condensed_graph_input;
@@ -27,7 +53,15 @@ namespace AssemblyNameSpace
             reads = reads_input;
             peaks_reads = peaks_reads_input;
         }
+        /// <summary>
+        /// Creates a report, has to be implemented by all reports.
+        /// </summary>
+        /// <returns>A string containing the report.</returns>
         public abstract string Create();
+        /// <summary>
+        /// Saves the Report cretaed with Create to a file.
+        /// </summary>
+        /// <param name="filename">The path to save the to.</param>
         public void Save(string filename)
         {
             StreamWriter sw = File.CreateText(filename);
@@ -35,14 +69,29 @@ namespace AssemblyNameSpace
             sw.Close();
         }
     }
+    /// <summary>
+    /// An HTML report
+    /// </summary>
     class HTMLReport : Report
     {
+        /// <summary>
+        /// Indicates if the program should use the included Dot (graphviz) distribution.
+        /// </summary>
         bool UseIncludedDotDistribution;
-        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, bool useincludeddotdistribution) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) {
+        /// <summary>
+        /// To retrieve all metadata
+        /// </summary>
+        /// <param name="condensed_graph_input">The condesed graph.</param>
+        /// <param name="graph_input">The noncondensed graph.</param>
+        /// <param name="meta_data_input">The metadata.</param>
+        /// <param name="reads_input">The reads.</param>
+        /// <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+        /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
+        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, bool useincludeddotdistribution) : base(condensed_graph_input, graph_input, meta_data_input, reads_input, peaks_reads_input)
+        {
             UseIncludedDotDistribution = useincludeddotdistribution;
-         }
+        }
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
-        /// <param name="filename"> The file to output to. </param>
         (string, string) CreateGraph()
         {
             // Generate a dot file to use in graphviz
@@ -76,21 +125,6 @@ namespace AssemblyNameSpace
             buffer.AppendLine("}");
             simplebuffer.AppendLine("}");
 
-            // Write .dot to a file
-            /*
-
-            string path = Path.ChangeExtension(filename, "");
-            string simplefilename = new string(path.Take(path.Length - 1).ToArray()) + "-simple.dot";
-
-            StreamWriter sw = File.CreateText(filename);
-            StreamWriter swsimple = File.CreateText(simplefilename);
-
-            sw.Write(buffer.ToString());
-            swsimple.Write(simplebuffer.ToString());
-
-            sw.Close();
-            swsimple.Close();*/
-
             // Generate SVG files of the graph
             try
             {
@@ -113,16 +147,13 @@ namespace AssemblyNameSpace
 
                 StreamWriter svgwriter = svg.StandardInput;
                 svgwriter.WriteLine(buffer.ToString());
-                svgwriter.Write(0x4);
+                svgwriter.Write(0x4); // End of input
                 svgwriter.Close();
 
                 StreamWriter simplesvgwriter = simplesvg.StandardInput;
                 simplesvgwriter.WriteLine(buffer.ToString());
-                simplesvgwriter.Write(0x4);
+                simplesvgwriter.Write(0x4); // End of input
                 simplesvgwriter.Close();
-
-                //svg.WaitForExit();
-                //simplesvg.WaitForExit();
 
                 var svggraph = svg.StandardOutput.ReadToEnd();
                 if (svggraph == "")
@@ -142,7 +173,7 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                throw new Exception("Generic Expection when trying call dot to build graph: " + e.Message);
+                throw new Exception("Unexpected Expection when trying call dot to build graph: " + e.Message);
             }
         }
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
@@ -420,25 +451,11 @@ namespace AssemblyNameSpace
             return html;
         }
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
-        /// <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         public override string Create()
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            //var fullpath = filename;
-            /*try
-            {
-                fullpath = Path.GetFullPath(filename);
-            }
-            catch
-            {
-                //
-            }*/
-
-            //string graphoutputpath = Path.GetDirectoryName(fullpath).ToString() + $"\\graph-{Interlocked.Increment(ref counter)}.dot";
-
-            // Console.WriteLine(graphoutputpath);
             string svg, simplesvg;
             (svg, simplesvg) = CreateGraph();
 

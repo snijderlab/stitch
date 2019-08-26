@@ -12,11 +12,10 @@
             from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
         </member>
         <member name="T:AssemblyNameSpace.ToRunWithCommandLine">
-            <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
-            This will be rewritten when the code is moved to its new repository </summary>
+            <summary> The main class which is the entry point from the command line </summary>
         </member>
         <member name="M:AssemblyNameSpace.ToRunWithCommandLine.Main">
-            <summary> The method that will be run if the code is run from the command line. </summary>
+            <summary> The entry point. </summary>
         </member>
         <member name="T:AssemblyNameSpace.AminoAcid">
             <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can 
@@ -29,7 +28,6 @@
         </member>
         <member name="M:AssemblyNameSpace.AminoAcid.#ctor(System.Char)">
             <summary> The creator of AminoAcids. </summary>
-            <param name="asm"> The Assembler that this AminoAcid is used in, to get the alphabet. </param>
             <param name="input"> The character to store in this AminoAcid. </param>
             <returns> Returns a reference to the new AminoAcid. </returns>
         </member>
@@ -76,8 +74,8 @@
         </member>
         <member name="M:AssemblyNameSpace.AminoAcid.Homology(AssemblyNameSpace.AminoAcid)">
             <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
-            See <see cref="!:Assembler.scoring_matrix"/> for the scoring matrix.
-            See <see cref="!:Assembler.SetAlphabet"/> on how to change the scoring matrix.</summary>
+            See <see cref="F:AssemblyNameSpace.Alphabet.scoring_matrix"/> for the scoring matrix.
+            See <see cref="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)"/> on how to change the scoring matrix.</summary>
             <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             <c>b.Homology(a)</c>. </remarks>
@@ -188,10 +186,10 @@
             <summary> The time needed to filter the sequences. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/></summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaInformation.drawingtime">
-            <summary> The time needed to draw the graphs. See <see cref="!:Assembler.OutputGraph"/></summary>
+            <summary> The time needed to draw the graphs.</summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaInformation.reads">
-            <summary> The amount of reads used by the program. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/>. See <see cref="!:Assembler.OpenReads"/></summary>
+            <summary> The amount of reads used by the program. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/>.</summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaInformation.kmers">
             <summary> The amount of k-mers generated. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/></summary>
@@ -204,6 +202,16 @@
         </member>
         <member name="F:AssemblyNameSpace.MetaInformation.sequences">
             <summary> The number of sequences found. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/></summary>
+        </member>
+        <member name="F:AssemblyNameSpace.MetaInformation.kmer_length">
+            <summary>
+            The length of the k-mers
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.MetaInformation.minimum_homology">
+            <summary>
+            The minimum homology score used
+            </summary>
         </member>
         <member name="T:AssemblyNameSpace.CondensedNode">
             <summary> Nodes in the condensed graph with a variable sequence length. </summary>
@@ -223,6 +231,16 @@
         <member name="F:AssemblyNameSpace.CondensedNode.Sequence">
             <summary> The sequence of this node. It is the longest constant sequence to be 
             found in the de Bruijn graph starting at the Index. See <see cref="F:AssemblyNameSpace.CondensedNode.Index"/></summary>
+        </member>
+        <member name="F:AssemblyNameSpace.CondensedNode.Prefix">
+            <summary>
+            The possible prefix sequence before the sequence, trimmed off in creating the condensed graph
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.CondensedNode.Suffix">
+            <summary>
+            The possible suffix sequence after the sequence, trimmed off in creating the condensed graph
+            </summary>
         </member>
         <member name="F:AssemblyNameSpace.CondensedNode.ForwardEdges">
             <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
@@ -271,7 +289,7 @@
         </member>
         <member name="M:AssemblyNameSpace.Alphabet.SetAlphabetData(System.String)">
             <summary> Set the alphabet based on data in csv format. </summary>
-            <param name="input"> The csv data. </param>
+            <param name="data"> The csv data. </param>
         </member>
         <member name="T:AssemblyNameSpace.HelperFunctionality">
             <summary> A class to store extension methods to help in the process of coding. </summary>
@@ -312,9 +330,81 @@
             <param name="sequences"> The sequences to match with. </param>
             <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         </member>
+        <member name="T:AssemblyNameSpace.Report">
+            <summary>
+            To be a basepoint for any reporting options, handling all the metadata.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.condensed_graph">
+            <summary>
+            The condensed graph.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.graph">
+            <summary>
+            The noncondesed graph.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.meta_data">
+            <summary>
+            The metadata of the run.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.reads">
+            <summary>
+            The reads used as input in the run.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.peaks_reads">
+            <summary>
+            Possebly the reads from PEAKS used in the run.
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Report.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.Peaks})">
+            <summary>
+            To create a report, gets all metadata.
+            </summary>
+            <param name="condensed_graph_input">The condesed graph.</param>
+            <param name="graph_input">The noncondesed graph.</param>
+            <param name="meta_data_input">The metadata.</param>
+            <param name="reads_input">The reads.</param>
+            <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+        </member>
+        <member name="M:AssemblyNameSpace.Report.Create">
+            <summary>
+            Creates a report, has to be implemented by all reports.
+            </summary>
+            <returns>A string containing the report.</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.Report.Save(System.String)">
+            <summary>
+            Saves the Report cretaed with Create to a file.
+            </summary>
+            <param name="filename">The path to save the to.</param>
+        </member>
+        <member name="T:AssemblyNameSpace.HTMLReport">
+            <summary>
+            An HTML report
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.HTMLReport.UseIncludedDotDistribution">
+            <summary>
+            Indicates if the program should use the included Dot (graphviz) distribution.
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.HTMLReport.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.Peaks},System.Boolean)">
+            <summary>
+            To retrieve all metadata
+            </summary>
+            <param name="condensed_graph_input">The condesed graph.</param>
+            <param name="graph_input">The noncondensed graph.</param>
+            <param name="meta_data_input">The metadata.</param>
+            <param name="reads_input">The reads.</param>
+            <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+            <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
+        </member>
         <member name="M:AssemblyNameSpace.HTMLReport.CreateGraph">
             <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
-            <param name="filename"> The file to output to. </param>
         </member>
         <member name="M:AssemblyNameSpace.HTMLReport.CreateReadsTable">
             <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
@@ -348,7 +438,6 @@
         </member>
         <member name="M:AssemblyNameSpace.HTMLReport.Create">
             <summary> Creates an HTML report to view the results and metadata. </summary>
-            <param name="filename"> The path / filename to store the report in and where to find the graph.svg </param>
         </member>
         <member name="M:AssemblyNameSpace.CSVReport.CreateCSVLine(System.String,System.String,System.String,System.String,System.String,System.Boolean)">
             <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
@@ -515,6 +604,124 @@
             <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
             <returns> Returns an HTML string with the metainformation. </returns>
         </member>
+        <member name="T:AssemblyNameSpace.FileFormat">
+            <summary>
+            To contain definitions for file formats
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.FileFormat.Peaks">
+            <summary>
+            To contain all options for PEAKS file formats
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.fraction">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.source_file">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.feature">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.scan">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.peptide">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.tag_length">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.alc">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.length">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.mz">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.z">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.rt">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.area">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.mass">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.ppm">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.ptm">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.local_confidence">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.tag">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.FileFormat.Peaks.mode">
+            <summary>
+            The position of this column in this peaks file format version.
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.FileFormat.Peaks.OldFormat">
+            <summary>
+            An older version of a PEAKS export
+            </summary>
+            <returns>The fileformat</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.FileFormat.Peaks.NewFormat">
+            <summary>
+            A newer version of a PEAKS export
+            </summary>
+            <returns>The fileformat</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.FileFormat.Peaks.CustomFormat(System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32,System.Int32)">
+            <summary>
+            An custom version of a PEAKS fileformat 
+            </summary>
+            <returns>The fileformat</returns>
+        </member>
         <member name="T:AssemblyNameSpace.Assembler">
             <summary> The Class with all code to assemble Peptide sequences. </summary>
         </member>
@@ -555,10 +762,177 @@
             <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
             <param name="kmer_length_input"> The lengths of the k-mers. </param>
             <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="P:AssemblyNameSpace.Assembler.Minimum_homology"/> </param>
+            <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
+            <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.GiveReads(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.None}})">
+            <summary>
+            Give a list of reads to the assembler.
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.GiveReadsPeaks(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.Peaks}})">
+            <summary>
+            Give a list of PEAKS reads to the assembler
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.StringToSequence(System.String)">
+            <summary>
+            Gets the sequence in AminoAcids from a string
+            </summary>
+            <param name="input">The input string</param>
+            <returns>The sequence in AminoAcids</returns>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.Assemble">
             <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
             run on an Assembler, all settings should be defined before running this. </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile">
+            <summary>
+            A class with options to parse a batch file.
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.Batch(System.String)">
+            <summary>
+            Parses a batch file and retrieves the runparameters.
+            </summary>
+            <param name="path">The path to the batch file.</param>
+            <returns>The runparameters as specified in the file.</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile.ParseHelper">
+            <summary>
+            A class with helper functionality for parsing
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.ParseHelper.SkipLine(System.String@)">
+            <summary>
+            Consumes a whole line of the string
+            </summary>
+            <param name="content">The string</param>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.ParseHelper.Name(System.String@)">
+            <summary>
+            Consumes a name from the start of the string
+            </summary>
+            <param name="content">The string</param>
+            <returns>The name</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.ParseHelper.Value(System.String@)">
+            <summary>
+            Consumes a value from the start of the string
+            </summary>
+            <param name="content">The string</param>
+            <returns>The value</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.ParseHelper.UntilSequence(System.String@,System.String)">
+            <summary>
+            Consumes the string until it find the sequence
+            </summary>
+            <param name="content">The string</param>
+            <param name="sequence">The sequence to find</param>
+            <returns>The consumed part of the string</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.ParseHelper.ConvertToInt(System.String,System.String)">
+            <summary>
+            Converts a string to an int, while it generates meaningfull error messages for the end user.
+            </summary>
+            <param name="input">The string to be converted to an int.</param>
+            <param name="origin">The place where the string originates from, to be included in error messages.</param>
+            <returns>If succesfull: the number (int32)</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue">
+            <summary>
+            A class to save key value trees
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.ParseCommandFile.KeyValue.Name">
+            <summary>
+            The name of a key
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.ParseCommandFile.KeyValue.Value">
+            <summary>
+            The value for this key
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.#ctor(System.String,System.String)">
+            <summary>
+            Create a new single valued key
+            </summary>
+            <param name="name">The name of the key</param>
+            <param name="value">The value of the key</param>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.#ctor(System.String,System.Collections.Generic.List{AssemblyNameSpace.ParseCommandFile.KeyValue})">
+            <summary>
+            Create a new multiple valued key
+            </summary>
+            <param name="name">The name of the key</param>
+            <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.GetValue">
+            <summary>
+            Tries to get a single value from this key, otherwise fails with an error message for the end user
+            </summary>
+            <returns>The value of the KeyValue</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.GetValues">
+            <summary>
+            Tries to get tha values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user
+            </summary>
+            <returns>The values of this KeyValue</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.IsSingle">
+            <summary>
+            To test if this is a single valued KeyValue
+            </summary>
+            <returns>A bool indicating that.</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue.ValueType">
+            <summary>
+            An abstract class to represent possible values for a KeyValue
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue.Single">
+            <summary>
+            A ValueType for a single valued KeyValue
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.ParseCommandFile.KeyValue.Single.Value">
+            <summary>
+            The value
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.Single.#ctor(System.String)">
+            <summary>
+            To create a single value
+            </summary>
+            <param name="value">The value</param>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue.Multiple">
+            <summary>
+            A ValueType to contain mulitple values
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.ParseCommandFile.KeyValue.Multiple.Values">
+            <summary>
+            The list of values
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseCommandFile.KeyValue.Multiple.#ctor(System.Collections.Generic.List{AssemblyNameSpace.ParseCommandFile.KeyValue})">
+            <summary>
+            To create a multiple value
+            </summary>
+            <param name="values">The values</param>
+        </member>
+        <member name="T:AssemblyNameSpace.ParseException">
+            <summary>
+            An exception to indicate some error while parsing the batch file
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.ParseException.#ctor(System.String)">
+            <summary>
+            To create a ParseException
+            </summary>
+            <param name="msg">The message for this Exception</param>
         </member>
         <member name="T:AssemblyNameSpace.RunParameters">
             <summary>

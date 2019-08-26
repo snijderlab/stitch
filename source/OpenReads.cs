@@ -99,15 +99,6 @@ namespace AssemblyNameSpace
 
             return reads;
         }
-        /// <summary> Opens a bunch of peaks files at once. </summary>
-        /*public List<string> Peaks(List<(string, string)> files, int cutoffscore, int localcutoffscore, FileFormat.Peaks pf, int kmer_length, char separator = ',', char decimalseparator = '.') {
-            var output_reads = new List<string>();
-            foreach (var file in files) {
-                output_reads.AddRange(Peaks(file.Item1, cutoffscore, localcutoffscore, pf, kmer_length, file.Item2, separator, decimalseparator));
-                Console.WriteLine($"Opened file {file.Item2} now on a total of  {output_reads.Count()} reads");
-            }
-            return output_reads;
-        }*/
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
         /// <param name="input_file"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
@@ -413,11 +404,24 @@ namespace AssemblyNameSpace
             }
         }
     }
+    /// <summary>
+    /// To contain definitions for file formats
+    /// </summary>
     public class FileFormat
     {
+        /// <summary>
+        /// To contain all options for PEAKS file formats
+        /// </summary>
         public class Peaks
         {
+            /// <summary>
+            /// The position of this column in this peaks file format version.
+            /// </summary>
             public int fraction, source_file, feature, scan, peptide, tag_length, alc, length, mz, z, rt, area, mass, ppm, ptm, local_confidence, tag, mode = -1;
+            /// <summary>
+            /// An older version of a PEAKS export
+            /// </summary>
+            /// <returns>The fileformat</returns>
             public static FileFormat.Peaks OldFormat()
             {
                 var pf = new FileFormat.Peaks();
@@ -438,6 +442,10 @@ namespace AssemblyNameSpace
                 pf.mode = 14;
                 return pf;
             }
+            /// <summary>
+            /// A newer version of a PEAKS export
+            /// </summary>
+            /// <returns>The fileformat</returns>
             public static FileFormat.Peaks NewFormat()
             {
                 var pf = new FileFormat.Peaks();
@@ -461,6 +469,10 @@ namespace AssemblyNameSpace
                 pf.mode = 17;
                 return pf;
             }
+            /// <summary>
+            /// An custom version of a PEAKS fileformat 
+            /// </summary>
+            /// <returns>The fileformat</returns>
             public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
             {
                 var pf = new FileFormat.Peaks();

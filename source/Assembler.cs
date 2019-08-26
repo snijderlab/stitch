@@ -50,6 +50,8 @@ namespace AssemblyNameSpace
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
+        /// <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
+        /// <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
         public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input = -1, bool should_reverse = true)
         {
             kmer_length = kmer_length_input;
@@ -62,15 +64,26 @@ namespace AssemblyNameSpace
 
             Alphabet.SetAlphabet();
         }
+        /// <summary>
+        /// Give a list of reads to the assembler.
+        /// </summary>
         public void GiveReads(List<(string, MetaData.None)> reads_i)
         {
             reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
         }
+        /// <summary>
+        /// Give a list of PEAKS reads to the assembler
+        /// </summary>
         public void GiveReadsPeaks(List<(string, MetaData.Peaks)> reads_i)
         {
             reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
             peaks_reads = reads_i.Select(x => x.Item2).ToList();
         }
+        /// <summary>
+        /// Gets the sequence in AminoAcids from a string
+        /// </summary>
+        /// <param name="input">The input string</param>
+        /// <returns>The sequence in AminoAcids</returns>
         AminoAcid[] StringToSequence(string input)
         {
             AminoAcid[] output = new AminoAcid[input.Length];
@@ -351,13 +364,11 @@ namespace AssemblyNameSpace
                 {
                     if (node.BackwardEdges.Count() == 1)
                     {
-                        //TODO commented this out because test 5 gave empty sequences, need to find that cause
                         node.Prefix = node.Sequence.Take(kmer_length - 1).ToList();
                         node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
                     }
                     if (node.ForwardEdges.Count() == 1)
                     {
-                        //TODO commented this out because test 5 gave empty sequences, need to find that cause
                         node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 1).ToList();
                         node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
                     }

@@ -22,7 +22,6 @@ namespace AssemblyNameSpace
         public int Code;
 
         /// <summary> The creator of AminoAcids. </summary>
-        /// <param name="asm"> The Assembler that this AminoAcid is used in, to get the alphabet. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
         /// <returns> Returns a reference to the new AminoAcid. </returns>
         public AminoAcid(char input)
@@ -99,8 +98,8 @@ namespace AssemblyNameSpace
             return this.Code.GetHashCode();
         }
         /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
-        /// See <see cref="Assembler.scoring_matrix"/> for the scoring matrix.
-        /// See <see cref="Assembler.SetAlphabet"/> on how to change the scoring matrix.</summary>
+        /// See <see cref="Alphabet.scoring_matrix"/> for the scoring matrix.
+        /// See <see cref="Alphabet.SetAlphabet"/> on how to change the scoring matrix.</summary>
         /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
         /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
         /// <c>b.Homology(a)</c>. </remarks>
@@ -265,9 +264,9 @@ namespace AssemblyNameSpace
         public long path_time;
         /// <summary> The time needed to filter the sequences. See <see cref="Assembler.Assemble"/></summary>
         public long sequence_filter_time;
-        /// <summary> The time needed to draw the graphs. See <see cref="Assembler.OutputGraph"/></summary>
+        /// <summary> The time needed to draw the graphs.</summary>
         public long drawingtime;
-        /// <summary> The amount of reads used by the program. See <see cref="Assembler.Assemble"/>. See <see cref="Assembler.OpenReads"/></summary>
+        /// <summary> The amount of reads used by the program. See <see cref="Assembler.Assemble"/>.</summary>
         public int reads;
         /// <summary> The amount of k-mers generated. See <see cref="Assembler.Assemble"/></summary>
         public int kmers;
@@ -277,7 +276,13 @@ namespace AssemblyNameSpace
         public int kmin1_mers_raw;
         /// <summary> The number of sequences found. See <see cref="Assembler.Assemble"/></summary>
         public int sequences;
+        /// <summary>
+        /// The length of the k-mers
+        /// </summary>
         public int kmer_length;
+        /// <summary>
+        /// The minimum homology score used
+        /// </summary>
         public int minimum_homology;
     }
     /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
@@ -294,7 +299,13 @@ namespace AssemblyNameSpace
         /// <summary> The sequence of this node. It is the longest constant sequence to be 
         /// found in the de Bruijn graph starting at the Index. See <see cref="CondensedNode.Index"/></summary>
         public List<AminoAcid> Sequence;
+        /// <summary>
+        /// The possible prefix sequence before the sequence, trimmed off in creating the condensed graph
+        /// </summary>
         public List<AminoAcid> Prefix;
+        /// <summary>
+        /// The possible suffix sequence after the sequence, trimmed off in creating the condensed graph
+        /// </summary>
         public List<AminoAcid> Suffix;
         /// <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
         public List<int> ForwardEdges;
@@ -331,7 +342,7 @@ namespace AssemblyNameSpace
         /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
         public static char[] alphabet;
         /// <summary> Find the index of the given character in the alphabet. </summary>
-        /// <param name="c"> The character to look op. </param>
+        /// <param name="c"> The character to look up. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
         public static int getIndexInAlphabet(char c)
         {
@@ -386,7 +397,7 @@ namespace AssemblyNameSpace
             }
         }
         /// <summary> Set the alphabet based on data in csv format. </summary>
-        /// <param name="input"> The csv data. </param>
+        /// <param name="data"> The csv data. </param>
         public static void SetAlphabetData(string data)
         {
             var input = data.Split('\n');

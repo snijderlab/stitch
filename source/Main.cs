@@ -10,9 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 
-// Build using .NET Core
-// https://opensource.com/article/17/5/cross-platform-console-apps
-
 namespace AssemblyNameSpace
 {
     /// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
@@ -24,17 +21,26 @@ namespace AssemblyNameSpace
     class NamespaceDoc
     {
     }
-    /// <summary> A Class to be able to run the code from the commandline. To be able to test it easily. 
-    /// This will be rewritten when the code is moved to its new repository </summary>
+    /// <summary> The main class which is the entry point from the command line </summary>
     class ToRunWithCommandLine
     {
-        /// <summary> The method that will be run if the code is run from the command line. </summary>
+        /// <summary> The entry point. </summary>
         static void Main()
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            string filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
+            // Retrieve the name of the batch file to run
+            string filename = "";
+            try
+            {
+                filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
+            } catch {
+                Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.");
+                return;
+            }
+
+            // Try to parse the batch file
             RunParameters inputparams = new RunParameters();
             try
             {
@@ -51,12 +57,12 @@ namespace AssemblyNameSpace
             Console.WriteLine("Parsed file");
             var runs = inputparams.CreateRuns();
 
-            Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run(s) to be done.");
+            string pluralsuffix = runs.Count() > 1 ? "s" : "";
+            Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralsuffix} to be done.");
             Parallel.ForEach(runs, (i) => i.Calculate());
 
             stopwatch.Stop();
-            Console.WriteLine($"Assembled all in {stopwatch.ElapsedMilliseconds} ms");
-
+            Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {stopwatch.ElapsedMilliseconds} ms");
         }
     }
 }
