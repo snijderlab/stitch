@@ -267,14 +267,14 @@ Path: Report.csv
 <-
 ```
 
-##### FASTQ (m)
+##### FASTA (m)
 
-To generate an FASTQ file with all reads.
+To generate an FASTA file with all path, with a score for each path.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)
-MinimalScore **TODO** | The minimal score needed to be included in the file | 0
+MinimalScore | The minimal score needed to be included in the file | 0
 
 _Example_
 ```
@@ -311,7 +311,7 @@ Path: Folder/Structure/Report-{id}.html
 -More advanced naming scheme
 Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 
--Not functional yet (does no create the folders) but would be nice
+-Not functional yet (does not create the folders) but would be nice
 Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fastq
 ```
 

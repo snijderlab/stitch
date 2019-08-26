@@ -53,7 +53,11 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
-                if (condensed_graph[i].BackwardEdges.Count() == 0) style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
+                //Test if it is a starting node
+                if (condensed_graph[i].BackwardEdges.Count() == 0 || (condensed_graph[i].BackwardEdges.Count() == 1 && condensed_graph[i].BackwardEdges[0] == i))
+                {
+                    style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
+                }
                 else style = "";
 
                 buffer.AppendLine($"\ti{i} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
@@ -450,10 +454,10 @@ namespace AssemblyNameSpace
             simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
 
             string stylesheet = "/* Could not find the stylesheet */";
-            if (File.Exists("styles.css")) stylesheet = File.ReadAllText("styles.css");
+            if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("styles.css");
 
             string script = "// Could not find the script";
-            if (File.Exists("script.js")) script = File.ReadAllText("script.js");
+            if (File.Exists("assets/script.js")) script = File.ReadAllText("script.js");
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             stopwatch.Stop();
@@ -599,7 +603,8 @@ namespace AssemblyNameSpace
 
             if (File.Exists(filename))
             {
-                // TO account for multithreading and multiple workers trying to append to the file at the same time
+                // To account for multithreading and multiple workers trying to append to the file at the same time
+                // This will keep trying to append the line until it worked
                 bool stuck = true;
                 while (stuck)
                 {
@@ -622,50 +627,113 @@ namespace AssemblyNameSpace
             }
         }
     }
-    class FASTQReport : Report
+    class FASTAReport : Report
     {
-        public FASTQReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
+        int MinScore;
+        public FASTAReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, int minscore) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input)
+        {
+            MinScore = minscore;
+        }
+        /// <summary>
+        /// Creates a FATSA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
+        /// </summary>
+        /// <returns>A string containing the file.</returns>
         public override string Create()
         {
-            string phredlookup = "!\"#$%&'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~";
             var buffer = new StringBuilder();
-            foreach (var node in condensed_graph)
+            var sequences = new List<(int, string)>();
+
+            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
             {
-                buffer.AppendLine($"@{node.Index}");
-                buffer.AppendLine(AminoAcid.ArrayToString(node.Sequence.ToArray()));
-                buffer.AppendLine("+"); //Stupid FASTQ thingy, could add the identifier again but there is really no point in that
-                buffer.AppendLine(CalculateScore(node).Select(i => phredlookup[i]));
+                var node = condensed_graph[node_index];
+
+                // Test if this is a starting node
+                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
+                {
+                    GetPaths(node_index, "", 0, sequences, new List<int>());
+                }
             }
+
+            // Filter and sort the lines
+            sequences = sequences.FindAll(i => i.Item1 >= MinScore);
+            sequences.Sort((a, b) => b.Item1.CompareTo(a.Item1));
+            foreach (var line in sequences)
+            {
+                buffer.AppendLine(line.Item2);
+            }
+
             return buffer.ToString();
         }
-        /// <summary> Create a reads alignment and calculates depth of coverage. </summary>
-        /// <returns> Returns a score per base. </returns>
-        int[] CalculateScore(CondensedNode node)
+        /// <summary>
+        /// Gets all paths starting from the given node.
+        /// </summary>
+        /// <param name="node_index">The node to start from</param>
+        /// <param name="currentpath">The sequences up to the start node</param>
+        /// <param name="currentscore">The score up to the start node</param>
+        /// <param name="output">The list containing all lines, here the output of the function will be aggregated</param>
+        /// <param name="indices">The list of all indices of the path up to the start node</param>
+        /// <returns>Nothing, see output for the output</returns>
+        void GetPaths(int node_index, string currentpath, int currentscore, List<(int, string)> output, List<int> indices)
         {
+            // Update all paths and scores
+            var node = condensed_graph[node_index];
+            string nextpath = currentpath + AminoAcid.ArrayToString(node.Sequence.ToArray());
+            int nextscore = currentscore + CalculateScore(node);
+            indices.Add(node_index);
+
+            if (node.ForwardEdges.Count() == 0)
+            {
+                // End of the sequences, create the output
+                // Create the ID of the path (indices of all contigs)
+                string id = indices.Aggregate("", (b, a) => $"{b}-{a.ToString()}").Substring(1);
+
+                output.Add((nextscore, $">{id} score:{nextscore}\n{nextpath}"));
+            }
+            else
+            {
+                // Follow all branches
+                foreach (var next in node.ForwardEdges)
+                {
+                    if (indices.Contains(next))
+                    {
+                        // Cycle: end the following of the path and generate the output
+                        // Create the ID of the path (indices of all contigs)
+                        string id = indices.Aggregate("", (b, a) => $"{b}-{a.ToString()}").Substring(1);
+
+                        output.Add((nextscore, $">{id}-|{next.ToString()}| score:{nextscore}\n{nextpath}"));
+                    }
+                    else
+                    {
+                        // Follow the sequence
+                        GetPaths(next, nextpath, nextscore, output, new List<int>(indices));
+                    }
+                }
+            }
+        }
+        /// <summary> Create a reads alignment and calculates depth of coverage. </summary>
+        /// <param name="node">The node to calculate the score of</param>
+        /// <returns> Returns a score per base. </returns>
+        int CalculateScore(CondensedNode node)
+        {
+            // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
             var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, true);
 
-            // Calculate the depth on every position
-            int[] depth = new int[sequence.Length];
+            // Calculate the score by calculating the total read length (which maps to a location on the contig)
+            int score = 0;
             for (int pos = 0; pos < sequence.Length; pos++)
             {
                 foreach (var read in positions)
                 {
                     if (pos >= read.Item2 && pos < read.Item3)
                     {
-                        depth[pos]++;
+                        score++;
                     }
                 }
             }
 
-            // Calculate the Phred score for every position
-            int basescore = 3;
-            for (int i = 0; i < sequence.Length; i++) {
-                depth[i] = basescore + (depth[i]-1)*Math.Min(3,basescore);
-            }
-
-            return depth;
+            return score;
         }
     }
 }

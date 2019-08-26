@@ -325,8 +325,8 @@ namespace AssemblyNameSpace
                         }
                         output.Report.Add(csettings);
                         break;
-                    case "fastq":
-                        var fsettings = new FASTQ();
+                    case "fasta":
+                        var fsettings = new FASTA();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -335,8 +335,11 @@ namespace AssemblyNameSpace
                                 case "path":
                                     fsettings.Path = setting.GetValue();
                                     break;
+                                case "minimalscore":
+                                    fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), "minimalscore of FASTA report");
+                                    break;
                                 default:
-                                    throw new ParseException($"Unknown key in FASTQ definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in FASTA definition: {setting.Name}");
                             }
                         }
                         output.Report.Add(fsettings);

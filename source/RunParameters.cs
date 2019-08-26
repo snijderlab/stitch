@@ -244,7 +244,9 @@ namespace AssemblyNameSpace
             throw new Exception("Creating ID's for CSV not supported yet");
         }
     }
-    public class FASTQ : ReportParameter { }
+    public class FASTA : ReportParameter {
+        public int MinimalScore = 0;
+     }
     public class SingleRun
     {
         public int ID;
@@ -320,9 +322,9 @@ namespace AssemblyNameSpace
                             var csvreport = new CSVReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
                             csvreport.CreateCSVLine(c.GetID(this), c.Path);
                             break;
-                        case FASTQ f:
-                            var fastqreport = new FASTQReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads);
-                            fastqreport.Save(f.CreateName(this));
+                        case FASTA f:
+                            var fastareport = new FASTAReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.peaks_reads, f.MinimalScore);
+                            fastareport.Save(f.CreateName(this));
                             break;
                     }
                 }
