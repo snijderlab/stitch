@@ -1,7 +1,7 @@
 # FileFormat.Peaks.length Field
  
 
-\[Missing <summary> documentation for "F:AssemblyNameSpace.FileFormat.Peaks.length"\]
+The position of this column in this peaks file format version.
 
 **Namespace:**&nbsp;<a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace</a><br />**Assembly:**&nbsp;Main (in Main.exe) Version: 0.0.0.0
 

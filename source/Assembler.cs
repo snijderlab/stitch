@@ -19,7 +19,7 @@ namespace AssemblyNameSpace
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
-        public List<MetaData.Peaks> peaks_reads = null;
+        public List<MetaData.IMetaData> reads_metadata = null;
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         public Node[] graph;
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
@@ -65,19 +65,12 @@ namespace AssemblyNameSpace
             Alphabet.SetAlphabet();
         }
         /// <summary>
-        /// Give a list of reads to the assembler.
+        /// Give a list of reads to the assembler
         /// </summary>
-        public void GiveReads(List<(string, MetaData.None)> reads_i)
+        public void GiveReads(List<(string, MetaData.IMetaData)> reads_i)
         {
             reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
-        }
-        /// <summary>
-        /// Give a list of PEAKS reads to the assembler
-        /// </summary>
-        public void GiveReadsPeaks(List<(string, MetaData.Peaks)> reads_i)
-        {
-            reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
-            peaks_reads = reads_i.Select(x => x.Item2).ToList();
+            reads_metadata = reads_i.Select(x => x.Item2).ToList();
         }
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
@@ -107,8 +100,6 @@ namespace AssemblyNameSpace
             var kmers = new List<(AminoAcid[], int)>();
             AminoAcid[] read;
 
-            Console.WriteLine($"Found {meta_data.reads} reads");
-
             for (int r = 0; r < reads.Count(); r++)
             {
                 read = reads[r];
@@ -128,7 +119,6 @@ namespace AssemblyNameSpace
                 }
             }
             meta_data.kmers = kmers.Count;
-            Console.WriteLine($"Found {meta_data.kmers} kmers");
 
             // Building the graph
             // Generating all (k-1)-mers
@@ -142,7 +132,6 @@ namespace AssemblyNameSpace
             });
 
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
-            Console.WriteLine($"Found {meta_data.kmin1_mers_raw} raw (k-1)-mers");
 
             var kmin1_mers = new List<(AminoAcid[], List<int>)>();
 
@@ -163,7 +152,6 @@ namespace AssemblyNameSpace
             }
 
             meta_data.kmin1_mers = kmin1_mers.Count;
-            Console.WriteLine($"Found {meta_data.kmin1_mers} (k-1)-mers");
 
             // Create a node for every possible (k-1)-mer
 

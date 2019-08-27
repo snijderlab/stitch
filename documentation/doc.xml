@@ -75,7 +75,7 @@
         <member name="M:AssemblyNameSpace.AminoAcid.Homology(AssemblyNameSpace.AminoAcid)">
             <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
             See <see cref="F:AssemblyNameSpace.Alphabet.scoring_matrix"/> for the scoring matrix.
-            See <see cref="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)"/> on how to change the scoring matrix.</summary>
+            See <see cref="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.String)"/> on how to change the scoring matrix.</summary>
             <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             <c>b.Homology(a)</c>. </remarks>
@@ -271,7 +271,7 @@
         </member>
         <member name="M:AssemblyNameSpace.Alphabet.getIndexInAlphabet(System.Char)">
             <summary> Find the index of the given character in the alphabet. </summary>
-            <param name="c"> The character to look op. </param>
+            <param name="c"> The character to look up. </param>
             <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
         </member>
         <member name="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)">
@@ -355,12 +355,12 @@
             The reads used as input in the run.
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.Report.peaks_reads">
+        <member name="F:AssemblyNameSpace.Report.reads_metadata">
             <summary>
             Possebly the reads from PEAKS used in the run.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Report.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.Peaks})">
+        <member name="M:AssemblyNameSpace.Report.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.IMetaData})">
             <summary>
             To create a report, gets all metadata.
             </summary>
@@ -368,7 +368,7 @@
             <param name="graph_input">The noncondesed graph.</param>
             <param name="meta_data_input">The metadata.</param>
             <param name="reads_input">The reads.</param>
-            <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+            <param name="reads_metadata_input">The MetaData of the reads.</param>
         </member>
         <member name="M:AssemblyNameSpace.Report.Create">
             <summary>
@@ -392,7 +392,7 @@
             Indicates if the program should use the included Dot (graphviz) distribution.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.HTMLReport.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.Peaks},System.Boolean)">
+        <member name="M:AssemblyNameSpace.HTMLReport.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.IMetaData},System.Boolean)">
             <summary>
             To retrieve all metadata
             </summary>
@@ -400,7 +400,7 @@
             <param name="graph_input">The noncondensed graph.</param>
             <param name="meta_data_input">The metadata.</param>
             <param name="reads_input">The reads.</param>
-            <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+            <param name="reads_metadata">MetaData of the reads.</param>
             <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
         </member>
         <member name="M:AssemblyNameSpace.HTMLReport.CreateGraph">
@@ -439,13 +439,21 @@
         <member name="M:AssemblyNameSpace.HTMLReport.Create">
             <summary> Creates an HTML report to view the results and metadata. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.CSVReport.CreateCSVLine(System.String,System.String,System.String,System.String,System.String,System.Boolean)">
+        <member name="M:AssemblyNameSpace.CSVReport.PrepareCSVFile(System.String)">
+            <summary>
+            Prepares the file to be used for a CSV report
+            </summary>
+            <param name="filename">The path to the file</param>
+        </member>
+        <member name="F:AssemblyNameSpace.CSVReport.CSVKey">
+            <summary>
+            The key to get acces to write to the CSV file
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.CSVReport.CreateCSVLine(System.String,System.String)">
             <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
             <param name="ID">ID of the run to recognise it in the CSV file. </param>
             <param name="filename"> The file to which to append the CSV line to. </param>
-            <param name="path_to_template"> The path to the original fasta file, to get extra information. </param>
-            <param name="extra"> Extra field to fill in own information. Created for holding the alphabet. </param>
-            <param name="path_to_report"> The path to the report to add a hyperlink to the CSV file. </param>
         </member>
         <member name="M:AssemblyNameSpace.FASTAReport.Create">
             <summary>
@@ -474,16 +482,16 @@
             To contain all logic for the reading of reads out of files.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.OpenReads.Simple(System.String,System.Char)">
+        <member name="M:AssemblyNameSpace.OpenReads.Simple(AssemblyNameSpace.MetaData.FileIdentifier,System.Char)">
             <summary> To open a file with reads. It assumes a very basic format,
             namely sequences separated with whitespace (space, tab or newline)
             with the possibility to specify comments as lines starting with a 
             specific character (standard '#').  </summary>
-            <param name="input_file"> The path to the file to read from. </param>
+            <param name="input_file"> The file to read from. </param>
             <param name="comment_char"> The character comment lines start with. </param>
             <returns> A list of all reads found. </returns>
         </member>
-        <member name="M:AssemblyNameSpace.OpenReads.Fasta(System.String)">
+        <member name="M:AssemblyNameSpace.OpenReads.Fasta(AssemblyNameSpace.MetaData.FileIdentifier)">
             <summary> To open a file with reads. the file should be in fasta format
             so identifiers on a single line starting with '>' followed by an arbitrary
             number of lines with sequences. Because sometimes programs output the length
@@ -491,7 +499,7 @@
             <param name="input_file"> The path to the file to read from. </param>
             <returns> A list of all reads found with their identifiers. </returns>
         </member>
-        <member name="M:AssemblyNameSpace.OpenReads.Peaks(System.String,System.Int32,System.Int32,AssemblyNameSpace.FileFormat.Peaks,System.Int32,System.String,System.Char,System.Char)">
+        <member name="M:AssemblyNameSpace.OpenReads.Peaks(AssemblyNameSpace.MetaData.FileIdentifier,System.Int32,System.Int32,AssemblyNameSpace.FileFormat.Peaks,System.Int32,System.Char,System.Char)">
             <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
             <param name="input_file"> Path to the CSV file. </param>
             <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
@@ -501,26 +509,52 @@
             <param name="peaksformat"> The peaksformat to use, this depends on the 
             version of peaks used to generate the CSV's. </param>
             <param name="min_length_patch"> The minimal length of a patch. </param>
-            <param name="prefix"> A prefix to add to identifiers to make it easier to
-            find the original </param>
             <param name="separator"> CSV separator used. </param>
             <param name="decimalseparator"> Separator used in decimals. </param>
             <returns> A list of all reads found with their metadata. </returns>
-        </member>
-        <member name="T:AssemblyNameSpace.IMetaData">
-            <summary>
-            The interface which proper metadata instances should implement.
-            </summary>
         </member>
         <member name="T:AssemblyNameSpace.MetaData">
             <summary>
             A class to hold all metadata handling in one place.
             </summary>
         </member>
+        <member name="T:AssemblyNameSpace.MetaData.IMetaData">
+            <summary>
+            The interface which proper metadata instances should implement.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.MetaData.IMetaData.File">
+            <summary>
+            The Identifier of the originating file
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.IMetaData.ToHTML">
+            <summary>
+            To generate (an) HTML element(s) from this MetaData
+            </summary>
+            <returns>A string containing the MetaData</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.IMetaData.#ctor(AssemblyNameSpace.MetaData.FileIdentifier)">
+            <summary>
+            To create an instance
+            </summary>
+            <param name="file">The identifier of the originating file</param>
+        </member>
         <member name="T:AssemblyNameSpace.MetaData.None">
             <summary>
             A metadata instance to contain no metadata so reads without metadata can also be handeled.
             </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.None.#ctor(AssemblyNameSpace.MetaData.FileIdentifier)">
+            <summary>
+            Create a new None MetaData
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.None.ToHTML">
+            <summary>
+            Returns None MetaData to HTML (which is always "")
+            </summary>
+            <returns>""</returns>
         </member>
         <member name="T:AssemblyNameSpace.MetaData.Fasta">
             <summary> A struct to hold metainformation from fasta data. </summary>
@@ -530,11 +564,12 @@
             The identifier from the fasta file.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.MetaData.Fasta.#ctor(System.String)">
+        <member name="M:AssemblyNameSpace.MetaData.Fasta.#ctor(System.String,AssemblyNameSpace.MetaData.FileIdentifier)">
             <summary>
             To create a new metadata instance with this metadata.
             </summary>
             <param name="identifier">The fasta identifier.</param>
+            <param name="file">The originating file.</param>
         </member>
         <member name="M:AssemblyNameSpace.MetaData.Fasta.ToHTML">
             <summary> Generate HTML with all metainformation from the fasta data. </summary>
@@ -594,15 +629,46 @@
         <member name="F:AssemblyNameSpace.MetaData.Peaks.Other_scans">
             <summary> Other scans giving the same sequence. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.MetaData.Peaks.#ctor(System.String,System.Char,System.Char,AssemblyNameSpace.FileFormat.Peaks,System.String)">
+        <member name="M:AssemblyNameSpace.MetaData.Peaks.#ctor(System.String,System.Char,System.Char,AssemblyNameSpace.FileFormat.Peaks,AssemblyNameSpace.MetaData.FileIdentifier)">
             <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             <param name="line"> The CSV line to parse. </param>
             <param name="separator"> The separator used in CSV. </param>
             <param name="decimalseparator"> The separator used in decimals. </param>
+            <param name="pf">FileFormat of the PEAKS file</param>
+            <param name="file">Identifier for the originating file</param>
         </member>
         <member name="M:AssemblyNameSpace.MetaData.Peaks.ToHTML">
             <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
             <returns> Returns an HTML string with the metainformation. </returns>
+        </member>
+        <member name="T:AssemblyNameSpace.MetaData.FileIdentifier">
+            <summary>
+            A identifier for a file, to hold information about where reads originate from.
+            </summary>
+        </member>
+        <member name="P:AssemblyNameSpace.MetaData.FileIdentifier.Path">
+            <value>The absolute path to the file</value>
+        </member>
+        <member name="F:AssemblyNameSpace.MetaData.FileIdentifier.Name">
+            <value>The name or identifier given to the file</value>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.FileIdentifier.#ctor(System.String,System.String)">
+            <summary>
+            Creating a new FileIdentifier
+            </summary>
+            <param name="path_input">The path to the file, can be a relative path</param>
+            <param name="name">The identifier given to the file</param>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.FileIdentifier.#ctor">
+            <summary>
+            To create a blank instance of FileIdentifier
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.MetaData.FileIdentifier.ToHTML">
+            <summary>
+            To generate HTML for use in the metadata sidebar in the HTML report
+            </summary>
+            <returns>A string containing the HTML</returns>
         </member>
         <member name="T:AssemblyNameSpace.FileFormat">
             <summary>
@@ -728,7 +794,7 @@
         <member name="F:AssemblyNameSpace.Assembler.reads">
             <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         </member>
-        <member name="F:AssemblyNameSpace.Assembler.peaks_reads">
+        <member name="F:AssemblyNameSpace.Assembler.reads_metadata">
             <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
             with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         </member>
@@ -765,14 +831,9 @@
             <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
             <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.GiveReads(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.None}})">
+        <member name="M:AssemblyNameSpace.Assembler.GiveReads(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.IMetaData}})">
             <summary>
-            Give a list of reads to the assembler.
-            </summary>
-        </member>
-        <member name="M:AssemblyNameSpace.Assembler.GiveReadsPeaks(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.Peaks}})">
-            <summary>
-            Give a list of PEAKS reads to the assembler
+            Give a list of reads to the assembler
             </summary>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.StringToSequence(System.String)">
@@ -934,9 +995,574 @@
             </summary>
             <param name="msg">The message for this Exception</param>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters">
+        <member name="T:AssemblyNameSpace.RunParameters.FullRunParameters">
             <summary>
             To give an 'api' for calling the program
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.Runname">
+            <summary>
+            The name of this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.Runtype">
+            <summary>
+            The type of this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.DataParameters">
+            <summary>
+            The inputs for this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.K">
+            <summary>
+            The K or values of K for this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.Reverse">
+            <summary>
+            The value of Reverse for this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.MinimalHomology">
+            <summary>
+            The value for the MinimalHomology
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.DuplicateThreshold">
+            <summary>
+            The value for the duplicatethreshold
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.Alphabet">
+            <summary>
+            The alphabet(s) to be used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.FullRunParameters.Report">
+            <summary>
+            The report(s) to be generated for this run
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.FullRunParameters.#ctor">
+            <summary>
+            A blank instance for the RunParameters with defaults and initialization
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.FullRunParameters.CreateRuns">
+            <summary>
+            Creates a list of all single runs contained in this run.abstract TO be ran in parrallel.
+            </summary>
+            <returns>All single runs</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.RuntypeValue">
+            <summary>
+            To dictate how this run should behave.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.RuntypeValue.Separate">
+            <summary>
+            Dictates that all input files should be run seperate from each other.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.RuntypeValue.Group">
+            <summary>
+            Dictates that all input files should be run in one group, with all information aggregated.
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Input">
+            <summary>
+            To contain parameters for the input of data
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Input.Parameter">
+            <summary>
+            A parameter to save an input file.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Parameter.File">
+            <summary>
+            The identifier of the file
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Input.Parameter.#ctor">
+            <summary>
+            Creates a blank file indetifier
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Input.Peaks">
+            <summary>
+            A dataparameter for PEAKS input files
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.Cutoffscore">
+            <summary>
+            The cutoffscore 
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.LocalCutoffscore">
+            <summary>
+            The cuttoffscore for patches
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.FileFormat">
+            <summary>
+            The file format of the PEAKS file
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.MinLengthPatch">
+            <summary>
+            The minimal length of a patch
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.Separator">
+            <summary>
+            The separator used in CSV
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Input.Peaks.DecimalSeparator">
+            <summary>
+            The decimal separator used
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Input.Peaks.#ctor">
+            <summary>
+            Fills in the default values
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Input.Reads">
+            <summary>
+            A parameter for simple reads files
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Input.Reads.#ctor">
+            <summary>
+            Fills in default values
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Input.FASTA">
+            <summary>
+            A parameter for FASTA reads files
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Input.FASTA.#ctor">
+            <summary>
+            Fills in default values
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.K">
+            <summary>
+            To contain options for values of K
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.K.KValue">
+            <summary>
+            A value for K
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.K.Single">
+            <summary>
+            A single value for K
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.K.Single.Value">
+            <summary>
+            The value of K
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.K.Single.#ctor(System.Int32)">
+            <summary>
+            Sets the value
+            </summary>
+            <param name="value">The value</param>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.K.Multiple">
+            <summary>
+            Multiple values for K, will be run in different SingleRuns
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.K.Multiple.Values">
+            <summary>
+            The values
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.K.Multiple.#ctor(System.Int32[])">
+            <summary>
+            Sets the values
+            </summary>
+            <param name="values">The values</param>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.K.Range">
+            <summary>
+            A range of values for K, will be run in different SingleRuns
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.K.Range.Start">
+            <summary>
+            The start of the range (included)
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.K.Range.End">
+            <summary>
+            The end of the range (if an integral amount of steps from the start it is included)
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.K.Range.Step">
+            <summary>
+            The size of the steps, default is 1
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.K.Range.#ctor">
+            <summary>
+            Sets the default stepsize
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.ReverseValue">
+            <summary>
+            The possible values for Reverse
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.ReverseValue.True">
+            <summary>
+            Turns on Reverse
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.ReverseValue.False">
+            <summary>
+            Turns off reverse
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.ReverseValue.Both">
+            <summary>
+            Runs both with and without Reverse in different SingleRuns
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic">
+            <summary>
+            A value possebly based on the value of K
+            </summary>
+        </member>
+        <member name="P:AssemblyNameSpace.RunParameters.KArithmatic.Value">
+            <summary>
+            Shows a maximal bracketed version of the expression
+            </summary>
+            <returns>The expression</returns>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.expression">
+            <summary>
+            The expression
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.GetValue(System.Int32)">
+            <summary>
+            To retrieve the value of the expression, given this value of K
+            </summary>
+            <param name="k">The value of K</param>
+            <returns>The value of the expression</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.#ctor(System.String)">
+            <summary>
+            To generate a KArithmatic, parses the given string immediatly to be sure to be error free if it succeeds.
+            </summary>
+            <param name="value">The expression</param>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic">
+            <summary>
+            To contain Arithmatic stuffs
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression">
+            <summary>
+            A general class for expressions
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression.Solve(System.Int32)">
+            <summary>
+            Solves the expression
+            </summary>
+            <param name="k">The value of K</param>
+            <returns>The value of the expression</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression.Show">
+            <summary>
+            Creates a maximal bracketed version of the expression
+            </summary>
+            <returns>This expression in string form</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator">
+            <summary>
+            An expression with an operator
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.type">
+            <summary>
+            The operator
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.left">
+            <summary>
+            The left hand side
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.right">
+            <summary>
+            The right hand side
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.#ctor(AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType,AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression,AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression)">
+            <summary>
+            Creates an operator expression
+            </summary>
+            <param name="type_input">The operator</param>
+            <param name="lhs">The left hand side</param>
+            <param name="rhs">The right hand side</param>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.Solve(System.Int32)">
+            <summary>
+            Solves the expression
+            </summary>
+            <param name="k">The value of K</param>
+            <returns>The value of the expression</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.Show">
+            <summary>
+            Creates a maximal bracketed version of the expression
+            </summary>
+            <returns>This expression in string form</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType">
+            <summary>
+            The possible operators
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Minus">
+            <summary> - </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Add">
+            <summary> + </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Times">
+            <summary> * </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Divide">
+            <summary> / </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K">
+            <summary>
+            An expression containing only the variable K
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.Solve(System.Int32)">
+            <summary>
+            Solves the expression
+            </summary>
+            <param name="k">The value of K</param>
+            <returns>The value of the expression</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.#ctor">
+            <summary>
+            Creates a new instance
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.Show">
+            <summary>
+            Creates a maximal bracketed version of the expression
+            </summary>
+            <returns>This expression in string form</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant">
+            <summary>
+            An expression containing a constant
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Value">
+            <summary>
+            The constant
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Solve(System.Int32)">
+            <summary>
+            Solves the expression
+            </summary>
+            <param name="k">The value of K</param>
+            <returns>The value of the expression</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.#ctor(System.Int32)">
+            <summary>
+            Creates a new instance
+            </summary>
+            <param name="value">The value of the constant</param>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Show">
+            <summary>
+            Creates a maximal bracketed version of the expression
+            </summary>
+            <returns>This expression in string form</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Parse(System.String)">
+            <summary>
+            Parses a string into an expression
+            </summary>
+            <param name="input">The string to parse</param>
+            <returns>The expression (if succesfull)</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.AlphabetValue">
+            <summary>
+            An input for an alphabet
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.AlphabetValue.Data">
+            <summary>
+            The data, Paths should be looked up to find the data
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.AlphabetValue.Name">
+            <summary>
+            The name for this alphabet, to recognize it
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Report">
+            <summary>
+            To contain parameters for reporting
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Report.Parameter">
+            <summary>
+            A parameter to define how to report the results
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Report.Parameter.Path">
+            <summary>
+            The path to save the result to
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Report.Parameter.CreateName(AssemblyNameSpace.RunParameters.SingleRun)">
+            <summary>
+            Generates a (unique) name based on the given template
+            </summary>
+            <param name="r">The values for the parameters</param>
+            <returns>A name</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Report.HTML">
+            <summary>
+            To indicate to return an HTML report
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Report.HTML.UseIncludedDotDistribution">
+            <summary>
+            To indicate if the included Dot distribution should be used
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Report.CSV">
+            <summary>
+            To indicate to return a CSVreport
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.Report.CSV.GetID(AssemblyNameSpace.RunParameters.SingleRun)">
+            <summary>
+            To get an ID for a CSV line
+            </summary>
+            <param name="r">The values of the parameters for this run</param>
+            <returns>An ID</returns>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.Report.FASTA">
+            <summary>
+            To indicate to return a FASTA report
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.Report.FASTA.MinimalScore">
+            <summary>
+            The minimal score needed to be included
+            </summary>
+        </member>
+        <member name="T:AssemblyNameSpace.RunParameters.SingleRun">
+            <summary>
+            ALl parameters for a single run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.ID">
+            <summary>
+            The unique numeric ID of this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.Runname">
+            <summary>
+            THe name of this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.Input">
+            <summary>
+            The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.K">
+            <summary>
+            The value of K used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.MinimalHomology">
+            <summary>
+            The value of MinimalHomology used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.DuplicateThreshold">
+            <summary>
+            The value of DuplicateThreshold used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.Reverse">
+            <summary>
+            The value of Reverse used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.Alphabet">
+            <summary>
+            The alphabet used in this run
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.RunParameters.SingleRun.Report">
+            <summary>
+            The reports to be generated
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.SingleRun.#ctor(System.Int32,System.String,AssemblyNameSpace.RunParameters.Input.Parameter,System.Int32,System.Int32,System.Int32,System.Boolean,AssemblyNameSpace.RunParameters.AlphabetValue,System.Collections.Generic.List{AssemblyNameSpace.RunParameters.Report.Parameter})">
+            <summary>
+            To create a single run with a single dataparameter as input
+            </summary>
+            <param name="id">The ID of the run</param>
+            <param name="runname">The name of the run</param>
+            <param name="input">The input data to be run</param>
+            <param name="k">The value of K</param>
+            <param name="duplicateThreshold">The value of DuplicateThreshold</param>
+            <param name="minimalHomology">The value of MinimalHomology</param>
+            <param name="reverse">The value of Reverse</param>
+            <param name="alphabet">The alphabet to be used</param>
+            <param name="report">The report(s) to be generated</param>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.SingleRun.#ctor(System.Int32,System.String,System.Collections.Generic.List{AssemblyNameSpace.RunParameters.Input.Parameter},System.Int32,System.Int32,System.Int32,System.Boolean,AssemblyNameSpace.RunParameters.AlphabetValue,System.Collections.Generic.List{AssemblyNameSpace.RunParameters.Report.Parameter})">
+            <summary>
+            To create a single run with a multiple dataparameters as input
+            </summary>
+            <param name="id">The ID of the run</param>
+            <param name="runname">The name of the run</param>
+            <param name="input">The input data to be run</param>
+            <param name="k">The value of K</param>
+            <param name="duplicateThreshold">The value of DuplicateThreshold</param>
+            <param name="minimalHomology">The value of MinimalHomology</param>
+            <param name="reverse">The value of Reverse</param>
+            <param name="alphabet">The alphabet to be used</param>
+            <param name="report">The report(s) to be generated</param>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.SingleRun.Display">
+            <summary>
+            To display the main parameters of this run in a string, mainly for error tracking and debugging purposes.
+            </summary>
+            <returns>The main parameters</returns>
+        </member>
+        <member name="M:AssemblyNameSpace.RunParameters.SingleRun.Calculate">
+            <summary>
+            Runs this run.abstract Runs the assembly, and generates the reports.
             </summary>
         </member>
     </members>

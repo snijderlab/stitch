@@ -58,9 +58,9 @@ h1 {
 }
 
 .aside-handle {
-    flex: 0 1 0.25em;
+    flex: 0 1 0.5em;
     background-color: var(--color-dark);
-    max-width: 0.25em;
+    max-width: 0.5em;
     cursor: ew-resize;
 }
 

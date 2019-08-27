@@ -36,7 +36,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Possebly the reads from PEAKS used in the run.
         /// </summary>
-        protected List<MetaData.Peaks> peaks_reads;
+        protected List<MetaData.IMetaData> reads_metadata;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -44,14 +44,14 @@ namespace AssemblyNameSpace
         /// <param name="graph_input">The noncondesed graph.</param>
         /// <param name="meta_data_input">The metadata.</param>
         /// <param name="reads_input">The reads.</param>
-        /// <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
-        public Report(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input)
+        /// <param name="reads_metadata_input">The MetaData of the reads.</param>
+        public Report(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata_input)
         {
             condensed_graph = condensed_graph_input;
             graph = graph_input;
             meta_data = meta_data_input;
             reads = reads_input;
-            peaks_reads = peaks_reads_input;
+            reads_metadata = reads_metadata_input;
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.
@@ -85,9 +85,9 @@ namespace AssemblyNameSpace
         /// <param name="graph_input">The noncondensed graph.</param>
         /// <param name="meta_data_input">The metadata.</param>
         /// <param name="reads_input">The reads.</param>
-        /// <param name="peaks_reads_input">Possibly the PEAKS reads.</param>
+        /// <param name="reads_metadata">MetaData of the reads.</param>
         /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
-        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, bool useincludeddotdistribution) : base(condensed_graph_input, graph_input, meta_data_input, reads_input, peaks_reads_input)
+        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata, bool useincludeddotdistribution) : base(condensed_graph_input, graph_input, meta_data_input, reads_input, reads_metadata)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
         }
@@ -266,7 +266,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < reads.Count(); i++)
             {
                 id = $"R{i:D4}";
-                string meta = peaks_reads == null ? "" : peaks_reads[i].ToHTML();
+                string meta = reads_metadata[i].ToHTML();
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block read-info"">
     <h1>Read: {id}</h1>
     <h2>Sequence</h2>
@@ -539,118 +539,55 @@ namespace AssemblyNameSpace
     }
     class CSVReport : Report
     {
-        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input) { }
+        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, reads_metadata) { }
         public override string Create()
         {
             return "";
         }
+        /// <summary>
+        /// Prepares the file to be used for a CSV report
+        /// </summary>
+        /// <param name="filename">The path to the file</param>
+        public void PrepareCSVFile(string filename)
+        {
+            StreamWriter sw = File.CreateText(filename);
+            sw.Write("sep=;\nID;Reads;K-mer length;Minimal Homology;Total nodes;Average Sequence Length;Total Sequence Length;Mean Connectivity;Total time;\n");
+            sw.Close();
+        }
+        /// <summary>
+        /// The key to get acces to write to the CSV file
+        /// </summary>
+        static object CSVKey = new Object();
+
         /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
         /// <param name="ID">ID of the run to recognise it in the CSV file. </param>
         /// <param name="filename"> The file to which to append the CSV line to. </param>
-        /// <param name="path_to_template"> The path to the original fasta file, to get extra information. </param>
-        /// <param name="extra"> Extra field to fill in own information. Created for holding the alphabet. </param>
-        /// <param name="path_to_report"> The path to the report to add a hyperlink to the CSV file. </param>
-        public void CreateCSVLine(string ID, string filename = "report.csv", string path_to_template = null, string extra = "", string path_to_report = "", bool extended = false)
+        public void CreateCSVLine(string ID, string filename)
         {
-            // If the original sequence is known, calculate the coverage
-            string coverage = "";
-            if (path_to_template != null && path_to_template != "")
+            int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
+            int totalnodes = condensed_graph.Count();
+            string line = $"{ID};{meta_data.reads};{meta_data.kmer_length};{meta_data.minimum_homology};{totalnodes};{(double)totallength / totalnodes};{totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};\n";
+
+            // To account for multithreading and multiple workers trying to append to the file at the same time
+            // This will block any concurrent access
+            lock (CSVKey)
             {
-                // Get the sequences
-                var fastafile = File.ReadAllText(path_to_template);
-                var raw_sequences = Regex.Split(fastafile, ">");
-                var seqs = new List<string>();
-
-                foreach (string seq in raw_sequences)
+                if (File.Exists(filename))
                 {
-                    var seq_lines = seq.Split("\n".ToCharArray());
-                    string sequence = "";
-                    for (int i = 1; i < seq_lines.Length; i++)
-                    {
-                        sequence += seq_lines[i].Trim("\r\n\t 0123456789".ToCharArray());
-                    }
-                    if (sequence != "") seqs.Add(sequence);
-                }
-
-                // Calculate the coverage
-                string[] reads_array = reads.Select(x => AminoAcid.ArrayToString(x)).ToArray();
-                string[] contigs_array = condensed_graph.Select(x => AminoAcid.ArrayToString(x.Sequence.ToArray())).ToArray();
-
-                if (seqs.Count() == 2 && !extended)
-                {
-                    var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], reads_array);
-                    var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], reads_array);
-                    var coverage_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[0], contigs_array);
-                    var coverage_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplate(seqs[1], contigs_array);
-
-                    coverage = $"{coverage_reads_heavy.Item1};{coverage_reads_heavy.Item2};{coverage_reads_light.Item1};{coverage_reads_light.Item2};{coverage_contigs_heavy.Item1};{coverage_contigs_heavy.Item2};{coverage_contigs_light.Item1};{coverage_contigs_light.Item2};";
-                }
-                else if (seqs.Count() == 2 && extended)
-                {
-                    // Filter only assembled contigs
-                    contigs_array = condensed_graph.Where(n => n.Origins.Count() > 1).Select(n => AminoAcid.ArrayToString(n.Sequence.ToArray())).ToArray();
-
-                    var coverage_reads_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], reads_array);
-                    var coverage_reads_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], reads_array);
-                    var coverage_contigs_heavy = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[0], contigs_array);
-                    var coverage_contigs_light = HelperFunctionality.MultipleSequenceAlignmentToTemplateExtended(seqs[1], contigs_array);
-
-                    // Create list of unique mapped peptides
-                    List<string> correct_contigs = new List<string>(coverage_contigs_heavy.Item2);
-                    foreach (var x in coverage_contigs_light.Item2)
-                    {
-                        if (!correct_contigs.Contains(x)) correct_contigs.Add(x);
-                    }
-
-                    coverage = $"{coverage_contigs_heavy.Item1};{coverage_contigs_light.Item1};{coverage_contigs_heavy.Item3};{coverage_contigs_light.Item3};{contigs_array.Count()};{correct_contigs.Count()};{coverage_reads_heavy.Item1};{coverage_reads_light.Item1};{coverage_reads_heavy.Item3};{coverage_reads_light.Item3};{condensed_graph.Aggregate("", (a, b) => a + b.Sequence.Count() + "|")};";
+                    File.AppendAllText(filename, line);
                 }
                 else
                 {
-                    Console.WriteLine($"Not an antibody fasta file: {path_to_template}");
+                    PrepareCSVFile(filename);
+                    File.AppendAllText(filename, line);
                 }
-            }
-
-            // If the path to the report is known create a hyperlink
-            string link = "";
-            if (path_to_report != "" && !extended)
-            {
-                link = $"=HYPERLINK(\"{path_to_report}\");";
-            }
-
-            int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
-            int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{extra};{meta_data.reads};{meta_data.kmer_length};{meta_data.minimum_homology};{totalnodes};{(double)totallength / totalnodes};{totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{meta_data.drawingtime};{coverage}{link}\n";
-
-            if (File.Exists(filename))
-            {
-                // To account for multithreading and multiple workers trying to append to the file at the same time
-                // This will keep trying to append the line until it worked
-                bool stuck = true;
-                while (stuck)
-                {
-                    try
-                    {
-                        File.AppendAllText(filename, line);
-                        stuck = false;
-                    }
-                    catch
-                    {
-                        // try again
-                    }
-                }
-            }
-            else
-            {
-                StreamWriter sw = File.CreateText(filename);
-                sw.Write(line);
-                sw.Close();
             }
         }
     }
     class FASTAReport : Report
     {
         int MinScore;
-        public FASTAReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.Peaks> peaks_reads_input, int minscore) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, peaks_reads_input)
+        public FASTAReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata, int minscore) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, reads_metadata)
         {
             MinScore = minscore;
         }

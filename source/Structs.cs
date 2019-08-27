@@ -99,7 +99,7 @@ namespace AssemblyNameSpace
         }
         /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
         /// See <see cref="Alphabet.scoring_matrix"/> for the scoring matrix.
-        /// See <see cref="Alphabet.SetAlphabet"/> on how to change the scoring matrix.</summary>
+        /// See <see cref="Alphabet.SetAlphabet(string)"/> on how to change the scoring matrix.</summary>
         /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
         /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
         /// <c>b.Homology(a)</c>. </remarks>

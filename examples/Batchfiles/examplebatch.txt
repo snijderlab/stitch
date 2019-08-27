@@ -8,13 +8,13 @@ Runtype : Separate
 -Input------------------
 Reads	->
 Path: examples\005\reads.txt
-Name: input
+Name: Reads 005
 <-
 
 -Parameters-------------
 K	            : 9
-MinimalHomology : 7
-DuplicateThreshold: 7
+MinimalHomology : K-1
+DuplicateThreshold: K-1
 Reverse	        : True
 Alphabet->
 Data	->

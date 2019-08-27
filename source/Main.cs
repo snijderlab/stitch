@@ -41,7 +41,7 @@ namespace AssemblyNameSpace
             }
 
             // Try to parse the batch file
-            RunParameters inputparams = new RunParameters();
+            var inputparams = new RunParameters.FullRunParameters();
             try
             {
                 inputparams = ParseCommandFile.Batch(filename);

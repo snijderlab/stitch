@@ -1,7 +1,7 @@
 # ParseCommandFile.ParseHelper Class
  
 
-\[Missing <summary> documentation for "T:AssemblyNameSpace.ParseCommandFile.ParseHelper"\]
+A class with helper functionality for parsing
 
 
 ## Inheritance Hierarchy
@@ -19,7 +19,12 @@ The ParseCommandFile.ParseHelper type exposes the following members.
 
 
 ## Methods
-&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="58295850-0cc0-8e2d-7f3c-3de2538c32b7">ConvertToInt</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="6daaf6be-33c3-643e-0554-187888112aed">Name</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="1f4e6804-5ac1-a429-c621-1a81c723162a">SkipLine</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="21200295-9ebc-ba26-fef4-3ff68167d6b9">UntilSequence</a></td><td /></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="96eb6854-9d74-7fd5-f41b-a89b33ffd288">Value</a></td><td /></tr></table>&nbsp;
+&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="58295850-0cc0-8e2d-7f3c-3de2538c32b7">ConvertToInt</a></td><td>
+Converts a string to an int, while it generates meaningfull error messages for the end user.</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="6daaf6be-33c3-643e-0554-187888112aed">Name</a></td><td>
+Consumes a name from the start of the string</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="1f4e6804-5ac1-a429-c621-1a81c723162a">SkipLine</a></td><td>
+Consumes a whole line of the string</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="21200295-9ebc-ba26-fef4-3ff68167d6b9">UntilSequence</a></td><td>
+Consumes the string until it find the sequence</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")![Static member](media/static.gif "Static member")</td><td><a href="96eb6854-9d74-7fd5-f41b-a89b33ffd288">Value</a></td><td>
+Consumes a value from the start of the string</td></tr></table>&nbsp;
 <a href="#parsecommandfile.parsehelper-class">Back to Top</a>
 
 ## See Also

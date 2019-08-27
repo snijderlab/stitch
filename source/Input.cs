@@ -22,7 +22,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="path">The path to the batch file.</param>
         /// <returns>The runparameters as specified in the file.</returns>
-        public static RunParameters Batch(string path)
+        public static RunParameters.FullRunParameters Batch(string path)
         {
             // Get the contents
             string content = File.ReadAllText(path).Trim();
@@ -108,7 +108,7 @@ namespace AssemblyNameSpace
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters
 
-            var output = new RunParameters();
+            var output = new RunParameters.FullRunParameters();
 
             bool versionspecified = false;
 
@@ -131,24 +131,24 @@ namespace AssemblyNameSpace
                         switch (pair.GetValue().ToLower())
                         {
                             case "separate":
-                                output.Runtype = RuntypeValue.Separate;
+                                output.Runtype = RunParameters.RuntypeValue.Separate;
                                 break;
                             case "group":
-                                output.Runtype = RuntypeValue.Group;
+                                output.Runtype = RunParameters.RuntypeValue.Group;
                                 break;
                             default:
                                 throw new ParseException($"Unknown option for Runtype: {pair.GetValue()}");
                         }
                         break;
                     case "peaks":
-                        var settings = new Peaks();
+                        var settings = new RunParameters.Input.Peaks();
 
                         foreach (var setting in pair.GetValues())
                         {
                             switch (setting.Name)
                             {
                                 case "path":
-                                    settings.Path = setting.GetValue();
+                                    settings.File.Path = setting.GetValue();
                                     break;
                                 case "cutoffscore":
                                     settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks Cutoffscore");
@@ -160,7 +160,7 @@ namespace AssemblyNameSpace
                                     settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks MinLengthPatch");
                                     break;
                                 case "name":
-                                    settings.Name = setting.GetValue();
+                                    settings.File.Name = setting.GetValue();
                                     break;
                                 case "separator":
                                     settings.Separator = setting.GetValue().First();
@@ -187,34 +187,55 @@ namespace AssemblyNameSpace
                             }
                         }
 
-                        output.Input.Add(settings);
+                        output.DataParameters.Add(settings);
                         break;
 
                     case "reads":
-                        var rsettings = new Reads();
+                        var rsettings = new RunParameters.Input.Reads();
 
                         foreach (var setting in pair.GetValues())
                         {
                             switch (setting.Name)
                             {
                                 case "path":
-                                    rsettings.Path = setting.GetValue();
+                                    rsettings.File.Path = setting.GetValue();
                                     break;
                                 case "name":
-                                    rsettings.Name = setting.GetValue();
+                                    rsettings.File.Name = setting.GetValue();
                                     break;
                                 default:
                                     throw new ParseException($"Unknown key in Reads definition: {setting.Name}");
                             }
                         }
 
-                        output.Input.Add(rsettings);
+                        output.DataParameters.Add(rsettings);
+                        break;
+                        
+                    case "fastainput":
+                        var fastasettings = new RunParameters.Input.FASTA();
+
+                        foreach (var setting in pair.GetValues())
+                        {
+                            switch (setting.Name)
+                            {
+                                case "path":
+                                    fastasettings.File.Path = setting.GetValue();
+                                    break;
+                                case "name":
+                                    fastasettings.File.Name = setting.GetValue();
+                                    break;
+                                default:
+                                    throw new ParseException($"Unknown key in FASTAInput definition: {setting.Name}");
+                            }
+                        }
+
+                        output.DataParameters.Add(fastasettings);
                         break;
 
                     case "k":
                         if (!pair.IsSingle())
                         {
-                            var ksettings = new Range();
+                            var ksettings = new RunParameters.K.Range();
 
                             foreach (var setting in pair.GetValues())
                             {
@@ -247,7 +268,7 @@ namespace AssemblyNameSpace
                         {
                             try
                             {
-                                output.K = new AssemblyNameSpace.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value"));
+                                output.K = new RunParameters.K.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value"));
                             }
                             catch
                             {
@@ -256,48 +277,34 @@ namespace AssemblyNameSpace
                                 {
                                     values.Add(ParseHelper.ConvertToInt(value, "multiple K values"));
                                 }
-                                output.K = new AssemblyNameSpace.Multiple(values.ToArray());
+                                output.K = new RunParameters.K.Multiple(values.ToArray());
                             }
                         }
                         break;
                     case "duplicatethreshold":
-                        try
-                        {
-                            output.DuplicateThreshold.Add(new AssemblyNameSpace.Simple(Convert.ToInt32(pair.GetValue())));
-                        }
-                        catch
-                        {
-                            output.DuplicateThreshold.Add(new AssemblyNameSpace.Calculation(pair.GetValue()));
-                        }
+                        output.DuplicateThreshold.Add(new RunParameters.KArithmatic(pair.GetValue()));
                         break;
                     case "minimalhomology":
-                        try
-                        {
-                            output.MinimalHomology.Add(new AssemblyNameSpace.Simple(Convert.ToInt32(pair.GetValue())));
-                        }
-                        catch
-                        {
-                            output.MinimalHomology.Add(new AssemblyNameSpace.Calculation(pair.GetValue()));
-                        }
+                        output.MinimalHomology.Add(new RunParameters.KArithmatic(pair.GetValue()));
                         break;
                     case "reverse":
                         switch (pair.GetValue().ToLower())
                         {
                             case "true":
-                                output.Reverse = ReverseValue.True;
+                                output.Reverse = RunParameters.ReverseValue.True;
                                 break;
                             case "false":
-                                output.Reverse = ReverseValue.False;
+                                output.Reverse = RunParameters.ReverseValue.False;
                                 break;
                             case "both":
-                                output.Reverse = ReverseValue.Both;
+                                output.Reverse = RunParameters.ReverseValue.Both;
                                 break;
                             default:
                                 throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()}");
                         }
                         break;
                     case "alphabet":
-                        var asettings = new AlphabetValue();
+                        var asettings = new RunParameters.AlphabetValue();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -319,7 +326,7 @@ namespace AssemblyNameSpace
                         output.Alphabet.Add(asettings);
                         break;
                     case "html":
-                        var hsettings = new HTML();
+                        var hsettings = new RunParameters.Report.HTML();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -349,7 +356,7 @@ namespace AssemblyNameSpace
                         output.Report.Add(hsettings);
                         break;
                     case "csv":
-                        var csettings = new CSV();
+                        var csettings = new RunParameters.Report.CSV();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -365,7 +372,7 @@ namespace AssemblyNameSpace
                         output.Report.Add(csettings);
                         break;
                     case "fasta":
-                        var fsettings = new FASTA();
+                        var fsettings = new RunParameters.Report.FASTA();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -391,11 +398,11 @@ namespace AssemblyNameSpace
             // Generate defaults
             if (output.DuplicateThreshold.Count() == 0)
             {
-                output.DuplicateThreshold.Add(new Calculation("K-1"));
+                output.DuplicateThreshold.Add(new RunParameters.KArithmatic("K-1"));
             }
             if (output.MinimalHomology.Count() == 0)
             {
-                output.MinimalHomology.Add(new Calculation("K-1"));
+                output.MinimalHomology.Add(new RunParameters.KArithmatic("K-1"));
             }
 
             // Check if there is a version specified

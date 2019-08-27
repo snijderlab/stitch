@@ -18,6 +18,7 @@ The 'examples' folder contains some examples which can be run to see what the pr
 
 Examples 001 through 007 are simple generated reads and sequences.
 Example 008 is an example of real world data gotten with PEAKS.
+Example 009 is an example of a FASTA input file.
 
 # Authors
 
@@ -27,7 +28,7 @@ Example 008 is an example of real world data gotten with PEAKS.
 # Acknowlegdments
 
 * Both authors are part of the group "Massspectrometry and Proteomics" at the university of Utrecht
-* The Graphviz software is included to visualize the graphs in the HTML reports
+* The [Graphviz software](https://www.graphviz.org) is included to visualize the graphs in the HTML reports
 
 # License
 

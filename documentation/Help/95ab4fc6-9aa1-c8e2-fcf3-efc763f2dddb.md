@@ -5,21 +5,21 @@ A struct to hold metainformation from PEAKS data.
 
 
 ## Inheritance Hierarchy
-<a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">System.Object</a><br />&nbsp;&nbsp;AssemblyNameSpace.MetaData.Peaks<br />
+<a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">System.Object</a><br />&nbsp;&nbsp;<a href="8a18d4bc-7296-ed41-0dcf-8b92542f6855">AssemblyNameSpace.MetaData.IMetaData</a><br />&nbsp;&nbsp;&nbsp;&nbsp;AssemblyNameSpace.MetaData.Peaks<br />
 **Namespace:**&nbsp;<a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace</a><br />**Assembly:**&nbsp;Main (in Main.exe) Version: 0.0.0.0
 
 ## Syntax
 
 **C#**<br />
 ``` C#
-public class Peaks : IMetaData
+public class Peaks : MetaData.IMetaData
 ```
 
 The MetaData.Peaks type exposes the following members.
 
 
 ## Constructors
-&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public method](media/pubmethod.gif "Public method")</td><td><a href="36442433-aa28-c7c0-aebf-aba63353638f">MetaData.Peaks</a></td><td>
+&nbsp;<table><tr><th></th><th>Name</th><th>Description</th></tr><tr><td>![Public method](media/pubmethod.gif "Public method")</td><td><a href="c52a08f8-d13b-ce37-eef6-9dd5dfc0b3f0">MetaData.Peaks</a></td><td>
 Create a PeaksMeta struct based on a CSV line in PEAKS format.</td></tr></table>&nbsp;
 <a href="#metadata.peaks-class">Back to Top</a>
 
@@ -35,7 +35,8 @@ Gets the <a href="http://msdn2.microsoft.com/en-us/library/42892f65" target="_bl
  (Inherited from <a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">Object</a>.)</td></tr><tr><td>![Protected method](media/protmethod.gif "Protected method")</td><td><a href="http://msdn2.microsoft.com/en-us/library/57ctke0a" target="_blank">MemberwiseClone</a></td><td>
 Creates a shallow copy of the current <a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">Object</a>.
  (Inherited from <a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">Object</a>.)</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")</td><td><a href="69adaeea-2e07-b87b-b33a-b8a8197be1d6">ToHTML</a></td><td>
-Generate HTML with all metainformation from the PEAKS data.</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")</td><td><a href="http://msdn2.microsoft.com/en-us/library/7bxwbwt2" target="_blank">ToString</a></td><td>
+Generate HTML with all metainformation from the PEAKS data.
+ (Overrides <a href="4eb8f479-49ff-9c5f-7566-b2e20210d29f">MetaData.IMetaData.ToHTML()</a>.)</td></tr><tr><td>![Public method](media/pubmethod.gif "Public method")</td><td><a href="http://msdn2.microsoft.com/en-us/library/7bxwbwt2" target="_blank">ToString</a></td><td>
 Returns a string that represents the current object.
  (Inherited from <a href="http://msdn2.microsoft.com/en-us/library/e5kfa45b" target="_blank">Object</a>.)</td></tr></table>&nbsp;
 <a href="#metadata.peaks-class">Back to Top</a>
@@ -46,7 +47,9 @@ Area of the peak of the peptide.</td></tr><tr><td>![Public field](media/pubfield
 z of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="f77b94bb-6dbb-4d15-909e-0b9d64973743">Cleaned_sequence</a></td><td>
 The sequence without modifications of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="d6c6000b-abf5-518d-c641-d2ed1a2337c9">Confidence</a></td><td>
 The confidence score of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="af989a68-4988-56c9-5b42-181e960152b8">Feature</a></td><td>
-The feature of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="698871c1-7a29-8d03-117a-07e2709990a7">Fraction</a></td><td>
+The feature of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="7560c485-b371-2620-8343-b172a5cfd996">File</a></td><td>
+The Identifier of the originating file
+ (Inherited from <a href="8a18d4bc-7296-ed41-0dcf-8b92542f6855">MetaData.IMetaData</a>.)</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="698871c1-7a29-8d03-117a-07e2709990a7">Fraction</a></td><td>
 The Fraction number of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="f4c55057-777b-8faf-3c4a-dc75248e81e4">Fragmentation_mode</a></td><td>
 Fragmentation mode used to generate the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="05901720-a26f-795f-a5dd-a391fe14a78e">Local_confidence</a></td><td>
 Local confidence scores of the peptide.</td></tr><tr><td>![Public field](media/pubfield.gif "Public field")</td><td><a href="6a385f3b-8fb1-fc06-e0dd-b2491e7ba77c">Mass</a></td><td>

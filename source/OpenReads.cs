@@ -21,20 +21,20 @@ namespace AssemblyNameSpace
         /// namely sequences separated with whitespace (space, tab or newline)
         /// with the possibility to specify comments as lines starting with a 
         /// specific character (standard '#').  </summary>
-        /// <param name="input_file"> The path to the file to read from. </param>
+        /// <param name="input_file"> The file to read from. </param>
         /// <param name="comment_char"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static List<(string, MetaData.None)> Simple(string input_file, char comment_char = '#')
+        public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier input_file, char comment_char = '#')
         {
-            var reads = new List<(string, MetaData.None)>();
+            var reads = new List<(string, MetaData.IMetaData)>();
 
-            if (!File.Exists(input_file))
-                throw new Exception($"The specified file does not exist: {input_file}");
+            if (!File.Exists(input_file.Path))
+                throw new Exception($"The specified file does not exist: {input_file.Path}");
 
             List<string> lines;
             try
             {
-                lines = File.ReadLines(input_file).ToList();
+                lines = File.ReadLines(input_file.Path).ToList();
             }
             catch (Exception e)
             {
@@ -44,7 +44,7 @@ namespace AssemblyNameSpace
             foreach (var line in lines)
             {
                 if (line[0] != comment_char)
-                    reads.AddRange(line.Split(new char[] { ' ', '\t', '\r', '\n' }, StringSplitOptions.RemoveEmptyEntries).Select(x => (x, new MetaData.None())));
+                    reads.Add((line.Trim(), new MetaData.None(input_file)));
             }
 
             return reads;
@@ -55,21 +55,21 @@ namespace AssemblyNameSpace
         /// of a line after every line this is stripped away.  </summary>
         /// <param name="input_file"> The path to the file to read from. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static List<(string, MetaData.Fasta)> Fasta(string input_file)
+        public static List<(string, MetaData.IMetaData)> Fasta(MetaData.FileIdentifier input_file)
         {
-            var reads = new List<(string, MetaData.Fasta)>();
+            var reads = new List<(string, MetaData.IMetaData)>();
 
-            if (!File.Exists(input_file))
+            if (!File.Exists(input_file.Path))
                 throw new Exception($"The specified file does not exist: {input_file}");
 
             List<string> lines;
             try
             {
-                lines = File.ReadLines(input_file).ToList();
+                lines = File.ReadLines(input_file.Path).ToList();
             }
             catch (Exception e)
             {
-                throw new Exception($"The specified file could not be read: {e.Message}");
+                throw new Exception($"The specified CSV file {input_file.Name} at {input_file.Path} could not be read: {e.Message}");
             }
             string identifier = "";
             var sequence = new StringBuilder();
@@ -81,20 +81,20 @@ namespace AssemblyNameSpace
                     if (identifier != "")
                     {
                         // Flush last sequence to list
-                        reads.Add((sequence.ToString(), new MetaData.Fasta(identifier)));
+                        reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, input_file)));
                     }
                     identifier = line.Substring(1).Trim();
                     sequence = new StringBuilder();
                 }
                 else
                 {
-                    sequence.Append(line.Trim().Where(x => Char.IsLetter(x)));
+                    sequence.Append(line.Trim().Where(x => Char.IsLetter(x)).ToArray());
                 }
             }
             if (identifier != "")
             {
                 // Flush last sequence to list
-                reads.Add((sequence.ToString(), new MetaData.Fasta(identifier)));
+                reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, input_file)));
             }
 
             return reads;
@@ -108,18 +108,16 @@ namespace AssemblyNameSpace
         /// <param name="peaksformat"> The peaksformat to use, this depends on the 
         /// version of peaks used to generate the CSV's. </param>
         /// <param name="min_length_patch"> The minimal length of a patch. </param>
-        /// <param name="prefix"> A prefix to add to identifiers to make it easier to
-        /// find the original </param>
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
         /// <returns> A list of all reads found with their metadata. </returns>
-        public static List<(string, MetaData.Peaks)> Peaks(string input_file, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, string prefix = "", char separator = ',', char decimalseparator = '.')
+        public static List<(string, MetaData.IMetaData)> Peaks(MetaData.FileIdentifier input_file, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
         {
-            if (!File.Exists(input_file))
+            if (!File.Exists(input_file.Path))
                 throw new Exception("The specified file does not exist, file asked for: " + input_file);
 
-            List<string> lines = File.ReadLines(input_file).ToList();
-            var reads = new List<(string, MetaData.Peaks)>();
+            List<string> lines = File.ReadLines(input_file.Path).ToList();
+            var reads = new List<(string, MetaData.IMetaData)>();
 
             int linenumber = 0;
             foreach (var line in lines)
@@ -129,7 +127,7 @@ namespace AssemblyNameSpace
                 {
                     try
                     {
-                        var meta = new MetaData.Peaks(line, separator, decimalseparator, peaksformat, prefix);
+                        var meta = new MetaData.Peaks(line, separator, decimalseparator, peaksformat, input_file);
                         if (meta.Confidence >= cutoffscore)
                         {
                             if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
@@ -139,7 +137,7 @@ namespace AssemblyNameSpace
                             else
                             {
                                 int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
-                                reads[pos].Item2.Other_scans.Add(prefix + meta.ScanID);
+                                ((MetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
                             }
                         }
                         // Find local patches of high enough confidence
@@ -177,7 +175,7 @@ namespace AssemblyNameSpace
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine($"ERROR while importing from PEAKS csv on line {prefix}{linenumber}\n{e.Message}");
+                        Console.WriteLine($"ERROR while importing from PEAKS CSV {input_file.Name} at {input_file.Path} on line {linenumber}\n{e.Message}");
                     }
                 }
             }
@@ -185,26 +183,49 @@ namespace AssemblyNameSpace
         }
     }
     /// <summary>
-    /// The interface which proper metadata instances should implement.
-    /// </summary>
-    public interface IMetaData
-    {
-        string ToHTML();
-    }
-    /// <summary>
     /// A class to hold all metadata handling in one place.
     /// </summary>
     public static class MetaData
     {
         /// <summary>
+        /// The interface which proper metadata instances should implement.
+        /// </summary>
+        public abstract class IMetaData
+        {
+            /// <summary>
+            /// The Identifier of the originating file
+            /// </summary>
+            public FileIdentifier File;
+            /// <summary>
+            /// To generate (an) HTML element(s) from this MetaData
+            /// </summary>
+            /// <returns>A string containing the MetaData</returns>
+            public abstract string ToHTML();
+            /// <summary>
+            /// To create an instance
+            /// </summary>
+            /// <param name="file">The identifier of the originating file</param>
+            public IMetaData(FileIdentifier file)
+            {
+                File = file;
+            }
+        }
+        /// <summary>
         /// A metadata instance to contain no metadata so reads without metadata can also be handeled.
         /// </summary>
         public class None : IMetaData
         {
-            public None() { }
-            public string ToHTML()
+            /// <summary>
+            /// Create a new None MetaData
+            /// </summary>
+            public None(FileIdentifier file) : base(file) { }
+            /// <summary>
+            /// Returns None MetaData to HTML (which is always "")
+            /// </summary>
+            /// <returns>""</returns>
+            public override string ToHTML()
             {
-                return "";
+                return File.ToHTML();
             }
         }
         /// <summary> A struct to hold metainformation from fasta data. </summary>
@@ -218,15 +239,17 @@ namespace AssemblyNameSpace
             /// To create a new metadata instance with this metadata.
             /// </summary>
             /// <param name="identifier">The fasta identifier.</param>
-            public Fasta(string identifier)
+            /// <param name="file">The originating file.</param>
+            public Fasta(string identifier, FileIdentifier file)
+                : base(file)
             {
                 this.Identifier = identifier;
             }
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
-            public string ToHTML()
+            public override string ToHTML()
             {
-                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>";
+                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>{File.ToHTML()}";
             }
         }
         /// <summary> A struct to hold metainformation from PEAKS data. </summary>
@@ -270,7 +293,10 @@ namespace AssemblyNameSpace
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
-            public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, string prefix = "")
+            /// <param name="pf">FileFormat of the PEAKS file</param>
+            /// <param name="file">Identifier for the originating file</param>
+            public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
+                : base(file)
             {
                 try
                 {
@@ -281,7 +307,7 @@ namespace AssemblyNameSpace
                     if (pf.fraction >= 0) Fraction = fields[pf.fraction];
                     if (pf.source_file >= 0) Source_File = fields[pf.source_file];
                     if (pf.feature >= 0) Feature = fields[pf.feature];
-                    if (pf.scan >= 0) ScanID = prefix + fields[pf.scan];
+                    if (pf.scan >= 0) ScanID = fields[pf.scan];
                     if (pf.peptide >= 0)
                     {
                         Original_tag = fields[pf.peptide];
@@ -323,7 +349,7 @@ namespace AssemblyNameSpace
             }
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
-            public string ToHTML()
+            public override string ToHTML()
             {
                 var output = new StringBuilder();
                 output.Append("<h2>Meta Information from PEAKS</h2>");
@@ -400,7 +426,46 @@ namespace AssemblyNameSpace
                 if (Other_scans.Count() > 0)
                     output.Append($"<h3>Also found in scans</h3>\n<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>");
 
+                output.Append(File.ToHTML());
+
                 return output.ToString();
+            }
+        }
+        /// <summary>
+        /// A identifier for a file, to hold information about where reads originate from.
+        /// </summary>
+        public class FileIdentifier
+        {
+            /// <value>The absolute path to the file</value>
+            public string Path { get { return path; } set { path = System.IO.Path.GetFullPath(value); } }
+            string path;
+            /// <value>The name or identifier given to the file</value>
+            public string Name;
+            /// <summary>
+            /// Creating a new FileIdentifier
+            /// </summary>
+            /// <param name="path_input">The path to the file, can be a relative path</param>
+            /// <param name="name">The identifier given to the file</param>
+            public FileIdentifier(string path_input, string name)
+            {
+                path = System.IO.Path.GetFullPath(path_input);
+                Name = name;
+            }
+            /// <summary>
+            /// To create a blank instance of FileIdentifier
+            /// </summary>
+            public FileIdentifier()
+            {
+                path = "";
+                Name = "";
+            }
+            /// <summary>
+            /// To generate HTML for use in the metadata sidebar in the HTML report
+            /// </summary>
+            /// <returns>A string containing the HTML</returns>
+            public string ToHTML()
+            {
+                return $"<h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<p>{Path}</p>";
             }
         }
     }

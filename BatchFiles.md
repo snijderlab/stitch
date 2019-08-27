@@ -64,6 +64,10 @@ Name: NameForMyFile
 <-
 ```
 
+##### FASTA (m) 
+
+**TODO**
+
 ##### Peaks (m)
 
 A multiple valued parameter to input data from a Peaks export file (.csv).
@@ -138,9 +142,9 @@ Step: 2
 
 ##### MinimalHomoloy (s)
 
-The minimal homology to use, this is the minimal score before an edge is included in the De Buijn graph. This value is mainly depending on the alphabet used.
+The minimal homology to use, this is the minimal score before an edge is included in the De Burijn graph. This value is mainly depending on the alphabet used.
 
-It can be defined as a constant value or as a calculation based on K (**TODO**).
+It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmatic, - + * /, the variable 'K' and constants (positive integer numbers).
 
 The default value is `K-1`.
 
@@ -159,7 +163,7 @@ MinimalHomology: K*2-3
 
 The threshold score which has to be reached before two edges are considered equal. This is used in the detection of duplicates while filtering reads. This value is mainly depending on the alphabet used.
 
-It can be defined as a constant value or as a calculation based on K (**TODO**).
+It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmatic, - + * /, the variable 'K' and constants (positive integer numbers).
 
 The default value is `K-1`.
 
@@ -254,10 +258,11 @@ Path: Report.html
 ##### CSV (m)
 
 To generate a CSV report, it will add summary information of each run on a single line to the file.
+If the file exists already it will append the new data lines to it, so that multiple runs after each other will not destroy previous work.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
-Path | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)
+Path | The path to save the report to | (No Default)
 
 _Example_
 ```
