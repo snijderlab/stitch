@@ -6,9 +6,9 @@ Batch files are used to aggregate all information for one run of the program. Th
 
 ## Structure
 
-The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimeter ( `:` for single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Paramater names and ost values are not case specific.
+The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and ost values are not case specific.
 
-Lines starting with a hypen `-` are considered comments and disregarded.
+Lines starting with a hyphen `-` are considered comments and disregarded.
 
 ### All parameters
 
@@ -27,12 +27,12 @@ Version: 0
 
 ##### Runname (s)
 
-The name of the run, to keep it organised. This name can consist of any characters except newlines.
+The name of the run, to keep it organized. This name can consist of any characters except newlines.
 
 _Examples_
 ```
 Runname: MyFirstTestRun
-Runname: Monoclonal Antibodies From Rabits
+Runname: Monoclonal Antibodies From Rabbits
 ```
 
 ##### Runtype (s)
@@ -49,12 +49,12 @@ Runtype: Group
 
 ##### Reads (m)
 
-A multiple valued parameter containing a Path, to a file with reads, and a Name, for this file to aid in recognising where the data comes from.
+A multiple valued parameter containing a Path, to a file with reads, and a Name, for this file to aid in recognizing where the data comes from.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to the file | (No Default)
-Name | Used to recognise the origin of reads from this file | (No Default)
+Name | Used to recognize the origin of reads from this file | (No Default)
 
 _Example_
 ```
@@ -64,9 +64,22 @@ Name: NameForMyFile
 <-
 ```
 
-##### FASTA (m) 
+##### FASTAInput (m) 
 
-**TODO**
+A multiple valued parameter containing a Path, to a fasta file with reads, and a Name, for this file to aid in recognizing where the data comes from.
+
+Inner parameter | Explanation | Default Value
+--- | --- | ---
+Path | The path to the file | (No Default)
+Name | Used to recognize the origin of reads from this file | (No Default)
+
+_Example_
+```
+FASTAInput ->
+Path: Path/To/My/FileWithReads.fasta
+Name: NameForMyFile
+<-
+```
 
 ##### Peaks (m)
 
@@ -83,7 +96,7 @@ Cutoffscore | The score a reads must at least have to be included in the list of
 LocalCutoffscore | The score a patch in a read should at least have to be included. | 90
 FileFormat | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old` and `New`. If `New` gives errors in reading the file maybe `Old` will work. | `New`
 MinLengthPatch | The minimal length of a patch before it is included | 3
-Name | Used to recognise the origin of reads from this file | (No Default)
+Name | Used to recognize the origin of reads from this file | (No Default)
 Separator | The separator used to separate cells in the csv | `,`
 DecimalSeparator | The separator used to separate decimals | `.`
 
@@ -95,7 +108,7 @@ Path: Path/To/My/FileWithPeaksReads.txt
 Name: NameForMyFile
 <-
 
--Maximal definiion
+-Maximal definition
 Peaks           ->
 Path            : Path/To/My/FileWithPeaksReads.txt
 Name            : NameForMyFile
@@ -114,9 +127,9 @@ DecimalSeparator: ,
 
 The value or values of K to be used.
 
-If multiple values are entered multiple runs are generated with all differen values of K.
+If multiple values are entered multiple runs are generated with all different values of K.
 
-For the range defnition some inner parameters are available. `Start` and `End` have to be defined.
+For the range definition some inner parameters are available. `Start` and `End` have to be defined.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
@@ -140,11 +153,11 @@ Step: 2
 <-
 ```
 
-##### MinimalHomoloy (s)
+##### MinimalHomology (s)
 
-The minimal homology to use, this is the minimal score before an edge is included in the De Burijn graph. This value is mainly depending on the alphabet used.
+The minimal homology to use, this is the minimal score before an edge is included in the De Bruijn graph. This value is mainly depending on the alphabet used.
 
-It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmatic, - + * /, the variable 'K' and constants (positive integer numbers).
+It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmetic, - + * /, the variable 'K' and constants (positive integer numbers).
 
 The default value is `K-1`.
 
@@ -163,7 +176,7 @@ MinimalHomology: K*2-3
 
 The threshold score which has to be reached before two edges are considered equal. This is used in the detection of duplicates while filtering reads. This value is mainly depending on the alphabet used.
 
-It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmatic, - + * /, the variable 'K' and constants (positive integer numbers).
+It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmetic, - + * /, the variable 'K' and constants (positive integer numbers).
 
 The default value is `K-1`.
 
@@ -180,7 +193,7 @@ DuplicateThreshold: K*2-3
 
 ##### Reverse (s)
 
-Defines if the reads should also be generated in reverse, which is usefull if some reads are/could be backwards compared to others. The possible values are `True`, `False` and `Both`. The last option will run the runs two times, one wit `True` and one wih `False`.
+Defines if the reads should also be generated in reverse, which is useful if some reads are/could be backwards compared to others. The possible values are `True`, `False` and `Both`. The last option will run the runs two times, one wit `True` and one wih `False`.
 
 _Examples_
 ```
@@ -191,14 +204,13 @@ Reverse: Both
 
 ##### Alphabet (m)
 
-Defines the alphabet(s) used to score K-mers against each other. If multiple alphabets are defined, these will be run independantly in different runs.
+Defines the alphabet(s) used to score K-mers against each other. If multiple alphabets are defined, these will be run independently in different runs. Both `;` and `,` are considered separators.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to the alphabet (cannot be used in conjunction with `Data`) | (No Default)
 Data | The alphabet, to allow for newlines the alphabet should be enclosed in `->` and `<-` (cannot be used in conjunction with `Path`) | (No Default)
-Name | To recognise the alphabet | (No Default)
-Separator **TODO** | The separator used in the CSV | `;`
+Name | To recognize the alphabet | (No Default)
 
 _Examples_
 ```
@@ -283,17 +295,17 @@ MinimalScore | The minimal score needed to be included in the file | 0
 
 _Example_
 ```
-FASTQ ->
-Path: Contigs.fastq
+FASTA ->
+Path: Contigs.fasta
 MinimalScore: 50
 <-
 ```
 
 ##### Generating Names
 
-The path of reports can be generated dnamically, very usefull if a batch files codes for many runs.
+The path of reports can be generated dynamically, very useful if a batch files codes for many runs.
 
-For now the code does not generate any missing folders (but chrashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO**)
+For now the code does not generate any missing folders (but crashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO**)
 
 Key | Explanation
 --- | --- 
@@ -317,7 +329,7 @@ Path: Folder/Structure/Report-{id}.html
 Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 
 -Not functional yet (does not create the folders) but would be nice
-Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fastq
+Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fasta
 ```
 
 ### Example Batch File
@@ -342,8 +354,8 @@ Name    : 003
 
 -Parameters-------------
 K	    : 8, 10
-Minimalhomology: 7
-duplicatethreshold: 7
+MinimalHomology: 7
+DuplicateThreshold: 7
 Reverse	: both
 Alphabet->
 Data	->

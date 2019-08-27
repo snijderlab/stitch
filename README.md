@@ -23,11 +23,11 @@ Example 009 is an example of a FASTA input file.
 # Authors
 
 * Douwe Schulte - Wrote the software
-* Joost Sneijder - Supervised and collaborated
+* Joost Snijder - Supervised and collaborated
 
-# Acknowlegdments
+# Acknowledgments
 
-* Both authors are part of the group "Massspectrometry and Proteomics" at the university of Utrecht
+* Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
 * The [Graphviz software](https://www.graphviz.org) is included to visualize the graphs in the HTML reports
 
 # License
@@ -36,4 +36,4 @@ Example 009 is an example of a FASTA input file.
 
 # Cross platform
 
-This program is written in vanilla C# without any big frameworks and as such is likely to be easy to port to other platforms. dotnet (.NET Core) and mono are being considered for this step.
+This program is written in plain C# without any big frameworks and as such is likely to be easy to port to other platforms. dotnet (.NET Core) and mono are being considered for this step.

@@ -26,10 +26,15 @@
             The only way to change it is in the creator. </summary>
             <value> The code of this AminoAcid. </value>
         </member>
-        <member name="M:AssemblyNameSpace.AminoAcid.#ctor(System.Char)">
+        <member name="F:AssemblyNameSpace.AminoAcid.alphabet">
+            <summary>
+            The alphabet used
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.AminoAcid.#ctor(AssemblyNameSpace.Alphabet,System.Char)">
             <summary> The creator of AminoAcids. </summary>
+            <param name="alphabet_input"> The alphabet used. </param>
             <param name="input"> The character to store in this AminoAcid. </param>
-            <returns> Returns a reference to the new AminoAcid. </returns>
         </member>
         <member name="M:AssemblyNameSpace.AminoAcid.ToString">
             <summary> Will create a string of this AminoAcid. Consiting of the character used to 
@@ -70,12 +75,12 @@
         </member>
         <member name="M:AssemblyNameSpace.AminoAcid.GetHashCode">
             <summary> To get a hashcode for this AminoAcid. </summary>
-            <returns> Returns the hascode of the AminoAcid. </returns>
+            <returns> Returns the hashcode of the AminoAcid. </returns>
         </member>
         <member name="M:AssemblyNameSpace.AminoAcid.Homology(AssemblyNameSpace.AminoAcid)">
             <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
             See <see cref="F:AssemblyNameSpace.Alphabet.scoring_matrix"/> for the scoring matrix.
-            See <see cref="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.String)"/> on how to change the scoring matrix.</summary>
+            See <see cref="M:AssemblyNameSpace.Alphabet.#ctor(System.String,AssemblyNameSpace.Alphabet.AlphabetParamType)"/> on how to change the scoring matrix.</summary>
             <remarks> Depending on which rules are put into the scoring matrix the order in which this 
             function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
             <c>b.Homology(a)</c>. </remarks>
@@ -89,7 +94,7 @@
             over the AminoAcids and returns the sum of the homology value between those. </remarks>
             <param name="left"> The first object to calculate homology with. </param>
             <param name="right"> The second object to calculate homology with. </param>
-            <returns> Returns the homology bewteen the two aminoacid arrays. </returns>
+            <returns> Returns the homology between the two aminoacid arrays. </returns>
         </member>
         <member name="T:AssemblyNameSpace.Node">
             <summary> Nodes in the graph with a sequence length of K-1. </summary>
@@ -167,7 +172,7 @@
             <returns> The amount of edges (forwards and backwards). </returns>
         </member>
         <member name="T:AssemblyNameSpace.MetaInformation">
-            <summary> A struct to hold meta information about the assembly to keep it organised 
+            <summary> A struct to hold meta information about the assembly to keep it organized 
             and to report back to the user. </summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaInformation.total_time">
@@ -203,27 +208,17 @@
         <member name="F:AssemblyNameSpace.MetaInformation.sequences">
             <summary> The number of sequences found. See <see cref="M:AssemblyNameSpace.Assembler.Assemble"/></summary>
         </member>
-        <member name="F:AssemblyNameSpace.MetaInformation.kmer_length">
-            <summary>
-            The length of the k-mers
-            </summary>
-        </member>
-        <member name="F:AssemblyNameSpace.MetaInformation.minimum_homology">
-            <summary>
-            The minimum homology score used
-            </summary>
-        </member>
         <member name="T:AssemblyNameSpace.CondensedNode">
             <summary> Nodes in the condensed graph with a variable sequence length. </summary>
         </member>
         <member name="F:AssemblyNameSpace.CondensedNode.Index">
-            <summary> The index this node. The index is defined as the index of the startnode in the adjecency list of the de Bruijn graph. </summary>
+            <summary> The index this node. The index is defined as the index of the startnode in the adjacency list of the de Bruijn graph. </summary>
         </member>
         <member name="F:AssemblyNameSpace.CondensedNode.ForwardIndex">
-            <summary> The index of the last node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
+            <summary> The index of the last node (going from back to forth). To build the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
         </member>
         <member name="F:AssemblyNameSpace.CondensedNode.BackwardIndex">
-            <summary> The index of the first node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
+            <summary> The index of the first node (going from back to forth). To build the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
         </member>
         <member name="F:AssemblyNameSpace.CondensedNode.Visited">
             <summary> Whether or not this node is visited yet. </summary>
@@ -261,6 +256,11 @@
             <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="F:AssemblyNameSpace.CondensedNode.BackwardEdges"/></param>
             <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="F:AssemblyNameSpace.CondensedNode.Origins"/></param>
         </member>
+        <member name="T:AssemblyNameSpace.Alphabet">
+            <summary>
+            To contain an alphabet with scoring matrix to score pairs of amino acids
+            </summary>
+        </member>
         <member name="F:AssemblyNameSpace.Alphabet.scoring_matrix">
             <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
             As such this matrix is rectangular. </summary>
@@ -274,7 +274,7 @@
             <param name="c"> The character to look up. </param>
             <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
         </member>
-        <member name="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)">
+        <member name="M:AssemblyNameSpace.Alphabet.#ctor(System.Collections.Generic.List{System.ValueTuple{System.Char,System.Char,System.Int32,System.Boolean}},System.Int32,System.String)">
             <summary> Set the alphabet of the assembler. </summary>
             <param name="rules"> A list of rules implemented as tuples containing the chars to connect, 
             the value to put into the matrix and whether or not the rule should be bidirectional (the value
@@ -283,13 +283,21 @@
             <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
             the best case scenario has the most used characters at the front of the string. </param>
         </member>
-        <member name="M:AssemblyNameSpace.Alphabet.SetAlphabet(System.String)">
-            <summary> Set the alphabet based on a CSV file. </summary>
-            <param name="filename"> Name of the file. </param>
+        <member name="T:AssemblyNameSpace.Alphabet.AlphabetParamType">
+            <summary>
+            To indicate if the given string is data or a path to the data
+            </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Alphabet.SetAlphabetData(System.String)">
+        <member name="F:AssemblyNameSpace.Alphabet.AlphabetParamType.Data">
+            <summary> It is the data itself. </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Alphabet.AlphabetParamType.Path">
+            <summary> It is a path to a file containing the data. </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Alphabet.#ctor(System.String,AssemblyNameSpace.Alphabet.AlphabetParamType)">
             <summary> Set the alphabet based on data in csv format. </summary>
             <param name="data"> The csv data. </param>
+            <param name="type"> To indicate if the data is data or a path to data </param>
         </member>
         <member name="T:AssemblyNameSpace.HelperFunctionality">
             <summary> A class to store extension methods to help in the process of coding. </summary>
@@ -320,7 +328,7 @@
             <param name="template"> The template to match against. </param>
             <param name="sequences"> The sequences to match with. </param>
         </member>
-        <member name="M:AssemblyNameSpace.HelperFunctionality.MultipleSequenceAlignmentToTemplate(System.String,System.Collections.Generic.List{System.ValueTuple{System.String,System.Int32}},System.Boolean)">
+        <member name="M:AssemblyNameSpace.HelperFunctionality.MultipleSequenceAlignmentToTemplate(System.String,System.Collections.Generic.List{System.ValueTuple{System.String,System.Int32}},AssemblyNameSpace.Alphabet,System.Boolean)">
             <summary> This aligns a list of sequences to a template sequence based on the alphabet. </summary>
             <returns> Returns a list of tuples with the sequences as first item, startinposition as second item, 
             end position as third item and identifier from the given list as fourth item. </returns>
@@ -329,6 +337,7 @@
             <param name="template"> The template to match against. </param>
             <param name="sequences"> The sequences to match with. </param>
             <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
+            <param name="alphabet"> The alphabet to be used. </param>
         </member>
         <member name="T:AssemblyNameSpace.Report">
             <summary>
@@ -342,7 +351,7 @@
         </member>
         <member name="F:AssemblyNameSpace.Report.graph">
             <summary>
-            The noncondesed graph.
+            The uncondensed graph.
             </summary>
         </member>
         <member name="F:AssemblyNameSpace.Report.meta_data">
@@ -357,18 +366,25 @@
         </member>
         <member name="F:AssemblyNameSpace.Report.reads_metadata">
             <summary>
-            Possebly the reads from PEAKS used in the run.
+            Possibly the reads from PEAKS used in the run.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Report.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.IMetaData})">
+        <member name="F:AssemblyNameSpace.Report.alphabet">
+            <summary>
+            The alphabet used in the assembly
+            </summary>
+        </member>
+        <member name="F:AssemblyNameSpace.Report.Run">
+            <summary>
+            The runparameters
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Report.#ctor(AssemblyNameSpace.Assembler,AssemblyNameSpace.RunParameters.SingleRun)">
             <summary>
             To create a report, gets all metadata.
             </summary>
-            <param name="condensed_graph_input">The condesed graph.</param>
-            <param name="graph_input">The noncondesed graph.</param>
-            <param name="meta_data_input">The metadata.</param>
-            <param name="reads_input">The reads.</param>
-            <param name="reads_metadata_input">The MetaData of the reads.</param>
+            <param name="assm">The assembler.</param>
+            <param name="run">The runparameters.</param>
         </member>
         <member name="M:AssemblyNameSpace.Report.Create">
             <summary>
@@ -378,7 +394,7 @@
         </member>
         <member name="M:AssemblyNameSpace.Report.Save(System.String)">
             <summary>
-            Saves the Report cretaed with Create to a file.
+            Saves the Report created with Create to a file.
             </summary>
             <param name="filename">The path to save the to.</param>
         </member>
@@ -392,15 +408,12 @@
             Indicates if the program should use the included Dot (graphviz) distribution.
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.HTMLReport.#ctor(System.Collections.Generic.List{AssemblyNameSpace.CondensedNode},AssemblyNameSpace.Node[],AssemblyNameSpace.MetaInformation,System.Collections.Generic.List{AssemblyNameSpace.AminoAcid[]},System.Collections.Generic.List{AssemblyNameSpace.MetaData.IMetaData},System.Boolean)">
+        <member name="M:AssemblyNameSpace.HTMLReport.#ctor(AssemblyNameSpace.Assembler,AssemblyNameSpace.RunParameters.SingleRun,System.Boolean)">
             <summary>
             To retrieve all metadata
             </summary>
-            <param name="condensed_graph_input">The condesed graph.</param>
-            <param name="graph_input">The noncondensed graph.</param>
-            <param name="meta_data_input">The metadata.</param>
-            <param name="reads_input">The reads.</param>
-            <param name="reads_metadata">MetaData of the reads.</param>
+            <param name="assm">The assembler.</param>
+            <param name="run">The runparameters.</param>
             <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
         </member>
         <member name="M:AssemblyNameSpace.HTMLReport.CreateGraph">
@@ -439,6 +452,13 @@
         <member name="M:AssemblyNameSpace.HTMLReport.Create">
             <summary> Creates an HTML report to view the results and metadata. </summary>
         </member>
+        <member name="M:AssemblyNameSpace.CSVReport.#ctor(AssemblyNameSpace.Assembler,AssemblyNameSpace.RunParameters.SingleRun)">
+            <summary>
+            To retrieve all metadata
+            </summary>
+            <param name="assm">The assembler.</param>
+            <param name="run">The runparameters.</param>
+        </member>
         <member name="M:AssemblyNameSpace.CSVReport.PrepareCSVFile(System.String)">
             <summary>
             Prepares the file to be used for a CSV report
@@ -447,17 +467,25 @@
         </member>
         <member name="F:AssemblyNameSpace.CSVReport.CSVKey">
             <summary>
-            The key to get acces to write to the CSV file
+            The key to get access to write to the CSV file
             </summary>
         </member>
         <member name="M:AssemblyNameSpace.CSVReport.CreateCSVLine(System.String,System.String)">
             <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
-            <param name="ID">ID of the run to recognise it in the CSV file. </param>
+            <param name="ID">ID of the run to recognize it in the CSV file. </param>
             <param name="filename"> The file to which to append the CSV line to. </param>
+        </member>
+        <member name="M:AssemblyNameSpace.FASTAReport.#ctor(AssemblyNameSpace.Assembler,AssemblyNameSpace.RunParameters.SingleRun,System.Int32)">
+            <summary>
+            To retrieve all metadata
+            </summary>
+            <param name="assm">The assembler.</param>
+            <param name="run">The runparameters.</param>
+            <param name="minscore">The minimal score needed to be included in the file</param>
         </member>
         <member name="M:AssemblyNameSpace.FASTAReport.Create">
             <summary>
-            Creates a FATSA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
+            Creates a FASTA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
             </summary>
             <returns>A string containing the file.</returns>
         </member>
@@ -504,10 +532,10 @@
             <param name="input_file"> Path to the CSV file. </param>
             <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
             <param name="localcutoffscore"> Score used to filter patches in peptides 
-            with high enough confidence to be used contrary their low gloabl confidence,
+            with high enough confidence to be used contrary their low global confidence,
             lower will be discarded. </param>
             <param name="peaksformat"> The peaksformat to use, this depends on the 
-            version of peaks used to generate the CSV's. </param>
+            version of peaks used to generate the CSVs. </param>
             <param name="min_length_patch"> The minimal length of a patch. </param>
             <param name="separator"> CSV separator used. </param>
             <param name="decimalseparator"> Separator used in decimals. </param>
@@ -582,7 +610,7 @@
             <summary> The Fraction number of the peptide. </summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaData.Peaks.Source_File">
-            <summary> The source file out of wich the peptide was generated. </summary>
+            <summary> The source file out of which the peptide was generated. </summary>
         </member>
         <member name="F:AssemblyNameSpace.MetaData.Peaks.Feature">
             <summary> The feature of the peptide. </summary>
@@ -824,12 +852,18 @@
             <summary> To contain meta information about how the program ran to make informed decisions on 
             how to choose the values of variables and to aid in debugging. </summary>
         </member>
-        <member name="M:AssemblyNameSpace.Assembler.#ctor(System.Int32,System.Int32,System.Int32,System.Boolean)">
+        <member name="F:AssemblyNameSpace.Assembler.alphabet">
+            <summary>
+            The alphabet used
+            </summary>
+        </member>
+        <member name="M:AssemblyNameSpace.Assembler.#ctor(System.Int32,System.Int32,System.Int32,System.Boolean,AssemblyNameSpace.Alphabet)">
             <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
             <param name="kmer_length_input"> The lengths of the k-mers. </param>
             <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="P:AssemblyNameSpace.Assembler.Minimum_homology"/> </param>
             <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
-            <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
+            <param name="should_reverse"> To indicate if the assembler should include all reads in reverse or not.</param>
+            <param name="alphabet_input"> The alphabet to be used.</param>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.GiveReads(System.Collections.Generic.List{System.ValueTuple{System.String,AssemblyNameSpace.MetaData.IMetaData}})">
             <summary>
@@ -844,7 +878,7 @@
             <returns>The sequence in AminoAcids</returns>
         </member>
         <member name="M:AssemblyNameSpace.Assembler.Assemble">
-            <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
+            <summary> Assemble the reads into the graph, this is logically (one of) the last methods to 
             run on an Assembler, all settings should be defined before running this. </summary>
         </member>
         <member name="T:AssemblyNameSpace.ParseCommandFile">
@@ -898,7 +932,7 @@
             </summary>
             <param name="input">The string to be converted to an int.</param>
             <param name="origin">The place where the string originates from, to be included in error messages.</param>
-            <returns>If succesfull: the number (int32)</returns>
+            <returns>If successfull: the number (int32)</returns>
         </member>
         <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue">
             <summary>
@@ -970,7 +1004,7 @@
         </member>
         <member name="T:AssemblyNameSpace.ParseCommandFile.KeyValue.Multiple">
             <summary>
-            A ValueType to contain mulitple values
+            A ValueType to contain multiple values
             </summary>
         </member>
         <member name="F:AssemblyNameSpace.ParseCommandFile.KeyValue.Multiple.Values">
@@ -1052,7 +1086,7 @@
         </member>
         <member name="M:AssemblyNameSpace.RunParameters.FullRunParameters.CreateRuns">
             <summary>
-            Creates a list of all single runs contained in this run.abstract TO be ran in parrallel.
+            Creates a list of all single runs contained in this run.abstract TO be ran in parallel.
             </summary>
             <returns>All single runs</returns>
         </member>
@@ -1063,7 +1097,7 @@
         </member>
         <member name="F:AssemblyNameSpace.RunParameters.RuntypeValue.Separate">
             <summary>
-            Dictates that all input files should be run seperate from each other.
+            Dictates that all input files should be run separate from each other.
             </summary>
         </member>
         <member name="F:AssemblyNameSpace.RunParameters.RuntypeValue.Group">
@@ -1088,7 +1122,7 @@
         </member>
         <member name="M:AssemblyNameSpace.RunParameters.Input.Parameter.#ctor">
             <summary>
-            Creates a blank file indetifier
+            Creates a blank file identifer
             </summary>
         </member>
         <member name="T:AssemblyNameSpace.RunParameters.Input.Peaks">
@@ -1238,79 +1272,79 @@
             Runs both with and without Reverse in different SingleRuns
             </summary>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic">
             <summary>
-            A value possebly based on the value of K
+            A value possibly based on the value of K
             </summary>
         </member>
-        <member name="P:AssemblyNameSpace.RunParameters.KArithmatic.Value">
+        <member name="P:AssemblyNameSpace.RunParameters.KArithmetic.Value">
             <summary>
             Shows a maximal bracketed version of the expression
             </summary>
             <returns>The expression</returns>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.expression">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.expression">
             <summary>
             The expression
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.GetValue(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.GetValue(System.Int32)">
             <summary>
             To retrieve the value of the expression, given this value of K
             </summary>
             <param name="k">The value of K</param>
             <returns>The value of the expression</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.#ctor(System.String)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.#ctor(System.String)">
             <summary>
-            To generate a KArithmatic, parses the given string immediatly to be sure to be error free if it succeeds.
+            To generate a KArithmetic, parses the given string immediately to be sure to be error free if it succeeds.
             </summary>
             <param name="value">The expression</param>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic">
             <summary>
-            To contain Arithmatic stuffs
+            To contain Arithmetic stuffs
             </summary>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Expression">
             <summary>
             A general class for expressions
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression.Solve(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Expression.Solve(System.Int32)">
             <summary>
             Solves the expression
             </summary>
             <param name="k">The value of K</param>
             <returns>The value of the expression</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression.Show">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Expression.Show">
             <summary>
             Creates a maximal bracketed version of the expression
             </summary>
             <returns>This expression in string form</returns>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator">
             <summary>
             An expression with an operator
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.type">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.type">
             <summary>
             The operator
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.left">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.left">
             <summary>
             The left hand side
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.right">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.right">
             <summary>
             The right hand side
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.#ctor(AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType,AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression,AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Expression)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.#ctor(AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType,AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Expression,AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Expression)">
             <summary>
             Creates an operator expression
             </summary>
@@ -1318,94 +1352,94 @@
             <param name="lhs">The left hand side</param>
             <param name="rhs">The right hand side</param>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.Solve(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.Solve(System.Int32)">
             <summary>
             Solves the expression
             </summary>
             <param name="k">The value of K</param>
             <returns>The value of the expression</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Operator.Show">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Operator.Show">
             <summary>
             Creates a maximal bracketed version of the expression
             </summary>
             <returns>This expression in string form</returns>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType">
             <summary>
             The possible operators
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Minus">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType.Minus">
             <summary> - </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Add">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType.Add">
             <summary> + </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Times">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType.Times">
             <summary> * </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.OpType.Divide">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.OpType.Divide">
             <summary> / </summary>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.K">
             <summary>
             An expression containing only the variable K
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.Solve(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.K.Solve(System.Int32)">
             <summary>
             Solves the expression
             </summary>
             <param name="k">The value of K</param>
             <returns>The value of the expression</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.#ctor">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.K.#ctor">
             <summary>
             Creates a new instance
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.K.Show">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.K.Show">
             <summary>
             Creates a maximal bracketed version of the expression
             </summary>
             <returns>This expression in string form</returns>
         </member>
-        <member name="T:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant">
+        <member name="T:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Constant">
             <summary>
             An expression containing a constant
             </summary>
         </member>
-        <member name="F:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Value">
+        <member name="F:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Constant.Value">
             <summary>
             The constant
             </summary>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Solve(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Constant.Solve(System.Int32)">
             <summary>
             Solves the expression
             </summary>
             <param name="k">The value of K</param>
             <returns>The value of the expression</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.#ctor(System.Int32)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Constant.#ctor(System.Int32)">
             <summary>
             Creates a new instance
             </summary>
             <param name="value">The value of the constant</param>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Arithmatic.Constant.Show">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Arithmetic.Constant.Show">
             <summary>
             Creates a maximal bracketed version of the expression
             </summary>
             <returns>This expression in string form</returns>
         </member>
-        <member name="M:AssemblyNameSpace.RunParameters.KArithmatic.Parse(System.String)">
+        <member name="M:AssemblyNameSpace.RunParameters.KArithmetic.Parse(System.String)">
             <summary>
             Parses a string into an expression
             </summary>
             <param name="input">The string to parse</param>
-            <returns>The expression (if succesfull)</returns>
+            <returns>The expression (if successfull)</returns>
         </member>
         <member name="T:AssemblyNameSpace.RunParameters.AlphabetValue">
             <summary>
@@ -1456,7 +1490,7 @@
         </member>
         <member name="T:AssemblyNameSpace.RunParameters.Report.CSV">
             <summary>
-            To indicate to return a CSVreport
+            To indicate to return a CSV report
             </summary>
         </member>
         <member name="M:AssemblyNameSpace.RunParameters.Report.CSV.GetID(AssemblyNameSpace.RunParameters.SingleRun)">
@@ -1478,7 +1512,7 @@
         </member>
         <member name="T:AssemblyNameSpace.RunParameters.SingleRun">
             <summary>
-            ALl parameters for a single run
+            All parameters for a single run
             </summary>
         </member>
         <member name="F:AssemblyNameSpace.RunParameters.SingleRun.ID">

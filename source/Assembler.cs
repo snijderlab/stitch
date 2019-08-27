@@ -46,13 +46,17 @@ namespace AssemblyNameSpace
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         public MetaInformation meta_data;
+        /// <summary>
+        /// The alphabet used
+        /// </summary>
         public Alphabet alphabet;
         private bool reverse;
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
         /// <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
-        /// <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
+        /// <param name="should_reverse"> To indicate if the assembler should include all reads in reverse or not.</param>
+        /// <param name="alphabet_input"> The alphabet to be used.</param>
         public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input, bool should_reverse, Alphabet alphabet_input)
         {
             kmer_length = kmer_length_input;

@@ -1,7 +1,7 @@
 # AminoAcid.Homology Method 
  
 
-Calculating homology, using the scoring matrix of the parent Assembler. See <a href="e9cc6eb7-d899-debf-02bb-b5554986767b">scoring_matrix</a> for the scoring matrix. See <a href="0284b402-b73f-b145-b4bc-d1f27bb579f5">SetAlphabet(String)</a> on how to change the scoring matrix.
+Calculating homology, using the scoring matrix of the parent Assembler. See <a href="e9cc6eb7-d899-debf-02bb-b5554986767b">scoring_matrix</a> for the scoring matrix. See <a href="5cda7084-f8a0-3495-46bc-2aba35aa874c">Alphabet(String, Alphabet.AlphabetParamType)</a> on how to change the scoring matrix.
 
 **Namespace:**&nbsp;<a href="6bcc80ef-5cfd-db5f-1eb2-7297d1c16397">AssemblyNameSpace</a><br />**Assembly:**&nbsp;Main (in Main.exe) Version: 0.0.0.0
 

@@ -22,7 +22,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected List<CondensedNode> condensed_graph;
         /// <summary>
-        /// The noncondesed graph.
+        /// The uncondensed graph.
         /// </summary>
         protected Node[] graph;
         /// <summary>
@@ -34,7 +34,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected List<AminoAcid[]> reads;
         /// <summary>
-        /// Possebly the reads from PEAKS used in the run.
+        /// Possibly the reads from PEAKS used in the run.
         /// </summary>
         protected List<MetaData.IMetaData> reads_metadata;
         /// <summary>
@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
         /// <returns>A string containing the report.</returns>
         public abstract string Create();
         /// <summary>
-        /// Saves the Report cretaed with Create to a file.
+        /// Saves the Report created with Create to a file.
         /// </summary>
         /// <param name="filename">The path to save the to.</param>
         public void Save(string filename)
@@ -334,7 +334,7 @@ namespace AssemblyNameSpace
                 buffer.Append($"<div class='align-block'><p><span class=\"number\">{String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length))}{number}</span><br><span class=\"seq\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
 
                 int[] depth = new int[bucketsize];
-                // Add every niveau in order
+                // Add every line in order
                 foreach (var line in placed)
                 {
                     for (int i = pos * bucketsize; i < pos * bucketsize + bucketsize; i++)
@@ -388,12 +388,14 @@ namespace AssemblyNameSpace
             string html = $@"
 <h3>General information</h3>
 <table>
-<tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
+<tr><td>Runname</td><td>{Run.Runname}</td></tr>
+<tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VERSIONNUMBER}</td></tr>
 <tr><td>K (length of k-mer)</td><td>{Run.K}</td></tr>
 <tr><td>Minimum homology</td><td>{Run.MinimalHomology}</td></tr>
 <tr><td>Duplicate Threshold</td><td>{Run.DuplicateThreshold}</td></tr>
 <tr><td>Reverse</td><td>{Run.Reverse}</td></tr>
 <tr><td>Alphabet</td><td>{Run.Alphabet.Name}</td></tr>
+<tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
 <tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
@@ -568,12 +570,12 @@ namespace AssemblyNameSpace
             sw.Close();
         }
         /// <summary>
-        /// The key to get acces to write to the CSV file
+        /// The key to get access to write to the CSV file
         /// </summary>
         static object CSVKey = new Object();
 
         /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
-        /// <param name="ID">ID of the run to recognise it in the CSV file. </param>
+        /// <param name="ID">ID of the run to recognize it in the CSV file. </param>
         /// <param name="filename"> The file to which to append the CSV line to. </param>
         public void CreateCSVLine(string ID, string filename)
         {
@@ -615,7 +617,7 @@ namespace AssemblyNameSpace
             MinScore = minscore;
         }
         /// <summary>
-        /// Creates a FATSA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
+        /// Creates a FASTA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
         /// </summary>
         /// <returns>A string containing the file.</returns>
         public override string Create()

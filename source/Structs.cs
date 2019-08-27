@@ -20,11 +20,14 @@ namespace AssemblyNameSpace
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
         public int Code;
+        /// <summary>
+        /// The alphabet used
+        /// </summary>
         public Alphabet alphabet;
 
         /// <summary> The creator of AminoAcids. </summary>
+        /// <param name="alphabet_input"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
-        /// <returns> Returns a reference to the new AminoAcid. </returns>
         public AminoAcid(Alphabet alphabet_input, char input)
         {
             alphabet = alphabet_input;
@@ -94,14 +97,14 @@ namespace AssemblyNameSpace
             return !(x == y);
         }
         /// <summary> To get a hashcode for this AminoAcid. </summary>
-        /// <returns> Returns the hascode of the AminoAcid. </returns>
+        /// <returns> Returns the hashcode of the AminoAcid. </returns>
         public override int GetHashCode()
         {
             return this.Code.GetHashCode();
         }
         /// <summary> Calculating homology, using the scoring matrix of the parent Assembler. 
         /// See <see cref="Alphabet.scoring_matrix"/> for the scoring matrix.
-        /// See <see cref="Alphabet.SetAlphabet(string)"/> on how to change the scoring matrix.</summary>
+        /// See <see cref="Alphabet(string, Alphabet.AlphabetParamType)"/> on how to change the scoring matrix.</summary>
         /// <remarks> Depending on which rules are put into the scoring matrix the order in which this 
         /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to 
         /// <c>b.Homology(a)</c>. </remarks>
@@ -115,7 +118,7 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Got an error for this code {this.Code} and that code {right.Code}");
+                Console.WriteLine($"Got an error while looking up the homology for this code {this.Code} and that code {right.Code}, probably there is one (or more) character that is not valid");
                 throw e;
             }
         }
@@ -125,7 +128,7 @@ namespace AssemblyNameSpace
         /// over the AminoAcids and returns the sum of the homology value between those. </remarks>
         /// <param name="left"> The first object to calculate homology with. </param>
         /// <param name="right"> The second object to calculate homology with. </param>
-        /// <returns> Returns the homology bewteen the two aminoacid arrays. </returns>
+        /// <returns> Returns the homology between the two aminoacid arrays. </returns>
         public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right)
         {
             int score = 0;
@@ -252,7 +255,7 @@ namespace AssemblyNameSpace
             return forwardEdges.Count + backwardEdges.Count;
         }
     }
-    /// <summary> A struct to hold meta information about the assembly to keep it organised 
+    /// <summary> A struct to hold meta information about the assembly to keep it organized 
     /// and to report back to the user. </summary>
     public struct MetaInformation
     {
@@ -282,11 +285,11 @@ namespace AssemblyNameSpace
     /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
     public class CondensedNode
     {
-        /// <summary> The index this node. The index is defined as the index of the startnode in the adjecency list of the de Bruijn graph. </summary>
+        /// <summary> The index this node. The index is defined as the index of the startnode in the adjacency list of the de Bruijn graph. </summary>
         public int Index;
-        /// <summary> The index of the last node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
+        /// <summary> The index of the last node (going from back to forth). To build the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
         public int ForwardIndex;
-        /// <summary> The index of the first node (going from back to forth). To buid the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
+        /// <summary> The index of the first node (going from back to forth). To build the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
         public int BackwardIndex;
         /// <summary> Whether or not this node is visited yet. </summary>
         public bool Visited;
@@ -327,6 +330,9 @@ namespace AssemblyNameSpace
             Visited = false;
         }
     }
+    /// <summary>
+    /// To contain an alphabet with scoring matrix to score pairs of amino acids
+    /// </summary>
     public class Alphabet
     {
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
@@ -389,6 +395,7 @@ namespace AssemblyNameSpace
         }
         /// <summary> Set the alphabet based on data in csv format. </summary>
         /// <param name="data"> The csv data. </param>
+        /// <param name="type"> To indicate if the data is data or a path to data </param>
         public Alphabet(string data, AlphabetParamType type)
         {
             if (type == AlphabetParamType.Path)
@@ -433,7 +440,7 @@ namespace AssemblyNameSpace
                         }
                         catch
                         {
-                            throw new ParseException($"The reading on the alphabet file was not succesfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
+                            throw new ParseException($"The reading on the alphabet file was not successfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
                         }
                     }
                 }
@@ -569,6 +576,7 @@ namespace AssemblyNameSpace
         /// <param name="template"> The template to match against. </param>
         /// <param name="sequences"> The sequences to match with. </param>
         /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
+        /// <param name="alphabet"> The alphabet to be used. </param>
         public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, Alphabet alphabet, bool reverse = false)
         {
             // Keep track of all places already covered

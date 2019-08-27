@@ -42,11 +42,11 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The value for the MinimalHomology
             /// </summary>
-            public List<KArithmatic> MinimalHomology;
+            public List<KArithmetic> MinimalHomology;
             /// <summary>
             /// The value for the duplicatethreshold
             /// </summary>
-            public List<KArithmatic> DuplicateThreshold;
+            public List<KArithmetic> DuplicateThreshold;
             /// <summary>
             /// The alphabet(s) to be used in this run
             /// </summary>
@@ -63,13 +63,13 @@ namespace AssemblyNameSpace
                 Runname = "";
                 DataParameters = new List<Input.Parameter>();
                 Reverse = ReverseValue.True;
-                MinimalHomology = new List<KArithmatic>();
-                DuplicateThreshold = new List<KArithmatic>();
+                MinimalHomology = new List<KArithmetic>();
+                DuplicateThreshold = new List<KArithmetic>();
                 Alphabet = new List<AlphabetValue>();
                 Report = new List<Report.Parameter>();
             }
             /// <summary>
-            /// Creates a list of all single runs contained in this run.abstract TO be ran in parrallel.
+            /// Creates a list of all single runs contained in this run.abstract TO be ran in parallel.
             /// </summary>
             /// <returns>All single runs</returns>
             public List<SingleRun> CreateRuns()
@@ -148,7 +148,7 @@ namespace AssemblyNameSpace
         public enum RuntypeValue
         {
             /// <summary>
-            /// Dictates that all input files should be run seperate from each other.
+            /// Dictates that all input files should be run separate from each other.
             /// </summary>
             Separate,
             /// <summary>
@@ -171,7 +171,7 @@ namespace AssemblyNameSpace
                 /// </summary>
                 public MetaData.FileIdentifier File;
                 /// <summary>
-                /// Creates a blank file indetifier
+                /// Creates a blank file identifer
                 /// </summary>
                 public Parameter()
                 {
@@ -332,9 +332,9 @@ namespace AssemblyNameSpace
             Both
         }
         /// <summary>
-        /// A value possebly based on the value of K
+        /// A value possibly based on the value of K
         /// </summary>
-        public class KArithmatic
+        public class KArithmetic
         {
             /// <summary>
             /// Shows a maximal bracketed version of the expression
@@ -344,7 +344,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The expression
             /// </summary>
-            Arithmatic.Expression expression;
+            Arithmetic.Expression expression;
             /// <summary>
             /// To retrieve the value of the expression, given this value of K
             /// </summary>
@@ -355,17 +355,17 @@ namespace AssemblyNameSpace
                 return expression.Solve(k);
             }
             /// <summary>
-            /// To generate a KArithmatic, parses the given string immediatly to be sure to be error free if it succeeds.
+            /// To generate a KArithmetic, parses the given string immediately to be sure to be error free if it succeeds.
             /// </summary>
             /// <param name="value">The expression</param>
-            public KArithmatic(string value)
+            public KArithmetic(string value)
             {
                 expression = Parse(value);
             }
             /// <summary>
-            /// To contain Arithmatic stuffs
+            /// To contain Arithmetic stuffs
             /// </summary>
-            class Arithmatic
+            class Arithmetic
             {
                 /// <summary>
                 /// A general class for expressions
@@ -542,40 +542,40 @@ namespace AssemblyNameSpace
             /// Parses a string into an expression
             /// </summary>
             /// <param name="input">The string to parse</param>
-            /// <returns>The expression (if succesfull)</returns>
-            Arithmatic.Expression Parse(string input)
+            /// <returns>The expression (if successfull)</returns>
+            Arithmetic.Expression Parse(string input)
             {
                 input = input.Trim();
                 // Scan for low level operators
                 if (input.Contains('+'))
                 {
                     int pos = input.IndexOf('+');
-                    return new Arithmatic.Operator(Arithmatic.OpType.Add, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    return new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
                 }
                 if (input.Contains('-'))
                 {
                     int pos = input.IndexOf('-');
-                    return new Arithmatic.Operator(Arithmatic.OpType.Minus, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    return new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
                 }
                 // Scan for high level operators
                 if (input.Contains('*'))
                 {
                     int pos = input.IndexOf('*');
-                    return new Arithmatic.Operator(Arithmatic.OpType.Times, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    return new Arithmetic.Operator(Arithmetic.OpType.Times, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
                 }
                 if (input.Contains('/'))
                 {
                     int pos = input.IndexOf('/');
-                    return new Arithmatic.Operator(Arithmatic.OpType.Divide, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    return new Arithmetic.Operator(Arithmetic.OpType.Divide, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
                 }
                 // Scan for constants and K's
                 if (input.ToLower() == "k")
                 {
-                    return new Arithmatic.K();
+                    return new Arithmetic.K();
                 }
                 try
                 {
-                    return new Arithmatic.Constant(Convert.ToInt32(input));
+                    return new Arithmetic.Constant(Convert.ToInt32(input));
                 }
                 catch
                 {
@@ -645,7 +645,7 @@ namespace AssemblyNameSpace
                 public bool UseIncludedDotDistribution = true;
             }
             /// <summary>
-            /// To indicate to return a CSVreport
+            /// To indicate to return a CSV report
             /// </summary>
             public class CSV : Parameter
             {
@@ -765,7 +765,7 @@ namespace AssemblyNameSpace
             /// <returns>The main parameters</returns>
             public string Display()
             {
-                return $"\tRunname\t\t: {Runname}\n\tInput\t\t: {Input.ToString()}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.ToString()}";
+                return $"\tRunname\t\t: {Runname}\n\tInput\t\t: {Input.Aggregate("", (a,b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}";
             }
             /// <summary>
             /// Runs this run.abstract Runs the assembly, and generates the reports.

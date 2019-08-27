@@ -282,10 +282,10 @@ namespace AssemblyNameSpace
                         }
                         break;
                     case "duplicatethreshold":
-                        output.DuplicateThreshold.Add(new RunParameters.KArithmatic(pair.GetValue()));
+                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(pair.GetValue()));
                         break;
                     case "minimalhomology":
-                        output.MinimalHomology.Add(new RunParameters.KArithmatic(pair.GetValue()));
+                        output.MinimalHomology.Add(new RunParameters.KArithmetic(pair.GetValue()));
                         break;
                     case "reverse":
                         switch (pair.GetValue().ToLower())
@@ -398,11 +398,11 @@ namespace AssemblyNameSpace
             // Generate defaults
             if (output.DuplicateThreshold.Count() == 0)
             {
-                output.DuplicateThreshold.Add(new RunParameters.KArithmatic("K-1"));
+                output.DuplicateThreshold.Add(new RunParameters.KArithmetic("K-1"));
             }
             if (output.MinimalHomology.Count() == 0)
             {
-                output.MinimalHomology.Add(new RunParameters.KArithmatic("K-1"));
+                output.MinimalHomology.Add(new RunParameters.KArithmetic("K-1"));
             }
 
             // Check if there is a version specified
@@ -486,7 +486,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
             /// <param name="origin">The place where the string originates from, to be included in error messages.</param>
-            /// <returns>If succesfull: the number (int32)</returns>
+            /// <returns>If successfull: the number (int32)</returns>
             public static int ConvertToInt(string input, string origin)
             {
                 try
@@ -503,7 +503,7 @@ namespace AssemblyNameSpace
                 }
                 catch
                 {
-                    throw new ParseException($"Some unkown ParseException occured while '{input}' was cnverted to an int32, this should be a number in the context of {origin}.");
+                    throw new ParseException($"Some unkown ParseException occurred while '{input}' was converted to an int32, this should be a number in the context of {origin}.");
                 }
             }
         }
@@ -601,7 +601,7 @@ namespace AssemblyNameSpace
                 }
             }
             /// <summary>
-            /// A ValueType to contain mulitple values
+            /// A ValueType to contain multiple values
             /// </summary>
             class Multiple : ValueType
             {

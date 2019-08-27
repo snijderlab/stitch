@@ -24,6 +24,7 @@ namespace AssemblyNameSpace
     /// <summary> The main class which is the entry point from the command line </summary>
     class ToRunWithCommandLine
     {
+        public const string VERSIONNUMBER = "0.0.0";
         /// <summary> The entry point. </summary>
         static void Main()
         {

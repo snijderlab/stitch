@@ -103,10 +103,10 @@ namespace AssemblyNameSpace
         /// <param name="input_file"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
         /// <param name="localcutoffscore"> Score used to filter patches in peptides 
-        /// with high enough confidence to be used contrary their low gloabl confidence,
+        /// with high enough confidence to be used contrary their low global confidence,
         /// lower will be discarded. </param>
         /// <param name="peaksformat"> The peaksformat to use, this depends on the 
-        /// version of peaks used to generate the CSV's. </param>
+        /// version of peaks used to generate the CSVs. </param>
         /// <param name="min_length_patch"> The minimal length of a patch. </param>
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
@@ -257,7 +257,7 @@ namespace AssemblyNameSpace
         {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
-            /// <summary> The source file out of wich the peptide was generated. </summary>
+            /// <summary> The source file out of which the peptide was generated. </summary>
             public string Source_File = null;
             /// <summary> The feature of the peptide. </summary>
             public string Feature = null;
@@ -339,7 +339,7 @@ namespace AssemblyNameSpace
                     }
                     if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
 
-                    // Initialise list
+                    // Initialize list
                     Other_scans = new List<string>();
                 }
                 catch (Exception e)
@@ -465,7 +465,7 @@ namespace AssemblyNameSpace
             /// <returns>A string containing the HTML</returns>
             public string ToHTML()
             {
-                return $"<h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<p>{Path}</p>";
+                return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<p>{Path}</p>";
             }
         }
     }
