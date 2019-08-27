@@ -671,7 +671,7 @@ namespace AssemblyNameSpace
             }
         }
         /// <summary>
-        /// ALl parameters for a single run
+        /// All parameters for a single run
         /// </summary>
         public class SingleRun
         {
@@ -774,8 +774,7 @@ namespace AssemblyNameSpace
             {
                 try
                 {
-                    var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse);
-                    AssemblyNameSpace.Alphabet.SetAlphabetData(Alphabet.Data);
+                    var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse, new Alphabet(Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data));
 
                     // Retrieve the input
                     foreach (var input in Input)
@@ -802,15 +801,15 @@ namespace AssemblyNameSpace
                         switch (report)
                         {
                             case Report.HTML h:
-                                var htmlreport = new HTMLReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.reads_metadata, h.UseIncludedDotDistribution);
+                                var htmlreport = new HTMLReport(assm, this, h.UseIncludedDotDistribution);
                                 htmlreport.Save(h.CreateName(this));
                                 break;
                             case Report.CSV c:
-                                var csvreport = new CSVReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.reads_metadata);
+                                var csvreport = new CSVReport(assm, this);
                                 csvreport.CreateCSVLine(c.GetID(this), c.Path);
                                 break;
                             case Report.FASTA f:
-                                var fastareport = new FASTAReport(assm.condensed_graph, assm.graph, assm.meta_data, assm.reads, assm.reads_metadata, f.MinimalScore);
+                                var fastareport = new FASTAReport(assm, this, f.MinimalScore);
                                 fastareport.Save(f.CreateName(this));
                                 break;
                         }

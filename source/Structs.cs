@@ -20,20 +20,22 @@ namespace AssemblyNameSpace
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
         public int Code;
+        public Alphabet alphabet;
 
         /// <summary> The creator of AminoAcids. </summary>
         /// <param name="input"> The character to store in this AminoAcid. </param>
         /// <returns> Returns a reference to the new AminoAcid. </returns>
-        public AminoAcid(char input)
+        public AminoAcid(Alphabet alphabet_input, char input)
         {
-            Code = Alphabet.getIndexInAlphabet(input);
+            alphabet = alphabet_input;
+            Code = alphabet.getIndexInAlphabet(input);
         }
         /// <summary> Will create a string of this AminoAcid. Consiting of the character used to 
         /// create this AminoAcid. </summary>
         /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
         public override string ToString()
         {
-            return Alphabet.alphabet[Code].ToString();
+            return alphabet.alphabet[Code].ToString();
         }
         /// <summary> Will create a string of an array of AminoAcids. </summary>
         /// <param name="array"> The array to create a string from. </param>
@@ -109,7 +111,7 @@ namespace AssemblyNameSpace
         {
             try
             {
-                return Alphabet.scoring_matrix[this.Code, right.Code];
+                return alphabet.scoring_matrix[this.Code, right.Code];
             }
             catch (Exception e)
             {
@@ -276,14 +278,6 @@ namespace AssemblyNameSpace
         public int kmin1_mers_raw;
         /// <summary> The number of sequences found. See <see cref="Assembler.Assemble"/></summary>
         public int sequences;
-        /// <summary>
-        /// The length of the k-mers
-        /// </summary>
-        public int kmer_length;
-        /// <summary>
-        /// The minimum homology score used
-        /// </summary>
-        public int minimum_homology;
     }
     /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
     public class CondensedNode
@@ -333,18 +327,18 @@ namespace AssemblyNameSpace
             Visited = false;
         }
     }
-    static class Alphabet
+    public class Alphabet
     {
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </summary>
-        public static int[,] scoring_matrix;
+        public int[,] scoring_matrix;
         /// <summary> The alphabet used for alignment. The default value is all the amino acids in order of
         /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
-        public static char[] alphabet;
+        public char[] alphabet;
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look up. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
-        public static int getIndexInAlphabet(char c)
+        public int getIndexInAlphabet(char c)
         {
             for (int i = 0; i < alphabet.Length; i++)
             {
@@ -364,7 +358,7 @@ namespace AssemblyNameSpace
         /// <param name="diagonals_value"> The value to place on the diagonals of the matrix. </param>
         /// <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
         /// the best case scenario has the most used characters at the front of the string. </param>
-        public static void SetAlphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
+        public Alphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
         {
             alphabet = input.ToCharArray();
 
@@ -383,43 +377,51 @@ namespace AssemblyNameSpace
                 }
             }
         }
-        /// <summary> Set the alphabet based on a CSV file. </summary>
-        /// <param name="filename"> Name of the file. </param>
-        public static void SetAlphabet(string filename)
+        /// <summary>
+        /// To indicate if the given string is data or a path to the data
+        /// </summary>
+        public enum AlphabetParamType
         {
-            try
-            {
-                SetAlphabetData(File.ReadAllText(filename));
-            }
-            catch
-            {
-                throw new Exception($"Could not open the file: {filename}");
-            }
+            /// <summary> It is the data itself. </summary>
+            Data,
+            /// <summary> It is a path to a file containing the data. </summary>
+            Path
         }
         /// <summary> Set the alphabet based on data in csv format. </summary>
         /// <param name="data"> The csv data. </param>
-        public static void SetAlphabetData(string data)
+        public Alphabet(string data, AlphabetParamType type)
         {
+            if (type == AlphabetParamType.Path)
+            {
+                try
+                {
+                    data = File.ReadAllText(data);
+                }
+                catch
+                {
+                    throw new Exception($"Could not open the alphabetfile: {data}");
+                }
+            }
             var input = data.Split('\n');
             int rows = input.Length;
             List<string[]> array = new List<string[]>();
 
             foreach (string line in input)
             {
-                array.Add(line.Split(new char[] { ';', ',' }).Select(x => x.Trim(new char[] { ' ', '\n', '\r', '\t', '-', '.' })).ToArray());
+                if (line != "")
+                    array.Add(line.Split(new char[] { ';', ',' }).Select(x => x.Trim(new char[] { ' ', '\n', '\r', '\t', '-', '.' })).ToArray());
             }
 
             int columns = array[0].Length;
 
             if (rows != columns)
             {
-                throw new Exception($"The amount of rows ({rows}) is not equal to the amount of columns ({columns}).");
+                throw new ParseException($"The amount of rows ({rows}) is not equal to the amount of columns ({columns}).");
             }
             else
             {
                 alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
                 scoring_matrix = new int[columns - 1, columns - 1];
-                bool succesful = true;
 
                 for (int i = 0; i < columns - 1; i++)
                 {
@@ -431,19 +433,14 @@ namespace AssemblyNameSpace
                         }
                         catch
                         {
-                            succesful = false;
+                            throw new ParseException($"The reading on the alphabet file was not succesfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
                         }
                     }
-                }
-
-                if (!succesful)
-                {
-                    throw new Exception("The reading on the alphabet file was not succesfull, see stdout for detailed error messages.");
                 }
             }
         }
     }
-        /// <summary> A class to store extension methods to help in the process of coding. </summary>
+    /// <summary> A class to store extension methods to help in the process of coding. </summary>
     static class HelperFunctionality
     {
         /// <summary> To copy a subarray to a new array. </summary>
@@ -572,7 +569,7 @@ namespace AssemblyNameSpace
         /// <param name="template"> The template to match against. </param>
         /// <param name="sequences"> The sequences to match with. </param>
         /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
-        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, bool reverse = false)
+        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, Alphabet alphabet, bool reverse = false)
         {
             // Keep track of all places already covered
             var result = new List<(string, int, int, int)>();
@@ -595,8 +592,8 @@ namespace AssemblyNameSpace
                         if (i + j >= 0)
                         {
                             //Console.WriteLine($"i {i} j{j} l{seq.Length} t{template.Length}");
-                            int score_fw = Alphabet.scoring_matrix[Alphabet.getIndexInAlphabet(template[i + j]), Alphabet.getIndexInAlphabet(seq[j])];
-                            int score_bw = Alphabet.scoring_matrix[Alphabet.getIndexInAlphabet(template[i + j]), Alphabet.getIndexInAlphabet(seq[seq.Length - j - 1])];
+                            int score_fw = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[i + j]), alphabet.getIndexInAlphabet(seq[j])];
+                            int score_bw = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[i + j]), alphabet.getIndexInAlphabet(seq[seq.Length - j - 1])];
                             score_fw_t += score_fw;
                             score_bw_t += score_bw;
 

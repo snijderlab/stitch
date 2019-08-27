@@ -259,6 +259,7 @@ Path: Report.html
 
 To generate a CSV report, it will add summary information of each run on a single line to the file.
 If the file exists already it will append the new data lines to it, so that multiple runs after each other will not destroy previous work.
+If also HTML reports are generated the CSV file will contain a hyperlink (in Microsoft Excel style) to every HTML report.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---

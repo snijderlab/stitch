@@ -38,20 +38,27 @@ namespace AssemblyNameSpace
         /// </summary>
         protected List<MetaData.IMetaData> reads_metadata;
         /// <summary>
+        /// The alphabet used in the assembly
+        /// </summary>
+        protected Alphabet alphabet;
+        /// <summary>
+        /// The runparameters
+        /// </summary>
+        protected RunParameters.SingleRun Run;
+        /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
-        /// <param name="condensed_graph_input">The condesed graph.</param>
-        /// <param name="graph_input">The noncondesed graph.</param>
-        /// <param name="meta_data_input">The metadata.</param>
-        /// <param name="reads_input">The reads.</param>
-        /// <param name="reads_metadata_input">The MetaData of the reads.</param>
-        public Report(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata_input)
+        /// <param name="assm">The assembler.</param>
+        /// <param name="run">The runparameters.</param>
+        public Report(Assembler assm, RunParameters.SingleRun run)
         {
-            condensed_graph = condensed_graph_input;
-            graph = graph_input;
-            meta_data = meta_data_input;
-            reads = reads_input;
-            reads_metadata = reads_metadata_input;
+            condensed_graph = assm.condensed_graph;
+            graph = assm.graph;
+            meta_data = assm.meta_data;
+            reads = assm.reads;
+            reads_metadata = assm.reads_metadata;
+            alphabet = assm.alphabet;
+            Run = run;
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.
@@ -81,13 +88,10 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To retrieve all metadata
         /// </summary>
-        /// <param name="condensed_graph_input">The condesed graph.</param>
-        /// <param name="graph_input">The noncondensed graph.</param>
-        /// <param name="meta_data_input">The metadata.</param>
-        /// <param name="reads_input">The reads.</param>
-        /// <param name="reads_metadata">MetaData of the reads.</param>
+        /// <param name="assm">The assembler.</param>
+        /// <param name="run">The runparameters.</param>
         /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
-        public HTMLReport(List<CondensedNode> condensed_graph_input, Node[] graph_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata, bool useincludeddotdistribution) : base(condensed_graph_input, graph_input, meta_data_input, reads_input, reads_metadata)
+        public HTMLReport(Assembler assm, RunParameters.SingleRun run, bool useincludeddotdistribution) : base(assm, run)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
         }
@@ -285,7 +289,7 @@ namespace AssemblyNameSpace
         {
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
-            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, true));
+            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, true));
 
             // Find a bit more efficient packing of reads on the sequence
             var placed = new List<List<(string, int, int, int)>>();
@@ -385,8 +389,11 @@ namespace AssemblyNameSpace
 <h3>General information</h3>
 <table>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
-<tr><td>K (length of k-mer)</td><td>{meta_data.kmer_length}</td></tr>
-<tr><td>Minimum homology</td><td>{meta_data.minimum_homology}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{Run.K}</td></tr>
+<tr><td>Minimum homology</td><td>{Run.MinimalHomology}</td></tr>
+<tr><td>Duplicate Threshold</td><td>{Run.DuplicateThreshold}</td></tr>
+<tr><td>Reverse</td><td>{Run.Reverse}</td></tr>
+<tr><td>Alphabet</td><td>{Run.Alphabet.Name}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
 <tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
@@ -539,7 +546,12 @@ namespace AssemblyNameSpace
     }
     class CSVReport : Report
     {
-        public CSVReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, reads_metadata) { }
+        /// <summary>
+        /// To retrieve all metadata
+        /// </summary>
+        /// <param name="assm">The assembler.</param>
+        /// <param name="run">The runparameters.</param>
+        public CSVReport(Assembler assm, RunParameters.SingleRun run) : base(assm, run) { }
         public override string Create()
         {
             return "";
@@ -551,7 +563,8 @@ namespace AssemblyNameSpace
         public void PrepareCSVFile(string filename)
         {
             StreamWriter sw = File.CreateText(filename);
-            sw.Write("sep=;\nID;Reads;K-mer length;Minimal Homology;Total nodes;Average Sequence Length;Total Sequence Length;Mean Connectivity;Total time;\n");
+            string link = Run.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? "Hyperlink(s) to the report(s);" : "";
+            sw.Write($"sep=;\nID;Data file;Alphabet;K-mer length;Minimal Homology;Duplicate Threshold;Reads;Total nodes;Average Sequence Length;Average depth of coverage;Mean Connectivity;Total time;{link}\n");
             sw.Close();
         }
         /// <summary>
@@ -564,9 +577,13 @@ namespace AssemblyNameSpace
         /// <param name="filename"> The file to which to append the CSV line to. </param>
         public void CreateCSVLine(string ID, string filename)
         {
+            // HYPERLINK
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
+            int totalreadslength = reads.Aggregate(0, (a, b) => a + b.Length) * (Run.Reverse ? 2 : 1);
             int totalnodes = condensed_graph.Count();
-            string line = $"{ID};{meta_data.reads};{meta_data.kmer_length};{meta_data.minimum_homology};{totalnodes};{(double)totallength / totalnodes};{totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};\n";
+            string data = Run.Input.Count() == 1 ? Run.Input[0].File.Name : "Group";
+            string link = Run.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? Run.Report.Where(a => a is RunParameters.Report.HTML).Aggregate("", (a, b) => (a + "=HYPERLINK(\"" + Path.GetFullPath(b.CreateName(Run)) + "\");")) : "";
+            string line = $"{ID};{data};{Run.Alphabet.Name};{Run.K};{Run.MinimalHomology};{Run.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
 
             // To account for multithreading and multiple workers trying to append to the file at the same time
             // This will block any concurrent access
@@ -587,7 +604,13 @@ namespace AssemblyNameSpace
     class FASTAReport : Report
     {
         int MinScore;
-        public FASTAReport(List<CondensedNode> condensed_graph_input, Node[] grap_input, MetaInformation meta_data_input, List<AminoAcid[]> reads_input, List<MetaData.IMetaData> reads_metadata, int minscore) : base(condensed_graph_input, grap_input, meta_data_input, reads_input, reads_metadata)
+        /// <summary>
+        /// To retrieve all metadata
+        /// </summary>
+        /// <param name="assm">The assembler.</param>
+        /// <param name="run">The runparameters.</param>
+        /// <param name="minscore">The minimal score needed to be included in the file</param>
+        public FASTAReport(Assembler assm, RunParameters.SingleRun run, int minscore) : base(assm, run)
         {
             MinScore = minscore;
         }
@@ -675,7 +698,7 @@ namespace AssemblyNameSpace
             // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, true);
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, true);
 
             // Calculate the score by calculating the total read length (which maps to a location on the contig)
             int score = 0;

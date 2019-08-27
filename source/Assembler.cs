@@ -46,23 +46,21 @@ namespace AssemblyNameSpace
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         public MetaInformation meta_data;
+        public Alphabet alphabet;
         private bool reverse;
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
         /// <param name="duplicate_threshold_input"> The minimum homology score between two reads needed to be viewed as duplicates.</param>
         /// <param name="should_reverse"> To indicate if the assembler should inlcude all reads in reverse or not.</param>
-        public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input = -1, bool should_reverse = true)
+        public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input, bool should_reverse, Alphabet alphabet_input)
         {
             kmer_length = kmer_length_input;
             minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
             duplicate_threshold = duplicate_threshold_input;
             reverse = should_reverse;
             meta_data = new MetaInformation();
-            meta_data.kmer_length = kmer_length;
-            meta_data.minimum_homology = minimum_homology;
-
-            Alphabet.SetAlphabet();
+            alphabet = alphabet_input;
         }
         /// <summary>
         /// Give a list of reads to the assembler
@@ -71,6 +69,7 @@ namespace AssemblyNameSpace
         {
             reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
             reads_metadata = reads_i.Select(x => x.Item2).ToList();
+            meta_data.reads = reads.Count();
         }
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
@@ -82,11 +81,11 @@ namespace AssemblyNameSpace
             AminoAcid[] output = new AminoAcid[input.Length];
             for (int i = 0; i < input.Length; i++)
             {
-                output[i] = new AminoAcid(input[i]);
+                output[i] = new AminoAcid(alphabet, input[i]);
             }
             return output;
         }
-        /// <summary> Assemble the reads into the graph, this is logically (one of) the last metods to 
+        /// <summary> Assemble the reads into the graph, this is logically (one of) the last methods to 
         /// run on an Assembler, all settings should be defined before running this. </summary>
         public void Assemble()
         {
