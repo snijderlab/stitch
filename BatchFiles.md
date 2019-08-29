@@ -37,7 +37,7 @@ Runname: Monoclonal Antibodies From Rabbits
 
 ##### Runtype (s)
 
-If the inputs in this run should be ran separate from each other trough the assembler (`Separate`), or be grouped together into one heap of data (`Group`).
+If the inputs in this run should be ran separate from each other trough the assembler (`Separate`), or be grouped together into one heap of data (`Group`). The default is `Group`.
 
 _Examples_
 ```
@@ -193,7 +193,7 @@ DuplicateThreshold: K*2-3
 
 ##### Reverse (s)
 
-Defines if the reads should also be generated in reverse, which is useful if some reads are/could be backwards compared to others. The possible values are `True`, `False` and `Both`. The last option will run the runs two times, one wit `True` and one wih `False`.
+Defines if the reads should also be generated in reverse, which is useful if some reads are/could be backwards compared to others. The possible values are `True`, `False` and `Both`. The last option will run the runs two times, one with `True` and one with `False`. The default if `False`.
 
 _Examples_
 ```

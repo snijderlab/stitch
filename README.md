@@ -25,6 +25,10 @@ Then run the following command to run the program:
 dotnet path/to/source.dll <arguments>
 ```
 
+## Installing Dot
+
+On windows [Graphviz](https://www.graphviz.org) is included in the assets, so there is no need to install it. On Linux or other platforms you will have to install Graphviz, [see this site](https://graphviz.gitlab.io/download/). Do not forget when you installed Graphviz on your own machine to add the option `DotDistribution: Global` to all HTML reports and check if the program should be added to your PATH variable.
+
 # Building
 
 The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, go into the 'source' folder and run:

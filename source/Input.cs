@@ -140,7 +140,7 @@ namespace AssemblyNameSpace
                                 output.Runtype = RunParameters.RuntypeValue.Group;
                                 break;
                             default:
-                                throw new ParseException($"Unknown option for Runtype: {pair.GetValue()}");
+                                throw new ParseException($"Unknown option for Runtype: {pair.GetValue()}, the options are: 'Group' and 'Separate'.");
                         }
                         break;
                     case "peaks":
@@ -182,11 +182,11 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        throw new ParseException("Unknown file format for Peaks (choose 'old' or 'new')");
+                                        throw new ParseException("Unknown file format for Peaks, the options are: 'Old' and 'New'.");
                                     }
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in PEAKS definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in PEAKS definition: {setting.Name}, the options are: 'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'.");
                             }
                         }
 
@@ -207,7 +207,7 @@ namespace AssemblyNameSpace
                                     rsettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in Reads definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in Reads definition: {setting.Name}, the options are: 'Path' and 'Name'.");
                             }
                         }
 
@@ -228,7 +228,7 @@ namespace AssemblyNameSpace
                                     fastasettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in FASTAInput definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in FASTAInput definition: {setting.Name}, the options are: 'Path' and 'Name'.");
                             }
                         }
 
@@ -254,10 +254,10 @@ namespace AssemblyNameSpace
                                         ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), "range K Step");
                                         break;
                                     default:
-                                        throw new ParseException($"Unknown key in K definition: {setting.Name}");
+                                        throw new ParseException($"Unknown key in K definition: {setting.Name}, the options are: 'Start', 'End' and 'Step'.");
                                 }
                             }
-                            if (ksettings.Start != 0 && ksettings.End != 0)
+                            if (ksettings.Start > 0 && ksettings.End > 0)
                             {
                                 output.K = ksettings;
                             }
@@ -303,7 +303,7 @@ namespace AssemblyNameSpace
                                 output.Reverse = RunParameters.ReverseValue.Both;
                                 break;
                             default:
-                                throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()}");
+                                throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()}, the options are: 'True', 'False' and 'Both'.");
                         }
                         break;
                     case "alphabet":
@@ -323,7 +323,7 @@ namespace AssemblyNameSpace
                                     asettings.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}, the options are 'Path', 'Data', and 'Name'");
                             }
                         }
                         output.Alphabet.Add(asettings);
@@ -349,11 +349,11 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        throw new ParseException($"Unknown option in HTML DotDistribution definition: {setting.Name} (the only valid options: 'global' and 'included')");
+                                        throw new ParseException($"Unknown option in HTML DotDistribution definition: {setting.Name}, the options are: 'Global' and 'Included'.");
                                     }
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in HTML definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in HTML definition: {setting.Name}, the options are: 'Path' and 'DotDistribution'.");
                             }
                         }
                         output.Report.Add(hsettings);
@@ -369,7 +369,7 @@ namespace AssemblyNameSpace
                                     csettings.Path = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in CSV definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in CSV definition: {setting.Name}, the option is: 'Path'");
                             }
                         }
                         output.Report.Add(csettings);
@@ -388,7 +388,7 @@ namespace AssemblyNameSpace
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), "minimalscore of FASTA report");
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in FASTA definition: {setting.Name}");
+                                    throw new ParseException($"Unknown key in FASTA definition: {setting.Name}, the options are: 'Path' and 'MinimalScore'.");
                             }
                         }
                         output.Report.Add(fsettings);
@@ -411,7 +411,7 @@ namespace AssemblyNameSpace
             // Check if there is a version specified
             if (!versionspecified)
             {
-                throw new ParseException($"There is no version specified of the batch file; This is needed to handle different versions in different ways.");
+                throw new ParseException($"There is no version specified for the batch file; This is needed to handle different versions in different ways.");
             }
 
             return output;

@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
@@ -133,14 +134,14 @@ namespace AssemblyNameSpace
             try
             {
                 Process svg = new Process();
-                svg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
+                svg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
                 svg.StartInfo.RedirectStandardError = true;
                 svg.StartInfo.RedirectStandardInput = true;
                 svg.StartInfo.RedirectStandardOutput = true;
                 svg.StartInfo.UseShellExecute = false;
 
                 Process simplesvg = new Process();
-                simplesvg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
+                simplesvg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
                 simplesvg.StartInfo.RedirectStandardError = true;
                 simplesvg.StartInfo.RedirectStandardInput = true;
                 simplesvg.StartInfo.RedirectStandardOutput = true;
@@ -155,7 +156,7 @@ namespace AssemblyNameSpace
                 svgwriter.Close();
 
                 StreamWriter simplesvgwriter = simplesvg.StandardInput;
-                simplesvgwriter.WriteLine(buffer.ToString());
+                simplesvgwriter.WriteLine(simplebuffer.ToString());
                 simplesvgwriter.Write(0x4); // End of input
                 simplesvgwriter.Close();
 
@@ -175,9 +176,13 @@ namespace AssemblyNameSpace
 
                 return (svggraph, simplesvggraph);
             }
+            catch (Win32Exception)
+            {
+                throw new Exception($"Could not start Dot of the Graphviz software. Please make sure it is installed and added to your PATH if you run Graphviz globally. Or make sure you execute this program when the assets folder is accessible.");
+            }
             catch (Exception e)
             {
-                throw new Exception("Unexpected Expection when trying call dot to build graph: " + e.Message);
+                throw new Exception("Unexpected exception when trying call dot to build graph: " + e.Message);
             }
         }
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
@@ -484,9 +489,19 @@ namespace AssemblyNameSpace
 
             string stylesheet = "// Could not find the stylesheet";
             if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
+            else {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"Could not find the styles.css file. Please make sure the 'assets' folder is accessible. The HTML report is generated but the looks are not great.");
+                Console.ResetColor();
+            }
 
             string script = "// Could not find the script";
             if (File.Exists("assets/script.js")) script = File.ReadAllText("assets/script.js");
+            else {
+                Console.ForegroundColor = ConsoleColor.Yellow;
+                Console.WriteLine($"Could not find the script.js file. Please make sure the 'assets' folder is accessible. The HTML report is generated but is not very interactive.");
+                Console.ResetColor();
+            }
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             stopwatch.Stop();

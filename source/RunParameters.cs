@@ -61,8 +61,9 @@ namespace AssemblyNameSpace
             public FullRunParameters()
             {
                 Runname = "";
+                Runtype = RuntypeValue.Group;
                 DataParameters = new List<Input.Parameter>();
-                Reverse = ReverseValue.True;
+                Reverse = ReverseValue.False;
                 MinimalHomology = new List<KArithmetic>();
                 DuplicateThreshold = new List<KArithmetic>();
                 Alphabet = new List<AlphabetValue>();
@@ -765,7 +766,7 @@ namespace AssemblyNameSpace
             /// <returns>The main parameters</returns>
             public string Display()
             {
-                return $"\tRunname\t\t: {Runname}\n\tInput\t\t: {Input.Aggregate("", (a,b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}";
+                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a,b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}";
             }
             /// <summary>
             /// Runs this run.abstract Runs the assembly, and generates the reports.
@@ -822,7 +823,7 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("ERROR: " + e.Message);
                     Console.ResetColor();
-                    Console.WriteLine("STACKTRACE: " + e.StackTrace + "\nRUNPARAMETERS:\n" + Display());
+                    Console.WriteLine("RUNPARAMETERS:\n" + Display());
                 }
             }
         }
