@@ -1,1 +1,0 @@
-csc source/Main.cs source/Structs.cs source/Reporting.cs source/OpenReads.cs source/Assembler.cs source/Input.cs source/RunParameters.cs

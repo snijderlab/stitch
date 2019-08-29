@@ -2,15 +2,44 @@
 
 # Getting started
 
-The software can be build using csc by using the included build.bat file.
+There are distributed executable files for windows (x64) and linux (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on any platform supporting the dotnet runtime (See ['Running with dotnet'](#running-with-dotnet)). To use these download the files, unpack the archive and run the files from the commandline with the filename of the batch file to be used.
 
-There are distributed executable files for all releases. To use these download the files, unpack the archive and run the files from the commandline with the filename of the batch file to be used.
-
+Windows (x64):
 ```
-main.exe examplebatchfile.txt
+source.exe examplebatchfile.txt
+```
+
+Linux (x64, most version):
+```
+./source examplebatchfile.txt
 ```
 
 For help creating batch files see BatchFiles.md
+
+## Running with dotnet
+
+To run the program with the dotnet runtime, first install the dotnet runtime (at least version 2.2) from [here](https://dotnet.microsoft.com/download).
+Then run the following command to run the program:
+
+```
+dotnet path/to/source.dll <arguments>
+```
+
+# Building
+
+The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, go into the 'source' folder and run:
+
+```
+dotnet run
+```
+
+To generate a single executable with help of the ILCompiler run:
+
+```
+dotnet publish -c Release -r target-name
+```
+
+The target name should then be a valid 'RID' for the platform you choose. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling, so it can only compile binaries for the platform you are at.
 
 # Examples
 
