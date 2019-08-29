@@ -239,7 +239,7 @@ namespace AssemblyNameSpace
     <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
     <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
     <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
-    <td>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</td>
+    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</td>
 </tr>");
             }
 
@@ -269,7 +269,7 @@ namespace AssemblyNameSpace
     <h2>Reads Alignment</h4>
     {CreateReadsAlignment(condensed_graph[i])}
     <h2>Based on</h2>
-    <p>{condensed_graph[i].Origins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
+    <p>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
 </div>");
             }
             for (int i = 0; i < reads.Count(); i++)
@@ -293,8 +293,8 @@ namespace AssemblyNameSpace
         string CreateReadsAlignment(CondensedNode node)
         {
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
-            List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
-            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, true));
+            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
+            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true));
 
             // Find a bit more efficient packing of reads on the sequence
             var placed = new List<List<(string, int, int, int)>>();
@@ -714,8 +714,8 @@ namespace AssemblyNameSpace
         {
             // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
-            List<(string, int)> reads_array = node.Origins.Select(x => (AminoAcid.ArrayToString(reads[x]), x)).ToList();
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, reads_array, alphabet, true);
+            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
+            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true));
 
             // Calculate the score by calculating the total read length (which maps to a location on the contig)
             int score = 0;

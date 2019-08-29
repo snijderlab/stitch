@@ -229,9 +229,8 @@ namespace AssemblyNameSpace
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
 
-                    List<int> origins = new List<int>(start_node.Origins);
-
-                    // TODO check why equal contigs could possible be in the graph twice (based on alphabet but NOT identity)
+                    List<List<int>> origins = new List<List<int>>();
+                    origins.Add(start_node.Origins);
 
                     // Debug purposes can be deleted later
                     int forward_node_index = i;
@@ -243,7 +242,7 @@ namespace AssemblyNameSpace
                         forward_node.Visited = true;
                         forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2)); // Last amino acid of the sequence
                         forward_node_index = forward_node.ForwardEdges[0].Item1;
-                        foreach (int o in forward_node.Origins) origins.Add(o);
+                        origins.Add(forward_node.Origins);
 
                         forward_node = graph[forward_node_index];
 
@@ -252,12 +251,14 @@ namespace AssemblyNameSpace
                     }
                     forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
                     forward_node.Visited = true;
-                    foreach (int o in forward_node.Origins) origins.Add(o);
+                    origins.Add(forward_node.Origins);
 
                     if (forward_node.ForwardEdges.Count() > 0)
                     {
                         forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
                     }
+
+                    origins.Reverse(); // To make sure all are in the right order
 
                     // Walk backwards
                     while (backward_node.ForwardEdges.Count <= 1 && backward_node.BackwardEdges.Count == 1)
@@ -265,7 +266,7 @@ namespace AssemblyNameSpace
                         backward_node.Visited = true;
                         backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                         backward_node_index = backward_node.BackwardEdges[0].Item1;
-                        foreach (int o in backward_node.Origins) origins.Add(o);
+                        origins.Add(backward_node.Origins);
 
                         backward_node = graph[backward_node_index];
 
@@ -274,7 +275,7 @@ namespace AssemblyNameSpace
                     }
                     backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                     backward_node.Visited = true;
-                    foreach (int o in backward_node.Origins) origins.Add(o);
+                    origins.Add(backward_node.Origins);
 
                     if (backward_node.BackwardEdges.Count() > 0)
                     {
@@ -285,17 +286,9 @@ namespace AssemblyNameSpace
                     backward_sequence.Reverse();
                     backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
                     backward_sequence.AddRange(forward_sequence);
+                    origins.Reverse(); // To place it in the right direction
 
-                    List<int> originslist = new List<int>();
-                    foreach (int origin in origins)
-                    {
-                        if (!originslist.Contains(origin))
-                        {
-                            originslist.Add(origin);
-                        }
-                    }
-                    originslist.Sort();
-                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, originslist));
+                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
                 }
             }
 

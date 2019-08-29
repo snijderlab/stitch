@@ -309,7 +309,23 @@ namespace AssemblyNameSpace
         /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
         public List<int> BackwardEdges;
         /// <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
-        public List<int> Origins;
+        public List<List<int>> Origins;
+        public List<int> UniqueOrigins
+        {
+            get
+            {
+                var output = new List<int>();
+                foreach (var outer in Origins)
+                {
+                    foreach (var inner in outer)
+                    {
+                        if (!output.Contains(inner)) output.Add(inner);
+                    }
+                }
+                output.Sort();
+                return output;
+            }
+        }
         /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
         /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/></param>
         /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/></param>
@@ -318,7 +334,7 @@ namespace AssemblyNameSpace
         /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/></param>
         /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/></param>
         /// <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="CondensedNode.Origins"/></param>
-        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<int> origins)
+        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins)
         {
             Sequence = sequence;
             Index = index;
@@ -514,62 +530,8 @@ namespace AssemblyNameSpace
 
             return ((double)hits / covered.Length, correct_reads);
         }
-        /// <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
-        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the  
-        /// correctly aligned reads as an array as the second item and the depth of coverage as the third item. </returns>
-        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
-        /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
-        /// <param name="template"> The template to match against. </param>
-        /// <param name="sequences"> The sequences to match with. </param>
-        public static (double, string[], double) MultipleSequenceAlignmentToTemplateExtended(string template, string[] sequences)
-        {
-            // Keep track of all places already covered
-            bool[] covered = new bool[template.Length];
-            int total_placed_reads_length = 0;
-            List<string> placed_sequences = new List<string>();
-
-            foreach (string seq in sequences)
-            {
-                bool found = false;
-                for (int i = 0; i < template.Length; i++)
-                {
-                    // Try aligning on this position
-                    bool hit = true;
-                    for (int j = 0; j < seq.Length && hit; j++)
-                    {
-                        if (i + j > template.Length - 1 || template[i + j] != seq[j])
-                        {
-                            hit = false;
-                        }
-                    }
-
-                    // The alignment succeeded, record this in the covered array
-                    if (hit)
-                    {
-                        for (int k = 0; k < seq.Length; k++)
-                        {
-                            covered[i + k] = true;
-                        }
-                        found = true;
-                        total_placed_reads_length += seq.Length;
-                    }
-                }
-                if (found == true)
-                {
-                    placed_sequences.Add(seq);
-                }
-            }
-
-            int hits = 0;
-            foreach (bool b in covered)
-            {
-                if (b) hits++;
-            }
-
-            return ((double)hits / covered.Length, placed_sequences.ToArray(), (double)total_placed_reads_length / template.Length);
-        }
         /// <summary> This aligns a list of sequences to a template sequence based on the alphabet. </summary>
-        /// <returns> Returns a list of tuples with the sequences as first item, startinposition as second item, 
+        /// <returns> Returns a list of tuples with the sequences as first item, startingposition as second item, 
         /// end position as third item and identifier from the given list as fourth item. </returns>
         /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
         /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
@@ -577,51 +539,91 @@ namespace AssemblyNameSpace
         /// <param name="sequences"> The sequences to match with. </param>
         /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         /// <param name="alphabet"> The alphabet to be used. </param>
-        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, List<(string, int)> sequences, Alphabet alphabet, bool reverse = false)
+        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, bool reverse = false)
         {
             // Keep track of all places already covered
             var result = new List<(string, int, int, int)>();
 
             foreach (var current in sequences)
             {
-                string seq = current.Item1;
-                for (int i = -seq.Length + 1; i < template.Length; i++)
+                int identifier = current.Key;
+                string seq = current.Value;
+                string seq_rev = string.Concat(seq.Reverse());
+                int firsthit = -1;
+                int lasthit = -1;
+
+                for (int i = 0; i < positions.Count(); i++)
                 {
-                    // Try aligning on this position
-                    bool hit = true;
-                    int score_fw_t = 0;
-                    int score_bw_t = 0;
-                    for (int j = 0; j < seq.Length && hit; j++)
+                    if (positions[i].Contains(identifier))
                     {
-                        if (i + j >= template.Length)
-                        {
-                            break;
-                        }
-                        if (i + j >= 0)
-                        {
-                            //Console.WriteLine($"i {i} j{j} l{seq.Length} t{template.Length}");
-                            int score_fw = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[i + j]), alphabet.getIndexInAlphabet(seq[j])];
-                            int score_bw = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[i + j]), alphabet.getIndexInAlphabet(seq[seq.Length - j - 1])];
-                            score_fw_t += score_fw;
-                            score_bw_t += score_bw;
-
-                            if (score_fw < 1 && score_bw < 1)
-                            {
-                                hit = false;
-                            }
-                        }
+                        if (firsthit == -1) firsthit = i;
+                        lasthit = i;
                     }
-
-                    // The alignment succeeded
-                    if (hit)
+                    else
                     {
-                        if (score_fw_t >= score_bw_t && score_fw_t > 2) result.Add((seq, i, i + seq.Length, current.Item2));
-                        else if (score_bw_t > 2) result.Add((new string(seq.Reverse().ToArray()), i, i + seq.Length, current.Item2));
+                        if (firsthit > 0 && lasthit > 0)
+                        {
+                            // End of a match
+
+                            // Find the placement of the read in this patch
+
+                            int lengthpatch = lasthit - firsthit + 1;
+
+                            Console.WriteLine($"patch {lengthpatch} seq {seq.Length}");
+
+                            if (identifier == 186) {
+                                Console.WriteLine($"seq {seq} template {template}");
+                                for(int p = 0; p < positions.Count(); p++) {
+                                    Console.Write($"s{seq[p]} t{template[p]}");
+                                    foreach (var inner in positions[p]) {
+                                        Console.Write($" {inner}");
+                                    }
+                                    Console.Write("\n");
+                                }
+                            }
+
+                            if (lengthpatch == seq.Length)
+                            {
+                                // Determine forwards or backwards
+                                if (reverse)
+                                {
+                                    int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
+                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit);
+                                    if (score_fw >= score_bw) result.Add((seq, firsthit, lasthit, identifier));
+                                    else result.Add((seq_rev, firsthit, lasthit, identifier));
+                                } else {
+                                    result.Add((seq, firsthit, lasthit, identifier));
+                                }
+
+                            }
+                            else if (lengthpatch < seq.Length)
+                            {
+                                // Find where it cuts of (maybe start or end??)
+                            }
+                            else
+                            {
+                                // The patch is bigger than the sequence??? how that??
+                                throw new Exception($"While aligning read {seq} onto contig {template} the read seems to be shorter than the length of the match between the read and contig. (read length: {seq.Length}, length patch: {lengthpatch}).");
+                            }
+
+                            firsthit = -1;
+                            lasthit = -1;
+                        }
                     }
                 }
             }
 
             return result;
+        }
+
+        static int GetPositionScore(ref string template, ref string read, Alphabet alphabet, int position)
+        {
+            int score = 0;
+            for (int i = 0; i < read.Length && i < template.Length - position; i++)
+            {
+                score += alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[position + i]), alphabet.getIndexInAlphabet(read[i])];
+            }
+            return score;
         }
     }
 }

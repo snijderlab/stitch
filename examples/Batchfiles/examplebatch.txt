@@ -12,10 +12,10 @@ Name: Reads 005
 <-
 
 -Parameters-------------
-K	            : 9
+K	            : 8
 MinimalHomology : K-1
 DuplicateThreshold: K-1
-Reverse	        : True
+Reverse	        : False
 Alphabet->
 Data	->
 *;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
