@@ -24,6 +24,9 @@ namespace AssemblyNameSpace
         /// <returns>The runparameters as specified in the file.</returns>
         public static RunParameters.FullRunParameters Batch(string path)
         {
+            if (!File.Exists(path)) {
+                throw new ParseException("The specified batch file does not exist.");
+            }
             // Get the contents
             string content = File.ReadAllText(path).Trim();
 
@@ -424,7 +427,7 @@ namespace AssemblyNameSpace
             /// <param name="content">The string</param>
             public static void SkipLine(ref string content)
             {
-                int nextnewline = content.IndexOf("\n");
+                int nextnewline = FindNextNewLine(ref content);
                 if (nextnewline > 0)
                 {
                     content = content.Remove(0, nextnewline).Trim();
@@ -433,6 +436,19 @@ namespace AssemblyNameSpace
                 {
                     content = "";
                 }
+            }
+            /// <summary>
+            /// To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core
+            /// </summary>
+            /// <param name="content">The string to search in</param>
+            /// <returns>The position of the next newline ('\n' or '\r') or -1 if none could be found</returns>
+            public static int FindNextNewLine(ref string content) {
+                for (int pos = 0; pos < content.Length; pos++) {
+                    if (content[pos] == '\n' || content[pos] == '\r') {
+                        return pos;
+                    }
+                }
+                return -1;
             }
             /// <summary>
             /// Consumes a name from the start of the string
@@ -457,7 +473,19 @@ namespace AssemblyNameSpace
             /// <returns>The value</returns>
             public static string Value(ref string content)
             {
-                return UntilSequence(ref content, "\n");
+                string result = "";
+                int nextnewline = FindNextNewLine(ref content);
+                if (nextnewline > 0)
+                {
+                    result = content.Substring(0, nextnewline).Trim();
+                    content = content.Remove(0, nextnewline).Trim();
+                }
+                else
+                {
+                    result = content.Trim();
+                    content = "";
+                }
+                return result;
             }
             /// <summary>
             /// Consumes the string until it find the sequence
@@ -467,7 +495,22 @@ namespace AssemblyNameSpace
             /// <returns>The consumed part of the string</returns>
             public static string UntilSequence(ref string content, string sequence)
             {
-                int nextnewline = content.IndexOf(sequence);
+                int nextnewline = -1;
+                bool found = false;
+                var contentarray = content.ToCharArray();
+                for (int pos = 0; pos <= contentarray.Length - sequence.Length && !found; pos++) {
+                    for (int offset = 0; offset <= sequence.Length; offset++ ) {
+                        if (offset == sequence.Length) {
+                            nextnewline = pos;
+                            found = true;
+                            break;
+                        }
+                        if (contentarray[pos+offset] != sequence[offset]) {
+                            break;
+                        }
+                    }
+                }
+
                 string value = "";
                 if (nextnewline > 0)
                 {
@@ -527,7 +570,7 @@ namespace AssemblyNameSpace
             /// <param name="value">The value of the key</param>
             public KeyValue(string name, string value)
             {
-                Name = name;
+                Name = name.ToLower();
                 Value = new Single(value);
             }
             /// <summary>
@@ -537,7 +580,7 @@ namespace AssemblyNameSpace
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
             public KeyValue(string name, List<KeyValue> values)
             {
-                Name = name;
+                Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
             }
             /// <summary>

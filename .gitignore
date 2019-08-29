@@ -2,3 +2,7 @@
 *.log
 *.zip
 *.dot
+*.fasta
+*.html
+*.csv
+*/bin/*

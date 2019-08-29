@@ -1,0 +1,70 @@
+{
+  "format": 1,
+  "restore": {
+    "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\source.csproj": {}
+  },
+  "projects": {
+    "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\source.csproj": {
+      "version": "1.0.0",
+      "restore": {
+        "projectUniqueName": "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\source.csproj",
+        "projectName": "source",
+        "projectPath": "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\source.csproj",
+        "packagesPath": "C:\\Users\\douwe\\.nuget\\packages\\",
+        "outputPath": "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\obj\\",
+        "projectStyle": "PackageReference",
+        "fallbackFolders": [
+          "C:\\Program Files\\dotnet\\sdk\\NuGetFallbackFolder"
+        ],
+        "configFilePaths": [
+          "C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\source\\NuGet.Config",
+          "C:\\Users\\douwe\\AppData\\Roaming\\NuGet\\NuGet.Config",
+          "C:\\Program Files (x86)\\NuGet\\Config\\Microsoft.VisualStudio.Offline.config"
+        ],
+        "originalTargetFrameworks": [
+          "netcoreapp2.2"
+        ],
+        "sources": {
+          "https://api.nuget.org/v3/index.json": {},
+          "https://dotnetfeed.blob.core.windows.net/dotnet-core/index.json": {}
+        },
+        "frameworks": {
+          "netcoreapp2.2": {
+            "projectReferences": {}
+          }
+        },
+        "warningProperties": {
+          "warnAsError": [
+            "NU1605"
+          ]
+        }
+      },
+      "frameworks": {
+        "netcoreapp2.2": {
+          "dependencies": {
+            "Microsoft.DotNet.ILCompiler": {
+              "target": "Package",
+              "version": "[1.0.0-alpha-27527-01, )"
+            },
+            "Microsoft.NETCore.App": {
+              "suppressParent": "All",
+              "target": "Package",
+              "version": "[2.2.6, )",
+              "autoReferenced": true
+            }
+          },
+          "imports": [
+            "net461"
+          ],
+          "assetTargetFallback": true,
+          "warn": true
+        }
+      },
+      "runtimes": {
+        "win-x64": {
+          "#import": []
+        }
+      }
+    }
+  }
+}

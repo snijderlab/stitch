@@ -7,7 +7,7 @@ Runtype : Separate
 
 -Input------------------
 Reads	->
-Path: examples\005\reads.txt
+Path: examples/005/reads.txt
 Name: Reads 005
 <-
 
@@ -51,4 +51,5 @@ Path	: report-reads-{id}.fasta
 <-
 HTML ->
 Path    : report-reads-{id}.html
+DotDistribution: global
 <-
