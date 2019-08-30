@@ -262,14 +262,16 @@ namespace AssemblyNameSpace
                 string suffix = "";
                 if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
 
+                var readsalignment = CreateReadsAlignment(condensed_graph[i]);
+
                 buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig: {id}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
     <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
     <h2>Reads Alignment</h4>
-    {CreateReadsAlignment(condensed_graph[i])}
+    {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</p>
+    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetReadLink(b))}</p>
 </div>");
             }
             for (int i = 0; i < reads.Count(); i++)
@@ -290,17 +292,32 @@ namespace AssemblyNameSpace
         }
         /// <summary> Create a reads alignment to display in the sidebar. </summary>
         /// <returns> Returns an HTML string. </returns>
-        string CreateReadsAlignment(CondensedNode node)
+        (string, List<int>) CreateReadsAlignment(CondensedNode node)
         {
-            string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
+            string sequence = AminoAcid.ArrayToString(node.Prefix.ToArray()) + AminoAcid.ArrayToString(node.Sequence.ToArray()) + AminoAcid.ArrayToString(node.Suffix.ToArray());
             Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
-            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true));
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true);
+            sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
+            int prefixoffset = node.Prefix.Count();
+
+            // Delete matches at prefix and suffix
+            positions = positions.Where(a => a.EndPosition > prefixoffset && a.StartPosition < sequence.Length + prefixoffset).ToList();
+            //  Update the overhang at the start and end
+            positions = positions.Select(a => {
+                if (a.StartPosition < prefixoffset) {
+                    a.StartOverhang += a.Sequence.Substring(0, prefixoffset - a.StartPosition);
+                }
+                if (a.EndPosition > prefixoffset + sequence.Length ) {
+                    a.EndOverhang += a.Sequence.Substring(a.EndPosition - prefixoffset - sequence.Length);
+                }
+                return a;
+            }).ToList();
+            List<int> uniqueorigins = positions.Select(a => a.Identifier).ToList();
 
             // Find a bit more efficient packing of reads on the sequence
-            var placed = new List<List<(string, int, int, int)>>();
-            while (positions.Count() > 0)
+            var placed = new List<List<HelperFunctionality.ReadPlacement>>();
+            foreach (var current in positions)
             {
-                var current = positions.Dequeue();
                 bool fit = false;
                 for (int i = 0; i < placed.Count() && !fit; i++)
                 {
@@ -308,9 +325,9 @@ namespace AssemblyNameSpace
                     bool clashes = false;
                     for (int j = 0; j < placed[i].Count() && !clashes; j++)
                     {
-                        if ((current.Item2 + 1 > placed[i][j].Item2 && current.Item2 - 1 < placed[i][j].Item3)
-                         || (current.Item3 + 1 > placed[i][j].Item2 && current.Item3 - 1 < placed[i][j].Item3)
-                         || (current.Item2 - 1 < placed[i][j].Item2 && current.Item3 + 1 > placed[i][j].Item3))
+                        if ((current.StartPosition + 1 > placed[i][j].StartPosition && current.StartPosition - 1 < placed[i][j].EndPosition)
+                         || (current.EndPosition + 1 > placed[i][j].StartPosition && current.EndPosition - 1 < placed[i][j].EndPosition)
+                         || (current.StartPosition - 1 < placed[i][j].StartPosition && current.EndPosition + 1 > placed[i][j].EndPosition))
                         {
                             clashes = true;
                         }
@@ -323,7 +340,7 @@ namespace AssemblyNameSpace
                 }
                 if (!fit)
                 {
-                    placed.Add(new List<(string, int, int, int)> { current });
+                    placed.Add(new List<HelperFunctionality.ReadPlacement> { current });
                 }
             }
 
@@ -332,24 +349,47 @@ namespace AssemblyNameSpace
 
             int max_depth = 0;
             const int bucketsize = 5;
+
+            // Create the front overhanging reads block
+            buffer.AppendLine($"<input type='checkbox' id=\"front-overhang-toggle-{node.Index:D4}\"/><label for=\"front-overhang-toggle-{node.Index:D4}\">");
+            buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+            foreach (var line in placed)
+            {
+                string result = "<br>";
+                foreach (var read in line)
+                {
+                   if (read.StartPosition == 0 && read.StartOverhang != "") {
+                       result = "<span class='text'>" + read.StartOverhang + "</span><span class='symbol'>...</span><br>";
+                   }
+                }
+                buffer.Append(result);
+            }
+            buffer.AppendLine($"</p></div></label>");
+
+            // Create the main blocks of the sequence alignment
             for (int pos = 0; pos <= sequence.Length / bucketsize; pos++)
             {
                 // Add the sequence and the number to tell the position
-                string number = ((pos + 1) * bucketsize).ToString();
-                buffer.Append($"<div class='align-block'><p><span class=\"number\">{String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length))}{number}</span><br><span class=\"seq\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
+                string number = "";
+                if (sequence.Length - pos * bucketsize >= bucketsize)
+                {
+                    number = ((pos + 1) * bucketsize).ToString();
+                    number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                }
+                buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
 
                 int[] depth = new int[bucketsize];
                 // Add every line in order
                 foreach (var line in placed)
                 {
-                    for (int i = pos * bucketsize; i < pos * bucketsize + bucketsize; i++)
+                    for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
                     {
                         string result = "&nbsp;";
                         foreach (var read in line)
                         {
-                            if (i >= read.Item2 && i < read.Item3)
+                            if (i + prefixoffset >= read.StartPosition && i + prefixoffset < read.EndPosition)
                             {
-                                result = $"<a href=\"#R{read.Item4:D4}\" class=\"align-link\">{read.Item1[i - read.Item2]}</a>";
+                                result = $"<a href=\"#R{read.Identifier:D4}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
                                 depth[i - pos * bucketsize]++;
                             }
                         }
@@ -365,9 +405,14 @@ namespace AssemblyNameSpace
                 }
                 buffer.Append("</div></div>");
             }
+
+            // Create the end overhanging reads block
+
+            // End the reads alignment div
             buffer.AppendLine("</div>");
 
-            return buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>");
+
+            return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
         /// <summary> Returns the string representation of the human friendly identifier of a node. </summary>
         /// <param name="index"> The index in the condensed graph of the condensed node. </param>
@@ -489,7 +534,8 @@ namespace AssemblyNameSpace
 
             string stylesheet = "// Could not find the stylesheet";
             if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
-            else {
+            else
+            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Could not find the styles.css file. Please make sure the 'assets' folder is accessible. The HTML report is generated but the looks are not great.");
                 Console.ResetColor();
@@ -497,7 +543,8 @@ namespace AssemblyNameSpace
 
             string script = "// Could not find the script";
             if (File.Exists("assets/script.js")) script = File.ReadAllText("assets/script.js");
-            else {
+            else
+            {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Could not find the script.js file. Please make sure the 'assets' folder is accessible. The HTML report is generated but is not very interactive.");
                 Console.ResetColor();
@@ -715,7 +762,7 @@ namespace AssemblyNameSpace
             // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
-            var positions = new Queue<(string, int, int, int)>(HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true));
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true);
 
             // Calculate the score by calculating the total read length (which maps to a location on the contig)
             int score = 0;
@@ -723,7 +770,7 @@ namespace AssemblyNameSpace
             {
                 foreach (var read in positions)
                 {
-                    if (pos >= read.Item2 && pos < read.Item3)
+                    if (pos >= read.StartPosition && pos < read.EndPosition)
                     {
                         score++;
                     }

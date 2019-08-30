@@ -136,6 +136,7 @@ namespace AssemblyNameSpace
 
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
 
+            // All kmin1_mers, the sequence and its origins
             var kmin1_mers = new List<(AminoAcid[], List<int>)>();
 
             foreach (var kmin1_mer in kmin1_mers_raw)
@@ -143,10 +144,10 @@ namespace AssemblyNameSpace
                 bool inlist = false;
                 for (int i = 0; i < kmin1_mers.Count(); i++)
                 {
-                    // TODO Deduplicate using alphabet
+                    // Find if it is already in the list
                     if (AminoAcid.ArrayHomology(kmin1_mer.Item1, kmin1_mers[i].Item1) >= duplicate_threshold)
                     {
-                        kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update origins
+                        if (!kmin1_mers[i].Item2.Contains(kmin1_mer.Item2)) kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update origins
                         inlist = true;
                         break;
                     }
@@ -223,72 +224,69 @@ namespace AssemblyNameSpace
                     var forward_node = start_node;
                     var backward_node = start_node;
 
-                    List<AminoAcid> forward_sequence = new List<AminoAcid>();
-                    List<AminoAcid> backward_sequence = new List<AminoAcid>();
-
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
-
-                    List<List<int>> origins = new List<List<int>>();
-                    origins.Add(start_node.Origins);
 
                     // Debug purposes can be deleted later
                     int forward_node_index = i;
                     int backward_node_index = i;
 
+                    List<int> forward_indices = new List<int>();
+                    List<int> backward_indices = new List<int>();
+
                     // Walk forwards until a multifurcartion in the path is found or the end is reached
                     while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count <= 1)
                     {
+                        forward_indices.Add(forward_node_index);
                         forward_node.Visited = true;
-                        forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2)); // Last amino acid of the sequence
                         forward_node_index = forward_node.ForwardEdges[0].Item1;
-                        origins.Add(forward_node.Origins);
 
                         forward_node = graph[forward_node_index];
 
                         // To account for possible cycles 
                         if (forward_node_index == i) break;
                     }
-                    forward_sequence.Add(forward_node.Sequence.ElementAt(kmer_length - 2));
+                    forward_indices.Add(forward_node_index);
                     forward_node.Visited = true;
-                    origins.Add(forward_node.Origins);
 
                     if (forward_node.ForwardEdges.Count() > 0)
                     {
                         forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
                     }
 
-                    origins.Reverse(); // To make sure all are in the right order
-
                     // Walk backwards
                     while (backward_node.ForwardEdges.Count <= 1 && backward_node.BackwardEdges.Count == 1)
                     {
+                        backward_indices.Add(backward_node_index);
                         backward_node.Visited = true;
-                        backward_sequence.Add(backward_node.Sequence.ElementAt(0));
                         backward_node_index = backward_node.BackwardEdges[0].Item1;
-                        origins.Add(backward_node.Origins);
 
                         backward_node = graph[backward_node_index];
 
                         // To account for possible cycles 
                         if (backward_node_index == i) break;
                     }
-                    backward_sequence.Add(backward_node.Sequence.ElementAt(0));
+                    backward_indices.Add(backward_node_index);
                     backward_node.Visited = true;
-                    origins.Add(backward_node.Origins);
-
                     if (backward_node.BackwardEdges.Count() > 0)
                     {
                         backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
                     }
 
-                    // Build the final sequence
-                    backward_sequence.Reverse();
-                    backward_sequence.AddRange(start_node.Sequence.SubArray(1, kmer_length - 3));
-                    backward_sequence.AddRange(forward_sequence);
-                    origins.Reverse(); // To place it in the right direction
+                    backward_indices.Reverse();
+                    forward_indices.RemoveAt(0);
+                    backward_indices.AddRange(forward_indices);
 
-                    condensed_graph.Add(new CondensedNode(backward_sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
+                    var sequence = new List<AminoAcid>();
+                    List<List<int>> origins = new List<List<int>>();
+
+                    foreach (var kmin1_mer_index in backward_indices) {
+                        sequence.Add(graph[kmin1_mer_index].Sequence[0]);
+                        origins.Add(graph[kmin1_mer_index].Origins);
+                    }
+                    sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length-2));
+
+                    condensed_graph.Add(new CondensedNode(sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
                 }
             }
 

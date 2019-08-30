@@ -344,6 +344,8 @@ namespace AssemblyNameSpace
             BackwardEdges = backward_edges;
             Origins = origins;
             Visited = false;
+            Suffix = new List<AminoAcid>();
+            Prefix = new List<AminoAcid>();
         }
     }
     /// <summary>
@@ -478,57 +480,29 @@ namespace AssemblyNameSpace
             Array.Copy(data, index, result, 0, length);
             return result;
         }
-        /// <summary> This aligns a list of sequences to a template sequence based on character identity. </summary>
-        /// <returns> Returns a ValueTuple with the coverage as the first item (as a Double) and the amount of 
-        /// correctly aligned reads as an Int as the second item. </returns>
-        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
-        /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
-        /// <param name="template"> The template to match against. </param>
-        /// <param name="sequences"> The sequences to match with. </param>
-        public static (double, int) MultipleSequenceAlignmentToTemplate(string template, string[] sequences)
-        {
-            // Keep track of all places already covered
-            bool[] covered = new bool[template.Length];
-            int correct_reads = 0;
-
-            foreach (string seq in sequences)
-            {
-                bool found = false;
-                for (int i = 0; i < template.Length; i++)
-                {
-                    // Try aligning on this position
-                    bool hit = true;
-                    for (int j = 0; j < seq.Length && hit; j++)
-                    {
-                        if (i + j > template.Length - 1 || template[i + j] != seq[j])
-                        {
-                            hit = false;
-                        }
-                    }
-
-                    // The alignment succeeded, record this in the covered array
-                    if (hit)
-                    {
-                        for (int k = 0; k < seq.Length; k++)
-                        {
-                            covered[i + k] = true;
-                        }
-                        found = true;
-                    }
-                }
-                if (found == true)
-                {
-                    correct_reads += 1;
-                }
+        public struct ReadPlacement{
+            public string Sequence;
+            public int StartPosition;
+            public int EndPosition;
+            public int Identifier;
+            public string StartOverhang;
+            public string EndOverhang;
+            public ReadPlacement(string sequence, int startposition, int identifier) {
+                Sequence = sequence;
+                StartPosition = startposition;
+                EndPosition = startposition + sequence.Length;
+                Identifier = identifier;
+                StartOverhang = "";
+                EndOverhang = "";
             }
-
-            int hits = 0;
-            foreach (bool b in covered)
-            {
-                if (b) hits++;
+            public ReadPlacement(string sequence, int startposition, int identifier, string startoverhang, string endoverhang) {
+                Sequence = sequence;
+                StartPosition = startposition;
+                EndPosition = startposition + sequence.Length;
+                Identifier = identifier;
+                StartOverhang = startoverhang;
+                EndOverhang = endoverhang;
             }
-
-            return ((double)hits / covered.Length, correct_reads);
         }
         /// <summary> This aligns a list of sequences to a template sequence based on the alphabet. </summary>
         /// <returns> Returns a list of tuples with the sequences as first item, startingposition as second item, 
@@ -539,11 +513,12 @@ namespace AssemblyNameSpace
         /// <param name="sequences"> The sequences to match with. </param>
         /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         /// <param name="alphabet"> The alphabet to be used. </param>
-        public static List<(string, int, int, int)> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, bool reverse = false)
+        public static List<ReadPlacement> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, bool reverse = false)
         {
             // Keep track of all places already covered
-            var result = new List<(string, int, int, int)>();
+            var result = new List<ReadPlacement>();
 
+            // Loop through all to be placed reads
             foreach (var current in sequences)
             {
                 int identifier = current.Key;
@@ -552,35 +527,53 @@ namespace AssemblyNameSpace
                 int firsthit = -1;
                 int lasthit = -1;
 
+                // Try to find the first (and last) position it is in the originslist
                 for (int i = 0; i < positions.Count(); i++)
                 {
-                    if (positions[i].Contains(identifier))
+                    bool hit = false;
+                    for (int j = 0; j < positions[i].Count(); j++)
                     {
-                        if (firsthit == -1) firsthit = i;
-                        lasthit = i;
-                    }
-                    else
-                    {
-                        if (firsthit > 0 && lasthit > 0)
+                        //if (identifier == 183) Console.WriteLine(positions[i][j]);
+                        if (positions[i][j] == identifier)
                         {
+                            if (firsthit == -1) firsthit = i;
+                            lasthit = i;
+                            hit = true;
+                            break;
+                        }
+                    }
+                    if (!hit || i == positions.Count() -1)
+                    {
+                        if (firsthit >= 0 && lasthit >= 0)
+                        {
+                            lasthit += 7; //K-2
                             // End of a match
 
                             // Find the placement of the read in this patch
 
-                            int lengthpatch = lasthit - firsthit + 1;
+                            int lengthpatch = lasthit - firsthit;
 
-                            Console.WriteLine($"patch {lengthpatch} seq {seq.Length}");
+                            var buffer = new StringBuilder();
 
-                            if (identifier == 186) {
-                                Console.WriteLine($"seq {seq} template {template}");
-                                for(int p = 0; p < positions.Count(); p++) {
-                                    Console.Write($"s{seq[p]} t{template[p]}");
-                                    foreach (var inner in positions[p]) {
-                                        Console.Write($" {inner}");
+                            buffer.AppendLine($"patch {lengthpatch} seq {seq.Length} firsthit {firsthit} lasthit {lasthit} id {identifier}");
+
+                            if (template == "EKQLGCTYLMKLPEVAAGVQSARFSVE")
+                            {
+                                buffer.AppendLine($"seq {seq} template {template}");
+                                for (int p = 0; p < positions.Count() && p < template.Length; p++)
+                                {
+                                    if (p < seq.Length + firsthit && p >= firsthit) buffer.Append($"s{seq[p - firsthit]}");
+                                    buffer.Append($"\tt{template[p]}");
+                                    foreach (var inner in positions[p])
+                                    {
+                                        buffer.Append($" {inner}");
                                     }
-                                    Console.Write("\n");
+                                    buffer.Append("\n");
                                 }
+                                Console.Write(buffer.ToString());
                             }
+
+                            //if (identifier == 183) Console.WriteLine($"> start {firsthit} last {lasthit}");
 
                             if (lengthpatch == seq.Length)
                             {
@@ -588,17 +581,42 @@ namespace AssemblyNameSpace
                                 if (reverse)
                                 {
                                     int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
-                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit);
-                                    if (score_fw >= score_bw) result.Add((seq, firsthit, lasthit, identifier));
-                                    else result.Add((seq_rev, firsthit, lasthit, identifier));
-                                } else {
-                                    result.Add((seq, firsthit, lasthit, identifier));
+                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit+1);
+                                    if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier));
+                                    else result.Add(new ReadPlacement(seq_rev, firsthit, identifier));
+                                }
+                                else
+                                {
+                                    result.Add(new ReadPlacement(seq, firsthit, identifier));
                                 }
 
                             }
                             else if (lengthpatch < seq.Length)
                             {
-                                // Find where it cuts of (maybe start or end??)
+                                // Offset, score, reverse
+                                var possibilities = new List<(int, ReadPlacement)>();
+
+                                for (int offset = 0; offset < seq.Length - lengthpatch + 1; offset++)
+                                {
+                                    int score = 0;
+                                    string tseq = "";
+                                    if (reverse)
+                                    {
+                                        tseq = seq_rev.Substring(offset, lengthpatch);
+                                        score = GetPositionScore(ref template, ref tseq, alphabet, firsthit + 1);
+                                        possibilities.Add((score, new ReadPlacement(tseq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
+                                    }
+                                    tseq = seq.Substring(offset, lengthpatch);
+                                    score = GetPositionScore(ref template, ref tseq, alphabet, firsthit);
+                                    possibilities.Add((score, new ReadPlacement(tseq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
+                                }
+
+                                var best = possibilities.First();
+                                foreach (var option in possibilities)
+                                {
+                                    if (option.Item1 > best.Item1) best = option;
+                                }
+                                result.Add(best.Item2);
                             }
                             else
                             {

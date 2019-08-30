@@ -46,9 +46,9 @@ Name	: Normal
 <-
 
 -Report-----------------
-FASTA	->
-Path	: report-reads-{id}.fasta
-<-
+-FASTA	->
+-Path	: report-reads-{id}.fasta
+-<-
 HTML ->
 Path    : report-reads-{id}.html
 DotDistribution: global

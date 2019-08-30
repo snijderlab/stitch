@@ -235,6 +235,7 @@ label {
     display: block;
     border-radius: 0.1em;
     margin-top: 0.5em;
+    cursor: pointer;
 }
 
 label::after {
@@ -462,8 +463,58 @@ svg .selected text {
     border-color: var(--color-secondary);
 }
 
+.front-overhang {
+    text-align: right;
+}
 
-/* Original seuquence peaks */
+.front-overhang .symbol {
+    letter-spacing: -4px;
+    opacity: 0.5;
+    margin-right: 0.25em;
+}
+
+.front-overhang .text {
+    display: none;
+}
+
+.front-overhang-spacing, .end-overhang-spacing {
+    height: 69px;
+    display: block;
+}
+
+input:checked+label .front-overhang .symbol {
+    display: none;
+}
+
+input:checked+label .front-overhang .text {
+    display: inline-block;
+}
+
+.reads-alignment label {
+    padding: 0;
+    margin: 0;
+    max-height: 0px;
+    font-size: 1rem;
+    color: #333;
+}
+
+.reads-alignment label::before {
+    content: "+";
+    color: var(--color-primary-light);
+    background-color: var(--color-primary-dark);
+    margin: 0.2em;
+    padding: 0.1em 0.4em;
+    border-radius: 50%;
+    width: 1em;
+    height: 1em;
+}
+
+.reads-alignment input:checked+label::before {
+    content: "-";
+    padding: 0.1em 0.45em;
+}
+
+/* Original sequence peaks */
 
 .original-sequence {
     display: flex;

@@ -65,7 +65,7 @@ Example 009 is an example of a FASTA input file.
 
 # License
 
-...
+MIT License see LICENSE.md.
 
 # Cross platform
 
