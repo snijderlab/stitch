@@ -415,6 +415,7 @@ svg .selected text {
 .align-block {
     display: flex;
     flex-direction: column;
+    height: auto;
 }
 
 .reads-alignment p {
@@ -465,37 +466,44 @@ svg .selected text {
 
 .front-overhang {
     text-align: right;
+    margin-right: .5em;
 }
 
-.front-overhang .symbol {
+.end-overhang {
+    text-align: left;
+    margin-left: .5em;
+}
+
+.overhang-block .symbol {
     letter-spacing: -4px;
     opacity: 0.5;
     margin-right: 0.25em;
 }
 
-.front-overhang .text {
+.overhang-block .text {
     display: none;
 }
 
-.front-overhang-spacing, .end-overhang-spacing {
+.front-overhang-spacing,
+.end-overhang-spacing {
     height: 69px;
     display: block;
 }
 
-input:checked+label .front-overhang .symbol {
+input:checked+label .overhang-block .symbol {
     display: none;
 }
 
-input:checked+label .front-overhang .text {
+input:checked+label .overhang-block .text {
     display: inline-block;
 }
 
 .reads-alignment label {
     padding: 0;
     margin: 0;
-    max-height: 0px;
     font-size: 1rem;
     color: #333;
+    background-color: transparent;
 }
 
 .reads-alignment label::before {
@@ -513,6 +521,7 @@ input:checked+label .front-overhang .text {
     content: "-";
     padding: 0.1em 0.45em;
 }
+
 
 /* Original sequence peaks */
 

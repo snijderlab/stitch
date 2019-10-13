@@ -31,10 +31,10 @@ On windows [Graphviz](https://www.graphviz.org) is included in the assets, so th
 
 # Building
 
-The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, go into the 'source' folder and run:
+The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
-dotnet run
+dotnet run -p source <path to batchfile>
 ```
 
 To generate a single executable with help of the ILCompiler run:

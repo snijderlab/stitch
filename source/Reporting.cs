@@ -351,7 +351,7 @@ namespace AssemblyNameSpace
             const int bucketsize = 5;
 
             // Create the front overhanging reads block
-            buffer.AppendLine($"<input type='checkbox' id=\"front-overhang-toggle-{node.Index:D4}\"/><label for=\"front-overhang-toggle-{node.Index:D4}\">");
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{node.Index:D4}\"/><label for=\"front-overhang-toggle-{node.Index:D4}\">");
             buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
             foreach (var line in placed)
             {
@@ -359,24 +359,27 @@ namespace AssemblyNameSpace
                 foreach (var read in line)
                 {
                    if (read.StartPosition == 0 && read.StartOverhang != "") {
-                       result = "<span class='text'>" + read.StartOverhang + "</span><span class='symbol'>...</span><br>";
+                       result = $"<a href=\"#R{read.Identifier:D4}\" class='text align-link'>{read.StartOverhang}</a><span class='symbol'>...</span><br>";
                    }
                 }
                 buffer.Append(result);
             }
-            buffer.AppendLine($"</p></div></label>");
+            buffer.AppendLine($"</p></div></label></div>");
 
             // Create the main blocks of the sequence alignment
             for (int pos = 0; pos <= sequence.Length / bucketsize; pos++)
             {
                 // Add the sequence and the number to tell the position
                 string number = "";
+                string last = "";
                 if (sequence.Length - pos * bucketsize >= bucketsize)
                 {
                     number = ((pos + 1) * bucketsize).ToString();
                     number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                } else {
+                    last = " last";
                 }
-                buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
+                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
 
                 int[] depth = new int[bucketsize];
                 // Add every line in order
@@ -398,7 +401,7 @@ namespace AssemblyNameSpace
                     buffer.Append("<br>");
                 }
                 buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
-                for (int i = 0; i < bucketsize; i++)
+                for (int i = 0; i < Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
                 {
                     if (depth[i] > max_depth) max_depth = depth[i];
                     buffer.Append($"<span class='coverage-depth-bar' style='--value:{depth[i]}'></span>");
@@ -407,6 +410,20 @@ namespace AssemblyNameSpace
             }
 
             // Create the end overhanging reads block
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{node.Index:D4}\"/><label for=\"end-overhang-toggle-{node.Index:D4}\">");
+            buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
+            foreach (var line in placed)
+            {
+                string result = "<br>";
+                foreach (var read in line)
+                {
+                   if (read.EndPosition == sequence.Length && read.EndOverhang != "") {
+                       result = $"<a href=\"#R{read.Identifier:D4}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
+                   }
+                }
+                buffer.Append(result);
+            }
+            buffer.AppendLine($"</p></div></label></div>");
 
             // End the reads alignment div
             buffer.AppendLine("</div>");
