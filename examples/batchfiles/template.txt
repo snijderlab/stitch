@@ -1,0 +1,35 @@
+------| Assemble |------
+
+-Run Info---------------
+Version	: 0
+Runname	: Template Matching Test
+Runtype : Separate
+
+-Input------------------
+Reads	->
+Path: examples/011/reads-IgG2-K-002-all-75,00.txt
+Name: Reads 011
+<--
+
+-Parameters-------------
+K	            : 6
+MinimalHomology : K-1
+DuplicateThreshold: K-1
+Reverse	        : False
+Alphabet->
+Path	: examples/alphabets/common_errors_alphabet.csv
+Name	: Normal
+<-
+Template->
+Path    : examples/templates/IGHC.fasta
+Name    : IGKJ Human
+<-
+
+-Report-----------------
+-FASTA	->
+-Path	: report-reads-{id}.fasta
+-<-
+HTML ->
+Path    : report-reads-{id}.html
+DotDistribution: global
+<-

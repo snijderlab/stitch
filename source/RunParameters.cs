@@ -52,6 +52,10 @@ namespace AssemblyNameSpace
             /// </summary>
             public List<AlphabetValue> Alphabet;
             /// <summary>
+            /// The template(s) to be used in this run
+            /// </summary>
+            public List<TemplateValue> Template;
+            /// <summary>
             /// The report(s) to be generated for this run
             /// </summary>
             public List<Report.Parameter> Report;
@@ -67,6 +71,7 @@ namespace AssemblyNameSpace
                 MinimalHomology = new List<KArithmetic>();
                 DuplicateThreshold = new List<KArithmetic>();
                 Alphabet = new List<AlphabetValue>();
+                Template = new List<TemplateValue>();
                 Report = new List<Report.Parameter>();
             }
             /// <summary>
@@ -125,14 +130,14 @@ namespace AssemblyNameSpace
                                     if (Runtype == RuntypeValue.Group)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Report));
+                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Report));
                                     }
                                     else
                                     {
                                         foreach (var input in DataParameters)
                                         {
                                             id++;
-                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Report));
+                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Report));
                                         }
                                     }
                                 }
@@ -599,6 +604,20 @@ namespace AssemblyNameSpace
             public string Name;
         }
         /// <summary>
+        /// An input for a template
+        /// </summary>
+        public class TemplateValue
+        {
+            /// <summary>
+            /// The path to the file
+            /// </summary>
+            public string Path;
+            /// <summary>
+            /// The name for this template, to recognize it
+            /// </summary>
+            public string Name;
+        }
+        /// <summary>
         /// To contain parameters for reporting
         /// </summary>
         public class Report
@@ -709,6 +728,10 @@ namespace AssemblyNameSpace
             /// </summary>
             public AlphabetValue Alphabet;
             /// <summary>
+            /// The template(s) used in this run
+            /// </summary>
+            public List<TemplateValue> Template;
+            /// <summary>
             /// The reports to be generated
             /// </summary>
             public List<Report.Parameter> Report;
@@ -723,8 +746,9 @@ namespace AssemblyNameSpace
             /// <param name="minimalHomology">The value of MinimalHomology</param>
             /// <param name="reverse">The value of Reverse</param>
             /// <param name="alphabet">The alphabet to be used</param>
+            /// <param name="template">The templates to be used</param>
             /// <param name="report">The report(s) to be generated</param>
-            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, List<Report.Parameter> report)
             {
                 ID = id;
                 Runname = runname;
@@ -734,6 +758,7 @@ namespace AssemblyNameSpace
                 MinimalHomology = minimalHomology;
                 Reverse = reverse;
                 Alphabet = alphabet;
+                Template = template;
                 Report = report;
             }
             /// <summary>
@@ -747,8 +772,9 @@ namespace AssemblyNameSpace
             /// <param name="minimalHomology">The value of MinimalHomology</param>
             /// <param name="reverse">The value of Reverse</param>
             /// <param name="alphabet">The alphabet to be used</param>
+            /// <param name="template">The templates to be used</param>
             /// <param name="report">The report(s) to be generated</param>
-            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, List<Report.Parameter> report)
             {
                 ID = id;
                 Runname = runname;
@@ -758,6 +784,7 @@ namespace AssemblyNameSpace
                 MinimalHomology = minimalHomology;
                 Reverse = reverse;
                 Alphabet = alphabet;
+                Template = template;
                 Report = report;
             }
             /// <summary>
@@ -766,7 +793,7 @@ namespace AssemblyNameSpace
             /// <returns>The main parameters</returns>
             public string Display()
             {
-                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a,b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}";
+                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a,b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}\n\tTemplate\t: {Template.Aggregate("", (a,b) => a + " " + b.Name)}";
             }
             /// <summary>
             /// Runs this run.abstract Runs the assembly, and generates the reports.
@@ -775,7 +802,8 @@ namespace AssemblyNameSpace
             {
                 try
                 {
-                    var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse, new Alphabet(Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data));
+                    var alphabet = new Alphabet(Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data);
+                    var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse, alphabet);
 
                     // Retrieve the input
                     foreach (var input in Input)
@@ -795,6 +823,12 @@ namespace AssemblyNameSpace
                     }
                     
                     assm.Assemble();
+
+                    foreach (var template in Template) {
+                        Console.WriteLine($"Working on Template {template.Name}");
+                        var database = new TemplateDatabase(template.Path, template.Name, alphabet);
+                        database.Match(assm.condensed_graph);
+                    }
 
                     // Generate the report(s)
                     foreach (var report in Report)
@@ -823,6 +857,7 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = ConsoleColor.Red;
                     Console.WriteLine("ERROR: " + e.Message);
                     Console.ResetColor();
+                    Console.WriteLine("STACKTRACE: " + e.StackTrace);
                     Console.WriteLine("RUNPARAMETERS:\n" + Display());
                 }
             }

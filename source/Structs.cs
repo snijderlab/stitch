@@ -439,34 +439,35 @@ namespace AssemblyNameSpace
 
             int columns = array[0].Length;
 
-            if (rows != columns)
+            for (int line = 0; line < rows; line++)
             {
-                throw new ParseException($"The amount of rows ({rows}) is not equal to the amount of columns ({columns}).");
-            }
-            else
-            {
-                alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
-                scoring_matrix = new int[columns - 1, columns - 1];
-
-                for (int i = 0; i < columns - 1; i++)
+                if (rows != array[line].Length)
                 {
-                    for (int j = 0; j < columns - 1; j++)
+                    throw new ParseException($"The amount of rows ({rows}) is not equal to the amount of columns ({array[line].Length}) for line {line + 1}.");
+                }
+            }
+
+            alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
+            scoring_matrix = new int[columns - 1, columns - 1];
+
+            for (int i = 0; i < columns - 1; i++)
+            {
+                for (int j = 0; j < columns - 1; j++)
+                {
+                    try
                     {
-                        try
-                        {
-                            scoring_matrix[i, j] = Int32.Parse(array[i + 1][j + 1]);
-                        }
-                        catch
-                        {
-                            throw new ParseException($"The reading on the alphabet file was not successfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
-                        }
+                        scoring_matrix[i, j] = Int32.Parse(array[i + 1][j + 1]);
+                    }
+                    catch
+                    {
+                        throw new ParseException($"The reading on the alphabet file was not successfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
                     }
                 }
             }
         }
     }
     /// <summary> A class to store extension methods to help in the process of coding. </summary>
-    static class HelperFunctionality
+    static public class HelperFunctionality
     {
         /// <summary> To copy a subarray to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
@@ -480,14 +481,16 @@ namespace AssemblyNameSpace
             Array.Copy(data, index, result, 0, length);
             return result;
         }
-        public struct ReadPlacement{
+        public struct ReadPlacement
+        {
             public string Sequence;
             public int StartPosition;
             public int EndPosition;
             public int Identifier;
             public string StartOverhang;
             public string EndOverhang;
-            public ReadPlacement(string sequence, int startposition, int identifier) {
+            public ReadPlacement(string sequence, int startposition, int identifier)
+            {
                 Sequence = sequence;
                 StartPosition = startposition;
                 EndPosition = startposition + sequence.Length;
@@ -495,7 +498,8 @@ namespace AssemblyNameSpace
                 StartOverhang = "";
                 EndOverhang = "";
             }
-            public ReadPlacement(string sequence, int startposition, int identifier, string startoverhang, string endoverhang) {
+            public ReadPlacement(string sequence, int startposition, int identifier, string startoverhang, string endoverhang)
+            {
                 Sequence = sequence;
                 StartPosition = startposition;
                 EndPosition = startposition + sequence.Length;
@@ -541,7 +545,7 @@ namespace AssemblyNameSpace
                             break;
                         }
                     }
-                    if (!hit || i == positions.Count() -1)
+                    if (!hit || i == positions.Count() - 1)
                     {
                         if (firsthit >= 0 && lasthit >= 0)
                         {
@@ -555,7 +559,7 @@ namespace AssemblyNameSpace
                                 if (reverse)
                                 {
                                     int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
-                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit+1);
+                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit + 1);
                                     if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier));
                                     else result.Add(new ReadPlacement(seq_rev, firsthit, identifier));
                                 }
@@ -617,5 +621,41 @@ namespace AssemblyNameSpace
             }
             return score;
         }
+
+        static public int SmithWaterman(AminoAcid[] left, AminoAcid[] right, int gap_penalty = 2, int mis_match = 1)
+        {
+            var score_matrix = new (int, Direction)[left.Length + 1, right.Length + 1]; // Default value of 0
+            int max_value = 0;
+            //(int, int) max_index = (0, 0);
+            for (int x = 1; x <= left.Length; x++)
+            {
+                for (int y = 1; y <= right.Length; y++)
+                {
+                    int score = left[x-1].Homology(right[y-1]);
+                    // Calculate the score for the current position
+                    int a = score_matrix[x - 1, y - 1].Item1 + (score == 0 ? - mis_match : score); // Match
+                    int b = score_matrix[x, y - 1].Item1 - gap_penalty; // GapLeft
+                    int c = score_matrix[x - 1, y].Item1 - gap_penalty; // GapRight
+                    int d = 0;
+                    if (a > b && a > c && a > d) score_matrix[x, y] = (a, Direction.Match);
+                    else if (b > c && b > d)     score_matrix[x, y] = (b, Direction.GapLeft);
+                    else if (c > d)              score_matrix[x, y] = (c, Direction.GapRight);
+                    else                         score_matrix[x, y] = (d, Direction.NoMatch);
+
+                    // Keep track of the maximal value
+                    if (score_matrix[x, y].Item1 > max_value)
+                    {
+                        max_value = score_matrix[x, y].Item1;
+                        //max_index = (x, y);
+                    }
+                }
+            }
+
+            // Traceback
+            // Not needed for now because this only returns the score, could easily be implemented later
+            return max_value;
+        }
+
+        enum Direction { Match, GapLeft, GapRight, NoMatch }
     }
 }

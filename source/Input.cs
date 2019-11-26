@@ -328,6 +328,25 @@ namespace AssemblyNameSpace
                         }
                         output.Alphabet.Add(asettings);
                         break;
+                    case "template":
+                        var tsettings = new RunParameters.TemplateValue();
+
+                        foreach (var setting in pair.GetValues())
+                        {
+                            switch (setting.Name)
+                            {
+                                case "path":
+                                    tsettings.Path = setting.GetValue();
+                                    break;
+                                case "name":
+                                    tsettings.Name = setting.GetValue();
+                                    break;
+                                default:
+                                    throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are 'Path'");
+                            }
+                        }
+                        output.Template.Add(tsettings);
+                        break;
                     case "html":
                         var hsettings = new RunParameters.Report.HTML();
 
