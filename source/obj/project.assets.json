@@ -2,15 +2,6 @@
   "version": 3,
   "targets": {
     ".NETCoreApp,Version=v2.2": {
-      "Microsoft.DotNet.ILCompiler/1.0.0-alpha-27527-01": {
-        "type": "package",
-        "compile": {
-          "ref/netstandard/_._": {}
-        },
-        "build": {
-          "build/Microsoft.DotNet.ILCompiler.targets": {}
-        }
-      },
       "Microsoft.NETCore.App/2.2.0": {
         "type": "package",
         "dependencies": {
@@ -220,35 +211,6 @@
     }
   },
   "libraries": {
-    "Microsoft.DotNet.ILCompiler/1.0.0-alpha-27527-01": {
-      "sha512": "PnYu4iPqTRzEYGfwbFn4HxlC+GlFetyxt/rq1r+rdelcXgNVJw+FgcYKjSK5s6etQnkQFBhtpq+vnTO3YAPhHw==",
-      "type": "package",
-      "path": "microsoft.dotnet.ilcompiler/1.0.0-alpha-27527-01",
-      "hasTools": true,
-      "files": [
-        ".nupkg.metadata",
-        "LICENSE.TXT",
-        "THIRD-PARTY-NOTICES.TXT",
-        "build/BuildFrameworkNativeObjects.proj",
-        "build/BuildIntegration.proj",
-        "build/Microsoft.DotNet.ILCompiler.targets",
-        "build/Microsoft.NETCore.Native.Publish.targets",
-        "build/Microsoft.NETCore.Native.ReadyToRun.targets",
-        "build/Microsoft.NETCore.Native.Unix.props",
-        "build/Microsoft.NETCore.Native.Windows.props",
-        "build/Microsoft.NETCore.Native.targets",
-        "build/findvcvarsall.bat",
-        "microsoft.dotnet.ilcompiler.1.0.0-alpha-27527-01.nupkg.sha512",
-        "microsoft.dotnet.ilcompiler.nuspec",
-        "ref/netstandard/_._",
-        "runtime.json",
-        "tools/netstandard/ILCompiler.Build.Tasks.dll",
-        "tools/netstandard/ILCompiler.Build.Tasks.pdb",
-        "tools/netstandard/System.Collections.Immutable.dll",
-        "tools/netstandard/System.Reflection.Metadata.dll",
-        "version.txt"
-      ]
-    },
     "Microsoft.NETCore.App/2.2.0": {
       "sha512": "7z5l8Jp324S8bU8+yyWeYHXUFYvKyiI5lqS1dXgTzOx1H69Qbf6df12kCKlNX45LpMfCMd4U3M6p7Rl5Zk7SLA==",
       "type": "package",
@@ -720,7 +682,6 @@
   },
   "projectFileDependencyGroups": {
     ".NETCoreApp,Version=v2.2": [
-      "Microsoft.DotNet.ILCompiler >= 1.0.0-alpha-27527-01",
       "Microsoft.NETCore.App >= 2.2.0"
     ]
   },
@@ -765,10 +726,6 @@
     "frameworks": {
       "netcoreapp2.2": {
         "dependencies": {
-          "Microsoft.DotNet.ILCompiler": {
-            "target": "Package",
-            "version": "[1.0.0-alpha-27527-01, )"
-          },
           "Microsoft.NETCore.App": {
             "suppressParent": "All",
             "target": "Package",

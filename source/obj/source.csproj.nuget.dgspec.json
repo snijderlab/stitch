@@ -41,10 +41,6 @@
       "frameworks": {
         "netcoreapp2.2": {
           "dependencies": {
-            "Microsoft.DotNet.ILCompiler": {
-              "target": "Package",
-              "version": "[1.0.0-alpha-27527-01, )"
-            },
             "Microsoft.NETCore.App": {
               "suppressParent": "All",
               "target": "Package",
