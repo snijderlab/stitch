@@ -3,7 +3,6 @@
 -Run Info---------------
 Version	: 0
 Runname	: Template Matching Test
-Runtype : Separate
 
 -Input------------------
 Reads	->
@@ -21,8 +20,8 @@ Path	: examples/alphabets/common_errors_alphabet.csv
 Name	: Normal
 <-
 Template->
-Path    : examples/templates/IGHC.fasta
-Name    : IGKJ Human
+Path    : examples/templates/IGHV.fasta
+Name    : IGHV Human
 <-
 
 -Report-----------------

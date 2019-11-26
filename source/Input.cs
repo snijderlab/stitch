@@ -659,7 +659,7 @@ namespace AssemblyNameSpace
                 /// <param name="value">The value</param>
                 public Single(string value)
                 {
-                    Value = value;
+                    Value = value.Trim();
                 }
             }
             /// <summary>

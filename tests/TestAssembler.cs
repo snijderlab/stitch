@@ -1,15 +1,7 @@
 using System;
 using System.IO;
-using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.ComponentModel;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using AssemblyNameSpace;
 
@@ -55,7 +47,11 @@ namespace AssemblyTestNameSpace
         [DataRow("*;A;B\nA;1;0\nB;0;1\nC;0;0", "Extra row")]
         [DataRow("*;A;B\nA;1;0;0\nB;0;1;0\nC;0;0;1", "Missing Column")]
         [DataRow("*;A;B\nA;1;0\nB;o;1", "Non Integer value")]
+        [DataRow("*;A;B\nA:1;0\nB;0;1", "Missing cell, ':' insted of ';'")]
+        [DataRow("*;A;B\nA;1;0\nB;0:1", "Missing cell, ':' insted of ';'")]
+        [DataRow("*;A;B\nA;1;0\nB;0;", "Missing value")]
         [DataRow("*;A;B\nA;1;0\nB;;1", "Missing value")]
+        [DataRow("*;A;B\nA;1\nB;0;1", "Missing cell")]
         [DataTestMethod]
         public void InvariantNotValidAlphabet(string a, string msg)
         {
@@ -128,6 +124,13 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(y);
             Assert.AreEqual(7, HelperFunctionality.SmithWaterman(a, b));
+        }
+        [TestMethod]
+        public void MismatchAndGap()
+        {
+            var a = StringToSequence("ACBCABCABCBBCBCAC");
+            var b = StringToSequence("CABCDAAC");
+            Assert.AreEqual(4, HelperFunctionality.SmithWaterman(a, b));
         }
         AminoAcid[] StringToSequence(string input)
         {
