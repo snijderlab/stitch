@@ -52,7 +52,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void OpenViaFile()
         {
-            //Expect to be running inside the /bin/debug/netcoreapp3.0 folder
+            //Expect to be running inside the /bin/debug/netcoreapp2.2 folder
             Alphabet alp2 = new Alphabet(@"../../../testalphabet.csv", Alphabet.AlphabetParamType.Path);
             string input = "AB";
             foreach (char c in input)

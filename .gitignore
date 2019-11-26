@@ -14,3 +14,5 @@ release
 generate_tests/*
 source/obj/*
 tests/obj/*
+.vscode
+.vscode/*
