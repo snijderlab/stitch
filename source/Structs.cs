@@ -515,7 +515,6 @@ namespace AssemblyNameSpace
         /// <param name="alphabet"> The alphabet to be used. </param>
         public static List<ReadPlacement> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, bool reverse = false)
         {
-            //TODO delete testing code
             // Keep track of all places already covered
             var result = new List<ReadPlacement>();
 
@@ -534,7 +533,6 @@ namespace AssemblyNameSpace
                     bool hit = false;
                     for (int j = 0; j < positions[i].Count(); j++)
                     {
-                        //if (identifier == 183) Console.WriteLine(positions[i][j]);
                         if (positions[i][j] == identifier)
                         {
                             if (firsthit == -1) firsthit = i;
@@ -547,34 +545,9 @@ namespace AssemblyNameSpace
                     {
                         if (firsthit >= 0 && lasthit >= 0)
                         {
-                            lasthit += 7; //K-2
-                            // End of a match
-
                             // Find the placement of the read in this patch
 
                             int lengthpatch = lasthit - firsthit;
-
-                            var buffer = new StringBuilder();
-
-                            buffer.AppendLine($"patch {lengthpatch} seq {seq.Length} firsthit {firsthit} lasthit {lasthit} id {identifier}");
-
-                            if (template == "EKQLGCTYLMKLPEVAAGVQSARFSVE")
-                            {
-                                buffer.AppendLine($"seq {seq} template {template}");
-                                for (int p = 0; p < positions.Count() && p < template.Length; p++)
-                                {
-                                    if (p < seq.Length + firsthit && p >= firsthit) buffer.Append($"s{seq[p - firsthit]}");
-                                    buffer.Append($"\tt{template[p]}");
-                                    foreach (var inner in positions[p])
-                                    {
-                                        buffer.Append($" {inner}");
-                                    }
-                                    buffer.Append("\n");
-                                }
-                                Console.Write(buffer.ToString());
-                            }
-
-                            //if (identifier == 183) Console.WriteLine($"> start {firsthit} last {lasthit}");
 
                             if (lengthpatch == seq.Length)
                             {
