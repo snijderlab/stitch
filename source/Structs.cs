@@ -422,9 +422,9 @@ namespace AssemblyNameSpace
                 {
                     data = File.ReadAllText(data);
                 }
-                catch
+                catch (Exception e)
                 {
-                    throw new Exception($"Could not open the alphabetfile: {data}");
+                    throw new Exception($"Could not open the alphabetfile: {data}; {e.Message}");
                 }
             }
             var input = data.Split('\n');
@@ -515,6 +515,7 @@ namespace AssemblyNameSpace
         /// <param name="alphabet"> The alphabet to be used. </param>
         public static List<ReadPlacement> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, bool reverse = false)
         {
+            //TODO delete testing code
             // Keep track of all places already covered
             var result = new List<ReadPlacement>();
 

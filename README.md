@@ -31,10 +31,10 @@ On windows [Graphviz](https://www.graphviz.org) is included in the assets, so th
 
 # Building
 
-The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, go into the 'source' folder and run:
+The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
-dotnet run
+dotnet run -p source <path to batchfile>
 ```
 
 To generate a single executable with help of the ILCompiler run:
@@ -44,6 +44,14 @@ dotnet publish -c Release -r target-name
 ```
 
 The target name should then be a valid 'RID' for the platform you choose. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling, so it can only compile binaries for the platform you are at.
+
+# Testing
+
+There are some unittests provided. These can be found in the 'tests' file. To run the unittests run (from inside the root folder):
+
+```
+dotnet test tests
+```
 
 # Examples
 

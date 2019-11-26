@@ -5,6 +5,12 @@
 *.fasta
 *.html
 *.csv
+*.png
+*.svg
+*.cache
 */bin
 source_linux_x64
 release
+generate_tests/*
+source/obj/*
+tests/obj/*

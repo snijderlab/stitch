@@ -666,7 +666,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// An exception to indicate some error while parsing the batch file
     /// </summary>
-    class ParseException : Exception
+    public class ParseException : Exception
     {
         /// <summary>
         /// To create a ParseException
