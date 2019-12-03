@@ -13,6 +13,17 @@ using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
+    /// <summary>To save all parameters for the generation of a report in one place</summary>
+    struct ReportInputParameters {
+        public Assembler assembler;
+        public RunParameters.SingleRun singleRun;
+        public List<TemplateDatabase> templateDatabases;
+        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases) {
+            assembler = assm;
+            singleRun = run;
+            templateDatabases = databases;
+        }
+    }
     /// <summary>
     /// To be a basepoint for any reporting options, handling all the metadata.
     /// </summary>
@@ -45,21 +56,22 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The runparameters
         /// </summary>
-        protected RunParameters.SingleRun Run;
+        protected RunParameters.SingleRun singleRun;
+        protected List<TemplateDatabase> templates;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
-        /// <param name="assm">The assembler.</param>
-        /// <param name="run">The runparameters.</param>
-        public Report(Assembler assm, RunParameters.SingleRun run)
+        /// <param name="parameters">The parameters for this report.</param>
+        public Report(ReportInputParameters parameters)
         {
-            condensed_graph = assm.condensed_graph;
-            graph = assm.graph;
-            meta_data = assm.meta_data;
-            reads = assm.reads;
-            reads_metadata = assm.reads_metadata;
-            alphabet = assm.alphabet;
-            Run = run;
+            condensed_graph = parameters.assembler.condensed_graph;
+            graph = parameters.assembler.graph;
+            meta_data = parameters.assembler.meta_data;
+            reads = parameters.assembler.reads;
+            reads_metadata = parameters.assembler.reads_metadata;
+            alphabet = parameters.assembler.alphabet;
+            singleRun = parameters.singleRun;
+            templates = parameters.templateDatabases;
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.
@@ -92,7 +104,7 @@ namespace AssemblyNameSpace
         /// <param name="assm">The assembler.</param>
         /// <param name="run">The runparameters.</param>
         /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
-        public HTMLReport(Assembler assm, RunParameters.SingleRun run, bool useincludeddotdistribution) : base(assm, run)
+        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution) : base(parameters)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
         }
@@ -117,18 +129,24 @@ namespace AssemblyNameSpace
                 }
                 else style = "";
 
-                buffer.AppendLine($"\ti{i} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
-                simplebuffer.AppendLine($"\ti{i} [label=\"I{i:D4}\"{style}]");
+                string id = GetAsideIdentifier(i, AsideType.Contig);
+
+                buffer.AppendLine($"\t{id} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
+                
+                simplebuffer.AppendLine($"\t{id} [label=\"{id}\"{style}]");
 
                 foreach (var fwe in condensed_graph[i].ForwardEdges)
                 {
-                    buffer.AppendLine($"\ti{i} -> i{fwe}");
-                    simplebuffer.AppendLine($"\ti{i} -> i{fwe}");
+                    string fid = GetAsideIdentifier(fwe, AsideType.Contig);
+                    buffer.AppendLine($"\t{id} -> {fid}");
+                    simplebuffer.AppendLine($"\t{id} -> {fid}");
                 }
             }
 
             buffer.AppendLine("}");
             simplebuffer.AppendLine("}");
+
+            Console.WriteLine(simplebuffer.ToString());
 
             // Generate SVG files of the graph
             try
@@ -173,6 +191,21 @@ namespace AssemblyNameSpace
                     var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                     Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
+                
+                string c = GetAsidePrefix(AsideType.Contig);
+                // Give the filled nodes (start node) the correct class
+                svggraph = Regex.Replace(svggraph, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+                // Give the nodes the correct ID
+                svggraph = Regex.Replace(svggraph, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>([A-Z][0-9]+)</title>", $"id=\"node-$2\" class=\"$1\" onclick=\"Select('$2')\">");
+                // Strip all <title> tags
+                svggraph = Regex.Replace(svggraph, "<title>[^<]*</title>", "");
+
+                // Give the filled nodes (start node) the correct class
+                simplesvggraph = Regex.Replace(simplesvggraph, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
+                // Give the nodes the correct ID
+                simplesvggraph = Regex.Replace(simplesvggraph, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>([A-Z][0-9]+)</title>", $"id=\"simple-node-$2\" class=\"$1\" onclick=\"Select('$2')\">");
+                // Strip all <title> tags
+                simplesvggraph = Regex.Replace(simplesvggraph, "<title>[^<]*</title>", "");
 
                 return (svggraph, simplesvggraph);
             }
@@ -197,13 +230,14 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
     <th onclick=""sortTable('reads-table', 2, 'number')"" class=""smallcell"">Sequence Length</th>
 </tr>");
-            string id;
+            string id, link;
 
             for (int i = 0; i < reads.Count(); i++)
             {
-                id = GetReadLink(i);
-                buffer.AppendLine($@"<tr id=""reads-table-r{i}"">
-    <td class=""center"">{id}</td>
+                id = GetAsideIdentifier(i, AsideType.Read);
+                link = GetAsideLink(i, AsideType.Read);
+                buffer.AppendLine($@"<tr id=""reads-{id}"">
+    <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
     <td class=""center"">{AminoAcid.ArrayToString(reads[i]).Count()}</td>
 </tr>");
@@ -228,18 +262,19 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('contigs-table', 4, 'string')"" class=""smallcell"">Forks from</th>
     <th onclick=""sortTable('contigs-table', 5, 'string')"">Based on</th>
 </tr>");
-            string id;
+            string id, link;
 
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
-                id = GetCondensedNodeLink(i);
-                buffer.AppendLine($@"<tr id=""table-i{i}"">
-    <td class=""center"">{id}</td>
+                id = GetAsideIdentifier(i, AsideType.Contig);
+                link = GetAsideLink(i, AsideType.Contig);
+                buffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
     <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
-    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
-    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetCondensedNodeLink(b))}</td>
-    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetReadLink(b))}</td>
+    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</td>
 </tr>");
             }
 
@@ -247,45 +282,101 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
-        /// <summary> Returns a list of asides for details viewing. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateAsides()
-        {
+        
+        string CreateTemplateTable() {
             var buffer = new StringBuilder();
-            string id;
 
-            for (int i = 0; i < condensed_graph.Count(); i++)
+            buffer.AppendLine(@"<table id=""template-table"" class=""widetable"">
+<tr>
+    <th onclick=""sortTable('template-table', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('template-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('template-table', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('template-table', 3, 'number')"" class=""smallcell"">Score</th>
+</tr>");
+            string id, link;
+
+            for (int i = 0; i < templates[0].templates.Count(); i++)
             {
-                id = $"I{i:D4}";
-                string prefix = "";
-                if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
-                string suffix = "";
-                if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
+                id = GetAsideIdentifier(i, AsideType.Template);
+                link = GetAsideLink(i, AsideType.Template);
+                buffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(templates[0].templates[i].Item1.ToArray())}</td>
+    <td class=""center"">{templates[0].templates[i].Item1.Count()}</td>
+    <td class=""center"">TBD</td>
+</tr>");
+            }
 
-                var readsalignment = CreateReadsAlignment(condensed_graph[i]);
+            buffer.AppendLine("</table>");
 
-                buffer.AppendLine($@"<div id=""{id}"" class=""info-block contig-info"">
-    <h1>Contig: {id}</h1>
+            return buffer.ToString();
+        }
+        /// <summary> Returns an aside for details viewing of a contig. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateContigAside(int i) {
+            string id = GetAsideIdentifier(i, AsideType.Contig);
+            string prefix = "";
+            if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
+            string suffix = "";
+            if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
+
+            var readsalignment = CreateReadsAlignment(condensed_graph[i]);
+
+            return $@"<div id=""{id}"" class=""info-block contig-info"">
+    <h1>Contig {id}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
     <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetReadLink(b))}</p>
-</div>");
-            }
-            for (int i = 0; i < reads.Count(); i++)
-            {
-                id = $"R{i:D4}";
-                string meta = reads_metadata[i].ToHTML();
-                buffer.AppendLine($@"<div id=""{id}"" class=""info-block read-info"">
-    <h1>Read: {id}</h1>
+    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</p>
+</div>";
+        }
+        /// <summary> Returns an aside for details viewing of a read. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateReadAside(int i) {
+            string id = GetAsideIdentifier(i, AsideType.Read);
+            string meta = reads_metadata[i].ToHTML();
+            return $@"<div id=""{id}"" class=""info-block read-info"">
+    <h1>Read {id}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(reads[i])}</p>
     <h2>Sequence Length</h2>
     <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
     {meta}
-</div>");
+</div>";
+        }
+        /// <summary> Returns an aside for details viewing of a template. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateTemplateAside(int i) {
+            string id = GetAsideIdentifier(i, AsideType.Template);
+            return $@"<div id=""{id}"" class=""info-block template-info"">
+    <h1>Template {id}</h1>
+    <h2>Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(templates[0].templates[i].Item1)}</p>
+    <h2>Sequence Length</h2>
+    <p>{AminoAcid.ArrayToString(templates[0].templates[i].Item1).Count()}</p>
+    {templates[0].templates[i].Item2.ToHTML()}
+</div>";
+        }
+        /// <summary> Returns a list of asides for details viewing. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateAsides()
+        {
+            var buffer = new StringBuilder();
+
+            for (int i = 0; i < condensed_graph.Count(); i++)
+            {
+                buffer.AppendLine(CreateContigAside(i));
+            }
+            for (int i = 0; i < reads.Count(); i++)
+            {
+                buffer.AppendLine(CreateReadAside(i));
+            }
+            if (templates.Count() > 0) {
+                for (int i = 0; i < templates[0].templates.Count(); i++) {
+                    buffer.AppendLine(CreateTemplateAside(i));
+                }
             }
 
             return buffer.ToString();
@@ -351,7 +442,8 @@ namespace AssemblyNameSpace
             const int bucketsize = 5;
 
             // Create the front overhanging reads block
-            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{node.Index:D4}\"/><label for=\"front-overhang-toggle-{node.Index:D4}\">");
+            string id = GetAsideIdentifier(node.Index, AsideType.Contig);
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
             buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
             foreach (var line in placed)
             {
@@ -359,7 +451,8 @@ namespace AssemblyNameSpace
                 foreach (var read in line)
                 {
                    if (read.StartPosition == 0 && read.StartOverhang != "") {
-                       result = $"<a href=\"#R{read.Identifier:D4}\" class='text align-link'>{read.StartOverhang}</a><span class='symbol'>...</span><br>";
+                       string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                       result = $"<a href=\"#{rid}\" class='text align-link'>{read.StartOverhang}</a><span class='symbol'>...</span><br>";
                    }
                 }
                 buffer.Append(result);
@@ -392,7 +485,8 @@ namespace AssemblyNameSpace
                         {
                             if (i + prefixoffset >= read.StartPosition && i + prefixoffset < read.EndPosition)
                             {
-                                result = $"<a href=\"#R{read.Identifier:D4}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
+                                string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                                result = $"<a href=\"#{rid}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
                                 depth[i - pos * bucketsize]++;
                             }
                         }
@@ -410,7 +504,7 @@ namespace AssemblyNameSpace
             }
 
             // Create the end overhanging reads block
-            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{node.Index:D4}\"/><label for=\"end-overhang-toggle-{node.Index:D4}\">");
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
             buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
             foreach (var line in placed)
             {
@@ -418,7 +512,8 @@ namespace AssemblyNameSpace
                 foreach (var read in line)
                 {
                    if (read.EndPosition == sequence.Length && read.EndOverhang != "") {
-                       result = $"<a href=\"#R{read.Identifier:D4}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
+                       string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                       result = $"<a href=\"#{rid}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
                    }
                 }
                 buffer.Append(result);
@@ -431,19 +526,43 @@ namespace AssemblyNameSpace
 
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
-        /// <summary> Returns the string representation of the human friendly identifier of a node. </summary>
-        /// <param name="index"> The index in the condensed graph of the condensed node. </param>
-        /// <returns> A string to be used where humans can see it. </returns>
-        string GetCondensedNodeLink(int index)
-        {
-            return $"<a href=\"#I{index:D4}\" class=\"info-link contig-link\">I{index:D4}</a>";
+        /// <summary>An enum to save what type of detail aside it is.</summary>
+        enum AsideType {Contig, Read, Template}
+        string GetAsidePrefix(AsideType type) {
+            switch (type) {
+                case AsideType.Contig:
+                    return "C";
+                case AsideType.Read:
+                    return "R";
+                case AsideType.Template:
+                    return "T";
+            }
+            throw new Exception("Invalid AsideType in GetAsidePrefix.");
         }
-        /// <summary> Returns the string representation of the human friendly identifier of a read. </summary>
-        /// <param name="index"> The index in the readslist. </param>
+        /// <summary>To generate an identifier ready for use in the HTML page.</summary>
+        /// <param name="index">The index of the element.</param>
+        /// <param name="type">The type of the element.</param>
+        /// <returns>A ready for use identifier.</returns>
+        string GetAsideIdentifier(int index, AsideType type) {
+            string pre = GetAsidePrefix(type);
+            if (index < 9999) {
+                return $"{pre}{index:D4}";
+            } else {
+                return $"{pre}{index}";
+            }
+        }
+        /// <summary> Returns a link to the given aside. </summary>
+        /// <param name="index">The index of the element.</param>
+        /// <param name="type">The type of the element.</param>
         /// <returns> A string to be used where humans can see it. </returns>
-        string GetReadLink(int index)
+        string GetAsideLink(int index, AsideType type)
         {
-            return $"<a href=\"#R{index:D4}\" class=\"info-link read-link\">R{index:D4}</a>";
+            string id = GetAsideIdentifier(index, type);
+            string classname = "";
+            if (type == AsideType.Contig) classname = "contig";
+            if (type == AsideType.Read) classname = "read";
+            if (type == AsideType.Template) classname = "template";
+            return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -455,13 +574,13 @@ namespace AssemblyNameSpace
             string html = $@"
 <h3>General information</h3>
 <table>
-<tr><td>Runname</td><td>{Run.Runname}</td></tr>
+<tr><td>Runname</td><td>{singleRun.Runname}</td></tr>
 <tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VERSIONNUMBER}</td></tr>
-<tr><td>K (length of k-mer)</td><td>{Run.K}</td></tr>
-<tr><td>Minimum homology</td><td>{Run.MinimalHomology}</td></tr>
-<tr><td>Duplicate Threshold</td><td>{Run.DuplicateThreshold}</td></tr>
-<tr><td>Reverse</td><td>{Run.Reverse}</td></tr>
-<tr><td>Alphabet</td><td>{Run.Alphabet.Name}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{singleRun.K}</td></tr>
+<tr><td>Minimum homology</td><td>{singleRun.MinimalHomology}</td></tr>
+<tr><td>Duplicate Threshold</td><td>{singleRun.DuplicateThreshold}</td></tr>
+<tr><td>Reverse</td><td>{singleRun.Reverse}</td></tr>
+<tr><td>Alphabet</td><td>{singleRun.Alphabet.Name}</td></tr>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
@@ -535,21 +654,7 @@ namespace AssemblyNameSpace
             string svg, simplesvg;
             (svg, simplesvg) = CreateGraph();
 
-            // Give the filled nodes (start node) the correct class
-            svg = Regex.Replace(svg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
-            // Give the nodes the correct ID
-            svg = Regex.Replace(svg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
-            // Strip all <title> tags
-            svg = Regex.Replace(svg, "<title>[^<]*</title>", "");
-
-            // Give the filled nodes (start node) the correct class
-            simplesvg = Regex.Replace(simplesvg, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
-            // Give the nodes the correct ID
-            simplesvg = Regex.Replace(simplesvg, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>i([0-9]+)</title>", "id=\"simple-node$2\" class=\"$1\" onclick=\"Select('I', $2)\">");
-            // Strip all <title> tags
-            simplesvg = Regex.Replace(simplesvg, "<title>[^<]*</title>", "");
-
-            string stylesheet = "// Could not find the stylesheet";
+            string stylesheet = "/* Could not find the stylesheet */";
             if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
             else
             {
@@ -579,6 +684,9 @@ namespace AssemblyNameSpace
 {stylesheet}
 </style>
 <script>
+ContigPrefix = '{GetAsidePrefix(AsideType.Contig)}';
+ReadPrefix = '{GetAsidePrefix(AsideType.Read)}';
+TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
 {script}
 </script>
 </head>
@@ -586,6 +694,10 @@ namespace AssemblyNameSpace
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
+
+<input type=""checkbox"" id=""template-table-collapsable""/>
+<label for=""template-table-collapsable"">Template Table</label>
+<div class=""collapsable"">{CreateTemplateTable()}</div>
 
 <input type=""checkbox"" id=""graph-collapsable""/>
 <label for=""graph-collapsable"">Graph</label>
@@ -596,7 +708,7 @@ namespace AssemblyNameSpace
 <div class=""collapsable"">{simplesvg}</div>
 
 <input type=""checkbox"" id=""table-collapsable""/>
-<label for=""table-collapsable"">Table</label>
+<label for=""table-collapsable"">Contigs Table</label>
 <div class=""collapsable"">{CreateContigsTable()}</div>
 
 <input type=""checkbox"" id=""reads-table-collapsable""/>
@@ -630,9 +742,8 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To retrieve all metadata
         /// </summary>
-        /// <param name="assm">The assembler.</param>
-        /// <param name="run">The runparameters.</param>
-        public CSVReport(Assembler assm, RunParameters.SingleRun run) : base(assm, run) { }
+        /// <param name="parameters">The parameters.</param>
+        public CSVReport(ReportInputParameters parameters) : base(parameters) { }
         public override string Create()
         {
             return "";
@@ -644,7 +755,7 @@ namespace AssemblyNameSpace
         public void PrepareCSVFile(string filename)
         {
             StreamWriter sw = File.CreateText(filename);
-            string link = Run.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? "Hyperlink(s) to the report(s);" : "";
+            string link = singleRun.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? "Hyperlink(s) to the report(s);" : "";
             sw.Write($"sep=;\nID;Data file;Alphabet;K-mer length;Minimal Homology;Duplicate Threshold;Reads;Total nodes;Average Sequence Length;Average depth of coverage;Mean Connectivity;Total time;{link}\n");
             sw.Close();
         }
@@ -660,11 +771,11 @@ namespace AssemblyNameSpace
         {
             // HYPERLINK
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
-            int totalreadslength = reads.Aggregate(0, (a, b) => a + b.Length) * (Run.Reverse ? 2 : 1);
+            int totalreadslength = reads.Aggregate(0, (a, b) => a + b.Length) * (singleRun.Reverse ? 2 : 1);
             int totalnodes = condensed_graph.Count();
-            string data = Run.Input.Count() == 1 ? Run.Input[0].File.Name : "Group";
-            string link = Run.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? Run.Report.Where(a => a is RunParameters.Report.HTML).Aggregate("", (a, b) => (a + "=HYPERLINK(\"" + Path.GetFullPath(b.CreateName(Run)) + "\");")) : "";
-            string line = $"{ID};{data};{Run.Alphabet.Name};{Run.K};{Run.MinimalHomology};{Run.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
+            string data = singleRun.Input.Count() == 1 ? singleRun.Input[0].File.Name : "Group";
+            string link = singleRun.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? singleRun.Report.Where(a => a is RunParameters.Report.HTML).Aggregate("", (a, b) => (a + "=HYPERLINK(\"" + Path.GetFullPath(b.CreateName(singleRun)) + "\");")) : "";
+            string line = $"{ID};{data};{singleRun.Alphabet.Name};{singleRun.K};{singleRun.MinimalHomology};{singleRun.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
 
             // To account for multithreading and multiple workers trying to append to the file at the same time
             // This will block any concurrent access
@@ -688,10 +799,9 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To retrieve all metadata
         /// </summary>
-        /// <param name="assm">The assembler.</param>
-        /// <param name="run">The runparameters.</param>
+        /// <param name="parameters">The parameters.</param>
         /// <param name="minscore">The minimal score needed to be included in the file</param>
-        public FASTAReport(Assembler assm, RunParameters.SingleRun run, int minscore) : base(assm, run)
+        public FASTAReport(ReportInputParameters parameters, int minscore) : base(parameters)
         {
             MinScore = minscore;
         }

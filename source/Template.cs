@@ -16,7 +16,7 @@ namespace AssemblyNameSpace
 {
     class TemplateDatabase {
         Alphabet alphabet;
-        List<(AminoAcid[], MetaData.IMetaData)> templates;
+        public List<(AminoAcid[], MetaData.IMetaData)> templates;
         public TemplateDatabase(string path, string name, Alphabet alp) {
             var sequences = OpenReads.Fasta(new MetaData.FileIdentifier(path, name));
             alphabet = alp;

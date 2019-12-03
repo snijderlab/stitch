@@ -823,12 +823,16 @@ namespace AssemblyNameSpace
                     }
                     
                     assm.Assemble();
+                    var databases = new List<TemplateDatabase>();
 
                     foreach (var template in Template) {
                         Console.WriteLine($"Working on Template {template.Name}");
                         var database = new TemplateDatabase(template.Path, template.Name, alphabet);
                         database.Match(assm.condensed_graph);
+                        databases.Add(database);
                     }
+
+                    ReportInputParameters parameters = new ReportInputParameters(assm, this, databases);
 
                     // Generate the report(s)
                     foreach (var report in Report)
@@ -836,15 +840,15 @@ namespace AssemblyNameSpace
                         switch (report)
                         {
                             case Report.HTML h:
-                                var htmlreport = new HTMLReport(assm, this, h.UseIncludedDotDistribution);
+                                var htmlreport = new HTMLReport(parameters, h.UseIncludedDotDistribution);
                                 htmlreport.Save(h.CreateName(this));
                                 break;
                             case Report.CSV c:
-                                var csvreport = new CSVReport(assm, this);
+                                var csvreport = new CSVReport(parameters);
                                 csvreport.CreateCSVLine(c.GetID(this), c.Path);
                                 break;
                             case Report.FASTA f:
-                                var fastareport = new FASTAReport(assm, this, f.MinimalScore);
+                                var fastareport = new FASTAReport(parameters, f.MinimalScore);
                                 fastareport.Save(f.CreateName(this));
                                 break;
                         }
