@@ -86,8 +86,13 @@ namespace AssemblyNameSpace
         /// <param name="filename">The path to save the to.</param>
         public void Save(string filename)
         {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+            var buffer = Create();
+            stopwatch.Stop();
+            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
             StreamWriter sw = File.CreateText(filename);
-            sw.Write(Create());
+            sw.Write(buffer);
             sw.Close();
         }
     }
@@ -384,17 +389,123 @@ namespace AssemblyNameSpace
     {templates[templateIndex].Templates[i].MetaData.ToHTML()}
 </div>";
         }
-        string CreateTemplateAlignment(int templateIndex, int i)
+        string CreateTemplateAlignment(int templateIndex, int ind)
         {
-            var template = templates[templateIndex].Templates[i];
+            var template = templates[templateIndex].Templates[ind];
 
             var buffer = new StringBuilder();
+            var placement = new List<List<bool>>();
 
-            foreach (var match in template.Matches) {
-                buffer.Append($"<p>{match}</p>");
+            // Create lists with values 'true' for every position where an aminoacid will be showed
+            // First create list with the right startgap and amount of 'true's to add the gaps later
+            placement.Add(Enumerable.Repeat(true, template.Sequence.Length).ToList());
+
+            foreach (var match in template.Matches)
+            {
+                var positions = Enumerable.Repeat(false, match.StartPosition).ToList();
+                positions.AddRange(Enumerable.Repeat(true, match.TotalMatches()));
+                placement.Add(positions);
             }
 
+            // Add the gaps in the sequences
+            // Gaps in the template should introduce a gap in all placements
+            // Gaps in the contig only introduces a gap in the current placement
+            for (int i = 1; i <= template.Matches.Count(); i++)
+            {
+                var match = template.Matches[i - 1];
+                if (match.Alignment.Count() == 1) continue;
+                int index = match.StartPosition;
+                foreach (var piece in match.Alignment)
+                {
+                    if (piece.GetType() == typeof(SequenceMatch.GapTemplate))
+                    {
+                        index += piece.count;
+                    }
+                    else if (piece.GetType() == typeof(SequenceMatch.GapTemplate))
+                    {
+                        int pos = PositionOfNthTrue(placement[i], index);
+                        foreach (var place in placement)
+                        {
+                            for (int n = 0; n < piece.count; n++)
+                            {
+                                place.Insert(pos, false);
+                            }
+                        }
+                    }
+                    else if (piece.GetType() == typeof(SequenceMatch.GapContig))
+                    {
+                        int pos = PositionOfNthTrue(placement[i], index);
+                        for (int n = 0; n < piece.count; n++)
+                        {
+                            placement[i].Insert(pos, false);
+                        }
+                    }
+                }
+            }
+
+            buffer.Append("<pre>ID  Score ");
+
+            // Add the template
+            string template_seq = AminoAcid.ArrayToString(template.Sequence);
+            int template_index = 0;
+            foreach (var p in placement[0])
+            {
+                if (p)
+                {
+                    buffer.Append(template_seq[template_index]);
+                    template_index++;
+                }
+                else
+                {
+                    buffer.Append(" ");
+                }
+            }
+            buffer.Append("\n");
+
+            // Add all the other sequences
+            for (int i = 1; i <= template.Matches.Count(); i++)
+            {
+                buffer.Append(GetAsideIdentifier(i-1, AsideType.Contig));
+                buffer.Append(" ");
+                buffer.Append($"{template.Matches[i-1].Score:D3}");
+                buffer.Append(" ");
+                string seq = AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
+                int seq_index = 0;
+                foreach (var p in placement[i])
+                {
+                    if (p)
+                    {
+                        buffer.Append(seq[seq_index]);
+                        seq_index++;
+                    }
+                    else
+                    {
+                        if (seq_index == 0)
+                        {
+                            buffer.Append(" ");
+                        }
+                        else
+                        {
+                            buffer.Append("-");
+                        }
+                    }
+                }
+                buffer.Append("\n");
+            }
+
+            buffer.Append("</pre>");
+
             return buffer.ToString();
+        }
+        int PositionOfNthTrue(List<bool> list, int n)
+        {
+            int sum = 0;
+            int i;
+            for (i = 0; i < list.Count() && sum < n; i++)
+            {
+                if (list[i]) sum++;
+            }
+            return i;
         }
         /// <summary> Returns a list of asides for details viewing. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -649,9 +760,9 @@ namespace AssemblyNameSpace
                 template_matching = $@"<div class=""template-matching"" style=""flex:{meta_data.template_matching_time}"">
     <p>Template Matching</p>
     <div class=""runtime-hover"">
-        <span class=""runtime-title"">Tenplate Matching</span>
+        <span class=""runtime-title"">Template Matching</span>
         <span class=""runtime-time"">{meta_data.template_matching_time} ms</span>
-        <span class=""runtime-desc"">Matching the contigs to the given database(s)</span>
+        <span class=""runtime-desc"">Matching the contigs to the given templates</span>
     </div>
 </div>";
             }
@@ -692,7 +803,7 @@ namespace AssemblyNameSpace
 </table>
 
 <h3>Runtime information</h3>
-<p>Total time: {meta_data.total_time + meta_data.drawingtime + meta_data.template_matching_time} ms</p>
+<p>Total computation time: {meta_data.total_time + meta_data.drawingtime + meta_data.template_matching_time} ms</p>
 <div class=""runtime"">
 <div class=""pre-work"" style=""flex:{meta_data.pre_time}"">
     <p>Pre</p>
@@ -727,6 +838,14 @@ namespace AssemblyNameSpace
     </div>
 </div>
 {template_matching}
+<div class=""drawing"" style=""flex:REPORTGENERATETIME"">
+    <p>Report</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Creating this report</span>
+        <span class=""runtime-time"">REPORTGENERATETIME ms</span>
+        <span class=""runtime-desc"">The time needed to create this report.</span>
+    </div>
+</div>
 </div>";
 
             return html;

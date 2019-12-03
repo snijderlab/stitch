@@ -773,5 +773,12 @@ namespace AssemblyNameSpace
                 i++;
             }
         }
+        public int TotalMatches() {
+            int sum = 0;
+            foreach (var m in Alignment) {
+                if (m.GetType() == typeof(SequenceMatch.Match)) sum += m.count;
+            }
+            return sum;
+        }
     }
 }
