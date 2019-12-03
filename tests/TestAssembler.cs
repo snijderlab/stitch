@@ -78,23 +78,25 @@ namespace AssemblyTestNameSpace
         {
             alp = new Alphabet("*;A;B;C;D\nA;1;0;0;0\nB;0;1;0;0\nC;0;0;1;0\nD;0;0;0;1", Alphabet.AlphabetParamType.Data);
         }
-        [DataRow("ACBCABCABCBBCBCAC", "CABCDABC")]
-        [DataRow("ACBCABCABCBBCBCAC", "CABCDBBC")]
+        [DataRow("CAAAACCCABBC", "CAAAACDCCABBC")]
+        [DataRow("CCCBAAACACBB", "CCCBAADACACBB")]
         [DataTestMethod]
         public void SingleGap(string x, string y)
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            Assert.AreEqual(5, HelperFunctionality.SmithWaterman(a, b));
+            var r = HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual("SequenceMatch< starting at: 0, score: 10, match: 6M1I6M >", r.ToString());
         }
-        [DataRow("ACACACA", "ACABCBACA")]
-        [DataRow("ACACACA", "ACBACBACA")]
+        [DataRow("ACACCACCACCA", "ACACDCACCDACCA")]
+        [DataRow("ABBCABAAABCA", "ABBCDABAADABCA")]
         [DataTestMethod]
         public void DoubleGap(string x, string y)
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            Assert.AreEqual(3, HelperFunctionality.SmithWaterman(a, b));
+            var r =  HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual("SequenceMatch< starting at: 0, score: 8, match: 4M1I4M1I4M >", r.ToString());
         }
         [DataRow("ACACACA", "ACABACA")]
         [DataRow("ACACACA", "ACACBCA")]
@@ -103,7 +105,8 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            Assert.AreEqual(5, HelperFunctionality.SmithWaterman(a, b));
+            var r = HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual("SequenceMatch< starting at: 0, score: 6, match: 7M >", r.ToString());
         }
         [DataRow("ABBA")]
         [DataRow("AAABBA")]
@@ -114,23 +117,26 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(x);
-            Assert.AreEqual(x.Length, HelperFunctionality.SmithWaterman(a, b));
+            var r = HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual($"SequenceMatch< starting at: 0, score: {x.Length}, match: {x.Length}M >", r.ToString());
         }
-        [DataRow("ACBDCADBCADCBADCCABCDAA", "DBCADCB")]
-        [DataRow("ACBDCADBCADCBADCCABCDAA", "DCBADCC")]
+        [DataRow("BABACBAAABCB", "CBAAA")]
+        [DataRow("CBABABACCBCA", "ABACC")]
         [DataTestMethod]
         public void EqualPart(string x, string y)
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            Assert.AreEqual(7, HelperFunctionality.SmithWaterman(a, b));
+            var r = HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual($"SequenceMatch< starting at: 4, score: 5, match: 5M >", r.ToString());
         }
         [TestMethod]
         public void MismatchAndGap()
         {
-            var a = StringToSequence("ACBCABCABCBBCBCAC");
-            var b = StringToSequence("CABCDAAC");
-            Assert.AreEqual(4, HelperFunctionality.SmithWaterman(a, b));
+            var a = StringToSequence("ABBAABBCBABAACCBBAAB");
+            var b = StringToSequence("BBCBDABCACC");
+            var r = HelperFunctionality.SmithWaterman(a, b);
+            Assert.AreEqual($"SequenceMatch< starting at: 5, score: 7, match: 4M1I6M >", r.ToString());
         }
         AminoAcid[] StringToSequence(string input)
         {

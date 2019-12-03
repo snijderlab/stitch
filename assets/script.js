@@ -51,19 +51,16 @@ function sortTable(id, column_number, type) {
 
 window.onhashchange = function(ev) {
     var target = window.location.href.split("#")[1];
-    var number = Number(target.slice(1));
 
     var els = document.getElementsByClassName("selected")
     while (els[0]) {
         els[0].classList.remove('selected')
     }
 
+    document.getElementById("table-" + target).classList.add("selected");
     if (target[0] == ContigPrefix) {
         document.getElementById("node-" + target).classList.add("selected");
         document.getElementById("simple-node-" + target).classList.add("selected");
-        document.getElementById("table-" + target).classList.add("selected");
-    } else if (target[0] == ReadPrefix) {
-        document.getElementById("reads-" + target).classList.add("selected");
     }
 }
 

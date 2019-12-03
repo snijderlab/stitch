@@ -7,7 +7,7 @@ Runtype : Separate
 
 -Input------------------
 FASTAInput	->
-Path: examples\009\reads.fasta
+Path: examples/009/reads.fasta
 Name: Reads 005
 <-
 

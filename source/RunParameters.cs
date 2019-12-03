@@ -824,6 +824,8 @@ namespace AssemblyNameSpace
                     
                     assm.Assemble();
                     var databases = new List<TemplateDatabase>();
+                    Stopwatch stopWatch = new Stopwatch();
+                    stopWatch.Start();
 
                     foreach (var template in Template) {
                         Console.WriteLine($"Working on Template {template.Name}");
@@ -831,6 +833,9 @@ namespace AssemblyNameSpace
                         database.Match(assm.condensed_graph);
                         databases.Add(database);
                     }
+
+                    stopWatch.Stop();
+                    assm.meta_data.template_matching_time = stopWatch.ElapsedMilliseconds;
 
                     ReportInputParameters parameters = new ReportInputParameters(assm, this, databases);
 

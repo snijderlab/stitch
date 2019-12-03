@@ -14,17 +14,20 @@ using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
-    class TemplateDatabase {
+    class TemplateDatabase
+    {
         Alphabet alphabet;
-        public List<(AminoAcid[], MetaData.IMetaData)> templates;
-        public TemplateDatabase(string path, string name, Alphabet alp) {
+        public List<Template> Templates;
+        public TemplateDatabase(string path, string name, Alphabet alp)
+        {
             var sequences = OpenReads.Fasta(new MetaData.FileIdentifier(path, name));
             alphabet = alp;
-            templates = new List<(AminoAcid[], MetaData.IMetaData)>();
+            Templates = new List<Template>();
 
-            foreach (var pair in sequences) {
+            foreach (var pair in sequences)
+            {
                 var parsed = StringToSequence(pair.Item1);
-                templates.Add((parsed, pair.Item2));
+                Templates.Add(new Template(parsed, pair.Item2));
             }
         }
         /// <summary>
@@ -41,38 +44,43 @@ namespace AssemblyNameSpace
             }
             return output;
         }
-        public void Match(List<CondensedNode> condensed_graph) {
+        public void Match(List<CondensedNode> condensed_graph)
+        {
             var sequences = new List<AminoAcid[]>();
-            foreach (var node in condensed_graph) {
+            foreach (var node in condensed_graph)
+            {
                 sequences.Add(node.Sequence.ToArray());
             }
 
-            var scores = new int[condensed_graph.Count(), templates.Count()];
-
-            int x = 0;
-            foreach (var seq in sequences) {
-                int y = 0;
-                foreach (var tem in templates) {
-                    scores[x, y] = HelperFunctionality.SmithWaterman(seq, tem.Item1);
-                    y++;
+            int y = 0;
+            foreach (var tem in Templates)
+            {
+                int x = 0;
+                foreach (var seq in sequences)
+                {
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(seq, tem.Sequence));
+                    x++;
                 }
-                x++;
+                y++;
             }
-
-            var buffer = new StringBuilder();
-            buffer.AppendLine("Rows: Contigs, Columns: Templates");
-            int a = condensed_graph.Count();
-            int b = templates.Count();
-            for (int i = 0; i < a; i++) {
-                for (int j = 0; j < b; j++) {
-                    buffer.Append(scores[i,j]);
-                    if (j != b-1) buffer.Append(",");
-                }
-                buffer.Append("\n");
-            }
-            Console.WriteLine(buffer.ToString());
-            Console.WriteLine(AminoAcid.ArrayToString(condensed_graph[6].Sequence.ToArray()));
-            Console.WriteLine(AminoAcid.ArrayToString(templates[132].Item1));
+        }
+    }
+    public class Template
+    {
+        public AminoAcid[] Sequence;
+        public MetaData.IMetaData MetaData;
+        public int Score;
+        public readonly List<SequenceMatch> Matches;
+        public Template(AminoAcid[] seq, MetaData.IMetaData meta)
+        {
+            Sequence = seq;
+            MetaData = meta;
+            Score = -1;
+            Matches = new List<SequenceMatch>();
+        }
+        public void AddMatch(SequenceMatch match) {
+            Score += match.Score;
+            Matches.Add(match);
         }
     }
 }

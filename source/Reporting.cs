@@ -14,11 +14,13 @@ using System.ComponentModel;
 namespace AssemblyNameSpace
 {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
-    struct ReportInputParameters {
+    struct ReportInputParameters
+    {
         public Assembler assembler;
         public RunParameters.SingleRun singleRun;
         public List<TemplateDatabase> templateDatabases;
-        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases) {
+        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases)
+        {
             assembler = assm;
             singleRun = run;
             templateDatabases = databases;
@@ -132,7 +134,7 @@ namespace AssemblyNameSpace
                 string id = GetAsideIdentifier(i, AsideType.Contig);
 
                 buffer.AppendLine($"\t{id} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
-                
+
                 simplebuffer.AppendLine($"\t{id} [label=\"{id}\"{style}]");
 
                 foreach (var fwe in condensed_graph[i].ForwardEdges)
@@ -145,8 +147,6 @@ namespace AssemblyNameSpace
 
             buffer.AppendLine("}");
             simplebuffer.AppendLine("}");
-
-            Console.WriteLine(simplebuffer.ToString());
 
             // Generate SVG files of the graph
             try
@@ -191,7 +191,7 @@ namespace AssemblyNameSpace
                     var simplesvgstderr = simplesvg.StandardError.ReadToEnd();
                     Console.WriteLine("SIMPLE SVG ERROR: " + simplesvgstderr);
                 }
-                
+
                 string c = GetAsidePrefix(AsideType.Contig);
                 // Give the filled nodes (start node) the correct class
                 svggraph = Regex.Replace(svggraph, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
@@ -282,28 +282,46 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
-        
-        string CreateTemplateTable() {
+
+        string CreateTemplateTables()
+        {
             var buffer = new StringBuilder();
 
-            buffer.AppendLine(@"<table id=""template-table"" class=""widetable"">
+            for (int i = 0; i < singleRun.Template.Count(); i++)
+            {
+                buffer.AppendLine($@"<input type=""checkbox"" id=""template-table-collapsable""/>
+<label for=""template-table-collapsable"">Template Matching {singleRun.Template[i].Name}</label>
+<div class=""collapsable"">{CreateTemplateTable(i)}</div>");
+            }
+
+            return buffer.ToString();
+        }
+
+        string CreateTemplateTable(int templateIndex)
+        {
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine($@"<table id=""template-table-{templateIndex}"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('template-table', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('template-table', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table', 3, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('template-table-{templateIndex}', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('template-table-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('template-table-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
 </tr>");
             string id, link;
 
-            for (int i = 0; i < templates[0].templates.Count(); i++)
+            var sorted = templates[templateIndex].Templates;
+            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            for (int i = 0; i < sorted.Count(); i++)
             {
-                id = GetAsideIdentifier(i, AsideType.Template);
-                link = GetAsideLink(i, AsideType.Template);
+                id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
+                link = GetAsideLink(templateIndex, i, AsideType.Template);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(templates[0].templates[i].Item1.ToArray())}</td>
-    <td class=""center"">{templates[0].templates[i].Item1.Count()}</td>
-    <td class=""center"">TBD</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""center"">{sorted[i].Sequence.Length}</td>
+    <td class=""center"">{sorted[i].Score}</td>
 </tr>");
             }
 
@@ -313,7 +331,8 @@ namespace AssemblyNameSpace
         }
         /// <summary> Returns an aside for details viewing of a contig. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateContigAside(int i) {
+        string CreateContigAside(int i)
+        {
             string id = GetAsideIdentifier(i, AsideType.Contig);
             string prefix = "";
             if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
@@ -334,7 +353,8 @@ namespace AssemblyNameSpace
         }
         /// <summary> Returns an aside for details viewing of a read. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateReadAside(int i) {
+        string CreateReadAside(int i)
+        {
             string id = GetAsideIdentifier(i, AsideType.Read);
             string meta = reads_metadata[i].ToHTML();
             return $@"<div id=""{id}"" class=""info-block read-info"">
@@ -348,16 +368,33 @@ namespace AssemblyNameSpace
         }
         /// <summary> Returns an aside for details viewing of a template. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateTemplateAside(int i) {
-            string id = GetAsideIdentifier(i, AsideType.Template);
+        string CreateTemplateAside(int templateIndex, int i)
+        {
+            string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
     <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(templates[0].templates[i].Item1)}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(templates[templateIndex].Templates[i].Sequence)}</p>
     <h2>Sequence Length</h2>
-    <p>{AminoAcid.ArrayToString(templates[0].templates[i].Item1).Count()}</p>
-    {templates[0].templates[i].Item2.ToHTML()}
+    <p>{templates[templateIndex].Templates[i].Sequence.Length}</p>
+    <h2>Score</h2>
+    <p>{templates[templateIndex].Templates[i].Score}</p>
+    <h2>Alignment</h2>
+    {CreateTemplateAlignment(templateIndex, i)}
+    {templates[templateIndex].Templates[i].MetaData.ToHTML()}
 </div>";
+        }
+        string CreateTemplateAlignment(int templateIndex, int i)
+        {
+            var template = templates[templateIndex].Templates[i];
+
+            var buffer = new StringBuilder();
+
+            foreach (var match in template.Matches) {
+                buffer.Append($"<p>{match}</p>");
+            }
+
+            return buffer.ToString();
         }
         /// <summary> Returns a list of asides for details viewing. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -373,9 +410,14 @@ namespace AssemblyNameSpace
             {
                 buffer.AppendLine(CreateReadAside(i));
             }
-            if (templates.Count() > 0) {
-                for (int i = 0; i < templates[0].templates.Count(); i++) {
-                    buffer.AppendLine(CreateTemplateAside(i));
+            if (templates.Count() > 0)
+            {
+                for (int t = 0; t < templates.Count(); t++)
+                {
+                    for (int i = 0; i < templates[t].Templates.Count(); i++)
+                    {
+                        buffer.AppendLine(CreateTemplateAside(t, i));
+                    }
                 }
             }
 
@@ -394,11 +436,14 @@ namespace AssemblyNameSpace
             // Delete matches at prefix and suffix
             positions = positions.Where(a => a.EndPosition > prefixoffset && a.StartPosition < sequence.Length + prefixoffset).ToList();
             //  Update the overhang at the start and end
-            positions = positions.Select(a => {
-                if (a.StartPosition < prefixoffset) {
+            positions = positions.Select(a =>
+            {
+                if (a.StartPosition < prefixoffset)
+                {
                     a.StartOverhang += a.Sequence.Substring(0, prefixoffset - a.StartPosition);
                 }
-                if (a.EndPosition > prefixoffset + sequence.Length ) {
+                if (a.EndPosition > prefixoffset + sequence.Length)
+                {
                     a.EndOverhang += a.Sequence.Substring(a.EndPosition - prefixoffset - sequence.Length);
                 }
                 return a;
@@ -450,10 +495,11 @@ namespace AssemblyNameSpace
                 string result = "<br>";
                 foreach (var read in line)
                 {
-                   if (read.StartPosition == 0 && read.StartOverhang != "") {
-                       string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
-                       result = $"<a href=\"#{rid}\" class='text align-link'>{read.StartOverhang}</a><span class='symbol'>...</span><br>";
-                   }
+                    if (read.StartPosition == 0 && read.StartOverhang != "")
+                    {
+                        string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                        result = $"<a href=\"#{rid}\" class='text align-link'>{read.StartOverhang}</a><span class='symbol'>...</span><br>";
+                    }
                 }
                 buffer.Append(result);
             }
@@ -469,7 +515,9 @@ namespace AssemblyNameSpace
                 {
                     number = ((pos + 1) * bucketsize).ToString();
                     number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
-                } else {
+                }
+                else
+                {
                     last = " last";
                 }
                 buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
@@ -511,10 +559,11 @@ namespace AssemblyNameSpace
                 string result = "<br>";
                 foreach (var read in line)
                 {
-                   if (read.EndPosition == sequence.Length && read.EndOverhang != "") {
-                       string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
-                       result = $"<a href=\"#{rid}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
-                   }
+                    if (read.EndPosition == sequence.Length && read.EndOverhang != "")
+                    {
+                        string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                        result = $"<a href=\"#{rid}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
+                    }
                 }
                 buffer.Append(result);
             }
@@ -527,9 +576,11 @@ namespace AssemblyNameSpace
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType {Contig, Read, Template}
-        string GetAsidePrefix(AsideType type) {
-            switch (type) {
+        enum AsideType { Contig, Read, Template }
+        string GetAsidePrefix(AsideType type)
+        {
+            switch (type)
+            {
                 case AsideType.Contig:
                     return "C";
                 case AsideType.Read:
@@ -539,25 +590,46 @@ namespace AssemblyNameSpace
             }
             throw new Exception("Invalid AsideType in GetAsidePrefix.");
         }
-        /// <summary>To generate an identifier ready for use in the HTML page.</summary>
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container.</summary>
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns>A ready for use identifier.</returns>
-        string GetAsideIdentifier(int index, AsideType type) {
+        string GetAsideIdentifier(int index, AsideType type)
+        {
+            return GetAsideIdentifier(-1, index, type);
+        }
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index2">The index in the container of the element.</param>
+        /// <param name="type">The type of the element.</param>
+        /// <returns>A ready for use identifier.</returns>
+        string GetAsideIdentifier(int index1, int index2, AsideType type)
+        {
             string pre = GetAsidePrefix(type);
-            if (index < 9999) {
-                return $"{pre}{index:D4}";
-            } else {
-                return $"{pre}{index}";
-            }
+            string i1 = "";
+            if (index1 == -1) i1 = "";
+            else i1 = $"{index1}:";
+            string i2 = "";
+            if (index2 < 9999) i2 = $"{index2:D4}";
+            else i2 = $"{index2}";
+            return $"{pre}{i1}{i2}";
         }
         /// <summary> Returns a link to the given aside. </summary>
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
-        /// <returns> A string to be used where humans can see it. </returns>
+        /// <returns>A valid HTML link.</returns>
         string GetAsideLink(int index, AsideType type)
         {
-            string id = GetAsideIdentifier(index, type);
+            return GetAsideLink(-1, index, type);
+        }
+        /// <summary> Returns a link to the given aside. </summary>
+        /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index2">The index in the container of the element.</param>
+        /// <param name="type">The type of the element.</param>
+        /// <returns> A valid HTML link.</returns>
+        string GetAsideLink(int index1, int index2, AsideType type)
+        {
+            string id = GetAsideIdentifier(index1, index2, type);
             string classname = "";
             if (type == AsideType.Contig) classname = "contig";
             if (type == AsideType.Read) classname = "read";
@@ -570,6 +642,19 @@ namespace AssemblyNameSpace
         {
             long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
             long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L;
+
+            string template_matching = "";
+            if (singleRun.Template.Count() > 0)
+            {
+                template_matching = $@"<div class=""template-matching"" style=""flex:{meta_data.template_matching_time}"">
+    <p>Template Matching</p>
+    <div class=""runtime-hover"">
+        <span class=""runtime-title"">Tenplate Matching</span>
+        <span class=""runtime-time"">{meta_data.template_matching_time} ms</span>
+        <span class=""runtime-desc"">Matching the contigs to the given database(s)</span>
+    </div>
+</div>";
+            }
 
             string html = $@"
 <h3>General information</h3>
@@ -607,7 +692,7 @@ namespace AssemblyNameSpace
 </table>
 
 <h3>Runtime information</h3>
-<p>Total time: {meta_data.total_time + meta_data.drawingtime} ms</p>
+<p>Total time: {meta_data.total_time + meta_data.drawingtime + meta_data.template_matching_time} ms</p>
 <div class=""runtime"">
 <div class=""pre-work"" style=""flex:{meta_data.pre_time}"">
     <p>Pre</p>
@@ -641,6 +726,7 @@ namespace AssemblyNameSpace
         <span class=""runtime-desc"">Work done by graphviz (dot) to draw the graphs.</span>
     </div>
 </div>
+{template_matching}
 </div>";
 
             return html;
@@ -695,9 +781,7 @@ TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
-<input type=""checkbox"" id=""template-table-collapsable""/>
-<label for=""template-table-collapsable"">Template Table</label>
-<div class=""collapsable"">{CreateTemplateTable()}</div>
+{CreateTemplateTables()}
 
 <input type=""checkbox"" id=""graph-collapsable""/>
 <label for=""graph-collapsable"">Graph</label>
