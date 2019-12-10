@@ -616,6 +616,10 @@ namespace AssemblyNameSpace
             /// The name for this template, to recognize it
             /// </summary>
             public string Name;
+            /// <summary>
+            /// The alphabet to be used for template matching
+            /// </summary>
+            public AlphabetValue Alphabet;
         }
         /// <summary>
         /// To contain parameters for reporting
@@ -829,7 +833,8 @@ namespace AssemblyNameSpace
 
                     foreach (var template in Template) {
                         Console.WriteLine($"Working on Template {template.Name}");
-                        var database = new TemplateDatabase(template.Path, template.Name, alphabet);
+                        var alph = template.Alphabet == null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
+                        var database = new TemplateDatabase(template.Path, template.Name, alph);
                         database.Match(assm.condensed_graph);
                         databases.Add(database);
                     }

@@ -8,7 +8,7 @@ Runname	: Template Matching Test
 Reads	->
 Path: examples/011/reads-IgG2-K-002-all-75,00.txt
 Name: Reads 011
-<--
+<-
 
 -Parameters-------------
 K	            : 6
@@ -22,6 +22,10 @@ Name	: Normal
 Template->
 Path    : examples/templates/IGHV.fasta
 Name    : IGHV Human
+Alphabet ->
+Path	: examples/alphabets/blosum90.csv
+Name	: Blosum90
+<-
 <-
 
 -Report-----------------
