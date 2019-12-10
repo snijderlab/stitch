@@ -25,8 +25,12 @@ namespace AssemblyNameSpace
             {
                 throw new ParseException("The specified batch file does not exist.");
             }
+            // Set the working directory to the directory of the batchfile
+            var original_working_directory = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(Path.GetDirectoryName(path));
+
             // Get the contents
-            string content = File.ReadAllText(path).Trim();
+            string content = File.ReadAllText(Path.GetFileName(path)).Trim();
 
             // Tokenize the file, into a key value pair tree
             var parsed = InputNameSpace.Tokenizer.Tokenize(content);
@@ -74,7 +78,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    settings.File.Path = setting.GetValue();
+                                    settings.File.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "cutoffscore":
                                     settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks Cutoffscore");
@@ -124,7 +128,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    rsettings.File.Path = setting.GetValue();
+                                    rsettings.File.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "name":
                                     rsettings.File.Name = setting.GetValue();
@@ -145,7 +149,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    fastasettings.File.Path = setting.GetValue();
+                                    fastasettings.File.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "name":
                                     fastasettings.File.Name = setting.GetValue();
@@ -240,7 +244,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    tsettings.Path = setting.GetValue();
+                                    tsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "name":
                                     tsettings.Name = setting.GetValue();
@@ -262,7 +266,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    hsettings.Path = setting.GetValue();
+                                    hsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "dotdistribution":
                                     if (setting.GetValue().ToLower() == "global")
@@ -340,6 +344,8 @@ namespace AssemblyNameSpace
                 throw new ParseException($"There is no version specified for the batch file; This is needed to handle different versions in different ways.");
             }
 
+            // Reset the working directory
+            Directory.SetCurrentDirectory(original_working_directory);
             return output;
         }
     }

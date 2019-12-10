@@ -14,6 +14,8 @@ Lines starting with a hyphen `-` are considered comments and disregarded. COmmen
 
 Here is a list of all parameters and their possible values. An 's' after the name indicates it is a single valued parameter, an 'm' indicates it is a multiple valued parameter.
 
+All paths are specified from the directory of the batchfile.
+
 #### Run Info
 
 ##### Version (s)

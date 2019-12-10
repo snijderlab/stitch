@@ -7,11 +7,11 @@ Runtype : Group
 
 -Input------------------
 PEAKS	->
-Path: examples\008\Herceptin_HCD.csv
+Path: ..\008\Herceptin_HCD.csv
 Name: HCD
 <-
 PEAKS	->
-Path: examples\008\Herceptin_ETHCD.csv
+Path: ..\008\Herceptin_ETHCD.csv
 Name: ETHCD
 <-
 
@@ -51,8 +51,8 @@ Name	: Normal
 
 -Report-----------------
 FASTA	->
-Path	: report-peaks.fasta
+Path	: ../../report-peaks.fasta
 <-
 HTML ->
-Path    : report-peaks.html
+Path    : ../../report-peaks.html
 <-

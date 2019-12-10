@@ -19,7 +19,7 @@ namespace AssemblyNameSpace
         /// <summary> The code (index of the char in the alpabet array of the parent).
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
-        public int Code;
+        public readonly int Code;
         /// <summary>
         /// The alphabet used
         /// </summary>
