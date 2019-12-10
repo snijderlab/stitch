@@ -1,55 +1,83 @@
 function sortTable(id, column_number, type) {
-    var table, rows, switching, i, x, y, shouldSwitch, dir, switchcount = 0;
+    var table, rows, switching, i, x, y, shouldSwitch, dir = 0;
     table = document.getElementById(id);
     switching = true;
     // Set the sorting direction to ascending:
     dir = "asc";
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
+    
+    sorted = false
+    if (headers[column_number].className == "asc") { dir = "desc"; sorted = true }
+    if (headers[column_number].className == "desc") {sorted = true}
+
     for (var j = 0; j < headers.length; j++) {
         headers[j].className = "";
     }
-    headers[column_number].className = "asc";
+    headers[column_number].className = dir;
+
+    rows = Array.from(table.getElementsByTagName("TR"));
+    values = [null]
+    for (i = 1; i < rows.length; i++) {
+        x = rows[i].getElementsByTagName("TD")[column_number]
+        switch(type) {
+            case "string": 
+                values.push(x.innerHTML.toLowerCase())
+                break
+            case "number": 
+                values.push(Number(x.innerHTML))
+                break
+            case "id": 
+                var p = x.innerText.slice(1).split(":")
+                values.push(Number(p[p.length - 1]))
+                break
+        }
+    }
+
+    if (sorted) {
+        rows = rows.reverse()
+        rows.splice(0, 0, rows[rows.length - 1])
+        rows.pop()
+        switching = false
+    } else {
+        switching = true
+    }
+
+    //console.log(dir, switching)
 
     while (switching) {
         switching = false;
-        rows = table.getElementsByTagName("TR");
         /* Loop through all table rows (except the
         first, which contains table headers): */
         for (i = 1; i < (rows.length - 1); i++) {
             shouldSwitch = false;
-
-            x = rows[i].getElementsByTagName("TD")[column_number];
-            y = rows[i + 1].getElementsByTagName("TD")[column_number];
-
-            var x_value = type == "string" ? x.innerHTML.toLowerCase() : type == "number" ? Number(x.innerHTML) : type == "id" ? Number(x.children[0].innerHTML.slice(1)) : null;
-            var y_value = type == "string" ? y.innerHTML.toLowerCase() : type == "number" ? Number(y.innerHTML) : type == "id" ? Number(y.children[0].innerHTML.slice(1)) : null;
-            if (dir == "asc") {
-                if (x_value > y_value) {
-                    shouldSwitch = true;
-                    break;
-                }
-            } else if (dir == "desc") {
-                if (x_value < y_value) {
-                    shouldSwitch = true;
-                    break;
-                }
+            if (values[i] > values[i+1]) {
+                shouldSwitch = true;
+                break;
             }
         }
         if (shouldSwitch) {
-            rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            el = rows[i + 1]
+            rows.splice(i + 1, 1)
+            rows.splice(i, 0, el)
+            el = values[i + 1]
+            values.splice(i + 1, 1)
+            values.splice(i, 0, el)
+            //rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
             switching = true;
-            switchcount++;
-        } else {
-            if (switchcount == 0 && dir == "asc") {
-                dir = "desc";
-                headers[column_number].className = "dsc";
-                switching = true;
-            }
         }
     }
+    // Remove old rows and append all new rows
+    while (table.lastChild) {
+        table.removeChild(table.lastChild);
+    }
+    var frag = document.createDocumentFragment();
+    for (var i = 0; i < rows.length; ++i) {
+        frag.appendChild(rows[i]);
+    }
+    table.appendChild(frag);
 }
 
-window.onhashchange = function(ev) {
+window.onhashchange = function (ev) {
     var target = window.location.href.split("#")[1];
 
     var els = document.getElementsByClassName("selected")
@@ -82,7 +110,7 @@ function lpad(str, padString, length) {
 var dragging = false;
 
 function Setup() {
-    document.getElementById("aside-handle").addEventListener('mousedown', function(ev) {
+    document.getElementById("aside-handle").addEventListener('mousedown', function (ev) {
         dragging = true;
         document.body.classList.add("dragging");
         pauseEvent(ev);
@@ -101,7 +129,7 @@ function Setup() {
     }
 }
 
-document.addEventListener('mousemove', function(ev) {
+document.addEventListener('mousemove', function (ev) {
     if (dragging) {
         width = window.innerWidth - ev.screenX;
         document.getElementById("aside").style.flexBasis = width.toString() + "px";
@@ -122,7 +150,7 @@ document.addEventListener('mousemove', function(ev) {
     }
 })
 
-document.addEventListener('mouseup', function() {
+document.addEventListener('mouseup', function () {
     dragging = false;
     document.body.classList.remove("dragging");
 })

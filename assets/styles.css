@@ -177,6 +177,7 @@ th {
     white-space: normal;
     overflow: hidden;
     text-overflow: ellipsis;
+    user-select: none;
 }
 
 th::after {
