@@ -60,6 +60,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected RunParameters.SingleRun singleRun;
         protected List<TemplateDatabase> templates;
+        protected List<(int, List<List<int>>)> paths;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -74,6 +75,7 @@ namespace AssemblyNameSpace
             alphabet = parameters.assembler.alphabet;
             singleRun = parameters.singleRun;
             templates = parameters.templateDatabases;
+            paths = parameters.assembler.GetAllPaths();
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.

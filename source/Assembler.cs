@@ -364,5 +364,60 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
+        /// <summary>
+        /// Gets all paths starting for all subgraphs
+        /// </summary>
+        /// <returns>A list with for each starting node a tuple with its index and all possible paths (as a list of indices)</returns>
+        public List<(int, List<List<int>>)> GetAllPaths() {
+            var opts = new List<(int, List<List<int>>)>();
+            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
+            {
+                var node = condensed_graph[node_index];
+
+                // Test if this is a starting node
+                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
+                {
+                    opts.Add((node_index, GetPaths(node_index, new List<int>())));
+                }
+            }
+            return opts;
+        }
+        /// <summary>
+        /// Gets all paths starting from the given node.
+        /// </summary>
+        /// <param name="node_index">The node to start from</param>
+        /// <param name="indices">The list of all indices of the path up to the start node</param>
+        /// <returns>A list with all possible paths (as a list of indices)</returns>
+        List<List<int>> GetPaths(int node_index, List<int> indices)
+        {
+            // Update all paths and scores
+            var node = condensed_graph[node_index];
+            indices.Add(node_index);
+
+            if (node.ForwardEdges.Count() == 0)
+            {
+                // End of the sequences, create the output
+                return new List<List<int>>{indices};
+            }
+            else
+            {
+                var opts = new List<List<int>>();
+                // Follow all branches
+                foreach (var next in node.ForwardEdges)
+                {
+                    if (indices.Contains(next))
+                    {
+                        // Cycle: end the following of the path and generate the output
+                        opts.Add(indices);
+                    }
+                    else
+                    {
+                        // Follow the sequence
+                        opts.AddRange(GetPaths(next, new List<int>(indices)));
+                    }
+                }
+                return opts;
+            }
+        }
     }
 }

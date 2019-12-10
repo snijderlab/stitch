@@ -312,7 +312,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    fsettings.Path = setting.GetValue();
+                                    fsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "minimalscore":
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), "minimalscore of FASTA report");

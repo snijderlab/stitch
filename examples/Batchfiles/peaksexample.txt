@@ -7,11 +7,11 @@ Runtype : Group
 
 -Input------------------
 PEAKS	->
-Path: ..\008\Herceptin_HCD.csv
+Path: ../008/Herceptin_HCD.csv
 Name: HCD
 <-
 PEAKS	->
-Path: ..\008\Herceptin_ETHCD.csv
+Path: ../008/Herceptin_ETHCD.csv
 Name: ETHCD
 <-
 
