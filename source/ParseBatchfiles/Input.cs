@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// A class with options to parse a batch file.
     /// </summary>
-    static class ParseCommandFile
+    public static class ParseCommandFile
     {
         /// <summary>
         /// Parses a batch file and retrieves the runparameters.
@@ -31,82 +31,7 @@ namespace AssemblyNameSpace
             string content = File.ReadAllText(path).Trim();
 
             // Tokenize the file, into a key value pair tree
-            var parsed = new List<KeyValue>();
-            while (content.Length > 0)
-            {
-                switch (content.First())
-                {
-                    case '-':
-                        // This line is a comment, skip it
-                        ParseHelper.SkipLine(ref content);
-                        break;
-                    case '\n':
-                        //skip
-                        content = content.Trim();
-                        break;
-                    default:
-                        // This is a parameter line, get the name
-                        var name = ParseHelper.Name(ref content);
-
-                        // Find if it is a single or multiple valued parameter
-                        if (content[0] == ':')
-                        {
-                            content = content.Remove(0, 1).Trim();
-                            //Get the single value of the parameter
-                            string value = ParseHelper.Value(ref content);
-                            parsed.Add(new KeyValue(name, value));
-                        }
-                        else if (content[0] == '-' && content[1] == '>')
-                        {
-                            content = content.Remove(0, 2).Trim();
-                            // Now get the multiple values
-                            var values = new List<KeyValue>();
-
-                            while (true)
-                            {
-
-                                if (content[0] == '-')
-                                {
-                                    // A comment skip it
-                                    ParseHelper.SkipLine(ref content);
-                                }
-                                else if (content[0] == '<' && content[1] == '-')
-                                {
-                                    // This is the end of the multiple valued parameter
-                                    content = content.Remove(0, 2).Trim();
-                                    parsed.Add(new KeyValue(name, values));
-                                    break;
-                                }
-                                else
-                                {
-                                    // Match the inner parameter
-                                    var innername = ParseHelper.Name(ref content);
-
-                                    // Find if it is a single line or multiple line valued inner parameter
-                                    if (content[0] == ':')
-                                    {
-                                        content = content.Remove(0, 1).Trim();
-                                        string value = ParseHelper.Value(ref content);
-                                        values.Add(new KeyValue(innername, value));
-                                    }
-                                    else if (content[0] == '-' && content[1] == '>')
-                                    {
-                                        content = content.Remove(0, 2).Trim();
-                                        string value = ParseHelper.UntilSequence(ref content, "<-");
-                                        values.Add(new KeyValue(innername, value));
-                                    }
-
-                                    content = content.Trim();
-                                }
-                            }
-                        }
-                        else
-                        {
-                            throw new ParseException($"Parameter {name.ToString()} should be followed by an delimiter (':' or '->')");
-                        }
-                        break;
-                }
-            }
+            var parsed = Tokenizer.Tokenize(content);            
 
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters
@@ -307,26 +232,7 @@ namespace AssemblyNameSpace
                         }
                         break;
                     case "alphabet":
-                        var asettings = new RunParameters.AlphabetValue();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    asettings.Data = File.ReadAllText(setting.GetValue());
-                                    break;
-                                case "data":
-                                    asettings.Data = setting.GetValue();
-                                    break;
-                                case "name":
-                                    asettings.Name = setting.GetValue();
-                                    break;
-                                default:
-                                    throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}, the options are 'Path', 'Data', and 'Name'");
-                            }
-                        }
-                        output.Alphabet.Add(asettings);
+                        output.Alphabet.Add(ParseHelper.ParseAlphabet(pair.GetValues()));
                         break;
                     case "template":
                         var tsettings = new RunParameters.TemplateValue();
@@ -341,8 +247,11 @@ namespace AssemblyNameSpace
                                 case "name":
                                     tsettings.Name = setting.GetValue();
                                     break;
+                                case "alphabet":
+                                    tsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
+                                    break;
                                 default:
-                                    throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are 'Path'");
+                                    throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are 'Path', 'Name' and 'Alphabet'");
                             }
                         }
                         output.Template.Add(tsettings);
@@ -441,109 +350,6 @@ namespace AssemblyNameSpace
         static class ParseHelper
         {
             /// <summary>
-            /// Consumes a whole line of the string
-            /// </summary>
-            /// <param name="content">The string</param>
-            public static void SkipLine(ref string content)
-            {
-                int nextnewline = FindNextNewLine(ref content);
-                if (nextnewline > 0)
-                {
-                    content = content.Remove(0, nextnewline).Trim();
-                }
-                else
-                {
-                    content = "";
-                }
-            }
-            /// <summary>
-            /// To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core
-            /// </summary>
-            /// <param name="content">The string to search in</param>
-            /// <returns>The position of the next newline ('\n' or '\r') or -1 if none could be found</returns>
-            public static int FindNextNewLine(ref string content) {
-                for (int pos = 0; pos < content.Length; pos++) {
-                    if (content[pos] == '\n' || content[pos] == '\r') {
-                        return pos;
-                    }
-                }
-                return -1;
-            }
-            /// <summary>
-            /// Consumes a name from the start of the string
-            /// </summary>
-            /// <param name="content">The string</param>
-            /// <returns>The name</returns>
-            public static string Name(ref string content)
-            {
-                var name = new StringBuilder();
-                while (Char.IsLetterOrDigit(content[0]) || content[0] == ' ')
-                {
-                    name.Append(content[0]);
-                    content = content.Remove(0, 1);
-                }
-                content = content.Trim();
-                return name.ToString().ToLower().Trim();
-            }
-            /// <summary>
-            /// Consumes a value from the start of the string
-            /// </summary>
-            /// <param name="content">The string</param>
-            /// <returns>The value</returns>
-            public static string Value(ref string content)
-            {
-                string result = "";
-                int nextnewline = FindNextNewLine(ref content);
-                if (nextnewline > 0)
-                {
-                    result = content.Substring(0, nextnewline).Trim();
-                    content = content.Remove(0, nextnewline).Trim();
-                }
-                else
-                {
-                    result = content.Trim();
-                    content = "";
-                }
-                return result;
-            }
-            /// <summary>
-            /// Consumes the string until it find the sequence
-            /// </summary>
-            /// <param name="content">The string</param>
-            /// <param name="sequence">The sequence to find</param>
-            /// <returns>The consumed part of the string</returns>
-            public static string UntilSequence(ref string content, string sequence)
-            {
-                int nextnewline = -1;
-                bool found = false;
-                var contentarray = content.ToCharArray();
-                for (int pos = 0; pos <= contentarray.Length - sequence.Length && !found; pos++) {
-                    for (int offset = 0; offset <= sequence.Length; offset++ ) {
-                        if (offset == sequence.Length) {
-                            nextnewline = pos;
-                            found = true;
-                            break;
-                        }
-                        if (contentarray[pos+offset] != sequence[offset]) {
-                            break;
-                        }
-                    }
-                }
-
-                string value = "";
-                if (nextnewline > 0)
-                {
-                    value = content.Substring(0, nextnewline).Trim();
-                    content = content.Remove(0, nextnewline + sequence.Length).Trim();
-                }
-                else
-                {
-                    value = content.Trim();
-                    content = "";
-                }
-                return value;
-            }
-            /// <summary>
             /// Converts a string to an int, while it generates meaningfull error messages for the end user.
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
@@ -568,11 +374,34 @@ namespace AssemblyNameSpace
                     throw new ParseException($"Some unkown ParseException occurred while '{input}' was converted to an int32, this should be a number in the context of {origin}.");
                 }
             }
+            public static RunParameters.AlphabetValue ParseAlphabet(List<KeyValue> values) {
+                var asettings = new RunParameters.AlphabetValue();
+
+                foreach (var setting in values)
+                {
+                    switch (setting.Name)
+                    {
+                        case "path":
+                            asettings.Data = File.ReadAllText(setting.GetValue());
+                            break;
+                        case "data":
+                            asettings.Data = setting.GetValue();
+                            break;
+                        case "name":
+                            asettings.Name = setting.GetValue();
+                            break;
+                        default:
+                            throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}, the options are 'Path', 'Data', and 'Name'");
+                    }
+                }
+
+                return asettings;
+            }
         }
         /// <summary>
         /// A class to save key value trees
         /// </summary>
-        class KeyValue
+        public class KeyValue
         {
             /// <summary>
             /// The name of a key

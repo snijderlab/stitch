@@ -6,9 +6,9 @@ Batch files are used to aggregate all information for one run of the program. Th
 
 ## Structure
 
-The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and ost values are not case specific.
+The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters, `:>` for multiline single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and ost values are not case specific.
 
-Lines starting with a hyphen `-` are considered comments and disregarded.
+Lines starting with a hyphen `-` are considered comments and disregarded. COmments are only valid in the 'outer scope' so comments should not be placed inside multiple valued parameters.
 
 ### All parameters
 
@@ -209,13 +209,13 @@ Defines the alphabet(s) used to score K-mers against each other. If multiple alp
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to the alphabet (cannot be used in conjunction with `Data`) | (No Default)
-Data | The alphabet, to allow for newlines the alphabet should be enclosed in `->` and `<-` (cannot be used in conjunction with `Path`) | (No Default)
+Data | The alphabet, to allow for newlines the alphabet should be enclosed in `:>` and `<:` (cannot be used in conjunction with `Path`) | (No Default)
 Name | To recognize the alphabet | (No Default)
 
 _Examples_
 ```
 Alphabet->
-Data	->
+Data	:>
 *;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
 L;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 S;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -239,7 +239,7 @@ C;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0
 W;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0
 O;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 U;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1
-<-
+<:
 Name	: Normal
 <-
 
@@ -358,7 +358,7 @@ MinimalHomology: 7
 DuplicateThreshold: 7
 Reverse	: both
 Alphabet->
-Data	->
+Data	:>
 *;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
 L;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
 S;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
@@ -382,7 +382,7 @@ C;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0
 W;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0
 O;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0
 U;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1
-<-
+<:
 Name	: Normal
 <-
 
