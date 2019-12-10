@@ -131,7 +131,7 @@ function Setup() {
 
 document.addEventListener('mousemove', function (ev) {
     if (dragging) {
-        width = window.innerWidth - ev.screenX;
+        width = window.innerWidth - ev.pageX;
         document.getElementById("aside").style.flexBasis = width.toString() + "px";
 
         if (width < 200) {
@@ -140,7 +140,7 @@ document.addEventListener('mousemove', function (ev) {
             document.body.classList.remove("only-main");
         }
 
-        if (ev.screenX < 200) {
+        if (ev.pageX < 200) {
             document.body.classList.add("only-aside");
         } else {
             document.body.classList.remove("only-aside");
