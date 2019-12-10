@@ -7,13 +7,13 @@ function sortTable(id, column_number, type) {
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
     
     sorted = false
-    if (headers[column_number].className == "asc") { dir = "desc"; sorted = true }
-    if (headers[column_number].className == "desc") {sorted = true}
+    if (headers[column_number].getAttribute('data-sortorder') == "asc") { dir = "desc"; sorted = true }
+    if (headers[column_number].getAttribute('data-sortorder') == "desc") {sorted = true}
 
     for (var j = 0; j < headers.length; j++) {
-        headers[j].className = "";
+        headers[j].setAttribute('data-sortorder', "");
     }
-    headers[column_number].className = dir;
+    headers[column_number].setAttribute('data-sortorder', dir);
 
     rows = Array.from(table.getElementsByTagName("TR"));
     values = [null]

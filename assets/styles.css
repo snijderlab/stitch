@@ -150,6 +150,11 @@ table {
     width: 100%;
 }
 
+.smallcell {
+    min-width: 4rem;
+    width: 15%;
+}
+
 @media (min-width: 800px) {
     .smallcell {
         width: 10%;
@@ -190,11 +195,11 @@ th[onclick]::after {
     content: "\21f3";
 }
 
-th.asc::after {
+th[data-sortorder="asc"]::after {
     content: "\21e7";
 }
 
-th.dsc::after {
+th[data-sortorder="desc"]::after {
     content: "\21e9";
 }
 
