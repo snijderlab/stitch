@@ -457,7 +457,7 @@ namespace AssemblyNameSpace
         {
             string sequence = AminoAcid.ArrayToString(node.Prefix.ToArray()) + AminoAcid.ArrayToString(node.Sequence.ToArray()) + AminoAcid.ArrayToString(node.Suffix.ToArray());
             Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true);
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
             sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             int prefixoffset = node.Prefix.Count();
 

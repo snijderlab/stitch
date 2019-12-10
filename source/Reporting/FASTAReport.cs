@@ -112,7 +112,7 @@ namespace AssemblyNameSpace
             // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, true);
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
 
             // Calculate the score by calculating the total read length (which maps to a location on the contig)
             int score = 0;
