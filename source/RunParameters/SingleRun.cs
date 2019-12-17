@@ -153,8 +153,8 @@ namespace AssemblyNameSpace
 
                     foreach (var template in Template)
                     {
+                        var alph = template.Alphabet != null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
-                        var alph = template.Alphabet == null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
                         var database = new TemplateDatabase(template.Path, template.Name, alph);
                         database.Match(assm.condensed_graph);
                         databases.Add(database);

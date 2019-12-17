@@ -308,21 +308,45 @@ namespace AssemblyNameSpace
         }
         string CreateTemplateAlignment(int templateIndex, int ind)
         {
+            //if (templateIndex != 0 || ind != 0)
+            //{
+            //    return "";
+            //}
+
+            StringBuilder buff = new StringBuilder();
+            foreach (var match in templates[templateIndex].Templates[ind].Matches)
+            {
+                buff.AppendLine($"{match.Score}\t{(double)match.Score/match.Length}\t{match.Length}\t{match.TotalMatches()}");
+            }
+            var file = File.AppendText(@"score_templates.txt");
+            file.Write(buff.ToString());
+            file.Close();
+
             var template = templates[templateIndex].Templates[ind];
 
             var buffer = new StringBuilder();
             var placement = new List<List<bool>>();
 
+            buffer.Append("<p>");
+
             // Create lists with values 'true' for every position where an aminoacid will be showed
             // First create list with the right startgap and amount of 'true's to add the gaps later
             placement.Add(Enumerable.Repeat(true, template.Sequence.Length).ToList());
 
+            int match_index = 0;
             foreach (var match in template.Matches)
             {
-                var positions = Enumerable.Repeat(false, match.StartPosition).ToList();
-                positions.AddRange(Enumerable.Repeat(true, match.TotalMatches()));
+                //Console.WriteLine(GetAsideIdentifier(match_index, AsideType.Contig));
+                //Console.WriteLine(match);
+                //Console.WriteLine(AminoAcid.ArrayToString(condensed_graph[match_index].Sequence.ToArray()));
+                var positions = Enumerable.Repeat(false, match.StartTemplatePosition).ToList(); // Startoverhang
+                positions.AddRange(Enumerable.Repeat(true, match.TotalMatches())); // Main sequence
+                positions.AddRange(Enumerable.Repeat(false, Math.Max(0, template.Sequence.Length - match.StartTemplatePosition - match.TotalMatches()))); // End overhang
                 placement.Add(positions);
+                match_index++;
             }
+
+            buffer.Append("</p>");
 
             // Add the gaps in the sequences
             // Gaps in the template should introduce a gap in all placements
@@ -331,21 +355,26 @@ namespace AssemblyNameSpace
             {
                 var match = template.Matches[i - 1];
                 if (match.Alignment.Count() == 1) continue;
-                int index = match.StartPosition;
+                int index = match.StartTemplatePosition;
                 foreach (var piece in match.Alignment)
                 {
-                    if (piece.GetType() == typeof(SequenceMatch.GapTemplate))
+                    if (piece.GetType() == typeof(SequenceMatch.Match))
                     {
                         index += piece.count;
                     }
                     else if (piece.GetType() == typeof(SequenceMatch.GapTemplate))
                     {
                         int pos = PositionOfNthTrue(placement[i], index);
-                        foreach (var place in placement)
+                        for (int j = 0; j <= template.Matches.Count(); j++)
                         {
-                            for (int n = 0; n < piece.count; n++)
+                            if (i != j)
                             {
-                                place.Insert(pos, false);
+                                for (int n = 0; n < piece.count; n++)
+                                {
+                                    //Console.WriteLine($"{place} {pos} {n}");
+                                    if (pos >= placement[j].Count()) placement[j].Add(false);
+                                    else placement[j].Insert(pos, false);
+                                }
                             }
                         }
                     }
@@ -360,59 +389,170 @@ namespace AssemblyNameSpace
                 }
             }
 
-            buffer.Append("<pre>ID  Score ");
+            // To save all sequences of all reads and the template
+            var sequences = new List<(string, string, string)>();
+
+            // Find the start and endoverhang
+            int startoverhang = -1;
+            for (int i = 0; i < placement[0].Count(); i++)
+            {
+                if (placement[0][i] == true)
+                {
+                    startoverhang = i;
+                    break;
+                }
+            }
+            if (startoverhang == -1)
+            {
+                throw new Exception("Startoverhang is invalid");
+            }
+
+            int endoverhang = -1;
+            for (int i = 0; i < placement[0].Count(); i++)
+            {
+                if (placement[0][placement[0].Count() - i - 1] == true)
+                {
+                    endoverhang = i;
+                    break;
+                }
+            }
+            if (startoverhang == -1)
+            {
+                throw new Exception("Endoverhang is invalid");
+            }
 
             // Add the template
+            StringBuilder sbt = new StringBuilder();
             string template_seq = AminoAcid.ArrayToString(template.Sequence);
             int template_index = 0;
-            foreach (var p in placement[0])
+            for (int i = startoverhang; i < placement[0].Count() - endoverhang; i++)
             {
-                if (p)
+                if (placement[0][i] == true)
                 {
-                    buffer.Append(template_seq[template_index]);
+                    sbt.Append(template_seq[template_index]);
                     template_index++;
                 }
                 else
                 {
-                    buffer.Append(" ");
+                    sbt.Append("-");
                 }
             }
-            buffer.Append("\n");
+            sequences.Add(("", sbt.ToString(), ""));
 
             // Add all the other sequences
             for (int i = 1; i <= template.Matches.Count(); i++)
             {
-                buffer.Append(GetAsideIdentifier(i-1, AsideType.Contig));
-                buffer.Append(" ");
-                buffer.Append($"{template.Matches[i-1].Score:D3}");
-                buffer.Append(" ");
+                StringBuilder sb = new StringBuilder();
                 string seq = AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
-                int seq_index = 0;
-                foreach (var p in placement[i])
+                int seq_index = template.Matches[i - 1].StartQueryPosition;
+                int max_seq = template.Matches[i - 1].TotalMatches();
+
+                for (int j = startoverhang; j < placement[0].Count() - endoverhang; j++)
                 {
-                    if (p)
+                    if (j < placement[i].Count() && placement[i][j] == true)
                     {
-                        buffer.Append(seq[seq_index]);
+                        sb.Append(seq[seq_index]);
                         seq_index++;
                     }
                     else
                     {
-                        if (seq_index == 0)
+                        if (seq_index == template.Matches[i - 1].StartQueryPosition || seq_index > max_seq - 1)
                         {
-                            buffer.Append(" ");
+                            sb.Append("_");
                         }
                         else
                         {
-                            buffer.Append("-");
+                            sb.Append("-");
                         }
                     }
                 }
-                buffer.Append("\n");
+                string full_seq = sb.ToString();
+                int l1 = full_seq.Length - startoverhang - endoverhang;
+                //Console.WriteLine($"(0, {startoverhang}) ({startoverhang}, {l1}) ({l1+startoverhang}, {endoverhang})");
+                sequences.Add((full_seq.Substring(0, startoverhang), full_seq.Substring(startoverhang, l1), full_seq.Substring(l1 + startoverhang, endoverhang)));
             }
 
-            buffer.Append("</pre>");
+            // New alignment in the same style as the reads alignment
+            buffer.AppendLine("<div class=\"reads-alignment\">");
 
-            return buffer.ToString();
+            int max_depth = 0;
+            const int bucketsize = 5;
+
+            // Create scores block
+            buffer.AppendLine($"<div class='align-block' style='line-height: 11px;margin-top: 100px;font-size: 17px;'>");
+            foreach (var match in template.Matches)
+            {
+                // TODO Also show the score somewhere
+                //string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                buffer.Append($"<a href=\"#\" class='text align-link'>S{match.Score} L{match.Length} E{50000*match.Length/Math.Pow(2, (0.252*match.Score - Math.Log(0.035))/Math.Log(2))}</a><br>");
+            }
+            buffer.AppendLine("</div>");
+
+            // Create the front overhanging reads block
+            string id = GetAsideIdentifier(template_index, ind, AsideType.Template);
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
+            buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+            for (int i = 1; i < sequences.Count(); i++)
+            {
+                // TODO Also show the score somewhere
+                string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                buffer.Append($"<a href=\"#{rid}\" class='text align-link'>{sequences[i].Item1}</a><span class='symbol'>...</span><br>");
+            }
+            buffer.AppendLine($"</p></div></label></div>");
+
+            // Create the main blocks of the sequence alignment
+            int seq_length = sequences[0].Item2.Length;
+            var sequence = sequences[0].Item2;
+            for (int pos = 0; pos <= seq_length / bucketsize; pos++)
+            {
+                // Add the sequence and the number to tell the position
+                string number = "";
+                string last = "";
+                if (seq_length - pos * bucketsize >= bucketsize)
+                {
+                    number = ((pos + 1) * bucketsize).ToString();
+                    number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                }
+                else
+                {
+                    last = " last";
+                }
+                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
+
+                int[] depth = new int[bucketsize];
+                // Add every line in order
+                for (int i = 1; i < sequences.Count(); i++)
+                {
+                    string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                    string result = "";
+                    if (sequences[i].Item2.Length > pos * bucketsize) result = $"<a href=\"#{rid}\" class=\"align-link\">{sequences[i].Item2.Substring(pos * bucketsize, Math.Min(bucketsize, sequences[i].Item2.Length - pos * bucketsize))}</a>";
+                    buffer.Append(result);
+                    buffer.Append("<br>");
+                    // TODO Update depth
+                }
+                buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+                for (int i = 0; i < Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
+                {
+                    if (depth[i] > max_depth) max_depth = depth[i];
+                    buffer.Append($"<span class='coverage-depth-bar' style='--value:{depth[i]}'></span>");
+                }
+                buffer.Append("</div></div>");
+            }
+
+            // Create the end overhanging reads block
+            buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
+            buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
+            for (int i = 1; i < sequences.Count(); i++)
+            {
+                string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                buffer.Append($"<a href=\"#{rid}\" class='text align-link'>{sequences[i].Item3}</a><span class='symbol'>...</span><br>");
+            }
+            buffer.AppendLine($"</p></div></label></div>");
+
+            // End the reads alignment div
+            buffer.AppendLine("</div>");
+
+            return buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>");
         }
         int PositionOfNthTrue(List<bool> list, int n)
         {

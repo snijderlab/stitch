@@ -172,7 +172,7 @@ namespace AssemblyNameSpace
         /// <param name="left">The template sequence to use.</param>
         /// <param name="right">The query sequence to use.</param>
         /// <param name="gap_penalty">The penalty for introducing a gap.</param>
-        static public SequenceMatch SmithWaterman(AminoAcid[] left, AminoAcid[] right, int gap_penalty = 2)
+        static public SequenceMatch SmithWaterman(String left, String right, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
         {
             var score_matrix = new (int, Direction)[left.Length + 1, right.Length + 1]; // Default value of 0
             int max_value = 0;
@@ -182,11 +182,11 @@ namespace AssemblyNameSpace
             {
                 for (int y = 1; y <= right.Length; y++)
                 {
-                    int score = left[x - 1].Homology(right[y - 1]);
+                    int score = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(left[x - 1]), alphabet.getIndexInAlphabet(right[y - 1])];
                     // Calculate the score for the current position
                     int a = score_matrix[x - 1, y - 1].Item1 + score; // Match
-                    int b = score_matrix[x, y - 1].Item1 - gap_penalty; // GapRight
-                    int c = score_matrix[x - 1, y].Item1 - gap_penalty; // GapLeft
+                    int b = score_matrix[x, y - 1].Item1 - (score_matrix[x, y - 1].Item2 == Direction.GapRight ? gap_penalty : start_gap_penalty); // GapRight
+                    int c = score_matrix[x - 1, y].Item1 - (score_matrix[x - 1, y].Item2 == Direction.GapLeft ? gap_penalty : start_gap_penalty); // GapLeft
                     int d = 0;
                     if (a > b && a > c && a > d) score_matrix[x, y] = (a, Direction.Match);
                     else if (b > c && b > d) score_matrix[x, y] = (b, Direction.GapRight);
@@ -206,15 +206,16 @@ namespace AssemblyNameSpace
             var match_list = new List<SequenceMatch.MatchPiece>();
 
             (int, int) index = max_index;
-            int start_index = 0;
+            (int, int) start_index = (0, 0);
             bool found_end = false;
             while (!found_end)
             {
                 int x = index.Item1;
                 int y = index.Item2;
-                if (x == 0 || y == 0) {
+                if (x == 0 || y == 0)
+                {
                     found_end = true;
-                    start_index = x;
+                    start_index = (x, y);
                     break;
                 }
                 switch (score_matrix[x, y].Item2)
@@ -233,13 +234,13 @@ namespace AssemblyNameSpace
                         break;
                     case Direction.NoMatch:
                         found_end = true;
-                        start_index = x;
+                        start_index = (x, y);
                         break;
                 }
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(start_index, max_value, match_list);
+            var match = new SequenceMatch(start_index.Item2, start_index.Item1, max_value, match_list);
             return match;
         }
 
@@ -249,20 +250,31 @@ namespace AssemblyNameSpace
     public class SequenceMatch
     {
         /// <summary>The position on the template where the match begins.</summary>
-        public int StartPosition;
+        public int StartTemplatePosition;
+        public int StartQueryPosition;
         public int Score;
         public List<MatchPiece> Alignment;
-        public SequenceMatch(int pos, int s, List<MatchPiece> m)
+        public int Length
         {
-            StartPosition = pos;
+            get
+            {
+                return Alignment.Aggregate(0, (a, b) => a + b.count);
+            }
+        }
+        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m)
+        {
+            StartTemplatePosition = tpos;
+            StartQueryPosition = qpos;
             Score = s;
             Alignment = m;
             simplify();
         }
-        public override string ToString() {
+        public override string ToString()
+        {
             var buffer = new StringBuilder();
-            buffer.Append($"SequenceMatch< starting at: {StartPosition}, score: {Score}, match: ");
-            foreach (var m in Alignment) {
+            buffer.Append($"SequenceMatch< starting at template: {StartTemplatePosition}, starting at query: {StartQueryPosition}, score: {Score}, match: ");
+            foreach (var m in Alignment)
+            {
                 buffer.Append(m.ToString());
             }
             buffer.Append(" >");
@@ -275,28 +287,32 @@ namespace AssemblyNameSpace
             {
                 count = c;
             }
-            public override string ToString() {
+            public override string ToString()
+            {
                 return $"{count}None";
             }
         }
         public class Match : MatchPiece
         {
             public Match(int c) : base(c) { }
-            public override string ToString() {
+            public override string ToString()
+            {
                 return $"{count}M";
             }
         }
         public class GapTemplate : MatchPiece
         {
             public GapTemplate(int c) : base(c) { }
-            public override string ToString() {
+            public override string ToString()
+            {
                 return $"{count}D";
             }
         }
         public class GapContig : MatchPiece
         {
             public GapContig(int c) : base(c) { }
-            public override string ToString() {
+            public override string ToString()
+            {
                 return $"{count}I";
             }
         }
@@ -318,9 +334,11 @@ namespace AssemblyNameSpace
                 i++;
             }
         }
-        public int TotalMatches() {
+        public int TotalMatches()
+        {
             int sum = 0;
-            foreach (var m in Alignment) {
+            foreach (var m in Alignment)
+            {
                 if (m.GetType() == typeof(SequenceMatch.Match)) sum += m.count;
             }
             return sum;

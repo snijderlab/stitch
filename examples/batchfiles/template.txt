@@ -6,7 +6,7 @@ Runname	: Template Matching Test
 
 -Input------------------
 Reads	->
-Path: ../011/reads-IgG2-K-002-all-75,00.txt
+Path: ../011/reads-IgG2-K-002-all-100,00.txt
 Name: Reads 011
 <-
 
@@ -23,15 +23,15 @@ Template->
 Path    : ../templates/IGHV.fasta
 Name    : IGHV Human
 Alphabet ->
-Path	: ../alphabets/blosum90.csv
-Name	: Blosum90
+Path	: ../alphabets/blosum62.csv
+Name	: Blosum62
 <-
 <-
 
 -Report-----------------
-FASTA	->
-Path	: ../../report-reads-{id}.fasta
-<-
+-FASTA	->
+-Path	: ../../report-reads-{id}.fasta
+-<-
 HTML ->
 Path    : ../../report-reads-{id}.html
 DotDistribution: global
