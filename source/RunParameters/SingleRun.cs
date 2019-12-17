@@ -155,9 +155,22 @@ namespace AssemblyNameSpace
                     {
                         var alph = template.Alphabet != null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
-                        var database = new TemplateDatabase(template.Path, template.Name, alph);
-                        database.Match(assm.condensed_graph);
-                        databases.Add(database);
+                        
+                        var stop1 = new Stopwatch();
+                        stop1.Start();
+                        var database1 = new TemplateDatabase(template.Path, template.Name, alph);
+                        database1.Match(assm.condensed_graph);
+                        stop1.Stop();
+
+                        // Testing Multithreaded: still gives errors in the HTML generation, so somewhere missing info?
+                        //var stop2 = new Stopwatch();
+                        //stop2.Start();
+                        //var database2 = new TemplateDatabase(template.Path, template.Name, alph);
+                        //database2.MatchParallel(assm.condensed_graph);
+                        //stop2.Stop();
+
+                        //Console.WriteLine($"Single Threaded\n{stop1.ElapsedMilliseconds}ms {database1.Templates.Count()} Templates\nMulti Threaded\n{stop2.ElapsedMilliseconds}ms {database2.Templates.Count()} Templates");
+                        databases.Add(database1);
                     }
 
                     stopWatch.Stop();

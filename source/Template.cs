@@ -70,7 +70,7 @@ namespace AssemblyNameSpace
         /// <param name="condensed_graph"></param>
         public void MatchParallel(List<CondensedNode> condensed_graph)
         {
-            throw new Exception("Parallel Match is not working");
+            //throw new Exception("Parallel Match is not working");
             var runs = new List<(AminoAcid[], Template)>();
             var sequences = new List<AminoAcid[]>();
             foreach (var node in condensed_graph)
