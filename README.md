@@ -53,6 +53,10 @@ There are some unittests provided. These can be found in the 'tests' file. To ru
 dotnet test tests
 ```
 
+# Documentation
+
+Documentation can be build using docfx.
+
 # Examples
 
 The 'examples' folder contains some examples which can be run to see what the program is up to.
@@ -66,7 +70,7 @@ Example 009 is an example of a FASTA input file.
 * Douwe Schulte - Wrote the software
 * Joost Snijder - Supervised and collaborated
 
-# Acknowledgments
+# Acknowledgements
 
 * Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
 * The [Graphviz software](https://www.graphviz.org) is included to visualize the graphs in the HTML reports

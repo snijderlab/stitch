@@ -4,8 +4,8 @@
       "src": [
         {
           "files": [
-            "../source/*.csproj",
-            "../source/*.cs"
+            "source/**.csproj",
+            "source/**.cs"
           ]
         }
       ],
@@ -31,13 +31,6 @@
         ]
       }
     ],
-    "resource": [
-      {
-        "files": [
-          "images/**"
-        ]
-      }
-    ],
     "overwrite": [
       {
         "files": [
@@ -45,11 +38,11 @@
         ],
         "exclude": [
           "obj/**",
-          "docs/**"
+          "_site/**"
         ]
       }
     ],
-    "dest": "docs",
+    "dest": "_site",
     "globalMetadataFiles": [],
     "fileMetadataFiles": [],
     "template": [
