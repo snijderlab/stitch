@@ -232,7 +232,7 @@ tr.selected {
 
 /* Collapsable regions */
 
-label {
+.report>label {
     display: block;
     font-size: 2em;
     color: white;
@@ -242,9 +242,10 @@ label {
     border-radius: 0.1em;
     margin-top: 0.5em;
     cursor: pointer;
+    user-select: none;
 }
 
-label::after {
+.report>label::after {
     content: "+";
     border: 1px solid var(--color-primary-light);
     color: var(--color-primary-light);
@@ -296,6 +297,7 @@ svg {
     max-width: 100%;
     height: auto;
     margin: 0 auto;
+    user-select: none;
 }
 
 svg text {
@@ -561,4 +563,71 @@ input:checked+label .overhang-block .text {
 
 .footer p {
     color: var(--color-light);
+}
+
+/* JS-settings */
+
+.js-settings {
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+}
+
+.js-settings p {
+    margin: 0;
+    margin-right: 0.5em;
+}
+
+/* Toggle switch */
+/* based on an example by w3schools */
+
+.js-toggle {
+    position: relative;
+    display: inline-block;
+    width: 2.5em;
+    height: 1.5em;
+}
+
+.js-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.js-toggle .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: var(--color-primary-light);
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 2em;
+}
+
+.js-toggle .slider:before {
+    position: absolute;
+    content: "";
+    height: 1.1em;
+    width: 1.1em;
+    left: 0.2em;
+    bottom: 0.2em;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: var(--color-primary);
+}
+
+input:focus+.slider {
+    box-shadow: 0 0 1px var(--color-primary);;
+}
+
+input:checked+.slider:before {
+    transform: translateX(1em);
 }

@@ -129,6 +129,13 @@ namespace AssemblyNameSpace
                 // Strip all <title> tags
                 simplesvggraph = Regex.Replace(simplesvggraph, "<title>[^<]*</title>", "");
 
+                // Add all paths as classes to the nodes
+                for (int i = 0; i < condensed_graph.Count(); i++) {
+                    string extra_classes = AllPathsContaining(i).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b, AsideType.Path)).Substring(1);
+                    svggraph = svggraph.Replace($"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
+                    simplesvggraph = simplesvggraph.Replace($"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
+                }
+
                 return (svggraph, simplesvggraph);
             }
             catch (Win32Exception)
@@ -251,6 +258,34 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+        string CreatePathsTable()
+        {
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine(@"<table id=""paths-table"" class=""widetable"">
+<tr>
+    <th onclick=""sortTable('paths-table', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('paths-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('paths-table', 2, 'number')"" class=""smallcell"">Length</th>
+</tr>");
+            string id, link;
+
+            for (int i = 0; i < PathsSequences.Count(); i++)
+            {
+                id = GetAsideIdentifier(i, AsideType.Path);
+                link = GetAsideLink(i, AsideType.Path);
+                buffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(PathsSequences[i].ToArray())}</td>
+    <td class=""center"">{PathsSequences[i].Count()}</td>
+</tr>");
+            }
+
+            buffer.AppendLine("</table>");
+
+            return buffer.ToString();
+        }
+
         /// <summary> Returns an aside for details viewing of a contig. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateContigAside(int i)
@@ -308,17 +343,32 @@ namespace AssemblyNameSpace
     {template.MetaData.ToHTML()}
 </div>";
         }
+        /// <summary>
+        /// Creates an aside for a path 
+        /// </summary>
+        /// <param name="i">The index</param>
+        /// <returns>valid HTML</returns>
+        string CreatePathAside(int i)
+        {
+            string id = GetAsideIdentifier(i, AsideType.Path);
+            return $@"<div id=""{id}"" class=""info-block read-info path-info"">
+    <h1>Path {id}</h1>
+    <h2>Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(PathsSequences[i])}</p>
+    <h2>Sequence Length</h2>
+    <p>{PathsSequences[i].Count()}</p>
+    <h2>Sequence Identifiers</h2>
+    <p>{paths[i].Item2.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b, AsideType.Contig)).Substring(4)}</p>
+    <h2>High scoring templates</h2>
+    <p>TO BE DONE</p>
+</div>";
+        }
         string CreateTemplateAlignment(int templateIndex, int ind)
         {
-            //if (templateIndex != 0 || ind != 0)
-            //{
-            //    return "";
-            //}
-
             StringBuilder buff = new StringBuilder();
             foreach (var match in templates[templateIndex].Templates[ind].Matches)
             {
-                buff.AppendLine($"{match.Score}\t{(double)match.Score/match.Length}\t{match.Length}\t{match.TotalMatches()}");
+                buff.AppendLine($"{match.Score}\t{(double)match.Score / match.Length}\t{match.Length}\t{match.TotalMatches()}");
             }
             var file = File.AppendText(@"score_templates.txt");
             file.Write(buff.ToString());
@@ -453,13 +503,8 @@ namespace AssemblyNameSpace
                 {
                     if (j < placement[i].Count() && placement[i][j] == true)
                     {
-                        try {
-                            sb.Append(seq[seq_index]);
-                            seq_index++;
-                        } 
-                        catch {
-                            Console.WriteLine($"Exception for seq_index {seq_index} seq {seq} i {i} j {j}");
-                        }
+                        sb.Append(seq[seq_index]);
+                        seq_index++;
                     }
                     else
                     {
@@ -491,7 +536,7 @@ namespace AssemblyNameSpace
             {
                 // TODO Also show the score somewhere
                 //string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
-                buffer.Append($"<a href=\"#\" class='text align-link'>S{match.Score} L{match.Length} E{50000*match.Length/Math.Pow(2, (0.252*match.Score - Math.Log(0.035))/Math.Log(2))}</a><br>");
+                buffer.Append($"<a href=\"#\" class='text align-link'>S{match.Score} L{match.Length} E{50000 * match.Length / Math.Pow(2, (0.252 * match.Score - Math.Log(0.035)) / Math.Log(2))}</a><br>");
             }
             buffer.AppendLine("</div>");
 
@@ -502,7 +547,7 @@ namespace AssemblyNameSpace
             for (int i = 1; i < sequences.Count(); i++)
             {
                 // TODO Also show the score somewhere
-                string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
                 buffer.Append($"<a href=\"#{rid}\" class='text align-link'>{sequences[i].Item1}</a><span class='symbol'>...</span><br>");
             }
             buffer.AppendLine($"</p></div></label></div>");
@@ -530,7 +575,7 @@ namespace AssemblyNameSpace
                 // Add every line in order
                 for (int i = 1; i < sequences.Count(); i++)
                 {
-                    string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                    string rid = GetAsideIdentifier(i - 1, AsideType.Path);
                     string result = "";
                     if (sequences[i].Item2.Length > pos * bucketsize) result = $"<a href=\"#{rid}\" class=\"align-link\">{sequences[i].Item2.Substring(pos * bucketsize, Math.Min(bucketsize, sequences[i].Item2.Length - pos * bucketsize))}</a>";
                     buffer.Append(result);
@@ -551,7 +596,7 @@ namespace AssemblyNameSpace
             buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
             for (int i = 1; i < sequences.Count(); i++)
             {
-                string rid = GetAsideIdentifier(i - 1, AsideType.Contig);
+                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
                 buffer.Append($"<a href=\"#{rid}\" class='text align-link'>{sequences[i].Item3}</a><span class='symbol'>...</span><br>");
             }
             buffer.AppendLine($"</p></div></label></div>");
@@ -577,6 +622,10 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
+            for (int i = 0; i < paths.Count(); i++)
+            {
+                buffer.AppendLine(CreatePathAside(i));
+            }
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
                 buffer.AppendLine(CreateContigAside(i));
@@ -783,12 +832,15 @@ namespace AssemblyNameSpace
         string GetAsideIdentifier(int index1, int index2, AsideType type)
         {
             string pre = GetAsidePrefix(type);
+
             string i1 = "";
             if (index1 == -1) i1 = "";
             else i1 = $"{index1}:";
+
             string i2 = "";
             if (index2 < 9999) i2 = $"{index2:D4}";
             else i2 = $"{index2}";
+
             return $"{pre}{i1}{i2}";
         }
         /// <summary> Returns a link to the given aside. </summary>
@@ -959,6 +1011,7 @@ namespace AssemblyNameSpace
 ContigPrefix = '{GetAsidePrefix(AsideType.Contig)}';
 ReadPrefix = '{GetAsidePrefix(AsideType.Read)}';
 TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
+PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
 {script}
 </script>
 </head>
@@ -966,6 +1019,13 @@ TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
+<div class=""js-settings"">
+    <p title=""Could help make the report feel more snappy, especially with lower powered devices."">Hover effects</p>
+    <label class=""js-toggle"">
+        <input type=""checkbox"" onchange=""togglejs()"" checked>
+        <span class=""slider"">
+    </label>
+</div>
 
 {CreateTemplateTables()}
 
@@ -976,6 +1036,10 @@ TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
 <input type=""checkbox"" id=""simple-graph-collapsable""/>
 <label for=""simple-graph-collapsable"">Simplified Graph</label>
 <div class=""collapsable"">{simplesvg}</div>
+
+<input type=""checkbox"" id=""paths-table-collapsable""/>
+<label for=""paths-table-collapsable"">Paths Table</label>
+<div class=""collapsable"">{CreatePathsTable()}</div>
 
 <input type=""checkbox"" id=""table-collapsable""/>
 <label for=""table-collapsable"">Contigs Table</label>
@@ -990,7 +1054,7 @@ TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
 <div class=""collapsable meta-collapsable"">{MetaInformation()}</div>
 
 <div class=""footer"">
-    <p>Code written in 2019</p>
+    <p>Code written in 2019-2020</p>
     <p>Made by the Hecklab</p>
 </div>
 

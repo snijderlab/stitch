@@ -16,16 +16,16 @@ MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
 Alphabet->
-Path	: ../alphabets/common_errors_alphabet.csv
-Name	: Normal
+    Path	: ../alphabets/common_errors_alphabet.csv
+    Name	: Normal
 <-
 Template->
-Path    : ../templates/IGHV.fasta
-Name    : IGHV Human
-Alphabet ->
-Path	: ../alphabets/blosum62.csv
-Name	: Blosum62
-<-
+    Path    : ../templates/smallIGHV.fasta
+    Name    : IGHV Human
+    Alphabet ->
+        Path	: ../alphabets/blosum62.csv
+        Name	: Blosum62
+    <-
 <-
 
 -Report-----------------

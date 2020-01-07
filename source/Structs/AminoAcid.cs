@@ -52,6 +52,9 @@ namespace AssemblyNameSpace
             }
             return builder.ToString();
         }
+        public static string ArrayToString(List<AminoAcid> list)
+        { return ArrayToString(list.ToArray()); }
+
         /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
         /// <remarks> Implemented as the equals operator (==). </remarks>
         /// <param name="obj"> The object to check equality with. </param>

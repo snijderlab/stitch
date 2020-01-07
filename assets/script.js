@@ -1,3 +1,5 @@
+hover_effects_on = true;
+
 function sortTable(id, column_number, type) {
     var table, rows, switching, i, x, y, shouldSwitch, dir = 0;
     table = document.getElementById(id);
@@ -90,6 +92,12 @@ window.onhashchange = function (ev) {
         document.getElementById("node-" + target).classList.add("selected");
         document.getElementById("simple-node-" + target).classList.add("selected");
     }
+    if (target[0] == PathPrefix) {
+        els = this.document.getElementsByClassName(target)
+        for (let el of els) {
+            if (el != null && el != undefined) el.classList.add("selected");
+        }
+    }
 }
 
 function Select(id) {
@@ -164,6 +172,7 @@ function pauseEvent(e) {
 }
 
 function enterHoverOver(e) {
+    if (!hover_effects_on) return;
     var id = e.target.href;
     var target = window.location.href.split("#")[1];
     var aside = document.getElementById(target);
@@ -190,4 +199,8 @@ function exitHoverOver(e) {
     while (elements.length > 0) {
         elements[0].classList.remove('hover');
     }
+}
+
+function togglejs() {
+    hover_effects_on = !hover_effects_on;
 }

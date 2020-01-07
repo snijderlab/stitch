@@ -61,6 +61,7 @@ namespace AssemblyNameSpace
         protected RunParameters.SingleRun singleRun;
         protected List<TemplateDatabase> templates;
         protected List<(int, List<int>)> paths;
+        protected List<List<AminoAcid>> PathsSequences;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -76,6 +77,7 @@ namespace AssemblyNameSpace
             singleRun = parameters.singleRun;
             templates = parameters.templateDatabases;
             paths = parameters.assembler.GetAllPaths();
+            PathsSequences = parameters.assembler.GetAllPathSequences();
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.
@@ -96,6 +98,23 @@ namespace AssemblyNameSpace
             StreamWriter sw = File.CreateText(filename);
             sw.Write(buffer);
             sw.Close();
+        }
+        /// <summary>
+        /// Retrieves all paths containing the specified condensed node id.
+        /// </summary>
+        /// <param name="id">The id of the specified node</param>
+        /// <returns>A list of all path ids</returns>
+        protected List<int> AllPathsContaining(int id) {
+            var output = new List<int>();
+            for (int i = 0; i < paths.Count(); i++) {
+                foreach (var node in paths[i].Item2) {
+                    if (node == id) {
+                        output.Add(i);
+                        break;
+                    }
+                }
+            }
+            return output;
         }
     }
 }
