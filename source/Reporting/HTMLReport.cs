@@ -293,17 +293,19 @@ namespace AssemblyNameSpace
         string CreateTemplateAside(int templateIndex, int i)
         {
             string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
+            var template = templates[templateIndex].Templates[i];
+
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
     <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(templates[templateIndex].Templates[i].Sequence)}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     <h2>Sequence Length</h2>
-    <p>{templates[templateIndex].Templates[i].Sequence.Length}</p>
+    <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
-    <p>{templates[templateIndex].Templates[i].Score}</p>
+    <p>{template.Score}</p>
     <h2>Alignment</h2>
     {CreateTemplateAlignment(templateIndex, i)}
-    {templates[templateIndex].Templates[i].MetaData.ToHTML()}
+    {template.MetaData.ToHTML()}
 </div>";
         }
         string CreateTemplateAlignment(int templateIndex, int ind)
@@ -404,7 +406,7 @@ namespace AssemblyNameSpace
             }
             if (startoverhang == -1)
             {
-                throw new Exception("Startoverhang is invalid");
+                throw new Exception("While creating the Template Aside for the HTML report an exception occurred: startoverhang is invalid. Please inform someone who works on this project.");
             }
 
             int endoverhang = -1;
@@ -418,7 +420,7 @@ namespace AssemblyNameSpace
             }
             if (startoverhang == -1)
             {
-                throw new Exception("Endoverhang is invalid");
+                throw new Exception("While creating the Template Aside for the HTML report an exception occurred: endoverhang is invalid. Please inform someone who works on this project.");
             }
 
             // Add the template
@@ -440,19 +442,24 @@ namespace AssemblyNameSpace
             sequences.Add(("", sbt.ToString(), ""));
 
             // Add all the other sequences
-            for (int i = 1; i <= template.Matches.Count(); i++)
+            for (int i = 1; i < template.Matches.Count(); i++)
             {
                 StringBuilder sb = new StringBuilder();
-                string seq = AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
-                int seq_index = template.Matches[i - 1].StartQueryPosition;
-                int max_seq = template.Matches[i - 1].TotalMatches();
+                string seq = template.Matches[i].Sequence; //AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
+                int seq_index = 0;//template.Matches[i - 1].StartQueryPosition;
+                int max_seq = seq.Length;//template.Matches[i - 1].TotalMatches();
 
                 for (int j = startoverhang; j < placement[0].Count() - endoverhang; j++)
                 {
                     if (j < placement[i].Count() && placement[i][j] == true)
                     {
-                        sb.Append(seq[seq_index]);
-                        seq_index++;
+                        try {
+                            sb.Append(seq[seq_index]);
+                            seq_index++;
+                        } 
+                        catch {
+                            Console.WriteLine($"Exception for seq_index {seq_index} seq {seq} i {i} j {j}");
+                        }
                     }
                     else
                     {
@@ -744,7 +751,7 @@ namespace AssemblyNameSpace
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Contig, Read, Template }
+        enum AsideType { Contig, Read, Template, Path }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -755,6 +762,8 @@ namespace AssemblyNameSpace
                     return "R";
                 case AsideType.Template:
                     return "T";
+                case AsideType.Path:
+                    return "P";
             }
             throw new Exception("Invalid AsideType in GetAsidePrefix.");
         }
@@ -802,6 +811,7 @@ namespace AssemblyNameSpace
             if (type == AsideType.Contig) classname = "contig";
             if (type == AsideType.Read) classname = "read";
             if (type == AsideType.Template) classname = "template";
+            if (type == AsideType.Path) classname = "path";
             return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>

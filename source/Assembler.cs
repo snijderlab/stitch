@@ -365,11 +365,29 @@ namespace AssemblyNameSpace
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
         /// <summary>
-        /// Gets all paths starting for all subgraphs
+        /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
         /// </summary>
-        /// <returns>A list with for each starting node a tuple with its index and all possible paths (as a list of indices)</returns>
-        public List<(int, List<List<int>>)> GetAllPaths() {
-            var opts = new List<(int, List<List<int>>)>();
+        /// <returns>A list with the sequences of all possible paths</returns>
+        public List<List<AminoAcid>> GetAllPathSequences() {
+            var paths = GetAllPaths();
+            var sequences = new List<List<AminoAcid>>();
+
+            foreach (var path in paths) {
+                var sequence = new List<AminoAcid>();
+                foreach (var node in path.Item2) {
+                    sequence.AddRange(condensed_graph[node].Sequence);
+                }
+                sequences.Add(sequence);
+            }
+
+            return sequences;
+        }
+        /// <summary>
+        /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
+        /// </summary>
+        /// <returns>A list with all possible paths as the starting node (its index) and the path as a list of indices</returns>
+        public List<(int, List<int>)> GetAllPaths() {
+            var opts = new List<(int, List<int>)>();
             for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
             {
                 var node = condensed_graph[node_index];
@@ -377,7 +395,10 @@ namespace AssemblyNameSpace
                 // Test if this is a starting node
                 if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
                 {
-                    opts.Add((node_index, GetPaths(node_index, new List<int>())));
+                    var paths = GetPaths(node_index, new List<int>());
+                    foreach (var path in paths) {
+                        opts.Add((node_index, path));
+                    }
                 }
             }
             return opts;

@@ -38,27 +38,25 @@ namespace AssemblyNameSpace
 
             foreach (var node in paths)
             {
-                foreach (var path in node.Item2)
+                var path = node.Item2;
+                int score = 0;
+                var id = new StringBuilder();
+                var sequence = new StringBuilder();
+                for (int index = 0; index < path.Count(); index++)
                 {
-                    int score = 0;
-                    var id = new StringBuilder();
-                    var sequence = new StringBuilder();
-                    for (int index = 0; index < path.Count(); index++)
+                    id.Append(index);
+                    score += CalculateScore(condensed_graph[index]);
+                    if (index == path.Count() - 1)
                     {
-                        id.Append(index);
-                        score += CalculateScore(condensed_graph[index]);
-                        if (index == path.Count() - 1)
-                        {
-                            sequence.Append(AminoAcid.ArrayToString(condensed_graph[index].Sequence.ToArray()));
-                        }
-                        else
-                        {
-                            sequence.Append(condensed_graph[index].Sequence[0].ToString());
-                            id.Append("-");
-                        }
+                        sequence.Append(AminoAcid.ArrayToString(condensed_graph[index].Sequence.ToArray()));
                     }
-                    sequences.Add((score, $">{id} score:{score}\n{sequence}"));
+                    else
+                    {
+                        sequence.Append(condensed_graph[index].Sequence[0].ToString());
+                        id.Append("-");
+                    }
                 }
+                sequences.Add((score, $">{id} score:{score}\n{sequence}"));
             }
 
             // Filter and sort the lines

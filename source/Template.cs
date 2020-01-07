@@ -44,21 +44,15 @@ namespace AssemblyNameSpace
             }
             return output;
         }
-        public void Match(List<CondensedNode> condensed_graph)
+        public void Match(List<List<AminoAcid>> sequences)
         {
-            var sequences = new List<AminoAcid[]>();
-            foreach (var node in condensed_graph)
-            {
-                sequences.Add(node.Sequence.ToArray());
-            }
-
             int y = 0;
             foreach (var tem in Templates)
             {
                 int x = 0;
                 foreach (var seq in sequences)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(seq), AminoAcid.ArrayToString(tem.Sequence), alphabet));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(seq.ToArray()), AminoAcid.ArrayToString(tem.Sequence), alphabet));
                     x++;
                 }
                 y++;
@@ -68,21 +62,16 @@ namespace AssemblyNameSpace
         /// Parallel (multithreaded) version of the 'Match' function.
         /// </summary>
         /// <param name="condensed_graph"></param>
-        public void MatchParallel(List<CondensedNode> condensed_graph)
+        public void MatchParallel(List<List<AminoAcid>> sequences)
         {
             //throw new Exception("Parallel Match is not working");
             var runs = new List<(AminoAcid[], Template)>();
-            var sequences = new List<AminoAcid[]>();
-            foreach (var node in condensed_graph)
-            {
-                sequences.Add(node.Sequence.ToArray());
-            }
 
             foreach (var tem in Templates)
             {
                 foreach (var seq in sequences)
                 {
-                    runs.Add((seq, tem));
+                    runs.Add((seq.ToArray(), tem));
                 }
             }
 

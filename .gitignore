@@ -16,3 +16,4 @@ source/obj/*
 tests/obj/*
 .vscode
 .vscode/*
+score_templates.txt

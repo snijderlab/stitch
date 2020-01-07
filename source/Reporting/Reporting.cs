@@ -60,7 +60,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected RunParameters.SingleRun singleRun;
         protected List<TemplateDatabase> templates;
-        protected List<(int, List<List<int>>)> paths;
+        protected List<(int, List<int>)> paths;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>

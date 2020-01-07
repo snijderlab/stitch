@@ -159,7 +159,7 @@ namespace AssemblyNameSpace
                         var stop1 = new Stopwatch();
                         stop1.Start();
                         var database1 = new TemplateDatabase(template.Path, template.Name, alph);
-                        database1.Match(assm.condensed_graph);
+                        database1.MatchParallel(assm.GetAllPathSequences());
                         stop1.Stop();
 
                         // Testing Multithreaded: still gives errors in the HTML generation, so somewhere missing info?
