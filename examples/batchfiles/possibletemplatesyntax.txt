@@ -1,0 +1,36 @@
+RecombineTemplate->
+    -Pick the <n> highest scoring templates from each database
+    n : 1
+
+    -The databases will be recombined in the order they are given in?
+    -Supply an order? Multiple orders?
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV Human * B C D
+
+    -All the databases given
+    Templates->
+        Template->
+            Path : ../templates/smallIGHV.fasta
+            Name : IGHV Human
+        <-
+        Template->
+            Path : ../templates/smallIGHV.fasta
+            Name : IGHV Human
+        <-
+        Template->
+            Path : ../templates/smallIGHV.fasta
+            Name : IGHV Human
+        <-
+        Template->
+            Path : ../templates/smallIGHV.fasta
+            Name : IGHV Human
+        <-
+    <-
+
+    -The alphabet used for all databases
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+    <-
+<-

@@ -542,7 +542,7 @@ namespace AssemblyNameSpace
                     {
                         if (seq_index == template.Matches[i - 1].StartQueryPosition || seq_index > max_seq - 1)
                         {
-                            sb.Append("_");
+                            sb.Append(".");
                         }
                         else
                         {
@@ -1052,7 +1052,7 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 <div class=""js-settings"">
-    <p title=""Could help make the report feel more snappy, especially with lower powered devices."">Hover effects</p>
+    <p title=""Could help make the report feel more snappy, especially with not so powerfull devices."">Hover effects</p>
     <label class=""js-toggle"">
         <input type=""checkbox"" onchange=""toggleHover()"" checked>
         <span class=""slider"">

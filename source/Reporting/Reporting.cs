@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
             stopwatch.Start();
             var buffer = Create();
             stopwatch.Stop();
-            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
+            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");
             StreamWriter sw = File.CreateText(filename);
             sw.Write(buffer);
             sw.Close();
