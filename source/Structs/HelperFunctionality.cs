@@ -171,8 +171,9 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="left">The template sequence to use.</param>
         /// <param name="right">The query sequence to use.</param>
+        /// /// <param name="right_id">The id of the query sequence to use.</param>
         /// <param name="gap_penalty">The penalty for introducing a gap.</param>
-        static public SequenceMatch SmithWaterman(String left, String right, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
+        static public SequenceMatch SmithWaterman(string left, string right, int right_id, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
         {
             var score_matrix = new (int, Direction)[left.Length + 1, right.Length + 1]; // Default value of 0
             int max_value = 0;
@@ -240,7 +241,7 @@ namespace AssemblyNameSpace
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(start_index.Item2, start_index.Item1, max_value, match_list, right);
+            var match = new SequenceMatch(start_index.Item2, start_index.Item1, max_value, match_list, right, right_id);
             return match;
         }
 
@@ -255,6 +256,7 @@ namespace AssemblyNameSpace
         public int Score;
         public List<MatchPiece> Alignment;
         public string Sequence;
+        public int SequenceID;
         public int Length
         {
             get
@@ -262,13 +264,14 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, string seq)
+        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, string seq, int seqid)
         {
             StartTemplatePosition = tpos;
             StartQueryPosition = qpos;
             Score = s;
             Alignment = m;
             Sequence = seq;
+            SequenceID = seqid;
             simplify();
         }
         public override string ToString()

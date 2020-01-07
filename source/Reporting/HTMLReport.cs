@@ -130,7 +130,8 @@ namespace AssemblyNameSpace
                 simplesvggraph = Regex.Replace(simplesvggraph, "<title>[^<]*</title>", "");
 
                 // Add all paths as classes to the nodes
-                for (int i = 0; i < condensed_graph.Count(); i++) {
+                for (int i = 0; i < condensed_graph.Count(); i++)
+                {
                     string extra_classes = AllPathsContaining(i).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b, AsideType.Path)).Substring(1);
                     svggraph = svggraph.Replace($"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
                     simplesvggraph = simplesvggraph.Replace($"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
@@ -351,16 +352,47 @@ namespace AssemblyNameSpace
         string CreatePathAside(int i)
         {
             string id = GetAsideIdentifier(i, AsideType.Path);
+            const int number = 10;
+            var best_templates = new List<(int, int, int)>();
+            int cutoff = 0;
+            //Pick each database
+            for (int k = 0; k < templates.Count(); k++)
+            { // Pick each template
+                for (int j = 0; j < templates[k].Templates.Count(); j++)
+                {
+                    var match = templates[k].Templates[j].Matches[i];
+                    if (match.Score > cutoff || best_templates.Count() < number)
+                    {
+                        best_templates.Add((k, j, match.Score));
+                        best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));
+
+                        int count = best_templates.Count();
+                        if (count > number) best_templates.RemoveRange(10, count - number);
+
+                        cutoff = best_templates.Last().Item3;
+                    }
+                }
+            }
+
+            var sb = new StringBuilder();
+            foreach (var tem in best_templates)
+            {
+                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template)}</td></tr>");
+            }
+
             return $@"<div id=""{id}"" class=""info-block read-info path-info"">
     <h1>Path {id}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(PathsSequences[i])}</p>
     <h2>Sequence Length</h2>
     <p>{PathsSequences[i].Count()}</p>
-    <h2>Sequence Identifiers</h2>
+    <h2>Path</h2>
     <p>{paths[i].Item2.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b, AsideType.Contig)).Substring(4)}</p>
-    <h2>High scoring templates</h2>
-    <p>TO BE DONE</p>
+    <h2>Top 10 templates</h2>
+    <table>
+    <tr><th>Score</th><th>Template</th></tr>
+    {sb.ToString()}
+    </table>
 </div>";
         }
         string CreateTemplateAlignment(int templateIndex, int ind)
@@ -501,7 +533,7 @@ namespace AssemblyNameSpace
 
                 for (int j = startoverhang; j < placement[0].Count() - endoverhang; j++)
                 {
-                    if (j < placement[i].Count() && placement[i][j] == true)
+                    if (j < placement[i].Count() && placement[i][j] == true && seq_index < max_seq)
                     {
                         sb.Append(seq[seq_index]);
                         seq_index++;
@@ -1022,7 +1054,7 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
 <div class=""js-settings"">
     <p title=""Could help make the report feel more snappy, especially with lower powered devices."">Hover effects</p>
     <label class=""js-toggle"">
-        <input type=""checkbox"" onchange=""togglejs()"" checked>
+        <input type=""checkbox"" onchange=""toggleHover()"" checked>
         <span class=""slider"">
     </label>
 </div>

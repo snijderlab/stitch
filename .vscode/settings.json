@@ -9,6 +9,7 @@
         "Massspectrometry",
         "Runname",
         "Runtype",
+        "Setup",
         "Tsvg",
         "alph",
         "asettings",
@@ -37,6 +38,7 @@
         "svggraph",
         "svgstderr",
         "svgwriter",
+        "true's",
         "tsettings"
     ]
 }

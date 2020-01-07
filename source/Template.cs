@@ -50,9 +50,9 @@ namespace AssemblyNameSpace
             foreach (var tem in Templates)
             {
                 int x = 0;
-                foreach (var seq in sequences)
+                for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(seq.ToArray()), AminoAcid.ArrayToString(tem.Sequence), alphabet));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(tem.Sequence), AminoAcid.ArrayToString(sequences[i].ToArray()), i, alphabet));
                     x++;
                 }
                 y++;
@@ -64,18 +64,17 @@ namespace AssemblyNameSpace
         /// <param name="condensed_graph"></param>
         public void MatchParallel(List<List<AminoAcid>> sequences)
         {
-            //throw new Exception("Parallel Match is not working");
-            var runs = new List<(AminoAcid[], Template)>();
+            var runs = new List<(Template, AminoAcid[], int)>();
 
             foreach (var tem in Templates)
             {
-                foreach (var seq in sequences)
+                for (int i = 0; i < sequences.Count(); i++)
                 {
-                    runs.Add((seq.ToArray(), tem));
+                    runs.Add((tem, sequences[i].ToArray(), i));
                 }
             }
 
-            Parallel.ForEach(runs, (s, _) => s.Item2.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(s.Item1), AminoAcid.ArrayToString(s.Item2.Sequence), alphabet)));
+            Parallel.ForEach(runs, (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(AminoAcid.ArrayToString(s.Item1.Sequence), AminoAcid.ArrayToString(s.Item2), s.Item3, alphabet)));
         }
     }
     public class Template

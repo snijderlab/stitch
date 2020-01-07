@@ -229,6 +229,10 @@ tr.selected {
     border-color: var(--color-secondary);
 }
 
+.aside th {
+    background: none;
+    border: none;
+}
 
 /* Collapsable regions */
 

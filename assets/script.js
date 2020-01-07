@@ -201,6 +201,6 @@ function exitHoverOver(e) {
     }
 }
 
-function togglejs() {
+function toggleHover() {
     hover_effects_on = !hover_effects_on;
 }
