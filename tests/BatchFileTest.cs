@@ -20,7 +20,15 @@ namespace AssemblyTestNameSpace
             var path = @"../../../../examples/batchfiles";
             var files = Directory.GetFiles(path);
             foreach (var file in files) {
-                ParseCommandFile.Batch(file);
+                try
+                {
+                    ParseCommandFile.Batch(file);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"At file {file}");
+                    throw e;
+                }
             }
         }
     }

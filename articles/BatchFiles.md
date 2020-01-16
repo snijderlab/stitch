@@ -6,9 +6,11 @@ Batch files are used to aggregate all information for one run of the program. Th
 
 ## Structure
 
-The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters, `:>` for multiline single valued parameters or `->` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and ost values are not case specific.
+The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters, `:>`/`<:` for multiline single valued parameters or `->`/`<-` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and most values are not case specific.
 
-Lines starting with a hyphen `-` are considered comments and disregarded. COmments are only valid in the 'outer scope' so comments should not be placed inside multiple valued parameters.
+In any place where a single valued parameter is expected both a single line `:` and a multiline `:>`/`<:` are valid. 
+
+Lines starting with a hyphen `-` are considered comments and disregarded. Comments can be placed in the outer scope and in multivalued arguments.
 
 ### All parameters
 
@@ -248,6 +250,65 @@ Name	: Normal
 Alphabet->
 Path    : My/Path/To/AnAlphabet.csv
 Name	: Normal
+<-
+```
+
+##### Template (m)
+
+Defines how to match all paths in the graph to a database of templates.
+
+Inner parameter | Explanation | Default Value
+--- | --- | ---
+Path | The path to the database. | (No Default)
+Type | The type of the database. Fasta or Reads. Tries to detect the type when no type is given. Based on the extension so .fasta is Fasta the rest is assumed to be Reads. | Detect
+Name | The name of the database. Used for display in the output. Can contain whitespace. | (No Default)
+Alphabet | The alphabet to use. See 'Alphabet'. | (No Default)
+
+```
+Template->
+    Path    : ../templates/smallIGHV.fasta
+    Type    : Fasta
+    Name    : IGHV Human
+    Alphabet ->
+        Path	: ../alphabets/blosum62.csv
+        Name	: Blosum62
+    <-
+<-
+```
+
+##### Recombine (m)
+
+Defines how to recombine a set of templates. For example if antibody data is used this recombination can be used to first match all paths to every template (as in the previous argument 'Template'). After this the _n_ highest scoring templates out of each templatedatabase (called 'Template') are recombined in the order provided. These recombined templates are then used to align all paths. This should provide the opportunity to detect the placement of paths relative to each other and the most likely template in the database. Be warned having a large _n_ increases the runtime exponentially.
+
+Inner parameter | Explanation | Default Value
+--- | --- | ---
+n | The amount of templates to recombine from each database | (No Default)
+Order | The order in which the templates will be recombined. Defined as the names of the template possibly with gaps ('*') in between. | (No Default)
+Templates | The list of templates to use. See 'Template'. Templates exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
+Alphabet | The alphabet to use. See 'Alphabet' | (No Default)
+
+```
+Recombine->
+    n : 1
+    Order : IGHV * IGHJ IGHC
+    Templates->
+        Template->
+            Path : ../templates/IGHV.fasta
+            Name : IGHV
+        <-
+        Template->
+            Path : ../templates/IGHJ.fasta
+            Name : IGHJ
+        <-
+        Template->
+            Path : ../templates/IGHC.fasta
+            Name : IGHC
+        <-
+    <-
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+    <-
 <-
 ```
 

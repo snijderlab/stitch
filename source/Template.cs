@@ -18,9 +18,18 @@ namespace AssemblyNameSpace
     {
         Alphabet alphabet;
         public List<Template> Templates;
-        public TemplateDatabase(string path, string name, Alphabet alp)
+        public TemplateDatabase(string path, RunParameters.InputType type, string name, Alphabet alp)
         {
-            var sequences = OpenReads.Fasta(new MetaData.FileIdentifier(path, name));
+            List<(string, MetaData.IMetaData)> sequences;
+
+            if (type == RunParameters.InputType.Reads) {
+                sequences = OpenReads.Simple(new MetaData.FileIdentifier(path, name));
+            } else if (type == RunParameters.InputType.Fasta) {
+                sequences = OpenReads.Fasta(new MetaData.FileIdentifier(path, name));
+            } else {
+                throw new Exception($"The type {type} is not a valid type for a template database file (file: {name} {path})");
+            }
+
             alphabet = alp;
             Templates = new List<Template>();
 

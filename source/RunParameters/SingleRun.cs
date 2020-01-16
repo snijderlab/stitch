@@ -158,7 +158,7 @@ namespace AssemblyNameSpace
                         
                         var stop1 = new Stopwatch();
                         stop1.Start();
-                        var database1 = new TemplateDatabase(template.Path, template.Name, alph);
+                        var database1 = new TemplateDatabase(template.Path, template.Type, template.Name, alph);
                         database1.MatchParallel(assm.GetAllPathSequences());
                         stop1.Stop();
 

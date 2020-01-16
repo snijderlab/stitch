@@ -29,6 +29,10 @@ namespace AssemblyNameSpace
             Group
         }
         /// <summary>
+        /// The type of an input file
+        /// </summary>
+        public enum InputType { Detect, Reads, Fasta, Peaks }
+        /// <summary>
         /// To contain parameters for the input of data
         /// </summary>
         public class Input
@@ -231,10 +235,66 @@ namespace AssemblyNameSpace
             /// </summary>
             public string Name;
             /// <summary>
+            /// The type of the file
+            /// </summary>
+            public InputType Type;
+            /// <summary>
             /// The alphabet to be used for template matching
             /// </summary>
             public AlphabetValue Alphabet;
         }
+        /// <summary>
+        /// To contain all parameters for recombination of templates
+        /// </summary>
+        public class RecombineValue
+        {
+            /// <summary>
+            /// The amount of templates to recombine from the highest scoring templates
+            /// </summary>
+            public int N;
+            /// <summary>
+            /// The templates to recombine
+            /// </summary>
+            public List<TemplateValue> Templates = new List<TemplateValue>();
+            /// <summary>
+            /// The alphabet to be used for all templates
+            /// </summary>
+            public AlphabetValue Alphabet;
+            /// <summary>
+            /// The order in which the templates are to be recombined
+            /// </summary>
+            public List<RecombineOrder.OrderPiece> Order = new List<RecombineOrder.OrderPiece>();
+        }
+
+        namespace RecombineOrder
+        {
+            /// <summary>
+            /// An abstract class to contain the order of templates
+            /// </summary>
+            public abstract class OrderPiece { }
+            /// <summary>
+            /// Introduce a gap in the recombined templates
+            /// </summary>
+            public class Gap : OrderPiece
+            {
+                public Gap() { }
+            }
+            /// <summary>
+            /// Introduce a template in the recombined templates
+            /// </summary>
+            public class Template : OrderPiece
+            {
+                /// <summary>
+                /// The index in the Templates list of the enclosing RecombineValue
+                /// </summary>
+                public int Index;
+                public Template(int i)
+                {
+                    Index = i;
+                }
+            }
+        }
+
         /// <summary>
         /// To contain parameters for reporting
         /// </summary>

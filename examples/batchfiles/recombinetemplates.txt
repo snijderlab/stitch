@@ -1,4 +1,25 @@
-RecombineTemplate->
+------| Assemble |------
+
+-Run Info---------------
+Version	: 0
+Runname	: Recombine Templates Test
+
+-Input------------------
+Reads	->
+Path: ../011/reads-IgG2-K-002-all-100,00.txt
+Name: Reads 011
+<-
+
+-Parameters-------------
+K	            : 6
+MinimalHomology : K-1
+DuplicateThreshold: K-1
+Reverse	        : False
+Alphabet->
+    Path	: ../alphabets/common_errors_alphabet.csv
+    Name	: Normal
+<-
+Recombine->
     -Pick the <n> highest scoring templates from each database
     n : 1
 
@@ -6,25 +27,25 @@ RecombineTemplate->
     -Supply an order? Multiple orders?
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV Human * B C D
+    Order : IGHV Human 1 * IGHV Human 2 IGHV Human 3 IGHV Human 4
 
     -All the databases given
     Templates->
         Template->
             Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human
+            Name : IGHV Human 1
         <-
         Template->
             Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human
+            Name : IGHV Human 2
         <-
         Template->
             Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human
+            Name : IGHV Human 3
         <-
         Template->
             Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human
+            Name : IGHV Human 4
         <-
     <-
 
@@ -33,4 +54,13 @@ RecombineTemplate->
         Path : ../alphabets/blosum62.csv
         Name : Blosum62
     <-
+<-
+
+-Report-----------------
+-FASTA	->
+-Path	: ../../report-reads-{id}.fasta
+-<-
+HTML ->
+Path    : ../../report-reads-{id}.html
+DotDistribution: global
 <-

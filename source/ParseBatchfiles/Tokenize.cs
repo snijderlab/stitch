@@ -148,6 +148,10 @@ namespace AssemblyNameSpace
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
+                            else if (content[0] == '-')
+                            {
+                                ParseHelper.SkipLine(ref content);
+                            }
                             else
                             {
                                 throw new ParseException($"Parameter {innername} in {name} should be followed by an delimiter (':', ':>' or '->')");

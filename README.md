@@ -47,7 +47,7 @@ The target name should then be a valid 'RID' for the platform you choose. See [t
 
 # Testing
 
-There are some unittests provided. These can be found in the 'tests' file. To run the unittests run (from inside the root folder):
+There are some unittests provided. These can be found in the 'tests' file. To run the unittests run (from the root folder):
 
 ```
 dotnet test tests

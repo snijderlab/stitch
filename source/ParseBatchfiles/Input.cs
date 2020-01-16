@@ -237,26 +237,84 @@ namespace AssemblyNameSpace
                         output.Alphabet.Add(ParseHelper.ParseAlphabet(pair.GetValues()));
                         break;
                     case "template":
-                        var tsettings = new RunParameters.TemplateValue();
+                        output.Template.Add(ParseHelper.ParseTemplate(pair.GetValues(), true));
+                        break;
+                    case "recombine":
+                        var recsettings = new RunParameters.RecombineValue();
+                        string order = "";
 
                         foreach (var setting in pair.GetValues())
                         {
                             switch (setting.Name)
                             {
-                                case "path":
-                                    tsettings.Path = Path.GetFullPath(setting.GetValue());
+                                case "n":
+                                    recsettings.N = ParseHelper.ConvertToInt(setting.GetValue(), "number of top hits to take from the templates <n>");
                                     break;
-                                case "name":
-                                    tsettings.Name = setting.GetValue();
+                                case "order":
+                                    order = setting.GetValue();
+                                    break;
+                                case "templates":
+                                    foreach (var template in setting.GetValues())
+                                    {
+                                        if (template.Name != "template")
+                                            throw new ParseException($"Unknown key in Recombine - Templates definition: {setting.Name}, only 'Template' is valid");
+
+                                        recsettings.Templates.Add(ParseHelper.ParseTemplate(template.GetValues(), false));
+                                    }
                                     break;
                                 case "alphabet":
-                                    tsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
+                                    recsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are 'Path', 'Name' and 'Alphabet'");
+                                    throw new ParseException($"Unknown key in Recombine definition: {setting.Name}, the options are 'N', 'Order', 'Templates' and 'Alphabet'");
                             }
                         }
-                        output.Template.Add(tsettings);
+
+                        // Test if the template names are unique and valid
+                        var template_names = new List<string>();
+                        foreach (var template in recsettings.Templates)
+                        {
+                            if (template_names.Contains(template.Name))
+                            {
+                                throw new ParseException($"Templates in Recombine should have a unique name, the name '{template.Name}' is not unique");
+                            }
+                            if (template.Name.Contains('*'))
+                            {
+                                throw new ParseException($"Names of Templates in Recombine cannot contain a '*' as this will be confusing, the name '{template.Name}' is not valid");
+                            }
+                            template_names.Add(template.Name);
+                        }
+
+                        // Parse the order
+                        while (order != "")
+                        {
+                            order = order.Trim();
+                            var match = false;
+                            for (int i = 0; i < recsettings.Templates.Count(); i++)
+                            {
+                                var template = recsettings.Templates[i];
+                                if (order.StartsWith(template.Name))
+                                {
+                                    order = order.Remove(0, template.Name.Length);
+                                    recsettings.Order.Add(new RunParameters.RecombineOrder.Template(i));
+                                    match = true;
+                                    break;
+                                }
+                            }
+                            if (match) continue;
+
+                            if (order.StartsWith('*'))
+                            {
+                                order = order.Remove(0, 1);
+                                recsettings.Order.Add(new RunParameters.RecombineOrder.Gap());
+                            }
+                            else
+                            {
+                                throw new ParseException($"Invalid Order definition in Recombine, cannot proceed past '{order}', the only valid options are a name of a template (as defined in 'Templates'), a gap (defined as '*') or whitespace");
+                            }
+                        }
+
+                        //output.Recombine.Add(recsettings);
                         break;
                     case "html":
                         var hsettings = new RunParameters.Report.HTML();
@@ -419,6 +477,60 @@ namespace AssemblyNameSpace
                 }
 
                 return asettings;
+            }
+
+            public static RunParameters.TemplateValue ParseTemplate(List<KeyValue> values, bool alphabet)
+            {
+                var tsettings = new RunParameters.TemplateValue();
+
+                foreach (var setting in values)
+                {
+                    switch (setting.Name)
+                    {
+                        case "path":
+                            tsettings.Path = Path.GetFullPath(setting.GetValue());
+                            break;
+                        case "type":
+                            switch (setting.GetValue().ToLower())
+                            {
+                                case "reads":
+                                    tsettings.Type = RunParameters.InputType.Reads;
+                                    break;
+                                case "fasta":
+                                    tsettings.Type = RunParameters.InputType.Fasta;
+                                    break;
+                                default:
+                                    throw new ParseException($"Unknown option in InputType definition: {setting.GetValue()}, the options are 'Reads' and 'Fasta'");
+                            }
+                            break;
+                        case "name":
+                            tsettings.Name = setting.GetValue();
+                            break;
+                        case "alphabet":
+                            if (!alphabet) throw new ParseException($"Alphabet cannot be defined here: {setting.Name}, the options are 'Path', 'Type' and 'Name'");
+                            tsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
+                            break;
+                        default:
+                            var tail = "'Path', 'Type', 'Name' and 'Alphabet'";
+                            if (!alphabet) tail = "'Path', 'Type' and 'Name'";
+                            throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are {tail}");
+                    }
+                }
+
+                // Try to detect the type of the file
+                if (tsettings.Type == RunParameters.InputType.Detect)
+                {
+                    if (tsettings.Path.EndsWith("fasta"))
+                    {
+                        tsettings.Type = RunParameters.InputType.Fasta;
+                    }
+                    else
+                    {
+                        tsettings.Type = RunParameters.InputType.Reads;
+                    }
+                }
+
+                return tsettings;
             }
         }
     }

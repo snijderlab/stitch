@@ -33,6 +33,7 @@
         "musl",
         "nbsp",
         "nuget",
+        "recsettings",
         "rsettings",
         "simplesvggraph",
         "simplesvgstderr",
