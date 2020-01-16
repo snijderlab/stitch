@@ -27,25 +27,29 @@ namespace AssemblyNameSpace
             /// The value for this key
             /// </summary>
             ValueType Value;
+            public readonly Position Position;
+
             /// <summary>
             /// Create a new single valued key
             /// </summary>
             /// <param name="name">The name of the key</param>
             /// <param name="value">The value of the key</param>
-            public KeyValue(string name, string value)
+            public KeyValue(string name, string value, Position position)
             {
                 Name = name.ToLower();
                 Value = new Single(value);
+                Position = position;
             }
             /// <summary>
             /// Create a new multiple valued key
             /// </summary>
             /// <param name="name">The name of the key</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
-            public KeyValue(string name, List<KeyValue> values)
+            public KeyValue(string name, List<KeyValue> values, Position position)
             {
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
+                Position = position;
             }
             /// <summary>
             /// Tries to get a single value from this key, otherwise fails with an error message for the end user
@@ -59,7 +63,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    throw new ParseException($"Parameter {Name} has multiple values but should have a single value.");
+                    throw new ParseException($"Parameter {Name} {Position} has multiple values but should have a single value.");
                 }
             }
             /// <summary>
@@ -74,7 +78,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    throw new ParseException($"Parameter {Name} has a single value but should have multiple values. Value {GetValue()}");
+                    throw new ParseException($"Parameter {Name} {Position} has a single value but should have multiple values. Value {GetValue()}");
                 }
             }
             /// <summary>

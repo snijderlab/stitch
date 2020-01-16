@@ -12,6 +12,21 @@ using System.Globalization;
 
 namespace AssemblyNameSpace
 {
+    /// <summary>
+    /// To keep track of a location of a token
+    /// </summary>
+    public class Position {
+        public readonly int Line;
+        public readonly int Column;
+        public Position(int l, int c) {
+            Line = l;
+            Column = c;
+        }
+        public override string ToString() {
+            return $"Position:{Line},{Column}";
+        }
+    }
+
     namespace InputNameSpace
     {
         public static class Tokenizer
@@ -19,14 +34,42 @@ namespace AssemblyNameSpace
             public static List<KeyValue> Tokenize(string content)
             {
                 var parsed = new List<KeyValue>();
+                var counter = new Counter();
+
                 while (content.Length > 0)
                 {
-                    var outcome = TokenizeHelper.MainArgument(content);
+                    var outcome = TokenizeHelper.MainArgument(content, counter);
                     if (outcome.Item1 != null) parsed.Add(outcome.Item1);
                     content = outcome.Item2;
                 }
                 return parsed;
             }
+            /// <summary>
+            /// To keep track of the location of the parsehead
+            /// </summary>
+            public class Counter {
+                public int Line;
+                public int Column;
+
+                public Counter() {
+                    Line = 0;
+                    Column = 1;
+                }
+
+                public void NextLine() {
+                    Line += 1;
+                    Column = 1;
+                }
+
+                public void NextColumn(int steps = 1) {
+                    Column += steps;
+                }
+
+                public Position GetPosition() {
+                    return new Position(Line, Column);
+                }
+            }
+
             /// <summary>
             /// A class with functionality for tokenizing
             /// </summary>
@@ -36,46 +79,49 @@ namespace AssemblyNameSpace
                 /// Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines 
                 /// </summary>
                 /// <returns>The status</returns>
-                public static (KeyValue, string) MainArgument(string content)
+                public static (KeyValue, string) MainArgument(string content, Counter counter)
                 {
                     switch (content.First())
                     {
                         case '-':
                             // This line is a comment, skip it
-                            ParseHelper.SkipLine(ref content);
+                            ParseHelper.SkipLine(ref content, counter);
                             return (null, content);
                         case '\n':
                             //skip
-                            return (null, content.Trim());
+                            ParseHelper.Trim(ref content, counter);
+                            return (null, content);
                         default:
-                            return Argument(content);
+                            return Argument(content, counter);
                     }
                 }
                 /// <summary>
                 /// Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines 
                 /// </summary>
                 /// <returns>The status</returns>
-                static (KeyValue, string) Argument(string content)
+                static (KeyValue, string) Argument(string content, Counter counter)
                 {
                     // This is a parameter line, get the name
-                    var name = ParseHelper.Name(ref content);
+                    ParseHelper.Trim(ref content, counter);
+                    var pos = counter.GetPosition();
+                    var name = ParseHelper.Name(ref content, counter);
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
                     {
-                        return MultilineSingleParameter(content, name);
+                        return MultilineSingleParameter(content, name, counter);
                     }
                     else if (content[0] == ':')
                     {
-                        return SingleParameter(content, name);
+                        return SingleParameter(content, name, counter);
                     }
                     else if (content[0] == '-' && content[1] == '>')
                     {
-                        return MultiParameter(content, name);
+                        return MultiParameter(content, name, counter);
                     }
                     else
                     {
-                        throw new ParseException($"Parameter {name.ToString()} should be followed by an delimiter (':', ':>' or '->')");
+                        throw new ParseException($"Parameter '{name.ToString()}' {pos} should be followed by an delimiter (':', ':>' or '->')");
                     }
                 }
                 /// <summary>
@@ -84,12 +130,14 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) SingleParameter(string content, string name)
+                static (KeyValue, string) SingleParameter(string content, string name, Counter counter)
                 {
-                    content = content.Remove(0, 1).Trim();
+                    content = content.Remove(0, 1);
+                    counter.NextColumn();
+                    ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
-                    string value = ParseHelper.Value(ref content);
-                    return (new KeyValue(name, value), content);
+                    string value = ParseHelper.Value(ref content, counter);
+                    return (new KeyValue(name, value, counter.GetPosition()), content);
                 }
                 /// <summary>
                 /// Single parameter on multiple lines
@@ -97,12 +145,14 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultilineSingleParameter(string content, string name)
+                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter)
                 {
-                    content = content.Remove(0, 2).Trim();
+                    content = content.Remove(0, 2);
+                    counter.NextColumn(2);
+                    ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
                     string value = ParseHelper.UntilSequence(ref content, "<:");
-                    return (new KeyValue(name, value.Trim()), content);
+                    return (new KeyValue(name, value.Trim(), counter.GetPosition()), content);
                 }
                 /// <summary>
                 /// Multiparameter
@@ -110,9 +160,11 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultiParameter(string content, string name)
+                static (KeyValue, string) MultiParameter(string content, string name, Counter counter)
                 {
-                    content = content.Remove(0, 2).Trim();
+                    content = content.Remove(0, 2);
+                    counter.NextColumn(2);
+                    ParseHelper.Trim(ref content, counter);
                     // Now get the multiple values
                     var values = new List<KeyValue>();
 
@@ -121,42 +173,44 @@ namespace AssemblyNameSpace
                         if (content[0] == '<' && content[1] == '-')
                         {
                             // This is the end of the multiple valued parameter
-                            content = content.Remove(0, 2).Trim();
-                            return (new KeyValue(name, values), content);
+                            content = content.Remove(0, 2);
+                            counter.NextColumn(2);
+                            ParseHelper.Trim(ref content, counter);
+                            return (new KeyValue(name, values, counter.GetPosition()), content);
                         }
                         else
                         {
                             // Match the inner parameter
-                            var innername = ParseHelper.Name(ref content);
+                            var innername = ParseHelper.Name(ref content, counter);
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')
                             {
-                                var outcome = MultilineSingleParameter(content, innername);
+                                var outcome = MultilineSingleParameter(content, innername, counter);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == ':')
                             {
-                                var outcome = SingleParameter(content, innername);
+                                var outcome = SingleParameter(content, innername, counter);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == '-' && content[1] == '>')
                             {
-                                var outcome = MultiParameter(content, innername);
+                                var outcome = MultiParameter(content, innername, counter);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == '-')
                             {
-                                ParseHelper.SkipLine(ref content);
+                                ParseHelper.SkipLine(ref content, counter);
                             }
                             else
                             {
-                                throw new ParseException($"Parameter {innername} in {name} should be followed by an delimiter (':', ':>' or '->')");
+                                throw new ParseException($"Parameter '{innername}' in '{name}' {counter.GetPosition()} should be followed by an delimiter (':', ':>' or '->')");
                             }
-                            content = content.Trim();
+                            ParseHelper.Trim(ref content, counter);
                         }
                     }
                 }
@@ -170,12 +224,13 @@ namespace AssemblyNameSpace
                 /// Consumes a whole line of the string
                 /// </summary>
                 /// <param name="content">The string</param>
-                public static void SkipLine(ref string content)
+                public static void SkipLine(ref string content, Counter counter)
                 {
                     int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
                     {
-                        content = content.Remove(0, nextnewline).Trim();
+                        content = content.Remove(0, nextnewline);
+                        Trim(ref content, counter);
                     }
                     else
                     {
@@ -203,15 +258,17 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string</param>
                 /// <returns>The name</returns>
-                public static string Name(ref string content)
+                public static string Name(ref string content, Counter counter)
                 {
+                    ParseHelper.Trim(ref content, counter);
                     var name = new StringBuilder();
                     while (Char.IsLetterOrDigit(content[0]) || content[0] == ' ')
                     {
                         name.Append(content[0]);
                         content = content.Remove(0, 1);
+                        counter.NextColumn();
                     }
-                    content = content.Trim();
+                    ParseHelper.Trim(ref content, counter);
                     return name.ToString().ToLower().Trim();
                 }
                 /// <summary>
@@ -219,14 +276,15 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string</param>
                 /// <returns>The value</returns>
-                public static string Value(ref string content)
+                public static string Value(ref string content, Counter counter)
                 {
                     string result = "";
                     int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
                     {
                         result = content.Substring(0, nextnewline).Trim();
-                        content = content.Remove(0, nextnewline).Trim();
+                        content = content.Remove(0, nextnewline);
+                        Trim(ref content, counter);
                     }
                     else
                     {
@@ -234,6 +292,13 @@ namespace AssemblyNameSpace
                         content = "";
                     }
                     return result;
+                }
+                public static void Trim(ref string content, Counter counter) {
+                    while (content != "" && Char.IsWhiteSpace(content[0])) {
+                        if (content[0] == '\n') counter.NextLine();
+                        else counter.NextColumn();
+                        content = content.Remove(0,1);
+                    }
                 }
                 /// <summary>
                 /// Consumes the string until it find the sequence

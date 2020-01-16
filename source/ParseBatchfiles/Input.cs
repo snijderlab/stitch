@@ -53,7 +53,7 @@ namespace AssemblyNameSpace
                     case "version":
                         if (pair.GetValue() != "0")
                         {
-                            throw new ParseException("The specified version does not exist");
+                            throw new ParseException($"The specified version does not exist. In 'Version' {pair.Position}");
                         }
                         versionspecified = true;
                         break;
@@ -67,7 +67,7 @@ namespace AssemblyNameSpace
                                 output.Runtype = RunParameters.RuntypeValue.Group;
                                 break;
                             default:
-                                throw new ParseException($"Unknown option for Runtype: {pair.GetValue()}, the options are: 'Group' and 'Separate'.");
+                                throw new ParseException($"Unknown option for Runtype: {pair.GetValue()} {pair.Position}, the options are: 'Group' and 'Separate'.");
                         }
                         break;
                     case "peaks":
@@ -81,13 +81,13 @@ namespace AssemblyNameSpace
                                     settings.File.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "cutoffscore":
-                                    settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks Cutoffscore");
+                                    settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks Cutoffscore", setting.Position);
                                     break;
                                 case "localcutoffscore":
-                                    settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks LocalCutoffscore");
+                                    settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks LocalCutoffscore", setting.Position);
                                     break;
                                 case "minlengthpatch":
-                                    settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks MinLengthPatch");
+                                    settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), "Peaks MinLengthPatch", setting.Position);
                                     break;
                                 case "name":
                                     settings.File.Name = setting.GetValue();
@@ -109,11 +109,11 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        throw new ParseException("Unknown file format for Peaks, the options are: 'Old' and 'New'.");
+                                        throw new ParseException($"Unknown file format for Peaks {setting.Position}, the options are: 'Old' and 'New'.");
                                     }
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in PEAKS definition: {setting.Name}, the options are: 'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'.");
+                                    throw new ParseException($"Unknown key in PEAKS definition: {setting.Name} {setting.Position}, the options are: 'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'.");
                             }
                         }
 
@@ -134,7 +134,7 @@ namespace AssemblyNameSpace
                                     rsettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in Reads definition: {setting.Name}, the options are: 'Path' and 'Name'.");
+                                    throw new ParseException($"Unknown key in Reads definition: {setting.Name} {setting.Position}, the options are: 'Path' and 'Name'.");
                             }
                         }
 
@@ -155,7 +155,7 @@ namespace AssemblyNameSpace
                                     fastasettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in FASTAInput definition: {setting.Name}, the options are: 'Path' and 'Name'.");
+                                    throw new ParseException($"Unknown key in FASTAInput definition: {setting.Name} {setting.Position}, the options are: 'Path' and 'Name'.");
                             }
                         }
 
@@ -172,16 +172,16 @@ namespace AssemblyNameSpace
                                 switch (setting.Name)
                                 {
                                     case "start":
-                                        ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), "range K Start");
+                                        ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), "range K Start", setting.Position);
                                         break;
                                     case "end":
-                                        ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), "range K End");
+                                        ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), "range K End", setting.Position);
                                         break;
                                     case "step":
-                                        ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), "range K Step");
+                                        ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), "range K Step", setting.Position);
                                         break;
                                     default:
-                                        throw new ParseException($"Unknown key in K definition: {setting.Name}, the options are: 'Start', 'End' and 'Step'.");
+                                        throw new ParseException($"Unknown key in K definition: {setting.Name} {setting.Position}, the options are: 'Start', 'End' and 'Step'.");
                                 }
                             }
                             if (ksettings.Start > 0 && ksettings.End > 0)
@@ -190,7 +190,7 @@ namespace AssemblyNameSpace
                             }
                             else
                             {
-                                throw new ParseException("A range of K should be set with a start and an end value");
+                                throw new ParseException($"A range of K should be set with a start and an end value. At 'K' {pair.Position}");
                             }
                             break;
                         }
@@ -198,14 +198,14 @@ namespace AssemblyNameSpace
                         {
                             try
                             {
-                                output.K = new RunParameters.K.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value"));
+                                output.K = new RunParameters.K.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value", pair.Position));
                             }
                             catch
                             {
                                 var values = new List<int>();
                                 foreach (string value in pair.GetValue().Split(",".ToCharArray()))
                                 {
-                                    values.Add(ParseHelper.ConvertToInt(value, "multiple K values"));
+                                    values.Add(ParseHelper.ConvertToInt(value, "multiple K values", pair.Position));
                                 }
                                 output.K = new RunParameters.K.Multiple(values.ToArray());
                             }
@@ -230,7 +230,7 @@ namespace AssemblyNameSpace
                                 output.Reverse = RunParameters.ReverseValue.Both;
                                 break;
                             default:
-                                throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()}, the options are: 'True', 'False' and 'Both'.");
+                                throw new ParseException($"Unknown option in Reverse definition: {pair.GetValue()} {pair.Position}, the options are: 'True', 'False' and 'Both'.");
                         }
                         break;
                     case "alphabet":
@@ -241,23 +241,23 @@ namespace AssemblyNameSpace
                         break;
                     case "recombine":
                         var recsettings = new RunParameters.RecombineValue();
-                        string order = "";
+                        KeyValue order = null;
 
                         foreach (var setting in pair.GetValues())
                         {
                             switch (setting.Name)
                             {
                                 case "n":
-                                    recsettings.N = ParseHelper.ConvertToInt(setting.GetValue(), "number of top hits to take from the templates <n>");
+                                    recsettings.N = ParseHelper.ConvertToInt(setting.GetValue(), "number of top hits to take from the templates <n>", setting.Position);
                                     break;
                                 case "order":
-                                    order = setting.GetValue();
+                                    order = setting;
                                     break;
                                 case "templates":
                                     foreach (var template in setting.GetValues())
                                     {
                                         if (template.Name != "template")
-                                            throw new ParseException($"Unknown key in Recombine - Templates definition: {setting.Name}, only 'Template' is valid");
+                                            throw new ParseException($"Unknown key in Templates {template.Position} definition: {setting.Name}, only 'Template' is valid");
 
                                         recsettings.Templates.Add(ParseHelper.ParseTemplate(template.GetValues(), false));
                                     }
@@ -266,7 +266,7 @@ namespace AssemblyNameSpace
                                     recsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in Recombine definition: {setting.Name}, the options are 'N', 'Order', 'Templates' and 'Alphabet'");
+                                    throw new ParseException($"Unknown key in Recombine definition: {setting.Name} {setting.Position}, the options are 'N', 'Order', 'Templates' and 'Alphabet'");
                             }
                         }
 
@@ -286,32 +286,37 @@ namespace AssemblyNameSpace
                         }
 
                         // Parse the order
-                        while (order != "")
-                        {
-                            order = order.Trim();
-                            var match = false;
-                            for (int i = 0; i < recsettings.Templates.Count(); i++)
+                        if (order != null) {
+                            var order_string = order.GetValue();
+                            while (order_string != "")
                             {
-                                var template = recsettings.Templates[i];
-                                if (order.StartsWith(template.Name))
+                                order_string = order_string.Trim();
+                                var match = false;
+                                for (int i = 0; i < recsettings.Templates.Count(); i++)
                                 {
-                                    order = order.Remove(0, template.Name.Length);
-                                    recsettings.Order.Add(new RunParameters.RecombineOrder.Template(i));
-                                    match = true;
-                                    break;
+                                    var template = recsettings.Templates[i];
+                                    if (order_string.StartsWith(template.Name))
+                                    {
+                                        order_string = order_string.Remove(0, template.Name.Length);
+                                        recsettings.Order.Add(new RunParameters.RecombineOrder.Template(i));
+                                        match = true;
+                                        break;
+                                    }
+                                }
+                                if (match) continue;
+
+                                if (order_string.StartsWith('*'))
+                                {
+                                    order_string = order_string.Remove(0, 1);
+                                    recsettings.Order.Add(new RunParameters.RecombineOrder.Gap());
+                                }
+                                else
+                                {
+                                    throw new ParseException($"Invalid Order definition in Recombine {order.Position}, cannot proceed past '{order_string}', the only valid options are a name of a template (as defined in 'Templates'), a gap (defined as '*') or whitespace");
                                 }
                             }
-                            if (match) continue;
-
-                            if (order.StartsWith('*'))
-                            {
-                                order = order.Remove(0, 1);
-                                recsettings.Order.Add(new RunParameters.RecombineOrder.Gap());
-                            }
-                            else
-                            {
-                                throw new ParseException($"Invalid Order definition in Recombine, cannot proceed past '{order}', the only valid options are a name of a template (as defined in 'Templates'), a gap (defined as '*') or whitespace");
-                            }
+                        } else {
+                            throw new ParseException($"No definition for the order in Recombine {pair.Position}");
                         }
 
                         //output.Recombine.Add(recsettings);
@@ -337,11 +342,11 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        throw new ParseException($"Unknown option in HTML DotDistribution definition: {setting.Name}, the options are: 'Global' and 'Included'.");
+                                        throw new ParseException($"Unknown option in HTML DotDistribution {setting.Position} definition: {setting.Name}, the options are: 'Global' and 'Included'.");
                                     }
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in HTML definition: {setting.Name}, the options are: 'Path' and 'DotDistribution'.");
+                                    throw new ParseException($"Unknown key in HTML definition: {setting.Name} {setting.Position}, the options are: 'Path' and 'DotDistribution'.");
                             }
                         }
                         output.Report.Add(hsettings);
@@ -357,7 +362,7 @@ namespace AssemblyNameSpace
                                     csettings.Path = setting.GetValue();
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in CSV definition: {setting.Name}, the option is: 'Path'");
+                                    throw new ParseException($"Unknown key in CSV definition: {setting.Name} {setting.Position}, the option is: 'Path'");
                             }
                         }
                         output.Report.Add(csettings);
@@ -373,16 +378,16 @@ namespace AssemblyNameSpace
                                     fsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "minimalscore":
-                                    fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), "minimalscore of FASTA report");
+                                    fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), "minimalscore of FASTA report", setting.Position);
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown key in FASTA definition: {setting.Name}, the options are: 'Path' and 'MinimalScore'.");
+                                    throw new ParseException($"Unknown key in FASTA definition: {setting.Name} {setting.Position}, the options are: 'Path' and 'MinimalScore'.");
                             }
                         }
                         output.Report.Add(fsettings);
                         break;
                     default:
-                        throw new ParseException($"Unknown key {pair.Name}");
+                        throw new ParseException($"Unknown key {pair.Name} {pair.Position}");
                 }
             }
 
@@ -435,7 +440,7 @@ namespace AssemblyNameSpace
             /// <param name="input">The string to be converted to an int.</param>
             /// <param name="origin">The place where the string originates from, to be included in error messages.</param>
             /// <returns>If successfull: the number (int32)</returns>
-            public static int ConvertToInt(string input, string origin)
+            public static int ConvertToInt(string input, string origin, Position pos)
             {
                 try
                 {
@@ -443,15 +448,15 @@ namespace AssemblyNameSpace
                 }
                 catch (FormatException)
                 {
-                    throw new ParseException($"The value '{input}' is not a valid number, this should be a number in the context of {origin}.");
+                    throw new ParseException($"The value '{input}' is not a valid number, this should be a number in the context of {origin} {pos}.");
                 }
                 catch (OverflowException)
                 {
-                    throw new ParseException($"The value '{input}' is outside the bounds of an int32, in the context of {origin}.");
+                    throw new ParseException($"The value '{input}' is outside the bounds of an int32, in the context of {origin} {pos}.");
                 }
                 catch
                 {
-                    throw new ParseException($"Some unkown ParseException occurred while '{input}' was converted to an int32, this should be a number in the context of {origin}.");
+                    throw new ParseException($"Some unkown ParseException occurred while '{input}' was converted to an int32, this should be a number in the context of {origin} {pos}.");
                 }
             }
             public static RunParameters.AlphabetValue ParseAlphabet(List<KeyValue> values)
@@ -472,7 +477,7 @@ namespace AssemblyNameSpace
                             asettings.Name = setting.GetValue();
                             break;
                         default:
-                            throw new ParseException($"Unknown key in Alphabet definition: {setting.Name}, the options are 'Path', 'Data', and 'Name'");
+                            throw new ParseException($"Unknown key in Alphabet definition: {setting.Name} {setting.Position}, the options are 'Path', 'Data', and 'Name'");
                     }
                 }
 
@@ -500,20 +505,20 @@ namespace AssemblyNameSpace
                                     tsettings.Type = RunParameters.InputType.Fasta;
                                     break;
                                 default:
-                                    throw new ParseException($"Unknown option in InputType definition: {setting.GetValue()}, the options are 'Reads' and 'Fasta'");
+                                    throw new ParseException($"Unknown option in InputType definition: {setting.GetValue()} {setting.Position}, the options are 'Reads' and 'Fasta'");
                             }
                             break;
                         case "name":
                             tsettings.Name = setting.GetValue();
                             break;
                         case "alphabet":
-                            if (!alphabet) throw new ParseException($"Alphabet cannot be defined here: {setting.Name}, the options are 'Path', 'Type' and 'Name'");
+                            if (!alphabet) throw new ParseException($"Alphabet cannot be defined here: {setting.Name} {setting.Position}, the options are 'Path', 'Type' and 'Name'");
                             tsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
                             break;
                         default:
                             var tail = "'Path', 'Type', 'Name' and 'Alphabet'";
                             if (!alphabet) tail = "'Path', 'Type' and 'Name'";
-                            throw new ParseException($"Unknown key in Template definition: {setting.Name}, the options are {tail}");
+                            throw new ParseException($"Unknown key in Template definition: {setting.Name} {setting.Position}, the options are {tail}");
                     }
                 }
 
