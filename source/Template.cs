@@ -39,6 +39,10 @@ namespace AssemblyNameSpace
                 Templates.Add(new Template(parsed, pair.Item2));
             }
         }
+        public TemplateDatabase(ICollection<Template> templates, Alphabet alp) {
+            alphabet = alp;
+            Templates = templates.ToList();
+        }
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
         /// </summary>

@@ -55,6 +55,7 @@ namespace AssemblyNameSpace
             /// The template(s) used in this run
             /// </summary>
             public List<TemplateValue> Template;
+            public RecombineValue Recombine;
             /// <summary>
             /// The reports to be generated
             /// </summary>
@@ -71,8 +72,9 @@ namespace AssemblyNameSpace
             /// <param name="reverse">The value of Reverse</param>
             /// <param name="alphabet">The alphabet to be used</param>
             /// <param name="template">The templates to be used</param>
+            /// <param name="recombine">The recombination, if needed</param>
             /// <param name="report">The report(s) to be generated</param>
-            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
             {
                 ID = id;
                 Runname = runname;
@@ -83,6 +85,7 @@ namespace AssemblyNameSpace
                 Reverse = reverse;
                 Alphabet = alphabet;
                 Template = template;
+                Recombine = recombine;
                 Report = report;
             }
             /// <summary>
@@ -97,8 +100,9 @@ namespace AssemblyNameSpace
             /// <param name="reverse">The value of Reverse</param>
             /// <param name="alphabet">The alphabet to be used</param>
             /// <param name="template">The templates to be used</param>
+            /// <param name="recombine">The recombination, if needed</param>
             /// <param name="report">The report(s) to be generated</param>
-            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
             {
                 ID = id;
                 Runname = runname;
@@ -109,6 +113,7 @@ namespace AssemblyNameSpace
                 Reverse = reverse;
                 Alphabet = alphabet;
                 Template = template;
+                Recombine = recombine;
                 Report = report;
             }
             /// <summary>
@@ -120,7 +125,7 @@ namespace AssemblyNameSpace
                 return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a, b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
             }
             /// <summary>
-            /// Runs this run.abstract Runs the assembly, and generates the reports.
+            /// Runs this run. Runs the assembly, and generates the reports.
             /// </summary>
             public void Calculate()
             {
@@ -147,34 +152,137 @@ namespace AssemblyNameSpace
                     }
 
                     assm.Assemble();
-                    var databases = new List<TemplateDatabase>();
+
+                    // Templates
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
+                    var databases = new List<TemplateDatabase>();
                     foreach (var template in Template)
                     {
                         var alph = template.Alphabet != null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
-                        
-                        var stop1 = new Stopwatch();
-                        stop1.Start();
+
                         var database1 = new TemplateDatabase(template.Path, template.Type, template.Name, alph);
                         database1.MatchParallel(assm.GetAllPathSequences());
-                        stop1.Stop();
 
-                        // Testing Multithreaded: still gives errors in the HTML generation, so somewhere missing info?
-                        //var stop2 = new Stopwatch();
-                        //stop2.Start();
-                        //var database2 = new TemplateDatabase(template.Path, template.Name, alph);
-                        //database2.MatchParallel(assm.condensed_graph);
-                        //stop2.Stop();
-
-                        //Console.WriteLine($"Single Threaded\n{stop1.ElapsedMilliseconds}ms {database1.Templates.Count()} Templates\nMulti Threaded\n{stop2.ElapsedMilliseconds}ms {database2.Templates.Count()} Templates");
                         databases.Add(database1);
                     }
 
                     stopWatch.Stop();
                     assm.meta_data.template_matching_time = stopWatch.ElapsedMilliseconds;
+
+                    // Recombine
+                    if (Recombine != null)
+                    {
+                        Stopwatch recombine_sw = new Stopwatch();
+                        recombine_sw.Start();
+
+                        Console.WriteLine("Working on recombination");
+                        var rec_databases = new List<TemplateDatabase>();
+                        var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
+
+                        foreach (var template in Recombine.Templates)
+                        {
+                            Console.WriteLine($"Working on Template {template.Name}");
+
+                            var database1 = new TemplateDatabase(template.Path, template.Type, template.Name, alph);
+                            database1.MatchParallel(assm.GetAllPathSequences());
+
+                            rec_databases.Add(database1);
+                        }
+
+                        Console.WriteLine("Finished first round of template matching");
+
+                        // Create a list for every database with the top n highest scoring templates. 
+                        // By having the lowest of these always at the first position at shuffling in 
+                        // a new high scoring template to its right position this snippet is still 
+                        // approximately O(n) in respect to the database. Worst case O(top_n * l_database)
+                        var top = new List<List<Template>>();
+                        foreach (var db in rec_databases)
+                        {
+                            var templates = new LinkedList<Template>();
+                            var first = true;
+                            foreach (var temp in db.Templates)
+                            {
+                                if (first)
+                                {
+                                    templates.AddFirst(temp);
+                                    first = false;
+                                    continue;
+                                }
+
+                                if (temp.Score > templates.First().Score)
+                                {
+                                    bool found = false;
+                                    var current = templates.First();
+
+                                    for (var it = templates.First; it != null; it = it.Next)
+                                    {
+                                        if (temp.Score < it.Value.Score)
+                                        {
+                                            templates.AddBefore(it, temp);
+                                            found = true;
+                                            break;
+                                        }
+                                    }
+
+                                    if (!found)
+                                    {
+                                        templates.AddLast(temp);
+                                    }
+
+                                    if (templates.Count() > Recombine.N) templates.RemoveFirst();
+                                }
+
+                            }
+                            top.Add(templates.ToList());
+                        }
+
+                        Console.WriteLine("Found all top <n> templates");
+
+                        // Recombine high scoring templates
+                        // https://rosettacode.org/wiki/Cartesian_product_of_two_or_more_lists#C.23
+                        IEnumerable<IEnumerable<Template>> empty = new[] { Enumerable.Empty<Template>() };
+
+                        var combinations = top.Aggregate(
+                            empty,
+                            (accumulator, sequence) =>
+                            from acc in accumulator
+                            from item in sequence
+                            select acc.Concat(new[] { item }));
+
+                        Console.WriteLine($"Found {combinations.Count()} combinations, with {combinations.First().Count()} elements in the first one");
+
+                        var recombined_templates = new List<Template>();
+                        foreach (var sequence in combinations)
+                        {
+                            var s = new List<AminoAcid>();
+                            foreach (var element in Recombine.Order)
+                            {
+                                if (element.GetType() == typeof(RecombineOrder.Gap))
+                                {
+                                    s.Add(new AminoAcid(alph, '*'));
+                                }
+                                else
+                                {
+                                    s.AddRange(sequence.ElementAt(((RecombineOrder.Template)element).Index).Sequence);
+                                }
+                            }
+                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", ""))));
+                        }
+
+                        var recombined_database = new TemplateDatabase(recombined_templates, alph);
+
+                        Console.WriteLine("Created templates for second round");
+
+                        recombined_database.MatchParallel(assm.GetAllPathSequences());
+
+                        Console.WriteLine("Finished second round of template matching");
+
+                        recombine_sw.Stop();
+                        Console.WriteLine($"Finished Recombination {recombine_sw.ElapsedMilliseconds} ms");
+                    }
 
                     ReportInputParameters parameters = new ReportInputParameters(assm, this, databases);
 

@@ -60,6 +60,10 @@ namespace AssemblyNameSpace
             /// </summary>
             public List<Report.Parameter> Report;
             /// <summary>
+            /// The recombine parameters (if given)
+            /// </summary>
+            public RecombineValue Recombine;
+            /// <summary>
             /// A blank instance for the RunParameters with defaults and initialization
             /// </summary>
             public FullRunParameters()
@@ -73,6 +77,7 @@ namespace AssemblyNameSpace
                 Alphabet = new List<AlphabetValue>();
                 Template = new List<TemplateValue>();
                 Report = new List<Report.Parameter>();
+                Recombine = null;
             }
             /// <summary>
             /// Creates a list of all single runs contained in this run.abstract TO be ran in parallel.
@@ -130,14 +135,14 @@ namespace AssemblyNameSpace
                                     if (Runtype == RuntypeValue.Group)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Report));
+                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report));
                                     }
                                     else
                                     {
                                         foreach (var input in DataParameters)
                                         {
                                             id++;
-                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Report));
+                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report));
                                         }
                                     }
                                 }

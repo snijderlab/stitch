@@ -240,6 +240,8 @@ namespace AssemblyNameSpace
                         output.Template.Add(ParseHelper.ParseTemplate(pair.GetValues(), true));
                         break;
                     case "recombine":
+                        if (output.Recombine != null) throw new ParseException($"Cannot have multiple definitions of Recombine. At {pair.Position}.");
+
                         var recsettings = new RunParameters.RecombineValue();
                         KeyValue order = null;
 
@@ -319,7 +321,7 @@ namespace AssemblyNameSpace
                             throw new ParseException($"No definition for the order in Recombine {pair.Position}");
                         }
 
-                        //output.Recombine.Add(recsettings);
+                        output.Recombine = recsettings;
                         break;
                     case "html":
                         var hsettings = new RunParameters.Report.HTML();

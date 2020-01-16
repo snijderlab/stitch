@@ -261,7 +261,7 @@ namespace AssemblyNameSpace
                 return output.ToString();
             }
         }
-                /// <summary>
+        /// <summary>
         /// A identifier for a file, to hold information about where reads originate from.
         /// </summary>
         public class FileIdentifier

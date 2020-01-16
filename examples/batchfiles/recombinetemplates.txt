@@ -23,29 +23,22 @@ Recombine->
     -Pick the <n> highest scoring templates from each database
     n : 1
 
-    -The databases will be recombined in the order they are given in?
-    -Supply an order? Multiple orders?
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV Human 1 * IGHV Human 2 IGHV Human 3 IGHV Human 4
-
-    -All the databases given
+    Order : IGHV * IGHJ IGHC
+    
     Templates->
         Template->
-            Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human 1
+            Path : ../templates/IGHV.fasta
+            Name : IGHV
         <-
         Template->
-            Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human 2
+            Path : ../templates/IGHJ.fasta
+            Name : IGHJ
         <-
         Template->
-            Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human 3
-        <-
-        Template->
-            Path : ../templates/smallIGHV.fasta
-            Name : IGHV Human 4
+            Path : ../templates/IGHC.fasta
+            Name : IGHC
         <-
     <-
 
