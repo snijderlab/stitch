@@ -16,14 +16,26 @@ namespace AssemblyNameSpace
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     struct ReportInputParameters
     {
-        public Assembler assembler;
-        public RunParameters.SingleRun singleRun;
-        public List<TemplateDatabase> templateDatabases;
+        public readonly Assembler assembler;
+        public readonly RunParameters.SingleRun singleRun;
+        public readonly List<TemplateDatabase> templateDatabases;
+        public readonly TemplateDatabase RecombinedDatabase;
+        public readonly List<TemplateDatabase> RecombinationDatabases;
         public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases)
         {
             assembler = assm;
             singleRun = run;
             templateDatabases = databases;
+            RecombinedDatabase = null;
+            RecombinationDatabases = null;
+        }
+        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases, TemplateDatabase recombineddatabase, List<TemplateDatabase> recombinationdatabases)
+        {
+            assembler = assm;
+            singleRun = run;
+            templateDatabases = databases;
+            RecombinedDatabase = recombineddatabase;
+            RecombinationDatabases = recombinationdatabases;
         }
     }
     /// <summary>
@@ -62,6 +74,8 @@ namespace AssemblyNameSpace
         protected List<TemplateDatabase> templates;
         protected List<(int, List<int>)> paths;
         protected List<List<AminoAcid>> PathsSequences;
+        public readonly TemplateDatabase RecombinedDatabase;
+        public readonly List<TemplateDatabase> RecombinationDatabases;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -78,6 +92,9 @@ namespace AssemblyNameSpace
             templates = parameters.templateDatabases;
             paths = parameters.assembler.GetAllPaths();
             PathsSequences = parameters.assembler.GetAllPathSequences();
+            RecombinedDatabase = parameters.RecombinedDatabase;
+            RecombinationDatabases = parameters.RecombinationDatabases;
+            
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.

@@ -172,6 +172,8 @@ namespace AssemblyNameSpace
                     stopWatch.Stop();
                     assm.meta_data.template_matching_time = stopWatch.ElapsedMilliseconds;
 
+                    ReportInputParameters parameters;
+
                     // Recombine
                     if (Recombine != null)
                     {
@@ -282,9 +284,13 @@ namespace AssemblyNameSpace
 
                         recombine_sw.Stop();
                         Console.WriteLine($"Finished Recombination {recombine_sw.ElapsedMilliseconds} ms");
+
+                        parameters = new ReportInputParameters(assm, this, databases, recombined_database, rec_databases);
+                    } else {
+                        parameters = new ReportInputParameters(assm, this, databases);
                     }
 
-                    ReportInputParameters parameters = new ReportInputParameters(assm, this, databases);
+                    
 
                     // Generate the report(s)
                     foreach (var report in Report)

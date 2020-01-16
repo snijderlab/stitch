@@ -21,12 +21,12 @@ Alphabet->
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 1
+    n : 10
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order : IGHV * IGHJ IGHC
-    
+
     Templates->
         Template->
             Path : ../templates/IGHV.fasta
@@ -37,6 +37,7 @@ Recombine->
             Name : IGHJ
         <-
         Template->
+        
             Path : ../templates/IGHC.fasta
             Name : IGHC
         <-

@@ -287,6 +287,38 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
+        string CreateRecombinationTable() {
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine($@"<table id=""recombination-table"" class=""widetable"">
+<tr>
+    <th onclick=""sortTable('recombination-table', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('recombination-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('recombination-table', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('recombination-table', 3, 'number')"" class=""smallcell"">Score</th>
+</tr>");
+            string id, link;
+
+            var sorted = RecombinedDatabase.Templates;
+            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            for (int i = 0; i < sorted.Count(); i++)
+            {
+                id = GetAsideIdentifier(i, AsideType.Recombination);
+                link = GetAsideLink(i, AsideType.Recombination);
+                buffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""center"">{sorted[i].Sequence.Length}</td>
+    <td class=""center"">{sorted[i].Score}</td>
+</tr>");
+            }
+
+            buffer.AppendLine("</table>");
+
+            return buffer.ToString();
+        }
+
         /// <summary> Returns an aside for details viewing of a contig. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateContigAside(int i)
@@ -395,6 +427,27 @@ namespace AssemblyNameSpace
     </table>
 </div>";
         }
+
+        /// <summary> Returns an aside for details viewing of a recombination. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateRecombinationAside(int i)
+        {
+            string id = GetAsideIdentifier(i, AsideType.Recombination);
+            var template = RecombinedDatabase.Templates[i];
+
+            return $@"<div id=""{id}"" class=""info-block template-info"">
+    <h1>Template {id}</h1>
+    <h2>Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    <h2>Sequence Length</h2>
+    <p>{template.Sequence.Length}</p>
+    <h2>Score</h2>
+    <p>{template.Score}</p>
+    <h2>Alignment</h2>
+    <p>None yet</p>
+</div>";
+        }
+
         string CreateTemplateAlignment(int templateIndex, int ind)
         {
             StringBuilder buff = new StringBuilder();
@@ -676,6 +729,10 @@ namespace AssemblyNameSpace
                     }
                 }
             }
+            for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
+            {
+                buffer.AppendLine(CreateRecombinationAside(i));
+            }
 
             return buffer.ToString();
         }
@@ -832,7 +889,7 @@ namespace AssemblyNameSpace
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Contig, Read, Template, Path }
+        enum AsideType { Contig, Read, Template, Path, Recombination, RecombinationTemplate }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -845,6 +902,10 @@ namespace AssemblyNameSpace
                     return "T";
                 case AsideType.Path:
                     return "P";
+                case AsideType.Recombination:
+                    return "RC";
+                case AsideType.RecombinationTemplate:
+                    return "RT";
             }
             throw new Exception("Invalid AsideType in GetAsidePrefix.");
         }
@@ -896,6 +957,8 @@ namespace AssemblyNameSpace
             if (type == AsideType.Read) classname = "read";
             if (type == AsideType.Template) classname = "template";
             if (type == AsideType.Path) classname = "path";
+            if (type == AsideType.Recombination) classname = "recombination";
+            if (type == AsideType.RecombinationTemplate) classname = "recombination-template";
             return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
@@ -1032,6 +1095,13 @@ namespace AssemblyNameSpace
             stopwatch.Stop();
             meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
 
+            string recombinationtable = "";
+            if (RecombinedDatabase != null) {
+                recombinationtable = $@"<input type=""checkbox"" id=""recombination-collapsable""/>
+<label for=""recombination-collapsable"">Recombination</label>
+<div class=""collapsable"">{CreateRecombinationTable()}</div>";
+            }
+
             string html = $@"<html>
 <head>
 <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
@@ -1059,6 +1129,7 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
     </label>
 </div>
 
+{recombinationtable}
 {CreateTemplateTables()}
 
 <input type=""checkbox"" id=""graph-collapsable""/>
