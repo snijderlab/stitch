@@ -2,7 +2,7 @@
 
 -Run Info---------------
 Version	: 0
-Runname	: Test
+Runname	: Peaks Example
 Runtype : Group
 
 -Input------------------

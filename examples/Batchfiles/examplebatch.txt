@@ -2,7 +2,7 @@
 
 -Run Info---------------
 Version	: 0
-Runname	: Test
+Runname	: Example Batch
 Runtype : Separate
 
 -Input------------------

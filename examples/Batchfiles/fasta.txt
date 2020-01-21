@@ -2,7 +2,7 @@
 
 -Run Info---------------
 Version	: 0
-Runname	: Test
+Runname	: Fasta Test
 Runtype : Separate
 
 -Input------------------

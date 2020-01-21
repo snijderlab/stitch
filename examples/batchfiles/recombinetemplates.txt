@@ -11,7 +11,7 @@ Name: Reads 011
 <-
 
 -Parameters-------------
-K	            : 6
+K	            : 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -21,7 +21,7 @@ Alphabet->
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 10
+    n : 3
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
@@ -37,7 +37,6 @@ Recombine->
             Name : IGHJ
         <-
         Template->
-        
             Path : ../templates/IGHC.fasta
             Name : IGHC
         <-

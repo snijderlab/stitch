@@ -1,5 +1,7 @@
 - name: Articles
   href: articles/
+- name: Examples
+  href: examples/
 - name: Api Documentation
   href: api/
-  homepage: api/index.md
+  topicHref: api/index.md

@@ -395,62 +395,14 @@ Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fasta
 ```
 
-### Example Batch File
+### Example Batch Files
 
-```
-------| Assemble |------
+:::code language="dotnetcli" source="../examples/batchfiles/examplebatch.txt":::
 
--Run Info---------------
-Version	: 0
-Runname	: Example
-Runtype : Apart
+:::code language="dotnetcli" source="../examples/batchfiles/fasta.txt":::
 
--Input------------------
-Reads	->
-Path    : examples\001\reads.txt
-Name    : 001
-<-
-Reads	->
-Path    : examples\003\reads.txt
-Name    : 003
-<-
+:::code language="dotnetcli" source="../examples/batchfiles/peaksexample.txt":::
 
--Parameters-------------
-K	    : 8, 10
-MinimalHomology: 7
-DuplicateThreshold: 7
-Reverse	: both
-Alphabet->
-Data	:>
-*;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
-L;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-S;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-A;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-E;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-G;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-V;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-R;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-K;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-T;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0
-P;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0
-D;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0
-I;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0
-N;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0
-Q;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0
-F;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0
-Y;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0
-H;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0
-M;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0
-C;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0
-W;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0
-O;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0
-U;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1
-<:
-Name	: Normal
-<-
+:::code language="dotnetcli" source="../examples/batchfiles/recombinetemplates.txt":::
 
--Report-----------------
-HTML	->
-Path	: report-reads-02-{data}-{k}.html
-<-
-```
+:::code language="dotnetcli" source="../examples/batchfiles/template.txt":::

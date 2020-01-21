@@ -25,9 +25,13 @@
       {
         "files": [
           "articles/**.md",
+          "articles/**.txt",
           "articles/**/toc.yml",
           "toc.yml",
-          "*.md"
+          "*.md",
+          "examples/toc.yml",
+          "examples/**/toc.yml",
+          "examples/**/**.md"
         ]
       }
     ],

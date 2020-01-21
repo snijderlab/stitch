@@ -40,21 +40,18 @@ namespace AssemblyNameSpace
         {
             return alphabet.alphabet[Code].ToString();
         }
-        /// <summary> Will create a string of an array of AminoAcids. </summary>
-        /// <param name="array"> The array to create a string from. </param>
-        /// <returns> Returns the string of the array. </returns>
-        public static string ArrayToString(AminoAcid[] array)
+        /// <summary> Will create a string of a collection of AminoAcids. </summary>
+        /// <param name="collaction"> The collaction to create a string from. </param>
+        /// <returns> Returns the string of the collaction. </returns>
+        public static string ArrayToString(ICollection<AminoAcid> collaction)
         {
             var builder = new StringBuilder();
-            foreach (AminoAcid aa in array)
+            foreach (AminoAcid aa in collaction)
             {
                 builder.Append(aa.ToString());
             }
             return builder.ToString();
         }
-        public static string ArrayToString(List<AminoAcid> list)
-        { return ArrayToString(list.ToArray()); }
-
         /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
         /// <remarks> Implemented as the equals operator (==). </remarks>
         /// <param name="obj"> The object to check equality with. </param>

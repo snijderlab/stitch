@@ -22,15 +22,19 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void SingleGap(string x, string y)
         {
-            var r = HelperFunctionality.SmithWaterman(x, y, 0, alp);
-            Assert.AreEqual("SequenceMatch< starting at template: 1, starting at query: 0, score: 10, match: 6M1I6M >", r.ToString());
+            var a = StringToSequence(x);
+            var b = StringToSequence(y);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp, 1, 2);
+            Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 10, match: 6M1I6M >", r.ToString());
         }
         [DataRow("ACACCACCACCA", "ACACDCACCDACCA")]
         [DataRow("ABBCABAAABCA", "ABBCDABAADABCA")]
         [DataTestMethod]
         public void DoubleGap(string x, string y)
         {
-            var r =  HelperFunctionality.SmithWaterman(x, y, 0, alp);
+            var a = StringToSequence(x);
+            var b = StringToSequence(y);
+            var r =  HelperFunctionality.SmithWaterman(a, b, 0, alp, 1, 2);
             Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 8, match: 4M1I4M1I4M >", r.ToString());
         }
         [DataRow("ACACACA", "ACABACA")]
@@ -38,7 +42,9 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void Mismatch(string x, string y)
         {
-            var r = HelperFunctionality.SmithWaterman(x, y, 0, alp);
+            var a = StringToSequence(x);
+            var b = StringToSequence(y);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
             Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 6, match: 7M >", r.ToString());
         }
         [DataRow("ABBA")]
@@ -48,7 +54,9 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void EqualSequences(string x)
         {
-            var r = HelperFunctionality.SmithWaterman(x, x, 0, alp);
+            var a = StringToSequence(x);
+            var b = StringToSequence(x);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
             Assert.AreEqual($"SequenceMatch< starting at template: 0, starting at query: 0, score: {x.Length}, match: {x.Length}M >", r.ToString());
         }
         [DataRow("BABACBAAABCB", "CBAAA")]
@@ -56,18 +64,52 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void EqualPart(string x, string y)
         {
-            var r = HelperFunctionality.SmithWaterman(x, y, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 0, starting at query: 4, score: 5, match: 5M >", r.ToString());
+            var a = StringToSequence(x);
+            var b = StringToSequence(y);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
         }
         [TestMethod]
         public void MismatchAndGap()
         {
-            var a = "ABBAABBCBABAACCBBAAB";
-            var b = "BBCBDABCACC";
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 1, starting at query: 5, score: 7, match: 4M1I6M >", r.ToString());
+            //ABBAABBCB ABAACCBBAAB
+            //     BBCBDABCACC
+            var a = StringToSequence("ABBAABBCBABAACCBBAAB");
+            var b = StringToSequence("BBCBDABCACC");
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp, 1, 2);
+            Assert.AreEqual($"SequenceMatch< starting at template: 5, starting at query: 0, score: 7, match: 4M1I6M >", r.ToString());
+        }
+        [TestMethod]
+        public void GenomicTest01() {
+            // I have not found the right value yet
+            var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data);
+            var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
+            var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
+            //GGTGC--CGACCGCGGACTGCT---  25
+            //    |  ||   | || || ||   
+            //----CCCCGGGTGTGG-CTCCTTCA  25
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp, 10, 10);
+            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
+        }
+        [TestMethod]
+        public void GenomicTest02() {
+            // I have not found the right value yet
+            var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data);
+            var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", alp);
+            var b = StringToSequence("TGTCGTCATAGTTTGGGCATGTTTCCCTTGTAGGTGTGAAATCACTTAGC", alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp, 1, 2);
+            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
         }
         AminoAcid[] StringToSequence(string input)
+        {
+            AminoAcid[] output = new AminoAcid[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                output[i] = new AminoAcid(alp, input[i]);
+            }
+            return output;
+        }
+        AminoAcid[] StringToSequence(string input, Alphabet alp)
         {
             AminoAcid[] output = new AminoAcid[input.Length];
             for (int i = 0; i < input.Length; i++)

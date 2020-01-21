@@ -219,9 +219,7 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < singleRun.Template.Count(); i++)
             {
-                buffer.AppendLine($@"<input type=""checkbox"" id=""template-table-collapsable""/>
-<label for=""template-table-collapsable"">Template Matching {singleRun.Template[i].Name}</label>
-<div class=""collapsable"">{CreateTemplateTable(i)}</div>");
+                buffer.AppendLine(Collapsible($"Template Matching {singleRun.Template[i].Name}", CreateTemplateTable(i)));
             }
 
             return buffer.ToString();
@@ -318,6 +316,48 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+    /// <summary>
+    /// Creates tables for all databases used in recombination
+    /// </summary>
+        string CreateRecombinationDatabaseTables() {
+            var buffer = new StringBuilder();
+
+            int index = -1;
+            foreach (var database in RecombinationDatabases) {
+                index++;
+                var innerbuffer = new StringBuilder();
+
+                innerbuffer.AppendLine($@"<table id=""recombination-table-{database.Name}"" class=""widetable"">
+<tr>
+    <th onclick=""sortTable('recombination-table-{database.Name}', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('recombination-table-{database.Name}', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('recombination-table-{database.Name}', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('recombination-table-{database.Name}', 3, 'number')"" class=""smallcell"">Score</th>
+</tr>");
+                string id, link;
+
+                var sorted = database.Templates;
+                sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+                for (int i = 0; i < sorted.Count(); i++)
+                {
+                    id = GetAsideIdentifier(index, i, AsideType.RecombinationTemplate);
+                    link = GetAsideLink(index, i, AsideType.RecombinationTemplate);
+                    innerbuffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""center"">{sorted[i].Sequence.Length}</td>
+    <td class=""center"">{sorted[i].Score}</td>
+</tr>");
+                }
+
+                innerbuffer.AppendLine("</table>");
+
+                buffer.AppendLine(Collapsible($"Recombination Database {database.Name}", innerbuffer.ToString()));
+            }
+
+            return buffer.ToString();
+        }
 
         /// <summary> Returns an aside for details viewing of a contig. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -371,8 +411,7 @@ namespace AssemblyNameSpace
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    <h2>Alignment</h2>
-    {CreateTemplateAlignment(templateIndex, i)}
+    {CreateTemplateAlignment(template, id)}
     {template.MetaData.ToHTML()}
 </div>";
         }
@@ -443,28 +482,34 @@ namespace AssemblyNameSpace
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    <h2>Alignment</h2>
-    <p>None yet</p>
+    {CreateTemplateAlignment(template, id)}
+</div>";
+        }
+        /// <summary> Returns an aside for details viewing of a recombination database. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateRecombinationDatabaseAside(int index, int i)
+        {
+            string id = GetAsideIdentifier(index, i, AsideType.RecombinationTemplate);
+            var template = RecombinationDatabases[index].Templates[i];
+
+            return $@"<div id=""{id}"" class=""info-block template-info"">
+    <h1>Template {id}</h1>
+    <h2>Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    <h2>Sequence Length</h2>
+    <p>{template.Sequence.Length}</p>
+    <h2>Score</h2>
+    <p>{template.Score}</p>
+    {CreateTemplateAlignment(template, id)}
 </div>";
         }
 
-        string CreateTemplateAlignment(int templateIndex, int ind)
+        string CreateTemplateAlignment(Template template, string id)
         {
-            StringBuilder buff = new StringBuilder();
-            foreach (var match in templates[templateIndex].Templates[ind].Matches)
-            {
-                buff.AppendLine($"{match.Score}\t{(double)match.Score / match.Length}\t{match.Length}\t{match.TotalMatches()}");
-            }
-            var file = File.AppendText(@"score_templates.txt");
-            file.Write(buff.ToString());
-            file.Close();
-
-            var template = templates[templateIndex].Templates[ind];
-
             var buffer = new StringBuilder();
             var placement = new List<List<bool>>();
 
-            buffer.Append("<p>");
+            buffer.Append("<h2>Alignment</h2><p>");
 
             // Create lists with values 'true' for every position where an aminoacid will be showed
             // First create list with the right startgap and amount of 'true's to add the gaps later
@@ -473,9 +518,6 @@ namespace AssemblyNameSpace
             int match_index = 0;
             foreach (var match in template.Matches)
             {
-                //Console.WriteLine(GetAsideIdentifier(match_index, AsideType.Contig));
-                //Console.WriteLine(match);
-                //Console.WriteLine(AminoAcid.ArrayToString(condensed_graph[match_index].Sequence.ToArray()));
                 var positions = Enumerable.Repeat(false, match.StartTemplatePosition).ToList(); // Startoverhang
                 positions.AddRange(Enumerable.Repeat(true, match.TotalMatches())); // Main sequence
                 positions.AddRange(Enumerable.Repeat(false, Math.Max(0, template.Sequence.Length - match.StartTemplatePosition - match.TotalMatches()))); // End overhang
@@ -574,26 +616,28 @@ namespace AssemblyNameSpace
                     sbt.Append("-");
                 }
             }
-            sequences.Add(("", sbt.ToString(), ""));
+            string sbt_string = sbt.ToString();
+            sequences.Add(("", sbt_string, ""));
 
             // Add all the other sequences
             for (int i = 1; i < template.Matches.Count(); i++)
             {
                 StringBuilder sb = new StringBuilder();
-                string seq = template.Matches[i].Sequence; //AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
-                int seq_index = 0;//template.Matches[i - 1].StartQueryPosition;
-                int max_seq = seq.Length;//template.Matches[i - 1].TotalMatches();
+                string seq = AminoAcid.ArrayToString(template.Matches[i].Sequence); //AminoAcid.ArrayToString(condensed_graph[i - 1].Sequence.ToArray());
+                int seq_index = 0; //template.Matches[i - 1].StartQueryPosition;
+                int max_seq = seq.Length; //template.Matches[i - 1].TotalMatches();
 
                 for (int j = startoverhang; j < placement[0].Count() - endoverhang; j++)
                 {
                     if (j < placement[i].Count() && placement[i][j] == true && seq_index < max_seq)
                     {
                         sb.Append(seq[seq_index]);
+                        int pos = sb.ToString().Length;
                         seq_index++;
                     }
                     else
                     {
-                        if (seq_index == template.Matches[i - 1].StartQueryPosition || seq_index > max_seq - 1)
+                        if (seq_index == template.Matches[i].StartQueryPosition || seq_index >= max_seq)
                         {
                             sb.Append(".");
                         }
@@ -626,7 +670,6 @@ namespace AssemblyNameSpace
             buffer.AppendLine("</div>");
 
             // Create the front overhanging reads block
-            string id = GetAsideIdentifier(template_index, ind, AsideType.Template);
             buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
             buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
             for (int i = 1; i < sequences.Count(); i++)
@@ -689,6 +732,57 @@ namespace AssemblyNameSpace
             // End the reads alignment div
             buffer.AppendLine("</div>");
 
+            // Finish Consensus Sequence
+            var consensus = new StringBuilder();
+            var consensus_sequence = template.CombinedSequence();
+            for (int i = 0; i < consensus_sequence.Count; i++) {
+                // Get the highest chars
+                string options = "";
+                int max = 0;
+                foreach (var item in consensus_sequence[i].Item1) {
+                    if (item.Value > max) {
+                        options = item.Key.ToString();
+                        max = item.Value;
+                    } else if (item.Value == max) {
+                        options += item.Key;
+                    }
+                }
+                if (options.Length > 1) {
+                    consensus.Append("(");
+                    consensus.Append(options);
+                    consensus.Append(")");
+                } else if (options.Length == 1) {
+                    consensus.Append(options);
+                } else {
+                    consensus.Append("_");
+                }
+                // Get the highest gap
+                List<Template.IGap> max_gap = new List<Template.IGap>{new Template.None()};
+                int max_gap_score = 0;
+                foreach (var item in consensus_sequence[i].Item2) {
+                    if (item.Value > max_gap_score) {
+                        max_gap = new List<Template.IGap>{item.Key};
+                        max_gap_score = item.Value;
+                    } else if (item.Value == max) {
+                        max_gap.Add(item.Key);
+                    }
+                }
+                if (max_gap.Count() > 1) {
+                    consensus.Append("(");
+                    foreach (var item in max_gap) {
+                        consensus.Append(item.ToString());
+                        consensus.Append("/");
+                    }
+                    consensus.Append(")");
+                } else if (max_gap.Count() == 1) {
+                    consensus.Append(max_gap[0].ToString());
+                } else {
+                    consensus.Append("_");
+                }
+            }
+            buffer.AppendLine("<h2>Consensus Sequence</h2>");
+            buffer.AppendLine(consensus.ToString());
+
             return buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>");
         }
         int PositionOfNthTrue(List<bool> list, int n)
@@ -707,31 +801,41 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
+            // Path Asides
             for (int i = 0; i < paths.Count(); i++)
             {
                 buffer.AppendLine(CreatePathAside(i));
             }
+            // Contigs Asides
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
                 buffer.AppendLine(CreateContigAside(i));
             }
+            // Read Asides
             for (int i = 0; i < reads.Count(); i++)
             {
                 buffer.AppendLine(CreateReadAside(i));
             }
-            if (templates.Count() > 0)
+            // Template Tables Asides
+            for (int t = 0; t < templates.Count(); t++)
             {
-                for (int t = 0; t < templates.Count(); t++)
+                for (int i = 0; i < templates[t].Templates.Count(); i++)
                 {
-                    for (int i = 0; i < templates[t].Templates.Count(); i++)
-                    {
-                        buffer.AppendLine(CreateTemplateAside(t, i));
-                    }
+                    buffer.AppendLine(CreateTemplateAside(t, i));
                 }
             }
+            // Recombination Table Asides
             for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
             {
                 buffer.AppendLine(CreateRecombinationAside(i));
+            }
+            // Recombination Databases Tables Asides
+            for (int t = 0; t < RecombinationDatabases.Count(); t++)
+            {
+                for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
+                {
+                    buffer.AppendLine(CreateRecombinationDatabaseAside(t, i));
+                }
             }
 
             return buffer.ToString();
@@ -885,7 +989,6 @@ namespace AssemblyNameSpace
             // End the reads alignment div
             buffer.AppendLine("</div>");
 
-
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
         /// <summary>An enum to save what type of detail aside it is.</summary>
@@ -960,6 +1063,17 @@ namespace AssemblyNameSpace
             if (type == AsideType.Recombination) classname = "recombination";
             if (type == AsideType.RecombinationTemplate) classname = "recombination-template";
             return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
+        }
+        /// <summary>
+        /// Create a collapsible region to be used as a main tab in the report
+        /// </summary>
+        /// <param name="name">The name to display</param>
+        /// <param name="content">The content</param>
+        string Collapsible(string name, string content) {
+            string id = name.ToLower().Replace(" ", "-") + "-collapsible";
+            return $@"<input type=""checkbox"" id=""{id}""/>
+<label for=""{id}"">{name}</label>
+<div class=""collapsable"">{content}</div>";
         }
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -1097,9 +1211,8 @@ namespace AssemblyNameSpace
 
             string recombinationtable = "";
             if (RecombinedDatabase != null) {
-                recombinationtable = $@"<input type=""checkbox"" id=""recombination-collapsable""/>
-<label for=""recombination-collapsable"">Recombination</label>
-<div class=""collapsable"">{CreateRecombinationTable()}</div>";
+                recombinationtable = Collapsible("Recombination Table", CreateRecombinationTable());
+                recombinationtable += CreateRecombinationDatabaseTables();
             }
 
             string html = $@"<html>
@@ -1129,32 +1242,14 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
     </label>
 </div>
 
-{recombinationtable}
-{CreateTemplateTables()}
-
-<input type=""checkbox"" id=""graph-collapsable""/>
-<label for=""graph-collapsable"">Graph</label>
-<div class=""collapsable"">{svg}</div>
-
-<input type=""checkbox"" id=""simple-graph-collapsable""/>
-<label for=""simple-graph-collapsable"">Simplified Graph</label>
-<div class=""collapsable"">{simplesvg}</div>
-
-<input type=""checkbox"" id=""paths-table-collapsable""/>
-<label for=""paths-table-collapsable"">Paths Table</label>
-<div class=""collapsable"">{CreatePathsTable()}</div>
-
-<input type=""checkbox"" id=""table-collapsable""/>
-<label for=""table-collapsable"">Contigs Table</label>
-<div class=""collapsable"">{CreateContigsTable()}</div>
-
-<input type=""checkbox"" id=""reads-table-collapsable""/>
-<label for=""reads-table-collapsable"">Reads Table</label>
-<div class=""collapsable"">{CreateReadsTable()}</div>
-
-<input type=""checkbox"" id=""meta-collapsable""/>
-<label for=""meta-collapsable"">Meta Information</label>
-<div class=""collapsable meta-collapsable"">{MetaInformation()}</div>
+ {recombinationtable}
+ {CreateTemplateTables()}
+ {Collapsible("Graph", svg)}
+ {Collapsible("Simplified Graph", simplesvg)}
+ {Collapsible("Paths Table", CreatePathsTable())}
+ {Collapsible("Contigs Table", CreateContigsTable())}
+ {Collapsible("Reads Table", CreateReadsTable())}
+ {Collapsible("Meta Information", MetaInformation())}
 
 <div class=""footer"">
     <p>Code written in 2019-2020</p>

@@ -23,9 +23,16 @@ namespace AssemblyNameSpace
         /// <returns> Returns a new array with clones of the original array. </returns>
         public static T[] SubArray<T>(this T[] data, int index, int length)
         {
-            T[] result = new T[length];
-            Array.Copy(data, index, result, 0, length);
-            return result;
+            try
+            {
+                T[] result = new T[length];
+                Array.Copy(data, index, result, 0, length);
+                return result;
+            }
+            catch
+            {
+                throw new Exception($"SubArray Exception length {length} index {index}");
+            }
         }
         public struct ReadPlacement
         {
@@ -169,36 +176,43 @@ namespace AssemblyNameSpace
             return score;
         }
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
-        /// <param name="left">The template sequence to use.</param>
-        /// <param name="right">The query sequence to use.</param>
-        /// /// <param name="right_id">The id of the query sequence to use.</param>
+        /// <param name="template">The template sequence to use.</param>
+        /// <param name="query">The query sequence to use.</param>
+        /// <param name="right_id">The id of the query sequence to use.</param>
         /// <param name="gap_penalty">The penalty for introducing a gap.</param>
-        static public SequenceMatch SmithWaterman(string left, string right, int right_id, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
+        static public SequenceMatch SmithWaterman(ICollection<AminoAcid> template, ICollection<AminoAcid> query, int right_id, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
         {
-            var score_matrix = new (int, Direction)[left.Length + 1, right.Length + 1]; // Default value of 0
+            var score_matrix = new (int, Direction)[template.Count + 1, query.Count + 1]; // Default value of 0
             int max_value = 0;
             (int, int) max_index = (0, 0);
 
-            for (int x = 1; x <= left.Length; x++)
+            int tem_pos, query_pos;
+
+            for (tem_pos = 1; tem_pos <= template.Count; tem_pos++)
             {
-                for (int y = 1; y <= right.Length; y++)
+                for (query_pos = 1; query_pos <= query.Count; query_pos++)
                 {
-                    int score = alphabet.scoring_matrix[alphabet.getIndexInAlphabet(left[x - 1]), alphabet.getIndexInAlphabet(right[y - 1])];
+                    int score = template.ElementAt(tem_pos - 1).Homology(query.ElementAt(query_pos - 1));
                     // Calculate the score for the current position
-                    int a = score_matrix[x - 1, y - 1].Item1 + score; // Match
-                    int b = score_matrix[x, y - 1].Item1 - (score_matrix[x, y - 1].Item2 == Direction.GapRight ? gap_penalty : start_gap_penalty); // GapRight
-                    int c = score_matrix[x - 1, y].Item1 - (score_matrix[x - 1, y].Item2 == Direction.GapLeft ? gap_penalty : start_gap_penalty); // GapLeft
+                    int a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
+                    int b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? gap_penalty : start_gap_penalty); // GapRight
+                    int c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? gap_penalty : start_gap_penalty); // GapLeft
                     int d = 0;
-                    if (a > b && a > c && a > d) score_matrix[x, y] = (a, Direction.Match);
-                    else if (b > c && b > d) score_matrix[x, y] = (b, Direction.GapRight);
-                    else if (c > d) score_matrix[x, y] = (c, Direction.GapLeft);
-                    else score_matrix[x, y] = (d, Direction.NoMatch);
+
+                    if (a > b && a > c && a > d)
+                        score_matrix[tem_pos, query_pos] = (a, Direction.Match);
+                    else if (b > c && b > d)
+                        score_matrix[tem_pos, query_pos] = (b, Direction.GapQuery);
+                    else if (c > d)
+                        score_matrix[tem_pos, query_pos] = (c, Direction.GapTemplate);
+                    else
+                        score_matrix[tem_pos, query_pos] = (d, Direction.NoMatch);
 
                     // Keep track of the maximal value
-                    if (score_matrix[x, y].Item1 > max_value)
+                    if (score_matrix[tem_pos, query_pos].Item1 > max_value)
                     {
-                        max_value = score_matrix[x, y].Item1;
-                        max_index = (x, y);
+                        max_value = score_matrix[tem_pos, query_pos].Item1;
+                        max_index = (tem_pos, query_pos);
                     }
                 }
             }
@@ -206,46 +220,39 @@ namespace AssemblyNameSpace
             // Traceback
             var match_list = new List<SequenceMatch.MatchPiece>();
 
-            (int, int) index = max_index;
-            (int, int) start_index = (0, 0);
+            tem_pos = max_index.Item1;
+            query_pos = max_index.Item2;
             bool found_end = false;
+
             while (!found_end)
             {
-                int x = index.Item1;
-                int y = index.Item2;
-                if (x == 0 || y == 0)
-                {
-                    found_end = true;
-                    start_index = (x, y);
-                    break;
-                }
-                switch (score_matrix[x, y].Item2)
+                switch (score_matrix[tem_pos, query_pos].Item2)
                 {
                     case Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
-                        index = (x - 1, y - 1);
+                        tem_pos--;
+                        query_pos--;
                         break;
-                    case Direction.GapLeft:
+                    case Direction.GapTemplate:
                         match_list.Add(new SequenceMatch.GapTemplate(1));
-                        index = (x - 1, y);
+                        tem_pos--;
                         break;
-                    case Direction.GapRight:
+                    case Direction.GapQuery:
                         match_list.Add(new SequenceMatch.GapContig(1));
-                        index = (x, y - 1);
+                        query_pos--;
                         break;
                     case Direction.NoMatch:
                         found_end = true;
-                        start_index = (x, y);
                         break;
                 }
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(start_index.Item2, start_index.Item1, max_value, match_list, right, right_id);
+            var match = new SequenceMatch(tem_pos, query_pos, max_value, match_list, query, right_id);
             return match;
         }
 
-        enum Direction { Match, GapLeft, GapRight, NoMatch }
+        enum Direction { NoMatch, GapTemplate, GapQuery, Match }
     }
     /// <summary>A class to save a match of two sequences in a space efficient way, based on CIGAR strings.</summary>
     public class SequenceMatch
@@ -255,7 +262,7 @@ namespace AssemblyNameSpace
         public int StartQueryPosition;
         public int Score;
         public List<MatchPiece> Alignment;
-        public string Sequence;
+        public ICollection<AminoAcid> Sequence;
         public int SequenceID;
         public int Length
         {
@@ -264,7 +271,7 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, string seq, int seqid)
+        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, ICollection<AminoAcid> seq, int seqid)
         {
             StartTemplatePosition = tpos;
             StartQueryPosition = qpos;
