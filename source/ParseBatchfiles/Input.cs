@@ -234,7 +234,7 @@ namespace AssemblyNameSpace
                         }
                         break;
                     case "alphabet":
-                        output.Alphabet.Add(ParseHelper.ParseAlphabet(pair.GetValues()));
+                        output.Alphabet.Add(ParseHelper.ParseAlphabet(pair));
                         break;
                     case "template":
                         output.Template.Add(ParseHelper.ParseTemplate(pair.GetValues(), true));
@@ -265,7 +265,7 @@ namespace AssemblyNameSpace
                                     }
                                     break;
                                 case "alphabet":
-                                    recsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
+                                    recsettings.Alphabet = ParseHelper.ParseAlphabet(setting);
                                     break;
                                 default:
                                     throw new ParseException($"Unknown key in Recombine definition: {setting.Name} {setting.Position}, the options are 'N', 'Order', 'Templates' and 'Alphabet'");
@@ -461,11 +461,15 @@ namespace AssemblyNameSpace
                     throw new ParseException($"Some unkown ParseException occurred while '{input}' was converted to an int32, this should be a number in the context of {origin} {pos}.");
                 }
             }
-            public static RunParameters.AlphabetValue ParseAlphabet(List<KeyValue> values)
+            public static RunParameters.AlphabetValue ParseAlphabet(KeyValue key)
             {
+                if (key.GetValues().Count() == 0) {
+                    throw new ParseException($"There should always be arguments defined for an Alphabet. At position {key.Position}.");
+                }
+
                 var asettings = new RunParameters.AlphabetValue();
 
-                foreach (var setting in values)
+                foreach (var setting in key.GetValues())
                 {
                     switch (setting.Name)
                     {
@@ -478,9 +482,22 @@ namespace AssemblyNameSpace
                         case "name":
                             asettings.Name = setting.GetValue();
                             break;
+                        case "gapstartpenalty":
+                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(), "gapstartpenalty in alphabet definition", setting.Position);
+                            break;
+                        case "gapextendpenalty":
+                            asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), "gapextendpenalty in alphabet definition", setting.Position);
+                            break;
                         default:
-                            throw new ParseException($"Unknown key in Alphabet definition: {setting.Name} {setting.Position}, the options are 'Path', 'Data', and 'Name'");
+                            throw new ParseException($"Unknown key in Alphabet definition: {setting.Name} {setting.Position}, the options are 'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'.");
                     }
+                }
+
+                if (asettings.Name == null) {
+                    throw new ParseException($"The name of an Alphabet should always be defined. At position {key.Position}.");
+                }
+                if (asettings.Data == null) {
+                    throw new ParseException($"The data of an Alphabet should always be defined, either as raw data or as a path. At position {key.Position}.");
                 }
 
                 return asettings;
@@ -515,7 +532,7 @@ namespace AssemblyNameSpace
                             break;
                         case "alphabet":
                             if (!alphabet) throw new ParseException($"Alphabet cannot be defined here: {setting.Name} {setting.Position}, the options are 'Path', 'Type' and 'Name'");
-                            tsettings.Alphabet = ParseHelper.ParseAlphabet(setting.GetValues());
+                            tsettings.Alphabet = ParseHelper.ParseAlphabet(setting);
                             break;
                         default:
                             var tail = "'Path', 'Type', 'Name' and 'Alphabet'";

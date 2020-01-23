@@ -43,10 +43,10 @@ namespace AssemblyNameSpace
         /// <summary> Will create a string of a collection of AminoAcids. </summary>
         /// <param name="collaction"> The collaction to create a string from. </param>
         /// <returns> Returns the string of the collaction. </returns>
-        public static string ArrayToString(ICollection<AminoAcid> collaction)
+        public static string ArrayToString(ICollection<AminoAcid> collection)
         {
             var builder = new StringBuilder();
-            foreach (AminoAcid aa in collaction)
+            foreach (AminoAcid aa in collection)
             {
                 builder.Append(aa.ToString());
             }

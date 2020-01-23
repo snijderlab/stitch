@@ -215,6 +215,8 @@ Inner parameter | Explanation | Default Value
 Path | The path to the alphabet (cannot be used in conjunction with `Data`) | (No Default)
 Data | The alphabet, to allow for newlines the alphabet should be enclosed in `:>` and `<:` (cannot be used in conjunction with `Path`) | (No Default)
 Name | To recognize the alphabet | (No Default)
+GapStartPenalty | The penalty for opening a gap in an alignment. Used in template matching. | 12
+GapExtendPenalty | The penalty for extending a gap in an alignment. Used in template matching. | 1
 
 _Examples_
 ```

@@ -220,6 +220,14 @@ namespace AssemblyNameSpace
             /// The name for this alphabet, to recognize it
             /// </summary>
             public string Name;
+            /// <summary>
+            /// The penalty for opening a gap in an alignment
+            /// </summary>
+            public int GapStartPenalty = 12;
+            /// <summary>
+            /// The penalty for extending a gap in an alignment
+            /// </summary>
+            public int GapExtendPenalty = 1;
         }
         /// <summary>
         /// An input for a template

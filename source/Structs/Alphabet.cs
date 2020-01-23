@@ -23,6 +23,18 @@ namespace AssemblyNameSpace
         /// <summary> The alphabet used for alignment. The default value is all the amino acids in order of
         /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
         public char[] alphabet;
+        /// <summary>
+        /// The penalty for opening a gap in an alignment
+        /// </summary>
+        public readonly int GapStartPenalty;
+        /// <summary>
+        /// The penalty for extending a gap in an alignment
+        /// </summary>
+        public readonly int GapExtendPenalty;
+        /// <summary>
+        /// The char that represents a gap
+        /// </summary>
+        private const char GapChar = '*';
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look up. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
@@ -38,32 +50,12 @@ namespace AssemblyNameSpace
             Console.WriteLine($"Could not find '{c}' in the alphabet: '{alphabet}'");
             return -1;
         }
-
-        /// <summary> Set the alphabet of the assembler. </summary>
-        /// <param name="rules"> A list of rules implemented as tuples containing the chars to connect, 
-        /// the value to put into the matrix and whether or not the rule should be bidirectional (the value
-        ///  in the matrix is the same both ways). </param>
-        /// <param name="diagonals_value"> The value to place on the diagonals of the matrix. </param>
-        /// <param name="input"> The alphabet to use, it will be iterated over from the front to the back so
-        /// the best case scenario has the most used characters at the front of the string. </param>
-        public Alphabet(List<ValueTuple<char, char, int, bool>> rules = null, int diagonals_value = 1, string input = "LSAEGVRKTPDINQFYHMCWOU")
-        {
-            alphabet = input.ToCharArray();
-
-            scoring_matrix = new int[alphabet.Length, alphabet.Length];
-
-            // Only set the diagonals to te given value
-            for (int i = 0; i < alphabet.Length; i++) scoring_matrix[i, i] = diagonals_value;
-
-            // Use the rules to 
-            if (rules != null)
-            {
-                foreach (var rule in rules)
-                {
-                    scoring_matrix[getIndexInAlphabet(rule.Item1), getIndexInAlphabet(rule.Item2)] = rule.Item3;
-                    if (rule.Item4) scoring_matrix[getIndexInAlphabet(rule.Item2), getIndexInAlphabet(rule.Item1)] = rule.Item3;
-                }
-            }
+        /// <summary>
+        /// Determines if the given aminoacid is a gap
+        /// </summary>
+        /// <param name="aa">The aminoacid to compare</param>
+        public bool IsGap(AminoAcid aa) {
+            return getIndexInAlphabet(GapChar) == aa.Code;
         }
         /// <summary>
         /// To indicate if the given string is data or a path to the data
@@ -75,11 +67,22 @@ namespace AssemblyNameSpace
             /// <summary> It is a path to a file containing the data. </summary>
             Path
         }
-        /// <summary> Set the alphabet based on data in csv format. </summary>
+        /// <summary>
+        /// Create a new Alphabet
+        /// </summary>
+        /// <param name="alphabetValue">The RunParameter to use</param>
+        /// <returns></returns>
+        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Data, AlphabetParamType.Data, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) {}
+        /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>
         /// <param name="type"> To indicate if the data is data or a path to data </param>
-        public Alphabet(string data, AlphabetParamType type)
+        /// <param name="gap_start_penalty">The penalty for opening a gap in an alignment</param>
+        /// <param name="gap_extend_penalty">The penalty for extending a gap in an alignment</param>
+        public Alphabet(string data, AlphabetParamType type, int gap_start_penalty, int gap_extend_penalty)
         {
+            GapStartPenalty = gap_start_penalty;
+            GapExtendPenalty = gap_extend_penalty;
+
             if (type == AlphabetParamType.Path)
             {
                 try
@@ -112,6 +115,11 @@ namespace AssemblyNameSpace
             }
 
             alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
+
+            if (!alphabet.Contains(GapChar)) {
+                alphabet = alphabet.Concat(new char[] {GapChar}).ToArray();
+            }
+
             scoring_matrix = new int[columns - 1, columns - 1];
 
             for (int i = 0; i < columns - 1; i++)

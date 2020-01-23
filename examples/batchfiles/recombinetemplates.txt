@@ -46,6 +46,7 @@ Recombine->
     Alphabet ->
         Path : ../alphabets/blosum62.csv
         Name : Blosum62
+        GapStartPenalty : 20
     <-
 <-
 

@@ -131,7 +131,7 @@ namespace AssemblyNameSpace
             {
                 try
                 {
-                    var alphabet = new Alphabet(Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data);
+                    var alphabet = new Alphabet(Alphabet);
                     var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse, alphabet);
 
                     // Retrieve the input
@@ -160,7 +160,7 @@ namespace AssemblyNameSpace
                     var databases = new List<TemplateDatabase>();
                     foreach (var template in Template)
                     {
-                        var alph = template.Alphabet != null ? new Alphabet(template.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
+                        var alph = template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
 
                         var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name);
@@ -182,7 +182,7 @@ namespace AssemblyNameSpace
 
                         Console.WriteLine("Working on recombination");
                         var rec_databases = new List<TemplateDatabase>();
-                        var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet.Data, AssemblyNameSpace.Alphabet.AlphabetParamType.Data) : alphabet;
+                        var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : alphabet;
 
                         foreach (var template in Recombine.Templates)
                         {

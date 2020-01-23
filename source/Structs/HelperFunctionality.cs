@@ -178,9 +178,7 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        /// <param name="right_id">The id of the query sequence to use.</param>
-        /// <param name="gap_penalty">The penalty for introducing a gap.</param>
-        static public SequenceMatch SmithWaterman(ICollection<AminoAcid> template, ICollection<AminoAcid> query, int right_id, Alphabet alphabet, int gap_penalty = 1, int start_gap_penalty = 11)
+        static public SequenceMatch SmithWaterman(ICollection<AminoAcid> template, ICollection<AminoAcid> query, int right_id, Alphabet alphabet)
         {
             var score_matrix = new (int, Direction)[template.Count + 1, query.Count + 1]; // Default value of 0
             int max_value = 0;
@@ -192,11 +190,12 @@ namespace AssemblyNameSpace
             {
                 for (query_pos = 1; query_pos <= query.Count; query_pos++)
                 {
+                    bool gap = alphabet.IsGap(template.ElementAt(tem_pos - 1)) || alphabet.IsGap(query.ElementAt(query_pos - 1));
                     int score = template.ElementAt(tem_pos - 1).Homology(query.ElementAt(query_pos - 1));
                     // Calculate the score for the current position
                     int a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
-                    int b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? gap_penalty : start_gap_penalty); // GapRight
-                    int c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? gap_penalty : start_gap_penalty); // GapLeft
+                    int b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight
+                    int c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapLeft
                     int d = 0;
 
                     if (a > b && a > c && a > d)

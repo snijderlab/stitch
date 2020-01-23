@@ -15,7 +15,7 @@ namespace AssemblyTestNameSpace
         Alphabet alp;
         public Alphabet_Test()
         {
-            alp = new Alphabet("*;A;B\nA;1;0\nB;0;1", Alphabet.AlphabetParamType.Data);
+            alp = new Alphabet("*;A;B\nA;1;0\nB;0;1", Alphabet.AlphabetParamType.Data, 12, 1);
         }
         [DataRow('A', 'B')]
         [DataRow('B', 'A')]
@@ -57,13 +57,13 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void InvariantNotValidAlphabet(string a, string msg)
         {
-            Assert.ThrowsException<ParseException>(() => new Alphabet(a, Alphabet.AlphabetParamType.Data), msg);
+            Assert.ThrowsException<ParseException>(() => new Alphabet(a, Alphabet.AlphabetParamType.Data, 12, 1), msg);
         }
         [TestMethod]
         public void OpenViaFile()
         {
             //Expect to be running inside the /bin/debug/netcoreapp2.2 folder
-            Alphabet alp2 = new Alphabet(@"../../../testalphabet.csv", Alphabet.AlphabetParamType.Path);
+            Alphabet alp2 = new Alphabet(@"../../../testalphabet.csv", Alphabet.AlphabetParamType.Path, 12, 1);
             string input = "AB";
             foreach (char c in input)
             {
@@ -78,7 +78,7 @@ namespace AssemblyTestNameSpace
             var path = @"../../../../examples/alphabets";
             var files = Directory.GetFiles(path);
             foreach (var file in files) {
-                new Alphabet(file, Alphabet.AlphabetParamType.Path);
+                new Alphabet(file, Alphabet.AlphabetParamType.Path, 12, 1);
             }
         }
     }
