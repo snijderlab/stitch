@@ -91,7 +91,7 @@ namespace AssemblyNameSpace
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i], i, alphabet));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].ToArray(), i, alphabet));
                     x++;
                 }
                 y++;
@@ -145,7 +145,7 @@ namespace AssemblyNameSpace
         {
             var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)>();
             output.Capacity = Sequence.Length;
-            Console.WriteLine($"The total sequence is {Sequence.Length} aa");
+            //Console.WriteLine($"The total sequence is {Sequence.Length} aa");
 
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
@@ -158,14 +158,14 @@ namespace AssemblyNameSpace
                 // Start at StartTemplatePosition and StartQueryPosition
                 var template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
-                Console.WriteLine($"This match is {match.TotalMatches()} matches long and {match.Sequence.Count()} aa {match}");
+                //Console.WriteLine($"This match is {match.TotalMatches()} matches long and {match.Sequence.Count()} aa {match}");
 
                 foreach (var piece in match.Alignment)
                 {
-                    Console.WriteLine($"at pos {template_pos}:{seq_pos}");
+                    //Console.WriteLine($"at pos {template_pos}:{seq_pos}");
                     if (piece is SequenceMatch.Match m)
                     {
-                        Console.WriteLine($"Found a match of {m.count} aa");
+                        //Console.WriteLine($"Found a match of {m.count} aa");
                         for (int i = 0; i < m.count && template_pos < Sequence.Length && seq_pos < match.Sequence.Count(); i++)
                         {
                             // Try to add this AminoAcid or update the count
@@ -173,7 +173,7 @@ namespace AssemblyNameSpace
                             try {
                                 key = match.Sequence.ElementAt(seq_pos);
                             } catch {
-                                Console.WriteLine($"Exception: at seq pos {seq_pos}");
+                                //Console.WriteLine($"Exception: at seq pos {seq_pos}");
                                 throw new Exception("");
                             }
                             if (output[template_pos].Item1.ContainsKey(key))

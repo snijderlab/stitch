@@ -35,6 +35,7 @@ namespace AssemblyNameSpace
         /// The char that represents a gap
         /// </summary>
         private const char GapChar = '*';
+        public readonly int GapIndex;
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look up. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
@@ -49,13 +50,6 @@ namespace AssemblyNameSpace
             }
             Console.WriteLine($"Could not find '{c}' in the alphabet: '{alphabet}'");
             return -1;
-        }
-        /// <summary>
-        /// Determines if the given aminoacid is a gap
-        /// </summary>
-        /// <param name="aa">The aminoacid to compare</param>
-        public bool IsGap(AminoAcid aa) {
-            return getIndexInAlphabet(GapChar) == aa.Code;
         }
         /// <summary>
         /// To indicate if the given string is data or a path to the data
@@ -119,6 +113,7 @@ namespace AssemblyNameSpace
             if (!alphabet.Contains(GapChar)) {
                 alphabet = alphabet.Concat(new char[] {GapChar}).ToArray();
             }
+            GapIndex = getIndexInAlphabet(GapChar);
 
             scoring_matrix = new int[columns - 1, columns - 1];
 

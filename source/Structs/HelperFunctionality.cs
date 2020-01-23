@@ -178,25 +178,29 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        static public SequenceMatch SmithWaterman(ICollection<AminoAcid> template, ICollection<AminoAcid> query, int right_id, Alphabet alphabet)
+        static public SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, int right_id, Alphabet alphabet)
         {
-            var score_matrix = new (int, Direction)[template.Count + 1, query.Count + 1]; // Default value of 0
+            var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
+
             int max_value = 0;
-            (int, int) max_index = (0, 0);
+            int max_index_t = 0;
+            int max_index_q = 0;
 
-            int tem_pos, query_pos;
+            int tem_pos, query_pos, score, a, b, c, d;
+            bool gap;
+            int gap_index = alphabet.GapIndex;
 
-            for (tem_pos = 1; tem_pos <= template.Count; tem_pos++)
+            for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
-                for (query_pos = 1; query_pos <= query.Count; query_pos++)
+                for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    bool gap = alphabet.IsGap(template.ElementAt(tem_pos - 1)) || alphabet.IsGap(query.ElementAt(query_pos - 1));
-                    int score = template.ElementAt(tem_pos - 1).Homology(query.ElementAt(query_pos - 1));
+                    gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
+                    score = alphabet.scoring_matrix[template[tem_pos - 1].Code, query[query_pos - 1].Code];
                     // Calculate the score for the current position
-                    int a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
-                    int b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight
-                    int c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapLeft
-                    int d = 0;
+                    a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
+                    b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight
+                    c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapLeft
+                    d = 0;
 
                     if (a > b && a > c && a > d)
                         score_matrix[tem_pos, query_pos] = (a, Direction.Match);
@@ -211,7 +215,8 @@ namespace AssemblyNameSpace
                     if (score_matrix[tem_pos, query_pos].Item1 > max_value)
                     {
                         max_value = score_matrix[tem_pos, query_pos].Item1;
-                        max_index = (tem_pos, query_pos);
+                        max_index_t = tem_pos;
+                        max_index_q = query_pos;
                     }
                 }
             }
@@ -219,26 +224,24 @@ namespace AssemblyNameSpace
             // Traceback
             var match_list = new List<SequenceMatch.MatchPiece>();
 
-            tem_pos = max_index.Item1;
-            query_pos = max_index.Item2;
             bool found_end = false;
 
             while (!found_end)
             {
-                switch (score_matrix[tem_pos, query_pos].Item2)
+                switch (score_matrix[max_index_t, max_index_q].Item2)
                 {
                     case Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
-                        tem_pos--;
-                        query_pos--;
+                        max_index_t--;
+                        max_index_q--;
                         break;
                     case Direction.GapTemplate:
                         match_list.Add(new SequenceMatch.GapTemplate(1));
-                        tem_pos--;
+                        max_index_t--;
                         break;
                     case Direction.GapQuery:
                         match_list.Add(new SequenceMatch.GapContig(1));
-                        query_pos--;
+                        max_index_q--;
                         break;
                     case Direction.NoMatch:
                         found_end = true;
@@ -247,7 +250,7 @@ namespace AssemblyNameSpace
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(tem_pos, query_pos, max_value, match_list, query, right_id);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, query, right_id);
             return match;
         }
 
@@ -261,7 +264,7 @@ namespace AssemblyNameSpace
         public int StartQueryPosition;
         public int Score;
         public List<MatchPiece> Alignment;
-        public ICollection<AminoAcid> Sequence;
+        public AminoAcid[] Sequence;
         public int SequenceID;
         public int Length
         {
@@ -270,7 +273,7 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, ICollection<AminoAcid> seq, int seqid)
+        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, AminoAcid[] seq, int seqid)
         {
             StartTemplatePosition = tpos;
             StartQueryPosition = qpos;
