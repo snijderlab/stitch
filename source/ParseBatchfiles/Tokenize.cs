@@ -15,14 +15,17 @@ namespace AssemblyNameSpace
     /// <summary>
     /// To keep track of a location of a token
     /// </summary>
-    public class Position {
+    public class Position
+    {
         public readonly int Line;
         public readonly int Column;
-        public Position(int l, int c) {
+        public Position(int l, int c)
+        {
             Line = l;
             Column = c;
         }
-        public override string ToString() {
+        public override string ToString()
+        {
             return $"Position:{Line},{Column}";
         }
     }
@@ -47,25 +50,30 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To keep track of the location of the parsehead
             /// </summary>
-            public class Counter {
+            public class Counter
+            {
                 public int Line;
                 public int Column;
 
-                public Counter() {
+                public Counter()
+                {
                     Line = 0;
                     Column = 1;
                 }
 
-                public void NextLine() {
+                public void NextLine()
+                {
                     Line += 1;
                     Column = 1;
                 }
 
-                public void NextColumn(int steps = 1) {
+                public void NextColumn(int steps = 1)
+                {
                     Column += steps;
                 }
 
-                public Position GetPosition() {
+                public Position GetPosition()
+                {
                     return new Position(Line, Column);
                 }
             }
@@ -109,15 +117,15 @@ namespace AssemblyNameSpace
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
                     {
-                        return MultilineSingleParameter(content, name, counter);
+                        return MultilineSingleParameter(content, name, counter, pos);
                     }
                     else if (content[0] == ':')
                     {
-                        return SingleParameter(content, name, counter);
+                        return SingleParameter(content, name, counter, pos);
                     }
                     else if (content[0] == '-' && content[1] == '>')
                     {
-                        return MultiParameter(content, name, counter);
+                        return MultiParameter(content, name, counter, pos);
                     }
                     else
                     {
@@ -130,14 +138,14 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) SingleParameter(string content, string name, Counter counter)
+                static (KeyValue, string) SingleParameter(string content, string name, Counter counter, Position pos)
                 {
                     content = content.Remove(0, 1);
                     counter.NextColumn();
                     ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
                     string value = ParseHelper.Value(ref content, counter);
-                    return (new KeyValue(name, value, counter.GetPosition()), content);
+                    return (new KeyValue(name, value, pos), content);
                 }
                 /// <summary>
                 /// Single parameter on multiple lines
@@ -145,14 +153,14 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter)
+                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, Position pos)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
                     ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
                     string value = ParseHelper.UntilSequence(ref content, "<:");
-                    return (new KeyValue(name, value.Trim(), counter.GetPosition()), content);
+                    return (new KeyValue(name, value.Trim(), pos), content);
                 }
                 /// <summary>
                 /// Multiparameter
@@ -160,7 +168,7 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultiParameter(string content, string name, Counter counter)
+                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, Position pos)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
@@ -176,29 +184,30 @@ namespace AssemblyNameSpace
                             content = content.Remove(0, 2);
                             counter.NextColumn(2);
                             ParseHelper.Trim(ref content, counter);
-                            return (new KeyValue(name, values, counter.GetPosition()), content);
+                            return (new KeyValue(name, values, pos), content);
                         }
                         else
                         {
                             // Match the inner parameter
+                            var innerpos = counter.GetPosition();
                             var innername = ParseHelper.Name(ref content, counter);
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')
                             {
-                                var outcome = MultilineSingleParameter(content, innername, counter);
+                                var outcome = MultilineSingleParameter(content, innername, counter, innerpos);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == ':')
                             {
-                                var outcome = SingleParameter(content, innername, counter);
+                                var outcome = SingleParameter(content, innername, counter, innerpos);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == '-' && content[1] == '>')
                             {
-                                var outcome = MultiParameter(content, innername, counter);
+                                var outcome = MultiParameter(content, innername, counter, innerpos);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
@@ -293,11 +302,13 @@ namespace AssemblyNameSpace
                     }
                     return result;
                 }
-                public static void Trim(ref string content, Counter counter) {
-                    while (content != "" && Char.IsWhiteSpace(content[0])) {
+                public static void Trim(ref string content, Counter counter)
+                {
+                    while (content != "" && Char.IsWhiteSpace(content[0]))
+                    {
                         if (content[0] == '\n') counter.NextLine();
                         else counter.NextColumn();
-                        content = content.Remove(0,1);
+                        content = content.Remove(0, 1);
                     }
                 }
                 /// <summary>

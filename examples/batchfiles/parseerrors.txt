@@ -1,0 +1,67 @@
+------| Assemble |------
+
+-Run Info---------------
+Version	: 1
+Runname	: Recombine Templates Test
+
+-Input------------------
+Reads	->
+Path: ../011/reads-IgG2-K-002-all-100,00.txt
+Name: Reads 011
+Key : k
+<-
+
+-Parameters-------------
+K	            : p
+MinimalHomology : K-1
+DuplicateThreshold: K-1
+Reverse	        : False
+Alphabet->
+    Path	: ../alphabets/common_errors_alphabet.csv
+    Name	: Normal
+<-
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    n : 3789797098798678698769
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV * IGHJ IGHC
+
+    Templates->
+        Template->
+            Path : ../templates/IGHV.fasta
+            Type : something
+            Name : IGHV*
+            Key : nothing
+        <-
+        Template->
+            Path : ../templates/IGHJ.fasta
+            Name : IGHJ
+        <-
+        Template->
+            Path : ../templates/IGHC.fasta
+            Name : IGHC
+        <-
+        Template->
+            Path : ../templates/IGHC.fasta
+            Name : IGHC
+        <-
+    <-
+
+    -The alphabet used for all databases
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+        GapStartPenalty : 20
+    <-
+<-
+
+-Report-----------------
+-FASTA	->
+-Path	: ../../report-reads-{id}.fasta
+-<-
+HTML ->
+Path    : ../../report-reads-{id}.html
+DotDistribution: global
+<-

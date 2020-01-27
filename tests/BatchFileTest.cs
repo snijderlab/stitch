@@ -16,18 +16,23 @@ namespace AssemblyTestNameSpace
         /// All batchfiles given as examples should be valid
         /// </summary>
         [TestMethod]
-        public void TestExamples() {
+        public void TestExamples()
+        {
             var path = @"../../../../examples/batchfiles";
             var files = Directory.GetFiles(path);
-            foreach (var file in files) {
-                try
+            foreach (var file in files)
+            {
+                if (Path.GetFileName(file) != "parseerrors.txt")
                 {
-                    ParseCommandFile.Batch(file);
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine($"At file {file}");
-                    throw e;
+                    try
+                    {
+                        ParseCommandFile.Batch(file);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"At file {file}");
+                        throw e;
+                    }
                 }
             }
         }
