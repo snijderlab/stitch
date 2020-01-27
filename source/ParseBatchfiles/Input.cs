@@ -204,7 +204,7 @@ namespace AssemblyNameSpace
                         {
                             try
                             {
-                                output.K = new RunParameters.K.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value", pair.Position).GetValue(outEither));
+                                output.K = new RunParameters.K.Single(ParseHelper.ConvertToInt(pair.GetValue(), "single K value", pair.Position).ReturnOrFail());
                             }
                             catch
                             {
