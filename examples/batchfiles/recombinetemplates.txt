@@ -21,11 +21,11 @@ Alphabet->
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 3
+    n : 2
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV * IGHJ IGHC
+    Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC
 
     Templates->
         Template->
@@ -37,16 +37,28 @@ Recombine->
             Name : IGHJ
         <-
         Template->
-            Path : ../templates/IGHC.fasta
+            Path : ../templates/IGHC_uniprot.fasta
             Name : IGHC
+        <-
+        Template->
+            Path : ../templates/IGKV.fasta
+            Name : IGKV
+        <-
+        Template->
+            Path : ../templates/IGKJ.fasta
+            Name : IGKJ
+        <-
+        Template->
+            Path : ../templates/IGKC.fasta
+            Name : IGKC
         <-
     <-
 
     -The alphabet used for all databases
     Alphabet ->
-        Path : ../alphabets/blosum62.csv
-        Name : Blosum62
-        GapStartPenalty : 20
+        Path : ../alphabets/mass_based.csv
+        Name : ALP
+        GapStartPenalty : 10
     <-
 <-
 

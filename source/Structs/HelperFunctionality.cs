@@ -222,6 +222,7 @@ namespace AssemblyNameSpace
             }
 
             // Traceback
+            // TODO: Adjust the score on each position based on the DOC, to create a fairer score
             var match_list = new List<SequenceMatch.MatchPiece>();
 
             bool found_end = false;

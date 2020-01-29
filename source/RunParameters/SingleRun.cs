@@ -271,7 +271,7 @@ namespace AssemblyNameSpace
                                     s.AddRange(sequence.ElementAt(((RecombineOrder.Template)element).Index).Sequence);
                                 }
                             }
-                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", ""))));
+                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph));
                         }
 
                         var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database");
