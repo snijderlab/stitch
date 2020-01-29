@@ -56,9 +56,9 @@ Recombine->
 
     -The alphabet used for all databases
     Alphabet ->
-        Path : ../alphabets/mass_based.csv
+        Path : ../alphabets/antibody.csv
         Name : ALP
-        GapStartPenalty : 10
+        GapStartPenalty : 12
     <-
 <-
 

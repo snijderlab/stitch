@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// To keep track of a location of a token
     /// </summary>
-    public class Position
+    public struct Position
     {
         public readonly int Line;
         public readonly int Column;
@@ -26,7 +26,67 @@ namespace AssemblyNameSpace
         }
         public override string ToString()
         {
-            return $"Position:{Line},{Column}";
+            return $"({Line},{Column})";
+        }
+        public static bool operator ==(Position p1, Position p2)
+        {
+            return p1.Equals(p2);
+        }
+        public static bool operator !=(Position p1, Position p2)
+        {
+            return !(p1.Equals(p2));
+        }
+        public override bool Equals(object p2)
+        {
+            if (p2.GetType() != this.GetType()) return false;
+            Position pos = (Position) p2;
+            return this.Line == pos.Line && this.Column == pos.Column;
+        }
+        public override int GetHashCode() {
+            return Line.GetHashCode() + Column.GetHashCode();
+        }
+    }
+
+    public struct Range {
+        public readonly Position Start;
+        public readonly Position End;
+        public Range(Position start, Position end) {
+            Start = start;
+            End = end;
+        }
+        public override string ToString()
+        {
+            return $"{Start} to {End}";
+        }
+    }
+
+    public struct KeyRange {
+        public readonly Position Start;
+        public readonly Position NameEnd;
+        public readonly Position FieldEnd;
+        public Range Full {
+            get {
+                return new Range(Start, FieldEnd);
+            }
+        }
+        public Range Name {
+            get {
+                return new Range(Start, NameEnd);
+            }
+        }
+        public KeyRange(Position start, Position nend, Position fend) {
+            Start = start;
+            NameEnd = nend;
+            FieldEnd = fend;
+        }
+        public KeyRange(Range name, Position fend) {
+            Start = name.Start;
+            NameEnd = name.End;
+            FieldEnd = fend;
+        }
+        public override string ToString()
+        {
+            return $"{Start} to {NameEnd} to {FieldEnd}";
         }
     }
 
@@ -111,25 +171,24 @@ namespace AssemblyNameSpace
                 {
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
-                    var pos = counter.GetPosition();
-                    var name = ParseHelper.Name(ref content, counter);
+                    (string name, Range range) = ParseHelper.Name(ref content, counter);
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
                     {
-                        return MultilineSingleParameter(content, name, counter, pos);
+                        return MultilineSingleParameter(content, name, counter, range);
                     }
                     else if (content[0] == ':')
                     {
-                        return SingleParameter(content, name, counter, pos);
+                        return SingleParameter(content, name, counter, range);
                     }
                     else if (content[0] == '-' && content[1] == '>')
                     {
-                        return MultiParameter(content, name, counter, pos);
+                        return MultiParameter(content, name, counter, range);
                     }
                     else
                     {
-                        throw new ParseException($"Parameter '{name.ToString()}' {pos} should be followed by an delimiter (':', ':>' or '->')");
+                        throw new ParseException($"Parameter '{name.ToString()}' {range} should be followed by an delimiter (':', ':>' or '->')");
                     }
                 }
                 /// <summary>
@@ -138,14 +197,14 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) SingleParameter(string content, string name, Counter counter, Position pos)
+                static (KeyValue, string) SingleParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 1);
                     counter.NextColumn();
                     ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
-                    string value = ParseHelper.Value(ref content, counter);
-                    return (new KeyValue(name, value, pos), content);
+                    (string value, Range range) = ParseHelper.Value(ref content, counter);
+                    return (new KeyValue(name, value, new KeyRange(namerange, counter.GetPosition()), range), content);
                 }
                 /// <summary>
                 /// Single parameter on multiple lines
@@ -153,14 +212,17 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, Position pos)
+                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
                     ParseHelper.Trim(ref content, counter);
+                    Position startvalue = counter.GetPosition();
                     //Get the single value of the parameter
                     string value = ParseHelper.UntilSequence(ref content, "<:");
-                    return (new KeyValue(name, value.Trim(), pos), content);
+                    Position endkey = counter.GetPosition();
+                    Position endvalue = new Position(endkey.Line, endkey.Column - 2);
+                    return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                 }
                 /// <summary>
                 /// Multiparameter
@@ -168,11 +230,13 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed</param>
                 /// <param name="name">The name of the parameter</param>
                 /// <returns>The status</returns>
-                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, Position pos)
+                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
                     ParseHelper.Trim(ref content, counter);
+                    Position startvalue = counter.GetPosition();
+                    Position endvalue = counter.GetPosition();
                     // Now get the multiple values
                     var values = new List<KeyValue>();
 
@@ -183,31 +247,31 @@ namespace AssemblyNameSpace
                             // This is the end of the multiple valued parameter
                             content = content.Remove(0, 2);
                             counter.NextColumn(2);
+                            Position endkey = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
-                            return (new KeyValue(name, values, pos), content);
+                            return (new KeyValue(name, values, new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                         }
                         else
                         {
                             // Match the inner parameter
-                            var innerpos = counter.GetPosition();
-                            var innername = ParseHelper.Name(ref content, counter);
+                            (string innername, Range innerrange) = ParseHelper.Name(ref content, counter);
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')
                             {
-                                var outcome = MultilineSingleParameter(content, innername, counter, innerpos);
+                                var outcome = MultilineSingleParameter(content, innername, counter, innerrange);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == ':')
                             {
-                                var outcome = SingleParameter(content, innername, counter, innerpos);
+                                var outcome = SingleParameter(content, innername, counter, innerrange);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
                             else if (content[0] == '-' && content[1] == '>')
                             {
-                                var outcome = MultiParameter(content, innername, counter, innerpos);
+                                var outcome = MultiParameter(content, innername, counter, innerrange);
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             }
@@ -219,6 +283,7 @@ namespace AssemblyNameSpace
                             {
                                 throw new ParseException($"Parameter '{innername}' in '{name}' {counter.GetPosition()} should be followed by an delimiter (':', ':>' or '->')");
                             }
+                            endvalue = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
                         }
                     }
@@ -267,9 +332,10 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string</param>
                 /// <returns>The name</returns>
-                public static string Name(ref string content, Counter counter)
+                public static (string, Range) Name(ref string content, Counter counter)
                 {
                     ParseHelper.Trim(ref content, counter);
+                    Position start = counter.GetPosition();
                     var name = new StringBuilder();
                     while (Char.IsLetterOrDigit(content[0]) || content[0] == ' ')
                     {
@@ -277,30 +343,37 @@ namespace AssemblyNameSpace
                         content = content.Remove(0, 1);
                         counter.NextColumn();
                     }
+                    Position greedy = counter.GetPosition();
+                    Position end = new Position(greedy.Line, greedy.Column - 1);
                     ParseHelper.Trim(ref content, counter);
-                    return name.ToString().ToLower().Trim();
+                    return (name.ToString().ToLower().Trim(), new Range(start, end));
                 }
                 /// <summary>
                 /// Consumes a value from the start of the string
                 /// </summary>
-                /// <param name="content">The string</param>
+                /// <param name="content">The string and range</param>
                 /// <returns>The value</returns>
-                public static string Value(ref string content, Counter counter)
+                public static (string, Range) Value(ref string content, Counter counter)
                 {
                     string result = "";
+                    Position start = counter.GetPosition();
+                    Position end;
                     int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
                     {
                         result = content.Substring(0, nextnewline).Trim();
                         content = content.Remove(0, nextnewline);
+                        // TODO: Is not updated yet
+                        end = counter.GetPosition();
                         Trim(ref content, counter);
                     }
                     else
                     {
                         result = content.Trim();
                         content = "";
+                        end = counter.GetPosition();
                     }
-                    return result;
+                    return (result, new Range(start, end));
                 }
                 public static void Trim(ref string content, Counter counter)
                 {
