@@ -1,7 +1,7 @@
 ------| Assemble |------
 
 -Run Info---------------
-Version	: 1
+Version : 1
 Runname	: Recombine Templates Test
 
 -Input------------------
@@ -14,7 +14,7 @@ Key : k
 -Parameters-------------
 K	            : p
 MinimalHomology : K-1
-DuplicateThreshold: K-1
+DuplicateThreshold: Kik-1io
 Reverse	        : False
 Alphabet->
     Path	: ../alphabets/common_errors_alphabet.csv
@@ -32,12 +32,12 @@ Recombine->
         Template->
             Path : ../templates/IGHV.fasta
             Type : something
-            Name : IGHV*
+            Name : IGHV
             Key : nothing
         <-
         Template->
             Path : ../templates/IGHJ.fasta
-            Name : IGHJ
+            Name : IGHJ*
         <-
         Template->
             Path : ../templates/IGHC.fasta

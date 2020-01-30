@@ -60,7 +60,7 @@ namespace AssemblyNameSpace
             var reads = new List<(string, MetaData.IMetaData)>();
 
             if (!File.Exists(input_file.Path))
-                throw new Exception($"The specified file does not exist: {input_file}");
+                throw new Exception($"The specified file does not exist: {input_file.Name} {input_file.Path}");
 
             List<string> lines;
             try

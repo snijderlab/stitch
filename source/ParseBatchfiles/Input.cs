@@ -21,30 +21,25 @@ namespace AssemblyNameSpace
         /// <returns>The runparameters as specified in the file.</returns>
         public static RunParameters.FullRunParameters Batch(string path)
         {
-            if (!File.Exists(path))
-            {
-                throw new ParseException("The specified batch file does not exist.");
-            }
+            var output = new RunParameters.FullRunParameters();
+            var outEither = new ParseEither<RunParameters.FullRunParameters>(output);
+
+            // Get the contents
+            string batchfilecontent = ParseHelper.GetAllText(path).ReturnOrFail().Replace("\t", "    "); // Remove tabs
+
             // Set the working directory to the directory of the batchfile
             var original_working_directory = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(Path.GetDirectoryName(path));
 
-            // Get the contents
-            string batchfilename = Path.GetFileName(path);
-            string batchfilecontent = File.ReadAllText(batchfilename).Trim();
-
             // Save the batchfile for use in the construction of error messages
             InputNameSpace.BatchFile.Name = path;
-            InputNameSpace.BatchFile.Content = File.ReadAllLines(batchfilename);
+            InputNameSpace.BatchFile.Content = batchfilecontent.Split('\n');
 
             // Tokenize the file, into a key value pair tree
             var parsed = InputNameSpace.Tokenizer.Tokenize(batchfilecontent);
 
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters
-
-            var output = new RunParameters.FullRunParameters();
-            var outEither = new ParseEither<RunParameters.FullRunParameters>(output);
 
             bool versionspecified = false;
 
@@ -73,7 +68,7 @@ namespace AssemblyNameSpace
                                 output.Runtype = RunParameters.RuntypeValue.Group;
                                 break;
                             default:
-                                outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "Unknown key", "Unknown key in Runtype definition", "Valid options are: 'Group' and 'Separate'."));
+                                outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "Unknown option", "Unknown option in Runtype definition", "Valid options are: 'Group' and 'Separate'."));
                                 break;
                         }
                         break;
@@ -85,7 +80,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    settings.File.Path = Path.GetFullPath(setting.GetValue());
+                                    settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "cutoffscore":
                                     settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
@@ -136,7 +131,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    rsettings.File.Path = Path.GetFullPath(setting.GetValue());
+                                    rsettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "name":
                                     rsettings.File.Name = setting.GetValue();
@@ -158,7 +153,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    fastasettings.File.Path = Path.GetFullPath(setting.GetValue());
+                                    fastasettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "name":
                                     fastasettings.File.Name = setting.GetValue();
@@ -226,10 +221,10 @@ namespace AssemblyNameSpace
                         }
                         break;
                     case "duplicatethreshold":
-                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(pair.GetValue()));
+                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange).GetValue(outEither)));
                         break;
                     case "minimalhomology":
-                        output.MinimalHomology.Add(new RunParameters.KArithmetic(pair.GetValue()));
+                        output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange).GetValue(outEither)));
                         break;
                     case "reverse":
                         switch (pair.GetValue().ToLower())
@@ -309,9 +304,15 @@ namespace AssemblyNameSpace
                         if (order != null)
                         {
                             var order_string = order.GetValue();
+                            // Create a new counter
+                            var order_counter = new InputNameSpace.Tokenizer.Counter();
+                            order_counter.Line = order.ValueRange.Start.Line;
+                            order_counter.Column = order.ValueRange.Start.Column;
+
                             while (order_string != "")
                             {
-                                order_string = order_string.Trim();
+                                InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
+
                                 var match = false;
                                 for (int i = 0; i < recsettings.Templates.Count(); i++)
                                 {
@@ -319,6 +320,7 @@ namespace AssemblyNameSpace
                                     if (order_string.StartsWith(template.Name))
                                     {
                                         order_string = order_string.Remove(0, template.Name.Length);
+                                        order_counter.NextColumn(template.Name.Length);
                                         recsettings.Order.Add(new RunParameters.RecombineOrder.Template(i));
                                         match = true;
                                         break;
@@ -329,11 +331,12 @@ namespace AssemblyNameSpace
                                 if (order_string.StartsWith('*'))
                                 {
                                     order_string = order_string.Remove(0, 1);
+                                    order_counter.NextColumn();
                                     recsettings.Order.Add(new RunParameters.RecombineOrder.Gap());
                                 }
                                 else
                                 {
-                                    outEither.AddMessage(new ErrorMessage(order.ValueRange, "Invalid order", $"Cannot proceed past '{order_string}'.", "Valid options are a name of a template, a gap ('*') or whitespace."));
+                                    outEither.AddMessage(new ErrorMessage(new Range(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
                                     break;
                                 }
                             }
@@ -353,7 +356,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    hsettings.Path = Path.GetFullPath(setting.GetValue());
+                                    hsettings.Path = setting.GetValue();
                                     break;
                                 case "dotdistribution":
                                     if (setting.GetValue().ToLower() == "global")
@@ -401,7 +404,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    fsettings.Path = Path.GetFullPath(setting.GetValue());
+                                    fsettings.Path = setting.GetValue();
                                     break;
                                 case "minimalscore":
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
@@ -422,11 +425,11 @@ namespace AssemblyNameSpace
             // Generate defaults
             if (output.DuplicateThreshold.Count() == 0)
             {
-                output.DuplicateThreshold.Add(new RunParameters.KArithmetic("K-1"));
+                output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", new Range(new Position(1, 1), new Position(1, 1))).GetValue(outEither)));
             }
             if (output.MinimalHomology.Count() == 0)
             {
-                output.MinimalHomology.Add(new RunParameters.KArithmetic("K-1"));
+                output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", new Range(new Position(1, 1), new Position(1, 1))).GetValue(outEither)));
             }
 
             // Check if there is a version specified
@@ -496,7 +499,7 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing {BatchFile.Name}.\n");
+                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing '{BatchFile.Name}'.\n");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)
@@ -540,11 +543,19 @@ namespace AssemblyNameSpace
         }
         public class ErrorMessage
         {
-            Position startposition = new Position(0,0);
-            Position endposition = new Position(0,0);
+            Position startposition = new Position(0, 0);
+            Position endposition = new Position(0, 0);
             string shortDescription = "";
             string longDescription = "";
             string helpDescription = "";
+            string subject = "";
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "")
+            {
+                subject = sub;
+                shortDescription = shortD;
+                longDescription = longD;
+                helpDescription = help;
+            }
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
             {
                 startposition = pos;
@@ -567,21 +578,30 @@ namespace AssemblyNameSpace
 
                 // Location
                 string location = "";
-                if (endposition == new Position(0,0)) {
+                if (subject != "")
+                {
+                    location = $"\n   | {subject}\n\n";
+                }
+                else if (endposition == new Position(0, 0))
+                {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = BatchFile.Content[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + "^^^";
                     location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
-                } else if (startposition.Line == endposition.Line) {
+                }
+                else if (startposition.Line == endposition.Line)
+                {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = BatchFile.Content[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
                     location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
-                } else {
+                }
+                else
+                {
                     var line_number = endposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -613,7 +633,12 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = defaultColour;
 
                 // Location
-                if (endposition == new Position(0,0)) {
+                if (subject != "")
+                {
+                    Console.WriteLine($"\n   | {subject}\n");
+                }
+                else if (endposition == new Position(0, 0))
+                {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -624,7 +649,9 @@ namespace AssemblyNameSpace
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");
-                } else if (startposition.Line == endposition.Line) {
+                }
+                else if (startposition.Line == endposition.Line)
+                {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -635,7 +662,9 @@ namespace AssemblyNameSpace
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");
-                } else {
+                }
+                else
+                {
                     var line_number = endposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -707,18 +736,7 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "path":
-                            try
-                            {
-                                asettings.Data = File.ReadAllText(setting.GetValue());
-                            }
-                            catch (System.IO.FileNotFoundException)
-                            {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "File could not be found", "", "Make sure the sure file exists and the path is typed correctly."));
-                            }
-                            catch (Exception e)
-                            {
-                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Unknown exception", $"Exception {e.Message} occurred while reading file."));
-                            }
+                            asettings.Data = GetAllText(setting).GetValue(outEither);
                             break;
                         case "data":
                             asettings.Data = setting.GetValue();
@@ -727,7 +745,7 @@ namespace AssemblyNameSpace
                             asettings.Name = setting.GetValue();
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(),setting.ValueRange).GetValue(outEither);
+                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         case "gapextendpenalty":
                             asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
@@ -759,7 +777,7 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "path":
-                            tsettings.Path = Path.GetFullPath(setting.GetValue());
+                            tsettings.Path = GetFullPath(setting).GetValue(outEither);
                             break;
                         case "type":
                             switch (setting.GetValue().ToLower())
@@ -806,6 +824,174 @@ namespace AssemblyNameSpace
                     else
                     {
                         tsettings.Type = RunParameters.InputType.Reads;
+                    }
+                }
+
+                return outEither;
+            }
+            public static ParseEither<string> GetFullPath(KeyValue setting)
+            {
+                var outEither = new ParseEither<string>();
+                string path = setting.GetValue();
+
+                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                {
+                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path contains invalid characters."));
+                }
+                else if (string.IsNullOrWhiteSpace(path))
+                {
+                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path is empty."));
+                }
+                {
+                    try
+                    {
+                        outEither.Value = Path.GetFullPath(setting.GetValue());
+                    }
+                    catch (ArgumentException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path cannot be found."));
+                    }
+                    catch (System.Security.SecurityException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The file could not be opened because of a lack of required permissions."));
+                    }
+                    catch (NotSupportedException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", "The path contains a colon ':' not part of a volume identifier."));
+                    }
+                    catch (PathTooLongException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", "The path length exceeds the system defined width."));
+                    }
+                    catch (Exception e)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}."));
+                    }
+                }
+                return outEither;
+            }
+            public static ParseEither<string> GetFullPath(string path)
+            {
+                var outEither = new ParseEither<string>();
+
+                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                {
+                    outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path contains invalid characters."));
+                }
+                else if (string.IsNullOrWhiteSpace(path))
+                {
+                    outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path is empty."));
+                }
+                {
+                    try
+                    {
+                        outEither.Value = Path.GetFullPath(path);
+                    }
+                    catch (ArgumentException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path cannot be found."));
+                    }
+                    catch (System.Security.SecurityException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The file could not be opened because of a lack of required permissions."));
+                    }
+                    catch (NotSupportedException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path contains a colon ':' not part of a volume identifier."));
+                    }
+                    catch (PathTooLongException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path length exceeds the system defined width."));
+                    }
+                    catch (Exception e)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}."));
+                    }
+                }
+                return outEither;
+            }
+            public static ParseEither<string> GetAllText(KeyValue setting)
+            {
+                var outEither = new ParseEither<string>();
+                var trypath = GetFullPath(setting);
+
+                if (trypath.HasFailed())
+                {
+                    outEither = new ParseEither<string>(trypath.Messages);
+                }
+                else if (Directory.Exists(trypath.Value))
+                {
+                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The file given is a directory."));
+                }
+                else
+                {
+                    try
+                    {
+                        outEither.Value = File.ReadAllText(trypath.Value);
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The path cannot be found, possibly on an unmapped drive."));
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The specified file could not be found."));
+                    }
+                    catch (IOException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program."));
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file."));
+                    }
+                    catch (System.Security.SecurityException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file."));
+                    }
+                }
+
+                return outEither;
+            }
+            public static ParseEither<string> GetAllText(string path)
+            {
+                var outEither = new ParseEither<string>();
+                var trypath = GetFullPath(path);
+
+                if (trypath.HasFailed())
+                {
+                    Console.WriteLine("FAILED");
+                    outEither = new ParseEither<string>(trypath.Messages);
+                }
+                else if (Directory.Exists(trypath.Value))
+                {
+                    outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The file given is a directory."));
+                }
+                else
+                {
+                    try
+                    {
+                        outEither.Value = File.ReadAllText(trypath.Value);
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The path cannot be found, possibly on an unmapped drive."));
+                    }
+                    catch (FileNotFoundException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The specified file could not be found."));
+                    }
+                    catch (IOException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program."));
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file."));
+                    }
+                    catch (System.Security.SecurityException)
+                    {
+                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file."));
                     }
                 }
 

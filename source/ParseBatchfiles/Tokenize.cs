@@ -292,7 +292,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// A class with helper functionality for parsing
             /// </summary>
-            static class ParseHelper
+            public static class ParseHelper
             {
                 /// <summary>
                 /// Consumes a whole line of the string
@@ -357,21 +357,21 @@ namespace AssemblyNameSpace
                 {
                     string result = "";
                     Position start = counter.GetPosition();
-                    Position end;
-                    int nextnewline = FindNextNewLine(ref content);
+                    Position end;int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
                     {
-                        result = content.Substring(0, nextnewline).Trim();
+                        result = content.Substring(0, nextnewline).TrimEnd(); // Save whitespace in front to make position work
                         content = content.Remove(0, nextnewline);
-                        // TODO: Is not updated yet
-                        end = counter.GetPosition();
+                        end = new Position(start.Line, start.Column + result.Length);
+                        result = result.TrimStart(); // Remove whitespace in front
                         Trim(ref content, counter);
                     }
                     else
                     {
-                        result = content.Trim();
+                        result = content.TrimEnd(); // Save whitespace in front to make position work
                         content = "";
-                        end = counter.GetPosition();
+                        end = new Position(start.Line, start.Column + result.Length);
+                        result = result.TrimStart(); // Remove whitespace in front
                     }
                     return (result, new Range(start, end));
                 }

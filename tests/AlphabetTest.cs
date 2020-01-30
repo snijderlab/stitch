@@ -74,11 +74,17 @@ namespace AssemblyTestNameSpace
         /// All alphabets given as examples should be valid
         /// </summary>
         [TestMethod]
-        public void TestExamples() {
+        public void TestExamples()
+        {
             var path = @"../../../../examples/alphabets";
             var files = Directory.GetFiles(path);
-            foreach (var file in files) {
-                new Alphabet(file, Alphabet.AlphabetParamType.Path, 12, 1);
+            foreach (var file in files)
+            {
+                if (file.EndsWith(".csv"))
+                {
+                    Console.Write(file);
+                    new Alphabet(file, Alphabet.AlphabetParamType.Path, 12, 1);
+                }
             }
         }
     }

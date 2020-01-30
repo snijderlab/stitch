@@ -41,14 +41,17 @@ namespace AssemblyNameSpace
             /// To generate a KArithmetic, parses the given string immediately to be sure to be error free if it succeeds.
             /// </summary>
             /// <param name="value">The expression</param>
-            public KArithmetic(string value)
+            public KArithmetic(Arithmetic.Expression exp)
             {
-                expression = Parse(value);
+                expression = exp;
+            }
+            public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range) {
+                return Parse(value, range);
             }
             /// <summary>
             /// To contain Arithmetic stuffs
             /// </summary>
-            class Arithmetic
+            public class Arithmetic
             {
                 /// <summary>
                 /// A general class for expressions
@@ -226,43 +229,75 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to parse</param>
             /// <returns>The expression (if successfull)</returns>
-            Arithmetic.Expression Parse(string input)
+            static ParseEither<Arithmetic.Expression> Parse(string input, Range range)
             {
-                input = input.Trim();
+                var outEither = new ParseEither<Arithmetic.Expression>();
+                int len = input.Length;
+                input = input.TrimEnd();
+                int endlen = input.Length;
+                input = input.TrimStart();
+                int startlen = input.Length;
+
+                int endpad = len - endlen;
+                int startpad = endlen - startlen;
+                // Update positions based on trimmed of sequences
+                range = new Range(new Position(range.Start.Line, range.Start.Column + startpad), new Position(range.End.Line, range.End.Column - endpad));
+
                 // Scan for low level operators
                 if (input.Contains('+'))
                 {
                     int pos = input.IndexOf('+');
-                    return new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
+                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    outEither.Value = res;
+                    return outEither;
                 }
                 if (input.Contains('-'))
                 {
                     int pos = input.IndexOf('-');
-                    return new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
+                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    outEither.Value = res;
+                    return outEither;
                 }
                 // Scan for high level operators
                 if (input.Contains('*'))
                 {
                     int pos = input.IndexOf('*');
-                    return new Arithmetic.Operator(Arithmetic.OpType.Times, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Times, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    outEither.Value = res;
+                    return outEither;
                 }
                 if (input.Contains('/'))
                 {
                     int pos = input.IndexOf('/');
-                    return new Arithmetic.Operator(Arithmetic.OpType.Divide, Parse(input.Substring(0, pos)), Parse(input.Substring(pos + 1)));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Divide, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    outEither.Value = res;
+                    return outEither;
                 }
                 // Scan for constants and K's
                 if (input.ToLower() == "k")
                 {
-                    return new Arithmetic.K();
+                    var res = new Arithmetic.K();
+                    outEither.Value = res;
+                    return outEither;
                 }
                 try
                 {
-                    return new Arithmetic.Constant(Convert.ToInt32(input));
+                    var res = new Arithmetic.Constant(Convert.ToInt32(input));
+                    outEither.Value = res;
+                    return outEither;
                 }
                 catch
                 {
-                    throw new ParseException($"The following could not be parsed into a calculation based on K: {input}");
+                    outEither.AddMessage(new InputNameSpace.ErrorMessage(range, "Not valid K arithmetic"));
+                    return outEither;
                 }
             }
         }

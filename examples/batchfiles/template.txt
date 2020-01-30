@@ -20,7 +20,7 @@ Alphabet->
     Name	: Normal
 <-
 Template->
-    Path    : ../templates/smallIGHV.fasta
+    Path    : ../templates/IGHV.fasta
     Name    : IGHV Human
     Alphabet ->
         Path	: ../alphabets/blosum62.csv
