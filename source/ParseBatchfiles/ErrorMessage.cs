@@ -10,12 +10,14 @@ namespace AssemblyNameSpace {
             string longDescription = "";
             string helpDescription = "";
             string subject = "";
+            public bool Warning { get; private set;}
             public ErrorMessage(string sub, string shortD, string longD = "", string help = "")
             {
                 subject = sub;
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
+                Warning = false;
             }
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
             {
@@ -23,6 +25,7 @@ namespace AssemblyNameSpace {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
+                Warning = false;
             }
             public ErrorMessage(Range range, string shortD, string longD = "", string help = "")
             {
@@ -31,9 +34,12 @@ namespace AssemblyNameSpace {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
+                Warning = false;
             }
             public static ErrorMessage DuplicateValue(Range range) {
-                return new ErrorMessage(range, "Duplicate value", "A value for this property was already defined.");
+                var output = new ErrorMessage(range, "Duplicate value", "A value for this property was already defined.");
+                output.Warning = true;
+                return output;
             }
             public static ErrorMessage MissingParameter(Range range, string parameter) {
                 return new ErrorMessage(range, $"Missing parameter: {parameter}");
@@ -44,7 +50,8 @@ namespace AssemblyNameSpace {
             public override string ToString()
             {
                 // Header
-                var header = $">> Error: {shortDescription}\n";
+                var name = Warning ? "Warning" : "Error";
+                var header = $">> {name}: {shortDescription}\n";
 
                 // Location
                 string location = "";
@@ -96,10 +103,12 @@ namespace AssemblyNameSpace {
             public void Print()
             {
                 var defaultColour = Console.ForegroundColor;
+                var primary_colour = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
 
                 // Header
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($">> Error: {shortDescription}");
+                Console.ForegroundColor = primary_colour;
+                var name = Warning ? "Warning" : "Error";
+                Console.WriteLine($">> {name}: {shortDescription}");
                 Console.ForegroundColor = defaultColour;
 
                 // Location
@@ -115,7 +124,7 @@ namespace AssemblyNameSpace {
                     var line = BatchFile.Content[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + "^^^";
                     Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = primary_colour;
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");
@@ -128,7 +137,7 @@ namespace AssemblyNameSpace {
                     var line = BatchFile.Content[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
                     Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.ForegroundColor = primary_colour;
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");

@@ -344,7 +344,7 @@ namespace AssemblyNameSpace
                         counter.NextColumn();
                     }
                     Position greedy = counter.GetPosition();
-                    Position end = new Position(greedy.Line, greedy.Column - 1);
+                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length);
                     ParseHelper.Trim(ref content, counter);
                     return (name.ToString().ToLower().Trim(), new Range(start, end));
                 }

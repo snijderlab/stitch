@@ -466,6 +466,12 @@ namespace AssemblyNameSpace
                 output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", new Range(new Position(1, 1), new Position(1, 1))).GetValue(outEither)));
             }
 
+            // Detect missing parameters
+            if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Runname"));
+            if (output.Report.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Any report parameter"));
+            if (output.DataParameters.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Any input parameter"));
+            if (output.Alphabet.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Alphabet"));
+
             // Check if there is a version specified
             if (!versionspecified)
             {
@@ -509,11 +515,11 @@ namespace AssemblyNameSpace
         public ParseEither() { }
         public bool HasFailed()
         {
-            if (Messages.Count() == 0)
+            foreach (var msg in Messages)
             {
-                return false;
+                if (!msg.Warning) return true;
             }
-            return true;
+            return false;
         }
         public ParseEither<Tout> Do<Tout>(Func<T, Tout> func, ErrorMessage failMessage = null)
         {
@@ -545,20 +551,18 @@ namespace AssemblyNameSpace
             }
             else
             {
+                foreach (var msg in Messages)
+                {
+                    msg.Print();
+                }
+
                 return Value;
             }
         }
         public T GetValue<Tout>(ParseEither<Tout> fail)
         {
-            if (!this.HasFailed())
-            {
-                return Value;
-            }
-            else
-            {
-                fail.Messages.AddRange(Messages);
-                return Value;
-            }
+            fail.Messages.AddRange(Messages);
+            return Value;
         }
         public void AddMessage(ErrorMessage failMessage)
         {
