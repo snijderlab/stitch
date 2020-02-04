@@ -286,12 +286,14 @@ Inner parameter | Explanation | Default Value
 --- | --- | ---
 n | The amount of templates to recombine from each database | (No Default)
 Order | The order in which the templates will be recombined. Defined as the names of the template possibly with gaps ('*') in between. | (No Default)
+CutoffScore | The mean score per position needed for a path to be included in the Template score. | (No Default)
 Templates | The list of templates to use. See 'Template'. Templates exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
 Alphabet | The alphabet to use. See 'Alphabet' | (No Default)
 
 ```
 Recombine->
     n : 1
+    CutoffScore : 2
     Order : IGHV * IGHJ IGHC
     Templates->
         Template->

@@ -17,8 +17,9 @@ MinimalHomology : K-1
 DuplicateThreshold: Kik-1io
 Reverse	        : False
 Alphabet->
-    Path	: ../alphabets/common_errors_alphabet.csv
+    -Path	: ../alphabets/common_errors_alphabet.csv
     Name	: Normal
+    Name    : Double Name
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database

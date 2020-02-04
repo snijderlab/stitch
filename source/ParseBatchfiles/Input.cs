@@ -2,9 +2,6 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Globalization;
 using AssemblyNameSpace.InputNameSpace;
 
 namespace AssemblyNameSpace
@@ -80,6 +77,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "cutoffscore":
@@ -92,13 +90,22 @@ namespace AssemblyNameSpace
                                     settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                     break;
                                 case "name":
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     settings.File.Name = setting.GetValue();
                                     break;
                                 case "separator":
-                                    settings.Separator = setting.GetValue().First();
+                                    if (setting.GetValue().Length != 1) {
+                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                    } else {
+                                        settings.Separator = setting.GetValue().First();
+                                    }
                                     break;
                                 case "decimalseparator":
-                                    settings.DecimalSeparator = setting.GetValue().First();
+                                    if (setting.GetValue().Length != 1) {
+                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                    } else {
+                                        settings.DecimalSeparator = setting.GetValue().First();
+                                    }
                                     break;
                                 case "format":
                                     if (setting.GetValue().ToLower() == "old")
@@ -111,14 +118,17 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in PEAKS Format definition", "Valid options are: 'Old' and 'New'."));
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old' and 'New'"));
                                     }
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in PEAKS definition", "Valid options are: 'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'."));
+                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
                                     break;
                             }
                         }
+
+                        if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                        if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
                         output.DataParameters.Add(settings);
                         break;
@@ -131,16 +141,21 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     rsettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "name":
+                                    if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     rsettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in Reads definition", "Valid options are: 'Path' and 'Name'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
                                     break;
                             }
                         }
+
+                        if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                        if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
                         output.DataParameters.Add(rsettings);
                         break;
@@ -153,16 +168,21 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     fastasettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
                                 case "name":
+                                    if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     fastasettings.File.Name = setting.GetValue();
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in FASTAInput definition", "Valid options are: 'Path' and 'Name'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
                                     break;
                             }
                         }
+
+                        if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                        if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
                         output.DataParameters.Add(fastasettings);
                         break;
@@ -177,16 +197,18 @@ namespace AssemblyNameSpace
                                 switch (setting.Name)
                                 {
                                     case "start":
+                                        if (ksettings.Start != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "end":
+                                        if (ksettings.End != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "step":
                                         ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                         break;
                                     default:
-                                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in K definition", "Valid options are: 'Start', 'End' and 'Step'."));
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "K", "'Start', 'End' and 'Step'"));
                                         break;
                                 }
                             }
@@ -239,7 +261,7 @@ namespace AssemblyNameSpace
                                 output.Reverse = RunParameters.ReverseValue.Both;
                                 break;
                             default:
-                                outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "Unknown key", "Unknown key in Reverse definition", "Valid options are: 'True', 'False' and 'Both'."));
+                                outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Reverse", "'True', 'False' and 'Both'"));
                                 break;
                         }
                         break;
@@ -247,7 +269,7 @@ namespace AssemblyNameSpace
                         output.Alphabet.Add(ParseHelper.ParseAlphabet(pair).GetValue(outEither));
                         break;
                     case "template":
-                        output.Template.Add(ParseHelper.ParseTemplate(pair.GetValues(), true).GetValue(outEither));
+                        output.Template.Add(ParseHelper.ParseTemplate(pair, true).GetValue(outEither));
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(new ErrorMessage(pair.KeyRange.Start, "Multiple definitions", "Cannot have multiple definitions of Recombine"));
@@ -264,14 +286,16 @@ namespace AssemblyNameSpace
                                     recsettings.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                     break;
                                 case "order":
+                                    if (order != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     order = setting;
                                     break;
                                 case "templates":
+                                    if (template_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     foreach (var template in setting.GetValues())
                                     {
                                         if (template.Name == "template")
                                         {
-                                            var templatevalue = ParseHelper.ParseTemplate(template.GetValues(), false).GetValue(outEither);
+                                            var templatevalue = ParseHelper.ParseTemplate(template, false).GetValue(outEither);
                                             recsettings.Templates.Add(templatevalue);
 
                                             // CHeck to see if the name is valid
@@ -287,18 +311,22 @@ namespace AssemblyNameSpace
                                         }
                                         else
                                         {
-                                            outEither.AddMessage(new ErrorMessage(template.KeyRange.Name, "Unknown key", "Unknown key in Templates definition", "Valid options are: 'Template'."));
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Templates", "'Template'"));
                                         }
                                     }
                                     break;
                                 case "alphabet":
+                                    if (recsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     recsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in Recombine definition", "Valid options are: 'N', 'Order', 'Templates' and 'Alphabet'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Templates' and 'Alphabet'"));
                                     break;
                             }
                         }
+
+                        if (recsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Alphabet"));
+                        if (template_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Templates"));
 
                         // Parse the order
                         if (order != null)
@@ -343,7 +371,7 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
-                            outEither.AddMessage(new ErrorMessage(pair.KeyRange.Full, "Order undefined", "No definition for 'Order' provided in Recombine"));
+                            outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Order"));
                         }
 
                         output.Recombine = recsettings;
@@ -356,6 +384,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     hsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "dotdistribution":
@@ -369,14 +398,15 @@ namespace AssemblyNameSpace
                                     }
                                     else
                                     {
-                                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in HTML DotDistribution definition", "Valid options are: 'Global' and 'Included'."));
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML DotDistribution", "'Global' and 'Included'"));
                                     }
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in HTML definition", "Valid options are: 'Path' and 'DotDistribution'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
                                     break;
                             }
                         }
+                        if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         output.Report.Add(hsettings);
                         break;
                     case "csv":
@@ -387,13 +417,15 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     csettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in CSV definition", "Valid options are: 'Path'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path'"));
                                     break;
                             }
                         }
+                        if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         output.Report.Add(csettings);
                         break;
                     case "fasta":
@@ -404,20 +436,22 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
+                                    if (!string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     fsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "minimalscore":
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in FASTA definition", "Valid options are: 'Path' and 'MinimalScore'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path' and 'MinimalScore'"));
                                     break;
                             }
                         }
+                        if (string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         output.Report.Add(fsettings);
                         break;
                     default:
-                        outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "Unknown key", "Unknown key in definition"));
+                        outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "", ""));
                         break;
                 }
             }
@@ -541,155 +575,6 @@ namespace AssemblyNameSpace
             public static string Name = "";
             public static string[] Content = new string[1];
         }
-        public class ErrorMessage
-        {
-            Position startposition = new Position(0, 0);
-            Position endposition = new Position(0, 0);
-            string shortDescription = "";
-            string longDescription = "";
-            string helpDescription = "";
-            string subject = "";
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "")
-            {
-                subject = sub;
-                shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
-            }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
-            {
-                startposition = pos;
-                shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
-            }
-            public ErrorMessage(Range range, string shortD, string longD = "", string help = "")
-            {
-                startposition = range.Start;
-                endposition = range.End;
-                shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
-            }
-            public override string ToString()
-            {
-                // Header
-                var header = $">> Error: {shortDescription}\n";
-
-                // Location
-                string location = "";
-                if (subject != "")
-                {
-                    location = $"\n   | {subject}\n\n";
-                }
-                else if (endposition == new Position(0, 0))
-                {
-                    var line_number = startposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
-                }
-                else if (startposition.Line == endposition.Line)
-                {
-                    var line_number = startposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
-                    location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
-                }
-                else
-                {
-                    var line_number = endposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    location = $"File: {BatchFile.Name}\n{start}\n";
-
-                    for (int i = startposition.Line; i <= endposition.Line; i++)
-                    {
-                        var line = BatchFile.Content[i];
-                        var number = i.ToString().PadRight(line_number.Length + 1);
-                        location += $"{number}| {line}\n";
-                    }
-                    location += $"{start}\n";
-                }
-
-                // Body
-                var body = "";
-                if (longDescription != "") body += longDescription + "\n";
-                if (helpDescription != "") body += helpDescription + "\n";
-
-                return header + location + body;
-            }
-            public void Print()
-            {
-                var defaultColour = Console.ForegroundColor;
-
-                // Header
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($">> Error: {shortDescription}");
-                Console.ForegroundColor = defaultColour;
-
-                // Location
-                if (subject != "")
-                {
-                    Console.WriteLine($"\n   | {subject}\n");
-                }
-                else if (endposition == new Position(0, 0))
-                {
-                    var line_number = startposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(pos);
-                    Console.ForegroundColor = defaultColour;
-                    Console.Write($"\n{start}\n");
-                }
-                else if (startposition.Line == endposition.Line)
-                {
-                    var line_number = startposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Write(pos);
-                    Console.ForegroundColor = defaultColour;
-                    Console.Write($"\n{start}\n");
-                }
-                else
-                {
-                    var line_number = endposition.Line.ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n");
-
-                    for (int i = startposition.Line; i <= endposition.Line; i++)
-                    {
-                        var line = BatchFile.Content[i];
-                        var number = i.ToString().PadRight(line_number.Length + 1);
-                        Console.Write($"{number}| {line}\n");
-                    }
-                    Console.Write($"{start}\n");
-                }
-
-                // Body
-                if (longDescription != "")
-                {
-                    Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(longDescription);
-                    Console.ForegroundColor = defaultColour;
-                }
-                if (helpDescription != "") Console.WriteLine(helpDescription);
-                Console.WriteLine("");
-            }
-        }
         /// <summary>
         /// A class with helper functionality for parsing
         /// </summary>
@@ -736,12 +621,15 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "path":
+                            if (asettings.Data != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             asettings.Data = GetAllText(setting).GetValue(outEither);
                             break;
                         case "data":
+                            if (asettings.Data != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             asettings.Data = setting.GetValue();
                             break;
                         case "name":
+                            if (asettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             asettings.Name = setting.GetValue();
                             break;
                         case "gapstartpenalty":
@@ -751,32 +639,27 @@ namespace AssemblyNameSpace
                             asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in Alphabet definition", "Valid options are: 'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'."));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
                             break;
                     }
                 }
 
-                if (asettings.Name == null)
-                {
-                    outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Name of Alphabet not defined", "", "Consider giving the Alphabet a name by using 'Name'."));
-                }
-                if (asettings.Data == null)
-                {
-                    outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Data of Alphabet not defined", "", "Consider giving the Alphabet data by using 'Data' or 'Path'."));
-                }
+                if (asettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
+                if (asettings.Data == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
 
                 return outEither;
             }
-            public static ParseEither<RunParameters.TemplateValue> ParseTemplate(List<KeyValue> values, bool alphabet)
+            public static ParseEither<RunParameters.TemplateValue> ParseTemplate(KeyValue node, bool alphabet)
             {
                 var tsettings = new RunParameters.TemplateValue();
                 var outEither = new ParseEither<RunParameters.TemplateValue>(tsettings);
 
-                foreach (var setting in values)
+                foreach (var setting in node.GetValues())
                 {
                     switch (setting.Name)
                     {
                         case "path":
+                            if (tsettings.Path != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             tsettings.Path = GetFullPath(setting).GetValue(outEither);
                             break;
                         case "type":
@@ -789,14 +672,16 @@ namespace AssemblyNameSpace
                                     tsettings.Type = RunParameters.InputType.Fasta;
                                     break;
                                 default:
-                                    outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unkown key", "Unkown key in InputType definition in Template definition", "Valid options are: 'Reads' and 'Fasta'."));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template InputType", "'Reads' and 'Fasta'"));
                                     break;
                             }
                             break;
                         case "name":
+                            if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             tsettings.Name = setting.GetValue();
                             break;
                         case "alphabet":
+                            if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (!alphabet)
                             {
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet should not be defined."));
@@ -807,12 +692,16 @@ namespace AssemblyNameSpace
                             }
                             break;
                         default:
-                            var tail = "'Path', 'Type', 'Name' and 'Alphabet'";
-                            if (!alphabet) tail = "'Path', 'Type' and 'Name'";
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unkown key in Template definition.", $"Valid options are: {tail}"));
+                            var options = "'Path', 'Type', 'Name' and 'Alphabet'";
+                            if (!alphabet) options = "'Path', 'Type' and 'Name'";
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             break;
                     }
                 }
+
+                if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
+                if (tsettings.Path == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Data or Path"));
+                if (alphabet && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Try to detect the type of the file
                 if (tsettings.Type == RunParameters.InputType.Detect)
