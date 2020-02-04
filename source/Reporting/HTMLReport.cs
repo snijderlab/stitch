@@ -542,12 +542,13 @@ namespace AssemblyNameSpace
                     {
                         lines[i + 1].Append(gapchar);
                     }
-                    else if (index == 0) {
+                    else if (index == 0)
+                    {
                         lines[i + 1].Append("\u00A0");
                     }
                     else
                     {
-                        lines[i + 1].Append(template.Matches[i].Sequence[index - 1]);
+                        lines[i + 1].Append(template.Matches[i].QuerySequence[index - 1]);
                     }
                 }
                 // Add the gap
@@ -601,7 +602,7 @@ namespace AssemblyNameSpace
                 buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, blocklength)}</span><br>");
                 for (int i = 1; i < aligned.Length; i++)
                 {
-                    string rid = GetAsideIdentifier(template.Matches[i - 1].SequenceID, AsideType.Path);
+                    string rid = GetAsideIdentifier(template.Matches[i - 1].QuerySequenceID, AsideType.Path);
                     string result = "";
                     if (aligned[i].Length > block * blocklength) result = $"<a href=\"#{rid}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                     buffer.Append(result);
@@ -614,9 +615,9 @@ namespace AssemblyNameSpace
 
             // Find the start and endoverhang
             // TODO: needs to work again.
-            int startoverhang = -1;
+            //int startoverhang = -1;
 
-            int endoverhang = -1;
+            //int endoverhang = -1;
 
             // Display Consensus Sequence
             var consensus = new StringBuilder();
@@ -732,16 +733,20 @@ namespace AssemblyNameSpace
                 }
             }
             // Recombination Table Asides
-            for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
+            if (RecombinedDatabase != null)
             {
-                buffer.AppendLine(CreateRecombinationAside(i));
-            }
-            // Recombination Databases Tables Asides
-            for (int t = 0; t < RecombinationDatabases.Count(); t++)
-            {
-                for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
+                for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
                 {
-                    buffer.AppendLine(CreateRecombinationDatabaseAside(t, i));
+                    buffer.AppendLine(CreateRecombinationAside(i));
+                }
+
+                // Recombination Databases Tables Asides
+                for (int t = 0; t < RecombinationDatabases.Count(); t++)
+                {
+                    for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
+                    {
+                        buffer.AppendLine(CreateRecombinationDatabaseAside(t, i));
+                    }
                 }
             }
 

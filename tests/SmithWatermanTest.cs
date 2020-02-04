@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
+using static AssemblyNameSpace.SequenceMatch;
 
 namespace AssemblyTestNameSpace
 {
@@ -25,7 +26,11 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(y);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 10, match: 6M1I6M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(10, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("6M1I6M", r.Alignment.CIGAR());
         }
         [DataRow("ACACCACCACCA", "ACACDCACCDACCA")]
         [DataRow("ABBCABAAABCA", "ABBCDABAADABCA")]
@@ -35,7 +40,11 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(y);
             var r =  HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 8, match: 4M1I4M1I4M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(8, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("4M1I4M1I4M", r.Alignment.CIGAR());
         }
         [DataRow("ACACACA", "ACABACA")]
         [DataRow("ACACACA", "ACACBCA")]
@@ -45,7 +54,11 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(y);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual("SequenceMatch< starting at template: 0, starting at query: 0, score: 6, match: 7M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(6, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("7M", r.Alignment.CIGAR());
         }
         [DataRow("ABBA")]
         [DataRow("AAABBA")]
@@ -57,7 +70,11 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(x);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 0, starting at query: 0, score: {x.Length}, match: {x.Length}M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(x.Length, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual($"{x.Length}M", r.Alignment.CIGAR());
         }
         [DataRow("BABACBAAABCB", "CBAAA")]
         [DataRow("CBABABACCBCA", "ABACC")]
@@ -67,7 +84,11 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(x);
             var b = StringToSequence(y);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(5, r.Score);
+            Assert.AreEqual(4, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("5M", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void MismatchAndGap()
@@ -77,11 +98,16 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence("ABBAABBCBABAACCBBAAB");
             var b = StringToSequence("BBCBDABCACC");
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 5, starting at query: 0, score: 7, match: 4M1I6M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(7, r.Score);
+            Assert.AreEqual(5, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("4M1I6M", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void GenomicTest01() {
             // I have not found the right value yet
+            // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
             var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
             var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
@@ -89,16 +115,126 @@ namespace AssemblyTestNameSpace
             //    |  ||   | || || ||   
             //----CCCCGGGTGTGG-CTCCTTCA  25
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(21, r.Score);
+            Assert.AreEqual(8, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("6M", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void GenomicTest02() {
             // I have not found the right value yet
+            // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
             var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", alp);
             var b = StringToSequence("TGTCGTCATAGTTTGGGCATGTTTCCCTTGTAGGTGTGAAATCACTTAGC", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
-            Assert.AreEqual($"SequenceMatch< starting at template: 4, starting at query: 0, score: 5, match: 5M >", r.ToString());
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(112, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(2, r.StartQueryPosition);
+            Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void LongerSequence() {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVSPVYWNSLFLLKGNYKAQMRGRTVNARVLKIGQKTRCMLLLWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(361, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("26M17D24M17I29M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void GFPAlignment() {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            //Uniprot - P42212
+            var gfp = "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK";
+            //Uniprot - P80893
+            //var bfp = "MFKGNVQGVGTVENIDKGAKFQSLHGVSLLPIDADLQSHDIIFPEDILEGVTSGELIAINGVRLTVVHTDKSIVRFDINDALELTTLGQLKVGDKVNIEKSFKFGDMTGGRSLSGIVTGVADIVEFIEKENNRQIWIEAPEHLTEFLVEKKYIGVDGVYLVIDAIENNRFCINLLLETDMRWYKKGSKVNIEIPDIAGNW";
+            //Uniprot - X5DSL3
+            var mcherry = "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK";
+            var a = StringToSequence(gfp, alp);
+            var b = StringToSequence(mcherry, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(283, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(1, r.StartQueryPosition);
+            Assert.AreEqual("13M4I22M1D3M1I12M1I28M2D59M1I11M4D20M5D2M2I6M1I22M1D2M2D13M2I10M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void IgGAlignment() {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            //IgG4-K-002
+            var igg4 = "QLQLQESGPGLLKPSETLSLTCTVSGGSISSPGYYGGWIRQPPGKGLEWIGSIYKSGSTYHNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCTRPVVRYFGWFDPWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTKTYTCNVDHKPSNTKVDKRVESKYGPPCPPCPAPEFEGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSQEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKGLPSSIEKTISKAKGQPREPQVYTLPPSQEEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSRLTVDKSRWQEGNVFSCSVMHEALHNHYTQKSLSLSLGKAIQLTQSPSSLSASVGDRVTITCRASQGISSALAWYQQKPGKAPKLLIYDASNLESGVPSRFSGSGSGTDFTLTISSLQPEDFATYYCQQFNSYPTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
+            //IgG2-K-002
+            var igg2 = "QVQLQESGPGLVKPSQTLSLTCTVSGGSISSGEYYWNWIRQHPGKGLEWIGYIYYSGSTYYNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCARESVAGFDYWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSNFGTQTYTCNVDHKPSNTKVDKTVERKCCVECPPCPAPPVAGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTFRVVSVLTVVHQDWLNGKEYKCKVSNKGLPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPMLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGKEIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPRLLIYGTSSRATGIPDRFSGSGSGTDFTLTISRLEPEDFAVYYCQQYGSSPITFGQGTRLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
+            var a = StringToSequence(igg2, alp);
+            var b = StringToSequence(igg4, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(3070, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("103M2I1M1I128M1I244M1D63M1D118M", r.Alignment.CIGAR());
+        }
+        // The following tests are written based on paths that were misaligned by the full program
+        // The testcases should only pass if the alignment is what should be expected as a good alignment, so not the one given by the full program
+        [TestMethod]
+        public void RealWorldFullTemplate() {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR*YYYYYGMDVWGQGTTVTVSSASTKGPSVFPLAPCSRSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYTCNVNHKPSNTKVDKRVELKTPLGDTTHTCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFKWYVDGVEVHNAKTKPREEQYNSTFRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESSGQPENNYNTTPPMLDSDGSFFLYSKLTVDKSRWQQGNIFSCSVMHEALHNRFTQKSLSLSPGKDILLTQTPLSLSITPGEPASISCRSSRSLLHSNGNTYLHWLQKPGQPPQCLICKVSNRFSGVPDRFSGSGSGIDFTLKISPVEAADVGVYITACKLHTGPCTFGQGTKLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSNTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
+            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
+            var a = StringToSequence(template, alp);
+            var b = StringToSequence(path, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(239, r.Score);
+            Assert.AreEqual(68, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("30M1D7M4I22M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void RealWorldIGHV() {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
+            var a = StringToSequence(template, alp);
+            var b = StringToSequence(path, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(68, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("30M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void RealWorldViaTemplateDataBase() {
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
+            var a = StringToSequence(tem, alp);
+            var b = StringToSequence(path, alp);
+
+            Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp);
+            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template>{template}, alp, "TEST DB");
+
+            db.Match(new List<List<AminoAcid>>{b.ToList()});
+            var r = db.Templates[0].Matches[0];
+
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(68, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         AminoAcid[] StringToSequence(string input)
         {

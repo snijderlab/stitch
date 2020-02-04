@@ -251,11 +251,21 @@ namespace AssemblyNameSpace
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, query, right_id);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, right_id);
             return match;
         }
 
         enum Direction { NoMatch, GapTemplate, GapQuery, Match }
+
+        public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)
+        {
+            StringBuilder sb = new StringBuilder();
+            foreach (SequenceMatch.MatchPiece element in match)
+            {
+                sb.Append(element.ToString());
+            }
+            return sb.ToString();
+        }
     }
     /// <summary>A class to save a match of two sequences in a space efficient way, based on CIGAR strings.</summary>
     public class SequenceMatch
@@ -265,8 +275,9 @@ namespace AssemblyNameSpace
         public int StartQueryPosition;
         public int Score;
         public List<MatchPiece> Alignment;
-        public AminoAcid[] Sequence;
-        public int SequenceID;
+        public AminoAcid[] TemplateSequence;
+        public AminoAcid[] QuerySequence;
+        public int QuerySequenceID;
         public int Length
         {
             get
@@ -274,25 +285,83 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, AminoAcid[] seq, int seqid)
+        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, int seqid)
         {
             StartTemplatePosition = tpos;
             StartQueryPosition = qpos;
             Score = s;
             Alignment = m;
-            Sequence = seq;
-            SequenceID = seqid;
+            TemplateSequence = tSeq;
+            QuerySequence = qSeq;
+            QuerySequenceID = seqid;
             simplify();
         }
         public override string ToString()
         {
             var buffer = new StringBuilder();
-            buffer.Append($"SequenceMatch< starting at template: {StartTemplatePosition}, starting at query: {StartQueryPosition}, score: {Score}, match: ");
-            foreach (var m in Alignment)
+            var buffer1 = new StringBuilder();
+            var buffer2 = new StringBuilder();
+            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tQueryID:{QuerySequenceID}\n\tMatch: {Alignment.CIGAR()}\n\n");
+            int tem_pos = StartTemplatePosition;
+            int query_pos = StartQueryPosition;
+            string tSeq = AminoAcid.ArrayToString(TemplateSequence);
+            string qSeq = AminoAcid.ArrayToString(QuerySequence);
+
+            if (tem_pos != 0 || query_pos != 0)
             {
-                buffer.Append(m.ToString());
+                if (tem_pos != 0) buffer1.Append("... ");
+                else buffer1.Append("    ");
+                if (query_pos != 0) buffer2.Append("... ");
+                else buffer2.Append("    ");
             }
-            buffer.Append(" >");
+
+            foreach (MatchPiece element in Alignment)
+            {
+                switch (element)
+                {
+                    case Match match:
+                        buffer1.Append(tSeq.Substring(tem_pos, match.count));
+                        buffer2.Append(qSeq.Substring(query_pos, match.count));
+                        tem_pos += match.count;
+                        query_pos += match.count;
+                        break;
+                    case GapContig gapC:
+                        buffer1.Append(new string('-', gapC.count));
+                        buffer2.Append(qSeq.Substring(query_pos, gapC.count));
+                        query_pos += gapC.count;
+                        break;
+                    case GapTemplate gapT:
+                        buffer1.Append(tSeq.Substring(tem_pos, gapT.count));
+                        buffer2.Append(new string('-', gapT.count));
+                        tem_pos += gapT.count;
+                        break;
+                }
+            }
+
+            if (tem_pos != tSeq.Length) buffer1.Append(" ...");
+            else buffer1.Append("");
+            if (query_pos != qSeq.Length) buffer2.Append(" ...");
+            else buffer2.Append("");
+
+            var seq1 = buffer1.ToString();
+            var seq2 = buffer2.ToString();
+            const int block = 80;
+            var blocks = seq1.Length / block;
+
+            for (int i = 0; i < blocks + 1; i++)
+            {
+                buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
+                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
+                buffer.Append("\n");
+                buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
+                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
+                buffer.Append("\n");
+                if (i != blocks)
+                {
+                    buffer.Append("\n");
+                }
+            }
+
             return buffer.ToString();
         }
         public abstract class MatchPiece

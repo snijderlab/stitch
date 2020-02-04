@@ -14,7 +14,7 @@ using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
-    class TemplateDatabase
+    public class TemplateDatabase
     {
         public readonly string Name;
         Alphabet alphabet;
@@ -192,7 +192,7 @@ namespace AssemblyNameSpace
                     {
                         if (seq_pos == -1) seq_pos = match.StartQueryPosition;
                         //Console.WriteLine($"Found a match of {m.count} aa");
-                        for (int i = 0; i < m.count && template_pos < Sequence.Length && seq_pos < match.Sequence.Length; i++)
+                        for (int i = 0; i < m.count && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
                             output[template_pos].Item1[matchindex] = (matchindex, seq_pos + 1);
@@ -207,7 +207,7 @@ namespace AssemblyNameSpace
                         if (template_pos < output.Count())
                         {
                             // Try to add this sequence or update the count
-                            int len = Math.Min(gt.count, match.Sequence.Length - seq_pos);
+                            int len = Math.Min(gt.count, match.QuerySequence.Length - seq_pos);
                             IGap sub_seq;
                             if (len <= 0)
                             {
@@ -215,7 +215,7 @@ namespace AssemblyNameSpace
                             }
                             else
                             {
-                                sub_seq = new Gap(match.Sequence.SubArray(seq_pos - 1, len));
+                                sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos - 1, len));
                             }
                             seq_pos += gt.count;
                             output[template_pos].Item2[matchindex] = (matchindex, sub_seq);
@@ -266,7 +266,7 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
-                            aa = Matches[option.Item1].Sequence[option.Item2 - 1];
+                            aa = Matches[option.Item1].QuerySequence[option.Item2 - 1];
                         }
 
                         if (output[i].Item1.ContainsKey(aa))

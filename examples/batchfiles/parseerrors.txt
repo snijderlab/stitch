@@ -6,7 +6,7 @@ Runname	: Recombine Templates Test
 
 -Input------------------
 Reads	->
-Path: ../011/reads-IgG2-K-002-all-100,00.txt
+Path: ../0111/reads-IgG2-K-002-all-100,00.txt
 Name: Reads 011
 Key : k
 <-

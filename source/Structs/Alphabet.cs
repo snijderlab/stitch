@@ -95,7 +95,7 @@ namespace AssemblyNameSpace
             foreach (string line in input)
             {
                 if (line != "")
-                    array.Add(line.Split(new char[] { ';', ',' }).Select(x => x.Trim(new char[] { ' ', '\n', '\r', '\t', '-', '.' })).ToArray());
+                    array.Add(line.Split(new char[] { ';', ',' }).Select(x => x.Trim(new char[] { ' ', '\n', '\r', '\t', '.' })).ToArray());
             }
 
             int columns = array[0].Length;

@@ -356,7 +356,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    hsettings.Path = setting.GetValue();
+                                    hsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "dotdistribution":
                                     if (setting.GetValue().ToLower() == "global")
@@ -387,7 +387,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    csettings.Path = setting.GetValue();
+                                    csettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 default:
                                     outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Unknown key", "Unknown key in CSV definition", "Valid options are: 'Path'."));
@@ -404,7 +404,7 @@ namespace AssemblyNameSpace
                             switch (setting.Name)
                             {
                                 case "path":
-                                    fsettings.Path = setting.GetValue();
+                                    fsettings.Path = Path.GetFullPath(setting.GetValue());
                                     break;
                                 case "minimalscore":
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);

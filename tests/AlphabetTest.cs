@@ -45,12 +45,17 @@ namespace AssemblyTestNameSpace
                 Assert.AreEqual(a, -1);
             }
         }
+        [TestMethod]
+        public void NegativeAlphabet() {
+            var alp = new Alphabet("*;A;B\nA;1;-1\nB;-1;1", Alphabet.AlphabetParamType.Data, 12, 1);
+            Assert.AreEqual(-1, alp.scoring_matrix[alp.getIndexInAlphabet('A'), alp.getIndexInAlphabet('B')]);
+        }
         [DataRow("*;A;B\nA;1;0", "Missing row")]
         [DataRow("*;A;B\nA;1;0\nB;0;1\nC;0;0", "Extra row")]
         [DataRow("*;A;B\nA;1;0;0\nB;0;1;0\nC;0;0;1", "Missing Column")]
         [DataRow("*;A;B\nA;1;0\nB;o;1", "Non Integer value")]
-        [DataRow("*;A;B\nA:1;0\nB;0;1", "Missing cell, ':' insted of ';'")]
-        [DataRow("*;A;B\nA;1;0\nB;0:1", "Missing cell, ':' insted of ';'")]
+        [DataRow("*;A;B\nA:1;0\nB;0;1", "Missing cell, ':' instead of ';'")]
+        [DataRow("*;A;B\nA;1;0\nB;0:1", "Missing cell, ':' instead of ';'")]
         [DataRow("*;A;B\nA;1;0\nB;0;", "Missing value")]
         [DataRow("*;A;B\nA;1;0\nB;;1", "Missing value")]
         [DataRow("*;A;B\nA;1\nB;0;1", "Missing cell")]
