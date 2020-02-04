@@ -1,103 +1,21 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Globalization;
 
 namespace AssemblyNameSpace
 {
-    /// <summary>
-    /// To keep track of a location of a token
-    /// </summary>
-    public struct Position
-    {
-        public readonly int Line;
-        public readonly int Column;
-        public Position(int l, int c)
-        {
-            Line = l;
-            Column = c;
-        }
-        public override string ToString()
-        {
-            return $"({Line},{Column})";
-        }
-        public static bool operator ==(Position p1, Position p2)
-        {
-            return p1.Equals(p2);
-        }
-        public static bool operator !=(Position p1, Position p2)
-        {
-            return !(p1.Equals(p2));
-        }
-        public override bool Equals(object p2)
-        {
-            if (p2.GetType() != this.GetType()) return false;
-            Position pos = (Position) p2;
-            return this.Line == pos.Line && this.Column == pos.Column;
-        }
-        public override int GetHashCode() {
-            return Line.GetHashCode() + Column.GetHashCode();
-        }
-    }
-
-    public struct Range {
-        public readonly Position Start;
-        public readonly Position End;
-        public Range(Position start, Position end) {
-            Start = start;
-            End = end;
-        }
-        public override string ToString()
-        {
-            return $"{Start} to {End}";
-        }
-    }
-
-    public struct KeyRange {
-        public readonly Position Start;
-        public readonly Position NameEnd;
-        public readonly Position FieldEnd;
-        public Range Full {
-            get {
-                return new Range(Start, FieldEnd);
-            }
-        }
-        public Range Name {
-            get {
-                return new Range(Start, NameEnd);
-            }
-        }
-        public KeyRange(Position start, Position nend, Position fend) {
-            Start = start;
-            NameEnd = nend;
-            FieldEnd = fend;
-        }
-        public KeyRange(Range name, Position fend) {
-            Start = name.Start;
-            NameEnd = name.End;
-            FieldEnd = fend;
-        }
-        public override string ToString()
-        {
-            return $"{Start} to {NameEnd} to {FieldEnd}";
-        }
-    }
-
     namespace InputNameSpace
     {
         public static class Tokenizer
         {
-            public static List<KeyValue> Tokenize(string content)
+            static ParsedFile File;
+            public static List<KeyValue> Tokenize(ParsedFile file)
             {
                 var parsed = new List<KeyValue>();
                 var counter = new Counter();
+                File = file;
+                var content = string.Join("\n", File.Lines);
 
                 while (content.Length > 0)
                 {
@@ -134,7 +52,7 @@ namespace AssemblyNameSpace
 
                 public Position GetPosition()
                 {
-                    return new Position(Line, Column);
+                    return new Position(Line, Column, File);
                 }
             }
 
@@ -221,7 +139,7 @@ namespace AssemblyNameSpace
                     //Get the single value of the parameter
                     string value = ParseHelper.UntilSequence(ref content, "<:");
                     Position endkey = counter.GetPosition();
-                    Position endvalue = new Position(endkey.Line, endkey.Column - 2);
+                    Position endvalue = new Position(endkey.Line, endkey.Column - 2, File);
                     return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                 }
                 /// <summary>
@@ -344,7 +262,7 @@ namespace AssemblyNameSpace
                         counter.NextColumn();
                     }
                     Position greedy = counter.GetPosition();
-                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length);
+                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length, File);
                     ParseHelper.Trim(ref content, counter);
                     return (name.ToString().ToLower().Trim(), new Range(start, end));
                 }
@@ -362,7 +280,7 @@ namespace AssemblyNameSpace
                     {
                         result = content.Substring(0, nextnewline).TrimEnd(); // Save whitespace in front to make position work
                         content = content.Remove(0, nextnewline);
-                        end = new Position(start.Line, start.Column + result.Length);
+                        end = new Position(start.Line, start.Column + result.Length, File);
                         result = result.TrimStart(); // Remove whitespace in front
                         Trim(ref content, counter);
                     }
@@ -370,7 +288,7 @@ namespace AssemblyNameSpace
                     {
                         result = content.TrimEnd(); // Save whitespace in front to make position work
                         content = "";
-                        end = new Position(start.Line, start.Column + result.Length);
+                        end = new Position(start.Line, start.Column + result.Length, File);
                         result = result.TrimStart(); // Remove whitespace in front
                     }
                     return (result, new Range(start, end));

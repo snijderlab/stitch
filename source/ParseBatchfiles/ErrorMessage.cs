@@ -4,8 +4,9 @@ namespace AssemblyNameSpace {
     namespace InputNameSpace {
         public class ErrorMessage
         {
-            Position startposition = new Position(0, 0);
-            Position endposition = new Position(0, 0);
+            Position startposition = new Position(0, 1, new ParsedFile());
+            Position endposition = new Position(0, 1, new ParsedFile());
+            ParsedFile File;
             string shortDescription = "";
             string longDescription = "";
             string helpDescription = "";
@@ -18,6 +19,7 @@ namespace AssemblyNameSpace {
                 longDescription = longD;
                 helpDescription = help;
                 Warning = false;
+                File = new ParsedFile();
             }
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
             {
@@ -26,6 +28,7 @@ namespace AssemblyNameSpace {
                 longDescription = longD;
                 helpDescription = help;
                 Warning = false;
+                File = pos.File;
             }
             public ErrorMessage(Range range, string shortD, string longD = "", string help = "")
             {
@@ -35,6 +38,7 @@ namespace AssemblyNameSpace {
                 longDescription = longD;
                 helpDescription = help;
                 Warning = false;
+                File = range.File;
             }
             public static ErrorMessage DuplicateValue(Range range) {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.");
@@ -59,34 +63,37 @@ namespace AssemblyNameSpace {
                 {
                     location = $"\n   | {subject}\n\n";
                 }
-                else if (endposition == new Position(0, 0))
+                else if (File.Filename == "") {
+                    location = "";
+                }
+                else if (endposition == new Position(0, 1, new ParsedFile()))
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
+                    var line = File.Lines[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
+                    location = $"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
                 }
                 else if (startposition.Line == endposition.Line)
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
+                    var line = File.Lines[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
-                    location = $"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
+                    location = $"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
                 }
                 else
                 {
                     var line_number = endposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    location = $"File: {BatchFile.Name}\n{start}\n";
+                    location = $"File: {File.Filename}\n{start}\n";
 
                     for (int i = startposition.Line; i <= endposition.Line; i++)
                     {
-                        var line = BatchFile.Content[i];
+                        var line = File.Lines[i];
                         var number = i.ToString().PadRight(line_number.Length + 1);
                         location += $"{number}| {line}\n";
                     }
@@ -116,14 +123,16 @@ namespace AssemblyNameSpace {
                 {
                     Console.WriteLine($"\n   | {subject}\n");
                 }
-                else if (endposition == new Position(0, 0))
+                else if (File.Filename == "") {
+                }
+                else if (endposition == new Position(0, 1, new ParsedFile()))
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
+                    var line = File.Lines[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
+                    Console.Write($"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}");
                     Console.ForegroundColor = primary_colour;
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
@@ -134,9 +143,9 @@ namespace AssemblyNameSpace {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = BatchFile.Content[startposition.Line];
+                    var line = File.Lines[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n{line_number} | {line}\n{start}");
+                    Console.Write($"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}");
                     Console.ForegroundColor = primary_colour;
                     Console.Write(pos);
                     Console.ForegroundColor = defaultColour;
@@ -147,11 +156,11 @@ namespace AssemblyNameSpace {
                     var line_number = endposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    Console.Write($"File: {BatchFile.Name}\n{start}\n");
+                    Console.Write($"File: {File.Filename}\n{start}\n");
 
                     for (int i = startposition.Line; i <= endposition.Line; i++)
                     {
-                        var line = BatchFile.Content[i];
+                        var line = File.Lines[i];
                         var number = i.ToString().PadRight(line_number.Length + 1);
                         Console.Write($"{number}| {line}\n");
                     }

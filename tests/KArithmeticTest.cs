@@ -104,7 +104,6 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void MissingValue() {
             foreach (var a in "+-*/") {
-                Assert.ThrowsException<ArgumentOutOfRangeException>(() => parse($"k{a}")); // ArgumentOutOfRangeException because internally it tries to create fancy errormessages but that gives this error.
                 Assert.ThrowsException<ParseException>(() => parse($"{a}2"));
             }
         }
@@ -124,7 +123,8 @@ namespace AssemblyTestNameSpace
             }
         }
         public KArithmetic parse(string s) {
-            return new KArithmetic(KArithmetic.TryParse(s, new Range(new Position(1, 1), new Position(1, 1))).ReturnOrFail());
+            var def_position = new Position(0, 1, new ParsedFile());
+            return new KArithmetic(KArithmetic.TryParse(s, new Range(def_position, def_position), new ParsedFile()).ReturnOrFail());
         }
     }
 }

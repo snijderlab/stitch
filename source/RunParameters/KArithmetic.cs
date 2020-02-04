@@ -45,8 +45,8 @@ namespace AssemblyNameSpace
             {
                 expression = exp;
             }
-            public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range) {
-                return Parse(value, range);
+            public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range, ParsedFile file) {
+                return Parse(value, range, file);
             }
             /// <summary>
             /// To contain Arithmetic stuffs
@@ -229,7 +229,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to parse</param>
             /// <returns>The expression (if successfull)</returns>
-            static ParseEither<Arithmetic.Expression> Parse(string input, Range range)
+            static ParseEither<Arithmetic.Expression> Parse(string input, Range range, ParsedFile file)
             {
                 var outEither = new ParseEither<Arithmetic.Expression>();
                 int len = input.Length;
@@ -241,24 +241,24 @@ namespace AssemblyNameSpace
                 int endpad = len - endlen;
                 int startpad = endlen - startlen;
                 // Update positions based on trimmed of sequences
-                range = new Range(new Position(range.Start.Line, range.Start.Column + startpad), new Position(range.End.Line, range.End.Column - endpad));
+                range = new Range(new Position(range.Start.Line, range.Start.Column + startpad, file), new Position(range.End.Line, range.End.Column - endpad, file));
 
                 // Scan for low level operators
                 if (input.Contains('+'))
                 {
                     int pos = input.IndexOf('+');
-                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
-                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
-                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
+                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }
                 if (input.Contains('-'))
                 {
                     int pos = input.IndexOf('-');
-                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
-                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
-                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
+                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }
@@ -266,18 +266,18 @@ namespace AssemblyNameSpace
                 if (input.Contains('*'))
                 {
                     int pos = input.IndexOf('*');
-                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
-                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
-                    var res = new Arithmetic.Operator(Arithmetic.OpType.Times, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Times, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }
                 if (input.Contains('/'))
                 {
                     int pos = input.IndexOf('/');
-                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column), new Position(range.End.Line, range.Start.Column + pos));
-                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1), new Position(range.End.Line, range.End.Column));
-                    var res = new Arithmetic.Operator(Arithmetic.OpType.Divide, Parse(input.Substring(0, pos), range1).GetValue(outEither), Parse(input.Substring(pos + 1), range2).GetValue(outEither));
+                    var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
+                    var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Divide, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }

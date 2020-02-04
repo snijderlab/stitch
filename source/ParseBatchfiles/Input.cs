@@ -29,11 +29,10 @@ namespace AssemblyNameSpace
             Directory.SetCurrentDirectory(Path.GetDirectoryName(path));
 
             // Save the batchfile for use in the construction of error messages
-            InputNameSpace.BatchFile.Name = path;
-            InputNameSpace.BatchFile.Content = batchfilecontent.Split('\n');
+            var batchfile = new ParsedFile(path, batchfilecontent.Split('\n'));
 
             // Tokenize the file, into a key value pair tree
-            var parsed = InputNameSpace.Tokenizer.Tokenize(batchfilecontent);
+            var parsed = InputNameSpace.Tokenizer.Tokenize(batchfile);
 
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters
@@ -243,10 +242,10 @@ namespace AssemblyNameSpace
                         }
                         break;
                     case "duplicatethreshold":
-                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange).GetValue(outEither)));
+                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
                         break;
                     case "minimalhomology":
-                        output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange).GetValue(outEither)));
+                        output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
                         break;
                     case "reverse":
                         switch (pair.GetValue().ToLower())
@@ -459,26 +458,29 @@ namespace AssemblyNameSpace
                 }
             }
 
+            Position def_position = new Position(0, 1, new ParsedFile());
+            Range def_range = new Range(def_position, def_position);
+
             // Generate defaults
             if (output.DuplicateThreshold.Count() == 0)
             {
-                output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", new Range(new Position(1, 1), new Position(1, 1))).GetValue(outEither)));
+                output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
             }
             if (output.MinimalHomology.Count() == 0)
             {
-                output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", new Range(new Position(1, 1), new Position(1, 1))).GetValue(outEither)));
+                output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
             }
 
             // Detect missing parameters
-            if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Runname"));
-            if (output.Report.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Any report parameter"));
-            if (output.DataParameters.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Any input parameter"));
-            if (output.Alphabet.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(new Range(new Position(1, 1), new Position(1, 1)), "Alphabet"));
+            if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
+            if (output.Report.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
+            if (output.DataParameters.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any input parameter"));
+            if (output.Alphabet.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Alphabet"));
 
             // Check if there is a version specified
             if (!versionspecified)
             {
-                outEither.AddMessage(new ErrorMessage(new Position(0, 1), "No version specified", "There is no version specified for the batch file; This is needed to handle different versions in different ways."));
+                outEither.AddMessage(new ErrorMessage(new Position(0, 1, new ParsedFile()), "No version specified", "There is no version specified for the batch file; This is needed to handle different versions in different ways."));
             }
 
             // Reset the working directory
@@ -542,7 +544,7 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing '{BatchFile.Name}'.\n");
+                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing.\n");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)
@@ -577,11 +579,6 @@ namespace AssemblyNameSpace
     /// </summary>
     namespace InputNameSpace
     {
-        static class BatchFile
-        {
-            public static string Name = "";
-            public static string[] Content = new string[1];
-        }
         /// <summary>
         /// A class with helper functionality for parsing
         /// </summary>
