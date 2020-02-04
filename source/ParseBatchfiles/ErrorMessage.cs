@@ -37,7 +37,7 @@ namespace AssemblyNameSpace {
                 Warning = false;
             }
             public static ErrorMessage DuplicateValue(Range range) {
-                var output = new ErrorMessage(range, "Duplicate value", "A value for this property was already defined.");
+                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.");
                 output.Warning = true;
                 return output;
             }

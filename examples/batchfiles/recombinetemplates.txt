@@ -23,6 +23,9 @@ Recombine->
     -Pick the <n> highest scoring templates from each database
     n : 2
 
+    -Minimal average score per position to be included
+    CutoffScore : 0.5
+
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC

@@ -590,25 +590,28 @@ namespace AssemblyNameSpace
 
             buffer.AppendLine("<div class=\"reads-alignment\">");
 
-            for (int block = 0; block < aligned[0].Length / blocklength; block++)
+            if (aligned.Length > 0)
             {
-                // Add the sequence and the number to tell the position
-                string number = "";
-                if (aligned[0].Length - block * blocklength >= blocklength)
+                for (int block = 0; block < aligned[0].Length / blocklength; block++)
                 {
-                    number = ((block + 1) * blocklength).ToString();
-                    number = String.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
+                    // Add the sequence and the number to tell the position
+                    string number = "";
+                    if (aligned[0].Length - block * blocklength >= blocklength)
+                    {
+                        number = ((block + 1) * blocklength).ToString();
+                        number = String.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
+                    }
+                    buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, blocklength)}</span><br>");
+                    for (int i = 1; i < aligned.Length; i++)
+                    {
+                        string rid = GetAsideIdentifier(template.Matches[i - 1].QuerySequenceID, AsideType.Path);
+                        string result = "";
+                        if (aligned[i].Length > block * blocklength) result = $"<a href=\"#{rid}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                        buffer.Append(result);
+                        buffer.Append("<br>");
+                    }
+                    buffer.Append("</div>");
                 }
-                buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, blocklength)}</span><br>");
-                for (int i = 1; i < aligned.Length; i++)
-                {
-                    string rid = GetAsideIdentifier(template.Matches[i - 1].QuerySequenceID, AsideType.Path);
-                    string result = "";
-                    if (aligned[i].Length > block * blocklength) result = $"<a href=\"#{rid}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
-                    buffer.Append(result);
-                    buffer.Append("<br>");
-                }
-                buffer.Append("</div>");
             }
             // TODO: Add the tail
             // TODO: Add DOC based on DOC of contigs

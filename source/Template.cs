@@ -19,6 +19,7 @@ namespace AssemblyNameSpace
         public readonly string Name;
         Alphabet alphabet;
         public List<Template> Templates;
+        double cutoffScore;
         /// <summary>
         /// Create a new TemplateDatabase based on the reads found in the given file.
         /// </summary>
@@ -26,9 +27,10 @@ namespace AssemblyNameSpace
         /// <param name="type">The type of the file</param>
         /// <param name="alp">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(MetaData.FileIdentifier file, RunParameters.InputType type, Alphabet alp, string name)
+        public TemplateDatabase(MetaData.FileIdentifier file, RunParameters.InputType type, Alphabet alp, string name, double _cutoffScore)
         {
             Name = name;
+            cutoffScore = _cutoffScore;
             List<(string, MetaData.IMetaData)> sequences;
 
             if (type == RunParameters.InputType.Reads)
@@ -50,7 +52,7 @@ namespace AssemblyNameSpace
             foreach (var pair in sequences)
             {
                 var parsed = StringToSequence(pair.Item1);
-                Templates.Add(new Template(parsed, pair.Item2, alphabet));
+                Templates.Add(new Template(parsed, pair.Item2, alphabet, cutoffScore));
             }
         }
         /// <summary>
@@ -130,19 +132,22 @@ namespace AssemblyNameSpace
         public int Score { get; private set; }
         public List<SequenceMatch> Matches;
         public readonly Alphabet Alphabet;
-        public Template(AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet)
+        double cutoffScore;
+        public Template(AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet, double _cutoffScore)
         {
             Sequence = seq;
             MetaData = meta;
-            Score = -1;
+            Score = 0;
             Matches = new List<SequenceMatch>();
             Alphabet = alphabet;
+            cutoffScore = _cutoffScore;
         }
         public void AddMatch(SequenceMatch match)
         {
-            // TODO: weigh the score based on total DOC?
-            Score += match.Score;
-            Matches.Add(match);
+            if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length)) {
+                Score += match.Score;
+                Matches.Add(match);
+            }
         }
         public interface IGap { }
         public struct None : IGap

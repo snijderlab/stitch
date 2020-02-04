@@ -250,6 +250,7 @@ namespace AssemblyNameSpace
             /// The alphabet to be used for template matching
             /// </summary>
             public AlphabetValue Alphabet;
+            public double CutoffScore = 0;
         }
         /// <summary>
         /// To contain all parameters for recombination of templates
@@ -272,6 +273,7 @@ namespace AssemblyNameSpace
             /// The order in which the templates are to be recombined
             /// </summary>
             public List<RecombineOrder.OrderPiece> Order = new List<RecombineOrder.OrderPiece>();
+            public double CutoffScore = 0;
         }
 
         namespace RecombineOrder

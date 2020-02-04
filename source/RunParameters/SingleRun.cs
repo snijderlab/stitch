@@ -163,7 +163,7 @@ namespace AssemblyNameSpace
                         var alph = template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
 
-                        var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name);
+                        var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore);
                         database1.MatchParallel(assm.GetAllPathSequences());
 
                         databases.Add(database1);
@@ -188,7 +188,7 @@ namespace AssemblyNameSpace
                         {
                             Console.WriteLine($"Working on Template {template.Name}");
 
-                            var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name);
+                            var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore);
                             database1.MatchParallel(assm.GetAllPathSequences());
 
                             rec_databases.Add(database1);
@@ -271,7 +271,7 @@ namespace AssemblyNameSpace
                                     s.AddRange(sequence.ElementAt(((RecombineOrder.Template)element).Index).Sequence);
                                 }
                             }
-                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph));
+                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph, Recombine.CutoffScore));
                         }
 
                         var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database");

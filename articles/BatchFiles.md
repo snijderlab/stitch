@@ -264,6 +264,7 @@ Inner parameter | Explanation | Default Value
 Path | The path to the database. | (No Default)
 Type | The type of the database. Fasta or Reads. Tries to detect the type when no type is given. Based on the extension so .fasta is Fasta the rest is assumed to be Reads. | Detect
 Name | The name of the database. Used for display in the output. Can contain whitespace. | (No Default)
+CutoffScore | The mean score per position needed for a path to be included in the Template score. | 0
 Alphabet | The alphabet to use. See 'Alphabet'. | (No Default)
 
 ```
@@ -271,6 +272,7 @@ Template->
     Path    : ../templates/smallIGHV.fasta
     Type    : Fasta
     Name    : IGHV Human
+    CutoffScore : 0.75
     Alphabet ->
         Path	: ../alphabets/blosum62.csv
         Name	: Blosum62
@@ -286,14 +288,14 @@ Inner parameter | Explanation | Default Value
 --- | --- | ---
 n | The amount of templates to recombine from each database | (No Default)
 Order | The order in which the templates will be recombined. Defined as the names of the template possibly with gaps ('*') in between. | (No Default)
-CutoffScore | The mean score per position needed for a path to be included in the Template score. | (No Default)
+CutoffScore | The mean score per position needed for a path to be included in the Template score. | 0
 Templates | The list of templates to use. See 'Template'. Templates exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
 Alphabet | The alphabet to use. See 'Alphabet' | (No Default)
 
 ```
 Recombine->
     n : 1
-    CutoffScore : 2
+    CutoffScore : 2.6
     Order : IGHV * IGHJ IGHC
     Templates->
         Template->

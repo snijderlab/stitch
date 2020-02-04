@@ -289,6 +289,9 @@ namespace AssemblyNameSpace
                                     if (order != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     order = setting;
                                     break;
+                                case "cutoffscore":
+                                    recsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                    break;
                                 case "templates":
                                     if (template_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     foreach (var template in setting.GetValues())
@@ -609,6 +612,31 @@ namespace AssemblyNameSpace
                     return new ParseEither<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
+            /// <summary>
+            /// Converts a string to a double, while it generates meaningfull error messages for the end user.
+            /// </summary>
+            /// <param name="input">The string to be converted to a double.</param>
+            /// <returns>If successfull: the number (double)</returns>
+            public static ParseEither<double> ConvertToDouble(string input, Range pos)
+            {
+                try
+                {
+                    return new ParseEither<double>(Convert.ToDouble(input, new System.Globalization.CultureInfo("en-US")));
+                }
+                catch (FormatException)
+                {
+
+                    return new ParseEither<double>(new ErrorMessage(pos, "Not a valid number"));
+                }
+                catch (OverflowException)
+                {
+                    return new ParseEither<double>(new ErrorMessage(pos, "Outside bounds"));
+                }
+                catch
+                {
+                    return new ParseEither<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
+                }
+            }
             public static ParseEither<RunParameters.AlphabetValue> ParseAlphabet(KeyValue key)
             {
                 var asettings = new RunParameters.AlphabetValue();
@@ -653,7 +681,12 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseEither<RunParameters.TemplateValue> ParseTemplate(KeyValue node, bool alphabet)
+            /// <summary>
+            /// Parses a Template
+            /// </summary>
+            /// <param name="node">The KeyValue to parse</param>
+            /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
+            public static ParseEither<RunParameters.TemplateValue> ParseTemplate(KeyValue node, bool extended)
             {
                 var tsettings = new RunParameters.TemplateValue();
                 var outEither = new ParseEither<RunParameters.TemplateValue>(tsettings);
@@ -684,9 +717,13 @@ namespace AssemblyNameSpace
                             if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             tsettings.Name = setting.GetValue();
                             break;
+                        case "cutoffscore":
+                                if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
+                                break;
                         case "alphabet":
                             if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            if (!alphabet)
+                            if (!extended)
                             {
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet should not be defined."));
                             }
@@ -697,7 +734,7 @@ namespace AssemblyNameSpace
                             break;
                         default:
                             var options = "'Path', 'Type', 'Name' and 'Alphabet'";
-                            if (!alphabet) options = "'Path', 'Type' and 'Name'";
+                            if (!extended) options = "'Path', 'Type' and 'Name'";
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             break;
                     }
@@ -705,7 +742,7 @@ namespace AssemblyNameSpace
 
                 if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
                 if (tsettings.Path == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Data or Path"));
-                if (alphabet && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
+                if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Try to detect the type of the file
                 if (tsettings.Type == RunParameters.InputType.Detect)

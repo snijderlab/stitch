@@ -224,7 +224,7 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(tem, alp);
             var b = StringToSequence(path, alp);
 
-            Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp);
+            Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
             TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template>{template}, alp, "TEST DB");
 
             db.Match(new List<List<AminoAcid>>{b.ToList()});
