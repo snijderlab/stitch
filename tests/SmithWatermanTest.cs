@@ -39,7 +39,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            var r =  HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(8, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -105,7 +105,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("4M1I6M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GenomicTest01() {
+        public void GenomicTest01()
+        {
             // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
@@ -122,7 +123,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("6M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GenomicTest02() {
+        public void GenomicTest02()
+        {
             // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
@@ -136,7 +138,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void LongerSequence() {
+        public void LongerSequence()
+        {
             // Shuffled the sequence a bit
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
@@ -149,7 +152,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("26M17D24M17I29M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GFPAlignment() {
+        public void GFPAlignment()
+        {
             // Shuffled the sequence a bit
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //Uniprot - P42212
@@ -168,7 +172,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("13M4I22M1D3M1I12M1I28M2D59M1I11M4D20M5D2M2I6M1I22M1D2M2D13M2I10M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void IgGAlignment() {
+        public void IgGAlignment()
+        {
             // Shuffled the sequence a bit
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //IgG4-K-002
@@ -187,7 +192,8 @@ namespace AssemblyTestNameSpace
         // The following tests are written based on paths that were misaligned by the full program
         // The testcases should only pass if the alignment is what should be expected as a good alignment, so not the one given by the full program
         [TestMethod]
-        public void RealWorldFullTemplate() {
+        public void RealWorldFullTemplate()
+        {
             // Shuffled the sequence a bit
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR*YYYYYGMDVWGQGTTVTVSSASTKGPSVFPLAPCSRSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYTCNVNHKPSNTKVDKRVELKTPLGDTTHTCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFKWYVDGVEVHNAKTKPREEQYNSTFRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESSGQPENNYNTTPPMLDSDGSFFLYSKLTVDKSRWQQGNIFSCSVMHEALHNRFTQKSLSLSPGKDILLTQTPLSLSITPGEPASISCRSSRSLLHSNGNTYLHWLQKPGQPPQCLICKVSNRFSGVPDRFSGSGSGIDFTLKISPVEAADVGVYITACKLHTGPCTFGQGTKLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSNTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
@@ -202,7 +208,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M1D7M4I22M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldIGHV() {
+        public void RealWorldIGHV()
+        {
             // Shuffled the sequence a bit
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
@@ -217,7 +224,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaTemplateDatabaseList() {
+        public void RealWorldViaTemplateDatabaseList()
+        {
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
@@ -225,9 +233,9 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
 
             Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template>{template}, alp, "TEST DB", 0);
+            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
 
-            db.Match(new List<List<AminoAcid>>{b.ToList()});
+            db.Match(new List<List<AminoAcid>> { b.ToList() });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
@@ -237,7 +245,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaTemplateDatabaseFile() {
+        public void RealWorldViaTemplateDatabaseFile()
+        {
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
@@ -247,7 +256,7 @@ namespace AssemblyTestNameSpace
             Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
             TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new MetaData.FileIdentifier("../../../../examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0);
 
-            db.Match(new List<List<AminoAcid>>{b.ToList()});
+            db.Match(new List<List<AminoAcid>> { b.ToList() });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
@@ -257,7 +266,8 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaBatchFile() {
+        public void RealWorldViaBatchFile()
+        {
             var parameters = ParseCommandFile.Batch("../../../../examples/batchfiles/smalltest.txt");
             var runs = parameters.CreateRuns();
             Assert.AreEqual(1, runs.Count());
@@ -275,7 +285,7 @@ namespace AssemblyTestNameSpace
             assm.Assemble();
 
             var database = new TemplateDatabase(new MetaData.FileIdentifier(template_parameter.Path, template_parameter.Name), template_parameter.Type, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore);
-            
+
             database.MatchParallel(assm.GetAllPathSequences());
 
             // Test if something went wrong

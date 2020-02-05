@@ -109,8 +109,10 @@ namespace AssemblyNameSpace
             var runs = new List<(Template, AminoAcid[], int)>();
 
             // Recode the given sequences
-            foreach (var seq in sequences) {
-                for (int i = 0; i < seq.Count(); i++) {
+            foreach (var seq in sequences)
+            {
+                for (int i = 0; i < seq.Count(); i++)
+                {
                     seq[i] = new AminoAcid(alphabet, seq[i].ToString()[0]);
                 }
             }
@@ -152,7 +154,8 @@ namespace AssemblyNameSpace
         }
         public void AddMatch(SequenceMatch match)
         {
-            if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length)) {
+            if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
+            {
                 Score += match.Score;
                 Matches.Add(match);
             }

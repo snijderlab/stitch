@@ -79,7 +79,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
-        /// <param name="parameters">The parameters for this report.</param>
+        /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters)
         {
             condensed_graph = parameters.assembler.condensed_graph;
@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
             PathsSequences = parameters.assembler.GetAllPathSequences();
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
-            
+
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.
@@ -121,11 +121,15 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="id">The id of the specified node</param>
         /// <returns>A list of all path ids</returns>
-        protected List<int> AllPathsContaining(int id) {
+        protected List<int> AllPathsContaining(int id)
+        {
             var output = new List<int>();
-            for (int i = 0; i < paths.Count(); i++) {
-                foreach (var node in paths[i].Item2) {
-                    if (node == id) {
+            for (int i = 0; i < paths.Count(); i++)
+            {
+                foreach (var node in paths[i].Item2)
+                {
+                    if (node == id)
+                    {
                         output.Add(i);
                         break;
                     }

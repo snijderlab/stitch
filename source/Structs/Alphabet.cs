@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="alphabetValue">The RunParameter to use</param>
         /// <returns></returns>
-        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Data, AlphabetParamType.Data, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) {}
+        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Data, AlphabetParamType.Data, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
         /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>
         /// <param name="type"> To indicate if the data is data or a path to data </param>
@@ -110,8 +110,9 @@ namespace AssemblyNameSpace
 
             alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
 
-            if (!alphabet.Contains(GapChar)) {
-                alphabet = alphabet.Concat(new char[] {GapChar}).ToArray();
+            if (!alphabet.Contains(GapChar))
+            {
+                alphabet = alphabet.Concat(new char[] { GapChar }).ToArray();
             }
             GapIndex = getIndexInAlphabet(GapChar);
 
@@ -132,15 +133,19 @@ namespace AssemblyNameSpace
                 }
             }
         }
-        public override string ToString() {
+        public override string ToString()
+        {
             var buffer = new StringBuilder();
             buffer.AppendLine($"Alphabet");
-            foreach (char c in alphabet) {
+            foreach (char c in alphabet)
+            {
                 buffer.Append(c);
             }
             buffer.Append($"\nWith gap {GapChar} at {GapIndex}\n");
-            for (int x = 0; x < scoring_matrix.GetLength(0); x++) {
-                for (int y = 0; y < scoring_matrix.GetLength(1); y++) {
+            for (int x = 0; x < scoring_matrix.GetLength(0); x++)
+            {
+                for (int y = 0; y < scoring_matrix.GetLength(1); y++)
+                {
                     buffer.Append($"{scoring_matrix[x, y],4}");
                 }
                 buffer.Append("\n");
@@ -149,5 +154,5 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
     }
-    
+
 }

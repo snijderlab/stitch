@@ -46,7 +46,8 @@ namespace AssemblyTestNameSpace
             }
         }
         [TestMethod]
-        public void NegativeAlphabet() {
+        public void NegativeAlphabet()
+        {
             var alp = new Alphabet("*;A;B\nA;1;-1\nB;-1;1", Alphabet.AlphabetParamType.Data, 12, 1);
             Assert.AreEqual(-1, alp.scoring_matrix[alp.getIndexInAlphabet('A'), alp.getIndexInAlphabet('B')]);
         }

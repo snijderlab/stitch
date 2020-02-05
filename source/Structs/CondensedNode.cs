@@ -78,5 +78,5 @@ namespace AssemblyNameSpace
             Prefix = new List<AminoAcid>();
         }
     }
-    
+
 }

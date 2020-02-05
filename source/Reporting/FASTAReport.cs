@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
             // Filter and sort the lines
             //sequences = sequences.FindAll(i => i.Item1 >= MinScore);
             //sequences.Sort((a, b) => b.Item1.CompareTo(a.Item1));
-            
+
             var buffer = new StringBuilder();
             foreach (var line in sequences)
             {

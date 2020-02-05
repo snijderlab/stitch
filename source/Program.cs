@@ -36,7 +36,9 @@ namespace AssemblyNameSpace
             try
             {
                 filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
-            } catch {
+            }
+            catch
+            {
                 Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.");
                 return;
             }

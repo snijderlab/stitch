@@ -286,11 +286,13 @@ namespace AssemblyNameSpace
                         Console.WriteLine($"Finished Recombination {recombine_sw.ElapsedMilliseconds} ms");
 
                         parameters = new ReportInputParameters(assm, this, databases, recombined_database, rec_databases);
-                    } else {
+                    }
+                    else
+                    {
                         parameters = new ReportInputParameters(assm, this, databases);
                     }
 
-                    
+
 
                     // Generate the report(s)
                     foreach (var report in Report)

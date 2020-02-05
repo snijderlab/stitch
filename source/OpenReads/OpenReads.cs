@@ -182,5 +182,5 @@ namespace AssemblyNameSpace
             return reads;
         }
     }
-    
+
 }

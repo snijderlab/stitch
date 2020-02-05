@@ -93,16 +93,22 @@ namespace AssemblyNameSpace
                                     settings.File.Name = setting.GetValue();
                                     break;
                                 case "separator":
-                                    if (setting.GetValue().Length != 1) {
+                                    if (setting.GetValue().Length != 1)
+                                    {
                                         outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         settings.Separator = setting.GetValue().First();
                                     }
                                     break;
                                 case "decimalseparator":
-                                    if (setting.GetValue().Length != 1) {
+                                    if (setting.GetValue().Length != 1)
+                                    {
                                         outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    } else {
+                                    }
+                                    else
+                                    {
                                         settings.DecimalSeparator = setting.GetValue().First();
                                     }
                                     break;
@@ -121,7 +127,7 @@ namespace AssemblyNameSpace
                                     }
                                     break;
                                 default:
-                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
                                     break;
                             }
                         }
@@ -715,9 +721,9 @@ namespace AssemblyNameSpace
                             tsettings.Name = setting.GetValue();
                             break;
                         case "cutoffscore":
-                                if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
-                                break;
+                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
+                            break;
                         case "alphabet":
                             if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (!extended)

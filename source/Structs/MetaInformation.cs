@@ -41,5 +41,5 @@ namespace AssemblyNameSpace
         /// <summary> The number of sequences found. See <see cref="Assembler.Assemble"/></summary>
         public int sequences;
     }
-    
+
 }

@@ -45,7 +45,8 @@ namespace AssemblyNameSpace
             {
                 expression = exp;
             }
-            public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range, ParsedFile file) {
+            public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range, ParsedFile file)
+            {
                 return Parse(value, range, file);
             }
             /// <summary>
@@ -249,7 +250,7 @@ namespace AssemblyNameSpace
                     int pos = input.IndexOf('+');
                     var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
                     var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
-                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Add, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }
@@ -258,7 +259,7 @@ namespace AssemblyNameSpace
                     int pos = input.IndexOf('-');
                     var range1 = new Range(new Position(range.Start.Line, range.Start.Column, file), new Position(range.End.Line, range.Start.Column + pos, file));
                     var range2 = new Range(new Position(range.Start.Line, range.Start.Column + pos + 1, file), new Position(range.End.Line, range.End.Column, file));
-                    var res =  new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
+                    var res = new Arithmetic.Operator(Arithmetic.OpType.Minus, Parse(input.Substring(0, pos), range1, file).GetValue(outEither), Parse(input.Substring(pos + 1), range2, file).GetValue(outEither));
                     outEither.Value = res;
                     return outEither;
                 }

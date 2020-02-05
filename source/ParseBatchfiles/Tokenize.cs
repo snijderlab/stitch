@@ -275,7 +275,7 @@ namespace AssemblyNameSpace
                 {
                     string result = "";
                     Position start = counter.GetPosition();
-                    Position end;int nextnewline = FindNextNewLine(ref content);
+                    Position end; int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
                     {
                         result = content.Substring(0, nextnewline).TrimEnd(); // Save whitespace in front to make position work

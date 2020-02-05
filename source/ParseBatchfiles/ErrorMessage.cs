@@ -1,7 +1,9 @@
 using System;
 
-namespace AssemblyNameSpace {
-    namespace InputNameSpace {
+namespace AssemblyNameSpace
+{
+    namespace InputNameSpace
+    {
         public class ErrorMessage
         {
             Position startposition = new Position(0, 1, new ParsedFile());
@@ -11,7 +13,7 @@ namespace AssemblyNameSpace {
             string longDescription = "";
             string helpDescription = "";
             string subject = "";
-            public bool Warning { get; private set;}
+            public bool Warning { get; private set; }
             public ErrorMessage(string sub, string shortD, string longD = "", string help = "")
             {
                 subject = sub;
@@ -40,15 +42,18 @@ namespace AssemblyNameSpace {
                 Warning = false;
                 File = range.File;
             }
-            public static ErrorMessage DuplicateValue(Range range) {
+            public static ErrorMessage DuplicateValue(Range range)
+            {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.");
                 output.Warning = true;
                 return output;
             }
-            public static ErrorMessage MissingParameter(Range range, string parameter) {
+            public static ErrorMessage MissingParameter(Range range, string parameter)
+            {
                 return new ErrorMessage(range, $"Missing parameter: {parameter}");
             }
-            public static ErrorMessage UnknownKey(Range range, string context, string options) {
+            public static ErrorMessage UnknownKey(Range range, string context, string options)
+            {
                 return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition", $"Valid options are: {options}");
             }
             public override string ToString()
@@ -63,7 +68,8 @@ namespace AssemblyNameSpace {
                 {
                     location = $"\n   | {subject}\n\n";
                 }
-                else if (File.Filename == "") {
+                else if (File.Filename == "")
+                {
                     location = "";
                 }
                 else if (endposition == new Position(0, 1, new ParsedFile()))
@@ -123,7 +129,8 @@ namespace AssemblyNameSpace {
                 {
                     Console.WriteLine($"\n   | {subject}\n");
                 }
-                else if (File.Filename == "") {
+                else if (File.Filename == "")
+                {
                 }
                 else if (endposition == new Position(0, 1, new ParsedFile()))
                 {
