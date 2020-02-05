@@ -584,15 +584,37 @@ namespace AssemblyNameSpace
                 aligned[i] = lines[i].ToString();
             }
 
-            // Chop it up, add numbers etc
-
-            const int blocklength = 5;
-
             buffer.AppendLine("<div class=\"reads-alignment\">");
+
+            // Create the front overhanging reads block
+            var frontoverhangbuffer = new StringBuilder();
+            bool frontoverhang = false;
+            frontoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
+            frontoverhangbuffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+            for (int i = 1; i < aligned.Count(); i++)
+            {
+                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
+                var match = template.Matches[i - 1];
+                if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
+                {
+                    frontoverhang = true;
+                    frontoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
+                }
+                else
+                {
+                    frontoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'></a><span class='symbol'></span><br>");
+                }
+            }
+            frontoverhangbuffer.AppendLine($"</p></div></label></div>");
+            if (frontoverhang) buffer.Append(frontoverhangbuffer.ToString());
+
+            // Chop it up, add numbers etc
+            // TODO: Add DOC based on DOC of contigs
+            const int blocklength = 5;
 
             if (aligned.Length > 0)
             {
-                for (int block = 0; block < aligned[0].Length / blocklength; block++)
+                for (int block = 0; block <= aligned[0].Length / blocklength; block++)
                 {
                     // Add the sequence and the number to tell the position
                     string number = "";
@@ -601,7 +623,7 @@ namespace AssemblyNameSpace
                         number = ((block + 1) * blocklength).ToString();
                         number = String.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
-                    buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, blocklength)}</span><br>");
+                    buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         string rid = GetAsideIdentifier(template.Matches[i - 1].QuerySequenceID, AsideType.Path);
@@ -613,14 +635,28 @@ namespace AssemblyNameSpace
                     buffer.Append("</div>");
                 }
             }
-            // TODO: Add the tail
-            // TODO: Add DOC based on DOC of contigs
 
-            // Find the start and endoverhang
-            // TODO: needs to work again.
-            //int startoverhang = -1;
-
-            //int endoverhang = -1;
+            // Create the end overhanging reads block
+            var endoverhangbuffer = new StringBuilder();
+            bool endoverhang = false;
+            endoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
+            endoverhangbuffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
+            for (int i = 1; i < aligned.Count(); i++)
+            {
+                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
+                var match = template.Matches[i - 1];
+                if (match.StartQueryPosition + match.TotalMatches() < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches() == match.TemplateSequence.Length)
+                {
+                    endoverhang = true;
+                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches(), match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches()))}</a><span class='symbol'>...</span><br>");
+                }
+                else
+                {
+                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'></a><span class='symbol'></span><br>");
+                }
+            }
+            endoverhangbuffer.AppendLine($"</p></div></label></div>");
+            if (endoverhang) buffer.Append(endoverhangbuffer.ToString());
 
             // Display Consensus Sequence
             var consensus = new StringBuilder();
