@@ -132,6 +132,22 @@ namespace AssemblyNameSpace
                 }
             }
         }
+        public override string ToString() {
+            var buffer = new StringBuilder();
+            buffer.AppendLine($"Alphabet");
+            foreach (char c in alphabet) {
+                buffer.Append(c);
+            }
+            buffer.Append($"\nWith gap {GapChar} at {GapIndex}\n");
+            for (int x = 0; x < scoring_matrix.GetLength(0); x++) {
+                for (int y = 0; y < scoring_matrix.GetLength(1); y++) {
+                    buffer.Append($"{scoring_matrix[x, y],4}");
+                }
+                buffer.Append("\n");
+            }
+            buffer.Append("\n");
+            return buffer.ToString();
+        }
     }
     
 }

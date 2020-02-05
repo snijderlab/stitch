@@ -160,7 +160,7 @@ namespace AssemblyNameSpace
                     var databases = new List<TemplateDatabase>();
                     foreach (var template in Template)
                     {
-                        var alph = template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
+                        var alph = new Alphabet(template.Alphabet);// template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
 
                         var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore);
@@ -274,7 +274,7 @@ namespace AssemblyNameSpace
                             recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph, Recombine.CutoffScore));
                         }
 
-                        var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database");
+                        var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database", Recombine.CutoffScore);
 
                         Console.WriteLine("Created templates for second round");
 

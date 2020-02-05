@@ -217,7 +217,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaTemplateDataBase() {
+        public void RealWorldViaTemplateDatabaseList() {
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
@@ -225,7 +225,7 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
 
             Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template>{template}, alp, "TEST DB");
+            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template>{template}, alp, "TEST DB", 0);
 
             db.Match(new List<List<AminoAcid>>{b.ToList()});
             var r = db.Templates[0].Matches[0];
@@ -235,6 +235,76 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("30M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void RealWorldViaTemplateDatabaseFile() {
+            var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
+            var a = StringToSequence(tem, alp);
+            var b = StringToSequence(path, alp);
+
+            Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
+            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new MetaData.FileIdentifier("../../../../examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0);
+
+            db.Match(new List<List<AminoAcid>>{b.ToList()});
+            var r = db.Templates[0].Matches[0];
+
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(68, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("30M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void RealWorldViaBatchFile() {
+            var parameters = ParseCommandFile.Batch("../../../../examples/batchfiles/smalltest.txt");
+            var runs = parameters.CreateRuns();
+            Assert.AreEqual(1, runs.Count());
+            Assert.AreEqual(1, runs[0].Input.Count());
+            Assert.AreEqual(1, runs[0].Template.Count());
+
+            var run = runs[0];
+            var template_parameter = run.Template[0];
+
+            var alphabet = new Alphabet(run.Alphabet);
+            var assm = new Assembler(run.K, run.DuplicateThreshold, run.MinimalHomology, run.Reverse, alphabet);
+
+            assm.GiveReads(OpenReads.Simple(run.Input[0].File));
+
+            assm.Assemble();
+
+            var database = new TemplateDatabase(new MetaData.FileIdentifier(template_parameter.Path, template_parameter.Name), template_parameter.Type, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore);
+            
+            database.MatchParallel(assm.GetAllPathSequences());
+
+            // Test if something went wrong
+            Assert.AreEqual(1, database.Templates.Count());
+            Assert.AreEqual(1, database.Templates[0].Matches.Count());
+            var template = database.Templates[0];
+            var match = template.Matches[0];
+            var reference_alphabet = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+
+            Console.WriteLine(match);
+            Console.WriteLine(template.Alphabet);
+            Console.WriteLine(reference_alphabet);
+
+            // Alphabet
+            Assert.AreEqual("Blosum62", template_parameter.Alphabet.Name);
+            Assert.AreEqual(12, template_parameter.Alphabet.GapStartPenalty);
+            Assert.AreEqual(2, template_parameter.Alphabet.GapExtendPenalty);
+            Assert.IsNotNull(template_parameter.Alphabet);
+            Assert.AreEqual(reference_alphabet.ToString(), template.Alphabet.ToString());
+            // Template sequence
+            Assert.AreEqual("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", AminoAcid.ArrayToString(template.Sequence));
+            // Path sequence
+            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(match.QuerySequence));
+            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPathSequences()[0]));
+            // Match
+            Assert.AreEqual(147, match.Score);
+            Assert.AreEqual(68, match.StartTemplatePosition);
+            Assert.AreEqual(0, match.StartQueryPosition);
+            Assert.AreEqual("30M", match.Alignment.CIGAR());
         }
         AminoAcid[] StringToSequence(string input)
         {

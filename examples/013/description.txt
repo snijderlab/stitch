@@ -1,0 +1,1 @@
+Very simple test (same data as smithwaterman RealWorld test).

@@ -31,6 +31,9 @@ namespace AssemblyNameSpace
         {
             Name = name;
             cutoffScore = _cutoffScore;
+            alphabet = alp;
+            Templates = new List<Template>();
+
             List<(string, MetaData.IMetaData)> sequences;
 
             if (type == RunParameters.InputType.Reads)
@@ -46,9 +49,6 @@ namespace AssemblyNameSpace
                 throw new Exception($"The type {type} is not a valid type for a template database file (file: {file})");
             }
 
-            alphabet = alp;
-            Templates = new List<Template>();
-
             foreach (var pair in sequences)
             {
                 var parsed = StringToSequence(pair.Item1);
@@ -61,9 +61,10 @@ namespace AssemblyNameSpace
         /// <param name="templates">The templates</param>
         /// <param name="alp">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alp, string name)
+        public TemplateDatabase(ICollection<Template> templates, Alphabet alp, string name, double _cutoffScore)
         {
             Name = name;
+            cutoffScore = _cutoffScore;
             alphabet = alp;
             Templates = templates.ToList();
         }
@@ -106,6 +107,13 @@ namespace AssemblyNameSpace
         public void MatchParallel(List<List<AminoAcid>> sequences)
         {
             var runs = new List<(Template, AminoAcid[], int)>();
+
+            // Recode the given sequences
+            foreach (var seq in sequences) {
+                for (int i = 0; i < seq.Count(); i++) {
+                    seq[i] = new AminoAcid(alphabet, seq[i].ToString()[0]);
+                }
+            }
 
             foreach (var tem in Templates)
             {
