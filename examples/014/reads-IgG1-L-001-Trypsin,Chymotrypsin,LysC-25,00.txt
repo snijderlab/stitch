@@ -1,0 +1,32 @@
+# generate_tests\Test mAB\IgG1-L-001.txt
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - Trypsin - 25%
+DTLMISR
+WQQGNVFSCSVMHEALHNHYTQK
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - Chymotrypsin - 25%
+TISRDNSKNTL
+VTVSSASTKGPSVF
+SSVVTVPSSSL
+ICNVNHKPSNTKVDKRVEPKSCDKTHTCPPCPAPEL
+PPKPKDTL
+KCKVSNKAL
+KTTPPVL
+DSDGSF
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - LysC - 25%
+GPSVFPLAPSSK
+STSGGTAALGCLVK
+FNWYVDGVEVHNAK
+PREEQYNSTYRVVSVLTVLHQDWLNGK
+ALAAPIEK
+GQPREPQVYTLPPSREEMTK
+SLSLSPGK
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Trypsin - 25%
+VTISCSGSSSNIGSNDVSWYQQLPGTAPK
+QFDVVFGGGTK
+YAASSYLSLTPEQWK
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Chymotrypsin - 25%
+TQPPSASGTPGQRVTISCSGSSSNIGSNDVSW
+PPSSEEL
+KSHRSY
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - LysC - 25%
+LTVLGQPK
+ATLVCLISDFYPGAVTVAWK

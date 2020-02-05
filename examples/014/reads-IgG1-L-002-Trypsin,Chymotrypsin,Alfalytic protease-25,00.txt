@@ -1,0 +1,34 @@
+# generate_tests\Test mAB\IgG1-L-002.txt
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Trypsin - 25%
+QVELVQSGAEVK
+KPGESLK
+GSGYSFTSYWIGWVR
+ASDTAMYYCAR
+GQLYGGTYMDGWGQGTLVTVSSASTK
+WQQGNVFSCSVMHEALHNHYTQK
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Chymotrypsin - 25%
+VQSGAEVKKPGESL
+KISCKGSGY
+APSSKSTSGGTAAL
+VDGVEVHNAKTKPREEQY
+PPSRDEL
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Alfalytic protease - 25%
+KKPGES
+CPPCPA
+PELLGGPS
+FLFPPKPKDT
+KFNWYV
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Trypsin - 25%
+LMIYGVNNRPSGVSNR
+SGNTASLTISGLQAEDEADYYCSSYDIESATPVFGGGTK
+ATLVCLISDFYPGAVTVAWK
+GDSSPVK
+SYSCQVTHEGSTVEK
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Chymotrypsin - 25%
+QAEDEADY
+GGGTKL
+SCQVTHEGSTVEKTVAPTECS
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Alfalytic protease - 25%
+DIGGYNS
+PKLMIYGV
+LGQPKA

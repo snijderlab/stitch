@@ -1,0 +1,33 @@
+# generate_tests\Test mAB\IgG2-L-001.txt
+# Generated sample - 10425H|brazikumab|Homo sapiens||H-GAMMA-2 (VH (1-124) [D1] + CH1 (125-222) [D2] + CH2 (235-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Trypsin - 25%
+GPSVFPLAPCSR
+TPEVTCVVVDVSHEDPEVQFNWYVDGVEVHNAK
+GLPAPIEK
+WQQGNVFSCSVMHEALHNHYTQK
+# Generated sample - 10425H|brazikumab|Homo sapiens||H-GAMMA-2 (VH (1-124) [D1] + CH1 (125-222) [D2] + CH2 (235-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Chymotrypsin - 25%
+DGSNEY
+TISRDNSKNTL
+CARDRGY
+PEPVTVSW
+ISRTPEVTCVVVDVSHEDPEVQF
+VDGVEVHNAKTKPREEQF
+TVVHQDW
+TKNQVSL
+DSDGSF
+# Generated sample - 10425H|brazikumab|Homo sapiens||H-GAMMA-2 (VH (1-124) [D1] + CH1 (125-222) [D2] + CH2 (235-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Alfalytic protease - 25%
+YGMHWV
+FLFPPKPKDT
+HEDPEV
+LHNHYT
+# Generated sample - 10425L|brazikumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Trypsin - 25%
+VTISCTGSSSNTGAGYDVHWYQQVPGTAPK
+LLIYGSGNRPSGVPDR
+ATLVCLISDFYPGAVTVAWK
+ADSSPVK
+SYSCQVTHEGSTVEK
+# Generated sample - 10425L|brazikumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Chymotrypsin - 25%
+QQVPGTAPKL
+QAEDEADY
+KSHRSY
+# Generated sample - 10425L|brazikumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Alfalytic protease - 25%
+DYYCQS

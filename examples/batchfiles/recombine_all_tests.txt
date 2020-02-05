@@ -3,11 +3,52 @@
 -Run Info---------------
 Version	: 0
 Runname	: Recombine Templates Test
+RunType : Separate
 
 -Input------------------
 Reads	->
-Path: ../011/reads-IgG2-K-002-all-100,00.txt
-Name: Reads 011
+Path: ../014/reads-IgG1-L-001-all-100,00.txt
+Name: IgG1-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG1-L-002-all-100,00.txt
+Name: IgG1-L-002
+<-
+Reads	->
+Path: ../014/reads-IgG1-K-001-all-100,00.txt
+Name: IgG1-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG1-K-002-all-100,00.txt
+Name: IgG1-K-002
+<-
+Reads	->
+Path: ../014/reads-IgG2-L-001-all-100,00.txt
+Name: IgG2-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG2-L-002-all-100,00.txt
+Name: IgG2-L-002
+<-
+Reads	->
+Path: ../014/reads-IgG2-K-001-all-100,00.txt
+Name: IgG2-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG2-K-002-all-100,00.txt
+Name: IgG2-K-002
+<-
+Reads	->
+Path: ../014/reads-IgG4-L-001-all-100,00.txt
+Name: IgG4-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG4-K-001-all-100,00.txt
+Name: IgG4-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG4-K-002-all-100,00.txt
+Name: IgG4-K-002
 <-
 
 -Parameters-------------
@@ -70,6 +111,6 @@ Recombine->
 -Path	: ../../report-reads-{id}.fasta
 -<-
 HTML ->
-Path    : ../../report-reads-{id}.html
+Path    : ../../report-reads-{data}.html
 DotDistribution: global
 <-
