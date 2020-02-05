@@ -9,13 +9,11 @@ namespace AssemblyNameSpace
     {
         public static class Tokenizer
         {
-            static ParsedFile File;
             public static List<KeyValue> Tokenize(ParsedFile file)
             {
                 var parsed = new List<KeyValue>();
-                var counter = new Counter();
-                File = file;
-                var content = string.Join("\n", File.Lines);
+                var counter = new Counter(file);
+                var content = string.Join("\n", file.Lines);
 
                 while (content.Length > 0)
                 {
@@ -32,11 +30,13 @@ namespace AssemblyNameSpace
             {
                 public int Line;
                 public int Column;
+                public ParsedFile File;
 
-                public Counter()
+                public Counter(ParsedFile file)
                 {
                     Line = 0;
                     Column = 1;
+                    File = file;
                 }
 
                 public void NextLine()
@@ -139,7 +139,7 @@ namespace AssemblyNameSpace
                     //Get the single value of the parameter
                     string value = ParseHelper.UntilSequence(ref content, "<:");
                     Position endkey = counter.GetPosition();
-                    Position endvalue = new Position(endkey.Line, endkey.Column - 2, File);
+                    Position endvalue = new Position(endkey.Line, endkey.Column - 2, counter.File);
                     return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                 }
                 /// <summary>
@@ -262,7 +262,7 @@ namespace AssemblyNameSpace
                         counter.NextColumn();
                     }
                     Position greedy = counter.GetPosition();
-                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length, File);
+                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length, counter.File);
                     ParseHelper.Trim(ref content, counter);
                     return (name.ToString().ToLower().Trim(), new Range(start, end));
                 }
@@ -280,7 +280,7 @@ namespace AssemblyNameSpace
                     {
                         result = content.Substring(0, nextnewline).TrimEnd(); // Save whitespace in front to make position work
                         content = content.Remove(0, nextnewline);
-                        end = new Position(start.Line, start.Column + result.Length, File);
+                        end = new Position(start.Line, start.Column + result.Length, counter.File);
                         result = result.TrimStart(); // Remove whitespace in front
                         Trim(ref content, counter);
                     }
@@ -288,7 +288,7 @@ namespace AssemblyNameSpace
                     {
                         result = content.TrimEnd(); // Save whitespace in front to make position work
                         content = "";
-                        end = new Position(start.Line, start.Column + result.Length, File);
+                        end = new Position(start.Line, start.Column + result.Length, counter.File);
                         result = result.TrimStart(); // Remove whitespace in front
                     }
                     return (result, new Range(start, end));
@@ -342,6 +342,34 @@ namespace AssemblyNameSpace
                         content = "";
                     }
                     return value;
+                }
+                /// <summary>
+                /// Consumes the string until it find one of the sequences
+                /// </summary>
+                /// <param name="content">The string</param>
+                /// <param name="sequence">The sequences to find</param>
+                /// <returns>The consumed part of the string</returns>
+                public static string UntilOneOf(ref string content, char[] sequence, Counter counter)
+                {
+                    var buffer = new StringBuilder();
+                    bool found = false;
+                    while (!found && content.Length > 0)
+                    {
+                        if (sequence.Contains(content[0]))
+                        {
+                            if (content[0] != '\n') counter.NextColumn();
+                            else counter.NextLine();
+
+                            buffer.Append(content[0]);
+                            content = content.Remove(0, 1);
+                        }
+                        else
+                        {
+                            found = true;
+                        }
+                    }
+
+                    return buffer.ToString();
                 }
             }
         }

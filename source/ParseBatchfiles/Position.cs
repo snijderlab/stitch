@@ -123,7 +123,6 @@ namespace AssemblyNameSpace
             Filename = "";
             Lines = new string[0];
         }
-        // TODO does not seem to work for two instances with both "" as filename
         public override bool Equals(object obj)
         {
             if (obj.GetType() != this.GetType())

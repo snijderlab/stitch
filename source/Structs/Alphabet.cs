@@ -77,6 +77,10 @@ namespace AssemblyNameSpace
             GapStartPenalty = gap_start_penalty;
             GapExtendPenalty = gap_extend_penalty;
 
+            //var result = InputNameSpace.ParseHelper.ParseAlphabetData(data, type);
+            //alphabet = result.Item1;
+            //scoring_matrix = result.Item2;
+
             if (type == AlphabetParamType.Path)
             {
                 try

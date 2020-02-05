@@ -3,6 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using AssemblyNameSpace.InputNameSpace;
+using System.Text;
 
 namespace AssemblyNameSpace
 {
@@ -341,7 +342,7 @@ namespace AssemblyNameSpace
                         {
                             var order_string = order.GetValue();
                             // Create a new counter
-                            var order_counter = new InputNameSpace.Tokenizer.Counter();
+                            var order_counter = new InputNameSpace.Tokenizer.Counter(batchfile);
                             order_counter.Line = order.ValueRange.Start.Line;
                             order_counter.Column = order.ValueRange.Start.Column;
 
@@ -683,6 +684,88 @@ namespace AssemblyNameSpace
                 if (asettings.Data == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
 
                 return outEither;
+            }
+            public static (char[], int[,]) ParseAlphabetData(string data, Alphabet.AlphabetParamType type)
+            {
+                // MEMORY LEAK
+                var outEither = new ParseEither<int[,]>();
+
+                var file = new ParsedFile();
+                var lines = data.Split('\n');
+                if (type == Alphabet.AlphabetParamType.Path)
+                {
+                    lines = GetAllText(data).ReturnOrFail().Split('\n');
+                    file = new ParsedFile(data, lines);
+                }
+                var counter = new Tokenizer.Counter(file);
+
+                int rows = lines.Length;
+                var cells = new List<(Position, List<(string, Range)>)>();
+
+                for (int i = 0; i < lines.Length; i++)
+                {
+                    var startline = counter.GetPosition();
+                    var splitline = new List<(string, Range)>();
+                    var line = lines[i];
+                    Tokenizer.ParseHelper.Trim(ref line, counter);
+
+                    while (line != "")
+                    {
+                        if (line[0] == ';' || line[0] == ',')
+                        {
+                            line.Remove(0, 1);
+                            counter.NextColumn();
+                        }
+                        else
+                        {
+                            var start = counter.GetPosition();
+                            var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
+                            var range = new Range(start, counter.GetPosition());
+                            splitline.Add((cell, range));
+                        }
+                        Tokenizer.ParseHelper.Trim(ref line, counter);
+                    }
+                    cells.Add((startline, splitline));
+                    counter.NextLine();
+                }
+
+                int columns = cells[0].Item2.Count();
+
+                for (int line = 0; line < rows; line++)
+                {
+                    if (rows > cells[line].Item2.Count())
+                    {
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", "There are column(s) missing on this row."));
+                    }
+                    else if (rows < cells[line].Item2.Count())
+                    {
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", "There are too much column(s) on this row."));
+                    }
+                }
+
+                var alphabetBuilder = new StringBuilder();
+                foreach (var element in cells[0].Item2)
+                {
+                    alphabetBuilder.Append(element.Item1);
+                }
+                var alphabet = alphabetBuilder.ToString().ToCharArray();
+
+                if (!alphabet.Contains('*')) // TODO: use the right variables
+                {
+                    outEither.AddMessage(new ErrorMessage(file, "GapChar missing", "The Gap '*' is missing in the alpabet definition."));
+                }
+
+                var scoring_matrix = new int[columns - 1, columns - 1];
+
+                for (int i = 0; i < columns - 1; i++)
+                {
+                    for (int j = 0; j < columns - 1; j++)
+                    {
+                        scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).GetValue(outEither);
+                    }
+                }
+                outEither.ReturnOrFail();
+                return (alphabet, scoring_matrix);
             }
             /// <summary>
             /// Parses a Template

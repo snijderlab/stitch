@@ -6,8 +6,8 @@ namespace AssemblyNameSpace
     {
         public class ErrorMessage
         {
-            Position startposition = new Position(0, 1, new ParsedFile());
-            Position endposition = new Position(0, 1, new ParsedFile());
+            Position startposition;
+            Position endposition;
             ParsedFile File;
             string shortDescription = "";
             string longDescription = "";
@@ -22,6 +22,14 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = false;
                 File = new ParsedFile();
+            }
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "")
+            {
+                shortDescription = shortD;
+                longDescription = longD;
+                helpDescription = help;
+                Warning = false;
+                File = file;
             }
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
             {
@@ -72,7 +80,11 @@ namespace AssemblyNameSpace
                 {
                     location = "";
                 }
-                else if (endposition == new Position(0, 1, new ParsedFile()))
+                else if (startposition == null)
+                {
+                    location = $"File: {File.Filename}\n";
+                }
+                else if (endposition == null)
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
@@ -125,14 +137,18 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = defaultColour;
 
                 // Location
-                if (subject != "")
+                if (subject != "") // Pregiven location
                 {
-                    Console.WriteLine($"\n   | {subject}\n");
+                    Console.Write($"\n   | {subject}\n");
                 }
-                else if (File.Filename == "")
+                else if (File.Filename == "") // No location
                 {
                 }
-                else if (endposition == new Position(0, 1, new ParsedFile()))
+                else if (startposition == null) // Only a file
+                {
+                    Console.Write($"File: {File.Filename}\n");
+                }
+                else if (endposition == null) // Single position
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
@@ -145,7 +161,7 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");
                 }
-                else if (startposition.Line == endposition.Line)
+                else if (startposition.Line == endposition.Line) // Single line
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
@@ -158,7 +174,7 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"\n{start}\n");
                 }
-                else
+                else // Multiline
                 {
                     var line_number = endposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
