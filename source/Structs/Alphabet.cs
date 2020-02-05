@@ -77,11 +77,11 @@ namespace AssemblyNameSpace
             GapStartPenalty = gap_start_penalty;
             GapExtendPenalty = gap_extend_penalty;
 
-            //var result = InputNameSpace.ParseHelper.ParseAlphabetData(data, type);
-            //alphabet = result.Item1;
-            //scoring_matrix = result.Item2;
+            var result = InputNameSpace.ParseHelper.ParseAlphabetData(data, type);
+            alphabet = result.Item1;
+            scoring_matrix = result.Item2;
 
-            if (type == AlphabetParamType.Path)
+            /*if (type == AlphabetParamType.Path)
             {
                 try
                 {
@@ -135,7 +135,7 @@ namespace AssemblyNameSpace
                         throw new ParseException($"The reading on the alphabet file was not successfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
                     }
                 }
-            }
+            }*/
         }
         public override string ToString()
         {

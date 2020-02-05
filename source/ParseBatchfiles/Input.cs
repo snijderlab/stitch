@@ -687,17 +687,19 @@ namespace AssemblyNameSpace
             }
             public static (char[], int[,]) ParseAlphabetData(string data, Alphabet.AlphabetParamType type)
             {
-                // MEMORY LEAK
-                var outEither = new ParseEither<int[,]>();
-
-                var file = new ParsedFile();
                 var lines = data.Split('\n');
+                var file = new ParsedFile("Inline alphabet", lines);
                 if (type == Alphabet.AlphabetParamType.Path)
                 {
                     lines = GetAllText(data).ReturnOrFail().Split('\n');
                     file = new ParsedFile(data, lines);
                 }
                 var counter = new Tokenizer.Counter(file);
+                return ParseAlphabetData(lines, counter);
+            }
+            public static (char[], int[,]) ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
+            {
+                var outEither = new ParseEither<int[,]>();
 
                 int rows = lines.Length;
                 var cells = new List<(Position, List<(string, Range)>)>();
@@ -713,12 +715,13 @@ namespace AssemblyNameSpace
                     {
                         if (line[0] == ';' || line[0] == ',')
                         {
-                            line.Remove(0, 1);
+                            line = line.Remove(0, 1);
                             counter.NextColumn();
                         }
                         else
                         {
                             var start = counter.GetPosition();
+                            var oldline = line;
                             var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
                             var range = new Range(start, counter.GetPosition());
                             splitline.Add((cell, range));
@@ -735,16 +738,16 @@ namespace AssemblyNameSpace
                 {
                     if (rows > cells[line].Item2.Count())
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", "There are column(s) missing on this row."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are column(s) missing on this row {line}."));
                     }
                     else if (rows < cells[line].Item2.Count())
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", "There are too much column(s) on this row."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are too much column(s) on this row {line}."));
                     }
                 }
 
                 var alphabetBuilder = new StringBuilder();
-                foreach (var element in cells[0].Item2)
+                foreach (var element in cells[0].Item2.Skip(1))
                 {
                     alphabetBuilder.Append(element.Item1);
                 }
@@ -752,7 +755,7 @@ namespace AssemblyNameSpace
 
                 if (!alphabet.Contains('*')) // TODO: use the right variables
                 {
-                    outEither.AddMessage(new ErrorMessage(file, "GapChar missing", "The Gap '*' is missing in the alpabet definition."));
+                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", "The Gap '*' is missing in the alpabet definition.", "", true));
                 }
 
                 var scoring_matrix = new int[columns - 1, columns - 1];
@@ -761,7 +764,14 @@ namespace AssemblyNameSpace
                 {
                     for (int j = 0; j < columns - 1; j++)
                     {
-                        scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).GetValue(outEither);
+                        try
+                        {
+                            scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).GetValue(outEither);
+                        }
+                        catch (ArgumentOutOfRangeException)
+                        {
+                            outEither.AddMessage(new ErrorMessage(counter.File, "Cell out of range", $"Cell {i},{j} out of range."));
+                        }
                     }
                 }
                 outEither.ReturnOrFail();

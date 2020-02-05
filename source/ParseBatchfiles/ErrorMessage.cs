@@ -14,40 +14,40 @@ namespace AssemblyNameSpace
             string helpDescription = "";
             string subject = "";
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "")
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false)
             {
                 subject = sub;
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
-                Warning = false;
+                Warning = warning;
                 File = new ParsedFile();
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "")
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false)
             {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
-                Warning = false;
+                Warning = warning;
                 File = file;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "")
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false)
             {
                 startposition = pos;
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
-                Warning = false;
+                Warning = warning;
                 File = pos.File;
             }
-            public ErrorMessage(Range range, string shortD, string longD = "", string help = "")
+            public ErrorMessage(Range range, string shortD, string longD = "", string help = "", bool warning = false)
             {
                 startposition = range.Start;
                 endposition = range.End;
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
-                Warning = false;
+                Warning = warning;
                 File = range.File;
             }
             public static ErrorMessage DuplicateValue(Range range)
@@ -99,7 +99,7 @@ namespace AssemblyNameSpace
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
+                    var pos = new string(' ', Math.Max(0, startposition.Column - 1)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
                     location = $"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
                 }
                 else
@@ -167,7 +167,7 @@ namespace AssemblyNameSpace
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + new string('^', endposition.Column - startposition.Column);
+                    var pos = new string(' ', Math.Max(0, startposition.Column - 1)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
                     Console.Write($"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}");
                     Console.ForegroundColor = primary_colour;
                     Console.Write(pos);

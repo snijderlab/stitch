@@ -346,30 +346,36 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// Consumes the string until it find one of the sequences
                 /// </summary>
-                /// <param name="content">The string</param>
+                /// <param name="content">The string, assumed not to have newlines before the first occurrence of a sequence</param>
                 /// <param name="sequence">The sequences to find</param>
                 /// <returns>The consumed part of the string</returns>
                 public static string UntilOneOf(ref string content, char[] sequence, Counter counter)
                 {
-                    var buffer = new StringBuilder();
-                    bool found = false;
-                    while (!found && content.Length > 0)
+                    var dict = new HashSet<char>(sequence);
+                    var pos = -1;
+                    for (int i = 0; i < content.Length; i++)
                     {
-                        if (sequence.Contains(content[0]))
+                        if (dict.Contains(content[i]))
                         {
-                            if (content[0] != '\n') counter.NextColumn();
-                            else counter.NextLine();
-
-                            buffer.Append(content[0]);
-                            content = content.Remove(0, 1);
-                        }
-                        else
-                        {
-                            found = true;
+                            pos = i;
+                            break;
                         }
                     }
 
-                    return buffer.ToString();
+                    if (pos == -1)
+                    {
+                        counter.NextColumn(content.Length);
+                        var backup = content;
+                        content = "";
+                        return backup;
+                    }
+                    else
+                    {
+                        var value = content.Substring(0, pos);
+                        counter.NextColumn(value.Length);
+                        content = content.Remove(0, pos);
+                        return value;
+                    }
                 }
             }
         }
