@@ -738,11 +738,11 @@ namespace AssemblyNameSpace
                 {
                     if (rows > cells[line].Item2.Count())
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are column(s) missing on this row {line}."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {rows - cells[line].Item2.Count()} column(s) missing on this row."));
                     }
                     else if (rows < cells[line].Item2.Count())
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are too much column(s) on this row {line}."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {cells[line].Item2.Count() - rows} additional column(s) on this row."));
                     }
                 }
 
@@ -770,7 +770,8 @@ namespace AssemblyNameSpace
                         }
                         catch (ArgumentOutOfRangeException)
                         {
-                            outEither.AddMessage(new ErrorMessage(counter.File, "Cell out of range", $"Cell {i},{j} out of range."));
+                            // Invalid amount of cells will already be pointed out
+                            //outEither.AddMessage(new ErrorMessage(cells[i + 1].Item1, "Cell out of range", $"Cell {i},{j} out of range."));
                         }
                     }
                 }

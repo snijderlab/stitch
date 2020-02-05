@@ -148,7 +148,7 @@ namespace AssemblyNameSpace
                 {
                     Console.Write($"File: {File.Filename}\n");
                 }
-                else if (endposition == null) // Single position
+                else if (endposition == null || startposition.Line > endposition.Line) // Single position
                 {
                     var line_number = startposition.Line.ToString();
                     var spacing = new string(' ', line_number.Length + 1);
