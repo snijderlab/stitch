@@ -287,7 +287,7 @@ namespace AssemblyNameSpace
                     }
                     sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length - 2));
 
-                    condensed_graph.Add(new CondensedNode(sequence, i, forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
+                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
                 }
             }
 

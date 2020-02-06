@@ -14,134 +14,28 @@ using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
-    public class TemplateDatabase
-    {
-        public readonly string Name;
-        readonly Alphabet alphabet;
-        public List<Template> Templates;
-        readonly double cutoffScore;
-        /// <summary>
-        /// Create a new TemplateDatabase based on the reads found in the given file.
-        /// </summary>
-        /// <param name="file">The file to open</param>
-        /// <param name="type">The type of the file</param>
-        /// <param name="alp">The alphabet to use</param>
-        /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(MetaData.FileIdentifier file, RunParameters.InputType type, Alphabet alp, string name, double _cutoffScore)
-        {
-            Name = name;
-            cutoffScore = _cutoffScore;
-            alphabet = alp;
-            Templates = new List<Template>();
-
-            List<(string, MetaData.IMetaData)> sequences;
-
-            if (type == RunParameters.InputType.Reads)
-            {
-                sequences = OpenReads.Simple(file);
-            }
-            else if (type == RunParameters.InputType.Fasta)
-            {
-                sequences = OpenReads.Fasta(file);
-            }
-            else
-            {
-                throw new Exception($"The type {type} is not a valid type for a template database file (file: {file})");
-            }
-
-            foreach (var pair in sequences)
-            {
-                var parsed = StringToSequence(pair.Item1);
-                Templates.Add(new Template(parsed, pair.Item2, alphabet, cutoffScore));
-            }
-        }
-        /// <summary>
-        /// Create a new TemplateDatabase based on the templates provided.
-        /// </summary>
-        /// <param name="templates">The templates</param>
-        /// <param name="alp">The alphabet to use</param>
-        /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alp, string name, double _cutoffScore)
-        {
-            Name = name;
-            cutoffScore = _cutoffScore;
-            alphabet = alp;
-            Templates = templates.ToList();
-        }
-        /// <summary>
-        /// Gets the sequence in AminoAcids from a string
-        /// </summary>
-        /// <param name="input">The input string</param>
-        /// <returns>The sequence in AminoAcids</returns>
-        AminoAcid[] StringToSequence(string input)
-        {
-            AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++)
-            {
-                output[i] = new AminoAcid(alphabet, input[i]);
-            }
-            return output;
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<List<AminoAcid>> sequences)
-        {
-            int y = 0;
-            foreach (var tem in Templates)
-            {
-                int x = 0;
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].ToArray(), alphabet));
-                    x++;
-                }
-                y++;
-            }
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        public void MatchParallel(List<GraphPath> sequences)
-        {
-            var runs = new List<(Template, GraphPath)>();
-
-            foreach (var tem in Templates)
-            {
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    runs.Add((tem, sequences[i]));
-                }
-            }
-
-            Parallel.ForEach(runs, (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2)));
-        }
-        /// <summary>
-        /// Create a string summary of a template database.
-        /// </summary>
-        public override string ToString()
-        {
-            return $"TemplateDatabase {Name} with {Templates.Count()} templates in total";
-        }
-    }
     public class Template
     {
+        public readonly string Name;
         public readonly AminoAcid[] Sequence;
         public readonly MetaData.IMetaData MetaData;
         public int Score { get; private set; }
         public List<SequenceMatch> Matches;
         public readonly Alphabet Alphabet;
         readonly double cutoffScore;
-        public Template(AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet, double _cutoffScore)
+        public readonly List<Template> Recombination;
+        public readonly TemplateLocation Location;
+        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet, double _cutoffScore, TemplateLocation location = null, List<Template> recombination = null)
         {
+            Name = name;
             Sequence = seq;
             MetaData = meta;
             Score = 0;
             Matches = new List<SequenceMatch>();
             Alphabet = alphabet;
             cutoffScore = _cutoffScore;
+            Recombination = recombination;
+            Location = location;
         }
         public void AddMatch(SequenceMatch match)
         {
@@ -274,7 +168,7 @@ namespace AssemblyNameSpace
                         int score;
                         if (option.SequencePosition == -1)
                         {
-                            score = 0;
+                            score = 1; //TODO: figure out the best score for a gap in a path
                             aa = new AminoAcid(Alphabet, Alphabet.alphabet[Alphabet.GapIndex]);
                         }
                         else
@@ -318,5 +212,19 @@ namespace AssemblyNameSpace
 
             return output;
         }
+    }
+    public class TemplateLocation
+    {
+        public readonly int TemplateDatabaseIndex;
+        public readonly int TemplateIndex;
+        public TemplateLocation(int templateDatabaseIndex, int templateIndex)
+        {
+            TemplateDatabaseIndex = templateDatabaseIndex;
+            TemplateIndex = templateIndex;
+        }
+    }
+    public class RecombinedTemplateLocation : TemplateLocation
+    {
+        public RecombinedTemplateLocation(int templateIndex) : base(-1, templateIndex) { }
     }
 }

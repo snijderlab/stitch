@@ -488,7 +488,7 @@ namespace AssemblyNameSpace
     <h2>Sequence Length</h2>
     <p>{Paths[i].Sequence.Length}</p>
     <h2>Path</h2>
-    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b.Index, AsideType.Contig)).Substring(4)}</p>
+    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig)).Substring(3)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -504,6 +504,12 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(i, AsideType.Recombination);
             var template = RecombinedDatabase.Templates[i];
 
+            string order = "";
+            if (template.Recombination != null)
+            {
+                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationTemplate)).Substring(3)}</p>";
+            }
+
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
     <h2>Sequence</h2>
@@ -512,6 +518,7 @@ namespace AssemblyNameSpace
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
+    {order}
     {CreateTemplateAlignment(template, id)}
 </div>";
         }
@@ -529,6 +536,8 @@ namespace AssemblyNameSpace
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
+    <h2>Out of database</h2>
+    <p>{template.Name}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
     {CreateTemplateAlignment(template, id)}

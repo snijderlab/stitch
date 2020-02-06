@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
     /// <summary> Nodes in the condensed graph with a variable sequence length. </summary>
     public class CondensedNode
     {
-        /// <summary> The index this node. The index is defined as the index of the startnode in the adjacency list of the de Bruijn graph. </summary>
+        /// <summary> The index this node. The index is defined as the index of the startnode in the condensed node list. </summary>
         public int Index;
 
         /// <summary> The index of the last node (going from back to forth). To build the condensed graph with indexes in the condensed graph instead of the de Bruijn graph in the edges lists. </summary>
@@ -71,7 +71,7 @@ namespace AssemblyNameSpace
 
         /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
         /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/>.</param>
-        /// <param name="index"> The index of the node, the index in the de Bruijn graph. See <see cref="CondensedNode.Index"/>.</param>
+        /// <param name="index"> The index of the node, the index in the de condensed graph. See <see cref="CondensedNode.Index"/>.</param>
         /// <param name="forward_index"> The index of the last node of the sequence (going from back to forth). See <see cref="CondensedNode.ForwardIndex"/>.</param>
         /// <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="CondensedNode.BackwardIndex"/>.</param>
         /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/>.</param>

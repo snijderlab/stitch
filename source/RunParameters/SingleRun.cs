@@ -171,12 +171,13 @@ namespace AssemblyNameSpace
                     stopWatch.Start();
 
                     var databases = new List<TemplateDatabase>();
-                    foreach (var template in Template)
+                    for (int i = 0; i < Template.Count(); i++)
                     {
+                        var template = Template[i];
                         var alph = new Alphabet(template.Alphabet);// template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
                         Console.WriteLine($"Working on Template {template.Name}");
 
-                        var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore);
+                        var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore, i);
                         database1.MatchParallel(assm.GetAllPaths());
 
                         databases.Add(database1);
@@ -197,11 +198,12 @@ namespace AssemblyNameSpace
                         var rec_databases = new List<TemplateDatabase>();
                         var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : alphabet;
 
-                        foreach (var template in Recombine.Templates)
+                        for (int i = 0; i < Recombine.Templates.Count(); i++)
                         {
+                            var template = Recombine.Templates[i];
                             Console.WriteLine($"Working on Template {template.Name}");
 
-                            var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore);
+                            var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore, i);
                             database1.MatchParallel(assm.GetAllPaths());
 
                             rec_databases.Add(database1);
@@ -270,9 +272,11 @@ namespace AssemblyNameSpace
                         Console.WriteLine($"Found {combinations.Count()} combinations, with {combinations.First().Count()} elements in the first one");
 
                         var recombined_templates = new List<Template>();
-                        foreach (var sequence in combinations)
+                        for (int i = 0; i < combinations.Count(); i++)
                         {
+                            var sequence = combinations.ElementAt(i);
                             var s = new List<AminoAcid>();
+                            var t = new List<Template>();
                             foreach (var element in Recombine.Order)
                             {
                                 if (element.GetType() == typeof(RecombineOrder.Gap))
@@ -282,9 +286,10 @@ namespace AssemblyNameSpace
                                 else
                                 {
                                     s.AddRange(sequence.ElementAt(((RecombineOrder.Template)element).Index).Sequence);
+                                    t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                                 }
                             }
-                            recombined_templates.Add(new Template(s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph, Recombine.CutoffScore));
+                            recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph, Recombine.CutoffScore, new RecombinedTemplateLocation(i), t));
                         }
 
                         var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database", Recombine.CutoffScore);
