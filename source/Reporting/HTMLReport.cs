@@ -142,7 +142,7 @@ namespace AssemblyNameSpace
                 // Add all paths as classes to the nodes
                 for (int i = 0; i < condensed_graph.Count(); i++)
                 {
-                    string extra_classes = AllPathsContaining(i).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b, AsideType.Path)).Substring(1);
+                    string extra_classes = AllPathsContaining(condensed_graph[i].Index).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b.Index, AsideType.Path)).Substring(1);
                     svggraph = svggraph.Replace($"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
                     simplesvggraph = simplesvggraph.Replace($"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
                 }
@@ -155,7 +155,7 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                throw new Exception("Unexpected exception when trying call dot to build graph: " + e.Message);
+                throw new Exception("Unexpected exception when trying call dot to build graph: " + e.Message + e.StackTrace);
             }
         }
 

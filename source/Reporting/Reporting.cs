@@ -119,16 +119,16 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="id">The id of the specified node</param>
         /// <returns>A list of all path ids</returns>
-        protected List<int> AllPathsContaining(int id)
+        protected List<GraphPath> AllPathsContaining(int id)
         {
-            var output = new List<int>();
-            for (int i = 0; i < Paths.Count(); i++)
+            var output = new List<GraphPath>();
+            foreach (var path in Paths)
             {
-                foreach (var node in Paths[i].Nodes)
+                foreach (var node in path.Nodes)
                 {
                     if (node.Index == id)
                     {
-                        output.Add(i);
+                        output.Add(path);
                         break;
                     }
                 }

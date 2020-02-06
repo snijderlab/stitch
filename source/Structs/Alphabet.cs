@@ -19,10 +19,11 @@ namespace AssemblyNameSpace
     {
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </summary>
-        public int[,] scoring_matrix;
+        public readonly int[,] scoring_matrix;
         /// <summary> The alphabet used for alignment. The default value is all the amino acids in order of
         /// natural abundance in prokaryotes to make finding the right amino acid a little bit faster. </summary>
-        public char[] alphabet;
+        public readonly char[] alphabet;
+        public readonly Dictionary<char, int> positionInAlphabet;
         /// <summary>
         /// The penalty for opening a gap in an alignment
         /// </summary>
@@ -41,15 +42,14 @@ namespace AssemblyNameSpace
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
         public int getIndexInAlphabet(char c)
         {
-            for (int i = 0; i < alphabet.Length; i++)
+            try
             {
-                if (c == alphabet[i])
-                {
-                    return i;
-                }
+                return positionInAlphabet[c];
             }
-            Console.WriteLine($"Could not find '{c}' in the alphabet: '{alphabet}'");
-            return -1;
+            catch (KeyNotFoundException)
+            {
+                throw new ArgumentException($"The char '{c}' could not be found in this alphabet.");
+            }
         }
         /// <summary>
         /// To indicate if the given string is data or a path to the data
@@ -81,61 +81,11 @@ namespace AssemblyNameSpace
             alphabet = result.Item1;
             scoring_matrix = result.Item2;
 
-            /*if (type == AlphabetParamType.Path)
+            positionInAlphabet = new Dictionary<char, int>();
+            for (int i = 0; i < alphabet.Length; i++)
             {
-                try
-                {
-                    data = File.ReadAllText(data);
-                }
-                catch (Exception e)
-                {
-                    throw new Exception($"Could not open the alphabetfile: {data}; {e.Message}");
-                }
+                positionInAlphabet.Add(alphabet[i], i);
             }
-            var input = data.Split('\n');
-            int rows = input.Length;
-            List<string[]> array = new List<string[]>();
-
-            foreach (string line in input)
-            {
-                if (line != "")
-                    array.Add(line.Split(new char[] { ';', ',' }).Select(x => x.Trim(new char[] { ' ', '\n', '\r', '\t', '.' })).ToArray());
-            }
-
-            int columns = array[0].Length;
-
-            for (int line = 0; line < rows; line++)
-            {
-                if (rows != array[line].Length)
-                {
-                    throw new ParseException($"The amount of rows ({rows}) is not equal to the amount of columns ({array[line].Length}) for line {line + 1}.");
-                }
-            }
-
-            alphabet = String.Join("", array[0].SubArray(1, columns - 1)).ToCharArray();
-
-            if (!alphabet.Contains(GapChar))
-            {
-                alphabet = alphabet.Concat(new char[] { GapChar }).ToArray();
-            }
-            GapIndex = getIndexInAlphabet(GapChar);
-
-            scoring_matrix = new int[columns - 1, columns - 1];
-
-            for (int i = 0; i < columns - 1; i++)
-            {
-                for (int j = 0; j < columns - 1; j++)
-                {
-                    try
-                    {
-                        scoring_matrix[i, j] = Int32.Parse(array[i + 1][j + 1]);
-                    }
-                    catch
-                    {
-                        throw new ParseException($"The reading on the alphabet file was not successfull, because at column {i} and row {j} the value ({array[i + 1][j + 1]}) is not a valid integer.");
-                    }
-                }
-            }*/
         }
         public override string ToString()
         {

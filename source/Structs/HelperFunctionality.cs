@@ -197,7 +197,7 @@ namespace AssemblyNameSpace
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
                     //gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
-                    score = alphabet.scoring_matrix[template[tem_pos - 1].Code, query[query_pos - 1].Code];
+                    score = alphabet.scoring_matrix[alphabet.positionInAlphabet[template[tem_pos - 1].Char], alphabet.positionInAlphabet[query[query_pos - 1].Char]];
                     // Calculate the score for the current position
                     a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
                     b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight

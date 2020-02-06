@@ -283,16 +283,18 @@ namespace AssemblyNameSpace
                     if (option.SequencePosition != 0)
                     {
                         AminoAcid aa;
+                        int score;
                         if (option.SequencePosition == -1)
                         {
+                            score = 0;
                             aa = new AminoAcid(Alphabet, Alphabet.alphabet[Alphabet.GapIndex]);
                         }
                         else
                         {
+                            score = Matches[option.MatchIndex].Path == null ? 1 : Matches[option.MatchIndex].Path.DepthOfCoverage[option.SequencePosition - 1];
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
                         }
 
-                        var score = Matches[option.MatchIndex].Path == null ? 1 : Matches[option.MatchIndex].Path.DepthOfCoverage[option.SequencePosition - 1];
                         if (output[i].Item1.ContainsKey(aa))
                         {
                             output[i].Item1[aa] += score;

@@ -41,8 +41,7 @@ namespace AssemblyTestNameSpace
             string input = "abcdefghijklmnopqrstuvwxyzCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             foreach (char c in input)
             {
-                int a = alp.getIndexInAlphabet(c);
-                Assert.AreEqual(a, -1);
+                Assert.ThrowsException<ArgumentException>(() => alp.getIndexInAlphabet(c));
             }
         }
         [TestMethod]
