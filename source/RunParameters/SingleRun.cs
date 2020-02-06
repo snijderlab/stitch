@@ -134,7 +134,7 @@ namespace AssemblyNameSpace
             /// <returns>The main parameters.</returns>
             public string Display()
             {
-                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a, b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
+                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a, b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse}\n\tAlphabet\t: {Alphabet.Name}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
             }
 
             /// <summary>

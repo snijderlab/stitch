@@ -108,7 +108,7 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        throw new ParseException($"Parameter '{name.ToString()}' {range} should be followed by an delimiter (':', ':>' or '->')");
+                        throw new ParseException($"Parameter '{name}' {range} should be followed by an delimiter (':', ':>' or '->')");
                     }
                 }
 
@@ -282,7 +282,7 @@ namespace AssemblyNameSpace
                 /// <returns>The value.</returns>
                 public static (string, Range) Value(ref string content, Counter counter)
                 {
-                    string result = "";
+                    string result;
                     Position start = counter.GetPosition();
                     Position end; int nextnewline = FindNextNewLine(ref content);
                     if (nextnewline > 0)
@@ -340,7 +340,7 @@ namespace AssemblyNameSpace
                         }
                     }
 
-                    string value = "";
+                    string value;
                     if (nextnewline > 0)
                     {
                         value = content.Substring(0, nextnewline).Trim();

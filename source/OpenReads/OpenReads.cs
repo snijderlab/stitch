@@ -17,29 +17,24 @@ namespace AssemblyNameSpace
     /// </summary>
     public static class OpenReads
     {
-		//Review: is er een reden dat je voor een tuple list gaat in plaats van een dictionary?
-		//MierenNeuken: snake_case en gewoonachterelkaar door elkaar in method parameters en variable names. Geloof dat conventie camelCase is, maar consistentie vooral.
-
-		//Review klopt het nog dat non newline whitespace supported is? Ik zie niet hoe. Anders even een testfile toevoegen met tabs en of spaces
-
-		/// <summary> To open a file with reads. It assumes a very basic format,
-		/// namely sequences separated with whitespace (space, tab or newline)
-		/// with the possibility to specify comments as lines starting with a
-		/// specific character (standard '#').  </summary>
-		/// <param name="input_file"> The file to read from. </param>
-		/// <param name="comment_char"> The character comment lines start with. </param>
-		/// <returns> A list of all reads found. </returns>
-		public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier input_file, char comment_char = '#')
+        /// <summary> To open a file with reads. It assumes a very basic format,
+        /// namely sequences separated with newlines
+        /// with the possibility to specify comments as lines starting with a
+        /// specific character (standard '#').  </summary>
+        /// <param name="inputFile"> The file to read from. </param>
+        /// <param name="commentChar"> The character comment lines start with. </param>
+        /// <returns> A list of all reads found. </returns>
+        public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier inputFile, char commentChar = '#')
         {
             var reads = new List<(string, MetaData.IMetaData)>();
 
-            if (!File.Exists(input_file.Path))
-                throw new Exception($"The specified file does not exist: {input_file.Path}");
+            if (!File.Exists(inputFile.Path))
+                throw new Exception($"The specified file does not exist: {inputFile.Path}");
 
             List<string> lines;
             try
             {
-                lines = File.ReadLines(input_file.Path).ToList();
+                lines = File.ReadLines(inputFile.Path).ToList();
             }
             catch (Exception e)
             {
@@ -48,8 +43,8 @@ namespace AssemblyNameSpace
 
             foreach (var line in lines)
             {
-                if (line[0] != comment_char)
-                    reads.Add((line.Trim(), new MetaData.None(input_file)));
+                if (line[0] != commentChar)
+                    reads.Add((line.Trim(), new MetaData.None(inputFile)));
             }
 
             return reads;

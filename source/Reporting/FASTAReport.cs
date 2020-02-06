@@ -18,7 +18,7 @@ namespace AssemblyNameSpace
     /// </summary>
     class FASTAReport : Report
     {
-        int MinScore;
+        readonly int MinScore;
 
         /// <summary>
         /// To retrieve all metadata.
@@ -68,7 +68,8 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             foreach (var line in sequences)
             {
-                buffer.AppendLine(line.Item2);
+                if (line.Item1 >= MinScore)
+                    buffer.AppendLine(line.Item2);
             }
 
             return buffer.ToString().Trim();
@@ -81,7 +82,7 @@ namespace AssemblyNameSpace
         {
             // Align the reads used for this sequence to the sequence
             string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
-            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
+            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
             var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
 
             // Calculate the score by calculating the total read length (which maps to a location on the contig)

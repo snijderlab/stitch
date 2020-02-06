@@ -17,7 +17,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The value for this key.
             /// </summary>
-            ValueType Value;
+            readonly ValueType Value;
             public readonly KeyRange KeyRange;
             public readonly Range ValueRange;
 
@@ -53,9 +53,9 @@ namespace AssemblyNameSpace
             /// <returns>The value of the KeyValue.</returns>
             public string GetValue()
             {
-                if (Value is Single)
+                if (Value is Single value)
                 {
-                    return ((Single)Value).Value;
+                    return value.Value;
                 }
                 else
                 {
@@ -69,9 +69,9 @@ namespace AssemblyNameSpace
             /// <returns>The values of this KeyValue.</returns>
             public List<KeyValue> GetValues()
             {
-                if (Value is Multiple)
+                if (Value is Multiple multiple)
                 {
-                    return ((Multiple)Value).Values;
+                    return multiple.Values;
                 }
                 else
                 {

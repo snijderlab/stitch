@@ -44,7 +44,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// A metadata instance to contain no metadata so reads without metadata can also be handeled.
+        /// A metadata instance to contain no metadata so reads without metadata can also be handled.
         /// </summary>
         public class None : IMetaData
         {
@@ -89,11 +89,6 @@ namespace AssemblyNameSpace
                 return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>{File.ToHTML()}";
             }
         }
-
-
-		//Review: mijn visie hierop is best een beetje anders. Je hebt nu twee klasses die peaks heten, eentje als
-		// fileformat en eentje als metadata. Ik heb het idee dat die klasse gewoon een klasse kan zijn die het metadata interface implementeert?
-		// Ik heb ook het idee dat al je metadata klasses eigenlijk fileformats zijn, maar dat is een naming thing. ik zou voor fileformat klasses gaan die IMetaData implementeren.
 
         /// <summary> A struct to hold metainformation from PEAKS data. </summary>
         public class Peaks : IMetaData

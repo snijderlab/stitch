@@ -12,7 +12,7 @@ namespace AssemblyTestNameSpace
     [TestClass]
     public class Alphabet_Test
     {
-        Alphabet alp;
+        readonly Alphabet alp;
         public Alphabet_Test()
         {
             alp = new Alphabet("*;A;B\nA;1;0\nB;0;1", Alphabet.AlphabetParamType.Data, 12, 1);

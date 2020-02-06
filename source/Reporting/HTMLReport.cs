@@ -21,7 +21,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Indicates if the program should use the included Dot (graphviz) distribution.
         /// </summary>
-        bool UseIncludedDotDistribution;
+        readonly bool UseIncludedDotDistribution;
 
         /// <summary>
         /// To retrieve all metadata.
@@ -75,19 +75,27 @@ namespace AssemblyNameSpace
             // Generate SVG files of the graph
             try
             {
-                Process svg = new Process();
-                svg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(filename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(filename), "svg") + "\"");
-                svg.StartInfo.RedirectStandardError = true;
-                svg.StartInfo.RedirectStandardInput = true;
-                svg.StartInfo.RedirectStandardOutput = true;
-                svg.StartInfo.UseShellExecute = false;
+                Process svg = new Process()
+                {
+                    StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg")
+                    {
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
+                    }
+                };
 
-                Process simplesvg = new Process();
-                simplesvg.StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg");// " + Path.GetFullPath(simplefilename) + " -o \"" + Path.ChangeExtension(Path.GetFullPath(simplefilename), "svg") + "\"");
-                simplesvg.StartInfo.RedirectStandardError = true;
-                simplesvg.StartInfo.RedirectStandardInput = true;
-                simplesvg.StartInfo.RedirectStandardOutput = true;
-                simplesvg.StartInfo.UseShellExecute = false;
+                Process simplesvg = new Process()
+                {
+                    StartInfo = new ProcessStartInfo(UseIncludedDotDistribution ? "assets/Dot/bin/dot.exe" : "dot", "-Tsvg")
+                    {
+                        RedirectStandardError = true,
+                        RedirectStandardInput = true,
+                        RedirectStandardOutput = true,
+                        UseShellExecute = false
+                    }
+                };
 
                 svg.Start();
                 simplesvg.Start();
@@ -473,7 +481,7 @@ namespace AssemblyNameSpace
     <h2>Top 10 templates</h2>
     <table>
     <tr><th>Score</th><th>Template</th></tr>
-    {sb.ToString()}
+    {sb}
     </table>
 </div>";
         }
@@ -741,16 +749,6 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
-        int PositionOfNthTrue(List<bool> list, int n)
-        {
-            int sum = 0;
-            int i;
-            for (i = 0; i < list.Count() && sum < n; i++)
-            {
-                if (list[i]) sum++;
-            }
-            return i;
-        }
 
         /// <summary> Returns a list of asides for details viewing. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
@@ -808,7 +806,7 @@ namespace AssemblyNameSpace
         {
             // TODO: move alignment to node definition, to reuse in different settings.
             string sequence = AminoAcid.ArrayToString(node.Prefix.ToArray()) + AminoAcid.ArrayToString(node.Sequence.ToArray()) + AminoAcid.ArrayToString(node.Suffix.ToArray());
-            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.Item1, item => item.Item2);
+            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
             var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
             sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             int prefixoffset = node.Prefix.Count();
@@ -995,11 +993,11 @@ namespace AssemblyNameSpace
         {
             string pre = GetAsidePrefix(type);
 
-            string i1 = "";
+            string i1;
             if (index1 == -1) i1 = "";
             else i1 = $"{index1}:";
 
-            string i2 = "";
+            string i2;
             if (index2 < 9999) i2 = $"{index2:D4}";
             else i2 = $"{index2}";
 
@@ -1070,7 +1068,7 @@ namespace AssemblyNameSpace
 <h3>General information</h3>
 <table>
 <tr><td>Runname</td><td>{singleRun.Runname}</td></tr>
-<tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VERSIONNUMBER}</td></tr>
+<tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VersionString}</td></tr>
 <tr><td>K (length of k-mer)</td><td>{singleRun.K}</td></tr>
 <tr><td>Minimum homology</td><td>{singleRun.MinimalHomology}</td></tr>
 <tr><td>Duplicate Threshold</td><td>{singleRun.DuplicateThreshold}</td></tr>

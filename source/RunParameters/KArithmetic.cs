@@ -28,7 +28,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The expression.
             /// </summary>
-            Arithmetic.Expression expression;
+            readonly Arithmetic.Expression expression;
 
             /// <summary>
             /// To retrieve the value of the expression, given this value of K.
@@ -85,17 +85,17 @@ namespace AssemblyNameSpace
                     /// <summary>
                     /// The operator.
                     /// </summary>
-                    OpType type;
+                    readonly OpType type;
 
                     /// <summary>
                     /// The left hand side.
                     /// </summary>
-                    Expression left;
+                    readonly Expression left;
 
                     /// <summary>
                     /// The right hand side.
                     /// </summary>
-                    Expression right;
+                    readonly Expression right;
 
                     /// <summary>
                     /// Creates an operator expression.
@@ -128,7 +128,7 @@ namespace AssemblyNameSpace
                             case OpType.Divide:
                                 return left.Solve(k) / right.Solve(k);
                             default:
-                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type.ToString()}");
+                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type}");
                         }
                     }
 
@@ -138,7 +138,7 @@ namespace AssemblyNameSpace
                     /// <returns>This expression in string form.</returns>
                     public override string Show()
                     {
-                        string op = "";
+                        string op;
                         switch (type)
                         {
                             case OpType.Minus:
@@ -154,7 +154,7 @@ namespace AssemblyNameSpace
                                 op = "/";
                                 break;
                             default:
-                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type.ToString()}");
+                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type}");
                         }
                         return "(" + left.Show() + op + right.Show() + ")";
                     }

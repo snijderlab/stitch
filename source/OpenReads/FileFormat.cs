@@ -17,37 +17,32 @@ namespace AssemblyNameSpace
     /// </summary>
     public class FileFormat
     {
-		//Review: waarom zijn al deze constructors static?
-
         /// <summary>
         /// To contain all options for PEAKS file formats.
         /// </summary>
         public class Peaks
         {
-			//review: Alles een eigen lijn voor leesbaarheid. eventueel onderaan het document als je liever wilt dat het niet in de weg staat?
-			//review: waarom zet je dingen naar -1? deze hoort toch niet opngeinitialiseerd gebruikt te worden?
-
-			/// <summary>
-			/// The position of this column in this peaks file format version.
-			/// </summary>
-			public int fraction;
-            public int source_file;
-            public int feature;
-            public int scan;
-            public int peptide;
-            public int tag_length;
-            public int alc;
-            public int length;
-            public int mz;
-            public int z;
-            public int rt;
-            public int area;
-            public int mass;
-            public int ppm;
-            public int ptm;
-            public int local_confidence;
-            public int tag;
-            public int mode;
+            /// <summary>
+            /// The position of this column in this peaks file format version.
+            /// </summary>
+            public int fraction = -1;
+            public int source_file = -1;
+            public int feature = -1;
+            public int scan = -1;
+            public int peptide = -1;
+            public int tag_length = -1;
+            public int alc = -1;
+            public int length = -1;
+            public int mz = -1;
+            public int z = -1;
+            public int rt = -1;
+            public int area = -1;
+            public int mass = -1;
+            public int ppm = -1;
+            public int ptm = -1;
+            public int local_confidence = -1;
+            public int tag = -1;
+            public int mode = -1;
 
             /// <summary>
             /// An older version of a PEAKS export.
@@ -55,23 +50,24 @@ namespace AssemblyNameSpace
             /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks OldFormat()
             {
-                var pf = new FileFormat.Peaks();
-                pf.scan = 0;
-                pf.peptide = 1;
-                pf.tag_length = 2;
-                pf.alc = 3;
-                pf.length = 4;
-                pf.mz = 5;
-                pf.z = 6;
-                pf.rt = 7;
-                pf.area = 8;
-                pf.mass = 9;
-                pf.ppm = 10;
-                pf.ptm = 11;
-                pf.local_confidence = 12;
-                pf.tag = 13;
-                pf.mode = 14;
-                return pf;
+                return new FileFormat.Peaks
+                {
+                    scan = 0,
+                    peptide = 1,
+                    tag_length = 2,
+                    alc = 3,
+                    length = 4,
+                    mz = 5,
+                    z = 6,
+                    rt = 7,
+                    area = 8,
+                    mass = 9,
+                    ppm = 10,
+                    ptm = 11,
+                    local_confidence = 12,
+                    tag = 13,
+                    mode = 14
+                };
             }
 
             /// <summary>
@@ -80,26 +76,27 @@ namespace AssemblyNameSpace
             /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks NewFormat()
             {
-                var pf = new FileFormat.Peaks();
-                pf.fraction = 0;
-                pf.source_file = 1;
-                pf.feature = 2;
-                pf.peptide = 3;
-                pf.scan = 4;
-                pf.tag_length = 5;
-                pf.alc = 6;
-                pf.length = 7;
-                pf.mz = 8;
-                pf.z = 9;
-                pf.rt = 10;
-                pf.area = 11;
-                pf.mass = 12;
-                pf.ppm = 13;
-                pf.ptm = 14;
-                pf.local_confidence = 15;
-                pf.tag = 16;
-                pf.mode = 17;
-                return pf;
+                return new FileFormat.Peaks
+                {
+                    fraction = 0,
+                    source_file = 1,
+                    feature = 2,
+                    peptide = 3,
+                    scan = 4,
+                    tag_length = 5,
+                    alc = 6,
+                    length = 7,
+                    mz = 8,
+                    z = 9,
+                    rt = 10,
+                    area = 11,
+                    mass = 12,
+                    ppm = 13,
+                    ptm = 14,
+                    local_confidence = 15,
+                    tag = 16,
+                    mode = 17
+                };
             }
 
             /// <summary>
@@ -108,26 +105,27 @@ namespace AssemblyNameSpace
             /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
             {
-                var pf = new FileFormat.Peaks();
-                pf.fraction = fraction;
-                pf.source_file = source_file;
-                pf.feature = feature;
-                pf.peptide = peptide;
-                pf.scan = scan;
-                pf.tag_length = tag_length;
-                pf.alc = alc;
-                pf.length = length;
-                pf.mz = mz;
-                pf.z = z;
-                pf.rt = rt;
-                pf.area = area;
-                pf.mass = mass;
-                pf.ppm = ppm;
-                pf.ptm = ptm;
-                pf.local_confidence = local_confidence;
-                pf.tag = tag;
-                pf.mode = mode;
-                return pf;
+                return new FileFormat.Peaks
+                {
+                    fraction = fraction,
+                    source_file = source_file,
+                    feature = feature,
+                    peptide = peptide,
+                    scan = scan,
+                    tag_length = tag_length,
+                    alc = alc,
+                    length = length,
+                    mz = mz,
+                    z = z,
+                    rt = rt,
+                    area = area,
+                    mass = mass,
+                    ppm = ppm,
+                    ptm = ptm,
+                    local_confidence = local_confidence,
+                    tag = tag,
+                    mode = mode
+                };
             }
         }
     }

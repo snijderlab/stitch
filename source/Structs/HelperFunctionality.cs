@@ -13,7 +13,7 @@ using System.Globalization;
 namespace AssemblyNameSpace
 {
     /// <summary> A class to store extension methods to help in the process of coding. </summary>
-    static public class HelperFunctionality
+    public static class HelperFunctionality
     {
         /// <summary> To copy a subarray to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
@@ -132,16 +132,16 @@ namespace AssemblyNameSpace
                                 for (int offset = 0; offset < seq.Length - lengthpatch + 1; offset++)
                                 {
                                     int score = 0;
-                                    string tseq = "";
+                                    string template_seq = "";
                                     if (reverse)
                                     {
-                                        tseq = seq_rev.Substring(offset, lengthpatch);
-                                        score = GetPositionScore(ref template, ref tseq, alphabet, firsthit + 1);
-                                        possibilities.Add((score, new ReadPlacement(tseq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
+                                        template_seq = seq_rev.Substring(offset, lengthpatch);
+                                        score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit + 1);
+                                        possibilities.Add((score, new ReadPlacement(template_seq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
                                     }
-                                    tseq = seq.Substring(offset, lengthpatch);
-                                    score = GetPositionScore(ref template, ref tseq, alphabet, firsthit);
-                                    possibilities.Add((score, new ReadPlacement(tseq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
+                                    template_seq = seq.Substring(offset, lengthpatch);
+                                    score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit);
+                                    possibilities.Add((score, new ReadPlacement(template_seq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
                                 }
 
                                 var best = possibilities.First();
@@ -180,7 +180,7 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        static public SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, int right_id, Alphabet alphabet)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, int right_id, Alphabet alphabet)
         {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
 
@@ -189,14 +189,14 @@ namespace AssemblyNameSpace
             int max_index_q = 0;
 
             int tem_pos, query_pos, score, a, b, c, d;
-            bool gap;
-            int gap_index = alphabet.GapIndex;
+            //bool gap;
+            //int gap_index = alphabet.GapIndex;
 
             for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
+                    //gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
                     score = alphabet.scoring_matrix[template[tem_pos - 1].Code, query[query_pos - 1].Code];
                     // Calculate the score for the current position
                     a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
@@ -288,15 +288,15 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int tpos, int qpos, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, int seqid)
+        public SequenceMatch(int template_position, int query_position, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, int query_sequence_id)
         {
-            StartTemplatePosition = tpos;
-            StartQueryPosition = qpos;
+            StartTemplatePosition = template_position;
+            StartQueryPosition = query_position;
             Score = s;
             Alignment = m;
             TemplateSequence = tSeq;
             QuerySequence = qSeq;
-            QuerySequenceID = seqid;
+            QuerySequenceID = query_sequence_id;
             simplify();
         }
         public override string ToString()

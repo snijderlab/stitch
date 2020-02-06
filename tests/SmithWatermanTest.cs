@@ -13,7 +13,7 @@ namespace AssemblyTestNameSpace
     [TestClass]
     public class SmithWaterman_Test
     {
-        Alphabet alp;
+        readonly Alphabet alp;
         public SmithWaterman_Test()
         {
             alp = new Alphabet("*;A;B;C;D\nA;1;0;0;0\nB;0;1;0;0\nC;0;0;1;0\nD;0;0;0;1", Alphabet.AlphabetParamType.Data, 2, 1);
@@ -112,9 +112,6 @@ namespace AssemblyTestNameSpace
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
             var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
             var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
-            //GGTGC--CGACCGCGGACTGCT---  25
-            //    |  ||   | || || ||   
-            //----CCCCGGGTGTGG-CTCCTTCA  25
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(21, r.Score);
@@ -161,9 +158,9 @@ namespace AssemblyTestNameSpace
             //Uniprot - P80893
             //var bfp = "MFKGNVQGVGTVENIDKGAKFQSLHGVSLLPIDADLQSHDIIFPEDILEGVTSGELIAINGVRLTVVHTDKSIVRFDINDALELTTLGQLKVGDKVNIEKSFKFGDMTGGRSLSGIVTGVADIVEFIEKENNRQIWIEAPEHLTEFLVEKKYIGVDGVYLVIDAIENNRFCINLLLETDMRWYKKGSKVNIEIPDIAGNW";
             //Uniprot - X5DSL3
-            var mcherry = "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK";
+            var mCherry = "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK";
             var a = StringToSequence(gfp, alp);
-            var b = StringToSequence(mcherry, alp);
+            var b = StringToSequence(mCherry, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(283, r.Score);
@@ -248,12 +245,9 @@ namespace AssemblyTestNameSpace
         public void RealWorldViaTemplateDatabaseFile()
         {
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
-            var a = StringToSequence(tem, alp);
             var b = StringToSequence(path, alp);
 
-            Template template = new Template(a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
             TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new MetaData.FileIdentifier("../../../../examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0);
 
             db.Match(new List<List<AminoAcid>> { b.ToList() });

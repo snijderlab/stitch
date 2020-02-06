@@ -70,7 +70,7 @@ namespace AssemblyNameSpace
                 public int Cutoffscore;
 
                 /// <summary>
-                /// The cuttoffscore for patches.
+                /// The cutoff score for patches.
                 /// </summary>
                 public int LocalCutoffscore;
 

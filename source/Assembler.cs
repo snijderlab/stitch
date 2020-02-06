@@ -25,7 +25,7 @@ namespace AssemblyNameSpace
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
         public List<CondensedNode> condensed_graph;
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
-        private int kmer_length;
+        private readonly int kmer_length;
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </summary>
         /// <value> The length of the k-mers. </value>
         public int Kmer_length
@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
             get { return kmer_length; }
         }
         /// <summary> The private member to store the minimum homology value in. </summary>
-        private int minimum_homology;
+        private readonly int minimum_homology;
         /// <summary> The minimum homology value of an edge to include it in the graph. Lowering the limit 
         /// could result in a longer sequence retrieved from the algorithm but would also greatly increase
         /// the computational cost of the calculation. </summary>
@@ -42,7 +42,7 @@ namespace AssemblyNameSpace
         {
             get { return minimum_homology; }
         }
-        private int duplicate_threshold;
+        private readonly int duplicate_threshold;
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         public MetaInformation meta_data;
@@ -50,7 +50,7 @@ namespace AssemblyNameSpace
         /// The alphabet used
         /// </summary>
         public Alphabet alphabet;
-        private bool reverse;
+        private readonly bool reverse;
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>

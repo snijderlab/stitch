@@ -16,14 +16,14 @@ namespace AssemblyNameSpace
     public class Node
     {
         /// <summary> The member to store the sequence information in. </summary>
-        private AminoAcid[] sequence;
+        private readonly AminoAcid[] sequence;
 
         /// <summary> The sequence of the Node. Only has a getter. </summary>
         /// <value> The sequence of this node. </value>
         public AminoAcid[] Sequence { get { return sequence; } }
 
         /// <summary> Where the (k-1)-mer sequence comes from. </summary>
-        private List<int> origins;
+        private readonly List<int> origins;
 
         /// <summary> The indexes of the reads where this (k-1)-mere originated from. </summary>
         /// <value> A list of indexes of the list of reads. </value>
@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
-        private List<ValueTuple<int, int, int>> forwardEdges;
+        private readonly List<ValueTuple<int, int, int>> forwardEdges;
 
         /// <summary> The list of edges going from this node. </summary>
         /// <value> The list of edges from this Node. The tuples contain the index
@@ -45,7 +45,7 @@ namespace AssemblyNameSpace
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
-        private List<ValueTuple<int, int, int>> backwardEdges;
+        private readonly List<ValueTuple<int, int, int>> backwardEdges;
 
         /// <summary> The list of edges going to this node. </summary>
         /// <value> The list of edges to this Node. The tuples contain the index

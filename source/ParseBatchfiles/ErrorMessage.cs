@@ -6,13 +6,13 @@ namespace AssemblyNameSpace
     {
         public class ErrorMessage
         {
-            Position startposition;
-            Position endposition;
-            ParsedFile File;
-            string shortDescription = "";
-            string longDescription = "";
-            string helpDescription = "";
-            string subject = "";
+            readonly Position startposition;
+            readonly Position endposition;
+            readonly ParsedFile File;
+            readonly string shortDescription = "";
+            readonly string longDescription = "";
+            readonly string helpDescription = "";
+            readonly string subject = "";
             public bool Warning { get; private set; }
             public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false)
             {
@@ -52,8 +52,7 @@ namespace AssemblyNameSpace
             }
             public static ErrorMessage DuplicateValue(Range range)
             {
-                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.");
-                output.Warning = true;
+                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;
             }
             public static ErrorMessage MissingParameter(Range range, string parameter)
@@ -71,7 +70,7 @@ namespace AssemblyNameSpace
                 var header = $">> {name}: {shortDescription}\n";
 
                 // Location
-                string location = "";
+                string location;
                 if (subject != "")
                 {
                     location = $"\n   | {subject}\n\n";

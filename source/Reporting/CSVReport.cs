@@ -43,7 +43,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The key to get access to write to the CSV file.
         /// </summary>
-        static object CSVKey = new Object();
+        static readonly object CSVKey = new Object();
 
         /// <summary> Fill metainformation in a CSV line and append it to the given file. </summary>
         /// <param name="ID">ID of the run to recognize it in the CSV file. </param>

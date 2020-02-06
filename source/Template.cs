@@ -17,9 +17,9 @@ namespace AssemblyNameSpace
     public class TemplateDatabase
     {
         public readonly string Name;
-        Alphabet alphabet;
+        readonly Alphabet alphabet;
         public List<Template> Templates;
-        double cutoffScore;
+        readonly double cutoffScore;
         /// <summary>
         /// Create a new TemplateDatabase based on the reads found in the given file.
         /// </summary>
@@ -142,7 +142,7 @@ namespace AssemblyNameSpace
         public int Score { get; private set; }
         public List<SequenceMatch> Matches;
         public readonly Alphabet Alphabet;
-        double cutoffScore;
+        readonly double cutoffScore;
         public Template(AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet, double _cutoffScore)
         {
             Sequence = seq;
@@ -183,8 +183,10 @@ namespace AssemblyNameSpace
         /// <returns>A list with tuples for each position in the original sequence. The first item is an array of tuples with all sequences on this position (matchindex) and the position on this sequence + 1 (or -1 if there is a gap, so 0 if outside bounds). The second item is an array of all gaps after this position, containing both the matchindex and sequence. </returns>
         public List<((int, int)[], (int, IGap)[])> AlignedSequences()
         {
-            var output = new List<((int, int)[], (int, IGap)[])>();
-            output.Capacity = Sequence.Length;
+            var output = new List<((int, int)[], (int, IGap)[])>()
+            {
+                Capacity = Sequence.Length
+            };
             //Console.WriteLine($"The total sequence is {Sequence.Length} aa");
 
             // Add all the positions
@@ -257,8 +259,10 @@ namespace AssemblyNameSpace
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
         public List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)> CombinedSequence()
         {
-            var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)>();
-            output.Capacity = Sequence.Length;
+            var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)>()
+            {
+                Capacity = Sequence.Length
+            };
 
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)

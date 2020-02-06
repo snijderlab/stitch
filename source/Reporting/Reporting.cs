@@ -48,7 +48,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected List<CondensedNode> condensed_graph;
         /// <summary>
-        /// The uncondensed graph.
+        /// The not condensed graph.
         /// </summary>
         protected Node[] graph;
         /// <summary>

@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns true when the Amino Acids are equal. </returns>
         public override bool Equals(object obj)
         {
-            return obj is AminoAcid && this == (AminoAcid)obj;
+            return obj is AminoAcid aa && this == aa;
         }
 
         /// <summary> To check for equality of arrays of AminoAcids. </summary>

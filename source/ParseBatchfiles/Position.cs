@@ -81,13 +81,13 @@ namespace AssemblyNameSpace
                 return new Range(Start, NameEnd);
             }
         }
-        public KeyRange(Position start, Position nend, Position fend)
+        public KeyRange(Position start, Position name_end, Position field_end)
         {
             Start = start;
-            NameEnd = nend;
-            FieldEnd = fend;
+            NameEnd = name_end;
+            FieldEnd = field_end;
             File = start.File;
-            if (start.File != nend.File || nend.File != fend.File)
+            if (start.File != name_end.File || name_end.File != field_end.File)
             {
                 throw new ArgumentException("Three positions in different files do not form a range in a single file.");
             }

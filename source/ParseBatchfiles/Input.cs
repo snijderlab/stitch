@@ -342,9 +342,12 @@ namespace AssemblyNameSpace
                         {
                             var order_string = order.GetValue();
                             // Create a new counter
-                            var order_counter = new InputNameSpace.Tokenizer.Counter(batchfile);
-                            order_counter.Line = order.ValueRange.Start.Line;
-                            order_counter.Column = order.ValueRange.Start.Column;
+                            var order_counter = new InputNameSpace.Tokenizer.Counter(batchfile)
+                            {
+                                Line = order.ValueRange.Start.Line,
+                                Column = order.ValueRange.Start.Column
+                            };
+
 
                             while (order_string != "")
                             {
@@ -510,7 +513,7 @@ namespace AssemblyNameSpace
     /// <summary>To save a result of a parse action, the value or a errormessage. </summary>
     public class ParseEither<T>
     {
-        public T Value = default(T);
+        public T Value;
         public List<ErrorMessage> Messages = new List<ErrorMessage>();
         public ParseEither(T t)
         {
@@ -721,7 +724,6 @@ namespace AssemblyNameSpace
                         else
                         {
                             var start = counter.GetPosition();
-                            var oldline = line;
                             var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
                             var range = new Range(start, counter.GetPosition());
                             splitline.Add((cell, range));
