@@ -13,23 +13,46 @@ using System.Globalization;
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// To contain definitions for file formats
+    /// To contain definitions for file formats.
     /// </summary>
     public class FileFormat
     {
+		//Review: waarom zijn al deze constructors static?
+
         /// <summary>
-        /// To contain all options for PEAKS file formats
+        /// To contain all options for PEAKS file formats.
         /// </summary>
         public class Peaks
         {
+			//review: Alles een eigen lijn voor leesbaarheid. eventueel onderaan het document als je liever wilt dat het niet in de weg staat?
+			//review: waarom zet je dingen naar -1? deze hoort toch niet opngeinitialiseerd gebruikt te worden?
+
+			/// <summary>
+			/// The position of this column in this peaks file format version.
+			/// </summary>
+			public int fraction;
+            public int source_file;
+            public int feature;
+            public int scan;
+            public int peptide;
+            public int tag_length;
+            public int alc;
+            public int length;
+            public int mz;
+            public int z;
+            public int rt;
+            public int area;
+            public int mass;
+            public int ppm;
+            public int ptm;
+            public int local_confidence;
+            public int tag;
+            public int mode;
+
             /// <summary>
-            /// The position of this column in this peaks file format version.
+            /// An older version of a PEAKS export.
             /// </summary>
-            public int fraction, source_file, feature, scan, peptide, tag_length, alc, length, mz, z, rt, area, mass, ppm, ptm, local_confidence, tag, mode = -1;
-            /// <summary>
-            /// An older version of a PEAKS export
-            /// </summary>
-            /// <returns>The fileformat</returns>
+            /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks OldFormat()
             {
                 var pf = new FileFormat.Peaks();
@@ -50,10 +73,11 @@ namespace AssemblyNameSpace
                 pf.mode = 14;
                 return pf;
             }
+
             /// <summary>
-            /// A newer version of a PEAKS export
+            /// A newer version of a PEAKS export.
             /// </summary>
-            /// <returns>The fileformat</returns>
+            /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks NewFormat()
             {
                 var pf = new FileFormat.Peaks();
@@ -77,10 +101,11 @@ namespace AssemblyNameSpace
                 pf.mode = 17;
                 return pf;
             }
+
             /// <summary>
-            /// An custom version of a PEAKS fileformat 
+            /// An custom version of a PEAKS fileformat.
             /// </summary>
-            /// <returns>The fileformat</returns>
+            /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
             {
                 var pf = new FileFormat.Peaks();

@@ -29,27 +29,27 @@ namespace AssemblyNameSpace
         /// <value> A list of indexes of the list of reads. </value>
         public List<int> Origins { get { return origins; } }
 
-        /// <summary> The list of edges from this Node. The tuples contain the index 
-        /// of the Node where the edge goes to, the homology with the first Node 
-        /// and the homology with the second Node in this order. The private 
+        /// <summary> The list of edges from this Node. The tuples contain the index
+        /// of the Node where the edge goes to, the homology with the first Node
+        /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
         private List<ValueTuple<int, int, int>> forwardEdges;
 
         /// <summary> The list of edges going from this node. </summary>
-        /// <value> The list of edges from this Node. The tuples contain the index 
-        /// of the Node where the edge goes to, the homology with the first Node 
+        /// <value> The list of edges from this Node. The tuples contain the index
+        /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. Only has a getter. </value>
         public List<ValueTuple<int, int, int>> ForwardEdges { get { return forwardEdges; } }
 
-        /// <summary> The list of edges to this Node. The tuples contain the index 
-        /// of the Node where the edge goes to, the homology with the first Node 
-        /// and the homology with the second Node in this order. The private 
+        /// <summary> The list of edges to this Node. The tuples contain the index
+        /// of the Node where the edge goes to, the homology with the first Node
+        /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
         private List<ValueTuple<int, int, int>> backwardEdges;
 
         /// <summary> The list of edges going to this node. </summary>
-        /// <value> The list of edges to this Node. The tuples contain the index 
-        /// of the Node where the edge goes to, the homology with the first Node 
+        /// <value> The list of edges to this Node. The tuples contain the index
+        /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. Only has a getter. </value>
         public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
 
@@ -87,6 +87,7 @@ namespace AssemblyNameSpace
             if (!inlist) forwardEdges.Add((target, score1, score2));
             return;
         }
+
         /// <summary> To add a backward edge to the Node. </summary>
         /// <param name="target"> The index of the Node where this edge comes from. </param>
         /// <param name="score1"> The homology of the edge with the first Node. </param>
@@ -105,20 +106,23 @@ namespace AssemblyNameSpace
             if (!inlist) backwardEdges.Add((target, score1, score2));
             return;
         }
+
         /// <summary> To check if the Node has forward edges. </summary>
         /// <returns> Returns true if the node has forward edges. </returns>
         public bool HasForwardEdges()
         {
             return forwardEdges.Count > 0;
         }
+
         /// <summary> To check if the Node has backward edges. </summary>
         /// <returns> Returns true if the node has backward edges. </returns>
         public bool HasBackwardEdges()
         {
             return backwardEdges.Count > 0;
         }
+
         /// <summary> To get the amount of edges (forward and backward). </summary>
-        /// <remarks> O(1) runtime </remarks>
+        /// <remarks> O(1) runtime. </remarks>
         /// <returns> The amount of edges (forwards and backwards). </returns>
         public int EdgesCount()
         {

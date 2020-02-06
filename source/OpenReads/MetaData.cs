@@ -23,48 +23,54 @@ namespace AssemblyNameSpace
         public abstract class IMetaData
         {
             /// <summary>
-            /// The Identifier of the originating file
+            /// The Identifier of the originating file.
             /// </summary>
             public FileIdentifier File;
+
             /// <summary>
-            /// To generate (an) HTML element(s) from this MetaData
+            /// To generate (an) HTML element(s) from this MetaData.
             /// </summary>
-            /// <returns>A string containing the MetaData</returns>
+            /// <returns>A string containing the MetaData.</returns>
             public abstract string ToHTML();
+
             /// <summary>
-            /// To create an instance
+            /// To create an instance.
             /// </summary>
-            /// <param name="file">The identifier of the originating file</param>
+            /// <param name="file">The identifier of the originating file.</param>
             public IMetaData(FileIdentifier file)
             {
                 File = file;
             }
         }
+
         /// <summary>
         /// A metadata instance to contain no metadata so reads without metadata can also be handeled.
         /// </summary>
         public class None : IMetaData
         {
             /// <summary>
-            /// Create a new None MetaData
+            /// Create a new None MetaData.
             /// </summary>
             public None(FileIdentifier file) : base(file) { }
+
             /// <summary>
-            /// Returns None MetaData to HTML (which is always "")
+            /// Returns None MetaData to HTML (which is always "").
             /// </summary>
-            /// <returns>""</returns>
+            /// <returns>"".</returns>
             public override string ToHTML()
             {
                 return File.ToHTML();
             }
         }
-        /// <summary> A struct to hold metainformation from fasta data. </summary>
+
+        /// <summary> A class to hold metainformation from fasta data. </summary>
         public class Fasta : IMetaData
         {
             /// <summary>
             /// The identifier from the fasta file.
             /// </summary>
             public string Identifier;
+
             /// <summary>
             /// To create a new metadata instance with this metadata.
             /// </summary>
@@ -75,6 +81,7 @@ namespace AssemblyNameSpace
             {
                 this.Identifier = identifier;
             }
+
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
             public override string ToHTML()
@@ -82,49 +89,72 @@ namespace AssemblyNameSpace
                 return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>{File.ToHTML()}";
             }
         }
+
+
+		//Review: mijn visie hierop is best een beetje anders. Je hebt nu twee klasses die peaks heten, eentje als
+		// fileformat en eentje als metadata. Ik heb het idee dat die klasse gewoon een klasse kan zijn die het metadata interface implementeert?
+		// Ik heb ook het idee dat al je metadata klasses eigenlijk fileformats zijn, maar dat is een naming thing. ik zou voor fileformat klasses gaan die IMetaData implementeren.
+
         /// <summary> A struct to hold metainformation from PEAKS data. </summary>
         public class Peaks : IMetaData
         {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
+
             /// <summary> The source file out of which the peptide was generated. </summary>
             public string Source_File = null;
+
             /// <summary> The feature of the peptide. </summary>
             public string Feature = null;
+
             /// <summary> The scan identifier of the peptide. </summary>
             public string ScanID = null;
+
             /// <summary> The sequence with modifications of the peptide. </summary>
             public string Original_tag = null;
+
             /// <summary> The sequence without modifications of the peptide. </summary>
             public string Cleaned_sequence = null;
+
             /// <summary> The confidence score of the peptide. </summary>
             public int Confidence = -1;
+
             /// <summary> m/z of the peptide. </summary>
             public double Mass_over_charge = -1;
+
             /// <summary> z of the peptide. </summary>
             public int Charge = -1;
+
             /// <summary> Retention time of the peptide. </summary>
             public double Retention_time = -1;
+
             /// <summary> Area of the peak of the peptide.</summary>
             public double Area = -1;
+
             /// <summary> Mass of the peptide.</summary>
             public double Mass = -1;
+
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
+
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
+
             /// <summary> Local confidence scores of the peptide. </summary>
             public int[] Local_confidence = null;
+
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
+
             /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans = null;
+
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
-            /// <param name="pf">FileFormat of the PEAKS file</param>
-            /// <param name="file">Identifier for the originating file</param>
+            /// <param name="pf">FileFormat of the PEAKS file.</param>
+            /// <param name="file">Identifier for the originating file.</param>
             public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
                 : base(file)
             {
@@ -177,6 +207,7 @@ namespace AssemblyNameSpace
                     throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
                 }
             }
+
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
             public override string ToHTML()
@@ -261,38 +292,43 @@ namespace AssemblyNameSpace
                 return output.ToString();
             }
         }
+
         /// <summary>
         /// A identifier for a file, to hold information about where reads originate from.
         /// </summary>
         public class FileIdentifier
         {
-            /// <value>The absolute path to the file</value>
+            /// <value>The absolute path to the file.</value>
             public string Path { get { return path; } set { path = System.IO.Path.GetFullPath(value); } }
             string path;
-            /// <value>The name or identifier given to the file</value>
+
+            /// <value>The name or identifier given to the file.</value>
             public string Name;
+
             /// <summary>
-            /// Creating a new FileIdentifier
+            /// Creating a new FileIdentifier.
             /// </summary>
-            /// <param name="path_input">The path to the file, can be a relative path</param>
-            /// <param name="name">The identifier given to the file</param>
+            /// <param name="path_input">The path to the file, can be a relative path.</param>
+            /// <param name="name">The identifier given to the file.</param>
             public FileIdentifier(string path_input, string name)
             {
                 path = System.IO.Path.GetFullPath(path_input);
                 Name = name;
             }
+
             /// <summary>
-            /// To create a blank instance of FileIdentifier
+            /// To create a blank instance of FileIdentifier.
             /// </summary>
             public FileIdentifier()
             {
                 path = "";
                 Name = "";
             }
+
             /// <summary>
-            /// To generate HTML for use in the metadata sidebar in the HTML report
+            /// To generate HTML for use in the metadata sidebar in the HTML report.
             /// </summary>
-            /// <returns>A string containing the HTML</returns>
+            /// <returns>A string containing the HTML.</returns>
             public string ToHTML()
             {
                 return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<p>{Path}</p>";

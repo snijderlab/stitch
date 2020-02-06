@@ -15,65 +15,75 @@ namespace AssemblyNameSpace
     namespace RunParameters
     {
         /// <summary>
-        /// All parameters for a single run
+        /// All parameters for a single run.
         /// </summary>
         public class SingleRun
         {
             /// <summary>
-            /// The unique numeric ID of this run
+            /// The unique numeric ID of this run.
             /// </summary>
             public int ID;
+
             /// <summary>
-            /// THe name of this run
+            /// THe name of this run.
             /// </summary>
             public string Runname;
+
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
             /// </summary>
             public List<Input.Parameter> Input;
+
             /// <summary>
-            /// The value of K used in this run
+            /// The value of K used in this run.
             /// </summary>
             public int K;
+
             /// <summary>
-            /// The value of MinimalHomology used in this run
+            /// The value of MinimalHomology used in this run.
             /// </summary>
             public int MinimalHomology;
+
             /// <summary>
-            /// The value of DuplicateThreshold used in this run
+            /// The value of DuplicateThreshold used in this run.
             /// </summary>
             public int DuplicateThreshold;
+
             /// <summary>
-            /// The value of Reverse used in this run
+            /// The value of Reverse used in this run.
             /// </summary>
             public bool Reverse;
+
             /// <summary>
-            /// The alphabet used in this run
+            /// The alphabet used in this run.
             /// </summary>
             public AlphabetValue Alphabet;
+
             /// <summary>
-            /// The template(s) used in this run
+            /// The template(s) used in this run.
             /// </summary>
             public List<TemplateValue> Template;
             public RecombineValue Recombine;
+
             /// <summary>
-            /// The reports to be generated
+            /// The reports to be generated.
             /// </summary>
             public List<Report.Parameter> Report;
+
             /// <summary>
-            /// To create a single run with a single dataparameter as input
+            /// To create a single run with a single dataparameter as input.
             /// </summary>
-            /// <param name="id">The ID of the run</param>
-            /// <param name="runname">The name of the run</param>
-            /// <param name="input">The input data to be run</param>
-            /// <param name="k">The value of K</param>
-            /// <param name="duplicateThreshold">The value of DuplicateThreshold</param>
-            /// <param name="minimalHomology">The value of MinimalHomology</param>
-            /// <param name="reverse">The value of Reverse</param>
-            /// <param name="alphabet">The alphabet to be used</param>
-            /// <param name="template">The templates to be used</param>
-            /// <param name="recombine">The recombination, if needed</param>
-            /// <param name="report">The report(s) to be generated</param>
+            /// <param name="id">The ID of the run.</param>
+            /// <param name="runname">The name of the run.</param>
+            /// <param name="input">The input data to be run.</param>
+            /// <param name="k">The value of K.</param>
+            /// <param name="duplicateThreshold">The value of DuplicateThreshold.</param>
+            /// <param name="minimalHomology">The value of MinimalHomology.</param>
+            /// <param name="reverse">The value of Reverse.</param>
+            /// <param name="alphabet">The alphabet to be used.</param>
+            /// <param name="template">The templates to be used.</param>
+            /// <param name="recombine">The recombination, if needed.</param>
+            /// <param name="report">The report(s) to be generated.</param>
             public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
             {
                 ID = id;
@@ -88,20 +98,21 @@ namespace AssemblyNameSpace
                 Recombine = recombine;
                 Report = report;
             }
+
             /// <summary>
-            /// To create a single run with a multiple dataparameters as input
+            /// To create a single run with a multiple dataparameters as input.
             /// </summary>
-            /// <param name="id">The ID of the run</param>
-            /// <param name="runname">The name of the run</param>
-            /// <param name="input">The input data to be run</param>
-            /// <param name="k">The value of K</param>
-            /// <param name="duplicateThreshold">The value of DuplicateThreshold</param>
-            /// <param name="minimalHomology">The value of MinimalHomology</param>
-            /// <param name="reverse">The value of Reverse</param>
-            /// <param name="alphabet">The alphabet to be used</param>
-            /// <param name="template">The templates to be used</param>
-            /// <param name="recombine">The recombination, if needed</param>
-            /// <param name="report">The report(s) to be generated</param>
+            /// <param name="id">The ID of the run.</param>
+            /// <param name="runname">The name of the run.</param>
+            /// <param name="input">The input data to be run.</param>
+            /// <param name="k">The value of K.</param>
+            /// <param name="duplicateThreshold">The value of DuplicateThreshold.</param>
+            /// <param name="minimalHomology">The value of MinimalHomology.</param>
+            /// <param name="reverse">The value of Reverse.</param>
+            /// <param name="alphabet">The alphabet to be used.</param>
+            /// <param name="template">The templates to be used.</param>
+            /// <param name="recombine">The recombination, if needed.</param>
+            /// <param name="report">The report(s) to be generated.</param>
             public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
             {
                 ID = id;
@@ -116,14 +127,16 @@ namespace AssemblyNameSpace
                 Recombine = recombine;
                 Report = report;
             }
+
             /// <summary>
             /// To display the main parameters of this run in a string, mainly for error tracking and debugging purposes.
             /// </summary>
-            /// <returns>The main parameters</returns>
+            /// <returns>The main parameters.</returns>
             public string Display()
             {
                 return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a, b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse.ToString()}\n\tAlphabet\t: {Alphabet.Name}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
             }
+
             /// <summary>
             /// Runs this run. Runs the assembly, and generates the reports.
             /// </summary>
@@ -196,9 +209,9 @@ namespace AssemblyNameSpace
 
                         Console.WriteLine("Finished first round of template matching");
 
-                        // Create a list for every database with the top n highest scoring templates. 
-                        // By having the lowest of these always at the first position at shuffling in 
-                        // a new high scoring template to its right position this snippet is still 
+                        // Create a list for every database with the top n highest scoring templates.
+                        // By having the lowest of these always at the first position at shuffling in
+                        // a new high scoring template to its right position this snippet is still
                         // approximately O(n) in respect to the database. Worst case O(top_n * l_database)
                         var top = new List<List<Template>>();
                         foreach (var db in rec_databases)

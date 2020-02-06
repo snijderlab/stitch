@@ -15,32 +15,35 @@ namespace AssemblyNameSpace
     namespace RunParameters
     {
         /// <summary>
-        /// A value possibly based on the value of K
+        /// A value possibly based on the value of K.
         /// </summary>
         public class KArithmetic
         {
             /// <summary>
-            /// Shows a maximal bracketed version of the expression
+            /// Shows a maximal bracketed version of the expression.
             /// </summary>
-            /// <returns>The expression</returns>
+            /// <returns>The expression.</returns>
             public string Value { get { return expression.Show(); } }
+
             /// <summary>
-            /// The expression
+            /// The expression.
             /// </summary>
             Arithmetic.Expression expression;
+
             /// <summary>
-            /// To retrieve the value of the expression, given this value of K
+            /// To retrieve the value of the expression, given this value of K.
             /// </summary>
-            /// <param name="k">The value of K</param>
-            /// <returns>The value of the expression</returns>
+            /// <param name="k">The value of K.</param>
+            /// <returns>The value of the expression.</returns>
             public int GetValue(int k)
             {
                 return expression.Solve(k);
             }
+
             /// <summary>
             /// To generate a KArithmetic, parses the given string immediately to be sure to be error free if it succeeds.
             /// </summary>
-            /// <param name="value">The expression</param>
+            /// <param name="value">The expression.</param>
             public KArithmetic(Arithmetic.Expression exp)
             {
                 expression = exp;
@@ -49,62 +52,69 @@ namespace AssemblyNameSpace
             {
                 return Parse(value, range, file);
             }
+
             /// <summary>
-            /// To contain Arithmetic stuffs
+            /// To contain Arithmetic stuffs.
             /// </summary>
             public class Arithmetic
             {
                 /// <summary>
-                /// A general class for expressions
+                /// A general class for expressions.
                 /// </summary>
                 public abstract class Expression
                 {
                     /// <summary>
-                    /// Solves the expression
+                    /// Solves the expression.
                     /// </summary>
-                    /// <param name="k">The value of K</param>
-                    /// <returns>The value of the expression</returns>
+                    /// <param name="k">The value of K.</param>
+                    /// <returns>The value of the expression.</returns>
                     public abstract int Solve(int k);
+
                     /// <summary>
-                    /// Creates a maximal bracketed version of the expression
+                    /// Creates a maximal bracketed version of the expression.
                     /// </summary>
-                    /// <returns>This expression in string form</returns>
+                    /// <returns>This expression in string form.</returns>
                     public abstract string Show();
                 }
+
                 /// <summary>
-                /// An expression with an operator
+                /// An expression with an operator.
                 /// </summary>
                 public class Operator : Expression
                 {
                     /// <summary>
-                    /// The operator
+                    /// The operator.
                     /// </summary>
                     OpType type;
+
                     /// <summary>
-                    /// The left hand side
+                    /// The left hand side.
                     /// </summary>
                     Expression left;
+
                     /// <summary>
-                    /// The right hand side
+                    /// The right hand side.
                     /// </summary>
                     Expression right;
+
                     /// <summary>
-                    /// Creates an operator expression
+                    /// Creates an operator expression.
                     /// </summary>
-                    /// <param name="type_input">The operator</param>
-                    /// <param name="lhs">The left hand side</param>
-                    /// <param name="rhs">The right hand side</param>
+                    /// <param name="type_input">The operator.</param>
+                    /// <param name="lhs">The left hand side.</param>
+                    /// <param name="rhs">The right hand side.</param>
                     public Operator(OpType type_input, Expression lhs, Expression rhs)
                     {
                         type = type_input;
                         left = lhs;
                         right = rhs;
                     }
+
                     /// <summary>
-                    /// Solves the expression
+                    /// Solves the expression.
                     /// </summary>
-                    /// <param name="k">The value of K</param>
-                    /// <returns>The value of the expression</returns>
+                    /// <param name="k">The value of K.</param>
+                    /// <returns>The value of the expression.</returns>
                     public override int Solve(int k)
                     {
                         switch (type)
@@ -121,10 +131,11 @@ namespace AssemblyNameSpace
                                 throw new ParseException($"An unkown operator type is signalled while solving the calculation {type.ToString()}");
                         }
                     }
+
                     /// <summary>
-                    /// Creates a maximal bracketed version of the expression
+                    /// Creates a maximal bracketed version of the expression.
                     /// </summary>
-                    /// <returns>This expression in string form</returns>
+                    /// <returns>This expression in string form.</returns>
                     public override string Show()
                     {
                         string op = "";
@@ -148,88 +159,100 @@ namespace AssemblyNameSpace
                         return "(" + left.Show() + op + right.Show() + ")";
                     }
                 }
+
                 /// <summary>
-                /// The possible operators
+                /// The possible operators.
                 /// </summary>
                 public enum OpType
                 {
                     /// <summary> - </summary>
                     Minus,
+
                     /// <summary> + </summary>
                     Add,
+
                     /// <summary> * </summary>
                     Times,
+
                     /// <summary> / </summary>
                     Divide
                 }
+
                 /// <summary>
-                /// An expression containing only the variable K
+                /// An expression containing only the variable K.
                 /// </summary>
                 public class K : Expression
                 {
                     /// <summary>
-                    /// Solves the expression
+                    /// Solves the expression.
                     /// </summary>
-                    /// <param name="k">The value of K</param>
-                    /// <returns>The value of the expression</returns>
+                    /// <param name="k">The value of K.</param>
+                    /// <returns>The value of the expression.</returns>
                     public override int Solve(int k)
                     {
                         return k;
                     }
+
                     /// <summary>
-                    /// Creates a new instance
+                    /// Creates a new instance.
                     /// </summary>
                     public K() { }
+
                     /// <summary>
-                    /// Creates a maximal bracketed version of the expression
+                    /// Creates a maximal bracketed version of the expression.
                     /// </summary>
-                    /// <returns>This expression in string form</returns>
+                    /// <returns>This expression in string form.</returns>
                     public override string Show()
                     {
                         return "K";
                     }
                 }
+
                 /// <summary>
-                /// An expression containing a constant
+                /// An expression containing a constant.
                 /// </summary>
                 public class Constant : Expression
                 {
                     /// <summary>
-                    /// The constant
+                    /// The constant.
                     /// </summary>
                     public int Value;
+
                     /// <summary>
-                    /// Solves the expression
+                    /// Solves the expression.
                     /// </summary>
-                    /// <param name="k">The value of K</param>
-                    /// <returns>The value of the expression</returns>
+                    /// <param name="k">The value of K.</param>
+                    /// <returns>The value of the expression.</returns>
                     public override int Solve(int k)
                     {
                         return Value;
                     }
+
                     /// <summary>
-                    /// Creates a new instance
+                    /// Creates a new instance.
                     /// </summary>
-                    /// <param name="value">The value of the constant</param>
+                    /// <param name="value">The value of the constant.</param>
                     public Constant(int value)
                     {
                         Value = value;
                     }
+
                     /// <summary>
-                    /// Creates a maximal bracketed version of the expression
+                    /// Creates a maximal bracketed version of the expression.
                     /// </summary>
-                    /// <returns>This expression in string form</returns>
+                    /// <returns>This expression in string form.</returns>
                     public override string Show()
                     {
                         return Value.ToString();
                     }
                 }
             }
+
             /// <summary>
-            /// Parses a string into an expression
+            /// Parses a string into an expression.
             /// </summary>
-            /// <param name="input">The string to parse</param>
-            /// <returns>The expression (if successfull)</returns>
+            /// <param name="input">The string to parse.</param>
+            /// <returns>The expression (if successfull).</returns>
             static ParseEither<Arithmetic.Expression> Parse(string input, Range range, ParsedFile file)
             {
                 var outEither = new ParseEither<Arithmetic.Expression>();

@@ -15,56 +15,67 @@ namespace AssemblyNameSpace
     namespace RunParameters
     {
         /// <summary>
-        /// To give an 'api' for calling the program
+        /// To give an 'api' for calling the program.
         /// </summary>
         public class FullRunParameters
         {
             /// <summary>
-            /// The name of this run
+            /// The name of this run.
             /// </summary>
             public string Runname;
+
             /// <summary>
-            /// The type of this run
+            /// The type of this run.
             /// </summary>
             public RuntypeValue Runtype;
+
             /// <summary>
-            /// The inputs for this run
+            /// The inputs for this run.
             /// </summary>
             public List<Input.Parameter> DataParameters;
+
             /// <summary>
-            /// The K or values of K for this run
+            /// The K or values of K for this run.
             /// </summary>
             public K.KValue K;
+
             /// <summary>
-            /// The value of Reverse for this run
+            /// The value of Reverse for this run.
             /// </summary>
             public ReverseValue Reverse;
+
             /// <summary>
-            /// The value for the MinimalHomology
+            /// The value for the MinimalHomology.
             /// </summary>
             public List<KArithmetic> MinimalHomology;
+
             /// <summary>
-            /// The value for the duplicatethreshold
+            /// The value for the duplicatethreshold.
             /// </summary>
             public List<KArithmetic> DuplicateThreshold;
+
             /// <summary>
-            /// The alphabet(s) to be used in this run
+            /// The alphabet(s) to be used in this run.
             /// </summary>
             public List<AlphabetValue> Alphabet;
+
             /// <summary>
-            /// The template(s) to be used in this run
+            /// The template(s) to be used in this run.
             /// </summary>
             public List<TemplateValue> Template;
+
             /// <summary>
-            /// The report(s) to be generated for this run
+            /// The report(s) to be generated for this run.
             /// </summary>
             public List<Report.Parameter> Report;
+
             /// <summary>
-            /// The recombine parameters (if given)
+            /// The recombine parameters (if given).
             /// </summary>
             public RecombineValue Recombine;
+
             /// <summary>
-            /// A blank instance for the RunParameters with defaults and initialization
+            /// A blank instance for the RunParameters with defaults and initialization.
             /// </summary>
             public FullRunParameters()
             {
@@ -79,10 +90,11 @@ namespace AssemblyNameSpace
                 Report = new List<Report.Parameter>();
                 Recombine = null;
             }
+
             /// <summary>
             /// Creates a list of all single runs contained in this run.abstract TO be ran in parallel.
             /// </summary>
-            /// <returns>All single runs</returns>
+            /// <returns>All single runs.</returns>
             public List<SingleRun> CreateRuns()
             {
                 var output = new List<SingleRun>();

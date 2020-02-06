@@ -18,3 +18,5 @@ tests/obj/*
 .vscode/*
 score_templates.txt
 _site
+.vs/*
+.vs

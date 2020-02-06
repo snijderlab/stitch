@@ -14,12 +14,12 @@ using System.ComponentModel;
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// A CSV report
+    /// A CSV report.
     /// </summary>
     class CSVReport : Report
     {
         /// <summary>
-        /// To retrieve all metadata
+        /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
         public CSVReport(ReportInputParameters parameters) : base(parameters) { }
@@ -27,10 +27,11 @@ namespace AssemblyNameSpace
         {
             return "";
         }
+
         /// <summary>
-        /// Prepares the file to be used for a CSV report
+        /// Prepares the file to be used for a CSV report.
         /// </summary>
-        /// <param name="filename">The path to the file</param>
+        /// <param name="filename">The path to the file.</param>
         public void PrepareCSVFile(string filename)
         {
             StreamWriter sw = File.CreateText(filename);
@@ -38,8 +39,9 @@ namespace AssemblyNameSpace
             sw.Write($"sep=;\nID;Data file;Alphabet;K-mer length;Minimal Homology;Duplicate Threshold;Reads;Total nodes;Average Sequence Length;Average depth of coverage;Mean Connectivity;Total time;{link}\n");
             sw.Close();
         }
+
         /// <summary>
-        /// The key to get access to write to the CSV file
+        /// The key to get access to write to the CSV file.
         /// </summary>
         static object CSVKey = new Object();
 
