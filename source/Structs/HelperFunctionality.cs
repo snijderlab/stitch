@@ -183,6 +183,18 @@ namespace AssemblyNameSpace
         public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
         {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
+            int[] indices_template = new int[template.Length];
+            int[] indices_query = new int[query.Length];
+
+            // Cache the indices as otherwise even dictionary lookups will become costly
+            for (int i = 0; i < template.Length; i++)
+            {
+                indices_template[i] = alphabet.positionInAlphabet[template[i].Char];
+            }
+            for (int i = 0; i < query.Length; i++)
+            {
+                indices_query[i] = alphabet.positionInAlphabet[query[i].Char];
+            }
 
             int max_value = 0;
             int max_index_t = 0;
@@ -197,7 +209,7 @@ namespace AssemblyNameSpace
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
                     //gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
-                    score = alphabet.scoring_matrix[alphabet.positionInAlphabet[template[tem_pos - 1].Char], alphabet.positionInAlphabet[query[query_pos - 1].Char]];
+                    score = alphabet.scoring_matrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
                     // Calculate the score for the current position
                     a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
                     b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight

@@ -108,18 +108,6 @@ namespace AssemblyNameSpace
         {
             var runs = new List<(Template, GraphPath)>();
 
-            // Recode the given sequences
-            foreach (var seq in sequences)
-            {
-                foreach (var node in seq.Nodes)
-                {
-                    for (int i = 0; i < node.Sequence.Count(); i++)
-                    {
-                        node.Sequence[i] = new AminoAcid(alphabet, node.Sequence[i].ToString()[0]);
-                    }
-                }
-            }
-
             foreach (var tem in Templates)
             {
                 for (int i = 0; i < sequences.Count(); i++)
