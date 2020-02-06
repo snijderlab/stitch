@@ -234,7 +234,7 @@ tr.selected {
     border: none;
 }
 
-/* Collapsable regions */
+/* Collapsible regions */
 
 .report>label {
     display: block;
@@ -428,6 +428,11 @@ svg .selected text {
     display: flex;
     flex-direction: column;
     height: auto;
+}
+
+.align-block.last:not(:last-child):not(:nth-last-child(2)) {
+    padding-right: 2px;
+    border-right: 5px solid var(--color-primary);
 }
 
 .reads-alignment p {

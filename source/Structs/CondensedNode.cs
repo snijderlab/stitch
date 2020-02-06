@@ -87,6 +87,108 @@ namespace AssemblyNameSpace
             Suffix = new List<AminoAcid>();
             Prefix = new List<AminoAcid>();
         }
+
+        /// <summary>
+        /// Retrieves an optimal placement of the reads to this node.
+        /// </summary>
+        /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
+        /// <param name="alphabet">The alphabet for the alignment.</param>
+        /// <param name="K">The K for the alignment.</param>
+        public List<List<HelperFunctionality.ReadPlacement>> ReadsAlignment(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        {
+            string sequence = AminoAcid.ArrayToString(Prefix) + AminoAcid.ArrayToString(Sequence) + AminoAcid.ArrayToString(Suffix);
+            Dictionary<int, string> lookup = UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
+            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, Origins, alphabet, K, true);
+            sequence = AminoAcid.ArrayToString(Sequence);
+            int prefixoffset = Prefix.Count();
+
+            // Delete matches at prefix and suffix
+            positions = positions.Where(a => a.EndPosition > prefixoffset && a.StartPosition < sequence.Length + prefixoffset).ToList();
+            //  Update the overhang at the start and end
+            positions = positions.Select(a =>
+            {
+                if (a.StartPosition < prefixoffset)
+                {
+                    a.StartOverhang += a.Sequence.Substring(0, prefixoffset - a.StartPosition);
+                }
+                if (a.EndPosition > prefixoffset + sequence.Length)
+                {
+                    a.EndOverhang += a.Sequence.Substring(a.EndPosition - prefixoffset - sequence.Length);
+                }
+                return a;
+            }).ToList();
+            List<int> uniqueorigins = positions.Select(a => a.Identifier).ToList();
+
+            // Find a bit more efficient packing of reads on the sequence
+            var placed = new List<List<HelperFunctionality.ReadPlacement>>();
+            foreach (var current in positions)
+            {
+                bool fit = false;
+                for (int i = 0; i < placed.Count() && !fit; i++)
+                {
+                    // Find if it fits in this row
+                    bool clashes = false;
+                    for (int j = 0; j < placed[i].Count() && !clashes; j++)
+                    {
+                        if ((current.StartPosition + 1 > placed[i][j].StartPosition && current.StartPosition - 1 < placed[i][j].EndPosition)
+                         || (current.EndPosition + 1 > placed[i][j].StartPosition && current.EndPosition - 1 < placed[i][j].EndPosition)
+                         || (current.StartPosition - 1 < placed[i][j].StartPosition && current.EndPosition + 1 > placed[i][j].EndPosition))
+                        {
+                            clashes = true;
+                        }
+                    }
+                    if (!clashes)
+                    {
+                        placed[i].Add(current);
+                        fit = true;
+                    }
+                }
+                if (!fit)
+                {
+                    placed.Add(new List<HelperFunctionality.ReadPlacement> { current });
+                }
+            }
+            return placed;
+        }
+
+        /// <summary>
+        /// Retrieves the depth of coverage for each position of the reads to this node.
+        /// </summary>
+        /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
+        /// <param name="alphabet">The alphabet for the alignment.</param>
+        /// <param name="K">The K for the alignment.</param>
+        /// <returns>An array of the length of the placement, so including start and end overhang</returns>
+        public int[] DepthOfCoverageFull(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        {
+            var placement = ReadsAlignment(reads, alphabet, K);
+            int sequenceLength = Prefix.Count() + Sequence.Count() + Suffix.Count();
+            int[] depthOfCoverage = new int[sequenceLength];
+
+            foreach (var row in placement)
+            {
+                foreach (var read in row)
+                {
+                    for (int i = read.StartPosition; i < read.StartPosition + read.Sequence.Length; i++)
+                    {
+                        depthOfCoverage[i]++;
+                    }
+                }
+            }
+            return depthOfCoverage;
+        }
+
+        /// <summary>
+        /// Retrieves the depth of coverage for each position of the reads to this node.
+        /// </summary>
+        /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
+        /// <param name="alphabet">The alphabet for the alignment.</param>
+        /// <param name="K">The K for the alignment.</param>
+        /// <returns>An array of the length of the sequence, so excluding start and end overhang</returns>
+        public int[] DepthOfCoverage(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        {
+            int[] depthOfCoverage = DepthOfCoverageFull(reads, alphabet, K);
+            return depthOfCoverage.SubArray(Prefix.Count(), Sequence.Count());
+        }
     }
 
 }

@@ -470,6 +470,17 @@ namespace AssemblyNameSpace
                 sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template)}</td></tr>");
             }
 
+            var templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top 10 templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
+
+            sb.Clear();
+            var maxCoverage = new List<int>();
+            foreach (var node in paths[i].Item2)
+            {
+                var core = CreateReadsAlignmentCore(condensed_graph[node]);
+                sb.Append(core.Item1);
+                maxCoverage.Add(core.Item2);
+            }
+
             return $@"<div id=""{id}"" class=""info-block read-info path-info"">
     <h1>Path {id}</h1>
     <h2>Sequence</h2>
@@ -478,11 +489,11 @@ namespace AssemblyNameSpace
     <p>{PathsSequences[i].Count()}</p>
     <h2>Path</h2>
     <p>{paths[i].Item2.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b, AsideType.Contig)).Substring(4)}</p>
-    <h2>Top 10 templates</h2>
-    <table>
-    <tr><th>Score</th><th>Template</th></tr>
+    <h2>Alignment</h2>
+    <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
-    </table>
+    </div>
+    {templateString}
 </div>";
         }
 
@@ -804,65 +815,11 @@ namespace AssemblyNameSpace
         /// <returns> Returns an HTML string. </returns>
         (string, List<int>) CreateReadsAlignment(CondensedNode node)
         {
-            // TODO: move alignment to node definition, to reuse in different settings.
-            string sequence = AminoAcid.ArrayToString(node.Prefix.ToArray()) + AminoAcid.ArrayToString(node.Sequence.ToArray()) + AminoAcid.ArrayToString(node.Suffix.ToArray());
-            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
-            sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
-            int prefixoffset = node.Prefix.Count();
-
-            // Delete matches at prefix and suffix
-            positions = positions.Where(a => a.EndPosition > prefixoffset && a.StartPosition < sequence.Length + prefixoffset).ToList();
-            //  Update the overhang at the start and end
-            positions = positions.Select(a =>
-            {
-                if (a.StartPosition < prefixoffset)
-                {
-                    a.StartOverhang += a.Sequence.Substring(0, prefixoffset - a.StartPosition);
-                }
-                if (a.EndPosition > prefixoffset + sequence.Length)
-                {
-                    a.EndOverhang += a.Sequence.Substring(a.EndPosition - prefixoffset - sequence.Length);
-                }
-                return a;
-            }).ToList();
-            List<int> uniqueorigins = positions.Select(a => a.Identifier).ToList();
-
-            // Find a bit more efficient packing of reads on the sequence
-            var placed = new List<List<HelperFunctionality.ReadPlacement>>();
-            foreach (var current in positions)
-            {
-                bool fit = false;
-                for (int i = 0; i < placed.Count() && !fit; i++)
-                {
-                    // Find if it fits in this row
-                    bool clashes = false;
-                    for (int j = 0; j < placed[i].Count() && !clashes; j++)
-                    {
-                        if ((current.StartPosition + 1 > placed[i][j].StartPosition && current.StartPosition - 1 < placed[i][j].EndPosition)
-                         || (current.EndPosition + 1 > placed[i][j].StartPosition && current.EndPosition - 1 < placed[i][j].EndPosition)
-                         || (current.StartPosition - 1 < placed[i][j].StartPosition && current.EndPosition + 1 > placed[i][j].EndPosition))
-                        {
-                            clashes = true;
-                        }
-                    }
-                    if (!clashes)
-                    {
-                        placed[i].Add(current);
-                        fit = true;
-                    }
-                }
-                if (!fit)
-                {
-                    placed.Add(new List<HelperFunctionality.ReadPlacement> { current });
-                }
-            }
+            var placed = node.ReadsAlignment(reads, alphabet, singleRun.K);
+            var sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
 
             var buffer = new StringBuilder();
             buffer.AppendLine("<div class=\"reads-alignment\">");
-
-            int max_depth = 0;
-            const int bucketsize = 5;
 
             // Create the front overhanging reads block
             string id = GetAsideIdentifier(node.Index, AsideType.Contig);
@@ -883,51 +840,9 @@ namespace AssemblyNameSpace
             }
             buffer.AppendLine($"</p></div></label></div>");
 
-            // Create the main blocks of the sequence alignment
-            for (int pos = 0; pos <= sequence.Length / bucketsize; pos++)
-            {
-                // Add the sequence and the number to tell the position
-                string number = "";
-                string last = "";
-                if (sequence.Length - pos * bucketsize >= bucketsize)
-                {
-                    number = ((pos + 1) * bucketsize).ToString();
-                    number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
-                }
-                else
-                {
-                    last = " last";
-                }
-                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
-
-                int[] depth = new int[bucketsize];
-                // Add every line in order
-                foreach (var line in placed)
-                {
-                    for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
-                    {
-                        string result = "&nbsp;";
-                        foreach (var read in line)
-                        {
-                            if (i + prefixoffset >= read.StartPosition && i + prefixoffset < read.EndPosition)
-                            {
-                                string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
-                                result = $"<a href=\"#{rid}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
-                                depth[i - pos * bucketsize]++;
-                            }
-                        }
-                        buffer.Append(result);
-                    }
-                    buffer.Append("<br>");
-                }
-                buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
-                for (int i = 0; i < Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
-                {
-                    if (depth[i] > max_depth) max_depth = depth[i];
-                    buffer.Append($"<span class='coverage-depth-bar' style='--value:{depth[i]}'></span>");
-                }
-                buffer.Append("</div></div>");
-            }
+            // Add the core alignment
+            var core = CreateReadsAlignmentCore(node);
+            buffer.AppendLine(core.Item1);
 
             // Create the end overhanging reads block
             buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
@@ -950,7 +865,63 @@ namespace AssemblyNameSpace
             // End the reads alignment div
             buffer.AppendLine("</div>");
 
-            return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
+            return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{core.Item2}'>"), node.UniqueOrigins);
+        }
+        (string, int) CreateReadsAlignmentCore(CondensedNode node)
+        {
+            var placed = node.ReadsAlignment(reads, alphabet, singleRun.K);
+            var depthOfCoverage = node.DepthOfCoverageFull(reads, alphabet, singleRun.K);
+            var sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
+            int prefixoffset = node.Prefix.Count();
+
+            var buffer = new StringBuilder();
+
+            const int bucketsize = 5;
+
+            // Create the main blocks of the sequence alignment
+            for (int pos = 0; pos <= sequence.Length / bucketsize; pos++)
+            {
+                // Add the sequence and the number to tell the position
+                string number = "";
+                string last = "";
+                if (sequence.Length - pos * bucketsize >= bucketsize)
+                {
+                    number = ((pos + 1) * bucketsize).ToString();
+                    number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                }
+                else
+                {
+                    last = " last";
+                }
+                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
+
+                // Add every line in order
+                foreach (var line in placed)
+                {
+                    for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
+                    {
+                        string result = "&nbsp;";
+                        foreach (var read in line)
+                        {
+                            if (i + prefixoffset >= read.StartPosition && i + prefixoffset < read.EndPosition)
+                            {
+                                string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
+                                result = $"<a href=\"#{rid}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
+                            }
+                        }
+                        buffer.Append(result);
+                    }
+                    buffer.Append("<br>");
+                }
+                buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+                for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
+                {
+                    buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
+                }
+                buffer.Append("</div></div>");
+            }
+
+            return (buffer.ToString(), depthOfCoverage.Max());
         }
 
         /// <summary>An enum to save what type of detail aside it is.</summary>
