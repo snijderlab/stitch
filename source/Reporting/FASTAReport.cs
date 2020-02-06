@@ -38,67 +38,22 @@ namespace AssemblyNameSpace
         {
             var sequences = new List<(int, string)>();
 
-            foreach (var node in paths)
+            foreach (var path in Paths)
             {
-                var path = node.Item2;
-                int score = 0;
-                var id = new StringBuilder();
-                var sequence = new StringBuilder();
-                for (int index = 0; index < path.Count(); index++)
-                {
-                    id.Append(index);
-                    score += CalculateScore(condensed_graph[index]);
-                    if (index == path.Count() - 1)
-                    {
-                        sequence.Append(AminoAcid.ArrayToString(condensed_graph[index].Sequence.ToArray()));
-                    }
-                    else
-                    {
-                        sequence.Append(condensed_graph[index].Sequence[0].ToString());
-                        id.Append("-");
-                    }
-                }
-                sequences.Add((score, $">{id} score:{score}\n{sequence}"));
+                sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
             }
 
             // Filter and sort the lines
-            //sequences = sequences.FindAll(i => i.Item1 >= MinScore);
-            //sequences.Sort((a, b) => b.Item1.CompareTo(a.Item1));
+            sequences = sequences.FindAll(i => i.Item1 >= MinScore);
+            sequences.Sort((a, b) => b.Item1.CompareTo(a.Item1));
 
             var buffer = new StringBuilder();
             foreach (var line in sequences)
             {
-                if (line.Item1 >= MinScore)
-                    buffer.AppendLine(line.Item2);
+                buffer.AppendLine(line.Item2);
             }
 
             return buffer.ToString().Trim();
-        }
-
-        /// <summary> Create a reads alignment and calculates depth of coverage. </summary>
-        /// <param name="node">The node to calculate the score of.</param>
-        /// <returns> Returns a score per base. </returns>
-        int CalculateScore(CondensedNode node)
-        {
-            // Align the reads used for this sequence to the sequence
-            string sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
-            Dictionary<int, string> lookup = node.UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
-            var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, node.Origins, alphabet, singleRun.K, true);
-
-            // Calculate the score by calculating the total read length (which maps to a location on the contig)
-            int score = 0;
-            for (int pos = 0; pos < sequence.Length; pos++)
-            {
-                foreach (var read in positions)
-                {
-                    if (pos >= read.StartPosition && pos < read.EndPosition)
-                    {
-                        score++;
-                    }
-                }
-            }
-
-            return score;
         }
     }
 }

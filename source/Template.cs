@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].ToArray(), i, alphabet));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].ToArray(), alphabet));
                     x++;
                 }
                 y++;
@@ -104,16 +104,19 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public void MatchParallel(List<List<AminoAcid>> sequences)
+        public void MatchParallel(List<GraphPath> sequences)
         {
-            var runs = new List<(Template, AminoAcid[], int)>();
+            var runs = new List<(Template, GraphPath)>();
 
             // Recode the given sequences
             foreach (var seq in sequences)
             {
-                for (int i = 0; i < seq.Count(); i++)
+                foreach (var node in seq.Nodes)
                 {
-                    seq[i] = new AminoAcid(alphabet, seq[i].ToString()[0]);
+                    for (int i = 0; i < node.Sequence.Count(); i++)
+                    {
+                        node.Sequence[i] = new AminoAcid(alphabet, node.Sequence[i].ToString()[0]);
+                    }
                 }
             }
 
@@ -121,11 +124,11 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    runs.Add((tem, sequences[i].ToArray(), i));
+                    runs.Add((tem, sequences[i]));
                 }
             }
 
-            Parallel.ForEach(runs, (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2, s.Item3, alphabet)));
+            Parallel.ForEach(runs, (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2)));
         }
         /// <summary>
         /// Create a string summary of a template database.
@@ -181,9 +184,9 @@ namespace AssemblyNameSpace
         /// Gets the placement of the sequences associated with this template.
         /// </summary>
         /// <returns>A list with tuples for each position in the original sequence. The first item is an array of tuples with all sequences on this position (matchindex) and the position on this sequence + 1 (or -1 if there is a gap, so 0 if outside bounds). The second item is an array of all gaps after this position, containing both the matchindex and sequence. </returns>
-        public List<((int, int)[], (int, IGap)[])> AlignedSequences()
+        public List<((int MatchIndex, int SequencePosition)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)> AlignedSequences()
         {
-            var output = new List<((int, int)[], (int, IGap)[])>()
+            var output = new List<((int MatchIndex, int SequencePosition)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)>()
             {
                 Capacity = Sequence.Length
             };
@@ -213,8 +216,8 @@ namespace AssemblyNameSpace
                         for (int i = 0; i < m.count && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
-                            output[template_pos].Item1[matchindex] = (matchindex, seq_pos + 1);
-                            output[template_pos].Item2[matchindex] = (matchindex, new None());
+                            output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1);
+                            output[template_pos].Gaps[matchindex] = (matchindex, new None());
 
                             template_pos++;
                             seq_pos++;
@@ -236,7 +239,7 @@ namespace AssemblyNameSpace
                                 sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos - 1, len));
                             }
                             seq_pos += gt.count;
-                            output[template_pos].Item2[matchindex] = (matchindex, sub_seq);
+                            output[template_pos].Gaps[matchindex] = (matchindex, sub_seq);
                         }
                     }
                     else if (piece is SequenceMatch.GapContig gc)
@@ -244,8 +247,8 @@ namespace AssemblyNameSpace
                         // Skip to the next section
                         for (int i = 0; i < gc.count && template_pos < output.Count(); i++)
                         {
-                            output[template_pos].Item1[matchindex] = (matchindex, -1);
-                            output[template_pos].Item2[matchindex] = (matchindex, new None());
+                            output[template_pos].Sequences[matchindex] = (matchindex, -1);
+                            output[template_pos].Gaps[matchindex] = (matchindex, new None());
                             template_pos++;
                         }
                     }
@@ -275,41 +278,42 @@ namespace AssemblyNameSpace
             for (int i = 0; i < Sequence.Length; i++)
             {
                 // Create the aminoacid dictionary
-                foreach (var option in alignedSequences[i].Item1)
+                foreach (var option in alignedSequences[i].Sequences)
                 {
-                    if (option.Item2 != 0)
+                    if (option.SequencePosition != 0)
                     {
                         AminoAcid aa;
-                        if (option.Item2 == -1)
+                        if (option.SequencePosition == -1)
                         {
                             aa = new AminoAcid(Alphabet, Alphabet.alphabet[Alphabet.GapIndex]);
                         }
                         else
                         {
-                            aa = Matches[option.Item1].QuerySequence[option.Item2 - 1];
+                            aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
                         }
 
+                        var score = Matches[option.MatchIndex].Path == null ? 1 : Matches[option.MatchIndex].Path.DepthOfCoverage[option.SequencePosition - 1];
                         if (output[i].Item1.ContainsKey(aa))
                         {
-                            output[i].Item1[aa] += 1;
+                            output[i].Item1[aa] += score;
                         }
                         else
                         {
-                            output[i].Item1.Add(aa, 1);
+                            output[i].Item1.Add(aa, score);
                         }
                     }
                 }
                 // Create the gap dictionary
-                foreach (var option in alignedSequences[i].Item2)
+                foreach (var option in alignedSequences[i].Gaps)
                 {
                     IGap key;
-                    if (option.Item2 == null)
+                    if (option.Gap == null)
                     {
                         key = new None();
                     }
                     else
                     {
-                        key = option.Item2;
+                        key = option.Gap;
                     }
                     if (output[i].Item2.ContainsKey(key))
                     {

@@ -25,7 +25,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(10, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -39,7 +39,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(8, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -53,7 +53,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(6, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -69,7 +69,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(x);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(x.Length, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -83,7 +83,7 @@ namespace AssemblyTestNameSpace
         {
             var a = StringToSequence(x);
             var b = StringToSequence(y);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(5, r.Score);
             Assert.AreEqual(4, r.StartTemplatePosition);
@@ -97,7 +97,7 @@ namespace AssemblyTestNameSpace
             //     BBCBDABCACC
             var a = StringToSequence("ABBAABBCBABAACCBBAAB");
             var b = StringToSequence("BBCBDABCACC");
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(7, r.Score);
             Assert.AreEqual(5, r.StartTemplatePosition);
@@ -112,7 +112,7 @@ namespace AssemblyTestNameSpace
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
             var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
             var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(21, r.Score);
             Assert.AreEqual(8, r.StartTemplatePosition);
@@ -127,7 +127,7 @@ namespace AssemblyTestNameSpace
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
             var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", alp);
             var b = StringToSequence("TGTCGTCATAGTTTGGGCATGTTTCCCTTGTAGGTGTGAAATCACTTAGC", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(112, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -141,7 +141,7 @@ namespace AssemblyTestNameSpace
             var alp = new Alphabet("../../../../examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVSPVYWNSLFLLKGNYKAQMRGRTVNARVLKIGQKTRCMLLLWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(361, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -161,7 +161,7 @@ namespace AssemblyTestNameSpace
             var mCherry = "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK";
             var a = StringToSequence(gfp, alp);
             var b = StringToSequence(mCherry, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(283, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -179,7 +179,7 @@ namespace AssemblyTestNameSpace
             var igg2 = "QVQLQESGPGLVKPSQTLSLTCTVSGGSISSGEYYWNWIRQHPGKGLEWIGYIYYSGSTYYNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCARESVAGFDYWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSNFGTQTYTCNVDHKPSNTKVDKTVERKCCVECPPCPAPPVAGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTFRVVSVLTVVHQDWLNGKEYKCKVSNKGLPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPMLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGKEIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPRLLIYGTSSRATGIPDRFSGSGSGTDFTLTISRLEPEDFAVYYCQQYGSSPITFGQGTRLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
             var a = StringToSequence(igg2, alp);
             var b = StringToSequence(igg4, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(3070, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -197,7 +197,7 @@ namespace AssemblyTestNameSpace
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var a = StringToSequence(template, alp);
             var b = StringToSequence(path, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(239, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
@@ -213,7 +213,7 @@ namespace AssemblyTestNameSpace
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var a = StringToSequence(template, alp);
             var b = StringToSequence(path, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, 0, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(147, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
@@ -280,7 +280,7 @@ namespace AssemblyTestNameSpace
 
             var database = new TemplateDatabase(new MetaData.FileIdentifier(template_parameter.Path, template_parameter.Name), template_parameter.Type, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore);
 
-            database.MatchParallel(assm.GetAllPathSequences());
+            database.MatchParallel(assm.GetAllPaths());
 
             // Test if something went wrong
             Assert.AreEqual(1, database.Templates.Count());
@@ -303,7 +303,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", AminoAcid.ArrayToString(template.Sequence));
             // Path sequence
             Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(match.QuerySequence));
-            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPathSequences()[0]));
+            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPaths()[0].Sequence));
             // Match
             Assert.AreEqual(147, match.Score);
             Assert.AreEqual(68, match.StartTemplatePosition);

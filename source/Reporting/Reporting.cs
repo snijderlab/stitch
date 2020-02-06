@@ -72,8 +72,7 @@ namespace AssemblyNameSpace
         /// </summary>
         protected RunParameters.SingleRun singleRun;
         protected List<TemplateDatabase> templates;
-        protected List<(int, List<int>)> paths;
-        protected List<List<AminoAcid>> PathsSequences;
+        protected List<GraphPath> Paths;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
         /// <summary>
@@ -90,8 +89,7 @@ namespace AssemblyNameSpace
             alphabet = parameters.assembler.alphabet;
             singleRun = parameters.singleRun;
             templates = parameters.templateDatabases;
-            paths = parameters.assembler.GetAllPaths();
-            PathsSequences = parameters.assembler.GetAllPathSequences();
+            Paths = parameters.assembler.GetAllPaths();
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
 
@@ -124,11 +122,11 @@ namespace AssemblyNameSpace
         protected List<int> AllPathsContaining(int id)
         {
             var output = new List<int>();
-            for (int i = 0; i < paths.Count(); i++)
+            for (int i = 0; i < Paths.Count(); i++)
             {
-                foreach (var node in paths[i].Item2)
+                foreach (var node in Paths[i].Nodes)
                 {
-                    if (node == id)
+                    if (node.Index == id)
                     {
                         output.Add(i);
                         break;

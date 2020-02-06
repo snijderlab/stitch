@@ -177,7 +177,7 @@ namespace AssemblyNameSpace
                         Console.WriteLine($"Working on Template {template.Name}");
 
                         var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore);
-                        database1.MatchParallel(assm.GetAllPathSequences());
+                        database1.MatchParallel(assm.GetAllPaths());
 
                         databases.Add(database1);
                     }
@@ -202,7 +202,7 @@ namespace AssemblyNameSpace
                             Console.WriteLine($"Working on Template {template.Name}");
 
                             var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore);
-                            database1.MatchParallel(assm.GetAllPathSequences());
+                            database1.MatchParallel(assm.GetAllPaths());
 
                             rec_databases.Add(database1);
                         }
@@ -291,7 +291,7 @@ namespace AssemblyNameSpace
 
                         Console.WriteLine("Created templates for second round");
 
-                        recombined_database.MatchParallel(assm.GetAllPathSequences());
+                        recombined_database.MatchParallel(assm.GetAllPaths());
 
                         Console.WriteLine("Finished second round of template matching");
 

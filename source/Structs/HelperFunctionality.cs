@@ -31,7 +31,7 @@ namespace AssemblyNameSpace
             }
             catch
             {
-                throw new Exception($"SubArray Exception length {length} index {index}");
+                throw new Exception($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
         public struct ReadPlacement
@@ -180,7 +180,7 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, int right_id, Alphabet alphabet)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
         {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
 
@@ -253,7 +253,7 @@ namespace AssemblyNameSpace
             }
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, right_id);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, path);
             return match;
         }
 
@@ -280,7 +280,7 @@ namespace AssemblyNameSpace
         public List<MatchPiece> Alignment;
         public AminoAcid[] TemplateSequence;
         public AminoAcid[] QuerySequence;
-        public int QuerySequenceID;
+        public GraphPath Path;
         public int Length
         {
             get
@@ -288,7 +288,7 @@ namespace AssemblyNameSpace
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
             }
         }
-        public SequenceMatch(int template_position, int query_position, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, int query_sequence_id)
+        public SequenceMatch(int template_position, int query_position, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, GraphPath path)
         {
             StartTemplatePosition = template_position;
             StartQueryPosition = query_position;
@@ -296,7 +296,7 @@ namespace AssemblyNameSpace
             Alignment = m;
             TemplateSequence = tSeq;
             QuerySequence = qSeq;
-            QuerySequenceID = query_sequence_id;
+            Path = path;
             simplify();
         }
         public override string ToString()
@@ -304,7 +304,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             var buffer1 = new StringBuilder();
             var buffer2 = new StringBuilder();
-            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tQueryID:{QuerySequenceID}\n\tMatch: {Alignment.CIGAR()}\n\n");
+            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tMatch: {Alignment.CIGAR()}\n\n");
             int tem_pos = StartTemplatePosition;
             int query_pos = StartQueryPosition;
             string tSeq = AminoAcid.ArrayToString(TemplateSequence);

@@ -49,6 +49,9 @@ namespace AssemblyNameSpace
 
         /// <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
         public List<List<int>> Origins;
+        public List<List<HelperFunctionality.ReadPlacement>> Alignment;
+        public int[] DepthOfCoverageFull;
+        public int[] DepthOfCoverage;
         public List<int> UniqueOrigins
         {
             get
@@ -89,12 +92,12 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// Retrieves an optimal placement of the reads to this node.
+        /// Retrieves an optimal placement of the reads to this node. And saves it for later use.
         /// </summary>
         /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
         /// <param name="alphabet">The alphabet for the alignment.</param>
         /// <param name="K">The K for the alignment.</param>
-        public List<List<HelperFunctionality.ReadPlacement>> ReadsAlignment(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        public List<List<HelperFunctionality.ReadPlacement>> CalculateReadsAlignment(List<AminoAcid[]> reads, Alphabet alphabet, int K)
         {
             string sequence = AminoAcid.ArrayToString(Prefix) + AminoAcid.ArrayToString(Sequence) + AminoAcid.ArrayToString(Suffix);
             Dictionary<int, string> lookup = UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
@@ -148,19 +151,18 @@ namespace AssemblyNameSpace
                     placed.Add(new List<HelperFunctionality.ReadPlacement> { current });
                 }
             }
+            Alignment = placed;
+            CalculateDepthOfCoverageFull();
+            CalculateDepthOfCoverage();
             return placed;
         }
 
         /// <summary>
         /// Retrieves the depth of coverage for each position of the reads to this node.
         /// </summary>
-        /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
-        /// <param name="alphabet">The alphabet for the alignment.</param>
-        /// <param name="K">The K for the alignment.</param>
-        /// <returns>An array of the length of the placement, so including start and end overhang</returns>
-        public int[] DepthOfCoverageFull(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        void CalculateDepthOfCoverageFull()
         {
-            var placement = ReadsAlignment(reads, alphabet, K);
+            var placement = Alignment;
             int sequenceLength = Prefix.Count() + Sequence.Count() + Suffix.Count();
             int[] depthOfCoverage = new int[sequenceLength];
 
@@ -174,20 +176,16 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-            return depthOfCoverage;
+            DepthOfCoverageFull = depthOfCoverage;
         }
 
         /// <summary>
         /// Retrieves the depth of coverage for each position of the reads to this node.
         /// </summary>
-        /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
-        /// <param name="alphabet">The alphabet for the alignment.</param>
-        /// <param name="K">The K for the alignment.</param>
-        /// <returns>An array of the length of the sequence, so excluding start and end overhang</returns>
-        public int[] DepthOfCoverage(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        void CalculateDepthOfCoverage()
         {
-            int[] depthOfCoverage = DepthOfCoverageFull(reads, alphabet, K);
-            return depthOfCoverage.SubArray(Prefix.Count(), Sequence.Count());
+            var depthOfCoverage = DepthOfCoverageFull.SubArray(Prefix.Count(), Sequence.Count());
+            DepthOfCoverage = depthOfCoverage;
         }
     }
 

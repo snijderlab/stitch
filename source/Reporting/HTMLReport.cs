@@ -281,14 +281,14 @@ namespace AssemblyNameSpace
 </tr>");
             string id, link;
 
-            for (int i = 0; i < PathsSequences.Count(); i++)
+            for (int i = 0; i < Paths.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Path);
                 link = GetAsideLink(i, AsideType.Path);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(PathsSequences[i].ToArray())}</td>
-    <td class=""center"">{PathsSequences[i].Count()}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</td>
+    <td class=""center"">{Paths[i].Sequence.Length}</td>
 </tr>");
             }
 
@@ -474,9 +474,9 @@ namespace AssemblyNameSpace
 
             sb.Clear();
             var maxCoverage = new List<int>();
-            foreach (var node in paths[i].Item2)
+            foreach (var node in Paths[i].Nodes)
             {
-                var core = CreateReadsAlignmentCore(condensed_graph[node]);
+                var core = CreateReadsAlignmentCore(node);
                 sb.Append(core.Item1);
                 maxCoverage.Add(core.Item2);
             }
@@ -484,11 +484,11 @@ namespace AssemblyNameSpace
             return $@"<div id=""{id}"" class=""info-block read-info path-info"">
     <h1>Path {id}</h1>
     <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(PathsSequences[i])}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</p>
     <h2>Sequence Length</h2>
-    <p>{PathsSequences[i].Count()}</p>
+    <p>{Paths[i].Sequence.Length}</p>
     <h2>Path</h2>
-    <p>{paths[i].Item2.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b, AsideType.Contig)).Substring(4)}</p>
+    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " -> " + GetAsideLink(b.Index, AsideType.Contig)).Substring(4)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -654,7 +654,7 @@ namespace AssemblyNameSpace
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
                     for (int i = 1; i < aligned.Length; i++)
                     {
-                        string rid = GetAsideIdentifier(template.Matches[i - 1].QuerySequenceID, AsideType.Path);
+                        string rid = GetAsideIdentifier(template.Matches[i - 1].Path.Index, AsideType.Path);
                         string result = "";
                         if (aligned[i].Length > block * blocklength) result = $"<a href=\"#{rid}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         buffer.Append(result);
@@ -768,7 +768,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
 
             // Path Asides
-            for (int i = 0; i < paths.Count(); i++)
+            for (int i = 0; i < Paths.Count(); i++)
             {
                 buffer.AppendLine(CreatePathAside(i));
             }
@@ -815,7 +815,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns an HTML string. </returns>
         (string, List<int>) CreateReadsAlignment(CondensedNode node)
         {
-            var placed = node.ReadsAlignment(reads, alphabet, singleRun.K);
+            var placed = node.Alignment;
             var sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
 
             var buffer = new StringBuilder();
@@ -869,8 +869,8 @@ namespace AssemblyNameSpace
         }
         (string, int) CreateReadsAlignmentCore(CondensedNode node)
         {
-            var placed = node.ReadsAlignment(reads, alphabet, singleRun.K);
-            var depthOfCoverage = node.DepthOfCoverageFull(reads, alphabet, singleRun.K);
+            var placed = node.Alignment;
+            var depthOfCoverage = node.DepthOfCoverageFull;
             var sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
             int prefixoffset = node.Prefix.Count();
 
