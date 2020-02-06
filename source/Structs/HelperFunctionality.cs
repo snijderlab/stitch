@@ -61,10 +61,11 @@ namespace AssemblyNameSpace
                 EndOverhang = endoverhang;
             }
         }
+
         /// <summary> This aligns a list of sequences to a template sequence based on the alphabet. </summary>
-        /// <returns> Returns a list of tuples with the sequences as first item, startingposition as second item, 
+        /// <returns> Returns a list of tuples with the sequences as first item, startingposition as second item,
         /// end position as third item and identifier from the given list as fourth item. </returns>
-        /// <remark> This code does not account for small defects in reads, it will only align perfect matches 
+        /// <remark> This code does not account for small defects in reads, it will only align perfect matches
         /// and it will only align matches tha fit entirely inside the template sequence (no overhang at the start or end). </remark>
         /// <param name="template"> The template to match against. </param>
         /// <param name="sequences"> The sequences to match with. </param>
@@ -175,6 +176,7 @@ namespace AssemblyNameSpace
             }
             return score;
         }
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
@@ -267,6 +269,7 @@ namespace AssemblyNameSpace
             return sb.ToString();
         }
     }
+
     /// <summary>A class to save a match of two sequences in a space efficient way, based on CIGAR strings.</summary>
     public class SequenceMatch
     {

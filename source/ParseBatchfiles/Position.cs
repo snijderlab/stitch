@@ -3,7 +3,7 @@ using System;
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// To keep track of a location of a token
+    /// To keep track of a location of a token.
     /// </summary>
     public struct Position
     {

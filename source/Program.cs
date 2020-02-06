@@ -13,7 +13,7 @@ using System.Globalization;
 namespace AssemblyNameSpace
 {
     /// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
-    /// from reads of a massspectrometer. 
+    /// from reads of a massspectrometer.
     /// The software is build by Douwe Schulte and was started on 25-03-2019.
     /// It is build in collaboration with and under supervision of Joost Snijder,
     /// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
@@ -21,10 +21,12 @@ namespace AssemblyNameSpace
     class NamespaceDoc
     {
     }
-    /// <summary> The main class which is the entry point from the command line </summary>
+
+    /// <summary> The main class which is the entry point from the command line. </summary>
     class ToRunWithCommandLine
     {
         public const string VERSIONNUMBER = "0.0.0";
+
         /// <summary> The entry point. </summary>
         static void Main()
         {

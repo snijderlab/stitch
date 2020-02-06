@@ -14,20 +14,22 @@ using System.ComponentModel;
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// A FASTA report
+    /// A FASTA report.
     /// </summary>
     class FASTAReport : Report
     {
         int MinScore;
+
         /// <summary>
-        /// To retrieve all metadata
+        /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
-        /// <param name="minscore">The minimal score needed to be included in the file</param>
+        /// <param name="minscore">The minimal score needed to be included in the file.</param>
         public FASTAReport(ReportInputParameters parameters, int minscore) : base(parameters)
         {
             MinScore = minscore;
         }
+
         /// <summary>
         /// Creates a FASTA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
         /// </summary>
@@ -73,7 +75,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Create a reads alignment and calculates depth of coverage. </summary>
-        /// <param name="node">The node to calculate the score of</param>
+        /// <param name="node">The node to calculate the score of.</param>
         /// <returns> Returns a score per base. </returns>
         int CalculateScore(CondensedNode node)
         {

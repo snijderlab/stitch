@@ -23,8 +23,9 @@ namespace AssemblyNameSpace
                 }
                 return parsed;
             }
+
             /// <summary>
-            /// To keep track of the location of the parsehead
+            /// To keep track of the location of the parsehead.
             /// </summary>
             public class Counter
             {
@@ -57,14 +58,14 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// A class with functionality for tokenizing
+            /// A class with functionality for tokenizing.
             /// </summary>
             static class TokenizeHelper
             {
                 /// <summary>
-                /// Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines 
+                /// Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines.
                 /// </summary>
-                /// <returns>The status</returns>
+                /// <returns>The status.</returns>
                 public static (KeyValue, string) MainArgument(string content, Counter counter)
                 {
                     switch (content.First())
@@ -81,10 +82,11 @@ namespace AssemblyNameSpace
                             return Argument(content, counter);
                     }
                 }
+
                 /// <summary>
-                /// Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines 
+                /// Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines.
                 /// </summary>
-                /// <returns>The status</returns>
+                /// <returns>The status.</returns>
                 static (KeyValue, string) Argument(string content, Counter counter)
                 {
                     // This is a parameter line, get the name
@@ -109,12 +111,13 @@ namespace AssemblyNameSpace
                         throw new ParseException($"Parameter '{name.ToString()}' {range} should be followed by an delimiter (':', ':>' or '->')");
                     }
                 }
+
                 /// <summary>
-                /// Single parameter on a single line
+                /// Single parameter on a single line.
                 /// </summary>
-                /// <param name="content">The string to be parsed</param>
-                /// <param name="name">The name of the parameter</param>
-                /// <returns>The status</returns>
+                /// <param name="content">The string to be parsed.</param>
+                /// <param name="name">The name of the parameter.</param>
+                /// <returns>The status.</returns>
                 static (KeyValue, string) SingleParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 1);
@@ -124,12 +127,13 @@ namespace AssemblyNameSpace
                     (string value, Range range) = ParseHelper.Value(ref content, counter);
                     return (new KeyValue(name, value, new KeyRange(namerange, counter.GetPosition()), range), content);
                 }
+
                 /// <summary>
-                /// Single parameter on multiple lines
+                /// Single parameter on multiple lines.
                 /// </summary>
-                /// <param name="content">The string to be parsed</param>
-                /// <param name="name">The name of the parameter</param>
-                /// <returns>The status</returns>
+                /// <param name="content">The string to be parsed.</param>
+                /// <param name="name">The name of the parameter.</param>
+                /// <returns>The status.</returns>
                 static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 2);
@@ -142,12 +146,13 @@ namespace AssemblyNameSpace
                     Position endvalue = new Position(endkey.Line, endkey.Column - 2, counter.File);
                     return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                 }
+
                 /// <summary>
-                /// Multiparameter
+                /// Multiparameter.
                 /// </summary>
-                /// <param name="content">The string to be parsed</param>
-                /// <param name="name">The name of the parameter</param>
-                /// <returns>The status</returns>
+                /// <param name="content">The string to be parsed.</param>
+                /// <param name="name">The name of the parameter.</param>
+                /// <returns>The status.</returns>
                 static (KeyValue, string) MultiParameter(string content, string name, Counter counter, Range namerange)
                 {
                     content = content.Remove(0, 2);
@@ -207,15 +212,16 @@ namespace AssemblyNameSpace
                     }
                 }
             }
+
             /// <summary>
-            /// A class with helper functionality for parsing
+            /// A class with helper functionality for parsing.
             /// </summary>
             public static class ParseHelper
             {
                 /// <summary>
-                /// Consumes a whole line of the string
+                /// Consumes a whole line of the string.
                 /// </summary>
-                /// <param name="content">The string</param>
+                /// <param name="content">The string.</param>
                 public static void SkipLine(ref string content, Counter counter)
                 {
                     int nextnewline = FindNextNewLine(ref content);
@@ -229,11 +235,12 @@ namespace AssemblyNameSpace
                         content = "";
                     }
                 }
+
                 /// <summary>
-                /// To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core
+                /// To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core.
                 /// </summary>
-                /// <param name="content">The string to search in</param>
-                /// <returns>The position of the next newline ('\n' or '\r') or -1 if none could be found</returns>
+                /// <param name="content">The string to search in.</param>
+                /// <returns>The position of the next newline ('\n' or '\r') or -1 if none could be found.</returns>
                 public static int FindNextNewLine(ref string content)
                 {
                     for (int pos = 0; pos < content.Length; pos++)
@@ -245,11 +252,12 @@ namespace AssemblyNameSpace
                     }
                     return -1;
                 }
+
                 /// <summary>
-                /// Consumes a name from the start of the string
+                /// Consumes a name from the start of the string.
                 /// </summary>
-                /// <param name="content">The string</param>
-                /// <returns>The name</returns>
+                /// <param name="content">The string.</param>
+                /// <returns>The name.</returns>
                 public static (string, Range) Name(ref string content, Counter counter)
                 {
                     ParseHelper.Trim(ref content, counter);
@@ -266,11 +274,12 @@ namespace AssemblyNameSpace
                     ParseHelper.Trim(ref content, counter);
                     return (name.ToString().ToLower().Trim(), new Range(start, end));
                 }
+
                 /// <summary>
-                /// Consumes a value from the start of the string
+                /// Consumes a value from the start of the string.
                 /// </summary>
-                /// <param name="content">The string and range</param>
-                /// <returns>The value</returns>
+                /// <param name="content">The string and range.</param>
+                /// <returns>The value.</returns>
                 public static (string, Range) Value(ref string content, Counter counter)
                 {
                     string result = "";
@@ -302,12 +311,13 @@ namespace AssemblyNameSpace
                         content = content.Remove(0, 1);
                     }
                 }
+
                 /// <summary>
-                /// Consumes the string until it find the sequence
+                /// Consumes the string until it find the sequence.
                 /// </summary>
-                /// <param name="content">The string</param>
-                /// <param name="sequence">The sequence to find</param>
-                /// <returns>The consumed part of the string</returns>
+                /// <param name="content">The string.</param>
+                /// <param name="sequence">The sequence to find.</param>
+                /// <returns>The consumed part of the string.</returns>
                 public static string UntilSequence(ref string content, string sequence)
                 {
                     int nextnewline = -1;

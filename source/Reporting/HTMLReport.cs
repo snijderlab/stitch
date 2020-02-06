@@ -14,7 +14,7 @@ using System.ComponentModel;
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// An HTML report
+    /// An HTML report.
     /// </summary>
     class HTMLReport : Report
     {
@@ -22,8 +22,9 @@ namespace AssemblyNameSpace
         /// Indicates if the program should use the included Dot (graphviz) distribution.
         /// </summary>
         bool UseIncludedDotDistribution;
+
         /// <summary>
-        /// To retrieve all metadata
+        /// To retrieve all metadata.
         /// </summary>
         /// <param name="assm">The assembler.</param>
         /// <param name="run">The runparameters.</param>
@@ -32,6 +33,7 @@ namespace AssemblyNameSpace
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
         }
+
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
         (string, string) CreateGraph()
         {
@@ -148,6 +150,7 @@ namespace AssemblyNameSpace
                 throw new Exception("Unexpected exception when trying call dot to build graph: " + e.Message);
             }
         }
+
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
         string CreateReadsTable()
@@ -177,6 +180,7 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+
         /// <summary> Returns a table containing all the contigs of a alignment. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateContigsTable()
@@ -317,8 +321,9 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+
         /// <summary>
-        /// Creates tables for all databases used in recombination
+        /// Creates tables for all databases used in recombination.
         /// </summary>
         string CreateRecombinationDatabaseTables()
         {
@@ -384,6 +389,7 @@ namespace AssemblyNameSpace
     <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</p>
 </div>";
         }
+
         /// <summary> Returns an aside for details viewing of a read. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateReadAside(int i)
@@ -399,6 +405,7 @@ namespace AssemblyNameSpace
     {meta}
 </div>";
         }
+
         /// <summary> Returns an aside for details viewing of a template. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateTemplateAside(int templateIndex, int i)
@@ -418,11 +425,12 @@ namespace AssemblyNameSpace
     {template.MetaData.ToHTML()}
 </div>";
         }
+
         /// <summary>
-        /// Creates an aside for a path 
+        /// Creates an aside for a path.
         /// </summary>
-        /// <param name="i">The index</param>
-        /// <returns>valid HTML</returns>
+        /// <param name="i">The index.</param>
+        /// <returns>valid HTML.</returns>
         string CreatePathAside(int i)
         {
             string id = GetAsideIdentifier(i, AsideType.Path);
@@ -488,6 +496,7 @@ namespace AssemblyNameSpace
     {CreateTemplateAlignment(template, id)}
 </div>";
         }
+
         /// <summary> Returns an aside for details viewing of a recombination database. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateRecombinationDatabaseAside(int index, int i)
@@ -742,6 +751,7 @@ namespace AssemblyNameSpace
             }
             return i;
         }
+
         /// <summary> Returns a list of asides for details viewing. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateAsides()
@@ -791,6 +801,7 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+
         /// <summary> Create a reads alignment to display in the sidebar. </summary>
         /// <returns> Returns an HTML string. </returns>
         (string, List<int>) CreateReadsAlignment(CondensedNode node)
@@ -943,6 +954,7 @@ namespace AssemblyNameSpace
 
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{max_depth}'>"), uniqueorigins);
         }
+
         /// <summary>An enum to save what type of detail aside it is.</summary>
         enum AsideType { Contig, Read, Template, Path, Recombination, RecombinationTemplate }
         string GetAsidePrefix(AsideType type)
@@ -964,6 +976,7 @@ namespace AssemblyNameSpace
             }
             throw new Exception("Invalid AsideType in GetAsidePrefix.");
         }
+
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container.</summary>
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
@@ -972,6 +985,7 @@ namespace AssemblyNameSpace
         {
             return GetAsideIdentifier(-1, index, type);
         }
+
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
         /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
         /// <param name="index2">The index in the container of the element.</param>
@@ -991,6 +1005,7 @@ namespace AssemblyNameSpace
 
             return $"{pre}{i1}{i2}";
         }
+
         /// <summary> Returns a link to the given aside. </summary>
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
@@ -999,6 +1014,7 @@ namespace AssemblyNameSpace
         {
             return GetAsideLink(-1, index, type);
         }
+
         /// <summary> Returns a link to the given aside. </summary>
         /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
         /// <param name="index2">The index in the container of the element.</param>
@@ -1016,11 +1032,12 @@ namespace AssemblyNameSpace
             if (type == AsideType.RecombinationTemplate) classname = "recombination-template";
             return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
         }
+
         /// <summary>
-        /// Create a collapsible region to be used as a main tab in the report
+        /// Create a collapsible region to be used as a main tab in the report.
         /// </summary>
-        /// <param name="name">The name to display</param>
-        /// <param name="content">The content</param>
+        /// <param name="name">The name to display.</param>
+        /// <param name="content">The content.</param>
         string Collapsible(string name, string content)
         {
             string id = name.ToLower().Replace(" ", "-") + "-collapsible";
@@ -1028,6 +1045,7 @@ namespace AssemblyNameSpace
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
         }
+
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string MetaInformation()
@@ -1131,6 +1149,7 @@ namespace AssemblyNameSpace
 
             return html;
         }
+
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
         public override string Create()
         {

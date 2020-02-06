@@ -17,14 +17,19 @@ namespace AssemblyNameSpace
     /// </summary>
     public static class OpenReads
     {
-        /// <summary> To open a file with reads. It assumes a very basic format,
-        /// namely sequences separated with whitespace (space, tab or newline)
-        /// with the possibility to specify comments as lines starting with a 
-        /// specific character (standard '#').  </summary>
-        /// <param name="input_file"> The file to read from. </param>
-        /// <param name="comment_char"> The character comment lines start with. </param>
-        /// <returns> A list of all reads found. </returns>
-        public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier input_file, char comment_char = '#')
+		//Review: is er een reden dat je voor een tuple list gaat in plaats van een dictionary?
+		//MierenNeuken: snake_case en gewoonachterelkaar door elkaar in method parameters en variable names. Geloof dat conventie camelCase is, maar consistentie vooral.
+
+		//Review klopt het nog dat non newline whitespace supported is? Ik zie niet hoe. Anders even een testfile toevoegen met tabs en of spaces
+
+		/// <summary> To open a file with reads. It assumes a very basic format,
+		/// namely sequences separated with whitespace (space, tab or newline)
+		/// with the possibility to specify comments as lines starting with a
+		/// specific character (standard '#').  </summary>
+		/// <param name="input_file"> The file to read from. </param>
+		/// <param name="comment_char"> The character comment lines start with. </param>
+		/// <returns> A list of all reads found. </returns>
+		public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier input_file, char comment_char = '#')
         {
             var reads = new List<(string, MetaData.IMetaData)>();
 
@@ -49,6 +54,7 @@ namespace AssemblyNameSpace
 
             return reads;
         }
+
         /// <summary> To open a file with reads. the file should be in fasta format
         /// so identifiers on a single line starting with '>' followed by an arbitrary
         /// number of lines with sequences. Because sometimes programs output the length
@@ -99,13 +105,14 @@ namespace AssemblyNameSpace
 
             return reads;
         }
+
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
         /// <param name="input_file"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
-        /// <param name="localcutoffscore"> Score used to filter patches in peptides 
+        /// <param name="localcutoffscore"> Score used to filter patches in peptides
         /// with high enough confidence to be used contrary their low global confidence,
         /// lower will be discarded. </param>
-        /// <param name="peaksformat"> The peaksformat to use, this depends on the 
+        /// <param name="peaksformat"> The peaksformat to use, this depends on the
         /// version of peaks used to generate the CSVs. </param>
         /// <param name="min_length_patch"> The minimal length of a patch. </param>
         /// <param name="separator"> CSV separator used. </param>
