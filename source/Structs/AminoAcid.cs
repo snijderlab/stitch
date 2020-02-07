@@ -101,7 +101,7 @@ namespace AssemblyNameSpace
         {
             try
             {
-                return alphabet.scoring_matrix[alphabet.positionInAlphabet[this.Char], alphabet.positionInAlphabet[right.Char]];
+                return alphabet.ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
             }
             catch (Exception e)
             {

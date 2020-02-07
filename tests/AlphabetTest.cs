@@ -48,7 +48,7 @@ namespace AssemblyTestNameSpace
         public void NegativeAlphabet()
         {
             var alp = new Alphabet("*;A;B\nA;1;-1\nB;-1;1", Alphabet.AlphabetParamType.Data, 12, 1);
-            Assert.AreEqual(-1, alp.scoring_matrix[alp.GetIndexInAlphabet('A'), alp.GetIndexInAlphabet('B')]);
+            Assert.AreEqual(-1, alp.ScoringMatrix[alp.GetIndexInAlphabet('A'), alp.GetIndexInAlphabet('B')]);
         }
         [DataRow("*;A;B\nA;1;0", "Missing row")]
         [DataRow("*;A;B\nA;1;0\nB;0;1\nC;0;0", "Extra row")]

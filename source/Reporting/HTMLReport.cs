@@ -677,7 +677,6 @@ namespace AssemblyNameSpace
             if (frontoverhang) buffer.Append(frontoverhangbuffer.ToString());
 
             // Chop it up, add numbers etc
-            // TODO: Add DOC based on DOC of contigs
             const int blocklength = 5;
 
             if (aligned.Length > 0)

@@ -191,7 +191,7 @@ namespace AssemblyNameSpace
             int score = 0;
             for (int i = 0; i < read.Length && i < template.Length - position; i++)
             {
-                score += alphabet.scoring_matrix[alphabet.GetIndexInAlphabet(template[position + i]), alphabet.GetIndexInAlphabet(read[i])];
+                score += alphabet.ScoringMatrix[alphabet.GetIndexInAlphabet(template[position + i]), alphabet.GetIndexInAlphabet(read[i])];
             }
             return score;
         }
@@ -208,11 +208,11 @@ namespace AssemblyNameSpace
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
             {
-                indices_template[i] = alphabet.positionInAlphabet[template[i].Char];
+                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Char];
             }
             for (int i = 0; i < query.Length; i++)
             {
-                indices_query[i] = alphabet.positionInAlphabet[query[i].Char];
+                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Char];
             }
 
             int max_value = 0;
@@ -228,7 +228,7 @@ namespace AssemblyNameSpace
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
                     //gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
-                    score = alphabet.scoring_matrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
+                    score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
                     // Calculate the score for the current position
                     a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
                     b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight
@@ -274,7 +274,7 @@ namespace AssemblyNameSpace
                         max_index_t--;
                         break;
                     case Direction.GapQuery:
-                        match_list.Add(new SequenceMatch.GapContig(1));
+                        match_list.Add(new SequenceMatch.GapQuery(1));
                         max_index_q--;
                         break;
                     case Direction.NoMatch:
@@ -298,175 +298,6 @@ namespace AssemblyNameSpace
                 sb.Append(element.ToString());
             }
             return sb.ToString();
-        }
-    }
-
-    /// <summary>A class to save a match of two sequences in a space efficient way, based on CIGAR strings.</summary>
-    public class SequenceMatch
-    {
-        /// <summary>The position on the template where the match begins.</summary>
-        public readonly int StartTemplatePosition;
-        public readonly int StartQueryPosition;
-        public readonly int Score;
-        public readonly List<MatchPiece> Alignment;
-        public AminoAcid[] TemplateSequence;
-        public AminoAcid[] QuerySequence;
-        public GraphPath Path;
-        public int Length
-        {
-            get
-            {
-                return Alignment.Aggregate(0, (a, b) => a + b.count);
-            }
-        }
-
-        public int TotalMatches
-        {
-            get
-            {
-                int sum = 0;
-                foreach (var m in Alignment)
-                {
-                    if (m is SequenceMatch.Match match) sum += match.count;
-                }
-                return sum;
-            }
-        }
-        public SequenceMatch(int template_position, int query_position, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, GraphPath path)
-        {
-            StartTemplatePosition = template_position;
-            StartQueryPosition = query_position;
-            Score = s;
-            Alignment = m;
-            TemplateSequence = tSeq;
-            QuerySequence = qSeq;
-            Path = path;
-            Simplify();
-        }
-        public override string ToString()
-        {
-            var buffer = new StringBuilder();
-            var buffer1 = new StringBuilder();
-            var buffer2 = new StringBuilder();
-            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tMatch: {Alignment.CIGAR()}\n\n");
-            int tem_pos = StartTemplatePosition;
-            int query_pos = StartQueryPosition;
-            string tSeq = AminoAcid.ArrayToString(TemplateSequence);
-            string qSeq = AminoAcid.ArrayToString(QuerySequence);
-
-            if (tem_pos != 0 || query_pos != 0)
-            {
-                if (tem_pos != 0) buffer1.Append("... ");
-                else buffer1.Append("    ");
-                if (query_pos != 0) buffer2.Append("... ");
-                else buffer2.Append("    ");
-            }
-
-            foreach (MatchPiece element in Alignment)
-            {
-                switch (element)
-                {
-                    case Match match:
-                        buffer1.Append(tSeq.Substring(tem_pos, match.count));
-                        buffer2.Append(qSeq.Substring(query_pos, match.count));
-                        tem_pos += match.count;
-                        query_pos += match.count;
-                        break;
-                    case GapContig gapC:
-                        buffer1.Append(new string('-', gapC.count));
-                        buffer2.Append(qSeq.Substring(query_pos, gapC.count));
-                        query_pos += gapC.count;
-                        break;
-                    case GapTemplate gapT:
-                        buffer1.Append(tSeq.Substring(tem_pos, gapT.count));
-                        buffer2.Append(new string('-', gapT.count));
-                        tem_pos += gapT.count;
-                        break;
-                }
-            }
-
-            if (tem_pos != tSeq.Length || query_pos != qSeq.Length)
-            {
-                if (tem_pos != tSeq.Length) buffer1.Append(" ...");
-                else buffer1.Append("    ");
-                if (query_pos != qSeq.Length) buffer2.Append(" ...");
-                else buffer2.Append("    ");
-            }
-
-            var seq1 = buffer1.ToString();
-            var seq2 = buffer2.ToString();
-            const int block = 80;
-            var blocks = seq1.Length / block + (seq1.Length % block == 0 ? 0 : 1);
-
-            for (int i = 0; i < blocks; i++)
-            {
-                buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
-                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
-                buffer.Append("\n");
-                buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
-                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
-                buffer.Append("\n");
-                if (i != blocks)
-                {
-                    buffer.Append("\n");
-                }
-            }
-
-            return buffer.ToString();
-        }
-        public abstract class MatchPiece
-        {
-            public int count;
-            public MatchPiece(int c)
-            {
-                count = c;
-            }
-            public override string ToString()
-            {
-                return $"{count}None";
-            }
-        }
-        public class Match : MatchPiece
-        {
-            public Match(int c) : base(c) { }
-            public override string ToString()
-            {
-                return $"{count}M";
-            }
-        }
-        public class GapTemplate : MatchPiece
-        {
-            public GapTemplate(int c) : base(c) { }
-            public override string ToString()
-            {
-                return $"{count}D";
-            }
-        }
-        public class GapContig : MatchPiece
-        {
-            public GapContig(int c) : base(c) { }
-            public override string ToString()
-            {
-                return $"{count}I";
-            }
-        }
-        void Simplify()
-        {
-            MatchPiece lastElement = null;
-            int count = Alignment.Count();
-            int i = 0;
-            while (i < count)
-            {
-                if (lastElement != null && lastElement.GetType() == Alignment[i].GetType())
-                {
-                    Alignment[i].count += Alignment[i - 1].count;
-                    Alignment.RemoveAt(i - 1);
-                    i--;
-                    count--;
-                }
-                lastElement = Alignment[i];
-                i++;
-            }
         }
     }
 }
