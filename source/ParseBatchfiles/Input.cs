@@ -454,8 +454,22 @@ namespace AssemblyNameSpace
                                 case "minimalscore":
                                     fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                     break;
+                                case "outputtype":
+                                    switch (setting.GetValue().ToLower())
+                                    {
+                                        case "paths":
+                                            fsettings.OutputType = RunParameters.Report.FastaOutputType.Paths;
+                                            break;
+                                        case "consensussequence":
+                                            fsettings.OutputType = RunParameters.Report.FastaOutputType.ConsensusSequence;
+                                            break;
+                                        default:
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Paths' and 'ConsensusSequence'"));
+                                            break;
+                                    }
+                                    break;
                                 default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path' and 'MinimalScore'"));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path', 'MinimalScore' and 'OutputType'"));
                                     break;
                             }
                         }

@@ -1,15 +1,5 @@
-using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Threading;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
@@ -19,15 +9,17 @@ namespace AssemblyNameSpace
     class FASTAReport : Report
     {
         readonly int MinScore;
+        readonly RunParameters.Report.FastaOutputType OutputType;
 
         /// <summary>
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
         /// <param name="minscore">The minimal score needed to be included in the file.</param>
-        public FASTAReport(ReportInputParameters parameters, int minscore) : base(parameters)
+        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.FastaOutputType outputType) : base(parameters)
         {
             MinScore = minscore;
+            OutputType = outputType;
         }
 
         /// <summary>
@@ -38,9 +30,19 @@ namespace AssemblyNameSpace
         {
             var sequences = new List<(int, string)>();
 
-            foreach (var path in Paths)
+            if (OutputType == RunParameters.Report.FastaOutputType.Paths)
             {
-                sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
+                foreach (var path in Paths)
+                {
+                    sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
+                }
+            }
+            else
+            {
+                foreach (var template in RecombinedDatabase.Templates)
+                {
+                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{ConsensusSequence(template)}"));
+                }
             }
 
             // Filter and sort the lines
@@ -54,6 +56,80 @@ namespace AssemblyNameSpace
             }
 
             return buffer.ToString().Trim();
+        }
+
+        string ConsensusSequence(Template template)
+        {
+            // Display Consensus Sequence
+            var consensus = new StringBuilder();
+            var consensus_sequence = template.CombinedSequence();
+
+            for (int i = 0; i < consensus_sequence.Count; i++)
+            {
+                // Get the highest chars
+                string options = "";
+                int max = 0;
+                foreach (var item in consensus_sequence[i].Item1)
+                {
+                    if (item.Value > max)
+                    {
+                        options = item.Key.ToString();
+                        max = item.Value;
+                    }
+                    else if (item.Value == max)
+                    {
+                        options += item.Key.ToString();
+                    }
+                }
+                if (options.Length > 1)
+                {
+                    consensus.Append("(");
+                    consensus.Append(options);
+                    consensus.Append(")");
+                }
+                else if (options.Length == 1)
+                {
+                    consensus.Append(options);
+                }
+                else
+                {
+                    consensus.Append("_");
+                }
+                // Get the highest gap
+                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
+                int max_gap_score = 0;
+                foreach (var item in consensus_sequence[i].Item2)
+                {
+                    if (item.Value.Count > max_gap_score)
+                    {
+                        max_gap = new List<Template.IGap> { item.Key };
+                        max_gap_score = item.Value.Count;
+                    }
+                    else if (item.Value.Count == max)
+                    {
+                        max_gap.Add(item.Key);
+                    }
+                }
+                if (max_gap.Count > 1)
+                {
+                    consensus.Append("(");
+                    foreach (var item in max_gap)
+                    {
+                        consensus.Append(item.ToString());
+                        consensus.Append("/");
+                    }
+                    consensus.Append(")");
+                }
+                else if (max_gap.Count == 1)
+                {
+                    consensus.Append(max_gap[0].ToString());
+                }
+                else
+                {
+                    consensus.Append("_");
+                }
+            }
+            return consensus.ToString();
         }
     }
 }

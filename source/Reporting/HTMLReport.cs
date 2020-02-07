@@ -549,6 +549,7 @@ namespace AssemblyNameSpace
     <h2>Score</h2>
     <p>{template.Score}</p>
     {CreateTemplateAlignment(template, id)}
+    {template.MetaData.ToHTML()}
 </div>";
         }
 

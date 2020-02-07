@@ -108,9 +108,10 @@ Recombine->
 <-
 
 -Report-----------------
--FASTA	->
--Path	: ../../report-reads-{id}.fasta
--<-
+FASTA	->
+Path	   : ../../report-reads-{id}.fasta
+OutputType : ConsensusSequence
+<-
 HTML ->
 Path    : ../../report-reads-{data}.html
 DotDistribution: global

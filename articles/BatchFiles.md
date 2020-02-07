@@ -361,12 +361,14 @@ Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)
 MinimalScore | The minimal score needed to be included in the file | 0
+OutputType | The type of sequences to give as output, 'Paths' or 'ConsensusSequences' | 'Paths'
 
 _Example_
 ```
 FASTA ->
-Path: Contigs.fasta
-MinimalScore: 50
+    Path         : Contigs.fasta
+    MinimalScore : 50
+    OutputType   : Paths
 <-
 ```
 

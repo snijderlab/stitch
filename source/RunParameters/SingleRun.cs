@@ -326,7 +326,7 @@ namespace AssemblyNameSpace
                                 csvreport.CreateCSVLine(c.GetID(this), c.Path);
                                 break;
                             case Report.FASTA f:
-                                var fastareport = new FASTAReport(parameters, f.MinimalScore);
+                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType);
                                 fastareport.Save(f.CreateName(this));
                                 break;
                         }

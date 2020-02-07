@@ -125,6 +125,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public class FASTA : Parameter
             {
+
                 /// <summary>
                 /// Fills in default values.
                 /// </summary>
@@ -411,6 +412,11 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
+            /// The type sequences in the fasta to give as output
+            /// </summary>
+            public enum FastaOutputType { Paths, ConsensusSequence }
+
+            /// <summary>
             /// To indicate to return a FASTA report.
             /// </summary>
             public class FASTA : Parameter
@@ -419,6 +425,11 @@ namespace AssemblyNameSpace
                 /// The minimal score needed to be included.
                 /// </summary>
                 public int MinimalScore = 0;
+
+                /// <summary>
+                /// The outputtype of the sequences
+                /// </summary>
+                public FastaOutputType OutputType = FastaOutputType.Paths;
             }
         }
     }
