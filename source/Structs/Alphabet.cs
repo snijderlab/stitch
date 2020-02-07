@@ -86,6 +86,11 @@ namespace AssemblyNameSpace
             {
                 positionInAlphabet.Add(alphabet[i], i);
             }
+            try
+            {
+                GapIndex = positionInAlphabet[GapChar];
+            }
+            catch { }
         }
         public override string ToString()
         {

@@ -142,7 +142,15 @@ namespace AssemblyNameSpace
                 // Add all paths as classes to the nodes
                 for (int i = 0; i < condensed_graph.Count(); i++)
                 {
-                    string extra_classes = AllPathsContaining(condensed_graph[i].Index).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b.Index, AsideType.Path)).Substring(1);
+                    string extra_classes;
+                    try
+                    {
+                        extra_classes = AllPathsContaining(condensed_graph[i].Index).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b.Index, AsideType.Path)).Substring(1);
+                    }
+                    catch
+                    {
+                        extra_classes = "";
+                    }
                     svggraph = svggraph.Replace($"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
                     simplesvggraph = simplesvggraph.Replace($"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"", $"id=\"simple-node-{GetAsideIdentifier(i, AsideType.Contig)}\" class=\"{extra_classes} ");
                 }
@@ -560,7 +568,8 @@ namespace AssemblyNameSpace
             // Combine horizontally
 
             var lines = new StringBuilder[template.Matches.Count() + 1];
-            char gapchar = alphabet.alphabet[alphabet.GapIndex];
+            const char gapchar = '-';
+            var depthOfCoverage = new List<int>();
 
             for (int i = 0; i < template.Matches.Count() + 1; i++)
             {
@@ -571,26 +580,34 @@ namespace AssemblyNameSpace
             {
                 var (Sequences, Gaps) = alignedSequences[template_pos];
                 lines[0].Append(template.Sequence[template_pos]);
+                int depth = 0;
+
                 // Add the aligned amino acid
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
                     int index = Sequences[i].SequencePosition;
+                    depth += Sequences[i].CoverageDepth;
+
                     if (index == -1)
                     {
                         lines[i + 1].Append(gapchar);
                     }
                     else if (index == 0)
                     {
-                        lines[i + 1].Append("\u00A0");
+                        lines[i + 1].Append("\u00A0"); // Non breaking space
                     }
                     else
                     {
                         lines[i + 1].Append(template.Matches[i].QuerySequence[index - 1]);
                     }
                 }
+
+                depthOfCoverage.Add(depth);
+
                 // Add the gap
-                // Unaligned for now
+                // TODO: Unaligned for now
                 int max_length = 0;
+                // Get the max length of the gaps 
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
                     if (Gaps[i].Gap != null && Gaps[i].Gap.ToString().Length > max_length)
@@ -598,30 +615,44 @@ namespace AssemblyNameSpace
                         max_length = Gaps[i].Gap.ToString().Length;
                     }
                 }
+                // Add gap to the template
                 lines[0].Append(new string(gapchar, max_length));
+
+                var depthGap = new List<int[]>();
+                // Add gap to the lines
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
                     string seq;
                     if (Gaps[i].Gap == null)
                     {
                         seq = "";
+                        depthGap.Add(Enumerable.Repeat(1, max_length).ToArray());
                     }
                     else
                     {
                         seq = Gaps[i].Gap.ToString();
+                        var d = new int[max_length];
+                        Gaps[i].CoverageDepth.CopyTo(d, max_length - Gaps[i].CoverageDepth.Length);
+                        depthGap.Add(d);
                     }
                     lines[i + 1].Append(seq.PadRight(max_length, gapchar));
                 }
+                var depthGapCombined = new int[max_length];
+                foreach (var d in depthGap)
+                {
+                    depthGapCombined = depthGapCombined.ElementwiseAdd(d);
+                }
+                depthOfCoverage.AddRange(depthGapCombined);
             }
 
-            var aligned = new string[template.Matches.Count()];
+            var aligned = new string[template.Matches.Count() + 1];
 
-            for (int i = 0; i < template.Matches.Count(); i++)
+            for (int i = 0; i < template.Matches.Count() + 1; i++)
             {
                 aligned[i] = lines[i].ToString();
             }
 
-            buffer.AppendLine("<div class=\"reads-alignment\">");
+            buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{depthOfCoverage.Max()}\">");
 
             // Create the front overhanging reads block
             var frontoverhangbuffer = new StringBuilder();
@@ -658,7 +689,7 @@ namespace AssemblyNameSpace
                     if (aligned[0].Length - block * blocklength >= blocklength)
                     {
                         number = ((block + 1) * blocklength).ToString();
-                        number = String.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
+                        number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
                     for (int i = 1; i < aligned.Length; i++)
@@ -669,7 +700,12 @@ namespace AssemblyNameSpace
                         buffer.Append(result);
                         buffer.Append("<br>");
                     }
-                    buffer.Append("</div>");
+                    buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+                    for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count() - block * blocklength); i++)
+                    {
+                        buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
+                    }
+                    buffer.Append("</div></div>");
                 }
             }
 
@@ -682,10 +718,10 @@ namespace AssemblyNameSpace
             {
                 string rid = GetAsideIdentifier(i - 1, AsideType.Path);
                 var match = template.Matches[i - 1];
-                if (match.StartQueryPosition + match.TotalMatches() < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches() == match.TemplateSequence.Length)
+                if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
                 {
                     endoverhang = true;
-                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches(), match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches()))}</a><span class='symbol'>...</span><br>");
+                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
@@ -698,6 +734,7 @@ namespace AssemblyNameSpace
             // Display Consensus Sequence
             var consensus = new StringBuilder();
             var consensus_sequence = template.CombinedSequence();
+
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
                 // Get the highest chars
@@ -734,12 +771,12 @@ namespace AssemblyNameSpace
                 int max_gap_score = 0;
                 foreach (var item in consensus_sequence[i].Item2)
                 {
-                    if (item.Value > max_gap_score)
+                    if (item.Value.Count > max_gap_score)
                     {
                         max_gap = new List<Template.IGap> { item.Key };
-                        max_gap_score = item.Value;
+                        max_gap_score = item.Value.Count;
                     }
-                    else if (item.Value == max)
+                    else if (item.Value.Count == max)
                     {
                         max_gap.Add(item.Key);
                     }
@@ -766,6 +803,14 @@ namespace AssemblyNameSpace
             buffer.AppendLine("</div><h2>Consensus Sequence</h2><p style='word-break: break-all;'>");
             buffer.AppendLine(consensus.ToString());
             buffer.AppendLine("</p>");
+
+            // Display matches table
+            buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
+            foreach (var match in template.Matches)
+            {
+                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Path.Index, AsideType.Path)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
+            }
+            buffer.Append("</table>");
 
             return buffer.ToString();
         }
@@ -896,7 +941,7 @@ namespace AssemblyNameSpace
                 if (sequence.Length - pos * bucketsize >= bucketsize)
                 {
                     number = ((pos + 1) * bucketsize).ToString();
-                    number = String.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                    number = string.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
                 }
                 else
                 {

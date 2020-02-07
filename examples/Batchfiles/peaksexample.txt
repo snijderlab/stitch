@@ -21,32 +21,54 @@ MinimalHomology : 7
 DuplicateThreshold: 7
 Reverse	        : True
 Alphabet->
-Data	:>
-*;L;S;A;E;G;V;R;K;T;P;D;I;N;Q;F;Y;H;M;C;W;O;U
-L;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-S;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-A;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-E;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-G;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-V;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-R;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-K;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0;0
-T;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0;0
-P;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0;0
-D;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0;0
-I;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0;0
-N;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0;0
-Q;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0;0
-F;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0;0
-Y;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0;0
-H;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0;0
-M;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0;0
-C;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0;0
-W;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0;0
-O;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1;0
-U;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;0;1
-<:
+Path : ../alphabets/default_alphabet.csv
 Name	: Normal
+<-
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    n : 2
+
+    -Minimal average score per position to be included
+    CutoffScore : 0.5
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC
+
+    Templates->
+        Template->
+            Path : ../templates/IGHV.fasta
+            Name : IGHV
+        <-
+        Template->
+            Path : ../templates/IGHJ.fasta
+            Name : IGHJ
+        <-
+        Template->
+            Path : ../templates/IGHC_uniprot.fasta
+            Name : IGHC
+        <-
+        Template->
+            Path : ../templates/IGKV.fasta
+            Name : IGKV
+        <-
+        Template->
+            Path : ../templates/IGKJ.fasta
+            Name : IGKJ
+        <-
+        Template->
+            Path : ../templates/IGKC.fasta
+            Name : IGKC
+        <-
+    <-
+
+    -The alphabet used for all databases
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+        GapStartPenalty : 12
+        GapExtendPenalty : 1
+    <-
 <-
 
 -Report-----------------

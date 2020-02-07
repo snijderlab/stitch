@@ -170,7 +170,7 @@ namespace AssemblyNameSpace
             {
                 foreach (var read in row)
                 {
-                    for (int i = read.StartPosition; i < read.StartPosition + read.Sequence.Length; i++)
+                    for (int i = read.StartPosition; i < read.StartPosition + read.Sequence.Length && i < depthOfCoverage.Length; i++)
                     {
                         depthOfCoverage[i]++;
                     }

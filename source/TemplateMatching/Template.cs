@@ -43,6 +43,8 @@ namespace AssemblyNameSpace
             {
                 Score += match.Score;
                 Matches.Add(match);
+                if (Matches.Count() > 1)
+                    Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
             }
         }
         public interface IGap { }
@@ -66,9 +68,9 @@ namespace AssemblyNameSpace
         /// Gets the placement of the sequences associated with this template.
         /// </summary>
         /// <returns>A list with tuples for each position in the original sequence. The first item is an array of tuples with all sequences on this position (matchindex) and the position on this sequence + 1 (or -1 if there is a gap, so 0 if outside bounds). The second item is an array of all gaps after this position, containing both the matchindex and sequence. </returns>
-        public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)> AlignedSequences()
+        public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> AlignedSequences()
         {
-            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)>()
+            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)>()
             {
                 Capacity = Sequence.Length
             };
@@ -76,7 +78,7 @@ namespace AssemblyNameSpace
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[Matches.Count()], new (int, IGap)[Matches.Count()]));
+                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[Matches.Count()], new (int, IGap, int[], int)[Matches.Count()]));
             }
 
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
@@ -95,38 +97,41 @@ namespace AssemblyNameSpace
                         {
                             // Add this ID to the list
                             output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            output[template_pos].Gaps[matchindex] = (matchindex, new None());
+                            output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
 
                             template_pos++;
                             seq_pos++;
                         }
                     }
-                    else if (piece is SequenceMatch.GapTemplate gt)
+                    else if (piece is SequenceMatch.GapContig gc)
                     {
                         if (template_pos < output.Count())
                         {
                             // Try to add this sequence or update the count
-                            int len = Math.Min(gt.count, match.QuerySequence.Length - seq_pos);
+                            int len = Math.Min(gc.count, match.QuerySequence.Length - seq_pos);
                             IGap sub_seq;
+                            int[] cov;
                             if (len <= 0)
                             {
                                 sub_seq = new None();
+                                cov = new int[0];
                             }
                             else
                             {
                                 sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos - 1, len));
+                                cov = match.Path.DepthOfCoverage.SubArray(seq_pos - 1, len);
                             }
-                            seq_pos += gt.count;
-                            output[template_pos].Gaps[matchindex] = (matchindex, sub_seq);
+                            seq_pos += gc.count;
+                            output[template_pos].Gaps[matchindex] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
                         }
                     }
-                    else if (piece is SequenceMatch.GapContig gc)
+                    else if (piece is SequenceMatch.GapTemplate gt)
                     {
                         // Skip to the next section
-                        for (int i = 0; i < gc.count && template_pos < output.Count(); i++)
+                        for (int i = 0; i < gt.count && template_pos < output.Count(); i++)
                         {
                             output[template_pos].Sequences[matchindex] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
-                            output[template_pos].Gaps[matchindex] = (matchindex, new None());
+                            output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], -1);
                             template_pos++;
                         }
                     }
@@ -138,9 +143,9 @@ namespace AssemblyNameSpace
         /// Returns the combined sequence or aminoacid variety per position in the alignment.
         /// </summary>
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
-        public List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)> CombinedSequence()
+        public List<(Dictionary<AminoAcid, int>, Dictionary<IGap, (int Count, int[] CoverageDepth)>)> CombinedSequence()
         {
-            var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, int>)>()
+            var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, (int Count, int[] CoverageDepth)>)>()
             {
                 Capacity = Sequence.Length
             };
@@ -148,7 +153,7 @@ namespace AssemblyNameSpace
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new Dictionary<AminoAcid, int>(), new Dictionary<IGap, int>()));
+                output.Add((new Dictionary<AminoAcid, int>(), new Dictionary<IGap, (int, int[])>()));
             }
 
             var alignedSequences = AlignedSequences();
@@ -194,11 +199,20 @@ namespace AssemblyNameSpace
                     }
                     if (output[i].Item2.ContainsKey(key))
                     {
-                        output[i].Item2[key] += 1;
+                        int[] cov;
+                        if (output[i].Item2[key].CoverageDepth == null)
+                        {
+                            cov = option.CoverageDepth;
+                        }
+                        else
+                        {
+                            cov = output[i].Item2[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
+                        }
+                        output[i].Item2[key] = (output[i].Item2[key].Count + 1, cov);
                     }
                     else
                     {
-                        output[i].Item2.Add(key, 1);
+                        output[i].Item2.Add(key, (1, option.CoverageDepth));
                     }
                 }
             }

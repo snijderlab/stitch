@@ -34,6 +34,25 @@ namespace AssemblyNameSpace
                 throw new Exception($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
+        /// <summary> To copy a subarray to a new array. </summary>
+        /// <param name="data"> The old array to copy from. </param>
+        /// <param name="index"> The index to start copying. </param>
+        /// <param name="length"> The length of the created subarray. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns a new array with clones of the original array. </returns>
+        public static int[] ElementwiseAdd(this int[] data, int[] that)
+        {
+            if (data == null) return that;
+            if (that == null) return data;
+            if (data.Length != that.Length) throw new ArgumentException("To do an elementwiseAdd the two arrays should be the same length.");
+            int[] result = new int[data.Length];
+            Array.Copy(data, 0, result, 0, data.Length);
+            for (int i = 0; i < that.Length; i++)
+            {
+                result[i] += that[i];
+            }
+            return result;
+        }
         public struct ReadPlacement
         {
             public string Sequence;
@@ -286,10 +305,10 @@ namespace AssemblyNameSpace
     public class SequenceMatch
     {
         /// <summary>The position on the template where the match begins.</summary>
-        public int StartTemplatePosition;
-        public int StartQueryPosition;
-        public int Score;
-        public List<MatchPiece> Alignment;
+        public readonly int StartTemplatePosition;
+        public readonly int StartQueryPosition;
+        public readonly int Score;
+        public readonly List<MatchPiece> Alignment;
         public AminoAcid[] TemplateSequence;
         public AminoAcid[] QuerySequence;
         public GraphPath Path;
@@ -298,6 +317,19 @@ namespace AssemblyNameSpace
             get
             {
                 return Alignment.Aggregate(0, (a, b) => a + b.count);
+            }
+        }
+
+        public int TotalMatches
+        {
+            get
+            {
+                int sum = 0;
+                foreach (var m in Alignment)
+                {
+                    if (m is SequenceMatch.Match match) sum += match.count;
+                }
+                return sum;
             }
         }
         public SequenceMatch(int template_position, int query_position, int s, List<MatchPiece> m, AminoAcid[] tSeq, AminoAcid[] qSeq, GraphPath path)
@@ -353,17 +385,20 @@ namespace AssemblyNameSpace
                 }
             }
 
-            if (tem_pos != tSeq.Length) buffer1.Append(" ...");
-            else buffer1.Append("");
-            if (query_pos != qSeq.Length) buffer2.Append(" ...");
-            else buffer2.Append("");
+            if (tem_pos != tSeq.Length || query_pos != qSeq.Length)
+            {
+                if (tem_pos != tSeq.Length) buffer1.Append(" ...");
+                else buffer1.Append("    ");
+                if (query_pos != qSeq.Length) buffer2.Append(" ...");
+                else buffer2.Append("    ");
+            }
 
             var seq1 = buffer1.ToString();
             var seq2 = buffer2.ToString();
             const int block = 80;
-            var blocks = seq1.Length / block;
+            var blocks = seq1.Length / block + (seq1.Length % block == 0 ? 0 : 1);
 
-            for (int i = 0; i < blocks + 1; i++)
+            for (int i = 0; i < blocks; i++)
             {
                 buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
                 //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
@@ -432,15 +467,6 @@ namespace AssemblyNameSpace
                 lastElement = Alignment[i];
                 i++;
             }
-        }
-        public int TotalMatches()
-        {
-            int sum = 0;
-            foreach (var m in Alignment)
-            {
-                if (m.GetType() == typeof(SequenceMatch.Match)) sum += m.count;
-            }
-            return sum;
         }
     }
 }
