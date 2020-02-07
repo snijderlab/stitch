@@ -22,8 +22,8 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void InvariantNotEqual(char x, char y)
         {
-            int a = alp.getIndexInAlphabet(x);
-            int b = alp.getIndexInAlphabet(y);
+            int a = alp.GetIndexInAlphabet(x);
+            int b = alp.GetIndexInAlphabet(y);
             Assert.AreNotEqual(a, b);
         }
         [DataRow('A', 'A')]
@@ -31,8 +31,8 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void InvariantEqual(char x, char y)
         {
-            int a = alp.getIndexInAlphabet(x);
-            int b = alp.getIndexInAlphabet(y);
+            int a = alp.GetIndexInAlphabet(x);
+            int b = alp.GetIndexInAlphabet(y);
             Assert.AreEqual(a, b);
         }
         [TestMethod]
@@ -41,14 +41,14 @@ namespace AssemblyTestNameSpace
             string input = "abcdefghijklmnopqrstuvwxyzCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
             foreach (char c in input)
             {
-                Assert.ThrowsException<ArgumentException>(() => alp.getIndexInAlphabet(c));
+                Assert.ThrowsException<ArgumentException>(() => alp.GetIndexInAlphabet(c));
             }
         }
         [TestMethod]
         public void NegativeAlphabet()
         {
             var alp = new Alphabet("*;A;B\nA;1;-1\nB;-1;1", Alphabet.AlphabetParamType.Data, 12, 1);
-            Assert.AreEqual(-1, alp.scoring_matrix[alp.getIndexInAlphabet('A'), alp.getIndexInAlphabet('B')]);
+            Assert.AreEqual(-1, alp.scoring_matrix[alp.GetIndexInAlphabet('A'), alp.GetIndexInAlphabet('B')]);
         }
         [DataRow("*;A;B\nA;1;0", "Missing row")]
         [DataRow("*;A;B\nA;1;0\nB;0;1\nC;0;0", "Extra row")]
@@ -72,7 +72,7 @@ namespace AssemblyTestNameSpace
             string input = "AB";
             foreach (char c in input)
             {
-                Assert.AreEqual(alp.getIndexInAlphabet(c), alp2.getIndexInAlphabet(c));
+                Assert.AreEqual(alp.GetIndexInAlphabet(c), alp2.GetIndexInAlphabet(c));
             }
         }
         /// <summary>

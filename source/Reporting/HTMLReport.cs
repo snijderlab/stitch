@@ -569,12 +569,12 @@ namespace AssemblyNameSpace
 
             for (int template_pos = 0; template_pos < alignedSequences.Count(); template_pos++)
             {
-                var position = alignedSequences[template_pos];
+                var (Sequences, Gaps) = alignedSequences[template_pos];
                 lines[0].Append(template.Sequence[template_pos]);
                 // Add the aligned amino acid
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
-                    int index = position.Item1[i].Item2;
+                    int index = Sequences[i].SequencePosition;
                     if (index == -1)
                     {
                         lines[i + 1].Append(gapchar);
@@ -593,22 +593,22 @@ namespace AssemblyNameSpace
                 int max_length = 0;
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
-                    if (position.Item2[i].Item2 != null && position.Item2[i].Item2.ToString().Length > max_length)
+                    if (Gaps[i].Gap != null && Gaps[i].Gap.ToString().Length > max_length)
                     {
-                        max_length = position.Item2[i].Item2.ToString().Length;
+                        max_length = Gaps[i].Gap.ToString().Length;
                     }
                 }
                 lines[0].Append(new string(gapchar, max_length));
                 for (int i = 0; i < template.Matches.Count(); i++)
                 {
                     string seq;
-                    if (position.Item2[i].Item2 == null)
+                    if (Gaps[i].Gap == null)
                     {
                         seq = "";
                     }
                     else
                     {
-                        seq = position.Item2[i].Item2.ToString();
+                        seq = Gaps[i].Gap.ToString();
                     }
                     lines[i + 1].Append(seq.PadRight(max_length, gapchar));
                 }

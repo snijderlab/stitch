@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look up. </param>
         /// <returns> The index of the character in the alphabet or -1 if it is not in the alphabet. </returns>
-        public int getIndexInAlphabet(char c)
+        public int GetIndexInAlphabet(char c)
         {
             try
             {

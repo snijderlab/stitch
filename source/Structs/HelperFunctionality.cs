@@ -172,7 +172,7 @@ namespace AssemblyNameSpace
             int score = 0;
             for (int i = 0; i < read.Length && i < template.Length - position; i++)
             {
-                score += alphabet.scoring_matrix[alphabet.getIndexInAlphabet(template[position + i]), alphabet.getIndexInAlphabet(read[i])];
+                score += alphabet.scoring_matrix[alphabet.GetIndexInAlphabet(template[position + i]), alphabet.GetIndexInAlphabet(read[i])];
             }
             return score;
         }
@@ -309,7 +309,7 @@ namespace AssemblyNameSpace
             TemplateSequence = tSeq;
             QuerySequence = qSeq;
             Path = path;
-            simplify();
+            Simplify();
         }
         public override string ToString()
         {
@@ -415,7 +415,7 @@ namespace AssemblyNameSpace
                 return $"{count}I";
             }
         }
-        void simplify()
+        void Simplify()
         {
             MatchPiece lastElement = null;
             int count = Alignment.Count();

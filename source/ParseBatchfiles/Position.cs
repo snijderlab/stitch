@@ -1,24 +1,47 @@
 using System;
+using System.IO;
 
 namespace AssemblyNameSpace
 {
     /// <summary>
-    /// To keep track of a location of a token.
+    /// To keep track of a location in a file, for example for error messages.
     /// </summary>
     public struct Position
     {
-        public readonly int Line;
-        public readonly int Column;
+        /// <summary>
+        /// The file this position is in
+        /// </summary>
         public readonly ParsedFile File;
-        public Position(int l, int c, ParsedFile file)
+
+        /// <summary>
+        /// The Line number (0 based) in the file
+        /// </summary>
+        public readonly int Line;
+
+        /// <summary>
+        /// The column number (1-based) on the line
+        /// </summary>
+        public readonly int Column;
+
+        /// <summary>
+        /// Creates a new location with the given parameters
+        /// </summary>
+        /// <param name="line">The line (0-based)</param>
+        /// <param name="column">The column (1-based)</param>
+        /// <param name="file">The file</param>
+        public Position(int line, int column, ParsedFile file)
         {
-            Line = l;
-            Column = c;
+            Line = line;
+            Column = column;
             File = file;
         }
+
+        /// <summary>
+        /// Summarises this location into a string for human readability
+        /// </summary>
         public override string ToString()
         {
-            return $"({Line},{Column})";
+            return $"{File}:{Line},{Column}";
         }
         public static bool operator ==(Position p1, Position p2)
         {
@@ -26,7 +49,7 @@ namespace AssemblyNameSpace
         }
         public static bool operator !=(Position p1, Position p2)
         {
-            return !(p1.Equals(p2));
+            return !p1.Equals(p2);
         }
         public override bool Equals(object p2)
         {
@@ -40,11 +63,32 @@ namespace AssemblyNameSpace
         }
     }
 
+    /// <summary>
+    /// Tracks a range in a file, for example the range of a keyword
+    /// </summary>
     public struct Range
     {
-        public readonly Position Start;
-        public readonly Position End;
+        /// <summary>
+        /// The file this positions are in
+        /// </summary>
         public readonly ParsedFile File;
+
+        /// <summary>
+        /// The start position
+        /// </summary>
+        public readonly Position Start;
+
+        /// <summary>
+        /// The end position
+        /// </summary>
+        public readonly Position End;
+
+        /// <summary>
+        /// Creates a new range
+        /// </summary>
+        /// <param name="start">The start position</param>
+        /// <param name="end">The end position</param>
+        /// <exception cref="ArgumentException">If the two positions are not in the same file, or if the start position is after the end position.</exception>
         public Range(Position start, Position end)
         {
             Start = start;
@@ -54,19 +98,49 @@ namespace AssemblyNameSpace
             {
                 throw new ArgumentException("Two positions in two different files do not form a range in a single file.");
             }
+            if (start.Line > end.Line || (start.Line == end.Line && start.Column > end.Column))
+            {
+                throw new ArgumentException("The start position cannot be before the end position.");
+            }
         }
+
+        /// <summary>
+        /// Summarises this range into a string for human readability
+        /// </summary>
         public override string ToString()
         {
             return $"{Start} to {End}";
         }
     }
 
+    /// <summary>
+    /// Tracks a range of a key in a keyvalue element in a file, |Key| :&gt; &lt;:|
+    /// </summary>
     public struct KeyRange
     {
-        public readonly Position Start;
-        public readonly Position NameEnd;
-        public readonly Position FieldEnd;
+        /// <summary>
+        /// The file of the range
+        /// </summary>
         public readonly ParsedFile File;
+
+        /// <summary>
+        /// The start of the range, |Key :&gt; &lt;:
+        /// </summary>
+        public readonly Position Start;
+
+        /// <summary>
+        /// The end of the key, Key| :&gt; &lt;:
+        /// </summary>
+        public readonly Position NameEnd;
+
+        /// <summary>
+        /// The end of the field, Key :&gt; &lt;:|
+        /// </summary>
+        public readonly Position FieldEnd;
+
+        /// <summary>
+        /// The full range, from <see cref="Start"/> to <see cref="FieldEnd"/>, |Key :&gt; &lt;:|
+        /// </summary>
         public Range Full
         {
             get
@@ -74,6 +148,10 @@ namespace AssemblyNameSpace
                 return new Range(Start, FieldEnd);
             }
         }
+
+        /// <summary>
+        /// The range of the name, from <see cref="Start"/> to <see cref="NameEnd"/>, |Key| :&gt; &lt;:
+        /// </summary>
         public Range Name
         {
             get
@@ -81,48 +159,112 @@ namespace AssemblyNameSpace
                 return new Range(Start, NameEnd);
             }
         }
-        public KeyRange(Position start, Position name_end, Position field_end)
+
+        /// <summary>
+        /// Creates a KeyRange
+        /// </summary>
+        /// <param name="start">Start position, <see cref="Start"/></param>
+        /// <param name="nameEnd">NameEnd position, <see cref="NameEnd"/></param>
+        /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
+        /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>
+        public KeyRange(Position start, Position nameEnd, Position fieldEnd)
         {
             Start = start;
-            NameEnd = name_end;
-            FieldEnd = field_end;
+            NameEnd = nameEnd;
+            FieldEnd = fieldEnd;
             File = start.File;
-            if (start.File != name_end.File || name_end.File != field_end.File)
+            if (start.File != nameEnd.File || nameEnd.File != fieldEnd.File)
             {
                 throw new ArgumentException("Three positions in different files do not form a range in a single file.");
             }
+            if (Start.Line > NameEnd.Line || (Start.Line == NameEnd.Line && Start.Column > NameEnd.Column))
+            {
+                throw new ArgumentException("The Start position cannot be before the NameEnd position.");
+            }
+            if (Start.Line > FieldEnd.Line || (Start.Line == FieldEnd.Line && Start.Column > FieldEnd.Column))
+            {
+                throw new ArgumentException("The Start position cannot be before the FieldEnd position.");
+            }
+            if (NameEnd.Line > FieldEnd.Line || (NameEnd.Line == FieldEnd.Line && NameEnd.Column > FieldEnd.Column))
+            {
+                throw new ArgumentException("The NameEnd position cannot be before the FieldEnd position.");
+            }
         }
-        public KeyRange(Range name, Position fend)
+
+        /// <summary>
+        /// Creates a KeyRange
+        /// </summary>
+        /// <param name="name">Name range, from <see cref="Start"/> to <see cref="NameEnd"/></param>
+        /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
+        /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>
+        public KeyRange(Range name, Position fieldEnd)
         {
             Start = name.Start;
             NameEnd = name.End;
-            FieldEnd = fend;
+            FieldEnd = fieldEnd;
             File = name.File;
-            if (name.File != fend.File)
+            if (name.File != fieldEnd.File)
             {
                 throw new ArgumentException("Two positions in two different files do not form a range in a single file.");
             }
+            if (Start.Line > NameEnd.Line || (Start.Line == NameEnd.Line && Start.Column > NameEnd.Column))
+            {
+                throw new ArgumentException("The Start position cannot be before the NameEnd position.");
+            }
+            if (Start.Line > FieldEnd.Line || (Start.Line == FieldEnd.Line && Start.Column > FieldEnd.Column))
+            {
+                throw new ArgumentException("The Start position cannot be before the FieldEnd position.");
+            }
+            if (NameEnd.Line > FieldEnd.Line || (NameEnd.Line == FieldEnd.Line && NameEnd.Column > FieldEnd.Column))
+            {
+                throw new ArgumentException("The NameEnd position cannot be before the FieldEnd position.");
+            }
         }
+
+        /// <summary>
+        /// Summarises this range into a string for human readability
+        /// </summary>
         public override string ToString()
         {
             return $"{Start} to {NameEnd} to {FieldEnd}";
         }
     }
 
+    /// <summary>
+    /// Saves a file to use with positions
+    /// </summary>
     public class ParsedFile
     {
+        /// <summary>
+        /// The filename (full path)
+        /// </summary>
         public readonly string Filename;
+
+        /// <summary>
+        /// The content of this file, as an array of all lines
+        /// </summary>
         public readonly string[] Lines;
+
+        /// <summary>
+        /// Creates a new ParsedFile
+        /// </summary>
+        /// <param name="name">The filename (will be resolved to full path)</param>
+        /// <param name="content">The file content, as an array of all lines</param>
         public ParsedFile(string name, string[] content)
         {
-            Filename = name;
+            Filename = Path.GetFullPath(name);
             Lines = content;
         }
+
+        /// <summary>
+        /// Creates an empty ParsedFile
+        /// </summary>
         public ParsedFile()
         {
             Filename = "";
             Lines = new string[0];
         }
+
         public override bool Equals(object obj)
         {
             if (obj.GetType() != this.GetType())
@@ -136,9 +278,10 @@ namespace AssemblyNameSpace
                 else return false;
             }
         }
+
         public override int GetHashCode()
         {
-            return Filename.GetHashCode();
+            return 23 + 17 * Filename.GetHashCode();
         }
     }
 }

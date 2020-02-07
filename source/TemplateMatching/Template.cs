@@ -66,18 +66,18 @@ namespace AssemblyNameSpace
         /// Gets the placement of the sequences associated with this template.
         /// </summary>
         /// <returns>A list with tuples for each position in the original sequence. The first item is an array of tuples with all sequences on this position (matchindex) and the position on this sequence + 1 (or -1 if there is a gap, so 0 if outside bounds). The second item is an array of all gaps after this position, containing both the matchindex and sequence. </returns>
-        public List<((int MatchIndex, int SequencePosition)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)> AlignedSequences()
+        public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)> AlignedSequences()
         {
-            var output = new List<((int MatchIndex, int SequencePosition)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)>()
+            // change it to matchindex, seqpos, doc, contigid + matchindex, gap, doc, contigid
+            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)>()
             {
                 Capacity = Sequence.Length
             };
-            //Console.WriteLine($"The total sequence is {Sequence.Length} aa");
 
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int, int)[Matches.Count()], new (int, IGap)[Matches.Count()]));
+                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[Matches.Count()], new (int, IGap)[Matches.Count()]));
             }
 
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
@@ -86,19 +86,16 @@ namespace AssemblyNameSpace
                 // Start at StartTemplatePosition and StartQueryPosition
                 var template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
-                //Console.WriteLine($"This match is {match.TotalMatches()} matches long and {match.Sequence.Count()} aa {match}");
 
                 foreach (var piece in match.Alignment)
                 {
-                    //Console.WriteLine($"at pos {template_pos}:{seq_pos}");
                     if (piece is SequenceMatch.Match m)
                     {
                         if (seq_pos == -1) seq_pos = match.StartQueryPosition;
-                        //Console.WriteLine($"Found a match of {m.count} aa");
                         for (int i = 0; i < m.count && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
-                            output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1);
+                            output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
                             output[template_pos].Gaps[matchindex] = (matchindex, new None());
 
                             template_pos++;
@@ -129,7 +126,7 @@ namespace AssemblyNameSpace
                         // Skip to the next section
                         for (int i = 0; i < gc.count && template_pos < output.Count(); i++)
                         {
-                            output[template_pos].Sequences[matchindex] = (matchindex, -1);
+                            output[template_pos].Sequences[matchindex] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
                             output[template_pos].Gaps[matchindex] = (matchindex, new None());
                             template_pos++;
                         }
@@ -165,25 +162,22 @@ namespace AssemblyNameSpace
                     if (option.SequencePosition != 0)
                     {
                         AminoAcid aa;
-                        int score;
                         if (option.SequencePosition == -1)
                         {
-                            score = 1; //TODO: figure out the best score for a gap in a path
                             aa = new AminoAcid(Alphabet, Alphabet.alphabet[Alphabet.GapIndex]);
                         }
                         else
                         {
-                            score = Matches[option.MatchIndex].Path == null ? 1 : Matches[option.MatchIndex].Path.DepthOfCoverage[option.SequencePosition - 1];
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
                         }
 
                         if (output[i].Item1.ContainsKey(aa))
                         {
-                            output[i].Item1[aa] += score;
+                            output[i].Item1[aa] += option.CoverageDepth;
                         }
                         else
                         {
-                            output[i].Item1.Add(aa, score);
+                            output[i].Item1.Add(aa, option.CoverageDepth);
                         }
                     }
                 }

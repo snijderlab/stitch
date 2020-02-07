@@ -18,6 +18,7 @@ namespace AssemblyNameSpace
         public readonly List<CondensedNode> Nodes;
         public readonly AminoAcid[] Sequence;
         public readonly int[] DepthOfCoverage;
+        public readonly int[] ContigID;
         public readonly int Score;
         public readonly int Index;
         public string Identifiers
@@ -40,15 +41,18 @@ namespace AssemblyNameSpace
             int totallength = Nodes.Aggregate(0, (a, b) => a + b.Sequence.Count());
             var list = new List<AminoAcid>() { Capacity = totallength };
             var depth = new List<int>() { Capacity = totallength };
+            var id = new List<int>() { Capacity = totallength };
 
             foreach (var node in Nodes)
             {
                 list.AddRange(node.Sequence);
                 depth.AddRange(node.DepthOfCoverage);
+                id.AddRange(Enumerable.Repeat(node.Index, node.Sequence.Count()));
             }
             Sequence = list.ToArray();
             DepthOfCoverage = depth.ToArray();
             Score = depth.Sum();
+            ContigID = id.ToArray();
         }
     }
 

@@ -27,11 +27,11 @@ namespace AssemblyNameSpace
         public Alphabet alphabet;
 
         /// <summary> The creator of AminoAcids. </summary>
-        /// <param name="alphabet_input"> The alphabet used. </param>
+        /// <param name="alphabetInput"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
-        public AminoAcid(Alphabet alphabet_input, char input)
+        public AminoAcid(Alphabet alphabetInput, char input)
         {
-            alphabet = alphabet_input;
+            alphabet = alphabetInput;
             Char = input;
         }
 
@@ -87,12 +87,11 @@ namespace AssemblyNameSpace
         /// <returns> Returns the hashcode of the AminoAcid. </returns>
         public override int GetHashCode()
         {
-            return this.Char.GetHashCode();
+            return 391 + 17 * Char.GetHashCode();
         }
 
-        /// <summary> Calculating homology, using the scoring matrix of the parent Assembler.
-        /// See <see cref="Alphabet.scoring_matrix"/> for the scoring matrix.
-        /// See <see cref="Alphabet(string, Alphabet.AlphabetParamType)"/> on how to change the scoring matrix.</summary>
+        /// <summary> Calculates homology between this and another AminoAcid, using the given alphabet.
+        /// See <see cref="alphabet"/>. </summary>
         /// <remarks> Depending on which rules are put into the scoring matrix the order in which this
         /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to
         /// <c>b.Homology(a)</c>. </remarks>
