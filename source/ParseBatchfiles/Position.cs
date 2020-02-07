@@ -100,7 +100,7 @@ namespace AssemblyNameSpace
             }
             if (start.Line > end.Line || (start.Line == end.Line && start.Column > end.Column))
             {
-                throw new ArgumentException("The start position cannot be before the end position.");
+                throw new ArgumentException($"The Start position '{start}' cannot be before the End '{end}' position.");
             }
         }
 
@@ -236,7 +236,7 @@ namespace AssemblyNameSpace
     public class ParsedFile
     {
         /// <summary>
-        /// The filename (full path)
+        /// The filename
         /// </summary>
         public readonly string Filename;
 
@@ -252,7 +252,7 @@ namespace AssemblyNameSpace
         /// <param name="content">The file content, as an array of all lines</param>
         public ParsedFile(string name, string[] content)
         {
-            Filename = Path.GetFullPath(name);
+            Filename = name;
             Lines = content;
         }
 
@@ -282,6 +282,11 @@ namespace AssemblyNameSpace
         public override int GetHashCode()
         {
             return 23 + 17 * Filename.GetHashCode();
+        }
+
+        public override string ToString()
+        {
+            return Filename;
         }
     }
 }

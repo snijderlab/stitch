@@ -50,7 +50,14 @@ namespace AssemblyNameSpace
             }
             public static ParseEither<Arithmetic.Expression> TryParse(string value, Range range, ParsedFile file)
             {
-                return Parse(value, range, file);
+                try
+                {
+                    return Parse(value, range, file);
+                }
+                catch (Exception e)
+                {
+                    return new ParseEither<Arithmetic.Expression>(new InputNameSpace.ErrorMessage(range, "Exception while parsing K Arithmetic", e.Message + e.StackTrace));
+                }
             }
 
             /// <summary>

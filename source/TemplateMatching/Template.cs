@@ -68,7 +68,6 @@ namespace AssemblyNameSpace
         /// <returns>A list with tuples for each position in the original sequence. The first item is an array of tuples with all sequences on this position (matchindex) and the position on this sequence + 1 (or -1 if there is a gap, so 0 if outside bounds). The second item is an array of all gaps after this position, containing both the matchindex and sequence. </returns>
         public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)> AlignedSequences()
         {
-            // change it to matchindex, seqpos, doc, contigid + matchindex, gap, doc, contigid
             var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap)[] Gaps)>()
             {
                 Capacity = Sequence.Length

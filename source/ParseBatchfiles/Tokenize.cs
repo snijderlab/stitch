@@ -141,7 +141,7 @@ namespace AssemblyNameSpace
                     ParseHelper.Trim(ref content, counter);
                     Position startvalue = counter.GetPosition();
                     //Get the single value of the parameter
-                    string value = ParseHelper.UntilSequence(ref content, "<:");
+                    string value = ParseHelper.UntilSequence(ref content, "<:", counter);
                     Position endkey = counter.GetPosition();
                     Position endvalue = new Position(endkey.Line, endkey.Column - 2, counter.File);
                     return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
@@ -317,8 +317,9 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string.</param>
                 /// <param name="sequence">The sequence to find.</param>
+                /// <param name="counter">The counter to keep track of the location</param>
                 /// <returns>The consumed part of the string.</returns>
-                public static string UntilSequence(ref string content, string sequence)
+                public static string UntilSequence(ref string content, string sequence, Counter counter)
                 {
                     int nextnewline = -1;
                     bool found = false;
@@ -338,6 +339,9 @@ namespace AssemblyNameSpace
                                 break;
                             }
                         }
+                        // Not equal on this position so adjust counter
+                        if (contentarray[pos] == '\n') counter.NextLine();
+                        else counter.NextColumn();
                     }
 
                     string value;

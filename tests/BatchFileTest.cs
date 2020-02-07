@@ -18,7 +18,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void TestExamples()
         {
-            var path = @"../../../../examples/batchfiles";
+            var path = Globals.Root + "examples/batchfiles";
             var files = Directory.GetFiles(path);
             foreach (var file in files)
             {
