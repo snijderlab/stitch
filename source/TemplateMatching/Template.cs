@@ -213,6 +213,36 @@ namespace AssemblyNameSpace
                 }
             }
             // TODO the list should be squatted/compressed to use the minimal amount of lines
+
+            // Filter DOC for duplicate entries
+            foreach (var (Sequences, Gaps) in output)
+            {
+                // Filter aminoAcids
+                for (int outer = 0; outer < Sequences.Length; outer++)
+                {
+                    if (Sequences[outer].CoverageDepth == 0) continue;
+
+                    for (int inner = 0; inner < Sequences.Length; inner++)
+                    {
+                        if (inner == outer) continue;
+                        if (Sequences[outer].ContigID == Sequences[inner].ContigID && Sequences[outer].SequencePosition == Sequences[inner].SequencePosition)
+                            Sequences[inner].CoverageDepth = 0;
+                    }
+                }
+
+                // Filter Gaps
+                for (int outer = 0; outer < Gaps.Length; outer++)
+                {
+                    if (Gaps[outer].CoverageDepth == null || Gaps[outer].CoverageDepth == new int[Gaps[outer].Gap.ToString().Length]) continue;
+
+                    for (int inner = 0; inner < Gaps.Length; inner++)
+                    {
+                        if (inner == outer) continue;
+                        if (Gaps[outer].ContigID == Gaps[inner].ContigID && Gaps[outer].CoverageDepth == Gaps[inner].CoverageDepth)
+                            Gaps[inner].CoverageDepth = new int[Gaps[inner].Gap.ToString().Length];
+                    }
+                }
+            }
             return output;
         }
 
