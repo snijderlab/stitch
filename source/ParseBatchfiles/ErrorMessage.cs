@@ -85,7 +85,7 @@ namespace AssemblyNameSpace
                 }
                 else if (endposition == null)
                 {
-                    var line_number = startposition.Line.ToString();
+                    var line_number = (startposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
                 }
                 else if (startposition.Line == endposition.Line)
                 {
-                    var line_number = startposition.Line.ToString();
+                    var line_number = (startposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
@@ -103,7 +103,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    var line_number = endposition.Line.ToString();
+                    var line_number = (endposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     location = $"File: {File.Filename}\n{start}\n";
@@ -111,7 +111,7 @@ namespace AssemblyNameSpace
                     for (int i = startposition.Line; i <= endposition.Line; i++)
                     {
                         var line = File.Lines[i];
-                        var number = i.ToString().PadRight(line_number.Length + 1);
+                        var number = (i + 1).ToString().PadRight(line_number.Length + 1);
                         location += $"{number}| {line}\n";
                     }
                     location += $"{start}\n";
@@ -149,7 +149,7 @@ namespace AssemblyNameSpace
                 }
                 else if (endposition == null || startposition.Line > endposition.Line) // Single position
                 {
-                    var line_number = startposition.Line.ToString();
+                    var line_number = (startposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
@@ -162,7 +162,7 @@ namespace AssemblyNameSpace
                 }
                 else if (startposition.Line == endposition.Line) // Single line
                 {
-                    var line_number = startposition.Line.ToString();
+                    var line_number = (startposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
@@ -175,7 +175,7 @@ namespace AssemblyNameSpace
                 }
                 else // Multiline
                 {
-                    var line_number = endposition.Line.ToString();
+                    var line_number = (endposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
                     Console.Write($"File: {File.Filename}\n{start}\n");
@@ -183,7 +183,7 @@ namespace AssemblyNameSpace
                     for (int i = startposition.Line; i <= endposition.Line; i++)
                     {
                         var line = File.Lines[i];
-                        var number = i.ToString().PadRight(line_number.Length + 1);
+                        var number = (i + 1).ToString().PadRight(line_number.Length + 1);
                         Console.Write($"{number}| {line}\n");
                     }
                     Console.Write($"{start}\n");

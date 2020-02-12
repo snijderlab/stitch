@@ -75,18 +75,14 @@ namespace AssemblyNameSpace
                 /// <returns>The status.</returns>
                 public static (KeyValue, string) MainArgument(string content, Counter counter)
                 {
-                    switch (content.First())
-                    {
-                        case '-':
-                            // This line is a comment, skip it
-                            ParseHelper.SkipLine(ref content, counter);
-                            return (null, content);
-                        case '\n':
-                            //skip
-                            ParseHelper.Trim(ref content, counter);
-                            return (null, content);
-                        default:
-                            return Argument(content, counter);
+                    ParseHelper.Trim(ref content, counter);
+
+                    if (content[0] == '-') {
+                        // This line is a comment, skip it
+                        ParseHelper.SkipLine(ref content, counter);
+                        return (null, content);
+                    } else {
+                        return Argument(content, counter);
                     }
                 }
 
@@ -115,7 +111,8 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        throw new ParseException($"Parameter '{name}' {range} should be followed by an delimiter (':', ':>' or '->')");
+                        new ErrorMessage(range, "Name not followed by delimiter OUTER", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                        throw new ParseException("");
                     }
                 }
 
@@ -172,6 +169,10 @@ namespace AssemblyNameSpace
 
                     while (true)
                     {
+                        if (content.Length == 0) {
+                            new ErrorMessage(new Range(namerange.Start, counter.GetPosition()), "Could not find the end of the multiparameter", "", "Make sure to end the parameter with '<-'.").Print();
+                            throw new ParseException("");
+                        }
                         if (content[0] == '<' && content[1] == '-')
                         {
                             // This is the end of the multiple valued parameter
@@ -182,7 +183,14 @@ namespace AssemblyNameSpace
                             return (new KeyValue(name, values, new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
                         }
                         else
-                        {
+                        {      
+                            ParseHelper.Trim(ref content, counter);                     
+                            if (content[0] == '-' && content[1] != '>')
+                            {
+                                ParseHelper.SkipLine(ref content, counter);
+                                continue;
+                            }
+
                             // Match the inner parameter
                             (string innername, Range innerrange) = ParseHelper.Name(ref content, counter);
 
@@ -211,7 +219,8 @@ namespace AssemblyNameSpace
                             }
                             else
                             {
-                                throw new ParseException($"Parameter '{innername}' in '{name}' {counter.GetPosition()} should be followed by an delimiter (':', ':>' or '->')");
+                                new ErrorMessage(counter.GetPosition(), "Name not followed by delimiter INNER", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                                throw new ParseException("");
                             }
                             endvalue = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
@@ -232,6 +241,7 @@ namespace AssemblyNameSpace
                 public static void SkipLine(ref string content, Counter counter)
                 {
                     int nextnewline = FindNextNewLine(ref content);
+
                     if (nextnewline > 0)
                     {
                         content = content.Remove(0, nextnewline);
@@ -247,12 +257,12 @@ namespace AssemblyNameSpace
                 /// To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core.
                 /// </summary>
                 /// <param name="content">The string to search in.</param>
-                /// <returns>The position of the next newline ('\n' or '\r') or -1 if none could be found.</returns>
+                /// <returns>The position of the next newline '\n' or -1 if none could be found.</returns>
                 public static int FindNextNewLine(ref string content)
                 {
                     for (int pos = 0; pos < content.Length; pos++)
                     {
-                        if (content[pos] == '\n' || content[pos] == '\r')
+                        if (content[pos] == '\n')
                         {
                             return pos;
                         }
@@ -270,16 +280,32 @@ namespace AssemblyNameSpace
                     ParseHelper.Trim(ref content, counter);
                     Position start = counter.GetPosition();
                     var name = new StringBuilder();
-                    while (Char.IsLetterOrDigit(content[0]) || content[0] == ' ')
+
+                    int count = 0;
+                    while (count < content.Length && (Char.IsLetterOrDigit(content[count]) || content[count] == ' ' || content[count] == '\t'))
                     {
-                        name.Append(content[0]);
-                        content = content.Remove(0, 1);
+                        name.Append(content[count]);
                         counter.NextColumn();
+                        count++;
                     }
+                    content = content.Remove(0, count);
+
+                    var name_str = name.ToString().ToLower();
+
                     Position greedy = counter.GetPosition();
-                    Position end = new Position(greedy.Line, greedy.Column + name.ToString().TrimEnd().Length - name.ToString().Length, counter.File);
+                    Position end = new Position(greedy.Line, greedy.Column + name_str.TrimEnd().Length - name_str.Length, counter.File);
                     ParseHelper.Trim(ref content, counter);
-                    return (name.ToString().ToLower().Trim(), new Range(start, end));
+
+                    name_str = name_str.Trim();
+
+                    var name_range = new Range(start, end);
+
+                    if (name_str == "") {
+                        new ErrorMessage(name_range, "Empty name", $"at").Print();
+                    //    throw new ParseException("");
+                    } 
+
+                    return (name_str, name_range);
                 }
 
                 /// <summary>
@@ -292,6 +318,7 @@ namespace AssemblyNameSpace
                     string result;
                     Position start = counter.GetPosition();
                     Position end; int nextnewline = FindNextNewLine(ref content);
+
                     if (nextnewline > 0)
                     {
                         result = content.Substring(0, nextnewline).TrimEnd(); // Save whitespace in front to make position work
@@ -307,16 +334,19 @@ namespace AssemblyNameSpace
                         end = new Position(start.Line, start.Column + result.Length, counter.File);
                         result = result.TrimStart(); // Remove whitespace in front
                     }
+
                     return (result, new Range(start, end));
                 }
                 public static void Trim(ref string content, Counter counter)
                 {
-                    while (content != "" && Char.IsWhiteSpace(content[0]))
+                    int count = 0;
+                    while (count < content.Length && Char.IsWhiteSpace(content[count]))
                     {
-                        if (content[0] == '\n') counter.NextLine();
+                        if (content[count] == '\n') counter.NextLine();
                         else counter.NextColumn();
-                        content = content.Remove(0, 1);
+                        count++;
                     }
+                    content = content.Remove(0, count);
                 }
 
                 /// <summary>

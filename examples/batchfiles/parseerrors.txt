@@ -27,7 +27,7 @@ Recombine->
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV * NONEXISTANTNAME IGHC
+    Order : IGHV * UNKNOWN IGHC
 
     Templates->
         Template->
@@ -83,9 +83,9 @@ X;0;-1;-1;-1;-2;-1;-1;-1;-1;-1;-1;-1;-1;-1;-2;0;0;-2;-1;-1;-1;-1;-1;-4
 <-
 
 -Report-----------------
--FASTA	->
--Path	: ../../report-reads-{id}.fasta
--<-
+FASTA ->
+    Path	: ../../report-reads-{id}.fasta
+<-
 HTML ->
 Path    : ../../report-reads-{id}.html
 DotDistribution: global
