@@ -1098,7 +1098,7 @@ namespace AssemblyNameSpace
 <tr><td>Minimum homology</td><td>{singleRun.MinimalHomology}</td></tr>
 <tr><td>Duplicate Threshold</td><td>{singleRun.DuplicateThreshold}</td></tr>
 <tr><td>Reverse</td><td>{singleRun.Reverse}</td></tr>
-<tr><td>Alphabet</td><td>{singleRun.Alphabet.Name}</td></tr>
+<tr><td>Alphabet</td><td>{singleRun.Alphabet.Alphabet}</td></tr>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>

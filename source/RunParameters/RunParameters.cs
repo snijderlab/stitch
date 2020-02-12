@@ -242,12 +242,12 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The data, Paths should be looked up to find the data.
             /// </summary>
-            public string Data;
+            public int[,] ScoringMatrix;
 
             /// <summary>
             /// The name for this alphabet, to recognize it.
             /// </summary>
-            public string Name;
+            public char[] Alphabet;
 
             /// <summary>
             /// The penalty for opening a gap in an alignment.
@@ -258,6 +258,7 @@ namespace AssemblyNameSpace
             /// The penalty for extending a gap in an alignment.
             /// </summary>
             public int GapExtendPenalty = 1;
+            public string Name = "";
         }
 
         /// <summary>

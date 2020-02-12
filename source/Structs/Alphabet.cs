@@ -72,7 +72,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="alphabetValue">The RunParameter to use</param>
         /// <returns></returns>
-        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Data, AlphabetParamType.Data, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
+        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
 
         /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>
@@ -87,6 +87,19 @@ namespace AssemblyNameSpace
             var result = InputNameSpace.ParseHelper.ParseAlphabetData(data, type);
             var alphabet = result.Item1;
             ScoringMatrix = result.Item2;
+
+            PositionInScoringMatrix = new Dictionary<char, int>();
+            for (int i = 0; i < alphabet.Length; i++)
+            {
+                PositionInScoringMatrix.Add(alphabet[i], i);
+            }
+        }
+
+        public Alphabet(char[] alphabet, int[,] data, int gap_start_penalty, int gap_extend_penalty)
+        {
+            GapStartPenalty = gap_start_penalty;
+            GapExtendPenalty = gap_extend_penalty;
+            ScoringMatrix = data;
 
             PositionInScoringMatrix = new Dictionary<char, int>();
             for (int i = 0; i < alphabet.Length; i++)

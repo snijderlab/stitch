@@ -27,7 +27,7 @@ Recombine->
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV * IGHJ IGHC
+    Order : IGHV * NONEXISTANTNAME IGHC
 
     Templates->
         Template->

@@ -342,12 +342,7 @@ namespace AssemblyNameSpace
                         {
                             var order_string = order.GetValue();
                             // Create a new counter
-                            var order_counter = new InputNameSpace.Tokenizer.Counter(batchfile)
-                            {
-                                Line = order.ValueRange.Start.Line,
-                                Column = order.ValueRange.Start.Column
-                            };
-
+                            var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
 
                             while (order_string != "")
                             {
@@ -621,8 +616,9 @@ namespace AssemblyNameSpace
                 }
                 catch (FormatException)
                 {
-
-                    return new ParseEither<int>(new ErrorMessage(pos, "Not a valid number"));
+                    string msg = "";
+                    if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
+                    return new ParseEither<int>(new ErrorMessage(pos, "Not a valid number", msg));
                 }
                 catch (OverflowException)
                 {
@@ -646,8 +642,9 @@ namespace AssemblyNameSpace
                 }
                 catch (FormatException)
                 {
-
-                    return new ParseEither<double>(new ErrorMessage(pos, "Not a valid number"));
+                    string msg = "";
+                    if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
+                    return new ParseEither<double>(new ErrorMessage(pos, "Not a valid number", msg));
                 }
                 catch (OverflowException)
                 {
@@ -669,20 +666,32 @@ namespace AssemblyNameSpace
                     return outEither;
                 }
 
+                (char[], int[,]) result;
+
                 foreach (var setting in key.GetValues())
                 {
                     switch (setting.Name)
                     {
                         case "path":
-                            if (asettings.Data != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            asettings.Data = GetAllText(setting).GetValue(outEither);
+                            if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            var content = GetAllText(setting).GetValue(outEither).Split("\n");
+                            var counter = new Tokenizer.Counter(new ParsedFile(GetFullPath(setting).GetValue(outEither), content));
+                            result = ParseAlphabetData(content, counter).GetValue(outEither);
+                            asettings.Alphabet = result.Item1;
+                            asettings.ScoringMatrix = result.Item2;
                             break;
                         case "data":
-                            if (asettings.Data != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            asettings.Data = setting.GetValue();
+                            //if (data != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            //data = setting.GetValue();
+                            if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            var data_content = setting.GetValue().Split("\n");
+                            var data_counter = new Tokenizer.Counter(setting.ValueRange.Start);
+                            result = ParseAlphabetData(data_content, data_counter).GetValue(outEither);
+                            asettings.Alphabet = result.Item1;
+                            asettings.ScoringMatrix = result.Item2;
                             break;
                         case "name":
-                            if (asettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (asettings.Name != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             asettings.Name = setting.GetValue();
                             break;
                         case "gapstartpenalty":
@@ -697,8 +706,8 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (asettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
-                if (asettings.Data == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
+                if (asettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
+                if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
 
                 return outEither;
             }
@@ -712,11 +721,11 @@ namespace AssemblyNameSpace
                     file = new ParsedFile(data, lines);
                 }
                 var counter = new Tokenizer.Counter(file);
-                return ParseAlphabetData(lines, counter);
+                return ParseAlphabetData(lines, counter).ReturnOrFail();
             }
-            public static (char[], int[,]) ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
+            public static ParseEither<(char[], int[,])> ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
             {
-                var outEither = new ParseEither<int[,]>();
+                var outEither = new ParseEither<(char[], int[,])>();
 
                 int rows = lines.Length;
                 var cells = new List<(Position, List<(string, Range)>)>();
@@ -791,8 +800,8 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
-                outEither.ReturnOrFail();
-                return (alphabet, scoring_matrix);
+                outEither.Value = (alphabet, scoring_matrix);
+                return outEither;
             }
             /// <summary>
             /// Parses a Template

@@ -40,6 +40,13 @@ namespace AssemblyNameSpace
                     File = file;
                 }
 
+                public Counter(Position pos)
+                {
+                    Line = pos.Line;
+                    Column = pos.Column;
+                    File = pos.File;
+                }
+
                 public void NextLine()
                 {
                     Line += 1;

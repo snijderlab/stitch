@@ -56,7 +56,7 @@ namespace AssemblyNameSpace
             int totalnodes = condensed_graph.Count();
             string data = singleRun.Input.Count() == 1 ? singleRun.Input[0].File.Name : "Group";
             string link = singleRun.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? singleRun.Report.Where(a => a is RunParameters.Report.HTML).Aggregate("", (a, b) => (a + "=HYPERLINK(\"" + Path.GetFullPath(b.CreateName(singleRun)) + "\");")) : "";
-            string line = $"{ID};{data};{singleRun.Alphabet.Name};{singleRun.K};{singleRun.MinimalHomology};{singleRun.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
+            string line = $"{ID};{data};{singleRun.Alphabet.Alphabet};{singleRun.K};{singleRun.MinimalHomology};{singleRun.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
 
             // To account for multithreading and multiple workers trying to append to the file at the same time
             // This will block any concurrent access
