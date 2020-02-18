@@ -804,6 +804,47 @@ namespace AssemblyNameSpace
             buffer.AppendLine(consensus.ToString());
             buffer.AppendLine("</p>");
 
+            // Sequence logo
+            const double threshold = 0.1;
+            const int height = 50;
+
+            buffer.Append($"<div class='sequence-logo' style='height:{height}px'>");
+            for (int i = 0; i < consensus_sequence.Count(); i++)
+            {
+                buffer.Append("<div class='sequence-logo-position'>");
+                // Get the highest chars
+                int sum = 0;
+                foreach (var item in consensus_sequence[i].Item1)
+                {
+                    sum += item.Value;
+                }
+
+                foreach (var item in consensus_sequence[i].Item1)
+                {
+                    if ((double)item.Value / sum > threshold)
+                    {
+                        buffer.Append($"<span style='height:{Math.Round((double)item.Value / sum * height)}px'>{item.Key}</span>");
+                    }
+                }
+                buffer.Append("</div>");
+                /*// Get the highest gap
+                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
+                int max_gap_score = 0;
+                foreach (var item in consensus_sequence[i].Item2)
+                {
+                    if (item.Value.Count > max_gap_score)
+                    {
+                        max_gap = new List<Template.IGap> { item.Key };
+                        max_gap_score = item.Value.Count;
+                    }
+                    else if (item.Value.Count == max)
+                    {
+                        max_gap.Add(item.Key);
+                    }
+                }*/
+            }
+            buffer.Append("</div>");
+
             // Display matches table
             buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
             foreach (var match in template.Matches)
