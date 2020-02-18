@@ -807,8 +807,9 @@ namespace AssemblyNameSpace
             // Sequence logo
             const double threshold = 0.1;
             const int height = 50;
+            const int fontsize = 20;
 
-            buffer.Append($"<div class='sequence-logo' style='height:{height}px'>");
+            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
                 buffer.Append("<div class='sequence-logo-position'>");
@@ -823,7 +824,7 @@ namespace AssemblyNameSpace
                 {
                     if ((double)item.Value / sum > threshold)
                     {
-                        buffer.Append($"<span style='height:{Math.Round((double)item.Value / sum * height)}px'>{item.Key}</span>");
+                        buffer.Append($"<span style='transform: scaleY({(double)item.Value / sum * height / fontsize})'>{item.Key}</span>");
                     }
                 }
                 buffer.Append("</div>");

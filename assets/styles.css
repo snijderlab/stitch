@@ -641,3 +641,18 @@ input:focus+.slider {
 input:checked+.slider:before {
     transform: translateX(1em);
 }
+
+/* Sequence Logo */
+
+.sequence-logo {
+    display: flex;
+    flex-wrap: wrap;
+    font-size: var(--sequence-logo-fontsize);
+}
+
+.sequence-logo-position {
+    height: var(--sequence-logo-height);
+    display: flex;
+    align-items: end;
+    flex-direction: column;
+}
