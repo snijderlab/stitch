@@ -1,0 +1,35 @@
+# generate_tests\Test mAB\IgG1-L-002.txt
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Trypsin - 25%
+ASDTAMYYCAR
+GQLYGGTYMDGWGQGTLVTVSSASTK
+EEQYNSTYR
+NQVSLTCLVK
+GFYPSDIAVEWESNGQPENNYK
+WQQGNVFSCSVMHEALHNHYTQK
+SLSLSPGK
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - Chymotrypsin - 25%
+VRQAPGKGL
+QGQVTISADKSISTAY
+TSGVHTF
+GGPSVF
+KCKVSNKAL
+TVDKSRW
+# Generated sample - 9788H|anetumab ravtansine|Homo sapiens||H-GAMMA-1 (VH (1-120) [D1] + CH1 (121-218) [D2] + CH2 (234-343) [D3] + CH3 (344-448) [D4])|||||||450|450|||MW undefined|MW undefined| - LysC - 25%
+PGESLK
+SISTAYLQWSSLK
+THTCPPCPAPELLGGPSVFLFPPK
+DTLMISRTPEVTCVVVDVSHEDPEVK
+ALPAPIEK
+GQPREPQVYTLPPSRDELTK
+SLSLSPGK
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Trypsin - 25%
+AAPSVTLFPPSSEELQANK
+ATLVCLISDFYPGAVTVAWK
+SYSCQVTHEGSTVEK
+TVAPTECS
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - Chymotrypsin - 25%
+GQPKAAPSVTL
+PGAVTVAW
+# Generated sample - 9788L|anetumab ravtansine|Homo sapiens||L-LAMBDA (V-LAMBDA (3-111) [D1] + C-LAMBDA (112-217) [D2])|||||||217|217|||MW undefined|MW undefined| - LysC - 25%
+LMIYGVNNRPSGVSNRFSGSK
+ATLVCLISDFYPGAVTVAWK

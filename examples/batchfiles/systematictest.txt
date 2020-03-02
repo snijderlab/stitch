@@ -1,0 +1,117 @@
+------| Assemble |------
+
+-Run Info---------------
+Version	: 0
+Runname	: Systematic test
+RunType : Separate
+
+-Input------------------
+Reads	->
+Path: ../014/reads-IgG1-L-001-all-100,00.txt
+Name: IgG1-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG1-L-002-all-100,00.txt
+Name: IgG1-L-002
+<-
+Reads	->
+Path: ../014/reads-IgG1-K-001-all-100,00.txt
+Name: IgG1-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG1-K-002-all-100,00.txt
+Name: IgG1-K-002
+<-
+Reads	->
+Path: ../014/reads-IgG2-L-001-all-100,00.txt
+Name: IgG2-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG2-L-002-all-100,00.txt
+Name: IgG2-L-002
+<-
+Reads	->
+Path: ../014/reads-IgG2-K-001-all-100,00.txt
+Name: IgG2-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG2-K-002-all-100,00.txt
+Name: IgG2-K-002
+<-
+Reads	->
+Path: ../014/reads-IgG4-L-001-all-100,00.txt
+Name: IgG4-L-001
+<-
+Reads	->
+Path: ../014/reads-IgG4-K-001-all-100,00.txt
+Name: IgG4-K-001
+<-
+Reads	->
+Path: ../014/reads-IgG4-K-002-all-100,00.txt
+Name: IgG4-K-002
+<-
+
+-Parameters-------------
+K	            ->
+    Start: 7
+    End: 12
+<-
+MinimalHomology : K-1
+DuplicateThreshold: K-1
+Reverse	        : False
+Alphabet->
+    Path	: ../alphabets/common_errors_alphabet.csv
+    Name	: Normal
+<-
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    n : 2
+
+    -Minimal average score per position to be included
+    CutoffScore : 0.5
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC
+
+    Templates->
+        Template->
+            Path : ../templates/IGHV.fasta
+            Name : IGHV
+        <-
+        Template->
+            Path : ../templates/IGHJ.fasta
+            Name : IGHJ
+        <-
+        Template->
+            Path : ../templates/IGHC_uniprot.fasta
+            Name : IGHC
+        <-
+        Template->
+            Path : ../templates/IGKV.fasta
+            Name : IGKV
+        <-
+        Template->
+            Path : ../templates/IGKJ.fasta
+            Name : IGKJ
+        <-
+        Template->
+            Path : ../templates/IGKC.fasta
+            Name : IGKC
+        <-
+    <-
+
+    -The alphabet used for all databases
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+        GapStartPenalty : 12
+        GapExtendPenalty : 1
+    <-
+<-
+
+-Report-----------------
+FASTA	->
+Path	   : ../../report-reads-{data}-{k}.fasta
+OutputType : ConsensusSequence
+<-

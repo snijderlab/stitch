@@ -1,0 +1,29 @@
+# generate_tests\Test mAB\IgG1-L-001.txt
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - Trypsin - 25%
+GLEWVSGISGSGSSTYYADSVK
+DTLMISR
+ALAAPIEK
+NQVSLTCLVK
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - Chymotrypsin - 25%
+ADSVKGRF
+VTVSSASTKGPSVF
+APSSKSTSGGTAAL
+GGPSVF
+AAPIEKTISKAKGQPREPQVY
+DSDGSF
+TVDKSRW
+# Generated sample - 10881H|abelacimab|Homo sapiens||H-GAMMA-1 (VH (1-122) [D1] + CH1 (123-220) [D2] + CH2 (236-345) [D3] + CH3 (346-450) [D4])|||||||452|452|||MW undefined|MW undefined| - Alfalytic protease - 25%
+PGKGLEWV
+KDYFPEPV
+LHQDWLNGKEYKCKV
+NGQPENNYKT
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Trypsin - 25%
+AGVETTTPSK
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Chymotrypsin - 25%
+PGTAPKL
+QSEDEADY
+GGGTKL
+PGAVTVAW
+KSHRSY
+SCQVTHEGSTVEKTVAPTECS
+# Generated sample - 10881L|abelacimab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Alfalytic protease - 25%

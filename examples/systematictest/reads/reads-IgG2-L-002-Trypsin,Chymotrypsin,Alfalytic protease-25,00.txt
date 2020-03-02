@@ -1,0 +1,33 @@
+# generate_tests\Test mAB\IgG2-L-002.txt
+# Generated sample - 10296H|erenumab|Homo sapiens||H-GAMMA-2 (VH (1-128) [D1] + CH1 (131-228) [D2] + CH2 (241-349) [D3] + CH3 (350-454) [D4])|||||||456|456|||MW undefined|MW undefined| - Trypsin - 25%
+AEDTAVYYCAR
+STSESTAALGCLVK
+# Generated sample - 10296H|erenumab|Homo sapiens||H-GAMMA-2 (VH (1-128) [D1] + CH1 (131-228) [D2] + CH2 (241-349) [D3] + CH3 (350-454) [D4])|||||||456|456|||MW undefined|MW undefined| - Chymotrypsin - 25%
+VESGGGVVQPGRSL
+SCAASGF
+VRQAPGKGL
+TISRDNSKNTL
+ISRTPEVTCVVVDVSHEDPEVQF
+VDGVEVHNAKTKPREEQF
+PAPIEKTISKTKGQPREPQVY
+PSDIAVEW
+ESNGQPENNY
+TVDKSRW
+# Generated sample - 10296H|erenumab|Homo sapiens||H-GAMMA-2 (VH (1-128) [D1] + CH1 (131-228) [D2] + CH2 (241-349) [D3] + CH3 (350-454) [D4])|||||||456|456|||MW undefined|MW undefined| - Alfalytic protease - 25%
+LFLQMNS
+GYYHYKYYGMA
+HEDPEV
+QFNWYV
+NKGLPA
+KGQPREPQV
+# Generated sample - 10296L|erenumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Trypsin - 25%
+ATLVCLISDFYPGAVTVAWK
+ADGSPVK
+AGVETTKPSK
+# Generated sample - 10296L|erenumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Chymotrypsin - 25%
+PGAVTVAW
+SCQVTHEGSTVEKTVAPTECS
+# Generated sample - 10296L|erenumab|Homo sapiens||L-LAMBDA (V-LAMBDA (1-110) [D1] + C-LAMBDA (111-216) [D2])|||||||216|216|||MW undefined|MW undefined| - Alfalytic protease - 25%
+PKLLIYDNNKRPS
+DFYPGA
+PEQWKS

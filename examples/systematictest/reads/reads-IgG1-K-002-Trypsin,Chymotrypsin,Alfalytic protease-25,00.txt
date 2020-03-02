@@ -1,0 +1,37 @@
+# generate_tests\Test mAB\IgG1-K-002.txt
+# Generated sample - 9953H|adalimumab beta|Homo sapiens||H-GAMMA-1 (VH (1-121) [D1] + CH1 (122-219) [D2] + CH2 (235-344) [D3] + CH3 (345-449) [D4])|||||||451|451|||MW undefined|MW undefined| - Trypsin - 25%
+THTCPPCPAPELLGGPSVFLFPPKPK
+DTLMISR
+TPEVTCVVVDVSHEDPEVK
+EPQVYTLPPSR
+GFYPSDIAVEWESNGQPENNYK
+TTPPVLDSDGSFFLYSK
+WQQGNVFSCSVMHEALHNHYTQK
+SLSLSPGK
+# Generated sample - 9953H|adalimumab beta|Homo sapiens||H-GAMMA-1 (VH (1-121) [D1] + CH1 (122-219) [D2] + CH2 (235-344) [D3] + CH3 (345-449) [D4])|||||||451|451|||MW undefined|MW undefined| - Chymotrypsin - 25%
+VQPGRSL
+VRQAPGKGL
+ISRTPEVTCVVVDVSHEDPEVKF
+PAPIEKTISKAKGQPREPQVY
+TKNQVSL
+DSDGSF
+QQGNVF
+# Generated sample - 9953H|adalimumab beta|Homo sapiens||H-GAMMA-1 (VH (1-121) [D1] + CH1 (122-219) [D2] + CH2 (235-344) [D3] + CH3 (345-449) [D4])|||||||451|451|||MW undefined|MW undefined| - Alfalytic protease - 25%
+FLFPPKPKDT
+HEDPEV
+KPREEQYNS
+KGQPREPQV
+LHNHYT
+# Generated sample - 9953L|adalimumab beta|Homo sapiens||L-KAPPA (V-KAPPA (1-107) [D1] + C-KAPPA (108-214) [D2])|||||||214|214|||MW undefined|MW undefined| - Trypsin - 25%
+LLIYAASTLQSGVPSR
+TVAAPSVFIFPPSDEQLK
+VYACEVTHQGLSSPVTK
+# Generated sample - 9953L|adalimumab beta|Homo sapiens||L-KAPPA (V-KAPPA (1-107) [D1] + C-KAPPA (108-214) [D2])|||||||214|214|||MW undefined|MW undefined| - Chymotrypsin - 25%
+QQKPGKAPKL
+QSGVPSRF
+SGSGSGTDF
+PREAKVQW
+# Generated sample - 9953L|adalimumab beta|Homo sapiens||L-KAPPA (V-KAPPA (1-107) [D1] + C-KAPPA (108-214) [D2])|||||||214|214|||MW undefined|MW undefined| - Alfalytic protease - 25%
+LQPEDV
+FIFPPS
+FNRGEC
