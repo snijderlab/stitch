@@ -69,6 +69,7 @@ namespace AssemblyNameSpace
             /// The reports to be generated.
             /// </summary>
             public List<Report.Parameter> Report;
+            ProgressBar progressBar;
 
             /// <summary>
             /// To create a single run with a single dataparameter as input.
@@ -84,7 +85,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -97,6 +98,7 @@ namespace AssemblyNameSpace
                 Template = template;
                 Recombine = recombine;
                 Report = report;
+                progressBar = bar;
             }
 
             /// <summary>
@@ -113,7 +115,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report)
+            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -126,6 +128,7 @@ namespace AssemblyNameSpace
                 Template = template;
                 Recombine = recombine;
                 Report = report;
+                progressBar = bar;
             }
 
             /// <summary>
@@ -166,6 +169,9 @@ namespace AssemblyNameSpace
 
                     assm.Assemble();
 
+                    // Did assembly
+                    if (progressBar != null) progressBar.Update();
+
                     // Templates
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
@@ -174,8 +180,7 @@ namespace AssemblyNameSpace
                     for (int i = 0; i < Template.Count(); i++)
                     {
                         var template = Template[i];
-                        var alph = new Alphabet(template.Alphabet);// template.Alphabet != null ? new Alphabet(template.Alphabet) : alphabet;
-                        Console.WriteLine($"Working on Template {template.Name}");
+                        var alph = new Alphabet(template.Alphabet);
 
                         var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore, i);
                         database1.MatchParallel(assm.GetAllPaths());
@@ -194,22 +199,18 @@ namespace AssemblyNameSpace
                         Stopwatch recombine_sw = new Stopwatch();
                         recombine_sw.Start();
 
-                        Console.WriteLine("Working on recombination");
                         var rec_databases = new List<TemplateDatabase>();
                         var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : alphabet;
 
                         for (int i = 0; i < Recombine.Templates.Count(); i++)
                         {
                             var template = Recombine.Templates[i];
-                            Console.WriteLine($"Working on Template {template.Name}");
 
                             var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore, i);
                             database1.MatchParallel(assm.GetAllPaths());
 
                             rec_databases.Add(database1);
                         }
-
-                        Console.WriteLine("Finished first round of template matching");
 
                         // Create a list for every database with the top n highest scoring templates.
                         // By having the lowest of these always at the first position at shuffling in
@@ -256,8 +257,6 @@ namespace AssemblyNameSpace
                             top.Add(templates.ToList());
                         }
 
-                        Console.WriteLine("Found all top <n> templates");
-
                         // Recombine high scoring templates
                         // https://rosettacode.org/wiki/Cartesian_product_of_two_or_more_lists#C.23
                         IEnumerable<IEnumerable<Template>> empty = new[] { Enumerable.Empty<Template>() };
@@ -268,8 +267,6 @@ namespace AssemblyNameSpace
                             from acc in accumulator
                             from item in sequence
                             select acc.Concat(new[] { item }));
-
-                        Console.WriteLine($"Found {combinations.Count()} combinations, with {combinations.First().Count()} elements in the first one");
 
                         var recombined_templates = new List<Template>();
                         for (int i = 0; i < combinations.Count(); i++)
@@ -294,14 +291,9 @@ namespace AssemblyNameSpace
 
                         var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database", Recombine.CutoffScore);
 
-                        Console.WriteLine("Created templates for second round");
-
                         recombined_database.MatchParallel(assm.GetAllPaths());
 
-                        Console.WriteLine("Finished second round of template matching");
-
                         recombine_sw.Stop();
-                        Console.WriteLine($"Finished Recombination {recombine_sw.ElapsedMilliseconds} ms");
 
                         parameters = new ReportInputParameters(assm, this, databases, recombined_database, rec_databases);
                     }
@@ -310,7 +302,8 @@ namespace AssemblyNameSpace
                         parameters = new ReportInputParameters(assm, this, databases);
                     }
 
-
+                    // Did recombination + databases
+                    if (progressBar != null) progressBar.Update();
 
                     // Generate the report(s)
                     foreach (var report in Report)
@@ -332,7 +325,8 @@ namespace AssemblyNameSpace
                         }
                     }
 
-                    Console.WriteLine($"Finished run: {ID}");
+                    // Did reports
+                    if (progressBar != null) progressBar.Update();
                 }
                 catch (Exception e)
                 {

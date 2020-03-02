@@ -250,9 +250,9 @@ namespace AssemblyNameSpace
         /// Returns the combined sequence or aminoacid variety per position in the alignment.
         /// </summary>
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
-        public List<(Dictionary<AminoAcid, int>, Dictionary<IGap, (int Count, int[] CoverageDepth)>)> CombinedSequence()
+        public List<(AminoAcid Template, Dictionary<AminoAcid, int> AminoAcids, Dictionary<IGap, (int Count, int[] CoverageDepth)> Gaps)> CombinedSequence()
         {
-            var output = new List<(Dictionary<AminoAcid, int>, Dictionary<IGap, (int Count, int[] CoverageDepth)>)>()
+            var output = new List<(AminoAcid Template, Dictionary<AminoAcid, int> AminoAcids, Dictionary<IGap, (int Count, int[] CoverageDepth)> Gaps)>()
             {
                 Capacity = Sequence.Length
             };
@@ -260,7 +260,7 @@ namespace AssemblyNameSpace
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new Dictionary<AminoAcid, int>(), new Dictionary<IGap, (int, int[])>()));
+                output.Add((Sequence[i], new Dictionary<AminoAcid, int>(), new Dictionary<IGap, (int, int[])>()));
             }
 
             var alignedSequences = AlignedSequences();
@@ -282,13 +282,13 @@ namespace AssemblyNameSpace
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
                         }
 
-                        if (output[i].Item1.ContainsKey(aa))
+                        if (output[i].AminoAcids.ContainsKey(aa))
                         {
-                            output[i].Item1[aa] += option.CoverageDepth;
+                            output[i].AminoAcids[aa] += option.CoverageDepth;
                         }
                         else
                         {
-                            output[i].Item1.Add(aa, option.CoverageDepth);
+                            output[i].AminoAcids.Add(aa, option.CoverageDepth);
                         }
                     }
                 }
@@ -304,22 +304,22 @@ namespace AssemblyNameSpace
                     {
                         key = option.Gap;
                     }
-                    if (output[i].Item2.ContainsKey(key))
+                    if (output[i].Gaps.ContainsKey(key))
                     {
                         int[] cov;
-                        if (output[i].Item2[key].CoverageDepth == null)
+                        if (output[i].Gaps[key].CoverageDepth == null)
                         {
                             cov = option.CoverageDepth;
                         }
                         else
                         {
-                            cov = output[i].Item2[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
+                            cov = output[i].Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
                         }
-                        output[i].Item2[key] = (output[i].Item2[key].Count + 1, cov);
+                        output[i].Gaps[key] = (output[i].Gaps[key].Count + 1, cov);
                     }
                     else
                     {
-                        output[i].Item2.Add(key, (1, option.CoverageDepth));
+                        output[i].Gaps.Add(key, (1, option.CoverageDepth));
                     }
                 }
             }

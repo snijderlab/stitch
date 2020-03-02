@@ -60,14 +60,19 @@ namespace AssemblyNameSpace
                 return;
             }
             Console.WriteLine("Parsed file");
-            var runs = inputparams.CreateRuns();
+
+            var bar = new ProgressBar();
+            var runs = inputparams.CreateRuns(bar);
 
             string pluralsuffix = runs.Count() > 1 ? "s" : "";
             Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralsuffix} to be done.");
+
+            bar.Start(runs.Count() * 3);
+
             Parallel.ForEach(runs, (i) => i.Calculate());
 
             stopwatch.Stop();
-            Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {stopwatch.ElapsedMilliseconds} ms");
+            Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}");
         }
     }
 }

@@ -60,7 +60,6 @@ namespace AssemblyNameSpace
 
         string ConsensusSequence(Template template)
         {
-            // Display Consensus Sequence
             var consensus = new StringBuilder();
             var consensus_sequence = template.CombinedSequence();
 
@@ -69,7 +68,8 @@ namespace AssemblyNameSpace
                 // Get the highest chars
                 string options = "";
                 int max = 0;
-                foreach (var item in consensus_sequence[i].Item1)
+
+                foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     if (item.Value > max)
                     {
@@ -81,24 +81,29 @@ namespace AssemblyNameSpace
                         options += item.Key.ToString();
                     }
                 }
+
                 if (options.Length > 1)
                 {
-                    consensus.Append("(");
-                    consensus.Append(options);
-                    consensus.Append(")");
+                    // Force a single amino acid, the one of the template or just the first one
+                    if (options.Contains(consensus_sequence[i].Template.Char))
+                    {
+                        consensus.Append(consensus_sequence[i].Template.Char);
+                    }
+                    else
+                    {
+                        consensus.Append(options[0]);
+                    }
                 }
-                else if (options.Length == 1)
+                else if (options.Length == 1 && options[0] != Alphabet.GapChar)
                 {
                     consensus.Append(options);
                 }
-                else
-                {
-                    consensus.Append("_");
-                }
+
                 // Get the highest gap
                 List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
                 int max_gap_score = 0;
-                foreach (var item in consensus_sequence[i].Item2)
+
+                foreach (var item in consensus_sequence[i].Gaps)
                 {
                     if (item.Value.Count > max_gap_score)
                     {
@@ -110,6 +115,7 @@ namespace AssemblyNameSpace
                         max_gap.Add(item.Key);
                     }
                 }
+
                 if (max_gap.Count > 1)
                 {
                     consensus.Append("(");
@@ -120,13 +126,9 @@ namespace AssemblyNameSpace
                     }
                     consensus.Append(")");
                 }
-                else if (max_gap.Count == 1)
+                else if (max_gap.Count == 1 && max_gap[0].GetType() != typeof(Template.None))
                 {
                     consensus.Append(max_gap[0].ToString());
-                }
-                else
-                {
-                    consensus.Append("_");
                 }
             }
             return consensus.ToString();

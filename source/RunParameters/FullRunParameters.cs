@@ -95,7 +95,7 @@ namespace AssemblyNameSpace
             /// Creates a list of all single runs contained in this run.abstract TO be ran in parallel.
             /// </summary>
             /// <returns>All single runs.</returns>
-            public List<SingleRun> CreateRuns()
+            public List<SingleRun> CreateRuns(ProgressBar bar = null)
             {
                 var output = new List<SingleRun>();
 
@@ -147,14 +147,14 @@ namespace AssemblyNameSpace
                                     if (Runtype == RuntypeValue.Group)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report));
+                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report, bar));
                                     }
                                     else
                                     {
                                         foreach (var input in DataParameters)
                                         {
                                             id++;
-                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report));
+                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report, bar));
                                         }
                                     }
                                 }

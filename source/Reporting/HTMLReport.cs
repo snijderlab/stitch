@@ -740,7 +740,7 @@ namespace AssemblyNameSpace
                 // Get the highest chars
                 string options = "";
                 int max = 0;
-                foreach (var item in consensus_sequence[i].Item1)
+                foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     if (item.Value > max)
                     {
@@ -769,7 +769,7 @@ namespace AssemblyNameSpace
                 // Get the highest gap
                 List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
                 int max_gap_score = 0;
-                foreach (var item in consensus_sequence[i].Item2)
+                foreach (var item in consensus_sequence[i].Gaps)
                 {
                     if (item.Value.Count > max_gap_score)
                     {
@@ -815,12 +815,12 @@ namespace AssemblyNameSpace
                 buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
                 int sum = 0;
-                foreach (var item in consensus_sequence[i].Item1)
+                foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     sum += item.Value;
                 }
 
-                foreach (var item in consensus_sequence[i].Item1)
+                foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     if ((double)item.Value / sum > threshold)
                     {

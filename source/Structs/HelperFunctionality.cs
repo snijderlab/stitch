@@ -299,5 +299,25 @@ namespace AssemblyNameSpace
             }
             return sb.ToString();
         }
+
+        public static string DisplayTime(long elapsedMilliseconds)
+        {
+            const long sectime = 1000;
+            const long mintime = 60 * sectime;
+            const long htime = 60 * mintime;
+
+            long hours = elapsedMilliseconds / htime;
+            long minutes = elapsedMilliseconds / mintime - hours * 60;
+            long seconds = elapsedMilliseconds / sectime - hours * 60 * 60 - minutes * 60;
+            long milliseconds = elapsedMilliseconds - hours * htime - minutes * mintime - seconds * sectime;
+
+            if (hours > 0)
+                return $"{hours}:{minutes:D2} h";
+            if (minutes > 0)
+                return $"{minutes}:{seconds:D2} m";
+            if (seconds > 0)
+                return $"{seconds,2}.{milliseconds / 100:D1} s";
+            return $"{milliseconds,3} ms";
+        }
     }
 }
