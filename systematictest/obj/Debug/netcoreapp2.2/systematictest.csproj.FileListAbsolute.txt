@@ -1,0 +1,14 @@
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.csprojAssemblyReference.cache
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.csproj.CoreCompileInputs.cache
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.AssemblyInfoInputs.cache
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.AssemblyInfo.cs
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\systematictest.deps.json
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\systematictest.dll
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\systematictest.pdb
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\source.dll
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\source.pdb
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.csproj.CopyComplete
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.dll
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\obj\Debug\netcoreapp2.2\systematictest.pdb
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\systematictest.runtimeconfig.json
+C:\Users\douwe\source\repos\research-project-amino-acid-alignment\systematictest\bin\Debug\netcoreapp2.2\systematictest.runtimeconfig.dev.json

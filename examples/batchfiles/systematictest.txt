@@ -112,6 +112,6 @@ Recombine->
 
 -Report-----------------
 FASTA	->
-Path	   : ../../report-reads-{data}-{k}.fasta
+Path	   : ../../systematictest/data/{data}-{k}.fasta
 OutputType : ConsensusSequence
 <-
