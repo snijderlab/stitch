@@ -6,62 +6,26 @@ Runname	: Systematic test
 RunType : Separate
 
 -Input------------------
-Reads	->
-Path: ../014/reads-IgG1-L-001-all-100,00.txt
-Name: IgG1-L-001
-<-
-Reads	->
-Path: ../014/reads-IgG1-L-002-all-100,00.txt
-Name: IgG1-L-002
-<-
-Reads	->
-Path: ../014/reads-IgG1-K-001-all-100,00.txt
-Name: IgG1-K-001
-<-
-Reads	->
-Path: ../014/reads-IgG1-K-002-all-100,00.txt
-Name: IgG1-K-002
-<-
-Reads	->
-Path: ../014/reads-IgG2-L-001-all-100,00.txt
-Name: IgG2-L-001
-<-
-Reads	->
-Path: ../014/reads-IgG2-L-002-all-100,00.txt
-Name: IgG2-L-002
-<-
-Reads	->
-Path: ../014/reads-IgG2-K-001-all-100,00.txt
-Name: IgG2-K-001
-<-
-Reads	->
-Path: ../014/reads-IgG2-K-002-all-100,00.txt
-Name: IgG2-K-002
-<-
-Reads	->
-Path: ../014/reads-IgG4-L-001-all-100,00.txt
-Name: IgG4-L-001
-<-
-Reads	->
-Path: ../014/reads-IgG4-K-001-all-100,00.txt
-Name: IgG4-K-001
-<-
-Reads	->
-Path: ../014/reads-IgG4-K-002-all-100,00.txt
-Name: IgG4-K-002
+Folder ->
+    Path: ../systematictest/reads
+    StartsWith: reads-IgG
 <-
 
 -Parameters-------------
-K	            ->
-    Start: 7
-    End: 12
+K ->
+    Start: 4
+    End: 15
 <-
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
-Alphabet->
+Alphabet ->
     Path	: ../alphabets/common_errors_alphabet.csv
-    Name	: Normal
+    Name	: Errors
+<-
+Alphabet ->
+    Path	: ../alphabets/default_alphabet.csv
+    Name	: Default
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database
@@ -112,6 +76,9 @@ Recombine->
 
 -Report-----------------
 FASTA	->
-Path	   : ../../systematictest/data/{data}-{k}.fasta
+Path	   : ../../systematictest/data/{data}-{alph}-{k}.fasta
 OutputType : ConsensusSequence
 <-
+-HTML	->
+-Path	   : ../../systematictest/data/{data}-{alph}-{k}.html
+-<-

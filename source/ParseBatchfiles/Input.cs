@@ -192,7 +192,49 @@ namespace AssemblyNameSpace
 
                         output.DataParameters.Add(fastasettings);
                         break;
+                    case "folder":
+                        // Parse files one by one
+                        var folder_path = "";
+                        var startswith = "";
+                        foreach (var setting in pair.GetValues())
+                        {
+                            switch (setting.Name)
+                            {
+                                case "path":
+                                    if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                    folder_path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                    break;
+                                case "startswith":
+                                    if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                    startswith = setting.GetValue();
+                                    break;
+                                default:
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
+                                    break;
+                            }
+                        }
 
+                        Console.WriteLine($"Folder {folder_path} {startswith}");
+
+                        foreach (var file in Directory.GetFiles(folder_path))
+                        {
+                            if (!Path.GetFileName(file).StartsWith(startswith)) continue;
+
+                            RunParameters.Input.Parameter param;
+                            if (file.EndsWith(".fasta"))
+                                param = new RunParameters.Input.FASTA();
+                            if (file.EndsWith(".txt"))
+                                param = new RunParameters.Input.Reads();
+                            else
+                                continue;
+
+                            param.File.Name = Path.GetFileNameWithoutExtension(file);
+                            param.File.Path = ParseHelper.GetFullPath(file).GetValue(outEither);
+
+                            output.DataParameters.Add(param);
+                        }
+
+                        break;
                     case "k":
                         if (!pair.IsSingle())
                         {
