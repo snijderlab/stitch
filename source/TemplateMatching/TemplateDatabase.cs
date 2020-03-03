@@ -89,6 +89,57 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
+        public void Match(List<GraphPath> sequences, int max_threads = 1)
+        {
+            if (max_threads == 1)
+            {
+                MatchSerial(sequences);
+            }
+            else
+            {
+                MatchParallel(sequences, max_threads);
+            }
+        }
+        /// <summary>
+        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// </summary>
+        /// <param name="sequences">The sequences to match with</param>
+        void MatchParallel(List<GraphPath> sequences, int max_threads)
+        {
+            var runs = new List<(Template, GraphPath)>();
+
+            foreach (var tem in Templates)
+            {
+                for (int i = 0; i < sequences.Count(); i++)
+                {
+                    runs.Add((tem, sequences[i]));
+                }
+            }
+
+            Parallel.ForEach(
+                runs,
+                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2))
+            );
+        }
+        void MatchSerial(List<GraphPath> sequences)
+        {
+            int y = 0;
+            foreach (var tem in Templates)
+            {
+                int x = 0;
+                for (int i = 0; i < sequences.Count(); i++)
+                {
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet));
+                    x++;
+                }
+                y++;
+            }
+        }
+        /// <summary>
+        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// </summary>
+        /// <param name="sequences">The sequences to match with</param>
         public void Match(List<List<AminoAcid>> sequences)
         {
             int y = 0;
@@ -102,24 +153,6 @@ namespace AssemblyNameSpace
                 }
                 y++;
             }
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        public void MatchParallel(List<GraphPath> sequences)
-        {
-            var runs = new List<(Template, GraphPath)>();
-
-            foreach (var tem in Templates)
-            {
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    runs.Add((tem, sequences[i]));
-                }
-            }
-
-            Parallel.ForEach(runs, (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2)));
         }
         /// <summary>
         /// Create a string summary of a template database.

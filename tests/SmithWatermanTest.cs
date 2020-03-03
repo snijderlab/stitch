@@ -258,7 +258,7 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
 
             Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
 
             db.Match(new List<List<AminoAcid>> { b.ToList() });
             var r = db.Templates[0].Matches[0];
@@ -276,7 +276,7 @@ namespace AssemblyTestNameSpace
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var b = StringToSequence(path, alp);
 
-            TemplateDatabase db = new AssemblyNameSpace.TemplateDatabase(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0, 0);
+            TemplateDatabase db = new TemplateDatabase(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0, 0);
 
             db.Match(new List<List<AminoAcid>> { b.ToList() });
             var r = db.Templates[0].Matches[0];
@@ -310,7 +310,7 @@ namespace AssemblyTestNameSpace
 
             var database = new TemplateDatabase(new MetaData.FileIdentifier(template_parameter.Path, template_parameter.Name), template_parameter.Type, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore, 0);
 
-            database.MatchParallel(assm.GetAllPaths());
+            database.Match(assm.GetAllPaths(), Environment.ProcessorCount);
 
             // Test if something went wrong
             Assert.AreEqual(1, database.Templates.Count());

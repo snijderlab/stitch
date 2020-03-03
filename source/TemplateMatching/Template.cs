@@ -93,12 +93,18 @@ namespace AssemblyNameSpace
         /// <param name="match">The match to add</param>
         public void AddMatch(SequenceMatch match)
         {
-            if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
+            lock (Matches)
             {
-                Score += match.Score;
-                Matches.Add(match);
-                if (Matches.Count() > 1)
-                    Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
+                if (match != null)
+                {
+                    if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
+                    {
+                        Score += match.Score;
+                        Matches.Add(match);
+                        if (Matches.Count() > 1)
+                            Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
+                    }
+                }
             }
         }
         /// <summary>

@@ -143,7 +143,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Runs this run. Runs the assembly, and generates the reports.
             /// </summary>
-            public void Calculate()
+            public void Calculate(int max_threads = 1)
             {
                 try
                 {
@@ -183,7 +183,7 @@ namespace AssemblyNameSpace
                         var alph = new Alphabet(template.Alphabet);
 
                         var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore, i);
-                        database1.MatchParallel(assm.GetAllPaths());
+                        database1.Match(assm.GetAllPaths(), max_threads);
 
                         databases.Add(database1);
                     }
@@ -207,7 +207,7 @@ namespace AssemblyNameSpace
                             var template = Recombine.Templates[i];
 
                             var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore, i);
-                            database1.MatchParallel(assm.GetAllPaths());
+                            database1.Match(assm.GetAllPaths(), max_threads);
 
                             rec_databases.Add(database1);
                         }
@@ -291,7 +291,7 @@ namespace AssemblyNameSpace
 
                         var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database", Recombine.CutoffScore);
 
-                        recombined_database.MatchParallel(assm.GetAllPaths());
+                        recombined_database.Match(assm.GetAllPaths(), max_threads);
 
                         recombine_sw.Stop();
 

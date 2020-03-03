@@ -33,6 +33,15 @@ namespace AssemblyNameSpace
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            Console.CancelKeyPress += delegate
+            {
+                var def = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine("== Aborted based on user input ==");
+                Console.ForegroundColor = def;
+                Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
+            };
+
             // Retrieve the name of the batch file to run
             string filename = "";
             try
@@ -69,7 +78,21 @@ namespace AssemblyNameSpace
 
             bar.Start(runs.Count() * 3);
 
-            Parallel.ForEach(runs, (i) => i.Calculate());
+            if (runs.Count() == 1)
+            {
+                runs[0].Calculate(Environment.ProcessorCount);
+            }
+            else if (runs.Count() < Environment.ProcessorCount)
+            {
+                Parallel.ForEach(
+                    runs,
+                    new ParallelOptions { MaxDegreeOfParallelism = runs.Count() },
+                    (i) => i.Calculate((int)Math.Round((double)Environment.ProcessorCount / runs.Count())));
+            }
+            else
+            {
+                Parallel.ForEach(runs, (i) => i.Calculate(1));
+            }
 
             stopwatch.Stop();
             Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}");

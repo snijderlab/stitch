@@ -1145,7 +1145,8 @@ namespace AssemblyNameSpace
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
 <tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
-<tr><td>Number of sequences found</td><td>{meta_data.sequences}</td></tr>
+<tr><td>Number of contigs found</td><td>{meta_data.sequences}</td></tr>
+<tr><td>Number of paths found</td><td>{Paths.Count()}</td></tr>
 </table>
 
 <h3>de Bruijn Graph information</h3>

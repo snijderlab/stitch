@@ -12,7 +12,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/source/bin/Debug/netcoreapp2.2/source.dll",
             "args": [
-                "examples/batchfiles/recombinetemplates.txt"
+                "examples/batchfiles/systematictest.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

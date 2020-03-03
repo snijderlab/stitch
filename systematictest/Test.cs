@@ -52,7 +52,8 @@ namespace SystematicTest
 
                         foreach (var piece in match.Alignment)
                         {
-                            if (piece.Length + pos >= positions[region])
+                            int res = piece.Length;
+                            while (pos + piece.Length >= positions[region])
                             {
                                 var c = positions[region] - pos;
                                 switch (piece)
@@ -72,58 +73,45 @@ namespace SystematicTest
                                 nmatch = 0;
                                 del = 0;
                                 insert = 0;
-                                c = piece.Length - c;
-                                switch (piece)
-                                {
-                                    case SequenceMatch.Match _:
-                                        nmatch += c;
-                                        break;
-                                    case SequenceMatch.GapQuery _:
-                                        del += c;
-                                        break;
-                                    case SequenceMatch.GapTemplate _:
-                                        insert += c;
-                                        break;
-                                }
-                                pos += piece.Length;
+                                res -= c;
                             }
-                            else
+                            switch (piece)
                             {
-                                switch (piece)
-                                {
-                                    case SequenceMatch.Match _:
-                                        nmatch += piece.Length;
-                                        break;
-                                    case SequenceMatch.GapQuery _:
-                                        del += piece.Length;
-                                        break;
-                                    case SequenceMatch.GapTemplate _:
-                                        insert += piece.Length;
-                                        break;
-                                }
-                                pos += piece.Length;
+                                case SequenceMatch.Match _:
+                                    nmatch += res;
+                                    break;
+                                case SequenceMatch.GapQuery _:
+                                    del += res;
+                                    break;
+                                case SequenceMatch.GapTemplate _:
+                                    insert += res;
+                                    break;
                             }
+                            pos += piece.Length;
                         }
+                        regions.Add((nmatch, del, insert));
 
                         foreach (var r in regions)
                         {
                             Console.WriteLine($"{r}");
                         }
+
+                        Console.WriteLine("\n");
                     }
 
-                    results.Add(new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR() });
+                    results.Add(new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" });
                 }
             }
 
             var sb = new StringBuilder();
-            sb.Append("sep=;\n");
+            sb.Append("sep=|\nType|Variant|Number|Proteases|Percentage|Alphabet|K|Score|StartPosition|Alignment|Link\n");
 
             foreach (var line in results)
             {
                 foreach (var column in line)
                 {
                     sb.Append(column);
-                    sb.Append(';');
+                    sb.Append('|');
                 }
                 sb.Append('\n');
             }

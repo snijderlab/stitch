@@ -6,16 +6,21 @@ Runname	: Systematic test
 RunType : Separate
 
 -Input------------------
-Folder ->
-    Path: ../systematictest/reads
-    StartsWith: reads-IgG
+-Folder ->
+-    Path: ../systematictest/reads
+-    StartsWith: reads-IgG
+-<-
+Reads -> 
+Path: ../systematictest/reads/reads-IgG1-K-001-all-100,00.txt
+Name: reads-IgG1-K-001-all-100,00
 <-
 
 -Parameters-------------
-K ->
-    Start: 4
-    End: 15
-<-
+-K ->
+-    Start: 4
+-    End: 15
+-<-
+K: 5
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -79,6 +84,6 @@ FASTA	->
 Path	   : ../../systematictest/data/{data}-{alph}-{k}.fasta
 OutputType : ConsensusSequence
 <-
--HTML	->
--Path	   : ../../systematictest/data/{data}-{alph}-{k}.html
--<-
+HTML	->
+Path	   : ../../systematictest/data/{data}-{alph}-{k}.html
+<-

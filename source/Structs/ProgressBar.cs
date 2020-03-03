@@ -41,11 +41,25 @@ namespace AssemblyNameSpace
 
                 if (clear)
                 {
-                    Console.SetCursorPosition(0, Console.CursorTop);
+                    try
+                    {
+                        Console.SetCursorPosition(0, Console.CursorTop);
+                    }
+                    catch { }
+                }
+
+                int width;
+                try
+                {
+                    width = Console.BufferWidth;
+                }
+                catch
+                {
+                    width = 30;
                 }
 
                 var tail = $"| {Math.Round((double)current_value / max_value * 100),3}% {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)} ";
-                var barlength = Console.BufferWidth - tail.Length - 1;
+                var barlength = width - tail.Length - 1;
                 var position = (int)Math.Round((double)current_value / max_value * barlength);
                 var stem = new String('-', position);
                 var empty = new String(' ', barlength - position);
