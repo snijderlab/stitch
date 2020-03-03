@@ -54,6 +54,20 @@ namespace AssemblyNameSpace
             Score = depth.Sum();
             ContigID = id.ToArray();
         }
+        /// <summary>
+        /// Creates a basic graphpath, mainly for testing purposes
+        /// </summary>
+        /// <param name="Sequence"></param>
+        public GraphPath(List<AminoAcid> sequence)
+        {
+            Nodes = new List<CondensedNode>();
+            Index = -1;
+
+            Sequence = sequence.ToArray();
+            DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();
+            Score = sequence.Count;
+            ContigID = Enumerable.Repeat(-1, sequence.Count).ToArray();
+        }
     }
 
 }

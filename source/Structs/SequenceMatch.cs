@@ -101,12 +101,12 @@ namespace AssemblyNameSpace
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
-                    case GapQuery gapC:
+                    case GapInQuery gapC:
                         buffer1.Append(new string('-', gapC.Length));
                         buffer2.Append(qSeq.Substring(query_pos, gapC.Length));
                         query_pos += gapC.Length;
                         break;
-                    case GapTemplate gapT:
+                    case GapInTemplate gapT:
                         buffer1.Append(tSeq.Substring(tem_pos, gapT.Length));
                         buffer2.Append(new string('-', gapT.Length));
                         tem_pos += gapT.Length;
@@ -211,18 +211,18 @@ namespace AssemblyNameSpace
         /// <summary>
         /// A gap in the template
         /// </summary>
-        public class GapTemplate : MatchPiece
+        public class GapInTemplate : MatchPiece
         {
-            public GapTemplate(int c) : base(c) { }
+            public GapInTemplate(int c) : base(c) { }
             override protected string Identifier() { return "D"; }
         }
 
         /// <summary>
         /// A gap in the query
         /// </summary>
-        public class GapQuery : MatchPiece
+        public class GapInQuery : MatchPiece
         {
-            public GapQuery(int c) : base(c) { }
+            public GapInQuery(int c) : base(c) { }
             override protected string Identifier() { return "I"; }
         }
     }

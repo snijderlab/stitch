@@ -130,25 +130,7 @@ namespace AssemblyNameSpace
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet));
-                    x++;
-                }
-                y++;
-            }
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<List<AminoAcid>> sequences)
-        {
-            int y = 0;
-            foreach (var tem in Templates)
-            {
-                int x = 0;
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].ToArray(), alphabet));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet, sequences[i]));
                     x++;
                 }
                 y++;

@@ -173,23 +173,23 @@ namespace AssemblyNameSpace
                 {
                     if (piece is SequenceMatch.Match m)
                     {
-                        if (seq_pos == -1) seq_pos = match.StartQueryPosition;
+                        //if (seq_pos == -1) seq_pos = match.StartQueryPosition;
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
                             output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
+                            //output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
 
                             template_pos++;
                             seq_pos++;
                         }
                     }
-                    else if (piece is SequenceMatch.GapQuery gq)
+                    else if (piece is SequenceMatch.GapInQuery gc)
                     {
-                        if (template_pos < output.Count())
+                        //if (template_pos < output.Count() && seq_pos < match.QuerySequence.Length)
                         {
                             // Try to add this sequence or update the count
-                            int len = Math.Min(gq.Length, match.QuerySequence.Length - seq_pos);
+                            int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
                             IGap sub_seq;
                             int[] cov;
                             if (len <= 0)
@@ -202,11 +202,11 @@ namespace AssemblyNameSpace
                                 sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos - 1, len));
                                 cov = match.Path.DepthOfCoverage.SubArray(seq_pos - 1, len);
                             }
-                            seq_pos += gq.Length;
+                            seq_pos += len;
                             output[template_pos].Gaps[matchindex] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
                         }
                     }
-                    else if (piece is SequenceMatch.GapTemplate gt)
+                    else if (piece is SequenceMatch.GapInTemplate gt)
                     {
                         // Skip to the next section
                         for (int i = 0; i < gt.Length && template_pos < output.Count(); i++)
@@ -302,14 +302,9 @@ namespace AssemblyNameSpace
                 foreach (var option in alignedSequences[i].Gaps)
                 {
                     IGap key;
-                    if (option.Gap == null)
-                    {
-                        key = new None();
-                    }
-                    else
-                    {
-                        key = option.Gap;
-                    }
+                    if (option.Gap == null || option.Gap is None) continue;
+                    key = option.Gap;
+
                     if (output[i].Gaps.ContainsKey(key))
                     {
                         int[] cov;

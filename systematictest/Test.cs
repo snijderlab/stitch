@@ -11,6 +11,8 @@ namespace SystematicTest
     {
         static void Main()
         {
+            System.Globalization.CultureInfo.CurrentCulture = new System.Globalization.CultureInfo("en-GB");
+
             var alphabet = new Alphabet("examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 1);
             var original_sequences = new Dictionary<string, AminoAcid[]>();
 
@@ -38,14 +40,14 @@ namespace SystematicTest
                     var reads = OpenReads.Fasta(fi);
                     var sequence = StringToSequence(reads[0].Item1, alphabet);
                     var match = HelperFunctionality.SmithWaterman(original_sequences[name], sequence, alphabet);
+                    var regions = new List<double>();
 
                     // Tried to get the match/del/insert numbers per region, does not fully work yet!
                     if (name == "IgG1-K-001")
                     {
-                        var regions = new List<(int, int, int)>();
                         var pos = match.StartTemplatePosition;
                         var region = 0;
-                        var positions = new List<int> { 99, 107, 123, 453, 549, 562, 668 };
+                        var positions = new List<int> { 14, 33, 50, 58, 96, 111, 120, 453, 453 + 26, 453 + 32, 453 + 49, 453 + 56, 453 + 90, 453 + 99, 453 + 109, 453 + 215 };//99, 107, 123, 453, 549, 562, 668 };
                         var nmatch = 0;
                         var del = 0;
                         var insert = 0;
@@ -53,44 +55,52 @@ namespace SystematicTest
                         foreach (var piece in match.Alignment)
                         {
                             int res = piece.Length;
-                            while (pos + piece.Length >= positions[region])
+                            while (region < positions.Count - 1 && pos + res >= positions[region])
                             {
                                 var c = positions[region] - pos;
+                                int skip = c;
+                                if (c < 0)
+                                {
+                                    skip = positions[region];
+                                    c = 0;
+                                }
                                 switch (piece)
                                 {
                                     case SequenceMatch.Match _:
                                         nmatch += c;
                                         break;
-                                    case SequenceMatch.GapQuery _:
-                                        del += c;
-                                        break;
-                                    case SequenceMatch.GapTemplate _:
+                                    case SequenceMatch.GapInQuery _:
                                         insert += c;
                                         break;
+                                    case SequenceMatch.GapInTemplate _:
+                                        del += c;
+                                        break;
                                 }
-                                regions.Add((nmatch, del, insert));
+                                regions.Add((double)nmatch / (positions[region] - (region == 0 ? 0 : positions[region - 1])));
                                 region += 1;
                                 nmatch = 0;
                                 del = 0;
                                 insert = 0;
                                 res -= c;
+                                pos += skip;
                             }
                             switch (piece)
                             {
                                 case SequenceMatch.Match _:
                                     nmatch += res;
                                     break;
-                                case SequenceMatch.GapQuery _:
-                                    del += res;
-                                    break;
-                                case SequenceMatch.GapTemplate _:
+                                case SequenceMatch.GapInQuery _:
                                     insert += res;
                                     break;
+                                case SequenceMatch.GapInTemplate _:
+                                    del += res;
+                                    break;
                             }
-                            pos += piece.Length;
+                            pos += res;
                         }
-                        regions.Add((nmatch, del, insert));
+                        regions.Add((double)nmatch / (positions[region] - (region == 0 ? 0 : positions[region - 1])));
 
+                        Console.WriteLine(Path.GetFileNameWithoutExtension(file));
                         foreach (var r in regions)
                         {
                             Console.WriteLine($"{r}");
@@ -99,7 +109,12 @@ namespace SystematicTest
                         Console.WriteLine("\n");
                     }
 
-                    results.Add(new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" });
+                    var line = new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" };
+                    foreach (var r in regions)
+                    {
+                        line.Add(r.ToString());
+                    }
+                    results.Add(line);
                 }
             }
 

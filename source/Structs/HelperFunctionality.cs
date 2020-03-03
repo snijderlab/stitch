@@ -219,30 +219,40 @@ namespace AssemblyNameSpace
             int max_index_t = 0;
             int max_index_q = 0;
 
-            int tem_pos, query_pos, score, a, b, c, d;
-            //bool gap;
-            //int gap_index = alphabet.GapIndex;
+            int tem_pos, query_pos, score, a, b, c;
+            bool gap;
+            char gap_char = Alphabet.GapChar;
 
             for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    //gap = template[tem_pos - 1].Code == gap_index || query[query_pos - 1].Code == gap_index;
-                    score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
-                    // Calculate the score for the current position
-                    a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
-                    b = score_matrix[tem_pos, query_pos - 1].Item1 - (score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapQuery ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapRight
-                    c = score_matrix[tem_pos - 1, query_pos].Item1 - (score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapTemplate ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty); // GapLeft
-                    d = 0;
+                    gap = template[tem_pos - 1].Char == gap_char || query[query_pos - 1].Char == gap_char;
 
-                    if (a > b && a > c && a > d)
-                        score_matrix[tem_pos, query_pos] = (a, Direction.Match);
-                    else if (b > c && b > d)
-                        score_matrix[tem_pos, query_pos] = (b, Direction.GapQuery);
-                    else if (c > d)
-                        score_matrix[tem_pos, query_pos] = (c, Direction.GapTemplate);
+                    // Calculate the score for the current position
+                    if (gap)
+                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 - alphabet.GapExtendPenalty; // Match Gap
                     else
-                        score_matrix[tem_pos, query_pos] = (d, Direction.NoMatch);
+                    {
+                        score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
+                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
+                    }
+                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapInQuery || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapInTemplate || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+
+                    if (a > b && a > c && a > 0)
+                    {
+                        if (gap)
+                            score_matrix[tem_pos, query_pos] = (a, Direction.MatchGap);
+                        else
+                            score_matrix[tem_pos, query_pos] = (a, Direction.Match);
+                    }
+                    else if (!gap && b > c && b > 0)
+                        score_matrix[tem_pos, query_pos] = (b, Direction.GapInQuery);
+                    else if (!gap && c > 0)
+                        score_matrix[tem_pos, query_pos] = (c, Direction.GapInTemplate);
+                    else
+                        score_matrix[tem_pos, query_pos] = (0, Direction.NoMatch);
 
                     // Keep track of the maximal value
                     if (score_matrix[tem_pos, query_pos].Item1 > max_value)
@@ -258,9 +268,7 @@ namespace AssemblyNameSpace
             // TODO: Adjust the score on each position based on the DOC, to create a fairer score
             var match_list = new List<SequenceMatch.MatchPiece>();
 
-            bool found_end = false;
-
-            while (!found_end)
+            while (true)
             {
                 switch (score_matrix[max_index_t, max_index_q].Item2)
                 {
@@ -269,26 +277,33 @@ namespace AssemblyNameSpace
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case Direction.GapTemplate:
-                        match_list.Add(new SequenceMatch.GapTemplate(1));
+                    case Direction.MatchGap:
+                        match_list.Add(new SequenceMatch.Match(1)); // TODO: Maybe Introduce the right gap?
+                        max_index_t--;
+                        max_index_q--;
+                        break;
+                    case Direction.GapInTemplate:
+                        match_list.Add(new SequenceMatch.GapInTemplate(1));
                         max_index_t--;
                         break;
-                    case Direction.GapQuery:
-                        match_list.Add(new SequenceMatch.GapQuery(1));
+                    case Direction.GapInQuery:
+                        match_list.Add(new SequenceMatch.GapInQuery(1));
                         max_index_q--;
                         break;
                     case Direction.NoMatch:
-                        found_end = true;
+                        goto END_OF_CRAWL; // I am hopefull this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
                         break;
                 }
             }
+
+        END_OF_CRAWL:
             match_list.Reverse();
 
             var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, path);
             return match;
         }
 
-        enum Direction { NoMatch, GapTemplate, GapQuery, Match }
+        enum Direction { NoMatch, GapInTemplate, GapInQuery, Match, MatchGap }
 
         public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)
         {
@@ -298,6 +313,82 @@ namespace AssemblyNameSpace
                 sb.Append(element.ToString());
             }
             return sb.ToString();
+        }
+
+        public static string ConsensusSequence(Template template)
+        {
+            var consensus = new StringBuilder();
+            var consensus_sequence = template.CombinedSequence();
+
+            for (int i = 0; i < consensus_sequence.Count; i++)
+            {
+                // Get the highest chars
+                string options = "";
+                int max = 0;
+
+                foreach (var item in consensus_sequence[i].AminoAcids)
+                {
+                    if (item.Value > max)
+                    {
+                        options = item.Key.ToString();
+                        max = item.Value;
+                    }
+                    else if (item.Value == max)
+                    {
+                        options += item.Key.ToString();
+                    }
+                }
+
+                if (options.Length > 1)
+                {
+                    // Force a single amino acid, the one of the template or just the first one
+                    if (options.Contains(consensus_sequence[i].Template.Char))
+                    {
+                        consensus.Append(consensus_sequence[i].Template.Char);
+                    }
+                    else
+                    {
+                        consensus.Append(options[0]);
+                    }
+                }
+                else if (options.Length == 1 && options[0] != Alphabet.GapChar)
+                {
+                    consensus.Append(options);
+                }
+
+                // Get the highest gap
+                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
+                int max_gap_score = 0;
+
+                foreach (var item in consensus_sequence[i].Gaps)
+                {
+                    if (item.Value.Count > max_gap_score)
+                    {
+                        max_gap = new List<Template.IGap> { item.Key };
+                        max_gap_score = item.Value.Count;
+                    }
+                    else if (item.Value.Count == max)
+                    {
+                        max_gap.Add(item.Key);
+                    }
+                }
+
+                if (max_gap.Count > 1)
+                {
+                    consensus.Append("(");
+                    foreach (var item in max_gap)
+                    {
+                        consensus.Append(item.ToString());
+                        consensus.Append("/");
+                    }
+                    consensus.Append(")");
+                }
+                else if (max_gap.Count == 1 && max_gap[0].GetType() != typeof(Template.None))
+                {
+                    consensus.Append(max_gap[0].ToString());
+                }
+            }
+            return consensus.ToString();
         }
 
         public static string DisplayTime(long elapsedMilliseconds)

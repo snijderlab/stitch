@@ -177,10 +177,47 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("26M17D24M17I29M", r.Alignment.CIGAR());
         }
         [TestMethod]
+        public void AlreadyAddedGap()
+        {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(453, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void AlreadyAddedGapViaTemplate()
+        {
+            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
+
+            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+
+            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
+            var r = db.Templates[0].Matches[0];
+
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(417, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
+
+            var seq = HelperFunctionality.ConsensusSequence(db.Templates[0]);
+            Assert.AreEqual("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", seq);
+        }
+        [TestMethod]
         public void GFPAlignment()
         {
             // Shuffled the sequence a bit
             var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            Console.WriteLine($"GapChar '{Alphabet.GapChar}'");
             //Uniprot - P42212
             var gfp = "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK";
             //Uniprot - P80893
@@ -230,7 +267,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(239, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("30M1D7M4I22M", r.Alignment.CIGAR());
+            Assert.AreEqual("31M1D6M4I22M", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void RealWorldIGHV()
@@ -260,7 +297,7 @@ namespace AssemblyTestNameSpace
             Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
             TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
 
-            db.Match(new List<List<AminoAcid>> { b.ToList() });
+            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
@@ -278,7 +315,7 @@ namespace AssemblyTestNameSpace
 
             TemplateDatabase db = new TemplateDatabase(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0, 0);
 
-            db.Match(new List<List<AminoAcid>> { b.ToList() });
+            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());

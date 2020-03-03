@@ -20,7 +20,7 @@ Name: reads-IgG1-K-001-all-100,00
 -    Start: 4
 -    End: 15
 -<-
-K: 5
+K: 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False

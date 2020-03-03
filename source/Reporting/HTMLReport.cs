@@ -627,7 +627,7 @@ namespace AssemblyNameSpace
                     if (Gaps[i].Gap == null)
                     {
                         seq = "";
-                        depthGap.Add(Enumerable.Repeat(1, max_length).ToArray());
+                        depthGap.Add(Enumerable.Repeat(0, max_length).ToArray());
                     }
                     else
                     {
@@ -732,7 +732,7 @@ namespace AssemblyNameSpace
             if (endoverhang) buffer.Append(endoverhangbuffer.ToString());
 
             // Display Consensus Sequence
-            var consensus = new StringBuilder();
+            /*var consensus = new StringBuilder();
             var consensus_sequence = template.CombinedSequence();
 
             for (int i = 0; i < consensus_sequence.Count(); i++)
@@ -799,9 +799,10 @@ namespace AssemblyNameSpace
                 {
                     consensus.Append("_");
                 }
-            }
+            }*/
+            var consensus_sequence = template.CombinedSequence();
             buffer.AppendLine("</div><h2>Consensus Sequence</h2><p style='word-break: break-all;'>");
-            buffer.AppendLine(consensus.ToString());
+            buffer.AppendLine(HelperFunctionality.ConsensusSequence(template));
             buffer.AppendLine("</p>");
 
             // Sequence logo

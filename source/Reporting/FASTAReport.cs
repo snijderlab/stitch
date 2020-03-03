@@ -41,7 +41,7 @@ namespace AssemblyNameSpace
             {
                 foreach (var template in RecombinedDatabase.Templates)
                 {
-                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{ConsensusSequence(template)}"));
+                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{HelperFunctionality.ConsensusSequence(template)}"));
                 }
             }
 
@@ -56,82 +56,6 @@ namespace AssemblyNameSpace
             }
 
             return buffer.ToString().Trim();
-        }
-
-        string ConsensusSequence(Template template)
-        {
-            var consensus = new StringBuilder();
-            var consensus_sequence = template.CombinedSequence();
-
-            for (int i = 0; i < consensus_sequence.Count; i++)
-            {
-                // Get the highest chars
-                string options = "";
-                int max = 0;
-
-                foreach (var item in consensus_sequence[i].AminoAcids)
-                {
-                    if (item.Value > max)
-                    {
-                        options = item.Key.ToString();
-                        max = item.Value;
-                    }
-                    else if (item.Value == max)
-                    {
-                        options += item.Key.ToString();
-                    }
-                }
-
-                if (options.Length > 1)
-                {
-                    // Force a single amino acid, the one of the template or just the first one
-                    if (options.Contains(consensus_sequence[i].Template.Char))
-                    {
-                        consensus.Append(consensus_sequence[i].Template.Char);
-                    }
-                    else
-                    {
-                        consensus.Append(options[0]);
-                    }
-                }
-                else if (options.Length == 1 && options[0] != Alphabet.GapChar)
-                {
-                    consensus.Append(options);
-                }
-
-                // Get the highest gap
-                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
-                int max_gap_score = 0;
-
-                foreach (var item in consensus_sequence[i].Gaps)
-                {
-                    if (item.Value.Count > max_gap_score)
-                    {
-                        max_gap = new List<Template.IGap> { item.Key };
-                        max_gap_score = item.Value.Count;
-                    }
-                    else if (item.Value.Count == max)
-                    {
-                        max_gap.Add(item.Key);
-                    }
-                }
-
-                if (max_gap.Count > 1)
-                {
-                    consensus.Append("(");
-                    foreach (var item in max_gap)
-                    {
-                        consensus.Append(item.ToString());
-                        consensus.Append("/");
-                    }
-                    consensus.Append(")");
-                }
-                else if (max_gap.Count == 1 && max_gap[0].GetType() != typeof(Template.None))
-                {
-                    consensus.Append(max_gap[0].ToString());
-                }
-            }
-            return consensus.ToString();
         }
     }
 }
