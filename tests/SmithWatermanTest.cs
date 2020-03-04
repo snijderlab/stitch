@@ -191,7 +191,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void AlreadyAddedGapViaTemplate()
+        public void AlreadyAddedGapViaTemplate01()
         {
             var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
@@ -211,6 +211,31 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
 
             const string expected = "VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK";
+            var seq = HelperFunctionality.ConsensusSequence(db.Templates[0]);
+            Console.Write($"\rExpected: {expected}\nActual:   {seq}");
+            Assert.AreEqual(expected, seq);
+        }
+        [TestMethod]
+        public void AlreadyAddedGapViaTemplate02()
+        {
+            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var a = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCAR*DIWGQGTVVTVSSASTKGPSVFPLAP", alp);
+            var b = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP", alp);
+
+            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+
+            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
+            var r = db.Templates[0].Matches[0];
+
+            Console.WriteLine(r.ToString());
+
+            Assert.AreEqual(364, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("49M10I27M", r.Alignment.CIGAR());
+
+            const string expected = "LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP";
             var seq = HelperFunctionality.ConsensusSequence(db.Templates[0]);
             Console.Write($"\rExpected: {expected}\nActual:   {seq}");
             Assert.AreEqual(expected, seq);

@@ -6,20 +6,17 @@ Runname	: Systematic test
 RunType : Separate
 
 -Input------------------
--Folder ->
--    Path: ../systematictest/reads
--    StartsWith: reads-IgG
--<-
-Reads -> 
-Path: ../systematictest/reads/reads-IgG1-K-001-all-100,00.txt
-Name: reads-IgG1-K-001-all-100,00
+Folder ->
+    Path: ../systematictest/reads
+    StartsWith: reads-IgG
 <-
+-Reads -> 
+-Path: ../systematictest/reads/reads-IgG1-K-001-all-100,00.txt
+-Name: reads-IgG1-K-001-all-100,00
+-<-
 
 -Parameters-------------
-K ->
-    Start: 5
-    End: 15
-<-
+K: 6, 7, 8, 12, 16
 -K: 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
@@ -34,7 +31,7 @@ Alphabet ->
 <-
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 2
+    n : 1
 
     -Minimal average score per position to be included
     CutoffScore : 0.5

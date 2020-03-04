@@ -125,6 +125,20 @@ DecimalSeparator: ,
 <-
 ```
 
+##### Folder (m)
+
+Open a specified folder and open all reads and fasta files in it. Files with `.txt` as extension will be reads as Reads. Files with `.fasta` as extension will de reads as Fasta. It is possible to provide a filter for the files in the form of a constant text the files have to start with.
+
+So in the example below all `.txt` and `.fasta` files in the dictionary starting with the text `reads-IgG` will be opened.
+
+```
+Folder ->
+    Path: ../systematictest/reads
+    StartsWith: reads-IgG
+<-
+```
+
+
 #### Parameters
 
 ##### K (s or m)
