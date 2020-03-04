@@ -214,8 +214,6 @@ namespace AssemblyNameSpace
                             }
                         }
 
-                        Console.WriteLine($"Folder {folder_path} {startswith}");
-
                         foreach (var file in Directory.GetFiles(folder_path))
                         {
                             if (!Path.GetFileName(file).StartsWith(startswith)) continue;
