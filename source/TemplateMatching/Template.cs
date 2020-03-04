@@ -168,43 +168,34 @@ namespace AssemblyNameSpace
                 // Start at StartTemplatePosition and StartQueryPosition
                 var template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
+                bool gap = false;
 
                 foreach (var piece in match.Alignment)
                 {
                     if (piece is SequenceMatch.Match m)
                     {
-                        //if (seq_pos == -1) seq_pos = match.StartQueryPosition;
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
                             output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            //output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
+                            if (!gap) output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
 
                             template_pos++;
                             seq_pos++;
+                            gap = false;
                         }
                     }
                     else if (piece is SequenceMatch.GapInQuery gc)
                     {
-                        //if (template_pos < output.Count() && seq_pos < match.QuerySequence.Length)
-                        {
-                            // Try to add this sequence or update the count
-                            int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
-                            IGap sub_seq;
-                            int[] cov;
-                            if (len <= 0)
-                            {
-                                sub_seq = new None();
-                                cov = new int[0];
-                            }
-                            else
-                            {
-                                sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos - 1, len));
-                                cov = match.Path.DepthOfCoverage.SubArray(seq_pos - 1, len);
-                            }
-                            seq_pos += len;
-                            output[template_pos].Gaps[matchindex] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
-                        }
+                        // Try to add this sequence or update the count
+                        gap = true;
+                        int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
+
+                        IGap sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos, len));
+                        int[] cov = match.Path.DepthOfCoverage.SubArray(seq_pos, len);
+
+                        seq_pos += len;
+                        output[Math.Max(0, template_pos - 1)].Gaps[matchindex] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {
@@ -215,6 +206,7 @@ namespace AssemblyNameSpace
                             output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], -1);
                             template_pos++;
                         }
+                        gap = false;
                     }
                 }
             }

@@ -204,13 +204,16 @@ namespace AssemblyTestNameSpace
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
+
             Assert.AreEqual(417, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
 
+            const string expected = "VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK";
             var seq = HelperFunctionality.ConsensusSequence(db.Templates[0]);
-            Assert.AreEqual("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", seq);
+            Console.Write($"\rExpected: {expected}\nActual:   {seq}");
+            Assert.AreEqual(expected, seq);
         }
         [TestMethod]
         public void GFPAlignment()

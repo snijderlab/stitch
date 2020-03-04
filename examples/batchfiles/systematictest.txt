@@ -16,11 +16,11 @@ Name: reads-IgG1-K-001-all-100,00
 <-
 
 -Parameters-------------
--K ->
--    Start: 4
--    End: 15
--<-
-K: 7
+K ->
+    Start: 5
+    End: 15
+<-
+-K: 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False

@@ -100,13 +100,13 @@ namespace SystematicTest
                         }
                         regions.Add((double)nmatch / (positions[region] - (region == 0 ? 0 : positions[region - 1])));
 
-                        Console.WriteLine(Path.GetFileNameWithoutExtension(file));
-                        foreach (var r in regions)
-                        {
-                            Console.WriteLine($"{r}");
-                        }
+                        //Console.WriteLine(Path.GetFileNameWithoutExtension(file));
+                        //foreach (var r in regions)
+                        //{
+                        //    Console.WriteLine($"{r}");
+                        //}
 
-                        Console.WriteLine("\n");
+                        //Console.WriteLine("\n");
                     }
 
                     var line = new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" };
@@ -119,7 +119,7 @@ namespace SystematicTest
             }
 
             var sb = new StringBuilder();
-            sb.Append("sep=|\nType|Variant|Number|Proteases|Percentage|Alphabet|K|Score|StartPosition|Alignment|Link\n");
+            sb.Append("sep=|\nType|Variant|Number|Proteases|Percentage|Alphabet|K|Score|StartPosition|Alignment|Link|F1|CDR1|F2|CDR2|F3|CDR3|F4|C HC|F1|CDR1|F2|CDR2|F3|CDR3|F4|C LC\n");
 
             foreach (var line in results)
             {
