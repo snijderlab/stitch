@@ -127,14 +127,24 @@ DecimalSeparator: ,
 
 ##### Folder (m)
 
-Open a specified folder and open all reads and fasta files in it. Files with `.txt` as extension will be reads as Reads. Files with `.fasta` as extension will de reads as Fasta. It is possible to provide a filter for the files in the form of a constant text the files have to start with.
+Open a specified folder and open all reads and fasta files in it. Files with `.txt` as extension will be read as Reads. Files with `.fasta` as extension will be read as Fasta. Files with `.csv` as extension will be read as Peaks. It is possible to provide a filter for the files in the form of a constant text the files have to start with.
 
-So in the example below all `.txt` and `.fasta` files in the dictionary starting with the text `reads-IgG` will be opened.
+So in the example below (example 01) all `.txt`, `.fasta` and `.csv` files in the dictionary starting with the text `reads-IgG` will be opened.
+
+For Peaks files extra parameters can be attached. All properties used in a peaks definition can also be used in a folder definition, with the caveat that here they should be prefixed with `Peaks`. As can be seen in example 02.
 
 ```
+- Example 01
 Folder ->
     Path: ../systematictest/reads
     StartsWith: reads-IgG
+<-
+
+- Example 02
+Folder ->
+    Path: ../systematictest/reads
+    PeaksFormat: Old
+    StartsWith: Herceptin
 <-
 ```
 

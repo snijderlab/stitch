@@ -196,6 +196,9 @@ namespace AssemblyNameSpace
                         // Parse files one by one
                         var folder_path = "";
                         var startswith = "";
+
+                        var peaks_settings = new RunParameters.Input.Peaks();
+
                         foreach (var setting in pair.GetValues())
                         {
                             switch (setting.Name)
@@ -207,6 +210,49 @@ namespace AssemblyNameSpace
                                 case "startswith":
                                     if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     startswith = setting.GetValue();
+                                    break;
+                                case "peakscutoffscore":
+                                    peaks_settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                    break;
+                                case "peakslocalcutoffscore":
+                                    peaks_settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                    break;
+                                case "peaksminlengthpatch":
+                                    peaks_settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                    break;
+                                case "peaksseparator":
+                                    if (setting.GetValue().Length != 1)
+                                    {
+                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                    }
+                                    else
+                                    {
+                                        peaks_settings.Separator = setting.GetValue().First();
+                                    }
+                                    break;
+                                case "peaksdecimalseparator":
+                                    if (setting.GetValue().Length != 1)
+                                    {
+                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                    }
+                                    else
+                                    {
+                                        peaks_settings.DecimalSeparator = setting.GetValue().First();
+                                    }
+                                    break;
+                                case "peaksformat":
+                                    if (setting.GetValue().ToLower() == "old")
+                                    {
+                                        peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                    }
+                                    else if (setting.GetValue().ToLower() == "new")
+                                    {
+                                        peaks_settings.FileFormat = FileFormat.Peaks.NewFormat();
+                                    }
+                                    else
+                                    {
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old' and 'New'"));
+                                    }
                                     break;
                                 default:
                                     outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
@@ -223,6 +269,8 @@ namespace AssemblyNameSpace
                                 param = new RunParameters.Input.FASTA();
                             if (file.EndsWith(".txt"))
                                 param = new RunParameters.Input.Reads();
+                            if (file.EndsWith(".csv"))
+                                param = peaks_settings;
                             else
                                 continue;
 

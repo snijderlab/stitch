@@ -6,20 +6,22 @@ Runname	: Peaks Example
 Runtype : Group
 
 -Input------------------
-PEAKS	->
-Path: ../008/Herceptin_HCD.csv
-Name: HCD
+Folder ->
+    Path: ../008/
+    PeaksFormat: Old
+    StartsWith: 190520
 <-
-PEAKS	->
-Path: ../008/Herceptin_ETHCD.csv
-Name: ETHCD
+Folder ->
+    Path: ../008/
+    PeaksFormat: new
+    StartsWith: Herceptin
 <-
 
 -Parameters-------------
-K	            : 9
-MinimalHomology : 7
-DuplicateThreshold: 7
-Reverse	        : True
+K	            : 7
+MinimalHomology : K-1
+DuplicateThreshold: K-1
+Reverse	        : False
 Alphabet->
 Path : ../alphabets/default_alphabet.csv
 Name	: Normal
@@ -74,6 +76,7 @@ Recombine->
 -Report-----------------
 FASTA	->
 Path	: ../../report-peaks.fasta
+OutputType : ConsensusSequence
 <-
 HTML ->
 Path    : ../../report-peaks.html

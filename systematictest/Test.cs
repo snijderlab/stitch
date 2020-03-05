@@ -53,6 +53,7 @@ namespace SystematicTest
                     var fi = new MetaData.FileIdentifier(file, name);
                     var reads = OpenReads.Fasta(fi);
                     var sequence = StringToSequence(reads[0].Item1, alphabet);
+                    var original_score = (reads[0].Item2 as MetaData.Fasta).Identifier.Split(':')[1].ToString();
                     var match = HelperFunctionality.SmithWaterman(original_sequences[name], sequence, alphabet);
                     var regions = new List<double>();
 
@@ -116,7 +117,7 @@ namespace SystematicTest
                     regions.Add((double)nmatch / (positions[region] - (region == 0 ? 0 : positions[region - 1])));
                     regions.Add((double)totalmatch / positions[positions.Length - 1]);
 
-                    var line = new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" };
+                    var line = new List<string> { pieces[1], pieces[2], pieces[3], pieces[4], pieces[5].Split(',')[0], pieces[6], pieces[7], original_score, match.Score.ToString(), match.StartTemplatePosition.ToString(), match.Alignment.CIGAR(), $"=HYPERLINK(\"C:\\Users\\douwe\\source\\repos\\research-project-amino-acid-alignment\\systematictest\\data\\{Path.GetFileNameWithoutExtension(file)}.html\"; \"HTML\")" };
                     foreach (var r in regions)
                     {
                         line.Add(Math.Min(1, r).ToString());
@@ -126,7 +127,7 @@ namespace SystematicTest
             }
 
             var sb = new StringBuilder();
-            sb.Append("sep=|\nType|Variant|Number|Proteases|Percentage|Alphabet|K|Score|StartPosition|Alignment|Link|F1|CDR1|F2|CDR2|F3|CDR3|F4|C HC|F1|CDR1|F2|CDR2|F3|CDR3|F4|C LC|Total\n");
+            sb.Append("sep=|\nType|Variant|Number|Proteases|Percentage|Alphabet|K|OriginalScore|Score|StartPosition|Alignment|Link|HcF1|HcCDR1|HcF2|HcCDR2|HcF3|HcCDR3|HcF4|HcC|LcF1|LcCDR1|LcF2|LcCDR2|LcF3|LcCDR3|LcF4|LcC|Total|\n");
 
             foreach (var line in results)
             {
