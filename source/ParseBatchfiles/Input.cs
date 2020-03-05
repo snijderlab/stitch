@@ -267,9 +267,9 @@ namespace AssemblyNameSpace
                             RunParameters.Input.Parameter param;
                             if (file.EndsWith(".fasta"))
                                 param = new RunParameters.Input.FASTA();
-                            if (file.EndsWith(".txt"))
+                            else if (file.EndsWith(".txt"))
                                 param = new RunParameters.Input.Reads();
-                            if (file.EndsWith(".csv"))
+                            else if (file.EndsWith(".csv"))
                                 param = peaks_settings;
                             else
                                 continue;
