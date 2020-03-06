@@ -303,6 +303,59 @@ namespace AssemblyNameSpace
             return match;
         }
 
+        public static int SmithWatermanStrings(string template, string query)
+        {
+            var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
+            int[] indices_template = new int[template.Length];
+            int[] indices_query = new int[query.Length];
+
+            // Cache the indices as otherwise even dictionary lookups will become costly
+            for (int i = 0; i < template.Length; i++)
+            {
+                indices_template[i] = (int)template[i];
+            }
+            for (int i = 0; i < query.Length; i++)
+            {
+                indices_query[i] = (int)query[i];
+            }
+
+            int max_value = 0;
+
+            int tem_pos, query_pos, score, a, b, c;
+
+            for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
+            {
+                for (query_pos = 1; query_pos <= query.Length; query_pos++)
+                {
+                    // Calculate the score for the current position
+                    score = indices_template[tem_pos - 1] == indices_query[query_pos - 1] ? 1 : 0;
+                    a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
+
+                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapInQuery || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? 1 : 4);
+                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapInTemplate || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? 1 : 4);
+
+                    if (a > b && a > c && a > 0)
+                    {
+                        score_matrix[tem_pos, query_pos] = (a, Direction.Match);
+                    }
+                    else if (b > c && b > 0)
+                        score_matrix[tem_pos, query_pos] = (b, Direction.GapInQuery);
+                    else if (c > 0)
+                        score_matrix[tem_pos, query_pos] = (c, Direction.GapInTemplate);
+                    else
+                        score_matrix[tem_pos, query_pos] = (0, Direction.NoMatch);
+
+                    // Keep track of the maximal value
+                    if (score_matrix[tem_pos, query_pos].Item1 > max_value)
+                    {
+                        max_value = score_matrix[tem_pos, query_pos].Item1;
+                    }
+                }
+            }
+
+            return max_value;
+        }
+
         enum Direction { NoMatch, GapInTemplate, GapInQuery, Match, MatchGap }
 
         public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)

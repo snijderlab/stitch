@@ -762,11 +762,20 @@ namespace AssemblyNameSpace
                     {
                         case "path":
                             if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var content = GetAllText(setting).GetValue(outEither).Split("\n");
+                            var alltext = GetAllText(setting);
+
+                            if (alltext.HasFailed())
+                            {
+                                alltext.GetValue(outEither);
+                                return outEither;
+                            }
+
+                            var content = alltext.GetValue(outEither).Split("\n");
                             var counter = new Tokenizer.Counter(new ParsedFile(GetFullPath(setting).GetValue(outEither), content));
                             result = ParseAlphabetData(content, counter).GetValue(outEither);
                             asettings.Alphabet = result.Item1;
                             asettings.ScoringMatrix = result.Item2;
+
                             break;
                         case "data":
                             //if (data != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -972,170 +981,197 @@ namespace AssemblyNameSpace
             public static ParseEither<string> GetFullPath(KeyValue setting)
             {
                 var outEither = new ParseEither<string>();
-                string path = setting.GetValue();
+                var res = GetFullPathPrivate(setting.GetValue());
 
-                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                if (res.Item2 == "")
                 {
-                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path contains invalid characters."));
+                    outEither.Value = Path.GetFullPath(res.Item1);
                 }
-                else if (string.IsNullOrWhiteSpace(path))
+                else
                 {
-                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path is empty."));
-                }
-                {
-                    try
-                    {
-                        outEither.Value = Path.GetFullPath(setting.GetValue());
-                    }
-                    catch (ArgumentException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The path cannot be found."));
-                    }
-                    catch (System.Security.SecurityException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid path", "The file could not be opened because of a lack of required permissions."));
-                    }
-                    catch (NotSupportedException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", "The path contains a colon ':' not part of a volume identifier."));
-                    }
-                    catch (PathTooLongException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", "The path length exceeds the system defined width."));
-                    }
-                    catch (Exception e)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.KeyRange.Full, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}."));
-                    }
+                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2));
                 }
                 return outEither;
             }
             public static ParseEither<string> GetFullPath(string path)
             {
                 var outEither = new ParseEither<string>();
+                var res = GetFullPathPrivate(path);
 
+                if (res.Item2 == "")
+                {
+                    outEither.Value = Path.GetFullPath(res.Item1);
+                }
+                else
+                {
+                    outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
+                }
+                return outEither;
+            }
+            static (string, string) GetFullPathPrivate(string path)
+            {
                 if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
                 {
-                    outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path contains invalid characters."));
+                    return ("Invalid path", "The path contains invalid characters.");
                 }
                 else if (string.IsNullOrWhiteSpace(path))
                 {
-                    outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path is empty."));
+                    return ("Invalid path", "The path is empty.");
                 }
                 {
                     try
                     {
-                        outEither.Value = Path.GetFullPath(path);
+                        return (Path.GetFullPath(path), "");
                     }
                     catch (ArgumentException)
                     {
-                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path cannot be found."));
+                        return ("Invalid path", "The path cannot be found.");
                     }
                     catch (System.Security.SecurityException)
                     {
-                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The file could not be opened because of a lack of required permissions."));
+                        return ("Invalid path", "The file could not be opened because of a lack of required permissions.");
                     }
                     catch (NotSupportedException)
                     {
-                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path contains a colon ':' not part of a volume identifier."));
+                        return ("Invalid path", "The path contains a colon ':' not part of a volume identifier.");
                     }
                     catch (PathTooLongException)
                     {
-                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", "The path length exceeds the system defined width."));
+                        return ("Invalid path", "The path length exceeds the system defined width.");
                     }
                     catch (Exception e)
                     {
-                        outEither.AddMessage(new ErrorMessage(path, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}."));
+                        return ("Invalid path", $"Unknown exception occurred when reading path: {e.Message}.");
                     }
                 }
-                return outEither;
             }
             public static ParseEither<string> GetAllText(KeyValue setting)
             {
                 var outEither = new ParseEither<string>();
-                var trypath = GetFullPath(setting);
 
-                if (trypath.HasFailed())
-                {
-                    outEither = new ParseEither<string>(trypath.Messages);
-                }
-                else if (Directory.Exists(trypath.Value))
-                {
-                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The file given is a directory."));
-                }
-                else
-                {
-                    try
-                    {
-                        outEither.Value = File.ReadAllText(trypath.Value);
-                    }
-                    catch (DirectoryNotFoundException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The path cannot be found, possibly on an unmapped drive."));
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The specified file could not be found."));
-                    }
-                    catch (IOException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program."));
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file."));
-                    }
-                    catch (System.Security.SecurityException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file."));
-                    }
-                }
+                var res = GetAllTextPrivate(setting.GetValue());
+
+                if (res.Item2 == "") outEither.Value = res.Item1;
+                else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
 
                 return outEither;
             }
             public static ParseEither<string> GetAllText(string path)
             {
                 var outEither = new ParseEither<string>();
-                var trypath = GetFullPath(path);
 
-                if (trypath.HasFailed())
+                var res = GetAllTextPrivate(path);
+
+                if (res.Item2 == "") outEither.Value = res.Item1;
+                else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
+
+                return outEither;
+            }
+            static (string, string, string) GetAllTextPrivate(string path)
+            {
+                var trypath = GetFullPathPrivate(path);
+
+                if (trypath.Item2 == "")
                 {
-                    Console.WriteLine("FAILED");
-                    outEither = new ParseEither<string>(trypath.Messages);
-                }
-                else if (Directory.Exists(trypath.Value))
-                {
-                    outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The file given is a directory."));
+                    if (Directory.Exists(trypath.Item1))
+                    {
+                        return ("Could not open file", "The file given is a directory.", "");
+                    }
+                    else
+                    {
+                        try
+                        {
+                            return (File.ReadAllText(trypath.Item1), "", "");
+                        }
+                        catch (DirectoryNotFoundException)
+                        {
+                            try
+                            {
+                                var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
+                                var drive = pieces[0].Split(':')[0];
+                                if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+                                {
+                                    string currentpath = $"{drive}:\\";
+                                    for (int i = 1; i < pieces.Length - 1; i++)
+                                    {
+                                        string nextpath = currentpath + pieces[i] + "\\";
+
+                                        if (!Directory.Exists(nextpath))
+                                        {
+                                            var directories = Directory.GetDirectories(currentpath);
+                                            var extra = "";
+
+                                            if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
+                                            else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                            else
+                                            {
+                                                int maxvalue = 0;
+                                                string maxname = "";
+                                                foreach (var dir in directories)
+                                                {
+                                                    int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
+                                                    if (score > maxvalue)
+                                                    {
+                                                        maxname = Path.GetFileName(dir);
+                                                        maxvalue = score;
+                                                    }
+                                                }
+                                                extra = $"\nDid you mean '{maxname}'?";
+                                            }
+
+                                            return ("Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
+                                        }
+                                        currentpath = nextpath;
+                                    }
+                                    // Will likely be never used because that would raise a FileNotFoundException
+                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
+                                }
+                                else
+                                {
+                                    return ("Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
+                                }
+                            }
+                            catch
+                            {
+                                return ("Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
+                            }
+                        }
+                        catch (FileNotFoundException)
+                        {
+                            int maxvalue = 0;
+                            string maxname = "";
+                            string name = Path.GetFileName(trypath.Item1);
+
+                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(trypath.Item1)))
+                            {
+                                int score = HelperFunctionality.SmithWatermanStrings(file, name);
+                                if (score > maxvalue)
+                                {
+                                    maxname = Path.GetFileName(file);
+                                    maxvalue = score;
+                                }
+                            }
+
+                            return ("Could not open file", "The specified file could not be found.", $"Did you mean '{maxname}'?");
+                        }
+                        catch (IOException)
+                        {
+                            return ("Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program.");
+                        }
+                        catch (UnauthorizedAccessException)
+                        {
+                            return ("Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file.");
+                        }
+                        catch (System.Security.SecurityException)
+                        {
+                            return ("Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file.");
+                        }
+                    }
                 }
                 else
                 {
-                    try
-                    {
-                        outEither.Value = File.ReadAllText(trypath.Value);
-                    }
-                    catch (DirectoryNotFoundException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The path cannot be found, possibly on an unmapped drive."));
-                    }
-                    catch (FileNotFoundException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The specified file could not be found."));
-                    }
-                    catch (IOException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program."));
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file."));
-                    }
-                    catch (System.Security.SecurityException)
-                    {
-                        outEither.AddMessage(new ErrorMessage(path, "Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file."));
-                    }
+                    return (trypath.Item1, trypath.Item2, "");
                 }
-
-                return outEither;
             }
         }
     }
