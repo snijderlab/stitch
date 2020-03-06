@@ -400,7 +400,7 @@ FASTA ->
 
 The path of reports can be generated dynamically, very useful if a batch files codes for many runs.
 
-For now the code does not generate any missing folders (but crashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO** create these folders automatically)
+The program will also create missing folders if needed.
 
 Key | Explanation
 --- | --- 
@@ -423,7 +423,7 @@ Path: Folder/Structure/Report-{id}.html
 -More advanced naming scheme
 Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 
--Not functional yet (does not create the folders) but would be nice
+-Creates the folders needed
 Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fasta
 ```
 
