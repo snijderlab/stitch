@@ -19,7 +19,7 @@ Alphabet->
     Path	: ../alphabets/common_errors_alphabet.csv
     Name	: Normal
 <-
-Template->
+Database->
     Path    : ../templates/IGHV.fasta
     Name    : IGHV Human
     Alphabet ->

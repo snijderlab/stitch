@@ -362,15 +362,15 @@ namespace AssemblyNameSpace
                     case "alphabet":
                         output.Alphabet.Add(ParseHelper.ParseAlphabet(pair).GetValue(outEither));
                         break;
-                    case "template":
-                        output.Template.Add(ParseHelper.ParseTemplate(pair, true).GetValue(outEither));
+                    case "database":
+                        output.Template.Add(ParseHelper.ParseDatabase(pair, true).GetValue(outEither));
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(new ErrorMessage(pair.KeyRange.Start, "Multiple definitions", "Cannot have multiple definitions of Recombine"));
 
                         var recsettings = new RunParameters.RecombineValue();
                         KeyValue order = null;
-                        var template_names = new List<string>();
+                        var database_names = new List<string>();
 
                         foreach (var setting in pair.GetValues())
                         {
@@ -386,29 +386,29 @@ namespace AssemblyNameSpace
                                 case "cutoffscore":
                                     recsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                     break;
-                                case "templates":
-                                    if (template_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    foreach (var template in setting.GetValues())
+                                case "databases":
+                                    if (database_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                    foreach (var database in setting.GetValues())
                                     {
-                                        if (template.Name == "template")
+                                        if (database.Name == "database")
                                         {
-                                            var templatevalue = ParseHelper.ParseTemplate(template, false).GetValue(outEither);
-                                            recsettings.Templates.Add(templatevalue);
+                                            var databasevalue = ParseHelper.ParseDatabase(database, false).GetValue(outEither);
+                                            recsettings.Databases.Add(databasevalue);
 
                                             // CHeck to see if the name is valid
-                                            if (template_names.Contains(templatevalue.Name))
+                                            if (database_names.Contains(databasevalue.Name))
                                             {
-                                                outEither.AddMessage(new ErrorMessage(template.KeyRange.Full, "Invalid name", "Template names have to be unique."));
+                                                outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique."));
                                             }
-                                            if (templatevalue.Name.Contains('*'))
+                                            if (databasevalue.Name.Contains('*'))
                                             {
-                                                outEither.AddMessage(new ErrorMessage(template.KeyRange.Full, "Invalid name", "Template names cannot contain '*'."));
+                                                outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
                                             }
-                                            template_names.Add(templatevalue.Name);
+                                            database_names.Add(databasevalue.Name);
                                         }
                                         else
                                         {
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Templates", "'Template'"));
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Databases", "'Database'"));
                                         }
                                     }
                                     break;
@@ -417,13 +417,13 @@ namespace AssemblyNameSpace
                                     recsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                                     break;
                                 default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Templates' and 'Alphabet'"));
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
                                     break;
                             }
                         }
 
                         if (recsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Alphabet"));
-                        if (template_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Templates"));
+                        if (database_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Databases"));
 
                         // Parse the order
                         if (order != null)
@@ -437,9 +437,9 @@ namespace AssemblyNameSpace
                                 InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
 
                                 var match = false;
-                                for (int i = 0; i < recsettings.Templates.Count(); i++)
+                                for (int i = 0; i < recsettings.Databases.Count(); i++)
                                 {
-                                    var template = recsettings.Templates[i];
+                                    var template = recsettings.Databases[i];
                                     if (order_string.StartsWith(template.Name))
                                     {
                                         order_string = order_string.Remove(0, template.Name.Length);
@@ -896,7 +896,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseEither<RunParameters.TemplateValue> ParseTemplate(KeyValue node, bool extended)
+            public static ParseEither<RunParameters.TemplateValue> ParseDatabase(KeyValue node, bool extended)
             {
                 var tsettings = new RunParameters.TemplateValue();
                 var outEither = new ParseEither<RunParameters.TemplateValue>(tsettings);

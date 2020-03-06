@@ -71,7 +71,7 @@ namespace AssemblyNameSpace
         /// The runparameters
         /// </summary>
         protected RunParameters.SingleRun singleRun;
-        protected List<TemplateDatabase> templates;
+        protected List<TemplateDatabase> databases;
         protected List<GraphPath> Paths;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
             reads_metadata = parameters.assembler.reads_metadata;
             alphabet = parameters.assembler.alphabet;
             singleRun = parameters.singleRun;
-            templates = parameters.templateDatabases;
+            databases = parameters.templateDatabases;
             Paths = parameters.assembler.GetAllPaths();
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;

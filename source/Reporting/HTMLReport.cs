@@ -258,7 +258,7 @@ namespace AssemblyNameSpace
 </tr>");
             string id, link;
 
-            var sorted = templates[templateIndex].Templates;
+            var sorted = databases[templateIndex].Templates;
             sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             for (int i = 0; i < sorted.Count(); i++)
@@ -427,7 +427,7 @@ namespace AssemblyNameSpace
         string CreateTemplateAside(int templateIndex, int i)
         {
             string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
-            var template = templates[templateIndex].Templates[i];
+            var template = databases[templateIndex].Templates[i];
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
@@ -454,11 +454,11 @@ namespace AssemblyNameSpace
             var best_templates = new List<(int, int, int)>();
             int cutoff = 0;
             //Pick each database
-            for (int k = 0; k < templates.Count(); k++)
+            for (int k = 0; k < databases.Count(); k++)
             { // Pick each template
-                for (int j = 0; j < templates[k].Templates.Count(); j++)
+                for (int j = 0; j < databases[k].Templates.Count(); j++)
                 {
-                    var match = templates[k].Templates[j].Matches[i];
+                    var match = databases[k].Templates[j].Matches[i];
                     if (match.Score > cutoff || best_templates.Count() < number)
                     {
                         best_templates.Add((k, j, match.Score));
@@ -880,9 +880,9 @@ namespace AssemblyNameSpace
                 buffer.AppendLine(CreateReadAside(i));
             }
             // Template Tables Asides
-            for (int t = 0; t < templates.Count(); t++)
+            for (int t = 0; t < databases.Count(); t++)
             {
-                for (int i = 0; i < templates[t].Templates.Count(); i++)
+                for (int i = 0; i < databases[t].Templates.Count(); i++)
                 {
                     buffer.AppendLine(CreateTemplateAside(t, i));
                 }

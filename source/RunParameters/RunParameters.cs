@@ -301,7 +301,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The templates to recombine.
             /// </summary>
-            public List<TemplateValue> Templates = new List<TemplateValue>();
+            public List<TemplateValue> Databases = new List<TemplateValue>();
 
             /// <summary>
             /// The alphabet to be used for all templates.

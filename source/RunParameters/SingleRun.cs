@@ -202,9 +202,9 @@ namespace AssemblyNameSpace
                         var rec_databases = new List<TemplateDatabase>();
                         var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : alphabet;
 
-                        for (int i = 0; i < Recombine.Templates.Count(); i++)
+                        for (int i = 0; i < Recombine.Databases.Count(); i++)
                         {
-                            var template = Recombine.Templates[i];
+                            var template = Recombine.Databases[i];
 
                             var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore, i);
                             database1.Match(assm.GetAllPaths(), max_threads);

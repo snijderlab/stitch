@@ -71,28 +71,28 @@ Recombine->
     -Separated by * means with a gap attached
     Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC
 
-    Templates->
-        Template->
+    Databases->
+        Database->
             Path : ../templates/IGHV.fasta
             Name : IGHV
         <-
-        Template->
+        Database->
             Path : ../templates/IGHJ.fasta
             Name : IGHJ
         <-
-        Template->
+        Database->
             Path : ../templates/IGHC_uniprot.fasta
             Name : IGHC
         <-
-        Template->
+        Database->
             Path : ../templates/IGKV.fasta
             Name : IGKV
         <-
-        Template->
+        Database->
             Path : ../templates/IGKJ.fasta
             Name : IGKJ
         <-
-        Template->
+        Database->
             Path : ../templates/IGKC.fasta
             Name : IGKC
         <-

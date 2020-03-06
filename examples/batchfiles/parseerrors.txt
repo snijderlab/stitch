@@ -29,22 +29,22 @@ Recombine->
     -Separated by * means with a gap attached
     Order : IGHV * UNKNOWN IGHC
 
-    Templates->
-        Template->
+    Databases->
+        Database->
             Path : ../templates/IGHV.fasta
             Type : something
             Name : IGHV
             Key : nothing
         <-
-        Template->
+        Database->
             Path : ../templates/IGHJ.fasta
             Name : IGHJ*
         <-
-        Template->
+        Database->
             Path : ../templates/IGHC.fasta
             Name : IGHC
         <-
-        Template->
+        Database->
             Path : ../templates/IGHC.fasta
             Name : IGHC
         <-

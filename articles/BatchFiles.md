@@ -279,7 +279,7 @@ Name	: Normal
 <-
 ```
 
-##### Template (m)
+##### Database (m)
 
 Defines how to match all paths in the graph to a database of templates.
 
@@ -292,7 +292,7 @@ CutoffScore | The mean score per position needed for a path to be included in th
 Alphabet | The alphabet to use. See 'Alphabet'. | (No Default)
 
 ```
-Template->
+Database ->
     Path    : ../templates/smallIGHV.fasta
     Type    : Fasta
     Name    : IGHV Human
@@ -306,14 +306,14 @@ Template->
 
 ##### Recombine (m)
 
-Defines how to recombine a set of templates. For example if antibody data is used this recombination can be used to first match all paths to every template (as in the previous argument 'Template'). After this the _n_ highest scoring templates out of each templatedatabase (called 'Template') are recombined in the order provided. These recombined templates are then used to align all paths. This should provide the opportunity to detect the placement of paths relative to each other and the most likely template in the database. Be warned having a large _n_ increases the runtime exponentially.
+Defines how to recombine a set of databases. For example if antibody data is used this recombination can be used to first match all paths to every template (as in the previous argument 'Database'). After this the _n_ highest scoring templates out of each database are recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime exponentially increases exponentially with _n_.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 n | The amount of templates to recombine from each database | (No Default)
-Order | The order in which the templates will be recombined. Defined as the names of the template possibly with gaps ('*') in between. | (No Default)
-CutoffScore | The mean score per position needed for a path to be included in the Template score. | 0
-Templates | The list of templates to use. See 'Template'. Templates exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
+Order | The order in which the databases will be recombined. Defined as a list of the names of the database in order possibly with gaps ('*') in between. | (No Default)
+CutoffScore | The mean score per position needed for a path to be included in the Database score. | 0
+Databases | The list of databases to use. See 'Database'. Databases exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
 Alphabet | The alphabet to use. See 'Alphabet' | (No Default)
 
 ```
@@ -321,16 +321,16 @@ Recombine->
     n : 1
     CutoffScore : 2.6
     Order : IGHV * IGHJ IGHC
-    Templates->
-        Template->
+    Databases->
+        Database->
             Path : ../templates/IGHV.fasta
             Name : IGHV
         <-
-        Template->
+        Database->
             Path : ../templates/IGHJ.fasta
             Name : IGHJ
         <-
-        Template->
+        Database->
             Path : ../templates/IGHC.fasta
             Name : IGHC
         <-
@@ -400,7 +400,7 @@ FASTA ->
 
 The path of reports can be generated dynamically, very useful if a batch files codes for many runs.
 
-For now the code does not generate any missing folders (but crashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO**)
+For now the code does not generate any missing folders (but crashes instead) so if any dynamically generated folder names are used these should be made up front. (**TODO** create these folders automatically)
 
 Key | Explanation
 --- | --- 

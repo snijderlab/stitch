@@ -20,7 +20,7 @@ Alphabet->
     Name	: Normal
     GapExtendPenalty : 200
 <-
-Template->
+Database->
     Path    : ../013/template.txt
     Name    : Template
     Alphabet ->
