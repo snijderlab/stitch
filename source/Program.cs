@@ -26,21 +26,14 @@ namespace AssemblyNameSpace
     class ToRunWithCommandLine
     {
         public const string VersionString = "0.0.0";
+        static Stopwatch stopwatch = new Stopwatch();
 
         /// <summary> The entry point. </summary>
         static void Main()
         {
-            var stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            Console.CancelKeyPress += delegate
-            {
-                var def = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine("== Aborted based on user input ==");
-                Console.ForegroundColor = def;
-                Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
-            };
+            Console.CancelKeyPress += HandleUserAbort;
 
             // Retrieve the name of the batch file to run
             string filename = "";
@@ -96,6 +89,18 @@ namespace AssemblyNameSpace
 
             stopwatch.Stop();
             Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}");
+        }
+
+        static void HandleUserAbort(object sender, ConsoleCancelEventArgs e)
+        {
+            e.Cancel = true;
+            var def = Console.ForegroundColor;
+            Console.ForegroundColor = ConsoleColor.Red;
+            Console.WriteLine("== Aborted based on user input ==");
+            Console.ForegroundColor = def;
+            Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
+            Console.Out.Flush();
+            Environment.Exit(1);
         }
     }
 }

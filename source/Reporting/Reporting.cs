@@ -110,9 +110,33 @@ namespace AssemblyNameSpace
             var buffer = Create();
             stopwatch.Stop();
             buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");
-            StreamWriter sw = File.CreateText(filename);
-            sw.Write(buffer);
-            sw.Close();
+            SaveAndCreateDirectories(filename, buffer);
+        }
+
+        void SaveAndCreateDirectories(string filename, string buffer)
+        {
+            var pieces = filename.Split(new char[] { '\\', '/' });
+            var drive = pieces[0].Split(':')[0];
+
+            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+            {
+                try
+                {
+                    Directory.CreateDirectory(Directory.GetParent(filename).FullName);
+                }
+                catch
+                {
+                    new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
+                }
+
+                StreamWriter sw = File.CreateText(filename);
+                sw.Write(buffer);
+                sw.Close();
+            }
+            else
+            {
+                new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
+            }
         }
         /// <summary>
         /// Retrieves all paths containing the specified condensed node id.
