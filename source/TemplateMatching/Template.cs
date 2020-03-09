@@ -99,7 +99,7 @@ namespace AssemblyNameSpace
                 {
                     if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
-                        Score += match.Score;
+                        Score += match.Score / match.TemplateSequence.Length;
                         Matches.Add(match);
                         if (Matches.Count() > 1)
                             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top

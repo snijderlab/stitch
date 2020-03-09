@@ -397,6 +397,38 @@ namespace AssemblyNameSpace
             return result;
         }
         /// <summary>
+        /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
+        /// </summary>
+        /// <returns>A list with all possible paths</returns>
+        public List<GraphPath> GetAllPathsMultipleReads()
+        {
+            var opts = new List<(int, List<int>)>();
+            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
+            {
+                var node = condensed_graph[node_index];
+
+                // Test if this is a starting node
+                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
+                {
+                    var paths = GetPaths(node_index, new List<int>());
+                    foreach (var path in paths)
+                    {
+                        opts.Add((node_index, path));
+                    }
+                }
+            }
+
+            var result = new List<GraphPath>() { Capacity = opts.Count() };
+
+            for (int i = 0; i < opts.Count(); i++)
+            {
+                var nodes = opts[i].Item2.Select(index => condensed_graph[index]).ToList();
+                if (nodes[0].Origins.Sum(x => x.Sum()) > nodes[0].Origins.Count) result.Add(new GraphPath(nodes, i));
+            }
+
+            return result;
+        }
+        /// <summary>
         /// Gets all paths starting from the given node.
         /// </summary>
         /// <param name="node_index">The node to start from</param>
