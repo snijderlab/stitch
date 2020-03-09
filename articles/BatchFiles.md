@@ -98,7 +98,7 @@ Inner parameter | Explanation | Default Value
 Path | The path to the file | (No Default)
 Cutoffscore | The score a reads must at least have to be included in the list of reads | 99
 LocalCutoffscore | The score a patch in a read should at least have to be included. | 90
-FileFormat | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old` and `New`. If `New` gives errors in reading the file maybe `Old` will work. | `New`
+FileFormat | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `X` and `X+`. If any gives errors in reading the file maybe another one will work. | `X+`
 MinLengthPatch | The minimal length of a patch before it is included | 3
 Name | Used to recognize the origin of reads from this file | (No Default)
 Separator | The separator used to separate cells in the csv | `,`

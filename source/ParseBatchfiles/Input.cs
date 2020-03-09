@@ -118,13 +118,17 @@ namespace AssemblyNameSpace
                                     {
                                         settings.FileFormat = FileFormat.Peaks.OldFormat();
                                     }
-                                    else if (setting.GetValue().ToLower() == "new")
+                                    else if (setting.GetValue().ToLower() == "x")
                                     {
-                                        settings.FileFormat = FileFormat.Peaks.NewFormat();
+                                        settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                    }
+                                    else if (setting.GetValue().ToLower() == "x+")
+                                    {
+                                        settings.FileFormat = FileFormat.Peaks.PeaksXplus();
                                     }
                                     else
                                     {
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old' and 'New'"));
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
                                     }
                                     break;
                                 default:
@@ -247,7 +251,7 @@ namespace AssemblyNameSpace
                                     }
                                     else if (setting.GetValue().ToLower() == "new")
                                     {
-                                        peaks_settings.FileFormat = FileFormat.Peaks.NewFormat();
+                                        peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
                                     }
                                     else
                                     {
@@ -670,6 +674,11 @@ namespace AssemblyNameSpace
 
                 return Value;
             }
+        }
+        public T ReturnOrDefault(T def)
+        {
+            if (this.HasFailed()) return def;
+            else return this.Value;
         }
         public T GetValue<Tout>(ParseEither<Tout> fail)
         {

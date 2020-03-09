@@ -31,11 +31,13 @@ namespace AssemblyNameSpace
             public int scan = -1;
             public int peptide = -1;
             public int tag_length = -1;
+            public int de_novo_score = -1;
             public int alc = -1;
             public int length = -1;
             public int mz = -1;
             public int z = -1;
             public int rt = -1;
+            public int predicted_rt = -1;
             public int area = -1;
             public int mass = -1;
             public int ppm = -1;
@@ -71,10 +73,10 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// A newer version of a PEAKS export.
+            /// Version X of PEAKS export. (made for build 31 january 2019)
             /// </summary>
             /// <returns>The fileformat.</returns>
-            public static FileFormat.Peaks NewFormat()
+            public static FileFormat.Peaks PeaksX()
             {
                 return new FileFormat.Peaks
                 {
@@ -100,10 +102,41 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
+            /// Version X+ of PEAKS export. (made for build 20 november 2019)
+            /// </summary>
+            /// <returns>The fileformat.</returns>
+            public static FileFormat.Peaks PeaksXplus()
+            {
+                return new FileFormat.Peaks
+                {
+                    fraction = 0,
+                    source_file = 1,
+                    feature = 2,
+                    peptide = 3,
+                    scan = 4,
+                    tag_length = 5,
+                    de_novo_score = 6,
+                    alc = 7,
+                    length = 8,
+                    mz = 9,
+                    z = 10,
+                    rt = 11,
+                    predicted_rt = 12,
+                    area = 13,
+                    mass = 14,
+                    ppm = 15,
+                    ptm = 16,
+                    local_confidence = 17,
+                    tag = 18,
+                    mode = 19
+                };
+            }
+
+            /// <summary>
             /// An custom version of a PEAKS fileformat.
             /// </summary>
             /// <returns>The fileformat.</returns>
-            public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int alc, int length, int mz, int z, int rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
+            public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int de_novo_score, int alc, int length, int mz, int z, int rt, int predicted_rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
             {
                 return new FileFormat.Peaks
                 {
@@ -113,11 +146,13 @@ namespace AssemblyNameSpace
                     peptide = peptide,
                     scan = scan,
                     tag_length = tag_length,
+                    de_novo_score = de_novo_score,
                     alc = alc,
                     length = length,
                     mz = mz,
                     z = z,
                     rt = rt,
+                    predicted_rt = predicted_rt,
                     area = area,
                     mass = mass,
                     ppm = ppm,

@@ -120,65 +120,62 @@ namespace AssemblyNameSpace
 
             List<string> lines = File.ReadLines(input_file.Path).ToList();
             var reads = new List<(string, MetaData.IMetaData)>();
+            var parsefile = new ParsedFile(input_file.Name, lines.ToArray());
 
-            int linenumber = 0;
-            foreach (var line in lines)
+            for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                linenumber++;
-                if (linenumber != 1)
+                try
                 {
-                    try
+                    var meta = new MetaData.Peaks(parsefile, linenumber, separator, decimalseparator, peaksformat, input_file);
+                    if (meta.Confidence >= cutoffscore)
                     {
-                        var meta = new MetaData.Peaks(line, separator, decimalseparator, peaksformat, input_file);
-                        if (meta.Confidence >= cutoffscore)
+                        if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
                         {
-                            if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
-                            {
-                                reads.Add((meta.Cleaned_sequence, meta));
-                            }
-                            else
-                            {
-                                int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
-                                ((MetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
-                            }
+                            reads.Add((meta.Cleaned_sequence, meta));
                         }
-                        // Find local patches of high enough confidence
                         else
                         {
-                            bool patch = false;
-                            int startpos = 0;
-                            for (int i = 0; i < meta.Local_confidence.Length; i++)
+                            int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
+                            ((MetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
+                        }
+                    }
+                    // Find local patches of high enough confidence
+                    else
+                    {
+                        bool patch = false;
+                        int startpos = 0;
+                        for (int i = 0; i < meta.Local_confidence.Length; i++)
+                        {
+                            if (!patch && meta.Local_confidence[i] >= localcutoffscore)
                             {
-                                if (!patch && meta.Local_confidence[i] >= localcutoffscore)
+                                // Found a potential starting position
+                                startpos = i;
+                                patch = true;
+                            }
+                            else if (patch && meta.Local_confidence[i] < localcutoffscore)
+                            {
+                                // Ends a patch
+                                patch = false;
+                                if (i - startpos >= min_length_patch)
                                 {
-                                    // Found a potential starting position
-                                    startpos = i;
-                                    patch = true;
-                                }
-                                else if (patch && meta.Local_confidence[i] < localcutoffscore)
-                                {
-                                    // Ends a patch
-                                    patch = false;
-                                    if (i - startpos >= min_length_patch)
+                                    // Long enough use it for assembly
+                                    char[] chunk = new char[i - startpos];
+
+                                    for (int j = startpos; j < i; j++)
                                     {
-                                        // Long enough use it for assembly
-                                        char[] chunk = new char[i - startpos];
-
-                                        for (int j = startpos; j < i; j++)
-                                        {
-                                            chunk[j - startpos] = meta.Cleaned_sequence[j];
-                                        }
-
-                                        reads.Add((new string(chunk), meta));
+                                        chunk[j - startpos] = meta.Cleaned_sequence[j];
                                     }
+
+                                    reads.Add((new string(chunk), meta));
                                 }
                             }
                         }
                     }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"ERROR while importing from PEAKS CSV {input_file.Name} at {input_file.Path} on line {linenumber}\n{e.Message}");
-                    }
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"ERROR while importing from PEAKS CSV {input_file.Name} at {input_file.Path} on line {linenumber}\n{e.Message}");
+                    if (linenumber < 3) break;
                 }
             }
             return reads;

@@ -43,7 +43,7 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void ExamplePeaksFiles(string file)
         {
-            OpenReads.Peaks(new MetaData.FileIdentifier(Globals.Root + file, ""), 99, 90, FileFormat.Peaks.NewFormat(), 5);
+            OpenReads.Peaks(new MetaData.FileIdentifier(Globals.Root + file, ""), 99, 90, FileFormat.Peaks.PeaksX(), 5);
         }
         /// <summary>
         /// All templates given as examples should be valid FASTA files

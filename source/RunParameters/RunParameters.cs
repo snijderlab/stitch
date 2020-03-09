@@ -102,7 +102,7 @@ namespace AssemblyNameSpace
                 {
                     Cutoffscore = 99;
                     LocalCutoffscore = 90;
-                    FileFormat = AssemblyNameSpace.FileFormat.Peaks.NewFormat();
+                    FileFormat = AssemblyNameSpace.FileFormat.Peaks.PeaksX();
                     MinLengthPatch = 3;
                     Separator = ',';
                     DecimalSeparator = '.';

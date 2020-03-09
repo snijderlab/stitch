@@ -111,6 +111,9 @@ namespace AssemblyNameSpace
             /// <summary> The sequence without modifications of the peptide. </summary>
             public string Cleaned_sequence = null;
 
+            /// <summary> The DeNovoScore as reported by PEAKS 10.5 </summary>
+            public int DeNovoScore = -1;
+
             /// <summary> The confidence score of the peptide. </summary>
             public int Confidence = -1;
 
@@ -122,6 +125,9 @@ namespace AssemblyNameSpace
 
             /// <summary> Retention time of the peptide. </summary>
             public double Retention_time = -1;
+
+            /// <summary> Predicted retention time of the peptide. </summary>
+            public string PredictedRetentionTime = null;
 
             /// <summary> Area of the peak of the peptide.</summary>
             public double Area = -1;
@@ -150,13 +156,45 @@ namespace AssemblyNameSpace
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
             /// <param name="file">Identifier for the originating file.</param>
-            public Peaks(string line, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
+            public Peaks(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
                 : base(file)
             {
                 try
                 {
+                    var messagebuffer = new ParseEither<object>();
                     char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
-                    string[] fields = line.Split(separator);
+                    //string[] fields = line.Split(separator);
+                    List<string> fields = new List<string>();
+                    List<Range> positions = new List<Range>();
+                    int lastpos = 0;
+                    string line = parsefile.Lines[linenumber];
+
+                    if (String.IsNullOrWhiteSpace(line)) throw new ParseException("Line is empty");
+
+                    for (int pos = 0; pos < line.Length; pos++)
+                    {
+                        if (line[pos] == separator)
+                        {
+                            fields.Add(line.Substring(lastpos, pos - lastpos));
+                            positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, pos, parsefile)));
+                            lastpos = pos + 1;
+                        }
+                    }
+
+                    fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
+                    positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
+
+                    if (fields.Count() < 3) throw new ParseException("Line has low amount of fields");
+
+                    int ConvertToInt(int pos)
+                    {
+                        return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).GetValue(messagebuffer);
+                    }
+
+                    double ConvertToDouble(int pos)
+                    {
+                        return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).GetValue(messagebuffer);
+                    }
 
                     // Assign all values
                     if (pf.fraction >= 0) Fraction = fields[pf.fraction];
@@ -168,38 +206,49 @@ namespace AssemblyNameSpace
                         Original_tag = fields[pf.peptide];
                         Cleaned_sequence = new string(Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
                     }
-                    if (pf.alc >= 0) Confidence = Convert.ToInt32(fields[pf.alc].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.mz >= 0) Mass_over_charge = Convert.ToDouble(fields[pf.mz].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.z >= 0) Charge = Convert.ToInt32(fields[pf.z].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.rt >= 0) Retention_time = Convert.ToDouble(fields[pf.rt].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.de_novo_score >= 0) DeNovoScore = ConvertToInt(pf.de_novo_score);
+                    if (pf.alc >= 0) Confidence = ConvertToInt(pf.alc);
+                    if (pf.mz >= 0) Mass_over_charge = ConvertToDouble(pf.mz);
+                    if (pf.z >= 0) Charge = ConvertToInt(pf.z);
+                    if (pf.rt >= 0) Retention_time = ConvertToDouble(pf.rt);
+                    if (pf.predicted_rt >= 0) PredictedRetentionTime = fields[pf.predicted_rt];
                     if (pf.area >= 0)
                     {
                         try
                         {
-                            Area = Convert.ToDouble(fields[pf.area].Replace(decimalseparator, current_decimal_separator));
+                            Area = ConvertToDouble(pf.area);
                         }
                         catch
                         {
                             Area = -1;
                         }
                     }
-                    if (pf.mass >= 0) Mass = Convert.ToDouble(fields[pf.mass].Replace(decimalseparator, current_decimal_separator));
-                    if (pf.ppm >= 0) Parts_per_million = Convert.ToDouble(fields[pf.ppm].Replace(decimalseparator, current_decimal_separator));
+                    if (pf.mass >= 0) Mass = ConvertToDouble(pf.mass);
+                    if (pf.ppm >= 0) Parts_per_million = ConvertToDouble(pf.ppm);
                     if (pf.ptm >= 0) Post_translational_modifications = fields[pf.ptm];
                     if (pf.local_confidence >= 0)
                     {
-                        Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                        if (Local_confidence.Length != Cleaned_sequence.Length)
-                            throw new Exception("The length of the sequence and amount of local score do not match.");
+                        try
+                        {
+                            Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
+                            if (Local_confidence.Length != Cleaned_sequence.Length)
+                                messagebuffer.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                        }
+                        catch
+                        {
+                            messagebuffer.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
+                        }
                     }
                     if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
+
+                    messagebuffer.ReturnOrFail();
 
                     // Initialize list
                     Other_scans = new List<string>();
                 }
                 catch (Exception e)
                 {
-                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {line}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
+                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {linenumber}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
                 }
             }
 
@@ -255,6 +304,9 @@ namespace AssemblyNameSpace
                 if (Feature != null)
                     output.Append($"<h3>Scan Feature</h3>\n<p>{Feature}</p>");
 
+                if (DeNovoScore >= 0)
+                    output.Append($"<h3>De Novo Score</h3>\n<p>{DeNovoScore}</p>");
+
                 if (Confidence >= 0)
                     output.Append($"<h3>Confidence score</h3>\n<p>{Confidence}</p>");
 
@@ -269,6 +321,9 @@ namespace AssemblyNameSpace
 
                 if (Retention_time >= 0)
                     output.Append($"<h3>Retention Time</h3>\n<p>{Retention_time}</p>");
+
+                if (PredictedRetentionTime != null)
+                    output.Append($"<h3>Predicted Retention Time</h3>\n<p>{PredictedRetentionTime}</p>");
 
                 if (Area >= 0)
                     output.Append($"<h3>Area</h3>\n<p>{Area}</p>");
