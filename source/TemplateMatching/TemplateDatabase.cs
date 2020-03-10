@@ -10,7 +10,6 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
-using System.Buffers;
 
 
 namespace AssemblyNameSpace
@@ -102,24 +101,21 @@ namespace AssemblyNameSpace
                 }
             }
 
-            var IntArrayPool = ArrayPool<int>.Shared;
-
             Parallel.ForEach(
                 runs,
                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, IntArrayPool, s.Item2))
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2))
             );
         }
         void MatchSerial(List<GraphPath> sequences)
         {
-            var IntArrayPool = ArrayPool<int>.Shared;
             int y = 0;
             foreach (var tem in Templates)
             {
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet, IntArrayPool, sequences[i]));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet, sequences[i]));
                     x++;
                 }
                 y++;

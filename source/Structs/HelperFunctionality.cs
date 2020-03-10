@@ -3,7 +3,12 @@ using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Buffers;
+using System.Diagnostics;
+using System.Text.RegularExpressions;
+using System.Collections.Concurrent;
+using System.Threading;
+using System.Threading.Tasks;
+using System.Globalization;
 
 namespace AssemblyNameSpace
 {
@@ -191,19 +196,14 @@ namespace AssemblyNameSpace
             return score;
         }
 
-        //static ArrayPool<int> IntArrayPool = ArrayPool<int>.Shared;
-
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, ArrayPool<int> IntArrayPool, GraphPath path = null)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
         {
-            //var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
-            int[] score_matrix = ArrayPool<int>.Shared.Rent((template.Length + 1) * (query.Length + 1));
-            int[] direction_matrix = ArrayPool<int>.Shared.Rent((template.Length + 1) * (query.Length + 1));
-            int[] indices_template = ArrayPool<int>.Shared.Rent(template.Length);
-            int[] indices_query = ArrayPool<int>.Shared.Rent(query.Length);
-            int rowsize = query.Length + 1;
+            var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
+            int[] indices_template = new int[template.Length];
+            int[] indices_query = new int[query.Length];
 
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
@@ -219,86 +219,50 @@ namespace AssemblyNameSpace
             int max_index_t = 0;
             int max_index_q = 0;
 
-            int tem_pos, query_pos, score, a, b, c, bpos, cpos, value;
-            Direction direction;
-            bool gap, tgap;
+            int tem_pos, query_pos, score, a, b, c;
+            bool gap;
             char gap_char = Alphabet.GapChar;
 
             for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
-                tgap = template[tem_pos - 1].Char == gap_char;
-
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    gap = tgap || query[query_pos - 1].Char == gap_char;
+                    gap = template[tem_pos - 1].Char == gap_char || query[query_pos - 1].Char == gap_char;
 
                     // Calculate the score for the current position
                     if (gap)
-                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] - alphabet.GapExtendPenalty; // Match Gap
+                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 - alphabet.GapExtendPenalty; // Match Gap
                     else
                     {
                         score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
-                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] + score; // Match
+                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
                     }
-
-                    bpos = rowsize * tem_pos + query_pos - 1;
-                    cpos = rowsize * (tem_pos - 1) + query_pos;
-
-                    try {
-                        
-                        b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.GapInQuery || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
-
- 
-                        c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.GapInTemplate || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
-                    } catch {
-                        throw new Exception($"At tempos {tem_pos} querypos {query_pos} with length {template.Length} and qlength {query.Length} bpos {bpos} cpos {cpos}.");
-                    }
+                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapInQuery || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapInTemplate || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     if (a > b && a > c && a > 0)
                     {
                         if (gap)
-                        {
-                            value = a;
-                            direction = Direction.MatchGap;
-                        }
+                            score_matrix[tem_pos, query_pos] = (a, Direction.MatchGap);
                         else
-                        {
-                            value = a;
-                            direction = Direction.Match;
-                        }
+                            score_matrix[tem_pos, query_pos] = (a, Direction.Match);
                     }
                     else if (!gap && b > c && b > 0)
-                    {
-                        value = b;
-                        direction = Direction.GapInQuery;
-                    }
+                        score_matrix[tem_pos, query_pos] = (b, Direction.GapInQuery);
                     else if (!gap && c > 0)
-                    {
-                        value = c;
-                        direction = Direction.GapInTemplate;
-                    }
+                        score_matrix[tem_pos, query_pos] = (c, Direction.GapInTemplate);
                     else
-                    {
-                        value = 0;
-                        direction = Direction.NoMatch;
-                    }
-
-                    score_matrix[rowsize * tem_pos + query_pos] = value;
-                    direction_matrix[rowsize * tem_pos + query_pos] = (int)direction;
+                        score_matrix[tem_pos, query_pos] = (0, Direction.NoMatch);
 
                     // Keep track of the maximal value
-                    if (value > max_value)
+                    if (score_matrix[tem_pos, query_pos].Item1 > max_value)
                     {
-                        max_value = value;
+                        max_value = score_matrix[tem_pos, query_pos].Item1;
                         max_index_t = tem_pos;
                         max_index_q = query_pos;
                     }
                 }
             }
-
-            ArrayPool<int>.Shared.Return(score_matrix, true);
-            ArrayPool<int>.Shared.Return(indices_query, true);
-            ArrayPool<int>.Shared.Return(indices_template, true);
 
             // Traceback
             // TODO: Adjust the score on each position based on the DOC, to create a fairer score
@@ -306,27 +270,27 @@ namespace AssemblyNameSpace
 
             while (true)
             {
-                switch (direction_matrix[rowsize * max_index_t + max_index_q])
+                switch (score_matrix[max_index_t, max_index_q].Item2)
                 {
-                    case (int)Direction.Match:
+                    case Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case (int)Direction.MatchGap:
+                    case Direction.MatchGap:
                         match_list.Add(new SequenceMatch.Match(1)); // TODO: Maybe Introduce the right gap?
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case (int)Direction.GapInTemplate:
+                    case Direction.GapInTemplate:
                         match_list.Add(new SequenceMatch.GapInTemplate(1));
                         max_index_t--;
                         break;
-                    case (int)Direction.GapInQuery:
+                    case Direction.GapInQuery:
                         match_list.Add(new SequenceMatch.GapInQuery(1));
                         max_index_q--;
                         break;
-                    case (int)Direction.NoMatch:
+                    case Direction.NoMatch:
                         goto END_OF_CRAWL; // I am hopefull this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
                         break;
                 }
@@ -334,8 +298,6 @@ namespace AssemblyNameSpace
 
         END_OF_CRAWL:
             match_list.Reverse();
-
-            ArrayPool<int>.Shared.Return(direction_matrix, true);
 
             var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, path);
             return match;
