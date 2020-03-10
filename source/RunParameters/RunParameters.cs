@@ -264,7 +264,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// An input for a template.
         /// </summary>
-        public class TemplateValue
+        public class DatabaseValue
         {
             /// <summary>
             /// The path to the file.
@@ -285,23 +285,32 @@ namespace AssemblyNameSpace
             /// The alphabet to be used for template matching.
             /// </summary>
             public AlphabetValue Alphabet;
+
+            /// <summary>
+            /// The average score needed for a path to be included in the alignment with a template.
+            /// </summary>
             public double CutoffScore = 0;
+
+            /// <summary>
+            /// The templates of this database
+            /// </summary>
+            public List<(string, MetaData.IMetaData)> Templates;
         }
 
         /// <summary>
-        /// To contain all parameters for recombination of templates.
+        /// To contain all parameters for recombination of Databases.
         /// </summary>
         public class RecombineValue
         {
             /// <summary>
-            /// The amount of templates to recombine from the highest scoring templates.
+            /// The amount of templates to recombine from the highest scoring Databases.
             /// </summary>
             public int N;
 
             /// <summary>
             /// The templates to recombine.
             /// </summary>
-            public List<TemplateValue> Databases = new List<TemplateValue>();
+            public List<DatabaseValue> Databases = new List<DatabaseValue>();
 
             /// <summary>
             /// The alphabet to be used for all templates.
@@ -375,7 +384,7 @@ namespace AssemblyNameSpace
                     output.Replace("{mh}", r.MinimalHomology.ToString());
                     output.Replace("{dt}", r.DuplicateThreshold.ToString());
                     output.Replace("{alph}", r.Alphabet.Name);
-                    output.Replace("{data}", r.Input.Count() == 1 ? r.Input[0].File.Name : "Group");
+                    output.Replace("{data}", r.Input.Count() == 1 ? r.Input[0][0].Item2.File.Name : "Group");
                     output.Replace("{name}", r.Runname);
                     output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
                     output.Replace("{time}", DateTime.Now.ToString("hh-mm-ss"));

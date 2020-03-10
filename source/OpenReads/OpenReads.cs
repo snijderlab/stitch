@@ -79,6 +79,7 @@ namespace AssemblyNameSpace
 
             foreach (var line in lines)
             {
+                if (line.Length == 0) continue;
                 if (line[0] == '>')
                 {
                     if (identifier != "")

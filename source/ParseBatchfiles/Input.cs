@@ -140,7 +140,9 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        output.DataParameters.Add(settings);
+                        var reads_peaks = OpenReads.Peaks(settings.File, settings.Cutoffscore, settings.LocalCutoffscore, settings.FileFormat, settings.MinLengthPatch, settings.Separator, settings.DecimalSeparator);
+                        outEither.Messages.AddRange(reads_peaks.Messages);
+                        if (!reads_peaks.HasFailed()) output.DataParameters.Add(reads_peaks.ReturnOrFail());
                         break;
 
                     case "reads":
@@ -167,7 +169,9 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        output.DataParameters.Add(rsettings);
+                        var reads_simple = OpenReads.Simple(rsettings.File);
+                        outEither.Messages.AddRange(reads_simple.Messages);
+                        if (!reads_simple.HasFailed()) output.DataParameters.Add(reads_simple.ReturnOrFail());
                         break;
 
                     case "fastainput":
@@ -194,7 +198,9 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        output.DataParameters.Add(fastasettings);
+                        var reads_fasta = OpenReads.Fasta(fastasettings.File);
+                        outEither.Messages.AddRange(reads_fasta.Messages);
+                        if (!reads_fasta.HasFailed()) output.DataParameters.Add(reads_fasta.ReturnOrFail());
                         break;
                     case "folder":
                         // Parse files one by one
@@ -268,20 +274,21 @@ namespace AssemblyNameSpace
                         {
                             if (!Path.GetFileName(file).StartsWith(startswith)) continue;
 
-                            RunParameters.Input.Parameter param;
+                            var fileId = new MetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
+
+                            ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
+
                             if (file.EndsWith(".fasta"))
-                                param = new RunParameters.Input.FASTA();
+                                folder_reads = OpenReads.Fasta(fileId);
                             else if (file.EndsWith(".txt"))
-                                param = new RunParameters.Input.Reads();
+                                folder_reads = OpenReads.Simple(fileId);
                             else if (file.EndsWith(".csv"))
-                                param = peaks_settings;
+                                folder_reads = OpenReads.Peaks(fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
                             else
                                 continue;
 
-                            param.File.Name = Path.GetFileNameWithoutExtension(file);
-                            param.File.Path = ParseHelper.GetFullPath(file).GetValue(outEither);
-
-                            output.DataParameters.Add(param);
+                            outEither.Messages.AddRange(folder_reads.Messages);
+                            if (!folder_reads.HasFailed()) output.DataParameters.Add(folder_reads.ReturnOrFail());
                         }
 
                         break;
@@ -932,10 +939,10 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseEither<RunParameters.TemplateValue> ParseDatabase(KeyValue node, bool extended)
+            public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(KeyValue node, bool extended)
             {
-                var tsettings = new RunParameters.TemplateValue();
-                var outEither = new ParseEither<RunParameters.TemplateValue>(tsettings);
+                var tsettings = new RunParameters.DatabaseValue();
+                var outEither = new ParseEither<RunParameters.DatabaseValue>(tsettings);
 
                 foreach (var setting in node.GetValues())
                 {

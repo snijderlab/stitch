@@ -54,7 +54,7 @@ namespace AssemblyNameSpace
             int totallength = condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()));
             int totalreadslength = reads.Aggregate(0, (a, b) => a + b.Length) * (singleRun.Reverse ? 2 : 1);
             int totalnodes = condensed_graph.Count();
-            string data = singleRun.Input.Count() == 1 ? singleRun.Input[0].File.Name : "Group";
+            string data = singleRun.Input.Count() == 1 ? singleRun.Input[0][0].Item2.File.Name : "Group";
             string link = singleRun.Report.Where(a => a is RunParameters.Report.HTML).Count() > 0 ? singleRun.Report.Where(a => a is RunParameters.Report.HTML).Aggregate("", (a, b) => (a + "=HYPERLINK(\"" + Path.GetFullPath(b.CreateName(singleRun)) + "\");")) : "";
             string line = $"{ID};{data};{singleRun.Alphabet.Alphabet};{singleRun.K};{singleRun.MinimalHomology};{singleRun.DuplicateThreshold};{meta_data.reads};{totalnodes};{(double)totallength / totalnodes};{(double)totalreadslength / totallength};{(double)condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L / condensed_graph.Count()};{meta_data.total_time};{link}\n";
 

@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The inputs for this run.
             /// </summary>
-            public List<Input.Parameter> DataParameters;
+            public List<List<(string, MetaData.IMetaData)>> DataParameters;
 
             /// <summary>
             /// The K or values of K for this run.
@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The template(s) to be used in this run.
             /// </summary>
-            public List<TemplateValue> Template;
+            public List<DatabaseValue> Template;
 
             /// <summary>
             /// The report(s) to be generated for this run.
@@ -81,12 +81,12 @@ namespace AssemblyNameSpace
             {
                 Runname = "";
                 Runtype = RuntypeValue.Group;
-                DataParameters = new List<Input.Parameter>();
+                DataParameters = new List<List<(string, MetaData.IMetaData)>>();
                 Reverse = ReverseValue.False;
                 MinimalHomology = new List<KArithmetic>();
                 DuplicateThreshold = new List<KArithmetic>();
                 Alphabet = new List<AlphabetValue>();
-                Template = new List<TemplateValue>();
+                Template = new List<DatabaseValue>();
                 Report = new List<Report.Parameter>();
                 Recombine = null;
             }

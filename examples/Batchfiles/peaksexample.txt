@@ -16,12 +16,12 @@ Peaks ->
     Format: X+
     Name: 01
     Separator: ,
-    Cutoffscore: 95
+    Cutoffscore: 98
     LocalCutoffscore: 98
 <-
 
 -Parameters-------------
-K	            : 8
+K	            : 10
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -34,7 +34,7 @@ Recombine->
     n : 2
 
     -Minimal average score per position to be included
-    CutoffScore : 1
+    CutoffScore : 2
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached

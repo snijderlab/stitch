@@ -40,11 +40,11 @@ namespace AssemblyNameSpace
 
             if (type == RunParameters.InputType.Reads)
             {
-                sequences = OpenReads.Simple(file);
+                sequences = OpenReads.Simple(file).ReturnOrFail();
             }
             else if (type == RunParameters.InputType.Fasta)
             {
-                sequences = OpenReads.Fasta(file);
+                sequences = OpenReads.Fasta(file).ReturnOrFail();
             }
             else
             {

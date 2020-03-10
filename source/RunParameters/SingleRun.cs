@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
             /// </summary>
-            public List<Input.Parameter> Input;
+            public List<List<(string, MetaData.IMetaData)>> Input;
 
             /// <summary>
             /// The value of K used in this run.
@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The template(s) used in this run.
             /// </summary>
-            public List<TemplateValue> Template;
+            public List<DatabaseValue> Template;
             public RecombineValue Recombine;
 
             /// <summary>
@@ -85,11 +85,11 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, Input.Parameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<DatabaseValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
-                Input = new List<Input.Parameter> { input };
+                Input = new List<List<(string, MetaData.IMetaData)>> { input };
                 K = k;
                 DuplicateThreshold = duplicateThreshold;
                 MinimalHomology = minimalHomology;
@@ -115,7 +115,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<Input.Parameter> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<TemplateValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, List<List<(string, MetaData.IMetaData)>> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<DatabaseValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -137,7 +137,7 @@ namespace AssemblyNameSpace
             /// <returns>The main parameters.</returns>
             public string Display()
             {
-                return $"\tRunname\t\t: {Runname}\n\tInput\t\t:{Input.Aggregate("", (a, b) => a + " " + b.File.Name)}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse}\n\tAlphabet\t: {Alphabet.Alphabet}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
+                return $"\tRunname\t\t: {Runname}\n\tK\t\t: {K}\n\tMinimalHomology\t: {MinimalHomology}\n\tReverse\t\t: {Reverse}\n\tAlphabet\t: {Alphabet.Alphabet}\n\tTemplate\t: {Template.Aggregate("", (a, b) => a + " " + b.Name)}";
             }
 
             /// <summary>
@@ -153,25 +153,7 @@ namespace AssemblyNameSpace
                     // Retrieve the input
                     foreach (var input in Input)
                     {
-                        ParseEither<List<(string, MetaData.IMetaData)>> reads;
-
-                        switch (input)
-                        {
-                            case Input.Peaks p:
-                                reads = OpenReads.Peaks(p.File, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Separator, p.DecimalSeparator);
-                                break;
-                            case Input.Reads r:
-                                reads = OpenReads.Simple(r.File);
-                                break;
-                            case Input.FASTA f:
-                                reads = OpenReads.Fasta(f.File);
-                                break;
-                            default:
-                                continue;
-                        }
-
-                        reads.PrintMessages();
-                        if (!reads.HasFailed()) assm.GiveReads(reads.ReturnOrFail());
+                        assm.GiveReads(input);
                     }
 
                     assm.Assemble();
