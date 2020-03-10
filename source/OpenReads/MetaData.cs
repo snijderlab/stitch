@@ -150,106 +150,143 @@ namespace AssemblyNameSpace
             /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans = null;
 
+            private Peaks(FileIdentifier file) : base(file) { }
+
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="line"> The CSV line to parse. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
             /// <param name="file">Identifier for the originating file.</param>
-            public Peaks(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
-                : base(file)
+            public static ParseEither<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
             {
-                try
+                var outeither = new ParseEither<Peaks>();
+                var peaks = new Peaks(file);
+                outeither.Value = peaks;
+
+                char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
+
+                List<string> fields = new List<string>();
+                List<Range> positions = new List<Range>();
+                int lastpos = 0;
+                string line = parsefile.Lines[linenumber];
+
+                if (String.IsNullOrWhiteSpace(line))
                 {
-                    var messagebuffer = new ParseEither<object>();
-                    char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
-                    //string[] fields = line.Split(separator);
-                    List<string> fields = new List<string>();
-                    List<Range> positions = new List<Range>();
-                    int lastpos = 0;
-                    string line = parsefile.Lines[linenumber];
-
-                    if (String.IsNullOrWhiteSpace(line)) throw new ParseException("Line is empty");
-
-                    for (int pos = 0; pos < line.Length; pos++)
-                    {
-                        if (line[pos] == separator)
-                        {
-                            fields.Add(line.Substring(lastpos, pos - lastpos));
-                            positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, pos, parsefile)));
-                            lastpos = pos + 1;
-                        }
-                    }
-
-                    fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
-                    positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
-
-                    if (fields.Count() < 3) throw new ParseException("Line has low amount of fields");
-
-                    int ConvertToInt(int pos)
-                    {
-                        return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).GetValue(messagebuffer);
-                    }
-
-                    double ConvertToDouble(int pos)
-                    {
-                        return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).GetValue(messagebuffer);
-                    }
-
-                    // Assign all values
-                    if (pf.fraction >= 0) Fraction = fields[pf.fraction];
-                    if (pf.source_file >= 0) Source_File = fields[pf.source_file];
-                    if (pf.feature >= 0) Feature = fields[pf.feature];
-                    if (pf.scan >= 0) ScanID = fields[pf.scan];
-                    if (pf.peptide >= 0)
-                    {
-                        Original_tag = fields[pf.peptide];
-                        Cleaned_sequence = new string(Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
-                    }
-                    if (pf.de_novo_score >= 0) DeNovoScore = ConvertToInt(pf.de_novo_score);
-                    if (pf.alc >= 0) Confidence = ConvertToInt(pf.alc);
-                    if (pf.mz >= 0) Mass_over_charge = ConvertToDouble(pf.mz);
-                    if (pf.z >= 0) Charge = ConvertToInt(pf.z);
-                    if (pf.rt >= 0) Retention_time = ConvertToDouble(pf.rt);
-                    if (pf.predicted_rt >= 0) PredictedRetentionTime = fields[pf.predicted_rt];
-                    if (pf.area >= 0)
-                    {
-                        try
-                        {
-                            Area = ConvertToDouble(pf.area);
-                        }
-                        catch
-                        {
-                            Area = -1;
-                        }
-                    }
-                    if (pf.mass >= 0) Mass = ConvertToDouble(pf.mass);
-                    if (pf.ppm >= 0) Parts_per_million = ConvertToDouble(pf.ppm);
-                    if (pf.ptm >= 0) Post_translational_modifications = fields[pf.ptm];
-                    if (pf.local_confidence >= 0)
-                    {
-                        try
-                        {
-                            Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                            if (Local_confidence.Length != Cleaned_sequence.Length)
-                                messagebuffer.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
-                        }
-                        catch
-                        {
-                            messagebuffer.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
-                        }
-                    }
-                    if (pf.mode >= 0) Fragmentation_mode = fields[pf.mode];
-
-                    messagebuffer.ReturnOrFail();
-
-                    // Initialize list
-                    Other_scans = new List<string>();
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line is empty", "", "", true));
+                    return outeither;
                 }
-                catch (Exception e)
+
+                for (int pos = 0; pos < line.Length; pos++)
                 {
-                    throw new Exception($"ERROR: Could not parse this line into Peaks format.\nLINE: {linenumber}\nERROR MESSAGE: {e.Message}\n{e.StackTrace}");
+                    if (line[pos] == separator)
+                    {
+                        fields.Add(line.Substring(lastpos, pos - lastpos));
+                        positions.Add(new Range(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile)));
+                        lastpos = pos + 1;
+                    }
                 }
+
+                fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
+                positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
+
+                if (fields.Count() < 3)
+                {
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line has low amount of fields", "", "", true));
+                    return outeither;
+                }
+
+                // Some helper functions
+                int ConvertToInt(int pos)
+                {
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1, outeither);
+                }
+
+                double ConvertToDouble(int pos)
+                {
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1, outeither);
+                }
+
+                bool CheckFieldExists(int pos)
+                {
+                    if (pos > fields.Count() - 1)
+                    {
+                        outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
+                        return false;
+                    }
+                    return true;
+                }
+
+                // Assign all values
+                if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))
+                    peaks.Fraction = fields[pf.fraction];
+
+                if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
+                    peaks.Source_File = fields[pf.source_file];
+
+                if (pf.feature >= 0 && CheckFieldExists(pf.feature))
+                    peaks.Feature = fields[pf.feature];
+
+                if (pf.scan >= 0 && CheckFieldExists(pf.scan))
+                    peaks.ScanID = fields[pf.scan];
+
+                if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
+                {
+                    peaks.Original_tag = fields[pf.peptide];
+                    peaks.Cleaned_sequence = new string(peaks.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
+                }
+
+                if (pf.de_novo_score >= 0 && CheckFieldExists(pf.de_novo_score))
+                    peaks.DeNovoScore = ConvertToInt(pf.de_novo_score);
+
+                if (pf.alc >= 0 && CheckFieldExists(pf.alc))
+                    peaks.Confidence = ConvertToInt(pf.alc);
+
+                if (pf.mz >= 0 && CheckFieldExists(pf.mz))
+                    peaks.Mass_over_charge = ConvertToDouble(pf.mz);
+
+                if (pf.z >= 0 && CheckFieldExists(pf.z))
+                    peaks.Charge = ConvertToInt(pf.z);
+
+                if (pf.rt >= 0 && CheckFieldExists(pf.rt))
+                    peaks.Retention_time = ConvertToDouble(pf.rt);
+
+                if (pf.predicted_rt >= 0 && CheckFieldExists(pf.predicted_rt))
+                    peaks.PredictedRetentionTime = fields[pf.predicted_rt];
+
+                if (pf.area >= 0 && CheckFieldExists(pf.area))
+                    peaks.Area = ConvertToDouble(pf.area);
+
+                if (pf.mass >= 0 && CheckFieldExists(pf.mass))
+                    peaks.Mass = ConvertToDouble(pf.mass);
+
+                if (pf.ppm >= 0 && CheckFieldExists(pf.ppm))
+                    peaks.Parts_per_million = ConvertToDouble(pf.ppm);
+
+                if (pf.ptm >= 0 && CheckFieldExists(pf.ptm))
+                    peaks.Post_translational_modifications = fields[pf.ptm];
+
+                if (pf.local_confidence >= 0 && CheckFieldExists(pf.local_confidence))
+                {
+                    try
+                    {
+                        peaks.Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
+                        if (peaks.Local_confidence.Length != peaks.Cleaned_sequence.Length)
+                            outeither.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                    }
+                    catch
+                    {
+                        outeither.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
+                    }
+                }
+
+                if (pf.mode >= 0 && CheckFieldExists(pf.mode))
+                    peaks.Fragmentation_mode = fields[pf.mode];
+
+                // Initialize list
+                peaks.Other_scans = new List<string>();
+
+                return outeither;
             }
 
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>

@@ -637,6 +637,14 @@ namespace AssemblyNameSpace
             }
             return false;
         }
+        public bool HasOnlyWarnings()
+        {
+            foreach (var msg in Messages)
+            {
+                if (!msg.Warning) return false;
+            }
+            return true;
+        }
         public ParseEither<Tout> Do<Tout>(Func<T, Tout> func, ErrorMessage failMessage = null)
         {
             if (!this.HasFailed())
@@ -653,15 +661,7 @@ namespace AssemblyNameSpace
         {
             if (this.HasFailed())
             {
-                var defaultColour = Console.ForegroundColor;
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing.\n");
-                Console.ForegroundColor = defaultColour;
-
-                foreach (var msg in Messages)
-                {
-                    msg.Print();
-                }
+                PrintMessages();
 
                 throw new ParseException("");
             }
@@ -675,8 +675,9 @@ namespace AssemblyNameSpace
                 return Value;
             }
         }
-        public T ReturnOrDefault(T def)
+        public T ReturnOrDefault<Tout>(T def, ParseEither<Tout> fail = null)
         {
+            if (fail != null) fail.Messages.AddRange(Messages);
             if (this.HasFailed()) return def;
             else return this.Value;
         }
@@ -688,6 +689,22 @@ namespace AssemblyNameSpace
         public void AddMessage(ErrorMessage failMessage)
         {
             Messages.Add(failMessage);
+        }
+
+        public void PrintMessages()
+        {
+            if (this.HasFailed())
+            {
+                var defaultColour = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing.\n");
+                Console.ForegroundColor = defaultColour;
+
+                foreach (var msg in Messages)
+                {
+                    msg.Print();
+                }
+            }
         }
     }
     /// <summary>

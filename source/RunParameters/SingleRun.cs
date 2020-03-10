@@ -156,7 +156,9 @@ namespace AssemblyNameSpace
                         switch (input)
                         {
                             case Input.Peaks p:
-                                assm.GiveReads(OpenReads.Peaks(p.File, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Separator, p.DecimalSeparator));
+                                var reads = OpenReads.Peaks(p.File, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Separator, p.DecimalSeparator);
+                                reads.PrintMessages();
+                                if (!reads.HasFailed()) assm.GiveReads(reads.ReturnOrFail());
                                 break;
                             case Input.Reads r:
                                 assm.GiveReads(OpenReads.Simple(r.File));
