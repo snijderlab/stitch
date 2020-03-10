@@ -24,54 +24,56 @@ namespace AssemblyNameSpace
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static List<(string, MetaData.IMetaData)> Simple(MetaData.FileIdentifier inputFile, char commentChar = '#')
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Simple(MetaData.FileIdentifier inputFile, char commentChar = '#')
         {
+            var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
+
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
+
+            if (possiblecontent.HasFailed())
+            {
+                outeither.Messages.AddRange(possiblecontent.Messages);
+                return outeither;
+            }
+
             var reads = new List<(string, MetaData.IMetaData)>();
+            outeither.Value = reads;
 
-            if (!File.Exists(inputFile.Path))
-                throw new Exception($"The specified file does not exist: {inputFile.Path}");
-
-            List<string> lines;
-            try
-            {
-                lines = File.ReadLines(inputFile.Path).ToList();
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"The specified file could not be read: {e.Message}");
-            }
+            var lines = possiblecontent.ReturnOrFail().Split('\n');
 
             foreach (var line in lines)
             {
+                if (line.Length == 0) continue;
                 if (line[0] != commentChar)
                     reads.Add((line.Trim(), new MetaData.None(inputFile)));
             }
 
-            return reads;
+            return outeither;
         }
 
         /// <summary> To open a file with reads. the file should be in fasta format
         /// so identifiers on a single line starting with '>' followed by an arbitrary
         /// number of lines with sequences. Because sometimes programs output the length
         /// of a line after every line this is stripped away.  </summary>
-        /// <param name="input_file"> The path to the file to read from. </param>
+        /// <param name="inputFile"> The path to the file to read from. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static List<(string, MetaData.IMetaData)> Fasta(MetaData.FileIdentifier input_file)
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(MetaData.FileIdentifier inputFile)
         {
+            var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
+
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
+
+            if (possiblecontent.HasFailed())
+            {
+                outeither.Messages.AddRange(possiblecontent.Messages);
+                return outeither;
+            }
+
             var reads = new List<(string, MetaData.IMetaData)>();
+            outeither.Value = reads;
 
-            if (!File.Exists(input_file.Path))
-                throw new Exception($"The specified file does not exist: {input_file.Name} {input_file.Path}");
+            var lines = possiblecontent.ReturnOrFail().Split('\n');
 
-            List<string> lines;
-            try
-            {
-                lines = File.ReadLines(input_file.Path).ToList();
-            }
-            catch (Exception e)
-            {
-                throw new Exception($"The specified CSV file {input_file.Name} at {input_file.Path} could not be read: {e.Message}");
-            }
             string identifier = "";
             var sequence = new StringBuilder();
 
@@ -82,7 +84,7 @@ namespace AssemblyNameSpace
                     if (identifier != "")
                     {
                         // Flush last sequence to list
-                        reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, input_file)));
+                        reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, inputFile)));
                     }
                     identifier = line.Substring(1).Trim();
                     sequence = new StringBuilder();
@@ -95,14 +97,14 @@ namespace AssemblyNameSpace
             if (identifier != "")
             {
                 // Flush last sequence to list
-                reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, input_file)));
+                reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, inputFile)));
             }
 
-            return reads;
+            return outeither;
         }
 
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
-        /// <param name="input_file"> Path to the CSV file. </param>
+        /// <param name="inputFile"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
         /// <param name="localcutoffscore"> Score used to filter patches in peptides
         /// with high enough confidence to be used contrary their low global confidence,
@@ -113,11 +115,11 @@ namespace AssemblyNameSpace
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
         /// <returns> A list of all reads found with their metadata. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Peaks(MetaData.FileIdentifier input_file, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Peaks(MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
         {
             var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(input_file.Path);
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
 
             if (possiblecontent.HasFailed())
             {
@@ -127,13 +129,14 @@ namespace AssemblyNameSpace
 
             List<string> lines = possiblecontent.ReturnOrFail().Split('\n').ToList();
             var reads = new List<(string, MetaData.IMetaData)>();
-            var parsefile = new ParsedFile(input_file.Name, lines.ToArray());
+            var parsefile = new ParsedFile(inputFile.Name, lines.ToArray());
 
             outeither.Value = reads;
 
+            // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, separator, decimalseparator, peaksformat, input_file);
+                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, separator, decimalseparator, peaksformat, inputFile);
 
                 if (parsed.HasOnlyWarnings()) continue;
 
@@ -143,6 +146,7 @@ namespace AssemblyNameSpace
                 {
                     if (linenumber < 3)
                     {
+                        // If the first real line already has errors it is very likely that the peaks format is chosen wrong so it should not overload the user with errors
                         outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Parsing stopped", "See above error messages for errors.", "Maybe try another version of the PEAKS format.", true));
                         break;
                     }

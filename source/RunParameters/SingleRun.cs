@@ -69,7 +69,7 @@ namespace AssemblyNameSpace
             /// The reports to be generated.
             /// </summary>
             public List<Report.Parameter> Report;
-            ProgressBar progressBar;
+            readonly ProgressBar progressBar;
 
             /// <summary>
             /// To create a single run with a single dataparameter as input.
@@ -153,20 +153,25 @@ namespace AssemblyNameSpace
                     // Retrieve the input
                     foreach (var input in Input)
                     {
+                        ParseEither<List<(string, MetaData.IMetaData)>> reads;
+
                         switch (input)
                         {
                             case Input.Peaks p:
-                                var reads = OpenReads.Peaks(p.File, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Separator, p.DecimalSeparator);
-                                reads.PrintMessages();
-                                if (!reads.HasFailed()) assm.GiveReads(reads.ReturnOrFail());
+                                reads = OpenReads.Peaks(p.File, p.Cutoffscore, p.LocalCutoffscore, p.FileFormat, p.MinLengthPatch, p.Separator, p.DecimalSeparator);
                                 break;
                             case Input.Reads r:
-                                assm.GiveReads(OpenReads.Simple(r.File));
+                                reads = OpenReads.Simple(r.File);
                                 break;
                             case Input.FASTA f:
-                                assm.GiveReads(OpenReads.Fasta(f.File));
+                                reads = OpenReads.Fasta(f.File);
                                 break;
+                            default:
+                                continue;
                         }
+
+                        reads.PrintMessages();
+                        if (!reads.HasFailed()) assm.GiveReads(reads.ReturnOrFail());
                     }
 
                     assm.Assemble();

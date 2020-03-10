@@ -4,6 +4,7 @@
         "CSVs",
         "Contig",
         "Cutoffscore",
+        "DENOVO",
         "ETHCD",
         "FASTA",
         "GGTGCCGACCGCGGACTGCT",
@@ -46,6 +47,7 @@
         "mers",
         "musl",
         "nbsp",
+        "newdata",
         "nuget",
         "recombinated",
         "recsettings",
@@ -56,6 +58,7 @@
         "svggraph",
         "svgstderr",
         "svgwriter",
+        "systematictest",
         "true's",
         "tsettings"
     ],

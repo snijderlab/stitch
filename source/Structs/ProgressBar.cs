@@ -7,10 +7,10 @@ namespace AssemblyNameSpace
 {
     public class ProgressBar
     {
-        object ValueKey = new object();
+        readonly object ValueKey = new object();
         int max_value;
         int current_value = 0;
-        Stopwatch stopwatch;
+        readonly Stopwatch stopwatch;
         bool free = true;
         Timer timer;
         int interval = 1000;

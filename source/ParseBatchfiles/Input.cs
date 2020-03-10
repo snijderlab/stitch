@@ -124,7 +124,7 @@ namespace AssemblyNameSpace
                                     }
                                     else if (setting.GetValue().ToLower() == "x+")
                                     {
-                                        settings.FileFormat = FileFormat.Peaks.PeaksXplus();
+                                        settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
                                     }
                                     else
                                     {

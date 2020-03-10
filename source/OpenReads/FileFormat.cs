@@ -105,7 +105,7 @@ namespace AssemblyNameSpace
             /// Version X+ of PEAKS export. (made for build 20 november 2019)
             /// </summary>
             /// <returns>The fileformat.</returns>
-            public static FileFormat.Peaks PeaksXplus()
+            public static FileFormat.Peaks PeaksXPlus()
             {
                 return new FileFormat.Peaks
                 {

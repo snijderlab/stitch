@@ -26,7 +26,7 @@ namespace AssemblyNameSpace
     class ToRunWithCommandLine
     {
         public const string VersionString = "0.0.0";
-        static Stopwatch stopwatch = new Stopwatch();
+        static readonly Stopwatch stopwatch = new Stopwatch();
 
         /// <summary> The entry point. </summary>
         static void Main()
