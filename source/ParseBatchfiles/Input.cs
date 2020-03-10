@@ -114,21 +114,20 @@ namespace AssemblyNameSpace
                                     }
                                     break;
                                 case "format":
-                                    if (setting.GetValue().ToLower() == "old")
+                                    switch (setting.GetValue().ToLower())
                                     {
-                                        settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                    }
-                                    else if (setting.GetValue().ToLower() == "x")
-                                    {
-                                        settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                    }
-                                    else if (setting.GetValue().ToLower() == "x+")
-                                    {
-                                        settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
-                                    }
-                                    else
-                                    {
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                        case "old":
+                                            settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                            break;
+                                        case "x":
+                                            settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                            break;
+                                        case "x+":
+                                            settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                            break;
+                                        default:
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                            break;
                                     }
                                     break;
                                 default:
@@ -251,17 +250,20 @@ namespace AssemblyNameSpace
                                     }
                                     break;
                                 case "peaksformat":
-                                    if (setting.GetValue().ToLower() == "old")
+                                    switch (setting.GetValue().ToLower())
                                     {
-                                        peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                    }
-                                    else if (setting.GetValue().ToLower() == "new")
-                                    {
-                                        peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                    }
-                                    else
-                                    {
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old' and 'New'"));
+                                        case "old":
+                                            peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                            break;
+                                        case "x":
+                                            peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                            break;
+                                        case "x+":
+                                            peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                            break;
+                                        default:
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                            break;
                                     }
                                     break;
                                 default:
@@ -941,6 +943,13 @@ namespace AssemblyNameSpace
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
             public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(KeyValue node, bool extended)
             {
+
+                // Parse files one by one
+                var file_path = "";
+                Range file_pos = node.ValueRange;
+
+                var peaks_settings = new RunParameters.Input.Peaks();
+
                 var tsettings = new RunParameters.DatabaseValue();
                 var outEither = new ParseEither<RunParameters.DatabaseValue>(tsettings);
 
@@ -949,22 +958,9 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "path":
-                            if (tsettings.Path != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            tsettings.Path = GetFullPath(setting).GetValue(outEither);
-                            break;
-                        case "type":
-                            switch (setting.GetValue().ToLower())
-                            {
-                                case "reads":
-                                    tsettings.Type = RunParameters.InputType.Reads;
-                                    break;
-                                case "fasta":
-                                    tsettings.Type = RunParameters.InputType.Fasta;
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template InputType", "'Reads' and 'Fasta'"));
-                                    break;
-                            }
+                            if (file_path != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            file_path = GetFullPath(setting).GetValue(outEither);
+                            file_pos = setting.ValueRange;
                             break;
                         case "name":
                             if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -985,6 +981,52 @@ namespace AssemblyNameSpace
                                 tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             }
                             break;
+                        case "peakscutoffscore":
+                            peaks_settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "peakslocalcutoffscore":
+                            peaks_settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "peaksminlengthpatch":
+                            peaks_settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "peaksseparator":
+                            if (setting.GetValue().Length != 1)
+                            {
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                            }
+                            else
+                            {
+                                peaks_settings.Separator = setting.GetValue().First();
+                            }
+                            break;
+                        case "peaksdecimalseparator":
+                            if (setting.GetValue().Length != 1)
+                            {
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                            }
+                            else
+                            {
+                                peaks_settings.DecimalSeparator = setting.GetValue().First();
+                            }
+                            break;
+                        case "peaksformat":
+                            switch (setting.GetValue().ToLower())
+                            {
+                                case "old":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                    break;
+                                case "x":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                    break;
+                                case "x+":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                    break;
+                                default:
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                    break;
+                            }
+                            break;
                         default:
                             var options = "'Path', 'Type', 'Name' and 'Alphabet'";
                             if (!extended) options = "'Path', 'Type' and 'Name'";
@@ -994,21 +1036,25 @@ namespace AssemblyNameSpace
                 }
 
                 if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
-                if (tsettings.Path == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Data or Path"));
+                if (file_path == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Path"));
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
-                // Try to detect the type of the file
-                if (tsettings.Type == RunParameters.InputType.Detect)
-                {
-                    if (tsettings.Path.EndsWith("fasta"))
-                    {
-                        tsettings.Type = RunParameters.InputType.Fasta;
-                    }
-                    else
-                    {
-                        tsettings.Type = RunParameters.InputType.Reads;
-                    }
-                }
+                // Open the file
+                var fileId = new MetaData.FileIdentifier() { Name = tsettings.Name, Path = ParseHelper.GetFullPath(file_path).GetValue(outEither) };
+
+                ParseEither<List<(string, MetaData.IMetaData)>> folder_reads = new ParseEither<List<(string, MetaData.IMetaData)>>();
+
+                if (file_path.EndsWith(".fasta"))
+                    folder_reads = OpenReads.Fasta(fileId);
+                else if (file_path.EndsWith(".txt"))
+                    folder_reads = OpenReads.Simple(fileId);
+                else if (file_path.EndsWith(".csv"))
+                    folder_reads = OpenReads.Peaks(fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
+                else
+                    outEither.AddMessage(new ErrorMessage(file_pos, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
+
+                outEither.Messages.AddRange(folder_reads.Messages);
+                if (!folder_reads.HasFailed()) tsettings.Templates = folder_reads.ReturnOrFail();
 
                 return outEither;
             }

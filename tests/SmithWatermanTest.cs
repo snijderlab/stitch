@@ -341,7 +341,7 @@ namespace AssemblyTestNameSpace
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var b = StringToSequence(path, alp);
 
-            TemplateDatabase db = new TemplateDatabase(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE"), InputType.Reads, alp, "TEST DB", 0, 0);
+            TemplateDatabase db = new TemplateDatabase(OpenReads.Simple(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE")).ReturnOrFail(), alp, "TEST DB", 0, 0);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
@@ -369,11 +369,11 @@ namespace AssemblyTestNameSpace
             var alphabet = new Alphabet(run.Alphabet);
             var assm = new Assembler(run.K, run.DuplicateThreshold, run.MinimalHomology, run.Reverse, alphabet);
 
-            assm.GiveReads(OpenReads.Simple(run.Input[0].File));
+            assm.GiveReads(run.Input[0]);
 
             assm.Assemble();
 
-            var database = new TemplateDatabase(new MetaData.FileIdentifier(template_parameter.Path, template_parameter.Name), template_parameter.Type, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore, 0);
+            var database = new TemplateDatabase(template_parameter.Templates, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore, 0);
 
             database.Match(assm.GetAllPaths(), Environment.ProcessorCount);
 

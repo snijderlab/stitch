@@ -171,7 +171,7 @@ namespace AssemblyNameSpace
                         var template = Template[i];
                         var alph = new Alphabet(template.Alphabet);
 
-                        var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, template.CutoffScore, i);
+                        var database1 = new TemplateDatabase(template.Templates, alph, template.Name, template.CutoffScore, i);
                         database1.Match(assm.GetAllPathsMultipleReads(), max_threads);
 
                         databases.Add(database1);
@@ -195,7 +195,7 @@ namespace AssemblyNameSpace
                         {
                             var template = Recombine.Databases[i];
 
-                            var database1 = new TemplateDatabase(new MetaData.FileIdentifier(template.Path, template.Name), template.Type, alph, template.Name, Recombine.CutoffScore, i);
+                            var database1 = new TemplateDatabase(template.Templates, alph, template.Name, Recombine.CutoffScore, i);
                             database1.Match(assm.GetAllPathsMultipleReads(), max_threads);
 
                             rec_databases.Add(database1);

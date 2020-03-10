@@ -28,28 +28,13 @@ namespace AssemblyNameSpace
         /// <param name="type">The type of the file</param>
         /// <param name="alp">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(MetaData.FileIdentifier file, RunParameters.InputType type, Alphabet alp, string name, double _cutoffScore, int index)
+        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alp, string name, double _cutoffScore, int index)
         {
             Name = name;
             Index = index;
             cutoffScore = _cutoffScore;
             alphabet = alp;
             Templates = new List<Template>();
-
-            List<(string, MetaData.IMetaData)> sequences;
-
-            if (type == RunParameters.InputType.Reads)
-            {
-                sequences = OpenReads.Simple(file).ReturnOrFail();
-            }
-            else if (type == RunParameters.InputType.Fasta)
-            {
-                sequences = OpenReads.Fasta(file).ReturnOrFail();
-            }
-            else
-            {
-                throw new Exception($"The type {type} is not a valid type for a template database file (file: {file})");
-            }
 
             for (int i = 0; i < sequences.Count(); i++)
             {

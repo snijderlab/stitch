@@ -31,11 +31,6 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// The type of an input file.
-        /// </summary>
-        public enum InputType { Detect, Reads, Fasta, Peaks }
-
-        /// <summary>
         /// To contain parameters for the input of data.
         /// </summary>
         public class Input
@@ -267,19 +262,9 @@ namespace AssemblyNameSpace
         public class DatabaseValue
         {
             /// <summary>
-            /// The path to the file.
-            /// </summary>
-            public string Path;
-
-            /// <summary>
             /// The name for this template, to recognize it.
             /// </summary>
             public string Name;
-
-            /// <summary>
-            /// The type of the file.
-            /// </summary>
-            public InputType Type;
 
             /// <summary>
             /// The alphabet to be used for template matching.
