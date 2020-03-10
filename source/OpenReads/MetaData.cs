@@ -199,12 +199,12 @@ namespace AssemblyNameSpace
                 // Some helper functions
                 int ConvertToInt(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1, outeither);
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1);
                 }
 
                 double ConvertToDouble(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1, outeither);
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1);
                 }
 
                 bool CheckFieldExists(int pos)

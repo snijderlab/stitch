@@ -80,58 +80,17 @@ namespace AssemblyNameSpace
                                     if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
                                     break;
-                                case "cutoffscore":
-                                    settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "localcutoffscore":
-                                    settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "minlengthpatch":
-                                    settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
                                 case "name":
                                     if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     settings.File.Name = setting.GetValue();
                                     break;
-                                case "separator":
-                                    if (setting.GetValue().Length != 1)
-                                    {
-                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    }
-                                    else
-                                    {
-                                        settings.Separator = setting.GetValue().First();
-                                    }
-                                    break;
-                                case "decimalseparator":
-                                    if (setting.GetValue().Length != 1)
-                                    {
-                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    }
-                                    else
-                                    {
-                                        settings.DecimalSeparator = setting.GetValue().First();
-                                    }
-                                    break;
-                                case "format":
-                                    switch (setting.GetValue().ToLower())
-                                    {
-                                        case "old":
-                                            settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                            break;
-                                        case "x":
-                                            settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                            break;
-                                        case "x+":
-                                            settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
-                                            break;
-                                        default:
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
-                                            break;
-                                    }
-                                    break;
                                 default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
+                                    var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
+                                    outEither.Messages.AddRange(peaks.Messages);
+
+                                    if (peaks.Value == false)
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
+
                                     break;
                             }
                         }
@@ -220,54 +179,13 @@ namespace AssemblyNameSpace
                                     if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     startswith = setting.GetValue();
                                     break;
-                                case "peakscutoffscore":
-                                    peaks_settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "peakslocalcutoffscore":
-                                    peaks_settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "peaksminlengthpatch":
-                                    peaks_settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "peaksseparator":
-                                    if (setting.GetValue().Length != 1)
-                                    {
-                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    }
-                                    else
-                                    {
-                                        peaks_settings.Separator = setting.GetValue().First();
-                                    }
-                                    break;
-                                case "peaksdecimalseparator":
-                                    if (setting.GetValue().Length != 1)
-                                    {
-                                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    }
-                                    else
-                                    {
-                                        peaks_settings.DecimalSeparator = setting.GetValue().First();
-                                    }
-                                    break;
-                                case "peaksformat":
-                                    switch (setting.GetValue().ToLower())
-                                    {
-                                        case "old":
-                                            peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                            break;
-                                        case "x":
-                                            peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                            break;
-                                        case "x+":
-                                            peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
-                                            break;
-                                        default:
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
-                                            break;
-                                    }
-                                    break;
                                 default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
+                                    var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
+                                    outEither.Messages.AddRange(peaks.Messages);
+
+                                    if (peaks.Value == false)
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
+
                                     break;
                             }
                         }
@@ -685,9 +603,8 @@ namespace AssemblyNameSpace
                 return Value;
             }
         }
-        public T ReturnOrDefault<Tout>(T def, ParseEither<Tout> fail = null)
+        public T ReturnOrDefault(T def)
         {
-            if (fail != null) fail.Messages.AddRange(Messages);
             if (this.HasFailed()) return def;
             else return this.Value;
         }
@@ -981,56 +898,16 @@ namespace AssemblyNameSpace
                                 tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             }
                             break;
-                        case "peakscutoffscore":
-                            peaks_settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                            break;
-                        case "peakslocalcutoffscore":
-                            peaks_settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                            break;
-                        case "peaksminlengthpatch":
-                            peaks_settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                            break;
-                        case "peaksseparator":
-                            if (setting.GetValue().Length != 1)
-                            {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                            }
-                            else
-                            {
-                                peaks_settings.Separator = setting.GetValue().First();
-                            }
-                            break;
-                        case "peaksdecimalseparator":
-                            if (setting.GetValue().Length != 1)
-                            {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                            }
-                            else
-                            {
-                                peaks_settings.DecimalSeparator = setting.GetValue().First();
-                            }
-                            break;
-                        case "peaksformat":
-                            switch (setting.GetValue().ToLower())
-                            {
-                                case "old":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                    break;
-                                case "x":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                    break;
-                                case "x+":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
-                                    break;
-                            }
-                            break;
                         default:
-                            var options = "'Path', 'Type', 'Name' and 'Alphabet'";
-                            if (!extended) options = "'Path', 'Type' and 'Name'";
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
+                            var peaks = GetPeaksSettings(setting, true, peaks_settings);
+                            outEither.Messages.AddRange(peaks.Messages);
+
+                            if (peaks.Value == false)
+                            {
+                                var options = "'Path', 'Type', 'Name' and 'Alphabet'";
+                                if (!extended) options = "'Path', 'Type' and 'Name'";
+                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
+                            }
                             break;
                     }
                 }
@@ -1055,6 +932,74 @@ namespace AssemblyNameSpace
 
                 outEither.Messages.AddRange(folder_reads.Messages);
                 if (!folder_reads.HasFailed()) tsettings.Templates = folder_reads.ReturnOrFail();
+
+                return outEither;
+            }
+            public static ParseEither<bool> GetPeaksSettings(KeyValue setting, bool withprefix, RunParameters.Input.Peaks peaks_settings)
+            {
+                var outEither = new ParseEither<bool>(true);
+                var name = setting.Name;
+
+                if (withprefix && !name.StartsWith("peaks"))
+                {
+                    outEither.Value = false;
+                    return outEither;
+                }
+
+                if (withprefix) name = name.Substring(5);
+
+                switch (name)
+                {
+                    case "cutoffscore":
+                        peaks_settings.Cutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        break;
+                    case "localcutoffscore":
+                        peaks_settings.LocalCutoffscore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        break;
+                    case "minlengthpatch":
+                        peaks_settings.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        break;
+                    case "separator":
+                        if (setting.GetValue().Length != 1)
+                        {
+                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                        }
+                        else
+                        {
+                            peaks_settings.Separator = setting.GetValue().First();
+                        }
+                        break;
+                    case "decimalseparator":
+                        if (setting.GetValue().Length != 1)
+                        {
+                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                        }
+                        else
+                        {
+                            peaks_settings.DecimalSeparator = setting.GetValue().First();
+                        }
+                        break;
+                    case "format":
+                        switch (setting.GetValue().ToLower())
+                        {
+                            case "old":
+                                peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                break;
+                            case "x":
+                                peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                break;
+                            case "x+":
+                                peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                break;
+                            default:
+                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                break;
+                        }
+                        break;
+                    default:
+                        outEither.Value = false;
+                        break;
+                }
 
                 return outEither;
             }

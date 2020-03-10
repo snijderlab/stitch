@@ -12,8 +12,9 @@ Runtype : Group
 -    StartsWith: 190520
 -<-
 Peaks ->
-    Path: Z:\users\3117030\Raw_Herceptin_201910\200305_HER_test_04_DENOVO_12\de novo peptides.csv
-    Format: X+
+    Path: ..\008\Herceptin_HCD.csv
+    -Z:\users\3117030\Raw_Herceptin_201910\200305_HER_test_04_DENOVO_12\de novo peptides.csv
+    Format: X
     Name: 01
     Separator: ,
     Cutoffscore: 98
