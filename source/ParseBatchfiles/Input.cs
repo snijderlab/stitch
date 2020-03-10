@@ -639,6 +639,7 @@ namespace AssemblyNameSpace
         }
         public bool HasOnlyWarnings()
         {
+            if (Messages.Count() == 0) return false;
             foreach (var msg in Messages)
             {
                 if (!msg.Warning) return false;
