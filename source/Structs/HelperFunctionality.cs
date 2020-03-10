@@ -191,10 +191,12 @@ namespace AssemblyNameSpace
             return score;
         }
 
+        //static ArrayPool<int> IntArrayPool = ArrayPool<int>.Shared;
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, ArrayPool<int> IntArrayPool, GraphPath path = null)
         {
             //var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
             int[] score_matrix = ArrayPool<int>.Shared.Rent((template.Length + 1) * (query.Length + 1));
