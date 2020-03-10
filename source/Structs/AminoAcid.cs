@@ -99,15 +99,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
         public int Homology(AminoAcid right)
         {
-            try
-            {
-                return alphabet.ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
-            }
-            catch (Exception e)
-            {
-                Console.WriteLine($"Got an error while looking up the homology for this code {this.Char} and that code {right.Char}, probably there is one (or more) character that is not valid");
-                throw e;
-            }
+            return alphabet.ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
         }
 
         /// <summary> Calculating homology between two arrays of AminoAcids, using the scoring matrix

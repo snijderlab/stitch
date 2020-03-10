@@ -44,7 +44,8 @@ namespace AssemblyNameSpace
             catch
             {
                 Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.");
-                return;
+                //return;
+                filename = @"C:\Users\Douwe\Source\Repos\research-project-amino-acid-alignment\examples\batchfiles\recombine_all_tests.txt";
             }
 
             // Try to parse the batch file
