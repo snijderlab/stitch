@@ -568,11 +568,11 @@ namespace AssemblyNameSpace
             // Convert to lines: (creates List<string>)
             // Combine horizontally
 
-            var lines = new StringBuilder[template.Matches.Count() + 1];
+            var lines = new StringBuilder[alignedSequences[0].Sequences.Count() + 1];
             const char gapchar = '-';
             var depthOfCoverage = new List<int>();
 
-            for (int i = 0; i < template.Matches.Count() + 1; i++)
+            for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
             {
                 lines[i] = new StringBuilder();
             }
@@ -584,7 +584,7 @@ namespace AssemblyNameSpace
                 int depth = 0;
 
                 // Add the aligned amino acid
-                for (int i = 0; i < template.Matches.Count(); i++)
+                for (int i = 0; i < Sequences.Count(); i++)
                 {
                     int index = Sequences[i].SequencePosition;
                     depth += Sequences[i].CoverageDepth;
@@ -599,7 +599,7 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        lines[i + 1].Append(template.Matches[i].QuerySequence[index - 1]);
+                        lines[i + 1].Append(template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1]);
                     }
                 }
 
@@ -609,7 +609,7 @@ namespace AssemblyNameSpace
                 // TODO: Unaligned for now
                 int max_length = 0;
                 // Get the max length of the gaps 
-                for (int i = 0; i < template.Matches.Count(); i++)
+                for (int i = 0; i < Gaps.Count(); i++)
                 {
                     if (Gaps[i].Gap != null && Gaps[i].Gap.ToString().Length > max_length)
                     {
@@ -621,7 +621,7 @@ namespace AssemblyNameSpace
 
                 var depthGap = new List<int[]>();
                 // Add gap to the lines
-                for (int i = 0; i < template.Matches.Count(); i++)
+                for (int i = 0; i < Gaps.Count(); i++)
                 {
                     string seq;
                     if (Gaps[i].Gap == null)
@@ -646,9 +646,9 @@ namespace AssemblyNameSpace
                 depthOfCoverage.AddRange(depthGapCombined);
             }
 
-            var aligned = new string[template.Matches.Count() + 1];
+            var aligned = new string[alignedSequences[0].Sequences.Count() + 1];
 
-            for (int i = 0; i < template.Matches.Count() + 1; i++)
+            for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
             {
                 aligned[i] = lines[i].ToString();
             }
@@ -922,6 +922,7 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(node.Index, AsideType.Contig);
             buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
             buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+
             foreach (var line in placed)
             {
                 string result = "<br>";

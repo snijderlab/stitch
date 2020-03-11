@@ -156,10 +156,49 @@ namespace AssemblyNameSpace
                 Capacity = Sequence.Length
             };
 
+            // Get levels (compress into somewhat lower amount of lines)
+            var levels = new List<List<(int Start, int Length)>>();
+            var level_lookup = new int[Matches.Count()];
+
+            for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
+            {
+                var start = Matches[matchindex].StartTemplatePosition;
+                var length = Matches[matchindex].LengthOnTemplate;
+                bool placed = false;
+
+                for (int l = 0; l < levels.Count(); l++)
+                {
+                    bool could_be_placed = true;
+                    // Try to determine if it clashes
+                    foreach ((var str, var len) in levels[l])
+                    {
+                        if ((start < str && start + length + 1 > str) || (start < str + len + 1 && start + length + 1 > str))
+                        {
+                            could_be_placed = false;
+                            break;
+                        }
+                    }
+
+                    if (could_be_placed)
+                    {
+                        levels[l].Add((start, length));
+                        level_lookup[matchindex] = l;
+                        placed = true;
+                        break;
+                    }
+                }
+
+                if (!placed)
+                {
+                    levels.Add(new List<(int Start, int Length)> { (start, length) });
+                    level_lookup[matchindex] = levels.Count() - 1;
+                }
+            }
+
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[Matches.Count()], new (int, IGap, int[], int)[Matches.Count()]));
+                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[levels.Count()], new (int, IGap, int[], int)[levels.Count()]));
             }
 
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
@@ -169,6 +208,7 @@ namespace AssemblyNameSpace
                 var template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
+                int level = level_lookup[matchindex];
 
                 foreach (var piece in match.Alignment)
                 {
@@ -177,8 +217,8 @@ namespace AssemblyNameSpace
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
-                            output[template_pos].Sequences[matchindex] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            if (!gap) output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
+                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
+                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
 
                             template_pos++;
                             seq_pos++;
@@ -195,22 +235,21 @@ namespace AssemblyNameSpace
                         int[] cov = match.Path.DepthOfCoverage.SubArray(seq_pos, len);
 
                         seq_pos += len;
-                        output[Math.Max(0, template_pos - 1)].Gaps[matchindex] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
+                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {
                         // Skip to the next section
                         for (int i = 0; i < gt.Length && template_pos < output.Count(); i++)
                         {
-                            output[template_pos].Sequences[matchindex] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
-                            output[template_pos].Gaps[matchindex] = (matchindex, new None(), new int[0], -1);
+                            output[template_pos].Sequences[level] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
+                            output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], -1);
                             template_pos++;
                         }
                         gap = false;
                     }
                 }
             }
-            // TODO the list should be squatted/compressed to use the minimal amount of lines
 
             // Filter DOC for duplicate entries
             foreach (var (Sequences, Gaps) in output)

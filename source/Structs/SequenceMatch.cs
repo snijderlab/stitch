@@ -57,6 +57,23 @@ namespace AssemblyNameSpace
             }
         }
 
+        /// <summary>
+        /// The total length on the template (matches + gaps in query)
+        /// </summary>
+        public int LengthOnTemplate
+        {
+            get
+            {
+                int sum = 0;
+                foreach (var m in Alignment)
+                {
+                    if (m is SequenceMatch.Match match) sum += match.Length;
+                    if (m is SequenceMatch.GapInQuery gc) sum += gc.Length;
+                }
+                return sum;
+            }
+        }
+
         public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, GraphPath path)
         {
             StartTemplatePosition = startTemplatePosition;
