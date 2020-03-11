@@ -202,9 +202,9 @@ namespace AssemblyNameSpace
         public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
-            Direction[] direction_matrix = new Direction[(template.Length + 1) * (query.Length + 1)];
-            int[] indices_template = new int[template.Length];
-            int[] indices_query = new int[query.Length];
+            int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
+            Span<int> indices_template = stackalloc int[template.Length];
+            Span<int> indices_query = stackalloc int[query.Length];
 
             int rowsize = query.Length + 1;
 
@@ -244,11 +244,11 @@ namespace AssemblyNameSpace
 
                     bpos = rowsize * tem_pos + query_pos - 1;
 
-                    b = score_matrix[bpos] - ((direction_matrix[bpos] == Direction.GapInQuery || direction_matrix[bpos] == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.GapInQuery || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     cpos = rowsize * (tem_pos - 1) + query_pos;
 
-                    c = score_matrix[cpos] - ((direction_matrix[cpos] == Direction.GapInTemplate || direction_matrix[cpos] == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.GapInTemplate || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     if (a > b && a > c && a > 0)
                     {
@@ -280,7 +280,7 @@ namespace AssemblyNameSpace
                     }
 
                     score_matrix[rowsize * tem_pos + query_pos] = value;
-                    direction_matrix[rowsize * tem_pos + query_pos] = direction;
+                    direction_matrix[rowsize * tem_pos + query_pos] = (int)direction;
 
                     // Keep track of the maximal value
                     if (value > max_value)
@@ -300,25 +300,25 @@ namespace AssemblyNameSpace
             {
                 switch (direction_matrix[rowsize * max_index_t + max_index_q])
                 {
-                    case Direction.Match:
+                    case (int)Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case Direction.MatchGap:
+                    case (int)Direction.MatchGap:
                         match_list.Add(new SequenceMatch.Match(1)); // TODO: Maybe Introduce the right gap?
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case Direction.GapInTemplate:
+                    case (int)Direction.GapInTemplate:
                         match_list.Add(new SequenceMatch.GapInTemplate(1));
                         max_index_t--;
                         break;
-                    case Direction.GapInQuery:
+                    case (int)Direction.GapInQuery:
                         match_list.Add(new SequenceMatch.GapInQuery(1));
                         max_index_q--;
                         break;
-                    case Direction.NoMatch:
+                    case (int)Direction.NoMatch:
                         goto END_OF_CRAWL; // I am hopefull this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
                         break;
                 }
