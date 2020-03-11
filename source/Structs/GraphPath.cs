@@ -20,7 +20,7 @@ namespace AssemblyNameSpace
         public readonly int[] DepthOfCoverage;
         public readonly int[] ContigID;
         public readonly int Score;
-        public readonly int Index;
+        public int Index;
         public string Identifiers
         {
             get

@@ -283,20 +283,35 @@ Name	: Normal
 
 Defines how to match all paths in the graph to a database of templates.
 
+Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
+
+When a database is used in a databaselist for a recombination database the `Alphabet` and `IncludeShortReads` parameters are considered invalid. These should be set on the enclosing recombination database.
+
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to the database. | (No Default)
-Type | The type of the database. Fasta or Reads. Tries to detect the type when no type is given. Based on the extension so .fasta is Fasta the rest is assumed to be Reads. | Detect
 Name | The name of the database. Used for display in the output. Can contain whitespace. | (No Default)
 CutoffScore | The mean score per position needed for a path to be included in the Template score. | 0
 Alphabet | The alphabet to use. See 'Alphabet'. | (No Default)
+IncludeShortReads | Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`) | True
 
 ```
 Database ->
     Path    : ../templates/smallIGHV.fasta
-    Type    : Fasta
     Name    : IGHV Human
     CutoffScore : 0.75
+    Alphabet ->
+        Path	: ../alphabets/blosum62.csv
+        Name	: Blosum62
+    <-
+<-
+
+Database ->
+    Path        : ../templates/smallIGHV.csv
+    PeaksFormat : Old
+    Name        : IGHV Human
+    CutoffScore : 4
+    IncludeShortReads : False
     Alphabet ->
         Path	: ../alphabets/blosum62.csv
         Name	: Blosum62

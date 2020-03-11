@@ -347,6 +347,21 @@ namespace AssemblyNameSpace
                                     if (recsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     recsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                                     break;
+                                case "includeshortreads":
+                                    switch (setting.GetValue().ToLower())
+                                    {
+                                        case "true":
+                                            recsettings.IncludeShortReads = true;
+                                            break;
+                                        case "false":
+                                            recsettings.IncludeShortReads = false;
+                                            break;
+                                        default:
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
+                                            break;
+                                    }
+
+                                    break;
                                 default:
                                     outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
                                     break;
@@ -860,7 +875,6 @@ namespace AssemblyNameSpace
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
             public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(KeyValue node, bool extended)
             {
-
                 // Parse files one by one
                 var file_path = "";
                 Range file_pos = node.ValueRange;
@@ -891,12 +905,32 @@ namespace AssemblyNameSpace
                             if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (!extended)
                             {
-                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet should not be defined."));
+                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
                             }
                             else
                             {
                                 tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             }
+                            break;
+                        case "includeshortreads":
+                            if (!extended)
+                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "IncludeShortReads cannot be defined here", "Inside a template in the templates list of a recombination IncludeShortReads can not be defined."));
+                            else
+                            {
+                                switch (setting.GetValue().ToLower())
+                                {
+                                    case "true":
+                                        tsettings.IncludeShortReads = true;
+                                        break;
+                                    case "false":
+                                        tsettings.IncludeShortReads = false;
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
+                                        break;
+                                }
+                            }
+
                             break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);

@@ -53,7 +53,7 @@ namespace AssemblyNameSpace
             }
             finally
             {
-                interval = (int)(interval * 1.1);
+                interval = (int)(interval * 1.05);
                 timer?.Change(interval, Timeout.Infinite);
             }
         }

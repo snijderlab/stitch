@@ -10,6 +10,7 @@ namespace AssemblyNameSpace
     {
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
+        public List<GraphPath> shortReads = new List<GraphPath>();
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         public List<MetaData.IMetaData> reads_metadata = null;
@@ -112,6 +113,15 @@ namespace AssemblyNameSpace
                 {
                     kmers.Add((read, r));
                     if (reverse) kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
+                }
+                else
+                {
+                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() })
+                    {
+                        DepthOfCoverage = Enumerable.Repeat(1, read.Length).ToArray(),
+                        DepthOfCoverageFull = Enumerable.Repeat(1, read.Length).ToArray()
+                    };
+                    shortReads.Add(new GraphPath(new List<CondensedNode> { node }, 0));
                 }
             }
             meta_data.kmers = kmers.Count;
@@ -367,8 +377,9 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
         /// </summary>
+        /// <param name="includeShortReads"> True if it also should return all filtered out reads (&lt;K). </param>
         /// <returns>A list with all possible paths</returns>
-        public List<GraphPath> GetAllPaths()
+        public List<GraphPath> GetAllPaths(bool includeShortReads)
         {
             var opts = new List<(int, List<int>)>();
             for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
@@ -386,12 +397,22 @@ namespace AssemblyNameSpace
                 }
             }
 
-            var result = new List<GraphPath>() { Capacity = opts.Count() };
+            var result = new List<GraphPath>() { Capacity = opts.Count() + (includeShortReads ? shortReads.Count() : 0) };
 
             for (int i = 0; i < opts.Count(); i++)
             {
                 var nodes = opts[i].Item2.Select(index => condensed_graph[index]).ToList();
                 result.Add(new GraphPath(nodes, i));
+            }
+
+            if (includeShortReads)
+            {
+                for (int i = 0; i < shortReads.Count(); i++)
+                {
+                    var path = shortReads[i];
+                    path.Index = opts.Count() + i;
+                    result.Add(path);
+                }
             }
 
             return result;

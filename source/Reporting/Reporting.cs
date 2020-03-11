@@ -89,7 +89,7 @@ namespace AssemblyNameSpace
             alphabet = parameters.assembler.alphabet;
             singleRun = parameters.singleRun;
             databases = parameters.templateDatabases;
-            Paths = parameters.assembler.GetAllPaths();
+            Paths = parameters.assembler.GetAllPaths(false);
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
 

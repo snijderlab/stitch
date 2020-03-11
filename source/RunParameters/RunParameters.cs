@@ -280,6 +280,11 @@ namespace AssemblyNameSpace
             /// The templates of this database
             /// </summary>
             public List<(string, MetaData.IMetaData)> Templates;
+
+            /// <summary>
+            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
+            /// </summary>
+            public bool IncludeShortReads = true;
         }
 
         /// <summary>
@@ -306,7 +311,16 @@ namespace AssemblyNameSpace
             /// The order in which the templates are to be recombined.
             /// </summary>
             public List<RecombineOrder.OrderPiece> Order = new List<RecombineOrder.OrderPiece>();
+
+            /// <summary>
+            /// The average score needed for a path to be included in the alignment with a template.
+            /// </summary>
             public double CutoffScore = 0;
+
+            /// <summary>
+            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
+            /// </summary>
+            public bool IncludeShortReads = true;
         }
 
         namespace RecombineOrder

@@ -74,8 +74,8 @@ namespace AssemblyNameSpace
         /// <param name="index"> The index of the node, the index in the de condensed graph. See <see cref="CondensedNode.Index"/>.</param>
         /// <param name="forward_index"> The index of the last node of the sequence (going from back to forth). See <see cref="CondensedNode.ForwardIndex"/>.</param>
         /// <param name="backward_index"> The index of the first node of the sequence (going from back to forth). See <see cref="CondensedNode.BackwardIndex"/>.</param>
-        /// <param name="forward_edges"> The forward edges from this node (indexes). See <see cref="CondensedNode.ForwardEdges"/>.</param>
-        /// <param name="backward_edges"> The backward edges from this node (indexes). See <see cref="CondensedNode.BackwardEdges"/>.</param>
+        /// <param name="forward_edges"> The forward edges from this node (indices). See <see cref="CondensedNode.ForwardEdges"/>.</param>
+        /// <param name="backward_edges"> The backward edges from this node (indices). See <see cref="CondensedNode.BackwardEdges"/>.</param>
         /// <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="CondensedNode.Origins"/>.</param>
         public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins)
         {

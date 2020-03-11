@@ -12,13 +12,13 @@ Runtype : Group
 -    StartsWith: 190520
 -<-
 Peaks ->
-    Path: ..\008\Herceptin_HCD.csv
-    -Z:\users\3117030\Raw_Herceptin_201910\200305_HER_test_04_DENOVO_12\de novo peptides.csv
-    Format: X
+    Path: Z:\users\3117030\Raw_Herceptin_201910\200305_HER_test_04_DENOVO_12\de novo peptides.csv
+    Format: X+
     Name: 01
     Separator: ,
     Cutoffscore: 98
     LocalCutoffscore: 98
+    MinLengthPatch: 6
 <-
 
 -Parameters-------------
@@ -40,6 +40,8 @@ Recombine->
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order : IGHV * IGHJ IGHC  IGKV IGKJ IGKC
+
+    IncludeShortReads: True
 
     Databases->
         Database->
