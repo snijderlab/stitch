@@ -731,86 +731,17 @@ namespace AssemblyNameSpace
             endoverhangbuffer.AppendLine($"</p></div></label></div>");
             if (endoverhang) buffer.Append(endoverhangbuffer.ToString());
 
-            // Display Consensus Sequence
-            /*var consensus = new StringBuilder();
             var consensus_sequence = template.CombinedSequence();
-
-            for (int i = 0; i < consensus_sequence.Count(); i++)
-            {
-                // Get the highest chars
-                string options = "";
-                int max = 0;
-                foreach (var item in consensus_sequence[i].AminoAcids)
-                {
-                    if (item.Value > max)
-                    {
-                        options = item.Key.ToString();
-                        max = item.Value;
-                    }
-                    else if (item.Value == max)
-                    {
-                        options += item.Key.ToString();
-                    }
-                }
-                if (options.Length > 1)
-                {
-                    consensus.Append("(");
-                    consensus.Append(options);
-                    consensus.Append(")");
-                }
-                else if (options.Length == 1)
-                {
-                    consensus.Append(options);
-                }
-                else
-                {
-                    consensus.Append("_");
-                }
-                // Get the highest gap
-                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
-                int max_gap_score = 0;
-                foreach (var item in consensus_sequence[i].Gaps)
-                {
-                    if (item.Value.Count > max_gap_score)
-                    {
-                        max_gap = new List<Template.IGap> { item.Key };
-                        max_gap_score = item.Value.Count;
-                    }
-                    else if (item.Value.Count == max)
-                    {
-                        max_gap.Add(item.Key);
-                    }
-                }
-                if (max_gap.Count() > 1)
-                {
-                    consensus.Append("(");
-                    foreach (var item in max_gap)
-                    {
-                        consensus.Append(item.ToString());
-                        consensus.Append("/");
-                    }
-                    consensus.Append(")");
-                }
-                else if (max_gap.Count() == 1)
-                {
-                    consensus.Append(max_gap[0].ToString());
-                }
-                else
-                {
-                    consensus.Append("_");
-                }
-            }*/
-            var consensus_sequence = template.CombinedSequence();
-            buffer.AppendLine("</div><h2>Consensus Sequence</h2><p style='word-break: break-all;'>");
+            buffer.AppendLine("</div><h2>Consensus Sequence</h2><p class='aside-seq'>");
             buffer.AppendLine(HelperFunctionality.ConsensusSequence(template));
             buffer.AppendLine("</p>");
 
             // Sequence logo
-            const double threshold = 0.1;
+            const double threshold = 0.3;
             const int height = 50;
             const int fontsize = 20;
 
-            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            buffer.Append($"<h2>Sequence Logo</h2><div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
                 buffer.Append("<div class='sequence-logo-position'>");
@@ -825,25 +756,11 @@ namespace AssemblyNameSpace
                 {
                     if ((double)item.Value / sum > threshold)
                     {
-                        buffer.Append($"<span style='transform: scaleY({(double)item.Value / sum * height / fontsize})'>{item.Key}</span>");
+                        var size = ((double)item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
                     }
                 }
                 buffer.Append("</div>");
-                /*// Get the highest gap
-                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
-                int max_gap_score = 0;
-                foreach (var item in consensus_sequence[i].Item2)
-                {
-                    if (item.Value.Count > max_gap_score)
-                    {
-                        max_gap = new List<Template.IGap> { item.Key };
-                        max_gap_score = item.Value.Count;
-                    }
-                    else if (item.Value.Count == max)
-                    {
-                        max_gap.Add(item.Key);
-                    }
-                }*/
             }
             buffer.Append("</div>");
 
