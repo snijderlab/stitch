@@ -201,9 +201,12 @@ namespace AssemblyNameSpace
         /// <param name="query">The query sequence to use.</param>
         public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
         {
-            var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
+            int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
+            Direction[] direction_matrix = new Direction[(template.Length + 1) * (query.Length + 1)];
             int[] indices_template = new int[template.Length];
             int[] indices_query = new int[query.Length];
+
+            int rowsize = query.Length + 1;
 
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
@@ -219,7 +222,8 @@ namespace AssemblyNameSpace
             int max_index_t = 0;
             int max_index_q = 0;
 
-            int tem_pos, query_pos, score, a, b, c;
+            int tem_pos, query_pos, score, a, b, c, bpos, cpos, value;
+            Direction direction;
             bool gap;
             char gap_char = Alphabet.GapChar;
 
@@ -231,33 +235,57 @@ namespace AssemblyNameSpace
 
                     // Calculate the score for the current position
                     if (gap)
-                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 - alphabet.GapExtendPenalty; // Match Gap
+                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] - alphabet.GapExtendPenalty; // Match Gap
                     else
                     {
                         score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
-                        a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
+                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] + score; // Match
                     }
-                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapInQuery || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
-                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapInTemplate || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+
+                    bpos = rowsize * tem_pos + query_pos - 1;
+
+                    b = score_matrix[bpos] - ((direction_matrix[bpos] == Direction.GapInQuery || direction_matrix[bpos] == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+
+                    cpos = rowsize * (tem_pos - 1) + query_pos;
+
+                    c = score_matrix[cpos] - ((direction_matrix[cpos] == Direction.GapInTemplate || direction_matrix[cpos] == Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     if (a > b && a > c && a > 0)
                     {
                         if (gap)
-                            score_matrix[tem_pos, query_pos] = (a, Direction.MatchGap);
+                        {
+                            value = a;
+                            direction = Direction.MatchGap;
+                        }
                         else
-                            score_matrix[tem_pos, query_pos] = (a, Direction.Match);
+                        {
+                            value = a;
+                            direction = Direction.Match;
+                        }
                     }
                     else if (!gap && b > c && b > 0)
-                        score_matrix[tem_pos, query_pos] = (b, Direction.GapInQuery);
+                    {
+                        value = b;
+                        direction = Direction.GapInQuery;
+                    }
                     else if (!gap && c > 0)
-                        score_matrix[tem_pos, query_pos] = (c, Direction.GapInTemplate);
+                    {
+                        value = c;
+                        direction = Direction.GapInTemplate;
+                    }
                     else
-                        score_matrix[tem_pos, query_pos] = (0, Direction.NoMatch);
+                    {
+                        value = 0;
+                        direction = Direction.NoMatch;
+                    }
+
+                    score_matrix[rowsize * tem_pos + query_pos] = value;
+                    direction_matrix[rowsize * tem_pos + query_pos] = direction;
 
                     // Keep track of the maximal value
-                    if (score_matrix[tem_pos, query_pos].Item1 > max_value)
+                    if (value > max_value)
                     {
-                        max_value = score_matrix[tem_pos, query_pos].Item1;
+                        max_value = value;
                         max_index_t = tem_pos;
                         max_index_q = query_pos;
                     }
@@ -270,7 +298,7 @@ namespace AssemblyNameSpace
 
             while (true)
             {
-                switch (score_matrix[max_index_t, max_index_q].Item2)
+                switch (direction_matrix[rowsize * max_index_t + max_index_q])
                 {
                     case Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
@@ -338,10 +366,6 @@ namespace AssemblyNameSpace
                     {
                         score_matrix[tem_pos, query_pos] = (a, Direction.Match);
                     }
-                    else if (b > c && b > 0)
-                        score_matrix[tem_pos, query_pos] = (b, Direction.GapInQuery);
-                    else if (c > 0)
-                        score_matrix[tem_pos, query_pos] = (c, Direction.GapInTemplate);
                     else
                         score_matrix[tem_pos, query_pos] = (0, Direction.NoMatch);
 
