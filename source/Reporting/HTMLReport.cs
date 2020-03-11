@@ -1135,14 +1135,57 @@ namespace AssemblyNameSpace
             return html;
         }
 
-        /// <summary> Creates an HTML report to view the results and metadata. </summary>
         public override string Create()
+        {
+            throw new Exception("HTML reports should be generated using the 'Save' function.");
+        }
+
+        /// <summary> Creates an HTML report to view the results and metadata. </summary>
+        public new void Save(string filename)
         {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
+            var foldername = Path.Join(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
+
+            Directory.CreateDirectory(foldername);
+            Directory.CreateDirectory(Path.Join(foldername, "paths"));
+
+            var excutablefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            void CopyAssetsFile(string name)
+            {
+                var source = Path.Join(excutablefolder, "assets", name);
+                if (File.Exists(source))
+                {
+                    try
+                    {
+                        File.Copy(source, Path.Join(foldername, name), true);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+                else
+                {
+                    new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
+                }
+            }
+
+            CopyAssetsFile("styles.css");
+            CopyAssetsFile("script.js");
+            CopyAssetsFile("Roboto-Regular.ttf");
+            CopyAssetsFile("Roboto-Medium.ttf");
+            CopyAssetsFile("RobotoMono-Regular.ttf");
+            CopyAssetsFile("RobotoMono-Medium.ttf");
+
+            // So assets are copied, folders can be made, now start working on the dissection of this beast on an HTML page
+
             string svg, simplesvg;
             (svg, simplesvg) = CreateGraph();
+
+            var clr = Console.ForegroundColor;
 
             string stylesheet = "/* Could not find the stylesheet */";
             if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
@@ -1150,7 +1193,6 @@ namespace AssemblyNameSpace
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Could not find the styles.css file. Please make sure the 'assets' folder is accessible. The HTML report is generated but the looks are not great.");
-                Console.ResetColor();
             }
 
             string script = "// Could not find the script";
@@ -1159,11 +1201,11 @@ namespace AssemblyNameSpace
             {
                 Console.ForegroundColor = ConsoleColor.Yellow;
                 Console.WriteLine($"Could not find the script.js file. Please make sure the 'assets' folder is accessible. The HTML report is generated but is not very interactive.");
-                Console.ResetColor();
             }
 
+            Console.ForegroundColor = clr;
+
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            stopwatch.Stop();
             meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
 
             string recombinationtable = "";
@@ -1225,7 +1267,10 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
 </div>
 </div>
 </body>";
-            return html;
+
+            stopwatch.Stop();
+            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");
+            SaveAndCreateDirectories(filename, html);
         }
     }
 }

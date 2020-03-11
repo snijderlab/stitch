@@ -113,7 +113,7 @@ namespace AssemblyNameSpace
             SaveAndCreateDirectories(filename, buffer);
         }
 
-        void SaveAndCreateDirectories(string filename, string buffer)
+        protected void SaveAndCreateDirectories(string filename, string buffer)
         {
             var pieces = filename.Split(new char[] { '\\', '/' });
             var drive = pieces[0].Split(':')[0];
