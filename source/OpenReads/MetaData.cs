@@ -418,7 +418,7 @@ namespace AssemblyNameSpace
             /// <returns>A string containing the HTML.</returns>
             public string ToHTML()
             {
-                return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<p>{Path}</p>";
+                return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<a href='file:///{path}' target='_blank'>{Path}</a>";
             }
         }
     }

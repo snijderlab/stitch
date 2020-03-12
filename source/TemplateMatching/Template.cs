@@ -37,7 +37,8 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The score for this template
         /// </summary>
-        public int Score { get; private set; }
+        public int Score { get { return (int)Math.Round((double)score / Sequence.Length); } }
+        int score;
 
         /// <summary>
         /// The list of matches on this template
@@ -79,7 +80,7 @@ namespace AssemblyNameSpace
             Name = name;
             Sequence = seq;
             MetaData = meta;
-            Score = 0;
+            score = 0;
             Matches = new List<SequenceMatch>();
             Alphabet = alphabet;
             cutoffScore = _cutoffScore;
@@ -99,7 +100,7 @@ namespace AssemblyNameSpace
                 {
                     if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
-                        Score += match.Score;// / match.TemplateSequence.Length;
+                        score += match.Score;// / match.TemplateSequence.Length;
                         Matches.Add(match);
                         if (Matches.Count() > 1)
                             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
@@ -199,6 +200,11 @@ namespace AssemblyNameSpace
             for (int i = 0; i < Sequence.Length; i++)
             {
                 output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[levels.Count()], new (int, IGap, int[], int)[levels.Count()]));
+                for (int j = 0; j < levels.Count(); j++)
+                {
+                    output[i].Sequences[j] = (-2, 0, 0, -1);
+                    output[i].Gaps[j] = (-2, new None(), new int[0], -1);
+                }
             }
 
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)

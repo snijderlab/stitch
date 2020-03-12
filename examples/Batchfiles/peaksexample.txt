@@ -12,7 +12,7 @@ Runtype : Group
 -    StartsWith: 190520
 -<-
 Peaks ->
-    Path: Z:\users\3117030\Raw_Herceptin_201910\200305_HER_test_04_DENOVO_12\de novo peptides.csv
+    Path: ..\008\200305_HER_test_04_DENOVO.csv
     Format: X+
     Name: 01
     Separator: ,
@@ -22,7 +22,7 @@ Peaks ->
 <-
 
 -Parameters-------------
-K	            : 10
+K	            : 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -35,7 +35,7 @@ Recombine->
     n : 2
 
     -Minimal average score per position to be included
-    CutoffScore : 2
+    CutoffScore : 4
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached

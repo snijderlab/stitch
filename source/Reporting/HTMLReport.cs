@@ -190,7 +190,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < reads.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Read);
-                link = GetAsideLink(i, AsideType.Read);
+                link = GetAsideLink(i, AsideType.Read, null, AssetsFolderName);
                 buffer.AppendLine($@"<tr id=""reads-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
@@ -228,9 +228,9 @@ namespace AssemblyNameSpace
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
     <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
-    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
-    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
-    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</td>
+    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig, null, AssetsFolderName))}</td>
+    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig, null, AssetsFolderName))}</td>
+    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, null, AssetsFolderName))}</td>
 </tr>");
             }
 
@@ -270,7 +270,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < sorted.Count(); i++)
             {
                 id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
-                link = GetAsideLink(templateIndex, i, AsideType.Template);
+                link = GetAsideLink(templateIndex, i, AsideType.Template, null, AssetsFolderName);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -298,7 +298,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < Paths.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Path);
-                link = GetAsideLink(i, AsideType.Path);
+                link = GetAsideLink(i, AsideType.Path, null, AssetsFolderName);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</td>
@@ -330,7 +330,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < sorted.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
-                link = GetAsideLink(i, AsideType.RecombinedTemplate);
+                link = GetAsideLink(i, AsideType.RecombinedTemplate, null, AssetsFolderName);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -372,7 +372,7 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < sorted.Count(); i++)
                 {
                     id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
-                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase);
+                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase, null, AssetsFolderName);
                     innerbuffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -409,7 +409,7 @@ namespace AssemblyNameSpace
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
+    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location, id))}</p>
 </div>";
         }
 
@@ -436,16 +436,19 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Template) + "s" };
             var template = databases[templateIndex].Templates[i];
+            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
-    <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    <h2>Consensus Sequence</h2>
+    {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {CreateTemplateAlignment(template, id, location)}
+    {alignment}
+    <h2>Template Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {template.MetaData.ToHTML()}
 </div>";
         }
@@ -484,7 +487,7 @@ namespace AssemblyNameSpace
             var sb = new StringBuilder();
             foreach (var tem in best_templates)
             {
-                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
+                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location, id)}</td></tr>");
             }
 
             var templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top 10 templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
@@ -505,7 +508,7 @@ namespace AssemblyNameSpace
     <h2>Sequence Length</h2>
     <p>{Paths[i].Sequence.Length}</p>
     <h2>Path</h2>
-    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
+    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location, id)).Substring(3)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -521,23 +524,26 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinedTemplate) + "s" };
             var template = RecombinedDatabase.Templates[i];
+            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
 
             string order = "";
             if (template.Recombination != null)
             {
-                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
+                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location, id)).Substring(3)}</p>";
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
-    <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    <h2>Consensus Sequence</h2>
+    {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
     {order}
-    {CreateTemplateAlignment(template, id, location)}
+    {alignment}
+    <h2>Template Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
 </div>";
         }
 
@@ -548,23 +554,26 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinationDatabase) + "s" };
             var template = RecombinationDatabases[index].Templates[i];
+            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
-    <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    <h2>Consensus Sequence</h2>
+    {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Out of database</h2>
     <p>{template.Name}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {CreateTemplateAlignment(template, id, location)}
+    {alignment}
+    <h2>Template Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {template.MetaData.ToHTML()}
 </div>";
         }
 
-        string CreateTemplateAlignment(Template template, string id, List<string> location)
+        (string, string) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -579,19 +588,19 @@ namespace AssemblyNameSpace
             // Convert to lines: (creates List<string>)
             // Combine horizontally
 
-            var lines = new StringBuilder[alignedSequences[0].Sequences.Count() + 1];
+            var lines = new List<(string, int, int)>[alignedSequences[0].Sequences.Count() + 1];
             const char gapchar = '-';
             var depthOfCoverage = new List<int>();
 
             for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
             {
-                lines[i] = new StringBuilder();
+                lines[i] = new List<(string, int, int)>();
             }
 
             for (int template_pos = 0; template_pos < alignedSequences.Count(); template_pos++)
             {
                 var (Sequences, Gaps) = alignedSequences[template_pos];
-                lines[0].Append(template.Sequence[template_pos]);
+                lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1));
                 int depth = 0;
 
                 // Add the aligned amino acid
@@ -602,15 +611,15 @@ namespace AssemblyNameSpace
 
                     if (index == -1)
                     {
-                        lines[i + 1].Append(gapchar);
+                        lines[i + 1].Add((gapchar.ToString(), -1, -1));
                     }
                     else if (index == 0)
                     {
-                        lines[i + 1].Append("\u00A0"); // Non breaking space
+                        lines[i + 1].Add(("\u00A0", -1, -1)); // Non breaking space
                     }
                     else
                     {
-                        lines[i + 1].Append(template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1]);
+                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), template.Matches[Sequences[i].MatchIndex].Path.Index, index - 1));
                     }
                 }
 
@@ -628,7 +637,7 @@ namespace AssemblyNameSpace
                     }
                 }
                 // Add gap to the template
-                lines[0].Append(new string(gapchar, max_length));
+                lines[0].Add((new string(gapchar, max_length), -1, -1));
 
                 var depthGap = new List<int[]>();
                 // Add gap to the lines
@@ -647,7 +656,8 @@ namespace AssemblyNameSpace
                         Gaps[i].CoverageDepth.CopyTo(d, max_length - Gaps[i].CoverageDepth.Length);
                         depthGap.Add(d);
                     }
-                    lines[i + 1].Append(seq.PadRight(max_length, gapchar));
+                    var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Path.Index;
+                    lines[i + 1].Add((seq.PadRight(max_length, gapchar), index, Sequences[i].SequencePosition - 1));
                 }
                 var depthGapCombined = new int[max_length];
                 foreach (var d in depthGap)
@@ -661,7 +671,12 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
             {
-                aligned[i] = lines[i].ToString();
+                StringBuilder sb = new StringBuilder();
+                foreach ((var text, _, _) in lines[i])
+                {
+                    sb.Append(text);
+                }
+                aligned[i] = sb.ToString();
             }
 
             buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{depthOfCoverage.Max()}\">");
@@ -673,13 +688,11 @@ namespace AssemblyNameSpace
             frontoverhangbuffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
             for (int i = 1; i < aligned.Count(); i++)
             {
-                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
-                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
                 {
                     frontoverhang = true;
-                    frontoverhangbuffer.Append($"<a href=\"{path}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
+                    frontoverhangbuffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
@@ -694,8 +707,53 @@ namespace AssemblyNameSpace
 
             if (aligned.Length > 0)
             {
+                int alignedindex = 0;
+                int alignedlength = 0;
                 for (int block = 0; block <= aligned[0].Length / blocklength; block++)
                 {
+                    // Get the right id's to generate the right links
+                    while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count())
+                    {
+                        alignedlength += lines[0][alignedindex].Item1.Length;
+                        alignedindex++;
+                    }
+                    var indices = new int[aligned.Length];
+                    var positions = new int[aligned.Length];
+
+                    for (int i = 1; i < aligned.Length; i++)
+                    {
+                        int index = lines[i][alignedindex].Item2;
+                        int position = lines[i][alignedindex].Item3;
+                        int additionallength = 0;
+                        int additionalindex = 1;
+
+                        while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count())
+                        {
+                            int thisindex = lines[i][alignedindex + additionalindex].Item2;
+                            int thisposition = lines[i][alignedindex + additionalindex].Item3;
+
+                            if (index == -1)
+                            {
+                                index = thisindex;
+                                position = thisposition;
+                            }
+                            else if (thisindex != -1 && thisindex != index)
+                            {
+                                // If two reads are on this patch just set the link to none.
+                                index = -1;
+                                position = -1;
+                                break;
+                            }
+
+                            additionallength += lines[0][alignedindex + additionalindex].Item1.Length;
+                            additionalindex++;
+                        }
+
+                        indices[i] = index;
+                        positions[i] = position;
+                    }
+
+
                     // Add the sequence and the number to tell the position
                     string number = "";
                     if (aligned[0].Length - block * blocklength >= blocklength)
@@ -706,10 +764,13 @@ namespace AssemblyNameSpace
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
                     for (int i = 1; i < aligned.Length; i++)
                     {
-                        string rid = GetAsideIdentifier(template.Matches[i - 1].Path.Index, AsideType.Path);
-                        string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                         string result = "";
-                        if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                        if (indices[i] >= 0)
+                        {
+                            var rid = GetAsideIdentifier(indices[i], AsideType.Path);
+                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
+                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                        }
                         buffer.Append(result);
                         buffer.Append("<br>");
                     }
@@ -729,13 +790,11 @@ namespace AssemblyNameSpace
             endoverhangbuffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
             for (int i = 1; i < aligned.Count(); i++)
             {
-                string rid = GetAsideIdentifier(i - 1, AsideType.Path);
-                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
                 {
                     endoverhang = true;
-                    endoverhangbuffer.Append($"<a href=\"{path}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
+                    endoverhangbuffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
@@ -744,11 +803,10 @@ namespace AssemblyNameSpace
             }
             endoverhangbuffer.AppendLine($"</p></div></label></div>");
             if (endoverhang) buffer.Append(endoverhangbuffer.ToString());
+            buffer.AppendLine("</div>");
 
             var consensus_sequence = template.CombinedSequence();
-            buffer.AppendLine("</div><h2>Consensus Sequence</h2><p class='aside-seq'>");
-            buffer.AppendLine(HelperFunctionality.ConsensusSequence(template));
-            buffer.AppendLine("</p>");
+            var cons_string = $"<h2>Consensus Sequence</h2><p class='aside-seq'>{HelperFunctionality.ConsensusSequence(template)}</p>";
 
             // Sequence logo
             const double threshold = 0.3;
@@ -786,7 +844,7 @@ namespace AssemblyNameSpace
             }
             buffer.Append("</table>");
 
-            return buffer.ToString();
+            return (buffer.ToString(), cons_string);
         }
 
         /// <summary> Returns a list of asides for details viewing. </summary>
@@ -846,8 +904,8 @@ namespace AssemblyNameSpace
             StringBuilder buffer = new StringBuilder();
             buffer.Append("<html>");
             buffer.Append(CreateHeader("Details " + id, location));
-            buffer.Append("<body class='details'>");
-            buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a>");
+            buffer.Append("<body class='details' onload='Setup()'>");
+            buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
             buffer.Append(content);
             buffer.Append("</body></html>");
 
@@ -1044,9 +1102,9 @@ namespace AssemblyNameSpace
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns>A valid HTML link.</returns>
-        string GetAsideLink(int index, AsideType type, List<string> location = null)
+        string GetAsideLink(int index, AsideType type, List<string> location = null, string thiselement = null)
         {
-            return GetAsideLink(-1, index, type, location);
+            return GetAsideLink(-1, index, type, location, thiselement);
         }
 
         /// <summary> Returns a link to the given aside. </summary>
@@ -1054,12 +1112,14 @@ namespace AssemblyNameSpace
         /// <param name="index2">The index in the container of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns> A valid HTML link.</returns>
-        string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null)
+        string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null, string thiselement = null)
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(index1, index2, type);
             string classname = GetAsideName(type);
             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
+            string referrer = "";
+            if (thiselement != null) referrer = $"?ref={GetLinkToFolder(location, new List<string>() { AssetsFolderName, classname + "s" })}{thiselement.Replace(':', '-')}.html";
             return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{id}</a>";
         }
 
@@ -1265,13 +1325,6 @@ assetsfolder = '{AssetsFolderName}';
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
-<div class=""js-settings"">
-    <p title=""Could help make the report feel more snappy, especially with not so powerfull devices."">Hover effects</p>
-    <label class=""js-toggle"">
-        <input type=""checkbox"" onchange=""toggleHover()"" checked>
-        <span class=""slider"">
-    </label>
-</div>
 
  {recombinationtable}
  {CreateTemplateTables()}

@@ -1,5 +1,3 @@
-hover_effects_on = true;
-
 function sortTable(id, column_number, type) {
     var table, rows, switching, i, x, y, shouldSwitch, dir = 0;
     table = document.getElementById(id);
@@ -79,27 +77,6 @@ function sortTable(id, column_number, type) {
     table.appendChild(frag);
 }
 
-window.onhashchange = function (ev) {
-    var target = window.location.href.split("#")[1];
-
-    var els = document.getElementsByClassName("selected")
-    while (els[0]) {
-        els[0].classList.remove('selected')
-    }
-
-    document.getElementById("table-" + target).classList.add("selected");
-    if (target[0] == ContigPrefix) {
-        document.getElementById("node-" + target).classList.add("selected");
-        document.getElementById("simple-node-" + target).classList.add("selected");
-    }
-    if (target[0] == PathPrefix) {
-        els = this.document.getElementsByClassName(target)
-        for (let el of els) {
-            if (el != null && el != undefined) el.classList.add("selected");
-        }
-    }
-}
-
 function Select(id) {
     window.location.href = assetsfolder + "/contigs/" + id.replace(':', '-') + ".html";
 }
@@ -112,12 +89,24 @@ function lpad(str, padString, length) {
 
 var dragging = false;
 
+function get(name) {
+    if (name = (new RegExp('[?&]' + encodeURIComponent(name) + '=([^&]*)')).exec(location.search))
+        return decodeURIComponent(name[1]);
+}
+
 function Setup() {
-    var elements = document.getElementsByClassName("align-link");
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener('mouseover', enterHoverOver);
-        elements[i].addEventListener('mouseout', exitHoverOver);
+    var backbutton = document.getElementById("back-button");
+    var ref = window.name.split('|').pop();
+    if (backbutton && ref) {
+        backbutton.href = ref;
+        var id = ref.split('/').pop().split('.')[0].replace(/-/g, ':');
+        backbutton.innerText = id;
+        if (id != assetsfolder.replace(/-/g, ':')) backbutton.style = "display: inline-block;"
     }
+
+    window.name = window.name + "|" + window.location.href
+
+    if (window.name.split('|').pop().split('/').pop().split('.')[0].replace(/-/g, ':') == assetsfolder.replace(/-/g, ':')) window.name = window.location.href;
 }
 
 function pauseEvent(e) {
@@ -128,36 +117,10 @@ function pauseEvent(e) {
     return false;
 }
 
-function enterHoverOver(e) {
-    if (!hover_effects_on) return;
-    var id = e.target.href;
-    var target = window.location.href.split("#")[1];
-    var aside = document.getElementById(target);
-    var elements = aside.getElementsByClassName("align-link");
-    for (var i = 0; i < elements.length; i++) {
-        if (elements[i].href == id) {
-            elements[i].classList.add('hover');
-        } else {
-            elements[i].classList.remove('hover');
-        }
-    }
-    var elements = aside.getElementsByClassName("read-link");
-    for (var i = 0; i < elements.length; i++) {
-        if (elements[i].href == id) {
-            elements[i].classList.add('hover');
-        } else {
-            elements[i].classList.remove('hover');
-        }
-    }
-}
-
-function exitHoverOver(e) {
-    var elements = document.getElementsByClassName("hover");
-    while (elements.length > 0) {
-        elements[0].classList.remove('hover');
-    }
-}
-
-function toggleHover() {
-    hover_effects_on = !hover_effects_on;
+function GoBack() {
+    var history = window.name.split('|');
+    history.pop(); //remove current
+    var url = history.pop();
+    window.name = history.join('|');
+    window.location.href = url;
 }
