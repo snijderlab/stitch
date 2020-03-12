@@ -7,10 +7,10 @@ function sortTable(id, column_number, type) {
     // Set the sorting direction to ascending:
     dir = "asc";
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
-    
+
     sorted = false
     if (headers[column_number].getAttribute('data-sortorder') == "asc") { dir = "desc"; sorted = true }
-    if (headers[column_number].getAttribute('data-sortorder') == "desc") {sorted = true}
+    if (headers[column_number].getAttribute('data-sortorder') == "desc") { sorted = true }
 
     for (var j = 0; j < headers.length; j++) {
         headers[j].setAttribute('data-sortorder', "");
@@ -21,14 +21,14 @@ function sortTable(id, column_number, type) {
     values = [null]
     for (i = 1; i < rows.length; i++) {
         x = rows[i].getElementsByTagName("TD")[column_number]
-        switch(type) {
-            case "string": 
+        switch (type) {
+            case "string":
                 values.push(x.innerHTML.toLowerCase())
                 break
-            case "number": 
+            case "number":
                 values.push(Number(x.innerHTML))
                 break
-            case "id": 
+            case "id":
                 var p = x.innerText.slice(1).split(":")
                 values.push(Number(p[p.length - 1]))
                 break
@@ -52,7 +52,7 @@ function sortTable(id, column_number, type) {
         first, which contains table headers): */
         for (i = 1; i < (rows.length - 1); i++) {
             shouldSwitch = false;
-            if (values[i] > values[i+1]) {
+            if (values[i] > values[i + 1]) {
                 shouldSwitch = true;
                 break;
             }
@@ -101,13 +101,8 @@ window.onhashchange = function (ev) {
 }
 
 function Select(id) {
-    window.location.href = "#" + id;
+    window.location.href = assetsfolder + "/contigs/" + id.replace(':', '-') + ".html";
 }
-
-/*
-function Select(prefix, number) {
-    window.location.href = "#" + prefix + lpad(number.toString(), '0', 4);
-}*/
 
 function lpad(str, padString, length) {
     while (str.length < length)
@@ -118,50 +113,12 @@ function lpad(str, padString, length) {
 var dragging = false;
 
 function Setup() {
-    document.getElementById("aside-handle").addEventListener('mousedown', function (ev) {
-        dragging = true;
-        document.body.classList.add("dragging");
-        pauseEvent(ev);
-    })
-
     var elements = document.getElementsByClassName("align-link");
     for (var i = 0; i < elements.length; i++) {
         elements[i].addEventListener('mouseover', enterHoverOver);
         elements[i].addEventListener('mouseout', exitHoverOver);
     }
-
-    var elements = document.getElementById("aside").getElementsByClassName("read-link");
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener('mouseover', enterHoverOver);
-        elements[i].addEventListener('mouseout', exitHoverOver);
-    }
 }
-
-document.addEventListener('mousemove', function (ev) {
-    if (dragging) {
-        width = window.innerWidth - ev.pageX;
-        document.getElementById("aside").style.flexBasis = width.toString() + "px";
-
-        if (width < 200) {
-            document.body.classList.add("only-main");
-        } else {
-            document.body.classList.remove("only-main");
-        }
-
-        if (ev.pageX < 200) {
-            document.body.classList.add("only-aside");
-        } else {
-            document.body.classList.remove("only-aside");
-        }
-
-        pauseEvent(ev);
-    }
-})
-
-document.addEventListener('mouseup', function () {
-    dragging = false;
-    document.body.classList.remove("dragging");
-})
 
 function pauseEvent(e) {
     if (e.stopPropagation) e.stopPropagation();

@@ -17,8 +17,6 @@
 }
 
 body {
-    display: flex;
-    flex-direction: row;
     font-family: "Roboto", sans-serif;
     margin: 0;
     color: var(--color-dark);
@@ -38,79 +36,13 @@ h1 {
     font-size: 2rem;
 }
 
-.dragging {
-    cursor: ew-resize;
-}
-
-.report,
-.aside {
-    min-height: 100vh;
-    overflow-y: scroll;
-}
-
 .report {
-    flex: 3;
     padding: 0 1em;
 }
 
-.only-aside .report {
-    display: none;
-}
-
-.aside-handle {
-    flex: 0 1 0.5em;
-    background-color: var(--color-dark);
-    max-width: 0.5em;
-    cursor: ew-resize;
-}
-
-.only-aside .aside-handle,
-.only-main .aside-handle,
-.dragging .aside-handle,
-.aside-handle:hover {
-    flex: 0 1 0.5em;
-    max-width: 0.5em;
-}
-
-.handle {
-    color: white;
-    padding: 0.5em 0.2em;
-    cursor: ew-resize;
-    background-color: var(--color-dark);
-    margin-left: -0.4em;
-    margin-top: -1em;
-    border-radius: 0.25em;
-    font-size: 0.75em;
-    font-family: "Roboto Mono", "Roboto", monospace;
-    width: 14px;
-    display: none;
-    z-index: 1;
-    position: fixed;
-    top: 50vh;
-    font-weight: 500;
-}
-
-.dragging .handle,
-.aside-handle:hover .handle {
-    display: block;
-}
-
-.aside {
-    flex: 0 1 500px;
+.details {
+    padding: 0.5em 1em;
     background-color: var(--color-primary-light);
-}
-
-.only-aside .aside {
-    flex-grow: 1;
-}
-
-.only-main .aside {
-    display: none;
-}
-
-.aside-wrapper {
-    padding: 0.5em;
-    padding-top: 0;
 }
 
 .aside-seq {
@@ -128,17 +60,14 @@ h1 {
     color: grey;
 }
 
-
-/* Showing of contig info */
-
-.aside-wrapper>div {
-    display: none;
+.overview-link {
+    background: var(--color-primary);
+    color: var(--color-primary-light);
+    text-decoration: none;
+    display: inline-block;
+    margin-top: 1em;
+    padding: 0.25em;
 }
-
-.info-block:target {
-    display: block;
-}
-
 
 /* Table*/
 
@@ -231,7 +160,7 @@ tr.selected {
     border-color: var(--color-secondary);
 }
 
-.aside th {
+.details th {
     background: none;
     border: none;
 }

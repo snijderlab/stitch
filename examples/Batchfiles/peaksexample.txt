@@ -18,7 +18,7 @@ Peaks ->
     Separator: ,
     Cutoffscore: 98
     LocalCutoffscore: 98
-    MinLengthPatch: 6
+    MinLengthPatch: 7
 <-
 
 -Parameters-------------

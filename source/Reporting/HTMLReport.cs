@@ -24,6 +24,12 @@ namespace AssemblyNameSpace
         readonly bool UseIncludedDotDistribution;
 
         /// <summary>
+        /// The name of the assets folder
+        /// </summary>
+        string AssetsFolderName;
+        string FullAssetsFolderName;
+
+        /// <summary>
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="assm">The assembler.</param>
@@ -128,7 +134,7 @@ namespace AssemblyNameSpace
                 // Give the filled nodes (start node) the correct class
                 svggraph = Regex.Replace(svggraph, "class=\"node\"(>\\s*<title>[^<]*</title>\\s*<polygon fill=\"blue\")", "class=\"node start-node\"$1");
                 // Give the nodes the correct ID
-                svggraph = Regex.Replace(svggraph, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>([A-Z][0-9]+)</title>", $"id=\"node-$2\" class=\"$1\" onclick=\"Select('$2')\">");
+                svggraph = Regex.Replace(svggraph, "id=\"node[0-9]+\" class=\"([a-z\\- ]*)\">\\s*<title>([A-Z][0-9]+)</title>", "id=\"node-$2\" class=\"$1\" onclick=\"Select('$2')\">");
                 // Strip all <title> tags
                 svggraph = Regex.Replace(svggraph, "<title>[^<]*</title>", "");
 
@@ -323,8 +329,8 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < sorted.Count(); i++)
             {
-                id = GetAsideIdentifier(i, AsideType.Recombination);
-                link = GetAsideLink(i, AsideType.Recombination);
+                id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
+                link = GetAsideLink(i, AsideType.RecombinedTemplate);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -365,8 +371,8 @@ namespace AssemblyNameSpace
 
                 for (int i = 0; i < sorted.Count(); i++)
                 {
-                    id = GetAsideIdentifier(index, i, AsideType.RecombinationTemplate);
-                    link = GetAsideLink(index, i, AsideType.RecombinationTemplate);
+                    id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
+                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase);
                     innerbuffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -388,12 +394,13 @@ namespace AssemblyNameSpace
         string CreateContigAside(int i)
         {
             string id = GetAsideIdentifier(i, AsideType.Contig);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Contig) + "s" };
             string prefix = "";
             if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
             string suffix = "";
             if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
 
-            var readsalignment = CreateReadsAlignment(condensed_graph[i]);
+            var readsalignment = CreateReadsAlignment(condensed_graph[i], location);
 
             return $@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig {id}</h1>
@@ -402,7 +409,7 @@ namespace AssemblyNameSpace
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</p>
+    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
 </div>";
         }
 
@@ -427,6 +434,7 @@ namespace AssemblyNameSpace
         string CreateTemplateAside(int templateIndex, int i)
         {
             string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Template) + "s" };
             var template = databases[templateIndex].Templates[i];
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
@@ -437,7 +445,7 @@ namespace AssemblyNameSpace
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {CreateTemplateAlignment(template, id)}
+    {CreateTemplateAlignment(template, id, location)}
     {template.MetaData.ToHTML()}
 </div>";
         }
@@ -450,6 +458,7 @@ namespace AssemblyNameSpace
         string CreatePathAside(int i)
         {
             string id = GetAsideIdentifier(i, AsideType.Path);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" };
             const int number = 10;
             var best_templates = new List<(int, int, int)>();
             int cutoff = 0;
@@ -475,7 +484,7 @@ namespace AssemblyNameSpace
             var sb = new StringBuilder();
             foreach (var tem in best_templates)
             {
-                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template)}</td></tr>");
+                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
             }
 
             var templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top 10 templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
@@ -484,7 +493,7 @@ namespace AssemblyNameSpace
             var maxCoverage = new List<int>();
             foreach (var node in Paths[i].Nodes)
             {
-                var core = CreateReadsAlignmentCore(node);
+                var core = CreateReadsAlignmentCore(node, location);
                 sb.Append(core.Item1);
                 maxCoverage.Add(core.Item2);
             }
@@ -496,7 +505,7 @@ namespace AssemblyNameSpace
     <h2>Sequence Length</h2>
     <p>{Paths[i].Sequence.Length}</p>
     <h2>Path</h2>
-    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig)).Substring(3)}</p>
+    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -509,13 +518,14 @@ namespace AssemblyNameSpace
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateRecombinationAside(int i)
         {
-            string id = GetAsideIdentifier(i, AsideType.Recombination);
+            string id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinedTemplate) + "s" };
             var template = RecombinedDatabase.Templates[i];
 
             string order = "";
             if (template.Recombination != null)
             {
-                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationTemplate)).Substring(3)}</p>";
+                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
@@ -527,7 +537,7 @@ namespace AssemblyNameSpace
     <h2>Score</h2>
     <p>{template.Score}</p>
     {order}
-    {CreateTemplateAlignment(template, id)}
+    {CreateTemplateAlignment(template, id, location)}
 </div>";
         }
 
@@ -535,7 +545,8 @@ namespace AssemblyNameSpace
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateRecombinationDatabaseAside(int index, int i)
         {
-            string id = GetAsideIdentifier(index, i, AsideType.RecombinationTemplate);
+            string id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinationDatabase) + "s" };
             var template = RecombinationDatabases[index].Templates[i];
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
@@ -548,12 +559,12 @@ namespace AssemblyNameSpace
     <p>{template.Name}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {CreateTemplateAlignment(template, id)}
+    {CreateTemplateAlignment(template, id, location)}
     {template.MetaData.ToHTML()}
 </div>";
         }
 
-        string CreateTemplateAlignment(Template template, string id)
+        string CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -663,15 +674,16 @@ namespace AssemblyNameSpace
             for (int i = 1; i < aligned.Count(); i++)
             {
                 string rid = GetAsideIdentifier(i - 1, AsideType.Path);
+                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
                 {
                     frontoverhang = true;
-                    frontoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
+                    frontoverhangbuffer.Append($"<a href=\"{path}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
-                    frontoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'></a><span class='symbol'></span><br>");
+                    frontoverhangbuffer.Append($"<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
             frontoverhangbuffer.AppendLine($"</p></div></label></div>");
@@ -695,8 +707,9 @@ namespace AssemblyNameSpace
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         string rid = GetAsideIdentifier(template.Matches[i - 1].Path.Index, AsideType.Path);
+                        string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                         string result = "";
-                        if (aligned[i].Length > block * blocklength) result = $"<a href=\"#{rid}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                        if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         buffer.Append(result);
                         buffer.Append("<br>");
                     }
@@ -717,15 +730,16 @@ namespace AssemblyNameSpace
             for (int i = 1; i < aligned.Count(); i++)
             {
                 string rid = GetAsideIdentifier(i - 1, AsideType.Path);
+                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html";
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
                 {
                     endoverhang = true;
-                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
+                    endoverhangbuffer.Append($"<a href=\"{path}\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
-                    endoverhangbuffer.Append($"<a href=\"#{rid}\" class='text align-link'></a><span class='symbol'></span><br>");
+                    endoverhangbuffer.Append($"<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
             endoverhangbuffer.AppendLine($"</p></div></label></div>");
@@ -768,7 +782,7 @@ namespace AssemblyNameSpace
             buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
             foreach (var match in template.Matches)
             {
-                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Path.Index, AsideType.Path)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
+                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Path.Index, AsideType.Path, location)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
             }
             buffer.Append("</table>");
 
@@ -777,31 +791,29 @@ namespace AssemblyNameSpace
 
         /// <summary> Returns a list of asides for details viewing. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateAsides()
+        void CreateAsides()
         {
-            var buffer = new StringBuilder();
-
             // Path Asides
             for (int i = 0; i < Paths.Count(); i++)
             {
-                buffer.AppendLine(CreatePathAside(i));
+                SaveAside(CreatePathAside(i), AsideType.Path, -1, i);
             }
             // Contigs Asides
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
-                buffer.AppendLine(CreateContigAside(i));
+                SaveAside(CreateContigAside(i), AsideType.Contig, -1, i);
             }
             // Read Asides
             for (int i = 0; i < reads.Count(); i++)
             {
-                buffer.AppendLine(CreateReadAside(i));
+                SaveAside(CreateReadAside(i), AsideType.Read, -1, i);
             }
             // Template Tables Asides
             for (int t = 0; t < databases.Count(); t++)
             {
                 for (int i = 0; i < databases[t].Templates.Count(); i++)
                 {
-                    buffer.AppendLine(CreateTemplateAside(t, i));
+                    SaveAside(CreateTemplateAside(t, i), AsideType.Template, t, i);
                 }
             }
             // Recombination Table Asides
@@ -809,7 +821,7 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
                 {
-                    buffer.AppendLine(CreateRecombinationAside(i));
+                    SaveAside(CreateRecombinationAside(i), AsideType.RecombinedTemplate, -1, i);
                 }
 
                 // Recombination Databases Tables Asides
@@ -817,17 +829,34 @@ namespace AssemblyNameSpace
                 {
                     for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
                     {
-                        buffer.AppendLine(CreateRecombinationDatabaseAside(t, i));
+                        SaveAside(CreateRecombinationDatabaseAside(t, i), AsideType.RecombinationDatabase, t, i);
                     }
                 }
             }
+        }
 
-            return buffer.ToString();
+        void SaveAside(string content, AsideType type, int index1, int index2)
+        {
+            var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
+            var homelocation = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
+            var id = GetAsideIdentifier(index1, index2, type);
+            var link = GetLinkToFolder(location, new List<string>());
+            var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
+
+            StringBuilder buffer = new StringBuilder();
+            buffer.Append("<html>");
+            buffer.Append(CreateHeader("Details " + id, location));
+            buffer.Append("<body class='details'>");
+            buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a>");
+            buffer.Append(content);
+            buffer.Append("</body></html>");
+
+            SaveAndCreateDirectories(fullpath, buffer.ToString());
         }
 
         /// <summary> Create a reads alignment to display in the sidebar. </summary>
         /// <returns> Returns an HTML string. </returns>
-        (string, List<int>) CreateReadsAlignment(CondensedNode node)
+        (string, List<int>) CreateReadsAlignment(CondensedNode node, List<string> location)
         {
             var placed = node.Alignment;
             var sequence = AminoAcid.ArrayToString(node.Sequence.ToArray());
@@ -856,7 +885,7 @@ namespace AssemblyNameSpace
             buffer.AppendLine($"</p></div></label></div>");
 
             // Add the core alignment
-            var core = CreateReadsAlignmentCore(node);
+            var core = CreateReadsAlignmentCore(node, location);
             buffer.AppendLine(core.Item1);
 
             // Create the end overhanging reads block
@@ -870,7 +899,8 @@ namespace AssemblyNameSpace
                     if (read.EndPosition == sequence.Length && read.EndOverhang != "")
                     {
                         string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
-                        result = $"<a href=\"#{rid}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
+                        string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Read) + "s" }, location) + rid.Replace(':', '-') + ".html";
+                        result = $"<a href=\"{path}\" class='text align-link'>{read.EndOverhang}</a><span class='symbol'>...</span><br>";
                     }
                 }
                 buffer.Append(result);
@@ -882,7 +912,7 @@ namespace AssemblyNameSpace
 
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{core.Item2}'>"), node.UniqueOrigins);
         }
-        (string, int) CreateReadsAlignmentCore(CondensedNode node)
+        (string, int) CreateReadsAlignmentCore(CondensedNode node, List<string> location)
         {
             var placed = node.Alignment;
             var depthOfCoverage = node.DepthOfCoverageFull;
@@ -921,7 +951,8 @@ namespace AssemblyNameSpace
                             if (i + prefixoffset >= read.StartPosition && i + prefixoffset < read.EndPosition)
                             {
                                 string rid = GetAsideIdentifier(read.Identifier, AsideType.Read);
-                                result = $"<a href=\"#{rid}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
+                                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Read) + "s" }, location) + rid.Replace(':', '-') + ".html";
+                                result = $"<a href=\"{path}\" class=\"align-link\">{read.Sequence[i - read.StartPosition + prefixoffset]}</a>";
                             }
                         }
                         buffer.Append(result);
@@ -940,7 +971,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Contig, Read, Template, Path, Recombination, RecombinationTemplate }
+        enum AsideType { Contig, Read, Template, Path, RecombinedTemplate, RecombinationDatabase }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -953,12 +984,31 @@ namespace AssemblyNameSpace
                     return "T";
                 case AsideType.Path:
                     return "P";
-                case AsideType.Recombination:
+                case AsideType.RecombinedTemplate:
                     return "RC";
-                case AsideType.RecombinationTemplate:
+                case AsideType.RecombinationDatabase:
                     return "RT";
             }
             throw new Exception("Invalid AsideType in GetAsidePrefix.");
+        }
+        string GetAsideName(AsideType type)
+        {
+            switch (type)
+            {
+                case AsideType.Contig:
+                    return "contig";
+                case AsideType.Read:
+                    return "read";
+                case AsideType.Template:
+                    return "template";
+                case AsideType.Path:
+                    return "path";
+                case AsideType.RecombinedTemplate:
+                    return "recombined-template";
+                case AsideType.RecombinationDatabase:
+                    return "recombination-database";
+            }
+            throw new Exception("Invalid AsideType in GetAsideName.");
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container.</summary>
@@ -994,9 +1044,9 @@ namespace AssemblyNameSpace
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns>A valid HTML link.</returns>
-        string GetAsideLink(int index, AsideType type)
+        string GetAsideLink(int index, AsideType type, List<string> location = null)
         {
-            return GetAsideLink(-1, index, type);
+            return GetAsideLink(-1, index, type, location);
         }
 
         /// <summary> Returns a link to the given aside. </summary>
@@ -1004,17 +1054,26 @@ namespace AssemblyNameSpace
         /// <param name="index2">The index in the container of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns> A valid HTML link.</returns>
-        string GetAsideLink(int index1, int index2, AsideType type)
+        string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null)
         {
+            if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(index1, index2, type);
-            string classname = "";
-            if (type == AsideType.Contig) classname = "contig";
-            if (type == AsideType.Read) classname = "read";
-            if (type == AsideType.Template) classname = "template";
-            if (type == AsideType.Path) classname = "path";
-            if (type == AsideType.Recombination) classname = "recombination";
-            if (type == AsideType.RecombinationTemplate) classname = "recombination-template";
-            return $"<a href=\"#{id}\" class=\"info-link {classname}-link\">{id}</a>";
+            string classname = GetAsideName(type);
+            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
+            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{id}</a>";
+        }
+
+        string GetLinkToFolder(List<string> target, List<string> location)
+        {
+            int i = 0;
+            for (; i < target.Count() && i < location.Count(); i++)
+            {
+                if (target[i] != location[i]) break;
+            }
+            var pieces = new List<string>(location.Count() + target.Count() - 2 * i);
+            pieces.AddRange(Enumerable.Repeat("..", location.Count() - i));
+            pieces.AddRange(target.Skip(i));
+            return string.Join("/", pieces.ToArray()) + "/";
         }
 
         /// <summary>
@@ -1034,6 +1093,7 @@ namespace AssemblyNameSpace
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string MetaInformation()
         {
+            //TODO needs time for recombined template matching
             long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
             long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L;
 
@@ -1140,70 +1200,54 @@ namespace AssemblyNameSpace
             throw new Exception("HTML reports should be generated using the 'Save' function.");
         }
 
-        /// <summary> Creates an HTML report to view the results and metadata. </summary>
-        public new void Save(string filename)
+        private string CreateHeader(string title, List<string> location)
         {
-            var stopwatch = new Stopwatch();
+            var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
+            return $@"<head>
+<meta charset=""utf-8"">
+<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
+<title>{title}</title>
+<style>
+@font-face {{
+  font-family: Roboto;
+  src: url({link}Roboto-Regular.ttf);
+  font-weight: normal;
+}}
+@font-face {{
+  font-family: Roboto;
+  src: url({link}Roboto-Medium.ttf);
+  font-weight: 500;
+}}
+@font-face {{
+  font-family: Roboto Mono;
+  src: url({link}RobotoMono-Regular.ttf);
+  font-weight: normal;
+}}
+@font-face {{
+  font-family: Roboto Mono;
+  src: url({link}RobotoMono-Medium.ttf);
+  font-weight: 500;
+}}
+</style>
+<script>
+ContigPrefix = '{GetAsidePrefix(AsideType.Contig)}';
+ReadPrefix = '{GetAsidePrefix(AsideType.Read)}';
+TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
+PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
+assetsfolder = '{AssetsFolderName}';
+</script>
+<script src='{link}script.js'></script>
+<link rel='stylesheet' href='{link}styles.css'>
+</head>";
+        }
+
+        private string CreateMain()
+        {
+            Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
-
-            var foldername = Path.Join(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
-
-            Directory.CreateDirectory(foldername);
-            Directory.CreateDirectory(Path.Join(foldername, "paths"));
-
-            var excutablefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
-
-            void CopyAssetsFile(string name)
-            {
-                var source = Path.Join(excutablefolder, "assets", name);
-                if (File.Exists(source))
-                {
-                    try
-                    {
-                        File.Copy(source, Path.Join(foldername, name), true);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-                else
-                {
-                    new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
-                }
-            }
-
-            CopyAssetsFile("styles.css");
-            CopyAssetsFile("script.js");
-            CopyAssetsFile("Roboto-Regular.ttf");
-            CopyAssetsFile("Roboto-Medium.ttf");
-            CopyAssetsFile("RobotoMono-Regular.ttf");
-            CopyAssetsFile("RobotoMono-Medium.ttf");
-
-            // So assets are copied, folders can be made, now start working on the dissection of this beast on an HTML page
 
             string svg, simplesvg;
             (svg, simplesvg) = CreateGraph();
-
-            var clr = Console.ForegroundColor;
-
-            string stylesheet = "/* Could not find the stylesheet */";
-            if (File.Exists("assets/styles.css")) stylesheet = File.ReadAllText("assets/styles.css");
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Could not find the styles.css file. Please make sure the 'assets' folder is accessible. The HTML report is generated but the looks are not great.");
-            }
-
-            string script = "// Could not find the script";
-            if (File.Exists("assets/script.js")) script = File.ReadAllText("assets/script.js");
-            else
-            {
-                Console.ForegroundColor = ConsoleColor.Yellow;
-                Console.WriteLine($"Could not find the script.js file. Please make sure the 'assets' folder is accessible. The HTML report is generated but is not very interactive.");
-            }
-
-            Console.ForegroundColor = clr;
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
@@ -1215,22 +1259,8 @@ namespace AssemblyNameSpace
                 recombinationtable += CreateRecombinationDatabaseTables();
             }
 
-            string html = $@"<html>
-<head>
-<meta charset=""utf-8"">
-<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-<title>Report Protein Sequence Run</title>
-<style>
-{stylesheet}
-</style>
-<script>
-ContigPrefix = '{GetAsidePrefix(AsideType.Contig)}';
-ReadPrefix = '{GetAsidePrefix(AsideType.Read)}';
-TemplatePrefix = '{GetAsidePrefix(AsideType.Template)}';
-PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
-{script}
-</script>
-</head>
+            var html = $@"<html>
+{CreateHeader("Report Protein Sequence Run", new List<string>())}
 <body onload=""Setup()"">
 <div class=""report"">
 <h1>Report Protein Sequence Run</h1>
@@ -1258,15 +1288,55 @@ PathPrefix = '{GetAsidePrefix(AsideType.Path)}';
 </div>
 
 </div>
-<div class=""aside-handle"" id=""aside-handle"">
-<span class=""handle"">&lt;&gt;</span>
-</div>
-<div class=""aside"" id=""aside"">
-<div class=""aside-wrapper"">
-{CreateAsides()}
-</div>
 </div>
 </body>";
+            return html;
+        }
+
+        /// <summary> Creates an HTML report to view the results and metadata. </summary>
+        public new void Save(string filename)
+        {
+            var stopwatch = new Stopwatch();
+            stopwatch.Start();
+
+            FullAssetsFolderName = Path.Join(Path.GetDirectoryName(filename), Path.GetFileNameWithoutExtension(filename));
+            AssetsFolderName = Path.GetFileNameWithoutExtension(filename);
+
+            Directory.CreateDirectory(FullAssetsFolderName);
+            Directory.CreateDirectory(Path.Join(FullAssetsFolderName, "paths"));
+
+            var excutablefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().Location);
+
+            void CopyAssetsFile(string name)
+            {
+                var source = Path.Join(excutablefolder, "assets", name);
+                if (File.Exists(source))
+                {
+                    try
+                    {
+                        File.Copy(source, Path.Join(FullAssetsFolderName, name), true);
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine(e);
+                    }
+                }
+                else
+                {
+                    new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
+                }
+            }
+
+            CopyAssetsFile("styles.css");
+            CopyAssetsFile("script.js");
+            CopyAssetsFile("Roboto-Regular.ttf");
+            CopyAssetsFile("Roboto-Medium.ttf");
+            CopyAssetsFile("RobotoMono-Regular.ttf");
+            CopyAssetsFile("RobotoMono-Medium.ttf");
+
+            // So assets are copied, folders can be made, now start working on the dissection of this beast on an HTML page
+            var html = CreateMain();
+            CreateAsides();
 
             stopwatch.Stop();
             html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");

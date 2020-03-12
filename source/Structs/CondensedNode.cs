@@ -120,6 +120,7 @@ namespace AssemblyNameSpace
                 }
                 return a;
             }).ToList();
+
             List<int> uniqueorigins = positions.Select(a => a.Identifier).ToList();
 
             // Find a bit more efficient packing of reads on the sequence
@@ -134,8 +135,7 @@ namespace AssemblyNameSpace
                     for (int j = 0; j < placed[i].Count() && !clashes; j++)
                     {
                         if ((current.StartPosition + 1 > placed[i][j].StartPosition && current.StartPosition - 1 < placed[i][j].EndPosition)
-                         || (current.EndPosition + 1 > placed[i][j].StartPosition && current.EndPosition - 1 < placed[i][j].EndPosition)
-                         || (current.StartPosition - 1 < placed[i][j].StartPosition && current.EndPosition + 1 > placed[i][j].EndPosition))
+                         || (current.StartPosition - 1 < placed[i][j].StartPosition && current.EndPosition + 1 > placed[i][j].StartPosition))
                         {
                             clashes = true;
                         }
