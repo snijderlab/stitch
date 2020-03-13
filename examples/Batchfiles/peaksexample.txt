@@ -16,7 +16,7 @@ Peaks ->
     Format: X+
     Name: 01
     Separator: ,
-    Cutoffscore: 90
+    Cutoffscore: 98
     LocalCutoffscore: 98
     MinLengthPatch: 7
 <-
@@ -41,7 +41,7 @@ Recombine->
     -Separated by * means with a gap attached
     Order : IGHV IGHJ IGHC  IGKV IGKJ IGKC
 
-    IncludeShortReads: True
+    IncludeShortReads: False
 
     Databases->
         Database->
