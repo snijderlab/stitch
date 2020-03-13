@@ -55,6 +55,9 @@ namespace AssemblyNameSpace
                         }
                         versionspecified = true;
                         break;
+                    case "maxcores":
+                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).GetValue(outEither);
+                        break;
                     case "runtype":
                         switch (pair.GetValue().ToLower())
                         {

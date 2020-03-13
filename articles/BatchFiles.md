@@ -39,6 +39,16 @@ Runname: MyFirstTestRun
 Runname: Monoclonal Antibodies From Rabbits
 ```
 
+##### MacCores (s)
+
+The maximum amount of cores to be used by this run. Default is the amount of cores of the machine.
+
+_Examples_
+```
+MaxCores: 4
+MaxCores: 86
+```
+
 ##### Runtype (s)
 
 If the inputs in this run should be ran separate from each other trough the assembler (`Separate`), or be grouped together into one heap of data (`Group`). The default is `Group`.

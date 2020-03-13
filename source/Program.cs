@@ -73,14 +73,14 @@ namespace AssemblyNameSpace
 
             if (runs.Count() == 1)
             {
-                runs[0].Calculate(Environment.ProcessorCount);
+                runs[0].Calculate(inputparams.MaxNumberOfCPUCores);
             }
-            else if (runs.Count() < Environment.ProcessorCount)
+            else if (runs.Count() < inputparams.MaxNumberOfCPUCores)
             {
                 Parallel.ForEach(
                     runs,
                     new ParallelOptions { MaxDegreeOfParallelism = runs.Count() },
-                    (i) => i.Calculate((int)Math.Round((double)Environment.ProcessorCount / runs.Count())));
+                    (i) => i.Calculate((int)Math.Round((double)inputparams.MaxNumberOfCPUCores / runs.Count())));
             }
             else
             {

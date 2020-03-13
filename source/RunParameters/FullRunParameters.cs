@@ -74,6 +74,8 @@ namespace AssemblyNameSpace
             /// </summary>
             public RecombineValue Recombine;
 
+            public int MaxNumberOfCPUCores;
+
             /// <summary>
             /// A blank instance for the RunParameters with defaults and initialization.
             /// </summary>
@@ -89,6 +91,7 @@ namespace AssemblyNameSpace
                 Template = new List<DatabaseValue>();
                 Report = new List<Report.Parameter>();
                 Recombine = null;
+                MaxNumberOfCPUCores = Environment.ProcessorCount;
             }
 
             /// <summary>
