@@ -165,7 +165,11 @@ namespace AssemblyNameSpace
             }
             catch (Win32Exception)
             {
-                throw new Exception($"Could not start Dot of the Graphviz software. Please make sure it is installed and added to your PATH if you run Graphviz globally. Or make sure you execute this program when the assets folder is accessible.");
+                if (UseIncludedDotDistribution)
+                    new InputNameSpace.ErrorMessage("", "Could not start Dot", "Please make sure Dot (Graphviz) is installed and added to your PATH.").Print();
+                else
+                    new InputNameSpace.ErrorMessage("", "Could not start Dot", "Make sure you execute this program when the assets folder is accessible.", "Dot is included for Windows in the assets folder.").Print();
+                throw new Exception("");
             }
             catch (Exception e)
             {
@@ -1056,7 +1060,7 @@ namespace AssemblyNameSpace
                 case AsideType.RecombinationDatabase:
                     return "RT";
             }
-            throw new Exception("Invalid AsideType in GetAsidePrefix.");
+            throw new ArgumentException("Invalid AsideType in GetAsidePrefix.");
         }
         string GetAsideName(AsideType type)
         {
@@ -1075,7 +1079,7 @@ namespace AssemblyNameSpace
                 case AsideType.RecombinationDatabase:
                     return "recombination-database";
             }
-            throw new Exception("Invalid AsideType in GetAsideName.");
+            throw new ArgumentException("Invalid AsideType in GetAsideName.");
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container.</summary>

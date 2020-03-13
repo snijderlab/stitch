@@ -135,7 +135,7 @@ namespace AssemblyNameSpace
                             case OpType.Divide:
                                 return left.Solve(k) / right.Solve(k);
                             default:
-                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type}");
+                                throw new ArgumentException($"An unkown operator type is signalled while solving the calculation {type}");
                         }
                     }
 
@@ -161,7 +161,7 @@ namespace AssemblyNameSpace
                                 op = "/";
                                 break;
                             default:
-                                throw new ParseException($"An unkown operator type is signalled while solving the calculation {type}");
+                                throw new ArgumentException($"An unkown operator type is signalled while solving the calculation {type}");
                         }
                         return "(" + left.Show() + op + right.Show() + ")";
                     }

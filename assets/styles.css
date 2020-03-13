@@ -204,7 +204,7 @@ input:checked+label {
     border-radius: 0.1em 0.1em 0 0;
 }
 
-input:checked+label::after {
+.report input:checked+label::after {
     content: "-";
 }
 

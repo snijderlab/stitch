@@ -31,7 +31,7 @@ namespace AssemblyNameSpace
             }
             catch
             {
-                throw new Exception($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
+                throw new ArgumentException($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
         /// <summary> To copy a subarray to a new array. </summary>
