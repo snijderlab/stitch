@@ -22,7 +22,7 @@ Peaks ->
 <-
 
 -Parameters-------------
-K	            : 7
+K	            : 9
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -35,7 +35,7 @@ Recombine->
     n : 2
 
     -Minimal average score per position to be included
-    CutoffScore : 4
+    CutoffScore : 2
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
@@ -49,8 +49,9 @@ Recombine->
             Name : IGHV
         <-
         Database->
-            Path : ../templates/IGHJ.fasta
-            Name : IGHJ
+            Path    : ../templates/IGHJ.fasta
+            Name    : IGHJ
+            Scoring : Relative
         <-
         Database->
             Path : ../templates/IGHC_uniprot.fasta

@@ -168,11 +168,11 @@ namespace AssemblyNameSpace
                     var databases = new List<TemplateDatabase>();
                     for (int i = 0; i < Template.Count(); i++)
                     {
-                        var template = Template[i];
-                        var alph = new Alphabet(template.Alphabet);
+                        var database = Template[i];
+                        var alph = new Alphabet(database.Alphabet);
 
-                        var database1 = new TemplateDatabase(template.Templates, alph, template.Name, template.CutoffScore, i);
-                        database1.Match(assm.GetAllPaths(template.IncludeShortReads), max_threads);
+                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore, i, database.Scoring);
+                        database1.Match(assm.GetAllPaths(database.IncludeShortReads), max_threads);
 
                         databases.Add(database1);
                     }
@@ -193,9 +193,9 @@ namespace AssemblyNameSpace
 
                         for (int i = 0; i < Recombine.Databases.Count(); i++)
                         {
-                            var template = Recombine.Databases[i];
+                            var database = Recombine.Databases[i];
 
-                            var database1 = new TemplateDatabase(template.Templates, alph, template.Name, Recombine.CutoffScore, i);
+                            var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring);
                             database1.Match(assm.GetAllPaths(Recombine.IncludeShortReads), max_threads);
 
                             rec_databases.Add(database1);
@@ -257,7 +257,9 @@ namespace AssemblyNameSpace
                             from item in sequence
                             select acc.Concat(new[] { item }));
 
+                        var recombined_database = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
                         var recombined_templates = new List<Template>();
+
                         for (int i = 0; i < combinations.Count(); i++)
                         {
                             var sequence = combinations.ElementAt(i);
@@ -275,10 +277,9 @@ namespace AssemblyNameSpace
                                     t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                                 }
                             }
-                            recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), alph, Recombine.CutoffScore, new RecombinedTemplateLocation(i), t));
+                            recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.None(new MetaData.FileIdentifier("nowhere", "")), recombined_database, new RecombinedTemplateLocation(i), t));
                         }
-
-                        var recombined_database = new TemplateDatabase(recombined_templates, alph, "Recombined Database", Recombine.CutoffScore);
+                        recombined_database.Templates = recombined_templates;
 
                         recombined_database.Match(assm.GetAllPaths(Recombine.IncludeShortReads), max_threads);
 

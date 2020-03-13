@@ -37,23 +37,20 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The score for this template
         /// </summary>
-        public int Score { get { return (int)Math.Round((double)score / Sequence.Length); } }
+        public int Score
+        {
+            get
+            {
+                if (Parent.Scoring == RunParameters.ScoringParameter.Absolute) return score;
+                else return (int)Math.Round((double)score / Sequence.Length);
+            }
+        }
         int score;
 
         /// <summary>
         /// The list of matches on this template
         /// </summary>
         public List<SequenceMatch> Matches;
-
-        /// <summary>
-        /// The alphabet of this template. TODO is this still needed?
-        /// </summary>
-        public readonly Alphabet Alphabet;
-
-        /// <summary>
-        /// The cutoff score to filter matches to be added to this template
-        /// </summary>
-        readonly double cutoffScore;
 
         /// <summary>
         /// If this template is recombinated this are the templates it consists of.
@@ -66,26 +63,29 @@ namespace AssemblyNameSpace
         public readonly TemplateLocation Location;
 
         /// <summary>
+        /// The parent database, needed to get the settings for scoring, alphabet etc
+        /// </summary>
+        private readonly TemplateDatabase Parent;
+
+        /// <summary>
         /// Creates a new template
         /// </summary>
         /// <param name="name">The name of the enclosing TemplateDatabase, <see cref="Name"/>.</param>
         /// <param name="seq">The sequence, <see cref="Sequence"/>.</param>
         /// <param name="meta">The metadata, <see cref="MetaData"/>.</param>
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
-        /// <param name="_cutoffScore">The cutoffScore, <see cref="cutoffScore"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Alphabet alphabet, double _cutoffScore, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, TemplateDatabase parent, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;
             MetaData = meta;
             score = 0;
             Matches = new List<SequenceMatch>();
-            Alphabet = alphabet;
-            cutoffScore = _cutoffScore;
             Recombination = recombination;
             Location = location;
+            Parent = parent;
         }
 
         /// <summary>
@@ -98,7 +98,7 @@ namespace AssemblyNameSpace
             {
                 if (match != null)
                 {
-                    if (match.Score >= cutoffScore * Math.Sqrt(match.QuerySequence.Length))
+                    if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
                         score += match.Score;// / match.TemplateSequence.Length;
                         Matches.Add(match);
@@ -318,7 +318,7 @@ namespace AssemblyNameSpace
                         AminoAcid aa;
                         if (option.SequencePosition == -1)
                         {
-                            aa = new AminoAcid(Alphabet, Alphabet.GapChar);
+                            aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
                         }
                         else
                         {

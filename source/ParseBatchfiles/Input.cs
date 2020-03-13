@@ -932,14 +932,30 @@ namespace AssemblyNameSpace
                             }
 
                             break;
+                        case "scoring":
+                            var scoring = setting.GetValue().ToLower();
+                            if (scoring == "absolute")
+                            {
+                                tsettings.Scoring = RunParameters.ScoringParameter.Absolute;
+                            }
+                            else if (scoring == "relative")
+                            {
+                                tsettings.Scoring = RunParameters.ScoringParameter.Relative;
+                            }
+                            else
+                            {
+                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
+                            }
+                            break;
+
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
 
                             if (peaks.Value == false)
                             {
-                                var options = "'Path', 'Type', 'Name' and 'Alphabet'";
-                                if (!extended) options = "'Path', 'Type' and 'Name'";
+                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'IncludeShortReads', 'Scoring' and all PEAKS format parameters";
+                                if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             }
                             break;

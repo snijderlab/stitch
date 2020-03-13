@@ -285,7 +285,14 @@ namespace AssemblyNameSpace
             /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
             /// </summary>
             public bool IncludeShortReads = true;
+
+            /// <summary>
+            /// The scoring system of this database, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template).
+            /// </summary>
+            public ScoringParameter Scoring = ScoringParameter.Absolute;
         }
+
+        public enum ScoringParameter { Absolute, Relative }
 
         /// <summary>
         /// To contain all parameters for recombination of Databases.

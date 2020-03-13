@@ -18,42 +18,47 @@ namespace AssemblyNameSpace
     {
         public readonly int Index;
         public readonly string Name;
-        readonly Alphabet alphabet;
+        public readonly Alphabet Alphabet;
         public List<Template> Templates;
-        readonly double cutoffScore;
+        public readonly double CutoffScore;
+        public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
         /// Create a new TemplateDatabase based on the reads found in the given file.
         /// </summary>
-        /// <param name="file">The file to open</param>
-        /// <param name="type">The type of the file</param>
-        /// <param name="alp">The alphabet to use</param>
+        /// <param name="sequences">The reads to generate templates from</param>
+        /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alp, string name, double _cutoffScore, int index)
+        /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
+        /// <param name="index">The index of this template for cross reference purposes</param>
+        /// <param name="scoring">The scoring behaviour to use in this database</param>
+        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
-            cutoffScore = _cutoffScore;
-            alphabet = alp;
+            CutoffScore = cutoffScore;
+            Alphabet = alphabet;
             Templates = new List<Template>();
+            Scoring = scoring;
 
             for (int i = 0; i < sequences.Count(); i++)
             {
                 var pair = sequences[i];
                 var parsed = StringToSequence(pair.Item1);
-                Templates.Add(new Template(name, parsed, pair.Item2, alphabet, cutoffScore, new TemplateLocation(index, i)));
+                Templates.Add(new Template(name, parsed, pair.Item2, this, new TemplateLocation(index, i)));
             }
         }
         /// <summary>
         /// Create a new TemplateDatabase based on the templates provided.
         /// </summary>
         /// <param name="templates">The templates</param>
-        /// <param name="alp">The alphabet to use</param>
+        /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alp, string name, double _cutoffScore)
+        /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
+        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore)
         {
             Name = name;
-            cutoffScore = _cutoffScore;
-            alphabet = alp;
+            CutoffScore = cutoffScore;
+            Alphabet = alphabet;
             Templates = templates.ToList();
         }
         /// <summary>
@@ -66,7 +71,7 @@ namespace AssemblyNameSpace
             AminoAcid[] output = new AminoAcid[input.Length];
             for (int i = 0; i < input.Length; i++)
             {
-                output[i] = new AminoAcid(alphabet, input[i]);
+                output[i] = new AminoAcid(Alphabet, input[i]);
             }
             return output;
         }
@@ -104,7 +109,7 @@ namespace AssemblyNameSpace
             Parallel.ForEach(
                 runs,
                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, alphabet, s.Item2))
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, s.Item2))
             );
         }
         void MatchSerial(List<GraphPath> sequences)
@@ -115,7 +120,7 @@ namespace AssemblyNameSpace
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, alphabet, sequences[i]));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, sequences[i]));
                     x++;
                 }
                 y++;
