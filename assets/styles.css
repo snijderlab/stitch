@@ -48,6 +48,11 @@ h1 {
     font-family: Roboto Mono, monospace;
 }
 
+.aside-seq .highlight {
+    color: var(--color-secondary-dark);
+    font-weight: 500;
+}
+
 .seq {
     word-break: break-all;
     font-family: Roboto Mono, monospace;
@@ -140,6 +145,10 @@ td.seq {
 }
 
 tr.selected {
+    background-color: var(--color-secondary-light);
+}
+
+tr:hover {
     background-color: var(--color-secondary-light);
 }
 

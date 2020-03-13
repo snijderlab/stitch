@@ -107,6 +107,12 @@ function Setup() {
     window.name = window.name + "|" + window.location.href
 
     if (window.name.split('|').pop().split('/').pop().split('.')[0].replace(/-/g, ':') == assetsfolder.replace(/-/g, ':')) window.name = window.location.href;
+
+    if (get('pos')) {
+        var pos = parseInt(get('pos'));
+        var text = document.getElementsByClassName('aside-seq')[0].innerText;
+        document.getElementsByClassName('aside-seq')[0].innerHTML = text.substring(0, pos) + "<span class='highlight'>" + text.substring(pos, pos + 1) + "</span>" + text.substring(pos + 1);
+    }
 }
 
 function pauseEvent(e) {

@@ -190,7 +190,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < reads.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Read);
-                link = GetAsideLink(i, AsideType.Read, null, AssetsFolderName);
+                link = GetAsideLink(i, AsideType.Read);
                 buffer.AppendLine($@"<tr id=""reads-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
@@ -228,9 +228,9 @@ namespace AssemblyNameSpace
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
     <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
-    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig, null, AssetsFolderName))}</td>
-    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig, null, AssetsFolderName))}</td>
-    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, null, AssetsFolderName))}</td>
+    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</td>
 </tr>");
             }
 
@@ -270,7 +270,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < sorted.Count(); i++)
             {
                 id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
-                link = GetAsideLink(templateIndex, i, AsideType.Template, null, AssetsFolderName);
+                link = GetAsideLink(templateIndex, i, AsideType.Template);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -298,7 +298,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < Paths.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Path);
-                link = GetAsideLink(i, AsideType.Path, null, AssetsFolderName);
+                link = GetAsideLink(i, AsideType.Path);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</td>
@@ -330,7 +330,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < sorted.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
-                link = GetAsideLink(i, AsideType.RecombinedTemplate, null, AssetsFolderName);
+                link = GetAsideLink(i, AsideType.RecombinedTemplate);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -372,7 +372,7 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < sorted.Count(); i++)
                 {
                     id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
-                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase, null, AssetsFolderName);
+                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase);
                     innerbuffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
@@ -409,7 +409,7 @@ namespace AssemblyNameSpace
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location, id))}</p>
+    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
 </div>";
         }
 
@@ -487,7 +487,7 @@ namespace AssemblyNameSpace
             var sb = new StringBuilder();
             foreach (var tem in best_templates)
             {
-                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location, id)}</td></tr>");
+                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
             }
 
             var templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top 10 templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
@@ -508,7 +508,7 @@ namespace AssemblyNameSpace
     <h2>Sequence Length</h2>
     <p>{Paths[i].Sequence.Length}</p>
     <h2>Path</h2>
-    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location, id)).Substring(3)}</p>
+    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -529,7 +529,7 @@ namespace AssemblyNameSpace
             string order = "";
             if (template.Recombination != null)
             {
-                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location, id)).Substring(3)}</p>";
+                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
@@ -1102,9 +1102,9 @@ namespace AssemblyNameSpace
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns>A valid HTML link.</returns>
-        string GetAsideLink(int index, AsideType type, List<string> location = null, string thiselement = null)
+        string GetAsideLink(int index, AsideType type, List<string> location = null)
         {
-            return GetAsideLink(-1, index, type, location, thiselement);
+            return GetAsideLink(-1, index, type, location);
         }
 
         /// <summary> Returns a link to the given aside. </summary>
@@ -1112,14 +1112,12 @@ namespace AssemblyNameSpace
         /// <param name="index2">The index in the container of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns> A valid HTML link.</returns>
-        string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null, string thiselement = null)
+        string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null)
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(index1, index2, type);
             string classname = GetAsideName(type);
             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
-            string referrer = "";
-            if (thiselement != null) referrer = $"?ref={GetLinkToFolder(location, new List<string>() { AssetsFolderName, classname + "s" })}{thiselement.Replace(':', '-')}.html";
             return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{id}</a>";
         }
 
