@@ -696,11 +696,15 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    frontoverhangbuffer.Append($"<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    frontoverhangbuffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
-            frontoverhangbuffer.AppendLine($"</p></div></label></div>");
-            if (frontoverhang) buffer.Append(frontoverhangbuffer.ToString());
+
+            if (frontoverhang)
+            {
+                buffer.Append(frontoverhangbuffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
+                buffer.AppendLine($"</p></div></label></div>");
+            }
 
             // Chop it up, add numbers etc
             const int blocklength = 5;
@@ -762,6 +766,7 @@ namespace AssemblyNameSpace
                         number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
+                    StringBuilder alignblock = new StringBuilder();
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         string result = "";
@@ -771,9 +776,10 @@ namespace AssemblyNameSpace
                             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
                             if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
-                        buffer.Append(result);
-                        buffer.Append("<br>");
+                        alignblock.Append(result);
+                        alignblock.Append("<br>");
                     }
+                    buffer.Append(alignblock.ToString().TrimEnd("<br>"));
                     buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
                     for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count() - block * blocklength); i++)
                     {
@@ -798,11 +804,14 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    endoverhangbuffer.Append($"<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    endoverhangbuffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
-            endoverhangbuffer.AppendLine($"</p></div></label></div>");
-            if (endoverhang) buffer.Append(endoverhangbuffer.ToString());
+            if (endoverhang)
+            {
+                buffer.Append(endoverhangbuffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
+                buffer.AppendLine($"</p></div></label></div>");
+            }
             buffer.AppendLine("</div>");
 
             var consensus_sequence = template.CombinedSequence();

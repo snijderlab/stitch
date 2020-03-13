@@ -339,25 +339,39 @@ namespace AssemblyNameSpace
                 foreach (var option in alignedSequences[i].Gaps)
                 {
                     IGap key;
-                    if (option.Gap == null || option.Gap is None) continue;
-                    key = option.Gap;
-
-                    if (output[i].Gaps.ContainsKey(key))
+                    if (option.Gap == null) continue;
+                    if (option.Gap == (IGap)new None())
                     {
-                        int[] cov;
-                        if (output[i].Gaps[key].CoverageDepth == null)
+                        if (output[i].Gaps.ContainsKey(new None()))
                         {
-                            cov = option.CoverageDepth;
+                            output[i].Gaps[new None()] = (output[i].Gaps[new None()].Count + 1, new int[0]);
                         }
                         else
                         {
-                            cov = output[i].Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
+                            output[i].Gaps.Add(new None(), (1, new int[0]));
                         }
-                        output[i].Gaps[key] = (output[i].Gaps[key].Count + 1, cov);
                     }
                     else
                     {
-                        output[i].Gaps.Add(key, (1, option.CoverageDepth));
+                        key = option.Gap;
+
+                        if (output[i].Gaps.ContainsKey(key))
+                        {
+                            int[] cov;
+                            if (output[i].Gaps[key].CoverageDepth == null)
+                            {
+                                cov = option.CoverageDepth;
+                            }
+                            else
+                            {
+                                cov = output[i].Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
+                            }
+                            output[i].Gaps[key] = (output[i].Gaps[key].Count + 1, cov);
+                        }
+                        else
+                        {
+                            output[i].Gaps.Add(key, (1, option.CoverageDepth));
+                        }
                     }
                 }
             }

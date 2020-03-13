@@ -53,6 +53,14 @@ namespace AssemblyNameSpace
             }
             return result;
         }
+        public static string TrimEnd(this string input, string suffixToRemove)
+        {
+            while (input != null && suffixToRemove != null && input.EndsWith(suffixToRemove))
+            {
+                input = input.Substring(0, input.Length - suffixToRemove.Length);
+            }
+            return input;
+        }
         public struct ReadPlacement
         {
             public string Sequence;
@@ -235,7 +243,7 @@ namespace AssemblyNameSpace
 
                     // Calculate the score for the current position
                     if (gap)
-                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] - alphabet.GapExtendPenalty; // Match Gap
+                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1]; // Match Gap, 0 penalty
                     else
                     {
                         score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
