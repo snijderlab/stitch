@@ -2,27 +2,29 @@
 
 ## Introduction
 
-Batch files are used to aggregate all information for one run of the program. These files can be edited wih any plain text editor. There is no specific extension required by the program so `.txt` is recommended because these will automatically be opened by an editor in plain text.
+Batch files are used to aggregate all information for one run of the program. These files can be edited with any plain text editor. There is no specific extension required by the program so `.txt` is recommended because these will automatically be opened by an editor in plain text.
 
 ## Structure
 
-The general structure is parameters followed by values. A parameter is the first thing on a line (possibly followed by whitespace) followed by a delimiter ( `:` for single valued parameters, `:>`/`<:` for multiline single valued parameters or `->`/`<-` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and most values are not case specific.
+The general structure is parameters followed by values. A parameter is the first thing on a line (possibly precessed by whitespace) followed by a delimiter ( `:` for single valued parameters, `:>`/`<:` for multiline single valued parameters or `->`/`<-` for multiple valued parameters) (possibly followed by whitespace) followed by the value(s). Parameter names and most values are not case specific.
 
 In any place where a single valued parameter is expected both a single line `:` and a multiline `:>`/`<:` are valid. 
 
-Lines starting with a hyphen `-` are considered comments and disregarded. Comments can be placed in the outer scope and in multivalued arguments.
+Lines starting with a hyphen `-` are considered comments and disregarded. Comments can be placed in the outer scope and in multiple valued arguments.
 
 ### All parameters
 
 Here is a list of all parameters and their possible values. An 's' after the name indicates it is a single valued parameter, an 'm' indicates it is a multiple valued parameter.
 
-All paths are specified from the directory of the batchfile.
+All paths are specified from the directory of the batch file.
+
+All assets are loaded form the folder assets relative to the position of the binary.
 
 #### Run Info
 
 ##### Version (s)
 
-The version of the batch file. For now only version 0 is accepted, but is included to later add more version with possible breaking changes in the structure.
+The version of the batch file. For now only version 0 is accepted, but is included to later add more versions with possible breaking changes in the structure. This parameter is required.
 
 _Example_
 ```
@@ -39,7 +41,7 @@ Runname: MyFirstTestRun
 Runname: Monoclonal Antibodies From Rabbits
 ```
 
-##### MacCores (s)
+##### MaxCores (s)
 
 The maximum amount of cores to be used by this run. Default is the amount of cores of the machine.
 
@@ -165,7 +167,7 @@ Folder ->
 
 The value or values of K to be used.
 
-If multiple values are entered multiple runs are generated with all different values of K.
+If multiple values are entered multiple runs are generated each with a different values for K.
 
 For the range definition some inner parameters are available. `Start` and `End` have to be defined.
 
@@ -193,7 +195,7 @@ Step: 2
 
 ##### MinimalHomology (s)
 
-The minimal homology to use, this is the minimal score before an edge is included in the De Bruijn graph. This value is mainly depending on the alphabet used.
+The minimal homology to use, this is the minimal score before an edge is included in the De Bruijn graph. This value is mainly dependent on the alphabet used.
 
 It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmetic, - + * /, the variable 'K' and constants (positive integer numbers).
 
@@ -295,7 +297,7 @@ Defines how to match all paths in the graph to a database of templates.
 
 Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-When a database is used in a databaselist for a recombination database the `Alphabet` and `IncludeShortReads` parameters are considered invalid. These should be set on the enclosing recombination database.
+When a database is used in a database list for a recombination database the `Alphabet` and `IncludeShortReads` parameters are considered invalid. These should be set on the enclosing recombination database.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
@@ -303,7 +305,8 @@ Path | The path to the database. | (No Default)
 Name | The name of the database. Used for display in the output. Can contain whitespace. | (No Default)
 CutoffScore | The mean score per position needed for a path to be included in the Template score. | 0
 Alphabet | The alphabet to use. See 'Alphabet'. | (No Default)
-IncludeShortReads | Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`) | True
+IncludeShortReads | Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`) | `True`
+Scoring | The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. | `Absolute`
 
 ```
 Database ->
@@ -331,7 +334,7 @@ Database ->
 
 ##### Recombine (m)
 
-Defines how to recombine a set of databases. For example if antibody data is used this recombination can be used to first match all paths to every template (as in the previous argument 'Database'). After this the _n_ highest scoring templates out of each database are recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime exponentially increases exponentially with _n_.
+Defines how to recombine a set of databases. For example if antibody data is used this recombination can be used to first match all paths to every template (as in the previous argument 'Database'). After this the _n_ highest scoring templates out of each database are recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime exponentially increases with _n_.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
@@ -340,6 +343,8 @@ Order | The order in which the databases will be recombined. Defined as a list o
 CutoffScore | The mean score per position needed for a path to be included in the Database score. | 0
 Databases | The list of databases to use. See 'Database'. Databases exist of a path to the database and a name, which should be unique (in this list) and not contain a '*', because otherwise the order cannot be unambiguously parsed.  | (No Default)
 Alphabet | The alphabet to use. See 'Alphabet' | (No Default)
+IncludeShortReads | Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`) | `True`
+Scoring | The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. | `Absolute`
 
 ```
 Recombine->
@@ -371,7 +376,7 @@ Recombine->
 
 ##### HTML (m)
 
-To generate an HTML report. This report displays the graph retrieved from the assembly, a list of all contigs (nodes in the De Bruijn graph), a list of all reads used to assemble and some metadata about the run, the reads and the contigs.
+To generate an HTML report. This report displays all information about this run, including all original metadata of the input. The report is designed to be used interactively to aid in understanding how well the software performed and how trustworthy the results are. The report will be generated as an overview file (with the name specified) with a folder with all additional details (with the same name as the HTML file). 
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
@@ -385,7 +390,9 @@ Path: Report.html
 <-
 ```
 
-##### CSV (m)
+##### CSV (m) 
+
+_(TODO outdated)_ 
 
 To generate a CSV report, it will add summary information of each run on a single line to the file.
 If the file exists already it will append the new data lines to it, so that multiple runs after each other will not destroy previous work.
@@ -404,13 +411,13 @@ Path: Report.csv
 
 ##### FASTA (m)
 
-To generate an FASTA file with all path, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
+To generate a FASTA file with all paths, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
 
 Inner parameter | Explanation | Default Value
 --- | --- | ---
 Path | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)
 MinimalScore | The minimal score needed to be included in the file | 0
-OutputType | The type of sequences to give as output, 'Paths' or 'ConsensusSequences' | 'Paths'
+OutputType | The type of sequences to give as output, `Paths` or `ConsensusSequences` | `Paths`
 
 _Example_
 ```
