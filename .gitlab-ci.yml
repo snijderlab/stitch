@@ -21,5 +21,9 @@ test:
 deploy:
   stage: deploy
   script:
-    - "dotnet publish source -c release"
+    - "dotnet publish source -c release /p:PublishTrimmed=true /p:PublishReadyToRun=true"
     - "dotnet publish source -c release -r linux-x64"
+    - 7z a -tzip package.zip @includefiles.txt
+  artefacts: 
+    paths:
+      - package.zip
