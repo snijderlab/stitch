@@ -1,1 +1,0 @@
-For the API documentation see the sidebar.
