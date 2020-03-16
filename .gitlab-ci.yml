@@ -11,6 +11,10 @@ before_script:
 build:
   stage: build
   script:
+    - "cd source"
+    - "rmdir /S obj"
+    - "rmdir /S bin"
+    - "cd .."
     - "dotnet build source"
 
 test:
