@@ -28,3 +28,4 @@ deploy:
   artifacts: 
     paths:
       - package.zip
+    expire_in: 2 weeks
