@@ -1,0 +1,28 @@
+image: microsoft/dotnet:latest
+
+stages:
+  - build
+  - test
+  - deploy
+
+variables:
+  project: "NewTypes"
+
+before_script:
+  - "dotnet restore"
+
+build:
+  stage: build
+  script:
+    - "dotnet build -p source"
+
+test:
+  stage: test
+  script:
+    - "dotnet test tests"
+
+deploy:
+  stage: deploy
+  script:
+    - "dotnet publish source -c release"
+    - "dotnet publish source -c release -r linux-x64"
