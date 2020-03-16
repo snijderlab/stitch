@@ -24,8 +24,14 @@ deploy:
   script:
     - "dotnet publish source -c release /p:PublishTrimmed=true /p:PublishReadyToRun=true"
     - "dotnet publish source -c release -r linux-x64"
-    - C:\"Program Files"\7-Zip\7z.exe a -tzip package.zip --% @build_include_files.txt
   artifacts: 
     paths:
-      - package.zip
+      - .\source\bin\release\netcoreapp3.1\win-x64\publish\source.exe
+      - .\source\bin\release\netcoreapp3.1\linux-x64\publish\source
+      - .\source\obj\release\netcoreapp3.1\win-x64\source.dll
+      - .\articles\BatchFiles.md
+      - License.md
+      - index.md
+      - assets/
+      - examples/
     expire_in: 2 weeks
