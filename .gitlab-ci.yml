@@ -13,8 +13,8 @@ build:
   stage: build
   script:
     - "cd source"
-    - "Remove-Item obj"
-    - "Remove-Item bin"
+    - "Remove-Item obj -Recurse"
+    - "Remove-Item bin -Recurse"
     - "cd .."
     - "dotnet build source"
 
@@ -37,6 +37,6 @@ clean:
   stage: clean
   script:
     - "cd source"
-    - "Remove-Item obj"
-    - "Remove-Item bin"
+    - "Remove-Item obj -Recurse"
+    - "Remove-Item bin -Recurse"
     - "cd .."
