@@ -6,10 +6,10 @@ There are distributed executable files for windows (x64) and linux (x64). The [d
 
 Windows (x64):
 ```
-source.exe examplebatchfile.txt
+.\source.exe examplebatchfile.txt
 ```
 
-Linux (x64, most version):
+Linux (x64, most versions):
 ```
 ./source examplebatchfile.txt
 ```
@@ -18,7 +18,7 @@ For help creating batch files see BatchFiles.md
 
 ## Running with dotnet
 
-To run the program with the dotnet runtime, first install the dotnet runtime (at least version 2.2) from [here](https://dotnet.microsoft.com/download).
+To run the program with the dotnet runtime, first install the dotnet runtime (at least version 3.1) from [here](https://dotnet.microsoft.com/download).
 Then run the following command to run the program:
 
 ```
@@ -27,27 +27,27 @@ dotnet path/to/source.dll <arguments>
 
 ## Installing Dot
 
-On windows [Graphviz](https://www.graphviz.org) is included in the assets, so there is no need to install it. On Linux or other platforms you will have to install Graphviz, [see this site](https://graphviz.gitlab.io/download/). Do not forget when you installed Graphviz on your own machine to add the option `DotDistribution: Global` to all HTML reports and check if the program should be added to your PATH variable.
+On windows [Graphviz](https://www.graphviz.org) is included in the assets, so there is no need to install it. On Linux or other platforms you will have to install Graphviz, [see this site](https://graphviz.gitlab.io/download/). Do not forget when you installed Graphviz on your own machine to add the option `DotDistribution: Global` to all HTML reports and check if the program should be added to your `PATH` variable.
 
 # Building
 
-The project is built with dotnet (SDK 2.2) this is tested on windows and linux. To run the project on your own machine (not linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (SDK 3.1) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
 dotnet run -p source <path to batchfile>
 ```
 
-To generate a single executable with help of the ILCompiler run:
+To generate a single executable run:
 
 ```
-dotnet publish -c Release -r target-name
+dotnet publish source -c release [-r target]
 ```
 
-The target name should then be a valid 'RID' for the platform you choose. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling, so it can only compile binaries for the platform you are at.
+The target name should then be a valid 'RID' for the platform you choose. But if this is omitted it will default to windows x64. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling with Ready to Run (R2R) enabled, so if there is a need to cross compile this option should be set to false (in `source.csproj`).
 
 # Testing
 
-There are some unittests provided. These can be found in the 'tests' file. To run the unittests run (from the root folder):
+There are some unit tests provided. These can be found in the 'tests' file. To run the unit tests run (from the root folder):
 
 ```
 dotnet test tests
@@ -79,7 +79,7 @@ Example 009 is an example of a FASTA input file.
 
 MIT License
 
-Copyright (c) 2019 Joost Snijder & Douwe Schulte
+Copyright (c) 2019-2020 Joost Snijder & Douwe Schulte
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
