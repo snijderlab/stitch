@@ -49,7 +49,7 @@ Recombine->
             Name : IGHV
         <-
         Database->
-            Path    : ../templates/IGHJone.fasta
+            Path    : ../templates/IGHJ_simplified.fasta
             Name    : IGHJ
             Scoring : Relative
         <-
