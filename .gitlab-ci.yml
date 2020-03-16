@@ -12,10 +12,6 @@ before_script:
 build:
   stage: build
   script:
-    - "cd source"
-    - "Remove-Item obj -Recurse"
-    - "Remove-Item bin -Recurse"
-    - "cd .."
     - "dotnet build source"
 
 test:
