@@ -77,11 +77,14 @@ namespace AssemblyNameSpace
                 {
                     ParseHelper.Trim(ref content, counter);
 
-                    if (content[0] == '-') {
+                    if (content[0] == '-')
+                    {
                         // This line is a comment, skip it
                         ParseHelper.SkipLine(ref content, counter);
                         return (null, content);
-                    } else {
+                    }
+                    else
+                    {
                         return Argument(content, counter);
                     }
                 }
@@ -94,7 +97,7 @@ namespace AssemblyNameSpace
                 {
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
-                    (string name, Range range) = ParseHelper.Name(ref content, counter);
+                    (string name, FileRange range) = ParseHelper.Name(ref content, counter);
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
@@ -122,13 +125,13 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static (KeyValue, string) SingleParameter(string content, string name, Counter counter, Range namerange)
+                static (KeyValue, string) SingleParameter(string content, string name, Counter counter, FileRange namerange)
                 {
                     content = content.Remove(0, 1);
                     counter.NextColumn();
                     ParseHelper.Trim(ref content, counter);
                     //Get the single value of the parameter
-                    (string value, Range range) = ParseHelper.Value(ref content, counter);
+                    (string value, FileRange range) = ParseHelper.Value(ref content, counter);
                     return (new KeyValue(name, value, new KeyRange(namerange, counter.GetPosition()), range), content);
                 }
 
@@ -138,7 +141,7 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, Range namerange)
+                static (KeyValue, string) MultilineSingleParameter(string content, string name, Counter counter, FileRange namerange)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
@@ -148,7 +151,7 @@ namespace AssemblyNameSpace
                     string value = ParseHelper.UntilSequence(ref content, "<:", counter);
                     Position endkey = counter.GetPosition();
                     Position endvalue = new Position(endkey.Line, endkey.Column - 2, counter.File);
-                    return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
+                    return (new KeyValue(name, value.Trim(), new KeyRange(namerange, endkey), new FileRange(startvalue, endvalue)), content);
                 }
 
                 /// <summary>
@@ -157,7 +160,7 @@ namespace AssemblyNameSpace
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, Range namerange)
+                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, FileRange namerange)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
@@ -169,8 +172,9 @@ namespace AssemblyNameSpace
 
                     while (true)
                     {
-                        if (content.Length == 0) {
-                            new ErrorMessage(new Range(namerange.Start, counter.GetPosition()), "Could not find the end of the multiparameter", "", "Make sure to end the parameter with '<-'.").Print();
+                        if (content.Length == 0)
+                        {
+                            new ErrorMessage(new FileRange(namerange.Start, counter.GetPosition()), "Could not find the end of the multiparameter", "", "Make sure to end the parameter with '<-'.").Print();
                             throw new ParseException("");
                         }
                         if (content[0] == '<' && content[1] == '-')
@@ -180,11 +184,11 @@ namespace AssemblyNameSpace
                             counter.NextColumn(2);
                             Position endkey = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
-                            return (new KeyValue(name, values, new KeyRange(namerange, endkey), new Range(startvalue, endvalue)), content);
+                            return (new KeyValue(name, values, new KeyRange(namerange, endkey), new FileRange(startvalue, endvalue)), content);
                         }
                         else
-                        {      
-                            ParseHelper.Trim(ref content, counter);                     
+                        {
+                            ParseHelper.Trim(ref content, counter);
                             if (content[0] == '-' && content[1] != '>')
                             {
                                 ParseHelper.SkipLine(ref content, counter);
@@ -192,7 +196,7 @@ namespace AssemblyNameSpace
                             }
 
                             // Match the inner parameter
-                            (string innername, Range innerrange) = ParseHelper.Name(ref content, counter);
+                            (string innername, FileRange innerrange) = ParseHelper.Name(ref content, counter);
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')
@@ -275,7 +279,7 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string.</param>
                 /// <returns>The name.</returns>
-                public static (string, Range) Name(ref string content, Counter counter)
+                public static (string, FileRange) Name(ref string content, Counter counter)
                 {
                     ParseHelper.Trim(ref content, counter);
                     Position start = counter.GetPosition();
@@ -298,12 +302,13 @@ namespace AssemblyNameSpace
 
                     name_str = name_str.Trim();
 
-                    var name_range = new Range(start, end);
+                    var name_range = new FileRange(start, end);
 
-                    if (name_str == "") {
+                    if (name_str == "")
+                    {
                         new ErrorMessage(name_range, "Empty name", $"at").Print();
-                    //    throw new ParseException("");
-                    } 
+                        //    throw new ParseException("");
+                    }
 
                     return (name_str, name_range);
                 }
@@ -313,7 +318,7 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="content">The string and range.</param>
                 /// <returns>The value.</returns>
-                public static (string, Range) Value(ref string content, Counter counter)
+                public static (string, FileRange) Value(ref string content, Counter counter)
                 {
                     string result;
                     Position start = counter.GetPosition();
@@ -335,7 +340,7 @@ namespace AssemblyNameSpace
                         result = result.TrimStart(); // Remove whitespace in front
                     }
 
-                    return (result, new Range(start, end));
+                    return (result, new FileRange(start, end));
                 }
                 public static void Trim(ref string content, Counter counter)
                 {

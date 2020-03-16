@@ -147,7 +147,7 @@ namespace AssemblyTestNameSpace
             var file = new ParsedFile();
             var def_position = new Position(0, 1, file);
             var end_position = new Position(0, s.Length + 1, file);
-            return new KArithmetic(KArithmetic.TryParse(s, new Range(def_position, end_position), new ParsedFile()).ReturnOrFail());
+            return new KArithmetic(KArithmetic.TryParse(s, new FileRange(def_position, end_position), new ParsedFile()).ReturnOrFail());
         }
     }
 }

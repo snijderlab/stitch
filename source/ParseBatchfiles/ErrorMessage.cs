@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
                 Warning = warning;
                 File = pos.File;
             }
-            public ErrorMessage(Range range, string shortD, string longD = "", string help = "", bool warning = false)
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false)
             {
                 startposition = range.Start;
                 endposition = range.End;
@@ -50,16 +50,16 @@ namespace AssemblyNameSpace
                 Warning = warning;
                 File = range.File;
             }
-            public static ErrorMessage DuplicateValue(Range range)
+            public static ErrorMessage DuplicateValue(FileRange range)
             {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;
             }
-            public static ErrorMessage MissingParameter(Range range, string parameter)
+            public static ErrorMessage MissingParameter(FileRange range, string parameter)
             {
                 return new ErrorMessage(range, $"Missing parameter: {parameter}");
             }
-            public static ErrorMessage UnknownKey(Range range, string context, string options)
+            public static ErrorMessage UnknownKey(FileRange range, string context, string options)
             {
                 return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.");
             }

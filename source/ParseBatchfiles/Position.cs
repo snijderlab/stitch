@@ -41,7 +41,7 @@ namespace AssemblyNameSpace
         /// </summary>
         public override string ToString()
         {
-            return $"{File}:{Line+1},{Column}";
+            return $"{File}:{Line + 1},{Column}";
         }
         public static bool operator ==(Position p1, Position p2)
         {
@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// Tracks a range in a file, for example the range of a keyword
     /// </summary>
-    public struct Range
+    public struct FileRange
     {
         /// <summary>
         /// The file this positions are in
@@ -89,7 +89,7 @@ namespace AssemblyNameSpace
         /// <param name="start">The start position</param>
         /// <param name="end">The end position</param>
         /// <exception cref="ArgumentException">If the two positions are not in the same file, or if the start position is after the end position.</exception>
-        public Range(Position start, Position end)
+        public FileRange(Position start, Position end)
         {
             Start = start;
             End = end;
@@ -141,22 +141,22 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The full range, from <see cref="Start"/> to <see cref="FieldEnd"/>, |Key :&gt; &lt;:|
         /// </summary>
-        public Range Full
+        public FileRange Full
         {
             get
             {
-                return new Range(Start, FieldEnd);
+                return new FileRange(Start, FieldEnd);
             }
         }
 
         /// <summary>
         /// The range of the name, from <see cref="Start"/> to <see cref="NameEnd"/>, |Key| :&gt; &lt;:
         /// </summary>
-        public Range Name
+        public FileRange Name
         {
             get
             {
-                return new Range(Start, NameEnd);
+                return new FileRange(Start, NameEnd);
             }
         }
 
@@ -197,7 +197,7 @@ namespace AssemblyNameSpace
         /// <param name="name">Name range, from <see cref="Start"/> to <see cref="NameEnd"/></param>
         /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
         /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>
-        public KeyRange(Range name, Position fieldEnd)
+        public KeyRange(FileRange name, Position fieldEnd)
         {
             Start = name.Start;
             NameEnd = name.End;

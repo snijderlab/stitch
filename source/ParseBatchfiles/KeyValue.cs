@@ -19,14 +19,14 @@ namespace AssemblyNameSpace
             /// </summary>
             readonly ValueType Value;
             public readonly KeyRange KeyRange;
-            public readonly Range ValueRange;
+            public readonly FileRange ValueRange;
 
             /// <summary>
             /// Create a new single valued key.
             /// </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="value">The value of the key.</param>
-            public KeyValue(string name, string value, KeyRange key_r, Range value_r)
+            public KeyValue(string name, string value, KeyRange key_r, FileRange value_r)
             {
                 Name = name.ToLower();
                 Value = new Single(value);
@@ -39,7 +39,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
-            public KeyValue(string name, List<KeyValue> values, KeyRange key_r, Range value_r)
+            public KeyValue(string name, List<KeyValue> values, KeyRange key_r, FileRange value_r)
             {
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);

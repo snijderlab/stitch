@@ -167,7 +167,7 @@ namespace AssemblyNameSpace
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
                 List<string> fields = new List<string>();
-                List<Range> positions = new List<Range>();
+                List<FileRange> positions = new List<FileRange>();
                 int lastpos = 0;
                 string line = parsefile.Lines[linenumber];
 
@@ -182,13 +182,13 @@ namespace AssemblyNameSpace
                     if (line[pos] == separator)
                     {
                         fields.Add(line.Substring(lastpos, pos - lastpos));
-                        positions.Add(new Range(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile)));
+                        positions.Add(new FileRange(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile)));
                         lastpos = pos + 1;
                     }
                 }
 
                 fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
-                positions.Add(new Range(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
+                positions.Add(new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
 
                 if (fields.Count() < 3)
                 {

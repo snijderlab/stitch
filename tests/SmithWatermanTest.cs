@@ -185,7 +185,7 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
-            Assert.AreEqual(453, r.Score);
+            Assert.AreEqual(454, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
@@ -197,15 +197,16 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
 
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
+            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
 
-            Assert.AreEqual(417, r.Score);
+            Assert.AreEqual(419, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
@@ -222,15 +223,16 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCAR*DIWGQGTVVTVSSASTKGPSVFPLAP", alp);
             var b = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP", alp);
 
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
+            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
 
             Console.WriteLine(r.ToString());
 
-            Assert.AreEqual(364, r.Score);
+            Assert.AreEqual(366, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("49M10I27M", r.Alignment.CIGAR());
@@ -292,7 +294,7 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
-            Assert.AreEqual(239, r.Score);
+            Assert.AreEqual(241, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("31M1D6M4I22M", r.Alignment.CIGAR());
@@ -322,8 +324,9 @@ namespace AssemblyTestNameSpace
             var a = StringToSequence(tem, alp);
             var b = StringToSequence(path, alp);
 
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), alp, 0);
-            TemplateDatabase db = new TemplateDatabase(new List<Template> { template }, alp, "TEST DB", 0);
+            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
+            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];
@@ -385,7 +388,6 @@ namespace AssemblyTestNameSpace
             var reference_alphabet = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
 
             Console.WriteLine(match);
-            Console.WriteLine(template.Alphabet);
             Console.WriteLine(reference_alphabet);
 
             // Alphabet
@@ -393,7 +395,6 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(12, template_parameter.Alphabet.GapStartPenalty);
             Assert.AreEqual(2, template_parameter.Alphabet.GapExtendPenalty);
             Assert.IsNotNull(template_parameter.Alphabet);
-            Assert.AreEqual(reference_alphabet.ToString(), template.Alphabet.ToString());
             // Template sequence
             Assert.AreEqual("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", AminoAcid.ArrayToString(template.Sequence));
             // Path sequence

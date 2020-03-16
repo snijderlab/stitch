@@ -408,7 +408,7 @@ namespace AssemblyNameSpace
                                 }
                                 else
                                 {
-                                    outEither.AddMessage(new ErrorMessage(new Range(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
+                                    outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
                                     break;
                                 }
                             }
@@ -515,7 +515,7 @@ namespace AssemblyNameSpace
             }
 
             Position def_position = new Position(0, 1, new ParsedFile());
-            Range def_range = new Range(def_position, def_position);
+            FileRange def_range = new FileRange(def_position, def_position);
 
             // Generate defaults
             if (output.DuplicateThreshold.Count() == 0)
@@ -667,7 +667,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
             /// <returns>If successfull: the number (int32)</returns>
-            public static ParseEither<int> ConvertToInt(string input, Range pos)
+            public static ParseEither<int> ConvertToInt(string input, FileRange pos)
             {
                 try
                 {
@@ -693,7 +693,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
-            public static ParseEither<double> ConvertToDouble(string input, Range pos)
+            public static ParseEither<double> ConvertToDouble(string input, FileRange pos)
             {
                 try
                 {
@@ -796,12 +796,12 @@ namespace AssemblyNameSpace
                 var outEither = new ParseEither<(char[], int[,])>();
 
                 int rows = lines.Length;
-                var cells = new List<(Position, List<(string, Range)>)>();
+                var cells = new List<(Position, List<(string, FileRange)>)>();
 
                 for (int i = 0; i < lines.Length; i++)
                 {
                     var startline = counter.GetPosition();
-                    var splitline = new List<(string, Range)>();
+                    var splitline = new List<(string, FileRange)>();
                     var line = lines[i];
                     Tokenizer.ParseHelper.Trim(ref line, counter);
 
@@ -816,7 +816,7 @@ namespace AssemblyNameSpace
                         {
                             var start = counter.GetPosition();
                             var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
-                            var range = new Range(start, counter.GetPosition());
+                            var range = new FileRange(start, counter.GetPosition());
                             splitline.Add((cell, range));
                         }
                         Tokenizer.ParseHelper.Trim(ref line, counter);
@@ -880,7 +880,7 @@ namespace AssemblyNameSpace
             {
                 // Parse files one by one
                 var file_path = "";
-                Range file_pos = node.ValueRange;
+                FileRange file_pos = node.ValueRange;
 
                 var peaks_settings = new RunParameters.Input.Peaks();
 
