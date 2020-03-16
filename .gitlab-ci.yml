@@ -5,16 +5,13 @@ stages:
   - test
   - deploy
 
-variables:
-  project: "NewTypes"
-
 before_script:
   - "dotnet restore"
 
 build:
   stage: build
   script:
-    - "dotnet build -p source"
+    - "dotnet build source"
 
 test:
   stage: test
