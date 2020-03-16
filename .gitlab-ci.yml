@@ -13,8 +13,8 @@ build:
   stage: build
   script:
     - "cd source"
-    - "rmdir /Q /S obj"
-    - "rmdir /Q /S bin"
+    - "Remove-Item obj"
+    - "Remove-Item bin"
     - "cd .."
     - "dotnet build source"
 
@@ -37,6 +37,6 @@ clean:
   stage: clean
   script:
     - "cd source"
-    - "rmdir /Q /S obj"
-    - "rmdir /Q /S bin"
+    - "Remove-Item obj"
+    - "Remove-Item bin"
     - "cd .."
