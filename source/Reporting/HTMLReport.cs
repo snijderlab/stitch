@@ -1369,7 +1369,7 @@ assetsfolder = '{AssetsFolderName}';
             Directory.CreateDirectory(FullAssetsFolderName);
             Directory.CreateDirectory(Path.Join(FullAssetsFolderName, "paths"));
 
-            var excutablefolder = Path.GetDirectoryName(System.Reflection.Assembly.GetExecutingAssembly().CodeBase);
+            var excutablefolder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
             void CopyAssetsFile(string name)
             {

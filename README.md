@@ -6,12 +6,17 @@ There are distributed executable files for windows (x64) and linux (x64). The [d
 
 Windows (x64):
 ```
-.\source.exe examplebatchfile.txt
+.\assembler.exe examplebatchfile.txt
 ```
 
 Linux (x64, most versions):
 ```
-./source examplebatchfile.txt
+./assembler_linux examplebatchfile.txt
+```
+
+OSX (x64, minimum version macOS 10.12 Sierra):
+```
+./assembler_linux examplebatchfile.txt
 ```
 
 For help creating batch files see BatchFiles.md
