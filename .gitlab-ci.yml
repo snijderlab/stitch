@@ -4,9 +4,9 @@ stages:
   - build
   - test
   - deploy
-  - clean
 
 before_script:
+  - "dotnet clean"
   - "dotnet restore"
 
 build:
@@ -28,11 +28,3 @@ deploy:
   artifacts: 
     paths:
       - package.zip
-
-clean:
-  stage: clean
-  script:
-    - "cd source"
-    - "Remove-Item obj -Recurse"
-    - "Remove-Item bin -Recurse"
-    - "cd .."
