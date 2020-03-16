@@ -24,7 +24,7 @@ deploy:
   script:
     - "dotnet publish source -c release /p:PublishTrimmed=true /p:PublishReadyToRun=true"
     - "dotnet publish source -c release -r linux-x64"
-    - "C:\"Program Files"\7-Zip\7z.exe a -tzip package.zip --% @build_include_files.txt"
+    - C:\"Program Files"\7-Zip\7z.exe a -tzip package.zip --% @build_include_files.txt
   artifacts: 
     paths:
       - package.zip
