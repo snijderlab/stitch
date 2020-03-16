@@ -4,6 +4,7 @@ stages:
   - build
   - test
   - deploy
+  - clean
 
 before_script:
   - "dotnet restore"
@@ -12,8 +13,8 @@ build:
   stage: build
   script:
     - "cd source"
-    - "rmdir /S obj"
-    - "rmdir /S bin"
+    - "rmdir /Q /S obj"
+    - "rmdir /Q /S bin"
     - "cd .."
     - "dotnet build source"
 
@@ -31,3 +32,11 @@ deploy:
   artifacts: 
     paths:
       - package.zip
+
+clean:
+  stage: clean
+  script:
+    - "cd source"
+    - "rmdir /Q /S obj"
+    - "rmdir /Q /S bin"
+    - "cd .."
