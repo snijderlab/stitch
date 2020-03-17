@@ -9,10 +9,11 @@
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
+            "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/source/bin/Debug/netcoreapp2.2/source.dll",
+            "program": "${workspaceFolder}/source/bin/Debug/netcoreapp3.1/source.dll",
             "args": [
-                "examples/batchfiles/systematictest.txt"
+                "examples/batchfiles/peaksexample.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

@@ -44,35 +44,12 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The total amount of (mis)matching aminoacids in the alignment
         /// </summary>
-        public int TotalMatches
-        {
-            get
-            {
-                int sum = 0;
-                foreach (var m in Alignment)
-                {
-                    if (m is SequenceMatch.Match match) sum += match.Length;
-                }
-                return sum;
-            }
-        }
+        public readonly int TotalMatches;
 
         /// <summary>
         /// The total length on the template (matches + gaps in query)
         /// </summary>
-        public int LengthOnTemplate
-        {
-            get
-            {
-                int sum = 0;
-                foreach (var m in Alignment)
-                {
-                    if (m is SequenceMatch.Match match) sum += match.Length;
-                    if (m is SequenceMatch.GapInQuery gc) sum += gc.Length;
-                }
-                return sum;
-            }
-        }
+        public readonly int LengthOnTemplate;
 
         public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, GraphPath path)
         {
@@ -84,6 +61,20 @@ namespace AssemblyNameSpace
             QuerySequence = querySequence;
             Path = path;
             Simplify();
+
+            int sum1 = 0;
+            int sum2 = 0;
+            foreach (var m in Alignment)
+            {
+                if (m is SequenceMatch.Match match)
+                {
+                    sum1 += match.Length;
+                    sum2 += match.Length;
+                }
+                if (m is SequenceMatch.GapInQuery gc) sum2 += gc.Length;
+            }
+            TotalMatches = sum1;
+            LengthOnTemplate = sum2;
         }
 
         /// <summary>

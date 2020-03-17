@@ -116,7 +116,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() })
+                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() }, new List<int>())
                     {
                         DepthOfCoverage = Enumerable.Repeat(1, read.Length).ToArray(),
                         DepthOfCoverageFull = Enumerable.Repeat(1, read.Length).ToArray()
@@ -226,6 +226,8 @@ namespace AssemblyNameSpace
                 {
                     var forward_node = start_node;
                     var backward_node = start_node;
+                    var prev_forward_node = start_node;
+                    var prev_backward_node = start_node;
 
                     List<int> forward_nodes = new List<int>();
                     List<int> backward_nodes = new List<int>();
@@ -238,42 +240,62 @@ namespace AssemblyNameSpace
                     List<int> backward_indices = new List<int>();
 
                     // Walk forwards until a multifurcartion in the path is found or the end is reached
-                    while (forward_node.ForwardEdges.Count == 1 && forward_node.BackwardEdges.Count <= 1)
+                    while (forward_node.ForwardEdges.Count == 1 && (forward_node_index == i || forward_node.BackwardEdges.Count <= 1))
                     {
                         forward_indices.Add(forward_node_index);
                         forward_node.Visited = true;
                         forward_node_index = forward_node.ForwardEdges[0].Item1;
 
+                        prev_forward_node = forward_node;
                         forward_node = graph[forward_node_index];
 
                         // To account for possible cycles 
                         if (forward_node_index == i) break;
                     }
-                    forward_indices.Add(forward_node_index);
-                    forward_node.Visited = true;
 
-                    if (forward_node.ForwardEdges.Count() > 0)
+                    if (forward_node_index == i || forward_node.BackwardEdges.Count() <= 1)
                     {
-                        forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
+                        forward_indices.Add(forward_node_index);
+                        forward_node.Visited = true;
+
+                        if (forward_node.ForwardEdges.Count() > 0)
+                        {
+                            forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
+                        }
+                    }
+                    else if (prev_forward_node.ForwardEdges.Count() > 0)
+                    {
+                        forward_nodes = (from node in prev_forward_node.ForwardEdges select node.Item1).ToList();
                     }
 
+
                     // Walk backwards
-                    while (backward_node.ForwardEdges.Count <= 1 && backward_node.BackwardEdges.Count == 1)
+                    while ((backward_node_index == i || backward_node.ForwardEdges.Count <= 1) && backward_node.BackwardEdges.Count == 1)
                     {
                         backward_indices.Add(backward_node_index);
                         backward_node.Visited = true;
                         backward_node_index = backward_node.BackwardEdges[0].Item1;
 
+                        prev_backward_node = backward_node;
                         backward_node = graph[backward_node_index];
 
                         // To account for possible cycles 
                         if (backward_node_index == i) break;
                     }
-                    backward_indices.Add(backward_node_index);
-                    backward_node.Visited = true;
-                    if (backward_node.BackwardEdges.Count() > 0)
+
+                    if (backward_node_index == i || backward_node.ForwardEdges.Count() <= 1)
                     {
-                        backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
+                        backward_indices.Add(backward_node_index);
+                        backward_node.Visited = true;
+
+                        if (backward_node.BackwardEdges.Count() > 0)
+                        {
+                            backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
+                        }
+                    }
+                    else if (prev_backward_node.BackwardEdges.Count() > 0)
+                    {
+                        backward_nodes = (from node in prev_backward_node.BackwardEdges select node.Item1).ToList();
                     }
 
                     backward_indices.Reverse();
@@ -290,7 +312,8 @@ namespace AssemblyNameSpace
                     }
                     sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length - 2));
 
-                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins));
+                    // I should handle back/forward index differently for 1 (k-1)mer condensed nodes. (set it to null?)
+                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices));
                 }
             }
 
@@ -299,64 +322,43 @@ namespace AssemblyNameSpace
             {
                 var node = condensed_graph[node_index];
                 List<int> forward = new List<int>(node.ForwardEdges);
-                node.ForwardEdges.Clear();
-                foreach (var FWE in forward)
-                {
-                    foreach (var BWE in graph[FWE].BackwardEdges)
-                    {
-                        for (int node2 = 0; node2 < condensed_graph.Count(); node2++)
-                        {
-                            if (BWE.Item1 == condensed_graph[node2].BackwardIndex)
-                            {
-                                bool inlist = false;
-                                foreach (var e in node.ForwardEdges)
-                                {
-                                    if (e == node2)
-                                    {
-                                        inlist = true;
-                                        break;
-                                    }
-                                }
-                                if (!inlist) node.ForwardEdges.Add(node2);
-                            }
-                        }
-                    }
-                }
                 List<int> backward = new List<int>(node.BackwardEdges);
+                node.ForwardEdges.Clear();
                 node.BackwardEdges.Clear();
-                foreach (var BWE in backward)
+
+                for (int condensed_index = 0; condensed_index < condensed_graph.Count(); condensed_index++)
                 {
-                    foreach (var FWE in graph[BWE].ForwardEdges)
+                    var cnode = condensed_graph[condensed_index];
+                    foreach (var fwe in forward)
                     {
-                        for (int node2 = 0; node2 < condensed_graph.Count(); node2++)
+                        if (cnode.GraphIndices.Contains(fwe))
                         {
-                            if (FWE.Item1 == condensed_graph[node2].ForwardIndex)
-                            {
-                                bool inlist = false;
-                                foreach (var e in node.BackwardEdges)
-                                {
-                                    if (e == node2)
-                                    {
-                                        inlist = true;
-                                        break;
-                                    }
-                                }
-                                if (!inlist) node.BackwardEdges.Add(node2);
-                            }
+                            node.ForwardEdges.Add(condensed_index);
+                            break;
+                        }
+                    }
+                    foreach (var bwe in backward)
+                    {
+                        if (cnode.GraphIndices.Contains(bwe))
+                        {
+                            node.BackwardEdges.Add(condensed_index);
+                            break;
                         }
                     }
                 }
+
+                // Remove the part of the sequence that overlaps with the previous or next node
                 if (!node.BackwardEdges.Contains(node_index) && !node.ForwardEdges.Contains(node_index))
                 {
-                    if (node.BackwardEdges.Count() == 1)
+                    if (node.BackwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 1)
                     {
-                        node.Prefix = node.Sequence.Take(kmer_length - 1).ToList();
-                        node.Sequence = node.Sequence.Skip(kmer_length - 1).ToList();
+                        node.Prefix = node.Sequence.Take(kmer_length - 2).ToList();
+                        node.Sequence = node.Sequence.Skip(kmer_length - 2).ToList();
                     }
-                    if (node.ForwardEdges.Count() == 1)
+                    if (node.ForwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 1)
                     {
-                        node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 1).ToList();
-                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 1).ToList();
+                        node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 2).ToList();
+                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 2).ToList();
                     }
                 }
             }
@@ -387,7 +389,7 @@ namespace AssemblyNameSpace
                 var node = condensed_graph[node_index];
 
                 // Test if this is a starting node
-                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
+                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges.ToArray()[0] == node_index))
                 {
                     var paths = GetPaths(node_index, new List<int>());
                     foreach (var path in paths)
@@ -429,7 +431,7 @@ namespace AssemblyNameSpace
                 var node = condensed_graph[node_index];
 
                 // Test if this is a starting node
-                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges[0] == node_index))
+                if (node.BackwardEdges.Count() == 0 || (node.BackwardEdges.Count() == 1 && node.BackwardEdges.ToArray()[0] == node_index))
                 {
                     var paths = GetPaths(node_index, new List<int>());
                     foreach (var path in paths)

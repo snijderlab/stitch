@@ -55,7 +55,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
                 //Test if it is a starting node
-                if (condensed_graph[i].BackwardEdges.Count() == 0 || (condensed_graph[i].BackwardEdges.Count() == 1 && condensed_graph[i].BackwardEdges[0] == i))
+                if (condensed_graph[i].BackwardEdges.Count() == 0 || (condensed_graph[i].BackwardEdges.Count() == 1 && condensed_graph[i].BackwardEdges.ToArray()[0] == i))
                 {
                     style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
                 }

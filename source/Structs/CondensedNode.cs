@@ -42,10 +42,10 @@ namespace AssemblyNameSpace
         public List<AminoAcid> Suffix;
 
         /// <summary> The list of forward edges, defined as the indexes in the de Bruijn graph. </summary>
-        public List<int> ForwardEdges;
+        public HashSet<int> ForwardEdges;
 
         /// <summary> The list of backward edges, defined as the indexes in the de Bruijn graph. </summary>
-        public List<int> BackwardEdges;
+        public HashSet<int> BackwardEdges;
 
         /// <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
         public List<List<int>> Origins;
@@ -68,6 +68,7 @@ namespace AssemblyNameSpace
                 return output;
             }
         }
+        public readonly HashSet<int> GraphIndices;
 
         /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
         /// <param name="sequence"> The sequence of this node. See <see cref="CondensedNode.Sequence"/>.</param>
@@ -77,18 +78,19 @@ namespace AssemblyNameSpace
         /// <param name="forward_edges"> The forward edges from this node (indices). See <see cref="CondensedNode.ForwardEdges"/>.</param>
         /// <param name="backward_edges"> The backward edges from this node (indices). See <see cref="CondensedNode.BackwardEdges"/>.</param>
         /// <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="CondensedNode.Origins"/>.</param>
-        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins)
+        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins, List<int> graphindices)
         {
             Sequence = sequence;
             Index = index;
             ForwardIndex = forward_index;
             BackwardIndex = backward_index;
-            ForwardEdges = forward_edges;
-            BackwardEdges = backward_edges;
+            ForwardEdges = forward_edges.ToHashSet();
+            BackwardEdges = backward_edges.ToHashSet();
             Origins = origins;
             Visited = false;
             Suffix = new List<AminoAcid>();
             Prefix = new List<AminoAcid>();
+            GraphIndices = graphindices.ToHashSet();
         }
 
         /// <summary>
