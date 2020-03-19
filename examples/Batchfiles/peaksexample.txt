@@ -12,8 +12,8 @@ Runtype : Group
 -    StartsWith: 190520
 -<-
 Peaks ->
-    Path: ..\008\200305_HER_test_04_DENOVO.csv
-    -Path: ..\008\minimalerrorset.csv
+    -Path: ..\008\200305_HER_test_04_DENOVO.csv
+    Path: ..\008\minimalerrorset.csv
     Format: X+
     Name: 01
     Separator: ,
@@ -23,14 +23,16 @@ Peaks ->
 <-
 
 -Parameters-------------
-K	            : 7
+K	            : 9
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
+
 Alphabet->
     Path : ../alphabets/common_errors_alphabet.csv
     Name : Normal
 <-
+
 Recombine->
     -Pick the <n> highest scoring templates from each database
     n : 2
@@ -40,7 +42,7 @@ Recombine->
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV IGHJ IGHC  IGKV IGKJ IGKC
+    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
 
     IncludeShortReads: False
 
@@ -48,6 +50,7 @@ Recombine->
         Database->
             Path : ../templates/IGHV.fasta
             Name : IGHV
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
             Path    : ../templates/IGHJ_simplified.fasta
@@ -57,18 +60,22 @@ Recombine->
         Database->
             Path : ../templates/IGHC_uniprot.fasta
             Name : IGHC
+            Identifier: GN=([\p{P}\w*-]+)
         <-
         Database->
-            Path : ../templates/IGKV.fasta
-            Name : IGKV
+            Path : ../templates/IGK+LV.fasta
+            Name : IGLV
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
-            Path : ../templates/IGKJ.fasta
-            Name : IGKJ
+            Path : ../templates/IGK+LJ.fasta
+            Name : IGLJ
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
-            Path : ../templates/IGKC.fasta
-            Name : IGKC
+            Path : ../templates/IGK+LC.fasta
+            Name : IGLC
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
     <-
 

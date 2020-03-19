@@ -70,23 +70,42 @@ namespace AssemblyNameSpace
             /// The identifier from the fasta file.
             /// </summary>
             public string Identifier;
+            public string FullLine;
+            public string EscapedIdentifier;
 
             /// <summary>
             /// To create a new metadata instance with this metadata.
             /// </summary>
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
-            public Fasta(string identifier, FileIdentifier file)
+            public Fasta(string identifier, string fullLine, FileIdentifier file)
                 : base(file)
             {
                 this.Identifier = identifier;
+                this.EscapedIdentifier = EscapeIdentifier(identifier);
+                this.FullLine = fullLine;
+            }
+
+            static string EscapeIdentifier(string identifier)
+            {
+                var chars = new HashSet<char>(Path.GetInvalidFileNameChars());
+                chars.Add('*');
+                var sb = new StringBuilder();
+
+                foreach (char c in identifier)
+                {
+                    if (!chars.Contains(c)) sb.Append(c);
+                    else sb.Append('_');
+                }
+
+                return sb.ToString();
             }
 
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
             public override string ToHTML()
             {
-                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>{File.ToHTML()}";
+                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>\n<h3>Fasta header</h3>\n<p>{FullLine}</p>{File.ToHTML()}";
             }
         }
 

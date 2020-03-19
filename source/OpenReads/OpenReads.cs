@@ -57,7 +57,7 @@ namespace AssemblyNameSpace
         /// of a line after every line this is stripped away.  </summary>
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(MetaData.FileIdentifier inputFile)
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(MetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
             var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
@@ -72,33 +72,65 @@ namespace AssemblyNameSpace
             var reads = new List<(string, MetaData.IMetaData)>();
             outeither.Value = reads;
 
-            var lines = possiblecontent.ReturnOrFail().Split('\n');
+            var lines = possiblecontent.ReturnOrFail().Split('\n').ToArray();
+            var parsefile = new ParsedFile(inputFile.Path, lines);
 
-            string identifier = "";
+            string identifierLine = "";
+            int identifierLineNumber = 1;
             var sequence = new StringBuilder();
+            int linenumber = 0;
 
             foreach (var line in lines)
             {
+                linenumber++;
                 if (line.Length == 0) continue;
                 if (line[0] == '>')
                 {
-                    if (identifier != "")
+                    if (identifierLine != "")
                     {
                         // Flush last sequence to list
-                        reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, inputFile)));
+                        var match = parseIdentifier.Match(identifierLine);
+                        if (match.Success)
+                        {
+                            reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile)));
+                        }
+                        else
+                        {
+                            outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                                new FileRange(new Position(identifierLineNumber, 1, parsefile), new Position(identifierLineNumber, identifierLine.Length, parsefile)),
+                                "Header line does not match RegEx",
+                                "This headerline does not match the RegEx given to parse the identifier."
+                                )
+                            );
+                        }
                     }
-                    identifier = line.Substring(1).Trim();
+                    identifierLine = line.Substring(1).Trim();
                     sequence = new StringBuilder();
+                    identifierLineNumber = linenumber;
                 }
                 else
                 {
                     sequence.Append(line.Trim().Where(x => Char.IsLetter(x)).ToArray());
                 }
             }
-            if (identifier != "")
+            if (identifierLine != "")
             {
                 // Flush last sequence to list
-                reads.Add((sequence.ToString(), new MetaData.Fasta(identifier, inputFile)));
+                var match = parseIdentifier.Match(identifierLine);
+
+                if (match.Success)
+                {
+                    reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile)));
+                }
+                else
+                {
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                        new FileRange(new Position(identifierLineNumber, 1, parsefile), new Position(identifierLineNumber, identifierLine.Length, parsefile)),
+                        "Header line does not match RegEx",
+                        "This headerline does not match the RegEx given to parse the identifier."
+                        )
+                    );
+                }
             }
 
             return outeither;

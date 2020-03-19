@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using AssemblyNameSpace.InputNameSpace;
 using System.Text;
+using System.Text.RegularExpressions;
 
 namespace AssemblyNameSpace
 {
@@ -150,6 +151,9 @@ namespace AssemblyNameSpace
                                     if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     fastasettings.File.Name = setting.GetValue();
                                     break;
+                                case "identifier":
+                                    fastasettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                                    break;
                                 default:
                                     outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
                                     break;
@@ -159,7 +163,7 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        var reads_fasta = OpenReads.Fasta(fastasettings.File);
+                        var reads_fasta = OpenReads.Fasta(fastasettings.File, fastasettings.Identifier);
                         outEither.Messages.AddRange(reads_fasta.Messages);
                         if (!reads_fasta.HasFailed()) output.DataParameters.Add(reads_fasta.ReturnOrFail());
                         break;
@@ -167,6 +171,7 @@ namespace AssemblyNameSpace
                         // Parse files one by one
                         var folder_path = "";
                         var startswith = "";
+                        var identifier = new Regex(".*");
 
                         var peaks_settings = new RunParameters.Input.Peaks();
 
@@ -181,6 +186,9 @@ namespace AssemblyNameSpace
                                 case "startswith":
                                     if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                     startswith = setting.GetValue();
+                                    break;
+                                case "identifier":
+                                    identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                                     break;
                                 default:
                                     var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
@@ -202,7 +210,7 @@ namespace AssemblyNameSpace
                             ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
 
                             if (file.EndsWith(".fasta"))
-                                folder_reads = OpenReads.Fasta(fileId);
+                                folder_reads = OpenReads.Fasta(fileId, identifier);
                             else if (file.EndsWith(".txt"))
                                 folder_reads = OpenReads.Simple(fileId);
                             else if (file.EndsWith(".csv"))
@@ -871,6 +879,28 @@ namespace AssemblyNameSpace
                 outEither.Value = (alphabet, scoring_matrix);
                 return outEither;
             }
+            public static ParseEither<Regex> ParseRegex(KeyValue node)
+            {
+                var outEither = new ParseEither<Regex>();
+                try
+                {
+                    outEither.Value = new Regex(node.GetValue().Trim());
+
+                    if (outEither.Value.GetGroupNumbers().Length <= 1)
+                    {
+                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no caputuring groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
+                    }
+                    else if (outEither.Value.GetGroupNumbers().Length > 2)
+                    {
+                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first one will be used.", "", true));
+                    }
+                }
+                catch (ArgumentException)
+                {
+                    outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given Regex could not be parsed.", "See https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference for a reference."));
+                }
+                return outEither;
+            }
             /// <summary>
             /// Parses a Template
             /// </summary>
@@ -914,6 +944,9 @@ namespace AssemblyNameSpace
                             {
                                 tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             }
+                            break;
+                        case "identifier":
+                            tsettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                             break;
                         case "includeshortreads":
                             if (!extended)
@@ -975,7 +1008,7 @@ namespace AssemblyNameSpace
                 ParseEither<List<(string, MetaData.IMetaData)>> folder_reads = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(fileId);
+                    folder_reads = OpenReads.Fasta(fileId, tsettings.Identifier);
                 else if (file_path.EndsWith(".txt"))
                     folder_reads = OpenReads.Simple(fileId);
                 else if (file_path.EndsWith(".csv"))

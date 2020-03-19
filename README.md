@@ -2,7 +2,7 @@
 
 # Getting started
 
-There are distributed executable files for windows (x64) and linux (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on any platform supporting the dotnet runtime (See ['Running with dotnet'](#running-with-dotnet)). To use these download the files, unpack the archive and run the files from the commandline with the filename of the batch file to be used.
+There are distributed executable files for windows (x64), linux (x64) and mac (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
 
 Windows (x64):
 ```
@@ -19,7 +19,8 @@ OSX (x64, minimum version macOS 10.12 Sierra):
 ./assembler_linux examplebatchfile.txt
 ```
 
-For help creating batch files see BatchFiles.md
+For help creating batch files see `BatchFiles.md`, this is included with the package.
+
 
 ## Running with dotnet
 
@@ -30,9 +31,11 @@ Then run the following command to run the program:
 dotnet path/to/source.dll <arguments>
 ```
 
+
 ## Installing Dot
 
 On windows [Graphviz](https://www.graphviz.org) is included in the assets, so there is no need to install it. On Linux or other platforms you will have to install Graphviz, [see this site](https://graphviz.gitlab.io/download/). Do not forget when you installed Graphviz on your own machine to add the option `DotDistribution: Global` to all HTML reports and check if the program should be added to your `PATH` variable.
+
 
 # Building
 
@@ -50,6 +53,7 @@ dotnet publish source -c release [-r target]
 
 The target name should then be a valid 'RID' for the platform you choose. But if this is omitted it will default to windows x64. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling with Ready to Run (R2R) enabled, so if there is a need to cross compile this option should be set to false (in `source.csproj`).
 
+
 # Testing
 
 There are some unit tests provided. These can be found in the 'tests' file. To run the unit tests run (from the root folder):
@@ -58,9 +62,11 @@ There are some unit tests provided. These can be found in the 'tests' file. To r
 dotnet test tests
 ```
 
+
 # Documentation
 
 Documentation can be build using docfx.
+
 
 # Examples
 
@@ -70,15 +76,18 @@ Examples 001 through 007 are simple generated reads and sequences.
 Example 008 is an example of real world data gotten with PEAKS.
 Example 009 is an example of a FASTA input file.
 
+
 # Authors
 
 * Douwe Schulte - Wrote the software
 * Joost Snijder - Supervised and collaborated
 
+
 # Acknowledgements
 
 * Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
 * The [Graphviz software](https://www.graphviz.org) is included to visualize the graphs in the HTML reports
+
 
 # License
 

@@ -1131,6 +1131,20 @@ namespace AssemblyNameSpace
         /// <returns>A ready for use identifier.</returns>
         string GetAsideIdentifier(int index1, int index2, AsideType type)
         {
+            // Try to use the identifiers as retrieved from the fasta header
+            if (type == AsideType.Read && reads_metadata[index2] is MetaData.Fasta)
+            {
+                return ((MetaData.Fasta)reads_metadata[index2]).EscapedIdentifier;
+            }
+            else if (type == AsideType.Template && databases[index1].Templates[index2].MetaData is MetaData.Fasta)
+            {
+                return ((MetaData.Fasta)databases[index1].Templates[index2].MetaData).EscapedIdentifier;
+            }
+            else if (type == AsideType.RecombinationDatabase && RecombinationDatabases[index1].Templates[index2].MetaData is MetaData.Fasta)
+            {
+                return ((MetaData.Fasta)RecombinationDatabases[index1].Templates[index2].MetaData).EscapedIdentifier;
+            }
+
             string pre = GetAsidePrefix(type);
 
             string i1;

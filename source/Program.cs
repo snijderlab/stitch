@@ -37,13 +37,25 @@ namespace AssemblyNameSpace
 
             // Retrieve the name of the batch file to run
             string filename = "";
+            bool clean = false;
             try
             {
                 filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
+                if (filename == "clean")
+                {
+                    clean = true;
+                    filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[2].Trim();
+                }
             }
             catch
             {
-                Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.");
+                Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.\nOr give the command 'clean' followed by the fasta file to clean.");
+                return;
+            }
+
+            if (clean)
+            {
+                CleanFasta(filename);
                 return;
             }
 
@@ -101,6 +113,39 @@ namespace AssemblyNameSpace
             Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
             Console.Out.Flush();
             Environment.Exit(1);
+        }
+
+        /// <summary>Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'.</summary>
+        static void CleanFasta(string filename)
+        {
+            var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
+            var reads = OpenReads.Fasta(new MetaData.FileIdentifier(path, "name"), new Regex("(.*)")).ReturnOrFail();
+            var dict = new Dictionary<string, string>();
+
+            foreach (var read in reads)
+            {
+                var id = ((MetaData.Fasta)read.Item2).FullLine;
+                if (!id.Contains("partial"))
+                {
+                    if (dict.ContainsKey(read.Item1))
+                    {
+                        dict[read.Item1] = dict[read.Item1] + " " + id;
+                    }
+                    else
+                    {
+                        dict[read.Item1] = id;
+                    }
+                }
+            }
+
+            var sb = new StringBuilder();
+            string EOL = Environment.NewLine;
+            foreach (var (seq, id) in dict)
+            {
+                sb.AppendLine($">{id}{EOL}{seq}");
+            }
+
+            File.WriteAllText(path, sb.ToString());
         }
     }
 }

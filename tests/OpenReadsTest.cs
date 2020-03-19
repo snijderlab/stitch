@@ -6,6 +6,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
+using System.Text.RegularExpressions;
 
 namespace AssemblyTestNameSpace
 {
@@ -36,7 +37,7 @@ namespace AssemblyTestNameSpace
         [DataTestMethod]
         public void ExampleFastaFiles(string file)
         {
-            OpenReads.Fasta(new MetaData.FileIdentifier(Globals.Root + file, ""));
+            OpenReads.Fasta(new MetaData.FileIdentifier(Globals.Root + file, ""), new Regex("(.*)"));
         }
         [DataRow(@"examples/008/Herceptin_ETHCD.csv")]
         [DataRow(@"examples/008/Herceptin_HCD.csv")]
@@ -58,7 +59,7 @@ namespace AssemblyTestNameSpace
                 try
                 {
                     Console.WriteLine(file);
-                    OpenReads.Fasta(new MetaData.FileIdentifier(file, ""));
+                    OpenReads.Fasta(new MetaData.FileIdentifier(file, ""), new Regex("(.*)"));
                 }
                 catch (Exception e)
                 {

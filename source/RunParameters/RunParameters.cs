@@ -125,6 +125,9 @@ namespace AssemblyNameSpace
                 /// Fills in default values.
                 /// </summary>
                 public FASTA() : base() { }
+
+                /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+                public Regex Identifier = new Regex("(.*)");
             }
         }
 
@@ -290,6 +293,9 @@ namespace AssemblyNameSpace
             /// The scoring system of this database, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template).
             /// </summary>
             public ScoringParameter Scoring = ScoringParameter.Absolute;
+
+            /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+            public Regex Identifier = new Regex("(.*)");
         }
 
         public enum ScoringParameter { Absolute, Relative }

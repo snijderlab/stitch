@@ -375,6 +375,8 @@ namespace AssemblyNameSpace
             meta_data.sequence_filter_time = stopWatch.ElapsedMilliseconds - meta_data.path_time - meta_data.graph_time - meta_data.pre_time;
             meta_data.sequences = condensed_graph.Count();
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
+
+            Console.WriteLine($"Assembled into {condensed_graph.Count()} contigs");
         }
         /// <summary>
         /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph

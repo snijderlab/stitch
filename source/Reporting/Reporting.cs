@@ -92,7 +92,7 @@ namespace AssemblyNameSpace
             Paths = parameters.assembler.GetAllPaths(false);
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
-
+            Console.WriteLine($"Making a report with {Paths.Count()} paths");
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.

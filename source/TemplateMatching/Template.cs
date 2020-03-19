@@ -100,10 +100,8 @@ namespace AssemblyNameSpace
                 {
                     if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
-                        score += match.Score;// / match.TemplateSequence.Length;
+                        score += match.Score;
                         Matches.Add(match);
-                        if (Matches.Count() > 1)
-                            Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
                     }
                 }
             }
@@ -154,6 +152,8 @@ namespace AssemblyNameSpace
         public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> AlignedSequences()
         {
             if (alignedSequencesCache != null) return alignedSequencesCache;
+
+            Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
 
             var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)>()
             {
@@ -289,6 +289,7 @@ namespace AssemblyNameSpace
                     }
                 }
             }
+            alignedSequencesCache = output;
             return output;
         }
 
@@ -381,7 +382,7 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-
+            combinedSequenceCache = output;
             return output;
         }
     }
