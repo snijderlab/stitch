@@ -13,6 +13,7 @@ Runtype : Group
 -<-
 Peaks ->
     Path: ..\008\200305_HER_test_04_DENOVO.csv
+    -Path: ..\008\minimalerrorset.csv
     Format: X+
     Name: 01
     Separator: ,

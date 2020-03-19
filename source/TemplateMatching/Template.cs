@@ -150,8 +150,11 @@ namespace AssemblyNameSpace
         /// Gets the placement of the sequences associated with this template.
         /// </summary>
         /// <returns>A list with tuples for each position in the original sequence. </returns>
+        private List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> alignedSequencesCache = null;
         public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> AlignedSequences()
         {
+            if (alignedSequencesCache != null) return alignedSequencesCache;
+
             var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)>()
             {
                 Capacity = Sequence.Length
@@ -293,8 +296,11 @@ namespace AssemblyNameSpace
         /// Returns the combined sequence or aminoacid variety per position in the alignment.
         /// </summary>
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
+        private List<(AminoAcid Template, Dictionary<AminoAcid, int> AminoAcids, Dictionary<IGap, (int Count, int[] CoverageDepth)> Gaps)> combinedSequenceCache = null;
         public List<(AminoAcid Template, Dictionary<AminoAcid, int> AminoAcids, Dictionary<IGap, (int Count, int[] CoverageDepth)> Gaps)> CombinedSequence()
         {
+            if (combinedSequenceCache != null) return combinedSequenceCache;
+
             var output = new List<(AminoAcid Template, Dictionary<AminoAcid, int> AminoAcids, Dictionary<IGap, (int Count, int[] CoverageDepth)> Gaps)>()
             {
                 Capacity = Sequence.Length

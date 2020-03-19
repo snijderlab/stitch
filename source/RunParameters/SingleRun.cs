@@ -301,7 +301,7 @@ namespace AssemblyNameSpace
                         switch (report)
                         {
                             case Report.HTML h:
-                                var htmlreport = new HTMLReport(parameters, h.UseIncludedDotDistribution);
+                                var htmlreport = new HTMLReport(parameters, h.UseIncludedDotDistribution, max_threads);
                                 htmlreport.Save(h.CreateName(this));
                                 break;
                             case Report.CSV c:

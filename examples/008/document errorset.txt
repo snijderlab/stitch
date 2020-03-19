@@ -1,0 +1,192 @@
+K: 7
+ALP: Common errors
+
+
+With 'minimalerrorset.csv'
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+Front
+R0028 R0073 R0094 R0117 R0165
+
+Center
+R0028 R0073 R0094 R0117 R0165
+
+Bottom
+R0028 R0073 R0094 R0117 R0165
+
+Joint
+R0009 R0028 R0063 R0073 R0094 R0117 R0165
+
+    ·----------------------------·
+    |           v¯¯|             v
+Front    ->    Center    ->    Joint
+    |             |
+    ·--> Bottom <-·
+
+
+With 'errorset.txt'
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+    ·----------------------------·
+    |           v¯¯|             v
+Front    ->    Center    ->    Joint
+    |             |
+    ·--> Bottom <-·
+
+# Cleaned set based on duplicated entries
+   TPPVLDSDGSFFLYSKLT
+  TTPPVLDSDGSFFLYSK
+YKTTPPVLDSDGSFFLYSKL
+ KTTPPVLDWGCEELYS
+  TTPPVLDSD
+
+# Minimal subset needed for the error
+   TPPVLDSDGSFFLYSKLT
+YKTTPPVLDSDGSFFLYSKL
+ KTTPPVLDWGCEELYS
+
+# Does not work
+YKTTPPVLDSDGSFFLYSKLT
+ KTTPPVLDWGCEELYS
+
+# The double T in front is needed as is the missing T in the first read
+ TPPVLDS
+TTPPVLDS
+TTPPVLDW
+
+# Even more minimal set (trimmed from start and end)
+ TPPVLDS [A]
+TTPPVLDS [B]
+TTPPVLDW [C]
+
+# The order is important
+Working: ABC, ACB
+Not working: BAC, BCA, CAB, CBA
+
+# Does not work (sets of triplet that do not show this weird graph)
+ ANIDNIDC
+AANIDNIDC
+AANIDNIDY
+
+ ANIDKLFC
+AANIDKLFC
+AANIDKLFY
+
+ TNIDKLFC
+TTNIDKLFC
+TTNIDKLFY
+
+ TNIDKLFC
+TTNIDKLFC
+TTNIDKLFW
+
+ TNIDKLFS
+TTNIDKLFS
+TTNIDKLFW
+
+ TNNIKLFS
+TTNNIKLFS
+TTNNIKLFW
+
+ TPPIKLFS
+TTPPIKLFS
+TTPPIKLFW
+
+# Does work
+ TPPVKLS
+TTPPVKLS
+TTPPVKLW
+
+ ANIDNIC
+AANIDNIC
+AANIDNIY
+
+ ANNNNNC
+AANNNNNC
+AANNNNNY
+
+     ANNNNNC
+DDDDAANNNNNC
+DDDDAANNNNNY
+
+# K: 8, same problem
+ ANNNNNNC
+AANNNNNNC
+AANNNNNNY
+
+# Debugging with this set:
+ ANNNNNC
+AANNNNNC
+AANNNNNY
+
+KMERS
+ANNNNNC
+AANNNNN
+ANNNNNC
+AANNNNN
+ANNNNNY
+
+KMIN1_MERS
+ANNNNN 2
+NNNNNC 1
+AANNNN 1
+NNNNNY 0
+
+GRAPH
+ANNNNN
+NNNNNC
+AANNNN
+NNNNNY
+
+Excpect: 2 -> 0 -> (1, 3)
+
+Forwardedges
+(1, 3) () (0) ()
+
+Backwardedges
+(2) (0) () (0)
+
+### Solved a problem where condensed paths starting on (k-1)mers with bifurcations were not extended in the direction without bifurcations
+
+Next problem
+‾‾‾‾‾‾‾‾‾‾‾‾‾‾
+
+K: 10
+
+ v¯¯|
+Start -> A
+    |--> B
+
+Start
+R0085 R0144
+
+A (had the last residue seemingly unsupported)
+R0085 R0144
+
+B (had the last residue seemingly unsupported)
+R0085 R0144
+
+DNQRVLVNTKA
+DNQRVLVNTAKTLA
+
+Which was shortened to (k: 7)
+NNNNNNKA
+NNNNNNAK
+Which gave the same structure.
+
+KMERS
+NNNNNNK
+NNNNNKA
+NNNNNNA
+NNNNNAK
+
+(K-1)MERS
+NNNNNN 1
+NNNNNK 1
+NNNNKA 0
+NNNNNA 1
+NNNNAK 1
+
+##### IMPORTANT I should align the reads not k-1 mers in the contig alignment
+
+Expect: 0 -> (1 -> 2, 3 -> 4)

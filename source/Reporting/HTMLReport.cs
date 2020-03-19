@@ -28,6 +28,7 @@ namespace AssemblyNameSpace
         /// </summary>
         string AssetsFolderName;
         string FullAssetsFolderName;
+        int MaxThreads;
 
         /// <summary>
         /// To retrieve all metadata.
@@ -35,9 +36,10 @@ namespace AssemblyNameSpace
         /// <param name="assm">The assembler.</param>
         /// <param name="run">The runparameters.</param>
         /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
-        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution) : base(parameters)
+        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution, int max_threads) : base(parameters)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
+            MaxThreads = max_threads;
         }
 
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
@@ -864,27 +866,42 @@ namespace AssemblyNameSpace
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         void CreateAsides()
         {
+            var jobbuffer = new List<(AsideType, int, int)>();
+
+            void ExecuteJob(AsideType aside, int index2, int index1)
+            {
+                switch (aside)
+                {
+                    case AsideType.Path: SaveAside(CreatePathAside(index1), AsideType.Path, -1, index1); break;
+                    case AsideType.Contig: SaveAside(CreateContigAside(index1), AsideType.Contig, -1, index1); break;
+                    case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, index1); break;
+                    case AsideType.Template: SaveAside(CreateTemplateAside(index2, index1), AsideType.Template, index2, index1); break;
+                    case AsideType.RecombinedTemplate: SaveAside(CreateRecombinationAside(index1), AsideType.RecombinedTemplate, -1, index1); break;
+                    case AsideType.RecombinationDatabase: SaveAside(CreateRecombinationDatabaseAside(index2, index1), AsideType.RecombinationDatabase, index2, index1); break;
+                };
+            }
+
             // Path Asides
             for (int i = 0; i < Paths.Count(); i++)
             {
-                SaveAside(CreatePathAside(i), AsideType.Path, -1, i);
+                jobbuffer.Add((AsideType.Path, -1, i));
             }
             // Contigs Asides
             for (int i = 0; i < condensed_graph.Count(); i++)
             {
-                SaveAside(CreateContigAside(i), AsideType.Contig, -1, i);
+                jobbuffer.Add((AsideType.Contig, -1, i));
             }
             // Read Asides
             for (int i = 0; i < reads.Count(); i++)
             {
-                SaveAside(CreateReadAside(i), AsideType.Read, -1, i);
+                jobbuffer.Add((AsideType.Read, -1, i));
             }
             // Template Tables Asides
             for (int t = 0; t < databases.Count(); t++)
             {
                 for (int i = 0; i < databases[t].Templates.Count(); i++)
                 {
-                    SaveAside(CreateTemplateAside(t, i), AsideType.Template, t, i);
+                    jobbuffer.Add((AsideType.Template, t, i));
                 }
             }
             // Recombination Table Asides
@@ -892,7 +909,7 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
                 {
-                    SaveAside(CreateRecombinationAside(i), AsideType.RecombinedTemplate, -1, i);
+                    jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
                 }
 
                 // Recombination Databases Tables Asides
@@ -900,8 +917,24 @@ namespace AssemblyNameSpace
                 {
                     for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
                     {
-                        SaveAside(CreateRecombinationDatabaseAside(t, i), AsideType.RecombinationDatabase, t, i);
+                        jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
                     }
+                }
+            }
+            Console.WriteLine($"No of asides: {jobbuffer.Count()}");
+            if (MaxThreads > 1)
+            {
+                Parallel.ForEach(
+                    jobbuffer,
+                    new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
+                    (a, _) => ExecuteJob(a.Item1, a.Item2, a.Item3)
+                );
+            }
+            else
+            {
+                foreach (var (t, i2, i1) in jobbuffer)
+                {
+                    ExecuteJob(t, i2, i1);
                 }
             }
         }
@@ -1317,9 +1350,6 @@ assetsfolder = '{AssetsFolderName}';
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
 
-            string svg, simplesvg;
-            (svg, simplesvg) = CreateGraph();
-
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
 
@@ -1330,6 +1360,8 @@ assetsfolder = '{AssetsFolderName}';
                 recombinationtable += CreateRecombinationDatabaseTables();
             }
 
+            var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
+
             var html = $@"<html>
 {CreateHeader("Report Protein Sequence Run", new List<string>())}
 <body onload=""Setup()"">
@@ -1339,8 +1371,8 @@ assetsfolder = '{AssetsFolderName}';
 
  {recombinationtable}
  {CreateTemplateTables()}
- {Collapsible("Graph", svg)}
- {Collapsible("Simplified Graph", simplesvg)}
+ {Collapsible("Graph", $"<img src='{AssetFolderName}/graph.svg' alt='The De Bruijn graph as resulting from the assembler.'>")}
+ {Collapsible("Simplified Graph", $"<img src='{AssetFolderName}/simplified-graph.svg' alt='The De Bruijn graph as resulting from the assembler. But now with the contig ids instead of the sequences.'>")}
  {Collapsible("Paths Table", CreatePathsTable())}
  {Collapsible("Contigs Table", CreateContigsTable())}
  {Collapsible("Reads Table", CreateReadsTable())}
@@ -1357,6 +1389,46 @@ assetsfolder = '{AssetsFolderName}';
             return html;
         }
 
+        async void CopyAssets()
+        {
+            await Task.Run(() =>
+            {
+                var excutablefolder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+
+                void CopyAssetsFile(string name)
+                {
+                    var source = Path.Join(excutablefolder, "assets", name);
+                    if (File.Exists(source))
+                    {
+                        try
+                        {
+                            File.Copy(source, Path.Join(FullAssetsFolderName, name), true);
+                        }
+                        catch (Exception e)
+                        {
+                            Console.WriteLine(e);
+                        }
+                    }
+                    else
+                    {
+                        new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
+                    }
+                }
+
+                CopyAssetsFile("styles.css");
+                CopyAssetsFile("script.js");
+                CopyAssetsFile("Roboto-Regular.ttf");
+                CopyAssetsFile("Roboto-Medium.ttf");
+                CopyAssetsFile("RobotoMono-Regular.ttf");
+                CopyAssetsFile("RobotoMono-Medium.ttf");
+
+                string svg, simplesvg;
+                (svg, simplesvg) = CreateGraph();
+                File.WriteAllText(Path.Join(FullAssetsFolderName, "graph.svg"), svg);
+                File.WriteAllText(Path.Join(FullAssetsFolderName, "simplified-graph.svg"), simplesvg);
+            });
+        }
+
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
         public new void Save(string filename)
         {
@@ -1369,36 +1441,8 @@ assetsfolder = '{AssetsFolderName}';
             Directory.CreateDirectory(FullAssetsFolderName);
             Directory.CreateDirectory(Path.Join(FullAssetsFolderName, "paths"));
 
-            var excutablefolder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
+            CopyAssets();
 
-            void CopyAssetsFile(string name)
-            {
-                var source = Path.Join(excutablefolder, "assets", name);
-                if (File.Exists(source))
-                {
-                    try
-                    {
-                        File.Copy(source, Path.Join(FullAssetsFolderName, name), true);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine(e);
-                    }
-                }
-                else
-                {
-                    new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
-                }
-            }
-
-            CopyAssetsFile("styles.css");
-            CopyAssetsFile("script.js");
-            CopyAssetsFile("Roboto-Regular.ttf");
-            CopyAssetsFile("Roboto-Medium.ttf");
-            CopyAssetsFile("RobotoMono-Regular.ttf");
-            CopyAssetsFile("RobotoMono-Medium.ttf");
-
-            // So assets are copied, folders can be made, now start working on the dissection of this beast on an HTML page
             var html = CreateMain();
             CreateAsides();
 

@@ -73,6 +73,11 @@ h1 {
     margin-right: 1em;
 }
 
+img {
+    max-width: 100%;
+}
+
+
 /* Table*/
 
 table {
@@ -172,6 +177,7 @@ tr:hover {
     background: none;
     border: none;
 }
+
 
 /* Collapsible regions */
 
@@ -513,6 +519,7 @@ input:checked+label .overhang-block .text {
     color: var(--color-light);
 }
 
+
 /* JS-settings */
 
 .js-settings {
@@ -526,7 +533,10 @@ input:checked+label .overhang-block .text {
     margin-right: 0.5em;
 }
 
+
 /* Toggle switch */
+
+
 /* based on an example by w3schools */
 
 .js-toggle {
@@ -580,6 +590,7 @@ input:focus+.slider {
 input:checked+.slider:before {
     transform: translateX(1em);
 }
+
 
 /* Sequence Logo */
 
