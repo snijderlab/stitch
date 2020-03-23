@@ -148,14 +148,14 @@ namespace AssemblyNameSpace
         /// Gets the placement of the sequences associated with this template.
         /// </summary>
         /// <returns>A list with tuples for each position in the original sequence. </returns>
-        private List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> alignedSequencesCache = null;
-        public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)> AlignedSequences()
+        private List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> alignedSequencesCache = null;
+        public List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences()
         {
             if (alignedSequencesCache != null) return alignedSequencesCache;
 
             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
 
-            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID)[] Gaps)>()
+            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>()
             {
                 Capacity = Sequence.Length
             };
@@ -202,11 +202,11 @@ namespace AssemblyNameSpace
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[levels.Count()], new (int, IGap, int[], int)[levels.Count()]));
+                output.Add((new (int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[levels.Count()], new (int, IGap, int[], int, bool)[levels.Count()]));
                 for (int j = 0; j < levels.Count(); j++)
                 {
                     output[i].Sequences[j] = (-2, 0, 0, -1);
-                    output[i].Gaps[j] = (-2, new None(), new int[0], -1);
+                    output[i].Gaps[j] = (-2, new None(), new int[0], -1, false);
                 }
             }
 
@@ -219,15 +219,22 @@ namespace AssemblyNameSpace
                 bool gap = false;
                 int level = level_lookup[matchindex];
 
-                foreach (var piece in match.Alignment)
+                for (int pieceindex = 0; pieceindex < match.Alignment.Count(); pieceindex++)
                 {
+                    var piece = match.Alignment[pieceindex];
+                    var inseq = pieceindex < match.Alignment.Count() - 1 && pieceindex > 0 ? true : false;
+
                     if (piece is SequenceMatch.Match m)
                     {
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             // Add this ID to the list
+                            var in_sequence = inseq // In the middle of the pieces
+                                           || (i < m.Length - 1) // Not the last AA
+                                           || (pieceindex < match.Alignment.Count() - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
+
                             output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos]);
+                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos], in_sequence);
 
                             template_pos++;
                             seq_pos++;
@@ -244,7 +251,7 @@ namespace AssemblyNameSpace
                         int[] cov = match.Path.DepthOfCoverage.SubArray(seq_pos, len);
 
                         seq_pos += len;
-                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1]);
+                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1], inseq);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {
@@ -252,7 +259,7 @@ namespace AssemblyNameSpace
                         for (int i = 0; i < gt.Length && template_pos < output.Count(); i++)
                         {
                             output[template_pos].Sequences[level] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
-                            output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], -1);
+                            output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], -1, true);
                             template_pos++;
                         }
                         gap = false;
@@ -346,7 +353,7 @@ namespace AssemblyNameSpace
                 foreach (var option in alignedSequences[i].Gaps)
                 {
                     IGap key;
-                    if (option.Gap == null) continue;
+                    if (option.Gap == null || !option.InSequence) continue;
                     if (option.Gap == (IGap)new None())
                     {
                         if (output[i].Gaps.ContainsKey(new None()))

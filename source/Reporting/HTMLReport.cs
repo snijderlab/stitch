@@ -540,7 +540,6 @@ namespace AssemblyNameSpace
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
-    <h2>Consensus Sequence</h2>
     {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
@@ -564,7 +563,6 @@ namespace AssemblyNameSpace
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {id}</h1>
-    <h2>Consensus Sequence</h2>
     {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
@@ -593,12 +591,13 @@ namespace AssemblyNameSpace
 
             // Convert to lines: (creates List<string>)
             // Combine horizontally
-
-            var lines = new List<(string, int, int)>[alignedSequences[0].Sequences.Count() + 1];
+            var totalsequences = alignedSequences[0].Sequences.Count();
+            var lines = new List<(string, int, int)>[totalsequences + 1];
             const char gapchar = '-';
+            const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<int>();
 
-            for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
+            for (int i = 0; i < totalsequences + 1; i++)
             {
                 lines[i] = new List<(string, int, int)>();
             }
@@ -610,7 +609,7 @@ namespace AssemblyNameSpace
                 int depth = 0;
 
                 // Add the aligned amino acid
-                for (int i = 0; i < Sequences.Count(); i++)
+                for (int i = 0; i < Sequences.Length; i++)
                 {
                     int index = Sequences[i].SequencePosition;
                     depth += Sequences[i].CoverageDepth;
@@ -621,7 +620,7 @@ namespace AssemblyNameSpace
                     }
                     else if (index == 0)
                     {
-                        lines[i + 1].Add(("\u00A0", -1, -1)); // Non breaking space
+                        lines[i + 1].Add((nonbreakingspace.ToString(), -1, -1));
                     }
                     else
                     {
@@ -635,7 +634,7 @@ namespace AssemblyNameSpace
                 // TODO: Unaligned for now
                 int max_length = 0;
                 // Get the max length of the gaps 
-                for (int i = 0; i < Gaps.Count(); i++)
+                for (int i = 0; i < Gaps.Length; i++)
                 {
                     if (Gaps[i].Gap != null && Gaps[i].Gap.ToString().Length > max_length)
                     {
@@ -647,7 +646,7 @@ namespace AssemblyNameSpace
 
                 var depthGap = new List<int[]>();
                 // Add gap to the lines
-                for (int i = 0; i < Gaps.Count(); i++)
+                for (int i = 0; i < Gaps.Length; i++)
                 {
                     string seq;
                     if (Gaps[i].Gap == null)
@@ -662,8 +661,12 @@ namespace AssemblyNameSpace
                         Gaps[i].CoverageDepth.CopyTo(d, max_length - Gaps[i].CoverageDepth.Length);
                         depthGap.Add(d);
                     }
+
+                    char padchar = nonbreakingspace;
+                    if (Gaps[i].InSequence) padchar = gapchar;
+
                     var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Path.Index;
-                    lines[i + 1].Add((seq.PadRight(max_length, gapchar), index, Sequences[i].SequencePosition - 1));
+                    lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1));
                 }
                 var depthGapCombined = new int[max_length];
                 foreach (var d in depthGap)
@@ -713,7 +716,7 @@ namespace AssemblyNameSpace
             }
 
             // Chop it up, add numbers etc
-            const int blocklength = 5;
+            const int blocklength = 10;
 
             if (aligned.Length > 0)
             {
@@ -727,6 +730,7 @@ namespace AssemblyNameSpace
                         alignedlength += lines[0][alignedindex].Item1.Length;
                         alignedindex++;
                     }
+
                     var indices = new int[aligned.Length];
                     var positions = new int[aligned.Length];
 
@@ -750,8 +754,8 @@ namespace AssemblyNameSpace
                             else if (thisindex != -1 && thisindex != index)
                             {
                                 // If two reads are on this patch just set the link to none.
-                                index = -1;
-                                position = -1;
+                                index = -2;
+                                position = -2;
                                 break;
                             }
 
@@ -772,6 +776,7 @@ namespace AssemblyNameSpace
                         number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
+
                     StringBuilder alignblock = new StringBuilder();
                     for (int i = 1; i < aligned.Length; i++)
                     {
@@ -781,6 +786,10 @@ namespace AssemblyNameSpace
                             var rid = GetAsideIdentifier(indices[i], AsideType.Path);
                             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
                             if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                        }
+                        else if (indices[i] == -2) // Clashing sequences remove link but display sequence
+                        {
+                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"#\" class=\"align-link clash\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
                         alignblock.Append(result);
                         alignblock.Append("<br>");
@@ -921,7 +930,6 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-            Console.WriteLine($"No of asides: {jobbuffer.Count()}");
             if (MaxThreads > 1)
             {
                 Parallel.ForEach(
@@ -1025,29 +1033,29 @@ namespace AssemblyNameSpace
 
             var buffer = new StringBuilder();
 
-            const int bucketsize = 5;
+            const int blocklength = 10;
 
             // Create the main blocks of the sequence alignment
-            for (int pos = 0; pos <= sequence.Length / bucketsize; pos++)
+            for (int pos = 0; pos <= sequence.Length / blocklength; pos++)
             {
                 // Add the sequence and the number to tell the position
                 string number = "";
                 string last = "";
-                if (sequence.Length - pos * bucketsize >= bucketsize)
+                if (sequence.Length - pos * blocklength >= blocklength)
                 {
-                    number = ((pos + 1) * bucketsize).ToString();
-                    number = string.Concat(Enumerable.Repeat("&nbsp;", bucketsize - number.Length)) + number;
+                    number = ((pos + 1) * blocklength).ToString();
+                    number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                 }
                 else
                 {
                     last = " last";
                 }
-                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * bucketsize, Math.Min(bucketsize, sequence.Length - pos * bucketsize))}</span><br>");
+                buffer.Append($"<div class='align-block{last}'><p><span class=\"number\">{number}</span><br><span class=\"seq{last}\">{sequence.Substring(pos * blocklength, Math.Min(blocklength, sequence.Length - pos * blocklength))}</span><br>");
 
                 // Add every line in order
                 foreach (var line in placed)
                 {
-                    for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
+                    for (int i = pos * blocklength; i < pos * blocklength + Math.Min(blocklength, sequence.Length - pos * blocklength); i++)
                     {
                         string result = "&nbsp;";
                         foreach (var read in line)
@@ -1064,7 +1072,7 @@ namespace AssemblyNameSpace
                     buffer.Append("<br>");
                 }
                 buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
-                for (int i = pos * bucketsize; i < pos * bucketsize + Math.Min(bucketsize, sequence.Length - pos * bucketsize); i++)
+                for (int i = pos * blocklength; i < pos * blocklength + Math.Min(blocklength, sequence.Length - pos * blocklength); i++)
                 {
                     buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
                 }

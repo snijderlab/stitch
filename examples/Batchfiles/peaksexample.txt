@@ -18,12 +18,12 @@ Peaks ->
     Name: 01
     Separator: ,
     Cutoffscore: 98
-    LocalCutoffscore: 98
-    MinLengthPatch: 7
+    LocalCutoffscore: 100
+    MinLengthPatch: 100
 <-
 
 -Parameters-------------
-K	            : 9
+K	            : 7
 MinimalHomology : K-1
 DuplicateThreshold: K-1
 Reverse	        : False
@@ -35,10 +35,10 @@ Alphabet->
 
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 2
+    n : 1
 
     -Minimal average score per position to be included
-    CutoffScore : 2
+    CutoffScore : 8
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
