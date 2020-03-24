@@ -568,11 +568,14 @@ namespace AssemblyNameSpace
                 }
             }
 
-            foreach (var db in output.Recombine.Databases)
+            if (output.Recombine != null)
             {
-                foreach (var read in db.Templates)
+                foreach (var db in output.Recombine.Databases)
                 {
-                    read.Item2.FinaliseIdentifier();
+                    foreach (var read in db.Templates)
+                    {
+                        read.Item2.FinaliseIdentifier();
+                    }
                 }
             }
 
