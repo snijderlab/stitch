@@ -119,7 +119,8 @@ namespace AssemblyNameSpace
         static void CleanFasta(string filename)
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
-            var reads = OpenReads.Fasta(new MetaData.FileIdentifier(path, "name"), new Regex("(.*)")).ReturnOrFail();
+            var namefilter = new NameFilter();
+            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name"), new Regex("(.*)")).ReturnOrFail();
             var dict = new Dictionary<string, string>();
 
             foreach (var read in reads)

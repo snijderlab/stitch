@@ -22,6 +22,7 @@ namespace AssemblyNameSpace
         {
             var output = new RunParameters.FullRunParameters();
             var outEither = new ParseEither<RunParameters.FullRunParameters>(output);
+            var namefilter = new NameFilter();
 
             // Get the contents
             string batchfilecontent = ParseHelper.GetAllText(path).ReturnOrFail().Replace("\t", "    "); // Remove tabs
@@ -102,7 +103,7 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        var reads_peaks = OpenReads.Peaks(settings.File, settings.Cutoffscore, settings.LocalCutoffscore, settings.FileFormat, settings.MinLengthPatch, settings.Separator, settings.DecimalSeparator);
+                        var reads_peaks = OpenReads.Peaks(namefilter, settings.File, settings.Cutoffscore, settings.LocalCutoffscore, settings.FileFormat, settings.MinLengthPatch, settings.Separator, settings.DecimalSeparator);
                         outEither.Messages.AddRange(reads_peaks.Messages);
                         if (!reads_peaks.HasFailed()) output.DataParameters.Add(reads_peaks.ReturnOrFail());
                         break;
@@ -131,7 +132,7 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        var reads_simple = OpenReads.Simple(rsettings.File);
+                        var reads_simple = OpenReads.Simple(namefilter, rsettings.File);
                         outEither.Messages.AddRange(reads_simple.Messages);
                         if (!reads_simple.HasFailed()) output.DataParameters.Add(reads_simple.ReturnOrFail());
                         break;
@@ -163,7 +164,7 @@ namespace AssemblyNameSpace
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                         if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        var reads_fasta = OpenReads.Fasta(fastasettings.File, fastasettings.Identifier);
+                        var reads_fasta = OpenReads.Fasta(namefilter, fastasettings.File, fastasettings.Identifier);
                         outEither.Messages.AddRange(reads_fasta.Messages);
                         if (!reads_fasta.HasFailed()) output.DataParameters.Add(reads_fasta.ReturnOrFail());
                         break;
@@ -210,11 +211,11 @@ namespace AssemblyNameSpace
                             ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
 
                             if (file.EndsWith(".fasta"))
-                                folder_reads = OpenReads.Fasta(fileId, identifier);
+                                folder_reads = OpenReads.Fasta(namefilter, fileId, identifier);
                             else if (file.EndsWith(".txt"))
-                                folder_reads = OpenReads.Simple(fileId);
+                                folder_reads = OpenReads.Simple(namefilter, fileId);
                             else if (file.EndsWith(".csv"))
-                                folder_reads = OpenReads.Peaks(fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
+                                folder_reads = OpenReads.Peaks(namefilter, fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
                             else
                                 continue;
 
@@ -305,7 +306,7 @@ namespace AssemblyNameSpace
                         output.Alphabet.Add(ParseHelper.ParseAlphabet(pair).GetValue(outEither));
                         break;
                     case "database":
-                        output.Template.Add(ParseHelper.ParseDatabase(pair, true).GetValue(outEither));
+                        output.Template.Add(ParseHelper.ParseDatabase(namefilter, pair, true).GetValue(outEither));
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(new ErrorMessage(pair.KeyRange.Start, "Multiple definitions", "Cannot have multiple definitions of Recombine"));
@@ -334,7 +335,7 @@ namespace AssemblyNameSpace
                                     {
                                         if (database.Name == "database")
                                         {
-                                            var databasevalue = ParseHelper.ParseDatabase(database, false).GetValue(outEither);
+                                            var databasevalue = ParseHelper.ParseDatabase(namefilter, database, false).GetValue(outEither);
                                             recsettings.Databases.Add(databasevalue);
 
                                             // CHeck to see if the name is valid
@@ -549,6 +550,32 @@ namespace AssemblyNameSpace
 
             // Reset the working directory
             Directory.SetCurrentDirectory(original_working_directory);
+
+            // Finalise all metadata names
+            foreach (var set in output.DataParameters)
+            {
+                foreach (var read in set)
+                {
+                    read.Item2.FinaliseIdentifier();
+                }
+            }
+
+            foreach (var db in output.Template)
+            {
+                foreach (var read in db.Templates)
+                {
+                    read.Item2.FinaliseIdentifier();
+                }
+            }
+
+            foreach (var db in output.Recombine.Databases)
+            {
+                foreach (var read in db.Templates)
+                {
+                    read.Item2.FinaliseIdentifier();
+                }
+            }
+
             return outEither.ReturnOrFail();
         }
     }
@@ -906,7 +933,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(KeyValue node, bool extended)
+            public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(NameFilter namefilter, KeyValue node, bool extended)
             {
                 // Parse files one by one
                 var file_path = "";
@@ -1008,11 +1035,11 @@ namespace AssemblyNameSpace
                 ParseEither<List<(string, MetaData.IMetaData)>> folder_reads = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(fileId, tsettings.Identifier);
+                    folder_reads = OpenReads.Fasta(namefilter, fileId, tsettings.Identifier);
                 else if (file_path.EndsWith(".txt"))
-                    folder_reads = OpenReads.Simple(fileId);
+                    folder_reads = OpenReads.Simple(namefilter, fileId);
                 else if (file_path.EndsWith(".csv"))
-                    folder_reads = OpenReads.Peaks(fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
+                    folder_reads = OpenReads.Peaks(namefilter, fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
                 else
                     outEither.AddMessage(new ErrorMessage(file_pos, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
 

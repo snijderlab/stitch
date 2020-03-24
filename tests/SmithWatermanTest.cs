@@ -198,7 +198,8 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            var namefilter = new NameFilter();
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -224,7 +225,8 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP", alp);
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            var namefilter = new NameFilter();
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -325,7 +327,8 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            Template template = new Template("", a, new MetaData.None(new MetaData.FileIdentifier("not empty", "")), db);
+            var namefilter = new NameFilter();
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -343,8 +346,9 @@ namespace AssemblyTestNameSpace
             var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var b = StringToSequence(path, alp);
+            var namefilter = new NameFilter();
 
-            TemplateDatabase db = new TemplateDatabase(OpenReads.Simple(new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE")).ReturnOrFail(), alp, "TEST DB", 0, 0);
+            TemplateDatabase db = new TemplateDatabase(OpenReads.Simple(namefilter, new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE")).ReturnOrFail(), alp, "TEST DB", 0, 0);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
             var r = db.Templates[0].Matches[0];

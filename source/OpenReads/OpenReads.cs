@@ -21,10 +21,11 @@ namespace AssemblyNameSpace
         /// namely sequences separated with newlines
         /// with the possibility to specify comments as lines starting with a
         /// specific character (standard '#').  </summary>
+        /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Simple(MetaData.FileIdentifier inputFile, char commentChar = '#')
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Simple(NameFilter filter, MetaData.FileIdentifier inputFile, char commentChar = '#')
         {
             var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
@@ -45,7 +46,7 @@ namespace AssemblyNameSpace
             {
                 if (line.Length == 0) continue;
                 if (line[0] != commentChar)
-                    reads.Add((line.Trim(), new MetaData.None(inputFile)));
+                    reads.Add((line.Trim(), new MetaData.Simple(inputFile, filter)));
             }
 
             return outeither;
@@ -55,9 +56,10 @@ namespace AssemblyNameSpace
         /// so identifiers on a single line starting with '>' followed by an arbitrary
         /// number of lines with sequences. Because sometimes programs output the length
         /// of a line after every line this is stripped away.  </summary>
+        /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(MetaData.FileIdentifier inputFile, Regex parseIdentifier)
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
             var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
@@ -92,7 +94,7 @@ namespace AssemblyNameSpace
                         var match = parseIdentifier.Match(identifierLine);
                         if (match.Success)
                         {
-                            reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile)));
+                            reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
                         }
                         else
                         {
@@ -120,7 +122,7 @@ namespace AssemblyNameSpace
 
                 if (match.Success)
                 {
-                    reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile)));
+                    reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
                 }
                 else
                 {
@@ -137,6 +139,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
+        /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> Path to the CSV file. </param>
         /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
         /// <param name="localcutoffscore"> Score used to filter patches in peptides
@@ -148,7 +151,7 @@ namespace AssemblyNameSpace
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
         /// <returns> A list of all reads found with their metadata. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Peaks(MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
+        public static ParseEither<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
         {
             var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
 
@@ -169,7 +172,7 @@ namespace AssemblyNameSpace
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, separator, decimalseparator, peaksformat, inputFile);
+                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, separator, decimalseparator, peaksformat, inputFile, filter);
 
                 if (parsed.HasOnlyWarnings()) continue;
 

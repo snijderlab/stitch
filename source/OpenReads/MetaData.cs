@@ -25,7 +25,20 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The Identifier of the originating file.
             /// </summary>
-            public FileIdentifier File;
+            public readonly FileIdentifier File;
+            private string identifier;
+
+            /// <summary>
+            /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
+            /// </summary>
+            public string Identifier { get { return identifier; } }
+            private string escapedIdentifier;
+
+            /// <summary>
+            /// The Identifier of the read escaped for use in filenames.
+            /// </summary>
+            public string EscapedIdentifier { get { return escapedIdentifier; } }
+            (string, BST, int) EscapedIdentifierBuffer;
 
             /// <summary>
             /// To generate (an) HTML element(s) from this MetaData.
@@ -37,24 +50,44 @@ namespace AssemblyNameSpace
             /// To create an instance.
             /// </summary>
             /// <param name="file">The identifier of the originating file.</param>
-            public IMetaData(FileIdentifier file)
+            /// <param name="identifier_">The identifier of the read.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
+            public IMetaData(FileIdentifier file, string identifier_, NameFilter filter)
             {
                 File = file;
+                identifier = identifier_;
+                EscapedIdentifierBuffer = filter.EscapeIdentifier(identifier);
+            }
+
+            /// <summary> Sets the Identifier and EscapedIdentifier based on the results of the namefilter. </summary>
+            public void FinaliseIdentifier()
+            {
+                var (name, bst, count) = EscapedIdentifierBuffer;
+
+                if (bst.Count <= 1)
+                {
+                    escapedIdentifier = name;
+                }
+                else
+                {
+                    identifier = $"{identifier}_{count:D3}";
+                    escapedIdentifier = $"{name}_{count:D3}";
+                }
             }
         }
 
         /// <summary>
         /// A metadata instance to contain no metadata so reads without metadata can also be handled.
         /// </summary>
-        public class None : IMetaData
+        public class Simple : IMetaData
         {
             /// <summary>
-            /// Create a new None MetaData.
+            /// Create a new Simple MetaData.
             /// </summary>
-            public None(FileIdentifier file) : base(file) { }
+            public Simple(FileIdentifier file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
 
             /// <summary>
-            /// Returns None MetaData to HTML (which is always "").
+            /// Returns Simple MetaData to HTML (which is always "").
             /// </summary>
             /// <returns>"".</returns>
             public override string ToHTML()
@@ -69,36 +102,17 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The identifier from the fasta file.
             /// </summary>
-            public string Identifier;
-            public string FullLine;
-            public string EscapedIdentifier;
+            public readonly string FullLine;
 
             /// <summary>
             /// To create a new metadata instance with this metadata.
             /// </summary>
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
-            public Fasta(string identifier, string fullLine, FileIdentifier file)
-                : base(file)
+            public Fasta(string identifier, string fullLine, FileIdentifier file, NameFilter filter)
+                : base(file, identifier, filter)
             {
-                this.Identifier = identifier;
-                this.EscapedIdentifier = EscapeIdentifier(identifier);
                 this.FullLine = fullLine;
-            }
-
-            static string EscapeIdentifier(string identifier)
-            {
-                var chars = new HashSet<char>(Path.GetInvalidFileNameChars());
-                chars.Add('*');
-                var sb = new StringBuilder();
-
-                foreach (char c in identifier)
-                {
-                    if (!chars.Contains(c)) sb.Append(c);
-                    else sb.Append('_');
-                }
-
-                return sb.ToString();
             }
 
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
@@ -169,7 +183,7 @@ namespace AssemblyNameSpace
             /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans = null;
 
-            private Peaks(FileIdentifier file) : base(file) { }
+            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
 
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="line"> The CSV line to parse. </param>
@@ -177,11 +191,9 @@ namespace AssemblyNameSpace
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
             /// <param name="file">Identifier for the originating file.</param>
-            public static ParseEither<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file)
+            public static ParseEither<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
             {
                 var outeither = new ParseEither<Peaks>();
-                var peaks = new Peaks(file);
-                outeither.Value = peaks;
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
@@ -235,6 +247,11 @@ namespace AssemblyNameSpace
                     }
                     return true;
                 }
+
+                if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                var peaks = new Peaks(file, fields[pf.scan], filter);
+                outeither.Value = peaks;
 
                 // Assign all values
                 if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))

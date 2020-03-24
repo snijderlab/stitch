@@ -409,7 +409,7 @@ namespace AssemblyNameSpace
             var readsalignment = CreateReadsAlignment(condensed_graph[i], location);
 
             return $@"<div id=""{id}"" class=""info-block contig-info"">
-    <h1>Contig {id}</h1>
+    <h1>Contig {GetAsideIdentifier(i, AsideType.Contig, true)}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
     <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
     <h2>Reads Alignment</h4>
@@ -426,7 +426,7 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(i, AsideType.Read);
             string meta = reads_metadata[i].ToHTML();
             return $@"<div id=""{id}"" class=""info-block read-info"">
-    <h1>Read {id}</h1>
+    <h1>Read {GetAsideIdentifier(i, AsideType.Read, true)}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(reads[i])}</p>
     <h2>Sequence Length</h2>
@@ -445,7 +445,7 @@ namespace AssemblyNameSpace
             (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {id}</h1>
+    <h1>Template {GetAsideIdentifier(templateIndex, i, AsideType.Template, true)}</h1>
     <h2>Consensus Sequence</h2>
     {consensus}
     <h2>Sequence Length</h2>
@@ -508,7 +508,7 @@ namespace AssemblyNameSpace
             }
 
             return $@"<div id=""{id}"" class=""info-block read-info path-info"">
-    <h1>Path {id}</h1>
+    <h1>Path {GetAsideIdentifier(i, AsideType.Path, true)}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</p>
     <h2>Sequence Length</h2>
@@ -539,7 +539,7 @@ namespace AssemblyNameSpace
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {id}</h1>
+    <h1>Template {GetAsideIdentifier(i, AsideType.RecombinedTemplate, true)}</h1>
     {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
@@ -562,7 +562,7 @@ namespace AssemblyNameSpace
             (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {id}</h1>
+    <h1>Template {GetAsideIdentifier(index, i, AsideType.RecombinationDatabase, true)}</h1>
     {consensus}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
@@ -1127,30 +1127,37 @@ namespace AssemblyNameSpace
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
         /// <returns>A ready for use identifier.</returns>
-        string GetAsideIdentifier(int index, AsideType type)
+        string GetAsideIdentifier(int index, AsideType type, bool humanvisible = false)
         {
-            return GetAsideIdentifier(-1, index, type);
+            return GetAsideIdentifier(-1, index, type, humanvisible);
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
         /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
         /// <param name="index2">The index in the container of the element.</param>
         /// <param name="type">The type of the element.</param>
+        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
-        string GetAsideIdentifier(int index1, int index2, AsideType type)
+        string GetAsideIdentifier(int index1, int index2, AsideType type, bool humanvisible = false)
         {
-            // Try to use the identifiers as retrieved from the fasta header
-            if (type == AsideType.Read && reads_metadata[index2] is MetaData.Fasta)
+            // Try to use the identifiers as retrieved from the metadata
+            MetaData.IMetaData metadata = null;
+            if (type == AsideType.Read)
             {
-                return ((MetaData.Fasta)reads_metadata[index2]).EscapedIdentifier;
+                metadata = reads_metadata[index2];
             }
-            else if (type == AsideType.Template && databases[index1].Templates[index2].MetaData is MetaData.Fasta)
+            else if (type == AsideType.Template)
             {
-                return ((MetaData.Fasta)databases[index1].Templates[index2].MetaData).EscapedIdentifier;
+                metadata = databases[index1].Templates[index2].MetaData;
             }
-            else if (type == AsideType.RecombinationDatabase && RecombinationDatabases[index1].Templates[index2].MetaData is MetaData.Fasta)
+            else if (type == AsideType.RecombinationDatabase)
             {
-                return ((MetaData.Fasta)RecombinationDatabases[index1].Templates[index2].MetaData).EscapedIdentifier;
+                metadata = RecombinationDatabases[index1].Templates[index2].MetaData;
+            }
+            if (metadata != null)
+            {
+                if (humanvisible) return metadata.Identifier;
+                else return metadata.EscapedIdentifier;
             }
 
             string pre = GetAsidePrefix(type);
@@ -1184,9 +1191,10 @@ namespace AssemblyNameSpace
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(index1, index2, type);
+            if (id == null) throw new Exception("ID is null");
             string classname = GetAsideName(type);
             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
-            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{id}</a>";
+            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(index1, index2, type, true)}</a>";
         }
 
         string GetLinkToFolder(List<string> target, List<string> location)
