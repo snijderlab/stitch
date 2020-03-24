@@ -59,14 +59,16 @@ namespace AssemblyNameSpace
             reverse = should_reverse;
             meta_data = new MetaInformation();
             alphabet = alphabet_input;
+            reads = new List<AminoAcid[]>();
+            reads_metadata = new List<MetaData.IMetaData>();
         }
         /// <summary>
         /// Give a list of reads to the assembler
         /// </summary>
         public void GiveReads(List<(string, MetaData.IMetaData)> reads_i)
         {
-            reads = reads_i.Select(x => StringToSequence(x.Item1)).ToList();
-            reads_metadata = reads_i.Select(x => x.Item2).ToList();
+            reads.AddRange(reads_i.Select(x => StringToSequence(x.Item1)));
+            reads_metadata.AddRange(reads_i.Select(x => x.Item2));
             meta_data.reads = reads.Count();
         }
         /// <summary>

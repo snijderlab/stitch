@@ -187,7 +187,7 @@ namespace AssemblyNameSpace
 
             buffer.AppendLine(@"<table id=""reads-table"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('reads-table', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('reads-table', 0, 'string')"" class=""smallcell"">Identifier</th>
     <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
     <th onclick=""sortTable('reads-table', 2, 'number')"" class=""smallcell"">Sequence Length</th>
 </tr>");
@@ -1253,7 +1253,7 @@ namespace AssemblyNameSpace
 <tr><td>Minimum homology</td><td>{singleRun.MinimalHomology}</td></tr>
 <tr><td>Duplicate Threshold</td><td>{singleRun.DuplicateThreshold}</td></tr>
 <tr><td>Reverse</td><td>{singleRun.Reverse}</td></tr>
-<tr><td>Alphabet</td><td>{singleRun.Alphabet.Alphabet}</td></tr>
+<tr><td>Alphabet</td><td>{singleRun.Alphabet.Name}</td></tr>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>

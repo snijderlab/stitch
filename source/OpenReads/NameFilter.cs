@@ -46,15 +46,14 @@ namespace AssemblyNameSpace
 
         public (string, BST, int) EscapeIdentifier(string identifier)
         {
-            var sb = new StringBuilder();
+            var chars = identifier.ToCharArray();
 
-            foreach (char c in identifier)
+            for (int i = 0; i < chars.Length; i++)
             {
-                if (!invalidchars.Contains(c)) sb.Append(c);
-                else sb.Append('_');
+                if (invalidchars.Contains(chars[i])) chars[i] = '_';
             }
 
-            var name = sb.ToString();
+            var name = chars.ToString();
 
             BST bst;
             int count = 1;
@@ -104,7 +103,7 @@ namespace AssemblyNameSpace
                 if (Left == null)
                 {
                     Left = new BST(name);
-                    return (Left, 1);
+                    return (Left, Left.Count);
                 }
                 else
                 {
@@ -116,7 +115,7 @@ namespace AssemblyNameSpace
                 if (Right == null)
                 {
                     Right = new BST(name);
-                    return (Right, 1);
+                    return (Right, Right.Count);
                 }
                 else
                 {
