@@ -1,0 +1,29 @@
+{
+    "name": "protein-assembler",
+    "displayName": "protein-assembler",
+    "description": "VS Code support for protein assembler",
+    "version": "0.0.1",
+    "publisher": "Douwe",
+    "repository": {
+        "type": "git",
+        "url": "https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment"
+    },
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "protein-assembler",
+            "aliases": ["Protein Assembler", "ProtSeq"],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "protein-assembler",
+            "scopeName": "source.protseq",
+            "path": "./syntaxes/protseq.tmLanguage.json"
+        }]
+    }
+}

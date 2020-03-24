@@ -1,0 +1,26 @@
+{
+    "comments": {
+        "lineComment": "-"
+    },
+    // symbols used as brackets
+    "brackets": [
+        ["->", "<-"],
+        [":>", "<:"]
+    ],
+    // symbols that are auto closed when typing
+    "autoClosingPairs": [
+        ["->", "<-"],
+        [":>", "<:"]
+    ],
+    "folding": {
+        "markers": {
+            "start": "[:-]>",
+            "end": "<[:-]"
+        }
+    },
+    "wordPattern": "\\w+",
+    "indentationRules": {
+        "increaseIndentPattern": "[-:]>",
+        "decreaseIndentPattern": "<[-:]"
+    }
+}
