@@ -87,7 +87,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns the hashcode of the AminoAcid. </returns>
         public override int GetHashCode()
         {
-            return 391 + 17 * Char.GetHashCode();
+            return 7559 ^ (Char.GetHashCode() * 13);
         }
 
         /// <summary> Calculates homology between this and another AminoAcid, using the given alphabet.

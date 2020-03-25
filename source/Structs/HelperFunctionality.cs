@@ -452,23 +452,13 @@ namespace AssemblyNameSpace
                         max_gap = new List<Template.IGap> { item.Key };
                         max_gap_score = item.Value.Count;
                     }
-                    else if (item.Value.Count == max)
+                    else if (item.Value.Count == max_gap_score)
                     {
                         max_gap.Add(item.Key);
                     }
                 }
 
-                if (max_gap.Count > 1)
-                {
-                    consensus.Append("(");
-                    foreach (var item in max_gap)
-                    {
-                        consensus.Append(item.ToString());
-                        consensus.Append("/");
-                    }
-                    consensus.Append(")");
-                }
-                else if (max_gap.Count == 1 && max_gap[0].GetType() != typeof(Template.None))
+                if (max_gap.Count >= 1 && max_gap[0].GetType() != typeof(Template.None))
                 {
                     consensus.Append(max_gap[0].ToString());
                 }

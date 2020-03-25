@@ -410,6 +410,33 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(0, match.StartQueryPosition);
             Assert.AreEqual("30M", match.Alignment.CIGAR());
         }
+        [TestMethod]
+        public void TestGapInConsensusSequence()
+        {
+            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path1 = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path2 = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVQWTDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var a = StringToSequence(tem, alp);
+            var b = StringToSequence(path1, alp);
+            var c = StringToSequence(path2, alp);
+
+            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
+            var namefilter = new NameFilter();
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
+            db.Templates.Add(template);
+
+            db.Match(new List<GraphPath> { new GraphPath(b.ToList()), new GraphPath(b.ToList()), new GraphPath(c.ToList()) });
+            var r = db.Templates[0].Matches[0];
+
+            Console.WriteLine(r.ToString());
+            var gaps = db.Templates[0].CombinedSequence()[47].Gaps;
+            foreach (var gap in gaps)
+            {
+                Console.WriteLine($"{gap.ToString()} {gap.GetHashCode()} {gap.Value.Count}");
+            }
+            Assert.AreEqual(path1, HelperFunctionality.ConsensusSequence(db.Templates[0]));
+        }
         AminoAcid[] StringToSequence(string input)
         {
             AminoAcid[] output = new AminoAcid[input.Length];

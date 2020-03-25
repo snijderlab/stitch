@@ -442,17 +442,18 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Template) + "s" };
             var template = databases[templateIndex].Templates[i];
-            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
+            var alignment = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(templateIndex, i, AsideType.Template, true)}</h1>
     <h2>Consensus Sequence</h2>
-    {consensus}
+    {alignment.ConsensusSequence}
+    {alignment.SequenceLogo}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {alignment}
+    {alignment.Alignment}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {template.MetaData.ToHTML()}
@@ -530,7 +531,7 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinedTemplate) + "s" };
             var template = RecombinedDatabase.Templates[i];
-            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
+            var alignment = CreateTemplateAlignment(template, id, location);
 
             string order = "";
             if (template.Recombination != null)
@@ -540,13 +541,14 @@ namespace AssemblyNameSpace
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(i, AsideType.RecombinedTemplate, true)}</h1>
-    {consensus}
+    {alignment.ConsensusSequence}
+    {alignment.SequenceLogo}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
     {order}
-    {alignment}
+    {alignment.Alignment}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
 </div>";
@@ -559,25 +561,26 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinationDatabase) + "s" };
             var template = RecombinationDatabases[index].Templates[i];
-            (var alignment, var consensus) = CreateTemplateAlignment(template, id, location);
+            var alignment = CreateTemplateAlignment(template, id, location);
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(index, i, AsideType.RecombinationDatabase, true)}</h1>
-    {consensus}
+    {alignment.ConsensusSequence}
+    {alignment.SequenceLogo}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Out of database</h2>
     <p>{template.Name}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {alignment}
+    {alignment.Alignment}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {template.MetaData.ToHTML()}
 </div>";
         }
 
-        (string, string) CreateTemplateAlignment(Template template, string id, List<string> location)
+        (string Alignment, string ConsensusSequence, string SequenceLogo) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -829,18 +832,20 @@ namespace AssemblyNameSpace
             }
             buffer.AppendLine("</div>");
 
-            var consensus_sequence = template.CombinedSequence();
             var cons_string = $"<h2>Consensus Sequence</h2><p class='aside-seq'>{HelperFunctionality.ConsensusSequence(template)}</p>";
 
             // Sequence logo
             const double threshold = 0.3;
             const int height = 50;
             const int fontsize = 20;
+            var consensus_sequence = template.CombinedSequence();
 
-            buffer.Append($"<h2>Sequence Logo</h2><div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            var sequence_logo_buffer = new StringBuilder();
+
+            sequence_logo_buffer.Append($"<h2>Sequence Logo</h2><div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
-                buffer.Append("<div class='sequence-logo-position'>");
+                sequence_logo_buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
                 int sum = 0;
                 foreach (var item in consensus_sequence[i].AminoAcids)
@@ -853,12 +858,36 @@ namespace AssemblyNameSpace
                     if ((double)item.Value / sum > threshold)
                     {
                         var size = ((double)item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
                     }
                 }
-                buffer.Append("</div>");
+                sequence_logo_buffer.Append("</div><div class='sequence-logo-position sequence-logo-gap'>");
+                // Get the highest chars
+                int gap_sum = 0;
+                foreach (var item in consensus_sequence[i].Gaps)
+                {
+                    gap_sum += item.Value.Count;
+                }
+
+                foreach (var item in consensus_sequence[i].Gaps)
+                {
+                    if ((double)item.Value.Count / gap_sum > threshold)
+                    {
+                        var size = ((double)item.Value.Count / gap_sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        
+                        if (item.Key == (Template.IGap)new Template.None())
+                        {
+                            sequence_logo_buffer.Append($"<span style='font-size:{size}em'>*</span>");
+                        }
+                        else
+                        {
+                            sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        }
+                    }
+                }
+                sequence_logo_buffer.Append("</div>");
             }
-            buffer.Append("</div>");
+            sequence_logo_buffer.Append("</div>");
 
             // Display matches table
             buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
@@ -868,7 +897,7 @@ namespace AssemblyNameSpace
             }
             buffer.Append("</table>");
 
-            return (buffer.ToString(), cons_string);
+            return (buffer.ToString(), cons_string, sequence_logo_buffer.ToString());
         }
 
         /// <summary> Returns a list of asides for details viewing. </summary>

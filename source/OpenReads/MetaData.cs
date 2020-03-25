@@ -70,7 +70,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    identifier = $"{identifier}_{count:D3}/{bst.Count}";
+                    identifier = $"{identifier}_{count:D3}";
                     escapedIdentifier = $"{name}_{count:D3}";
                 }
             }

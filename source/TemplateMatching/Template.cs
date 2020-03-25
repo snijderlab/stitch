@@ -117,6 +117,8 @@ namespace AssemblyNameSpace
         public struct None : IGap
         {
             public override string ToString() { return ""; }
+            public override int GetHashCode() { return 397; }
+            public override bool Equals(object obj) { return obj is None; }
         }
 
         /// <summary>
@@ -128,6 +130,7 @@ namespace AssemblyNameSpace
             /// The sequence of this gap
             /// </summary>
             public readonly AminoAcid[] Sequence;
+            int hashCode;
 
             /// <summary>
             /// Creates a new Gap
@@ -136,11 +139,40 @@ namespace AssemblyNameSpace
             public Gap(AminoAcid[] sequence)
             {
                 Sequence = sequence;
+
+                // Precomputes a hashcode based on the actual sequence of the gap
+                int hash = 1217;
+                int pos = 0;
+                for (int i = 0; i < 5; i++)
+                {
+                    hash ^= Sequence[pos].GetHashCode();
+                    hash += 11;
+                    pos = ((pos + i) * 653) % Sequence.Length;
+                }
+                hashCode = hash;
             }
 
             public override string ToString()
             {
                 return AminoAcid.ArrayToString(Sequence);
+            }
+
+            public override int GetHashCode()
+            {
+                return hashCode;
+            }
+
+            // Equality is defined by the equality of the sequences
+            public override bool Equals(object obj)
+            {
+                if (obj is Gap aa && this.Sequence.Length == aa.Sequence.Length)
+                {
+                    return AminoAcid.ArrayEquals(this.Sequence, aa.Sequence);
+                }
+                else
+                {
+                    return false;
+                }
             }
         }
 
@@ -286,13 +318,13 @@ namespace AssemblyNameSpace
                 // Filter Gaps
                 for (int outer = 0; outer < Gaps.Length; outer++)
                 {
-                    if (Gaps[outer].CoverageDepth == null || Gaps[outer].CoverageDepth == new int[Gaps[outer].Gap.ToString().Length]) continue;
+                    if (Gaps[outer].CoverageDepth == null) continue;
 
                     for (int inner = 0; inner < Gaps.Length; inner++)
                     {
                         if (inner == outer) continue;
-                        if (Gaps[outer].ContigID == Gaps[inner].ContigID && Gaps[outer].CoverageDepth == Gaps[inner].CoverageDepth)
-                            Gaps[inner].CoverageDepth = new int[Gaps[inner].Gap.ToString().Length];
+                        if (Gaps[outer].ContigID == Gaps[inner].ContigID && Gaps[outer].Gap == Gaps[inner].Gap)
+                            Gaps[inner].CoverageDepth = null;
                     }
                 }
             }
@@ -354,6 +386,7 @@ namespace AssemblyNameSpace
                 {
                     IGap key;
                     if (option.Gap == null || !option.InSequence) continue;
+
                     if (option.Gap == (IGap)new None())
                     {
                         if (output[i].Gaps.ContainsKey(new None()))
