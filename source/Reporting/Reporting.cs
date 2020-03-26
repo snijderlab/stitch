@@ -21,6 +21,7 @@ namespace AssemblyNameSpace
         public readonly List<TemplateDatabase> templateDatabases;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
+        public TemplateDatabase ReadAlignment;
         public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases)
         {
             assembler = assm;
@@ -28,6 +29,7 @@ namespace AssemblyNameSpace
             templateDatabases = databases;
             RecombinedDatabase = null;
             RecombinationDatabases = null;
+            ReadAlignment = null;
         }
         public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases, TemplateDatabase recombineddatabase, List<TemplateDatabase> recombinationdatabases)
         {
@@ -36,6 +38,7 @@ namespace AssemblyNameSpace
             templateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
             RecombinationDatabases = recombinationdatabases;
+            ReadAlignment = null;
         }
     }
     /// <summary>
@@ -75,6 +78,8 @@ namespace AssemblyNameSpace
         protected List<GraphPath> Paths;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
+
+        public readonly TemplateDatabase ReadAlignment;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -86,12 +91,23 @@ namespace AssemblyNameSpace
             meta_data = parameters.assembler.meta_data;
             reads = parameters.assembler.reads;
             reads_metadata = parameters.assembler.reads_metadata;
-            alphabet = parameters.assembler.alphabet;
             singleRun = parameters.singleRun;
+
+            if (singleRun.ReadAlign != null)
+            {
+                foreach (var set in singleRun.ReadAlign.Input.Data)
+                {
+                    reads.AddRange(set.Select(a => HelperFunctionality.StringToSequence(a.Item1, new Alphabet(singleRun.ReadAlign.Alphabet))));
+                    reads_metadata.AddRange(set.Select(a => a.Item2));
+                }
+            }
+
+            alphabet = parameters.assembler.alphabet;
             databases = parameters.templateDatabases;
-            Paths = parameters.assembler.GetAllPaths(false);
+            Paths = parameters.assembler.GetAllPaths();
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
+            ReadAlignment = parameters.ReadAlignment;
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.

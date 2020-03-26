@@ -108,6 +108,7 @@ namespace AssemblyNameSpace
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
             if (output.Report == null || output.Report.Files.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
+            if (output.Recombine == null && output.ReadAlignment != null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine parameter, because ReadAlign is specified"));
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -147,6 +148,18 @@ namespace AssemblyNameSpace
                 foreach (var db in output.Recombine.Databases)
                 {
                     foreach (var read in db.Templates)
+                    {
+                        read.Item2.FinaliseIdentifier();
+                    }
+                }
+            }
+
+            if (output.ReadAlignment != null)
+            {
+                // Finalise all metadata names
+                foreach (var set in output.ReadAlignment.Input.Data)
+                {
+                    foreach (var read in set)
                     {
                         read.Item2.FinaliseIdentifier();
                     }

@@ -395,6 +395,39 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
+        string CreateReadAlignmentTable()
+        {
+            var buffer = new StringBuilder();
+
+            buffer.AppendLine($@"<table id=""read-alignment-table"" class=""widetable"">
+<tr>
+    <th onclick=""sortTable('read-alignment-table', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('read-alignment-table', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('read-alignment-table', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('read-alignment-table', 3, 'number')"" class=""smallcell"">Score</th>
+</tr>");
+            string id, link;
+
+            var sorted = ReadAlignment.Templates;
+            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            for (int i = 0; i < sorted.Count(); i++)
+            {
+                id = GetAsideIdentifier(i, AsideType.ReadAlignment);
+                link = GetAsideLink(i, AsideType.ReadAlignment);
+                buffer.AppendLine($@"<tr id=""table-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""center"">{sorted[i].Sequence.Length}</td>
+    <td class=""center"">{sorted[i].Score}</td>
+</tr>");
+            }
+
+            buffer.AppendLine("</table>");
+
+            return buffer.ToString();
+        }
+
         /// <summary> Returns an aside for details viewing of a contig. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         string CreateContigAside(int i)
@@ -580,6 +613,29 @@ namespace AssemblyNameSpace
 </div>";
         }
 
+        /// <summary> Returns an aside for details viewing of a recombination. </summary>
+        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
+        string CreateReadAlignmentAside(int i)
+        {
+            string id = GetAsideIdentifier(i, AsideType.ReadAlignment);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.ReadAlignment) + "s" };
+            var template = ReadAlignment.Templates[i];
+            var alignment = CreateTemplateAlignment(template, id, location);
+
+            return $@"<div id=""{id}"" class=""info-block template-info"">
+    <h1>Template {GetAsideIdentifier(i, AsideType.ReadAlignment, true)}</h1>
+    {alignment.ConsensusSequence}
+    {alignment.SequenceLogo}
+    <h2>Sequence Length</h2>
+    <p>{template.Sequence.Length}</p>
+    <h2>Score</h2>
+    <p>{template.Score}</p>
+    {alignment.Alignment}
+    <h2>Template Sequence</h2>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+</div>";
+        }
+
         (string Alignment, string ConsensusSequence, string SequenceLogo) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
@@ -595,20 +651,20 @@ namespace AssemblyNameSpace
             // Convert to lines: (creates List<string>)
             // Combine horizontally
             var totalsequences = alignedSequences[0].Sequences.Count();
-            var lines = new List<(string, int, int)>[totalsequences + 1];
+            var lines = new List<(string, int, int, AsideType)>[totalsequences + 1];
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<int>();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
-                lines[i] = new List<(string, int, int)>();
+                lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType type)>();
             }
 
             for (int template_pos = 0; template_pos < alignedSequences.Count(); template_pos++)
             {
                 var (Sequences, Gaps) = alignedSequences[template_pos];
-                lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1));
+                lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1, AsideType.Path));
                 int depth = 0;
 
                 // Add the aligned amino acid
@@ -619,15 +675,18 @@ namespace AssemblyNameSpace
 
                     if (index == -1)
                     {
-                        lines[i + 1].Add((gapchar.ToString(), -1, -1));
+                        lines[i + 1].Add((gapchar.ToString(), -1, -1, AsideType.Path));
                     }
                     else if (index == 0)
                     {
-                        lines[i + 1].Add((nonbreakingspace.ToString(), -1, -1));
+                        lines[i + 1].Add((nonbreakingspace.ToString(), -1, -1, AsideType.Path));
                     }
                     else
                     {
-                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), template.Matches[Sequences[i].MatchIndex].Path.Index, index - 1));
+                        var type = AsideType.ReadAlignment;
+                        if (template.Matches[Sequences[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
+
+                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), template.Matches[Sequences[i].MatchIndex].Index, index - 1, type));
                     }
                 }
 
@@ -645,7 +704,7 @@ namespace AssemblyNameSpace
                     }
                 }
                 // Add gap to the template
-                lines[0].Add((new string(gapchar, max_length), -1, -1));
+                lines[0].Add((new string(gapchar, max_length), -1, -1, AsideType.Path));
 
                 var depthGap = new List<int[]>();
                 // Add gap to the lines
@@ -668,8 +727,12 @@ namespace AssemblyNameSpace
                     char padchar = nonbreakingspace;
                     if (Gaps[i].InSequence) padchar = gapchar;
 
-                    var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Path.Index;
-                    lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1));
+                    var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Index;
+
+                    var type = AsideType.ReadAlignment;
+                    if (Gaps[i].MatchIndex >= 0 && template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
+
+                    lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1, type));
                 }
                 var depthGapCombined = new int[max_length];
                 foreach (var d in depthGap)
@@ -680,14 +743,20 @@ namespace AssemblyNameSpace
             }
 
             var aligned = new string[alignedSequences[0].Sequences.Count() + 1];
+            var types = new List<AsideType>[alignedSequences[0].Sequences.Count() + 1];
 
             for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
             {
                 StringBuilder sb = new StringBuilder();
-                foreach ((var text, _, _) in lines[i])
+                var typ = new List<AsideType>();
+
+                foreach ((var text, _, _, var type) in lines[i])
                 {
                     sb.Append(text);
+                    typ.AddRange(Enumerable.Repeat(type, text.Length));
                 }
+
+                types[i] = typ;
                 aligned[i] = sb.ToString();
             }
 
@@ -698,6 +767,7 @@ namespace AssemblyNameSpace
             bool frontoverhang = false;
             frontoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
             frontoverhangbuffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+
             for (int i = 1; i < aligned.Count(); i++)
             {
                 var match = template.Matches[i - 1];
@@ -725,7 +795,7 @@ namespace AssemblyNameSpace
             {
                 int alignedindex = 0;
                 int alignedlength = 0;
-                for (int block = 0; block <= aligned[0].Length / blocklength; block++)
+                for (int block = 0; block * blocklength < aligned[0].Length; block++)
                 {
                     // Get the right id's to generate the right links
                     while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count())
@@ -786,8 +856,8 @@ namespace AssemblyNameSpace
                         string result = "";
                         if (indices[i] >= 0)
                         {
-                            var rid = GetAsideIdentifier(indices[i], AsideType.Path);
-                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
+                            var rid = GetAsideIdentifier(indices[i], types[i][block * blocklength]);
+                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(types[i][block * blocklength]) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
                             if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
                         else if (indices[i] == -2) // Clashing sequences remove link but display sequence
@@ -799,6 +869,7 @@ namespace AssemblyNameSpace
                     }
                     buffer.Append(alignblock.ToString().TrimEnd("<br>"));
                     buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+
                     for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count() - block * blocklength); i++)
                     {
                         buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
@@ -874,7 +945,7 @@ namespace AssemblyNameSpace
                     if ((double)item.Value.Count / gap_sum > threshold)
                     {
                         var size = ((double)item.Value.Count / gap_sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        
+
                         if (item.Key == (Template.IGap)new Template.None())
                         {
                             sequence_logo_buffer.Append($"<span style='font-size:{size}em'>*</span>");
@@ -893,7 +964,7 @@ namespace AssemblyNameSpace
             buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
             foreach (var match in template.Matches)
             {
-                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Path.Index, AsideType.Path, location)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
+                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Index, AsideType.Path, location)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
             }
             buffer.Append("</table>");
 
@@ -916,6 +987,7 @@ namespace AssemblyNameSpace
                     case AsideType.Template: SaveAside(CreateTemplateAside(index2, index1), AsideType.Template, index2, index1); break;
                     case AsideType.RecombinedTemplate: SaveAside(CreateRecombinationAside(index1), AsideType.RecombinedTemplate, -1, index1); break;
                     case AsideType.RecombinationDatabase: SaveAside(CreateRecombinationDatabaseAside(index2, index1), AsideType.RecombinationDatabase, index2, index1); break;
+                    case AsideType.ReadAlignment: SaveAside(CreateReadAlignmentAside(index1), AsideType.ReadAlignment, -1, index1); break;
                 };
             }
 
@@ -957,6 +1029,14 @@ namespace AssemblyNameSpace
                     {
                         jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
                     }
+                }
+            }
+            // Reads Alignment Table Asides
+            if (ReadAlignment != null)
+            {
+                for (int i = 0; i < ReadAlignment.Templates.Count(); i++)
+                {
+                    jobbuffer.Add((AsideType.ReadAlignment, -1, i));
                 }
             }
             if (MaxThreads > 1)
@@ -1112,7 +1192,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Contig, Read, Template, Path, RecombinedTemplate, RecombinationDatabase }
+        enum AsideType { Contig, Read, Template, Path, RecombinedTemplate, RecombinationDatabase, ReadAlignment }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -1129,6 +1209,8 @@ namespace AssemblyNameSpace
                     return "RC";
                 case AsideType.RecombinationDatabase:
                     return "RT";
+                case AsideType.ReadAlignment:
+                    return "RA";
             }
             throw new ArgumentException("Invalid AsideType in GetAsidePrefix.");
         }
@@ -1148,6 +1230,8 @@ namespace AssemblyNameSpace
                     return "recombined-template";
                 case AsideType.RecombinationDatabase:
                     return "recombination-database";
+                case AsideType.ReadAlignment:
+                    return "read-alignment";
             }
             throw new ArgumentException("Invalid AsideType in GetAsideName.");
         }
@@ -1183,7 +1267,7 @@ namespace AssemblyNameSpace
             {
                 metadata = RecombinationDatabases[index1].Templates[index2].MetaData;
             }
-            if (metadata != null)
+            if (metadata != null && metadata.Identifier != null)
             {
                 if (humanvisible) return metadata.Identifier;
                 else return metadata.EscapedIdentifier;
@@ -1419,6 +1503,12 @@ assetsfolder = '{AssetsFolderName}';
                 recombinationtable += CreateRecombinationDatabaseTables();
             }
 
+            string readalignmenttable = "";
+            if (ReadAlignment != null)
+            {
+                readalignmenttable = Collapsible("Read Alignment Table", CreateReadAlignmentTable());
+            }
+
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
             var html = $@"<html>
@@ -1428,6 +1518,7 @@ assetsfolder = '{AssetsFolderName}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
+ {readalignmenttable}
  {recombinationtable}
  {CreateTemplateTables()}
  {Collapsible("Graph", $"<img src='{AssetFolderName}/graph.svg' alt='The De Bruijn graph as resulting from the assembler.'>")}

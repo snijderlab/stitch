@@ -26,13 +26,13 @@ namespace AssemblyNameSpace
             /// The Identifier of the originating file.
             /// </summary>
             public readonly FileIdentifier File;
-            private string identifier;
+            protected string identifier;
 
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
             public string Identifier { get { return identifier; } }
-            private string escapedIdentifier;
+            protected string escapedIdentifier;
 
             /// <summary>
             /// The Identifier of the read escaped for use in filenames.
@@ -56,11 +56,12 @@ namespace AssemblyNameSpace
             {
                 File = file;
                 identifier = identifier_;
-                EscapedIdentifierBuffer = filter.EscapeIdentifier(identifier);
+                if (filter != null)
+                    EscapedIdentifierBuffer = filter.EscapeIdentifier(identifier);
             }
 
             /// <summary> Sets the Identifier and EscapedIdentifier based on the results of the namefilter. </summary>
-            public void FinaliseIdentifier()
+            public virtual void FinaliseIdentifier()
             {
                 var (name, bst, count) = EscapedIdentifierBuffer;
 
@@ -74,6 +75,8 @@ namespace AssemblyNameSpace
                     escapedIdentifier = $"{name}_{count:D3}";
                 }
             }
+
+            public virtual int[] PositionalScore() { return new int[0]; }
         }
 
         /// <summary>
@@ -176,6 +179,7 @@ namespace AssemblyNameSpace
 
             /// <summary> Local confidence scores of the peptide. </summary>
             public int[] Local_confidence = null;
+            public override int[] PositionalScore() { return Local_confidence; }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
@@ -413,6 +417,28 @@ namespace AssemblyNameSpace
                 output.Append(File.ToHTML());
 
                 return output.ToString();
+            }
+        }
+
+        public class Path : IMetaData
+        {
+            GraphPath path;
+            public override int[] PositionalScore() { return path.DepthOfCoverage; }
+            public int[] ContigID { get { return path.ContigID; } }
+            public Path(GraphPath path_) : base(new FileIdentifier("nowhere", ""), "P", null)
+            {
+                path = path_;
+                identifier = $"P{path.Index:D4}";
+                escapedIdentifier = $"P{path.Index:D4}";
+            }
+            public override string ToHTML()
+            {
+                return "";
+            }
+
+            public override void FinaliseIdentifier()
+            {
+
             }
         }
 

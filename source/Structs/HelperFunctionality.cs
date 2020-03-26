@@ -204,10 +204,25 @@ namespace AssemblyNameSpace
             return score;
         }
 
+        /// <summary>
+        /// Gets the sequence in AminoAcids from a string
+        /// </summary>
+        /// <param name="input">The input string</param>
+        /// <returns>The sequence in AminoAcids</returns>
+        public static AminoAcid[] StringToSequence(string input, Alphabet alphabet)
+        {
+            AminoAcid[] output = new AminoAcid[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                output[i] = new AminoAcid(alphabet, input[i]);
+            }
+            return output;
+        }
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, GraphPath path = null)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, MetaData.IMetaData metadata = null, int index = 0)
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
             int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
@@ -335,7 +350,7 @@ namespace AssemblyNameSpace
         END_OF_CRAWL:
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, path);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index);
             return match;
         }
 

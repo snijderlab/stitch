@@ -382,7 +382,7 @@ namespace AssemblyTestNameSpace
 
             var database = new TemplateDatabase(template_parameter.Templates, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore, 0);
 
-            database.Match(assm.GetAllPaths(false), Environment.ProcessorCount);
+            database.Match(assm.GetAllPaths(), Environment.ProcessorCount);
 
             // Test if something went wrong
             Assert.AreEqual(1, database.Templates.Count());
@@ -403,7 +403,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", AminoAcid.ArrayToString(template.Sequence));
             // Path sequence
             Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(match.QuerySequence));
-            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPaths(false)[0].Sequence));
+            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPaths()[0].Sequence));
             // Match
             Assert.AreEqual(147, match.Score);
             Assert.AreEqual(68, match.StartTemplatePosition);

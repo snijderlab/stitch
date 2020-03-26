@@ -260,13 +260,15 @@ namespace AssemblyNameSpace
                     {
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
+                            var contigid = match.Index;
+                            if (match.MetaData is MetaData.Path mp) contigid = mp.ContigID[seq_pos];
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
                                            || (pieceindex < match.Alignment.Count() - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.Path.DepthOfCoverage[seq_pos], match.Path.ContigID[seq_pos]);
-                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], match.Path.ContigID[seq_pos], in_sequence);
+                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore()[seq_pos], contigid);
+                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new int[0], contigid, in_sequence);
 
                             template_pos++;
                             seq_pos++;
@@ -280,10 +282,13 @@ namespace AssemblyNameSpace
                         int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
 
                         IGap sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos, len));
-                        int[] cov = match.Path.DepthOfCoverage.SubArray(seq_pos, len);
+                        int[] cov = match.MetaData.PositionalScore().SubArray(seq_pos, len);
+
+                        var contigid = match.Index;
+                        if (match.MetaData is MetaData.Path mp) contigid = mp.ContigID[seq_pos - 1];
 
                         seq_pos += len;
-                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, match.Path.ContigID[seq_pos - 1], inseq);
+                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, contigid, inseq);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {

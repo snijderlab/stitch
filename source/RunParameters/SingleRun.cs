@@ -64,6 +64,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public List<DatabaseValue> Template;
             public RecombineParameter Recombine;
+            public ReadAlignmentParameter ReadAlign;
 
             /// <summary>
             /// The reports to be generated.
@@ -85,7 +86,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReportParameter report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReadAlignmentParameter readAlign, ReportParameter report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -97,6 +98,7 @@ namespace AssemblyNameSpace
                 Alphabet = alphabet;
                 Template = template;
                 Recombine = recombine;
+                ReadAlign = readAlign;
                 Report = report.Files;
                 progressBar = bar;
             }
@@ -115,7 +117,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, InputParameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReportParameter report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, InputParameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReadAlignmentParameter readAlign, ReportParameter report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -127,6 +129,7 @@ namespace AssemblyNameSpace
                 Alphabet = alphabet;
                 Template = template;
                 Recombine = recombine;
+                ReadAlign = readAlign;
                 Report = report.Files;
                 progressBar = bar;
             }
@@ -172,7 +175,14 @@ namespace AssemblyNameSpace
                         var alph = new Alphabet(database.Alphabet);
 
                         var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore, i, database.Scoring);
-                        database1.Match(assm.GetAllPaths(database.IncludeShortReads), max_threads);
+                        database1.Match(assm.GetAllPaths(), max_threads);
+
+                        if (database.IncludeShortReads)
+                        {
+                            var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
+                            for (int j = 0; j < assm.reads.Count; j++) reads.Add((AminoAcid.ArrayToString(assm.reads[j]), assm.reads_metadata[j]));
+                            database1.Match(reads, max_threads);
+                        }
 
                         databases.Add(database1);
                     }
@@ -196,7 +206,14 @@ namespace AssemblyNameSpace
                             var database = Recombine.Databases[i];
 
                             var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring);
-                            database1.Match(assm.GetAllPaths(Recombine.IncludeShortReads), max_threads);
+                            database1.Match(assm.GetAllPaths(), max_threads);
+
+                            if (Recombine.IncludeShortReads)
+                            {
+                                var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
+                                for (int j = 0; j < assm.reads.Count; j++) reads.Add((AminoAcid.ArrayToString(assm.reads[j]), assm.reads_metadata[j]));
+                                database1.Match(reads, max_threads);
+                            }
 
                             rec_databases.Add(database1);
                         }
@@ -284,7 +301,14 @@ namespace AssemblyNameSpace
 
                         recombined_database.Templates = recombined_templates;
 
-                        recombined_database.Match(assm.GetAllPaths(Recombine.IncludeShortReads), max_threads);
+                        recombined_database.Match(assm.GetAllPaths(), max_threads);
+
+                        if (Recombine.IncludeShortReads)
+                        {
+                            var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
+                            for (int i = 0; i < assm.reads.Count; i++) reads.Add((AminoAcid.ArrayToString(assm.reads[i]), assm.reads_metadata[i]));
+                            recombined_database.Match(reads, max_threads);
+                        }
 
                         recombine_sw.Stop();
 
@@ -297,6 +321,27 @@ namespace AssemblyNameSpace
 
                     // Did recombination + databases
                     if (progressBar != null) progressBar.Update();
+
+                    if (ReadAlign != null)
+                    {
+                        var namefilter = new NameFilter();
+
+                        List<(string, MetaData.IMetaData)> templates = parameters.RecombinedDatabase.Templates.Select(
+                            a => (
+                                HelperFunctionality.ConsensusSequence(a),
+                                (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "RT"))
+                            ).ToList();
+
+                        templates.ForEach(a => a.Item2.FinaliseIdentifier());
+                        var read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
+
+                        var reads = new List<(string, MetaData.IMetaData)>();
+                        foreach (var set in ReadAlign.Input.Data) reads.AddRange(set);
+
+                        // Match should also take reads and these should link to the original read and not a nonexisting path
+                        read_templates.Match(reads, max_threads);
+                        parameters.ReadAlignment = read_templates;
+                    }
 
                     // Generate the report(s)
                     foreach (var report in Report)

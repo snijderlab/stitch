@@ -109,7 +109,7 @@ namespace AssemblyNameSpace
             Parallel.ForEach(
                 runs,
                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, s.Item2))
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, new MetaData.Path(s.Item2), s.Item2.Index))
             );
         }
         void MatchSerial(List<GraphPath> sequences)
@@ -120,7 +120,58 @@ namespace AssemblyNameSpace
                 int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, sequences[i]));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, new MetaData.Path(sequences[i]), sequences[i].Index));
+                    x++;
+                }
+                y++;
+            }
+        }
+        /// <summary>
+        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// </summary>
+        /// <param name="sequences">The sequences to match with</param>
+        public void Match(List<(string, MetaData.IMetaData)> sequences, int max_threads = 1)
+        {
+            if (max_threads == 1)
+            {
+                MatchSerial(sequences);
+            }
+            else
+            {
+                MatchParallel(sequences, max_threads);
+            }
+        }
+        /// <summary>
+        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// </summary>
+        /// <param name="sequences">The sequences to match with</param>
+        void MatchParallel(List<(string, MetaData.IMetaData)> sequences, int max_threads)
+        {
+            var runs = new List<(Template, string, MetaData.IMetaData, int)>();
+
+            foreach (var tem in Templates)
+            {
+                for (int i = 0; i < sequences.Count(); i++)
+                {
+                    runs.Add((tem, sequences[i].Item1, sequences[i].Item2, i));
+                }
+            }
+
+            Parallel.ForEach(
+                runs,
+                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, StringToSequence(s.Item2), Alphabet, s.Item3, s.Item4))
+            );
+        }
+        void MatchSerial(List<(string, MetaData.IMetaData)> sequences)
+        {
+            int y = 0;
+            foreach (var tem in Templates)
+            {
+                int x = 0;
+                for (int i = 0; i < sequences.Count(); i++)
+                {
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, StringToSequence(sequences[i].Item1), Alphabet, sequences[i].Item2, i));
                     x++;
                 }
                 y++;
