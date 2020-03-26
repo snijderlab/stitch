@@ -5,32 +5,34 @@ Version	: 0
 Runname	: Peaks Example
 Runtype : Group
 
--Input------------------
--Folder ->
--    Path: ../008/
--    PeaksFormat: Old
--    StartsWith: 190520
--<-
-Peaks ->
-    Path: ..\008\200305_HER_test_04_DENOVO.csv
-    -Path: ..\008\minimalerrorset.csv
-    Format: X+
-    Name: 01
-    Separator: ,
-    Cutoffscore: 98
-    LocalCutoffscore: 100
-    MinLengthPatch: 100
-<-
+Assembly ->
+    Input ->
+        -Folder ->
+        -    Path: ../008/
+        -    PeaksFormat: Old
+        -    StartsWith: 190520
+        -<-
+        Peaks ->
+            Path: ..\008\200305_HER_test_04_DENOVO.csv
+            -Path: ..\008\minimalerrorset.csv
+            Format: X+
+            Name: 01
+            Separator: ,
+            Cutoffscore: 98
+            LocalCutoffscore: 100
+            MinLengthPatch: 100
+        <-
+    <-
 
--Parameters-------------
-K	            : 7
-MinimalHomology : K-1
-DuplicateThreshold: K-1
-Reverse	        : False
+    K	            : 7
+    MinimalHomology : K-1
+    DuplicateThreshold: K-1
+    Reverse	        : False
 
-Alphabet->
-    Path : ../alphabets/common_errors_alphabet.csv
-    Name : Normal
+    Alphabet->
+        Path : ../alphabets/common_errors_alphabet.csv
+        Name : Normal
+    <-
 <-
 
 Recombine->
@@ -88,11 +90,41 @@ Recombine->
     <-
 <-
 
--Report-----------------
-FASTA	->
-Path	: ../../report-peaks.fasta
-OutputType : ConsensusSequence
+ReadsAlign -> 
+    Input ->
+        Folder ->
+            Path: ../008/
+            PeaksFormat: Old
+            StartsWith: 190520
+        <-
+        Peaks ->
+            Path: ..\008\200305_HER_test_04_DENOVO.csv
+            -Path: ..\008\minimalerrorset.csv
+            Format: X+
+            Name: 01
+            Separator: ,
+            Cutoffscore: 90
+            LocalCutoffscore: 100
+            MinLengthPatch: 100
+        <-
+    <-
+    
+    CutoffScore: 7
+
+    Alphabet ->
+        Path : ../alphabets/blosum62.csv
+        Name : Blosum62
+        GapStartPenalty : 12
+        GapExtendPenalty : 1
+    <-
 <-
-HTML ->
-Path    : ../../report-peaks.html
+
+Report ->
+    FASTA	->
+    Path	: ../../report-peaks.fasta
+    OutputType : ConsensusSequence
+    <-
+    HTML ->
+    Path    : ../../report-peaks.html
+    <-
 <-

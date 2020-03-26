@@ -2,10 +2,10 @@
 
 Version	: 0
 Runname	: Peaks Example
+Runtype : Group
 
-Assemble -> 
+Assembly -> 
     Input ->
-        Runtype : Group
         -Folder ->
         -    Path: ../008/
         -    PeaksFormat: Old
@@ -92,7 +92,7 @@ ReadsAlign ->
     Input ->
         Runtype : Group
         Folder ->
-            Path: ../008/
+            Path: examples/008/
             PeaksFormat: Old
             StartsWith: 190520
         <-

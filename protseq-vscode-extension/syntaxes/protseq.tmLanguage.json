@@ -84,7 +84,7 @@
             }]
         },
         "multiple-parameter": {
-            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|k|alphabet|database|recombine|html|csv|fasta|databases)\\s*(->)",
+            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|k|alphabet|database|recombine|html|csv|fasta|databases|readsalign|input|report|assembly)\\s*(->)",
             "end": "(<-)",
             "beginCaptures": {
                 "1": {

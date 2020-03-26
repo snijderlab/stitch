@@ -29,7 +29,10 @@ namespace AssemblyNameSpace
 
             // Set the working directory to the directory of the batchfile
             var original_working_directory = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(Path.GetDirectoryName(path));
+            if (!string.IsNullOrEmpty(Path.GetDirectoryName(path)))
+            {
+                Directory.SetCurrentDirectory(Path.GetDirectoryName(path));
+            }
 
             // Save the batchfile for use in the construction of error messages
             var batchfile = new ParsedFile(path, batchfilecontent.Split('\n'));
@@ -74,448 +77,24 @@ namespace AssemblyNameSpace
                                 break;
                         }
                         break;
-                    case "peaks":
-                        var settings = new RunParameters.Input.Peaks();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
-                                    break;
-                                case "name":
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    settings.File.Name = setting.GetValue();
-                                    break;
-                                default:
-                                    var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
-                                    outEither.Messages.AddRange(peaks.Messages);
-
-                                    if (peaks.Value == false)
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
-
-                                    break;
-                            }
-                        }
-
-                        if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                        var reads_peaks = OpenReads.Peaks(namefilter, settings.File, settings.Cutoffscore, settings.LocalCutoffscore, settings.FileFormat, settings.MinLengthPatch, settings.Separator, settings.DecimalSeparator);
-                        outEither.Messages.AddRange(reads_peaks.Messages);
-                        if (!reads_peaks.HasFailed()) output.DataParameters.Add(reads_peaks.ReturnOrFail());
-                        break;
-
-                    case "reads":
-                        var rsettings = new RunParameters.Input.Reads();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    rsettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
-                                    break;
-                                case "name":
-                                    if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    rsettings.File.Name = setting.GetValue();
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
-                                    break;
-                            }
-                        }
-
-                        if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                        var reads_simple = OpenReads.Simple(namefilter, rsettings.File);
-                        outEither.Messages.AddRange(reads_simple.Messages);
-                        if (!reads_simple.HasFailed()) output.DataParameters.Add(reads_simple.ReturnOrFail());
-                        break;
-
-                    case "fastainput":
-                        var fastasettings = new RunParameters.Input.FASTA();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    fastasettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
-                                    break;
-                                case "name":
-                                    if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    fastasettings.File.Name = setting.GetValue();
-                                    break;
-                                case "identifier":
-                                    fastasettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
-                                    break;
-                            }
-                        }
-
-                        if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                        var reads_fasta = OpenReads.Fasta(namefilter, fastasettings.File, fastasettings.Identifier);
-                        outEither.Messages.AddRange(reads_fasta.Messages);
-                        if (!reads_fasta.HasFailed()) output.DataParameters.Add(reads_fasta.ReturnOrFail());
-                        break;
-                    case "folder":
-                        // Parse files one by one
-                        var folder_path = "";
-                        var startswith = "";
-                        var identifier = new Regex(".*");
-
-                        var peaks_settings = new RunParameters.Input.Peaks();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    folder_path = ParseHelper.GetFullPath(setting).GetValue(outEither);
-                                    break;
-                                case "startswith":
-                                    if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    startswith = setting.GetValue();
-                                    break;
-                                case "identifier":
-                                    identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
-                                    break;
-                                default:
-                                    var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
-                                    outEither.Messages.AddRange(peaks.Messages);
-
-                                    if (peaks.Value == false)
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
-
-                                    break;
-                            }
-                        }
-
-                        foreach (var file in Directory.GetFiles(folder_path))
-                        {
-                            if (!Path.GetFileName(file).StartsWith(startswith)) continue;
-
-                            var fileId = new MetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
-
-                            ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
-
-                            if (file.EndsWith(".fasta"))
-                                folder_reads = OpenReads.Fasta(namefilter, fileId, identifier);
-                            else if (file.EndsWith(".txt"))
-                                folder_reads = OpenReads.Simple(namefilter, fileId);
-                            else if (file.EndsWith(".csv"))
-                                folder_reads = OpenReads.Peaks(namefilter, fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
-                            else
-                                continue;
-
-                            outEither.Messages.AddRange(folder_reads.Messages);
-                            if (!folder_reads.HasFailed()) output.DataParameters.Add(folder_reads.ReturnOrFail());
-                        }
-
-                        break;
-                    case "k":
-                        if (!pair.IsSingle())
-                        {
-                            var ksettings = new RunParameters.K.Range();
-
-                            foreach (var setting in pair.GetValues())
-                            {
-                                switch (setting.Name)
-                                {
-                                    case "start":
-                                        if (ksettings.Start != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                        break;
-                                    case "end":
-                                        if (ksettings.End != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                        break;
-                                    case "step":
-                                        ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "K", "'Start', 'End' and 'Step'"));
-                                        break;
-                                }
-                            }
-                            if (ksettings.Start > 0 && ksettings.End > 0)
-                            {
-                                output.K = ksettings;
-                            }
-                            else
-                            {
-                                outEither.AddMessage(new ErrorMessage(pair.KeyRange.Full, "Invalid range", "A range should be set with a start and end value"));
-                            }
-                            break;
-                        }
-                        else
-                        {
-                            var kvalue = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange);
-                            if (!kvalue.HasFailed())
-                            {
-                                // Single K value
-                                output.K = new RunParameters.K.Single(kvalue.GetValue(outEither));
-                            }
-                            else
-                            {
-                                // Multiple K values
-                                var values = new List<int>();
-                                foreach (string value in pair.GetValue().Split(",".ToCharArray()))
-                                {
-                                    values.Add(ParseHelper.ConvertToInt(value, pair.ValueRange).GetValue(outEither));
-                                }
-                                output.K = new RunParameters.K.Multiple(values.ToArray());
-                            }
-                        }
-                        break;
-                    case "duplicatethreshold":
-                        output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
-                        break;
-                    case "minimalhomology":
-                        output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
-                        break;
-                    case "reverse":
-                        switch (pair.GetValue().ToLower())
-                        {
-                            case "true":
-                                output.Reverse = RunParameters.ReverseValue.True;
-                                break;
-                            case "false":
-                                output.Reverse = RunParameters.ReverseValue.False;
-                                break;
-                            case "both":
-                                output.Reverse = RunParameters.ReverseValue.Both;
-                                break;
-                            default:
-                                outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Reverse", "'True', 'False' and 'Both'"));
-                                break;
-                        }
-                        break;
-                    case "alphabet":
-                        output.Alphabet.Add(ParseHelper.ParseAlphabet(pair).GetValue(outEither));
+                    case "assembly":
+                        if (output.Assembly != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.Assembly = ParseHelper.ParseAssembly(batchfile, namefilter, pair).GetValue(outEither);
                         break;
                     case "database":
-                        output.Template.Add(ParseHelper.ParseDatabase(namefilter, pair, true).GetValue(outEither));
+                        output.Databases.Add(ParseHelper.ParseDatabase(namefilter, pair, true).GetValue(outEither));
                         break;
                     case "recombine":
-                        if (output.Recombine != null) outEither.AddMessage(new ErrorMessage(pair.KeyRange.Start, "Multiple definitions", "Cannot have multiple definitions of Recombine"));
-
-                        var recsettings = new RunParameters.RecombineValue();
-                        KeyValue order = null;
-                        var database_names = new List<string>();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "n":
-                                    recsettings.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "order":
-                                    if (order != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    order = setting;
-                                    break;
-                                case "cutoffscore":
-                                    recsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "databases":
-                                    if (database_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    foreach (var database in setting.GetValues())
-                                    {
-                                        if (database.Name == "database")
-                                        {
-                                            var databasevalue = ParseHelper.ParseDatabase(namefilter, database, false).GetValue(outEither);
-                                            recsettings.Databases.Add(databasevalue);
-
-                                            // CHeck to see if the name is valid
-                                            if (database_names.Contains(databasevalue.Name))
-                                            {
-                                                outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique."));
-                                            }
-                                            if (databasevalue.Name.Contains('*'))
-                                            {
-                                                outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
-                                            }
-                                            database_names.Add(databasevalue.Name);
-                                        }
-                                        else
-                                        {
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Databases", "'Database'"));
-                                        }
-                                    }
-                                    break;
-                                case "alphabet":
-                                    if (recsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    recsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
-                                    break;
-                                case "includeshortreads":
-                                    switch (setting.GetValue().ToLower())
-                                    {
-                                        case "true":
-                                            recsettings.IncludeShortReads = true;
-                                            break;
-                                        case "false":
-                                            recsettings.IncludeShortReads = false;
-                                            break;
-                                        default:
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
-                                            break;
-                                    }
-
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
-                                    break;
-                            }
-                        }
-
-                        if (recsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Alphabet"));
-                        if (database_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Databases"));
-
-                        // Parse the order
-                        if (order != null)
-                        {
-                            var order_string = order.GetValue();
-                            // Create a new counter
-                            var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
-
-                            while (order_string != "")
-                            {
-                                InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
-
-                                var match = false;
-                                for (int i = 0; i < recsettings.Databases.Count(); i++)
-                                {
-                                    var template = recsettings.Databases[i];
-                                    if (order_string.StartsWith(template.Name))
-                                    {
-                                        order_string = order_string.Remove(0, template.Name.Length);
-                                        order_counter.NextColumn(template.Name.Length);
-                                        recsettings.Order.Add(new RunParameters.RecombineOrder.Template(i));
-                                        match = true;
-                                        break;
-                                    }
-                                }
-                                if (match) continue;
-
-                                if (order_string.StartsWith('*'))
-                                {
-                                    order_string = order_string.Remove(0, 1);
-                                    order_counter.NextColumn();
-                                    recsettings.Order.Add(new RunParameters.RecombineOrder.Gap());
-                                }
-                                else
-                                {
-                                    outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
-                                    break;
-                                }
-                            }
-                        }
-                        else
-                        {
-                            outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Order"));
-                        }
-
-                        output.Recombine = recsettings;
+                        if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.Recombine = ParseHelper.ParseRecombine(namefilter, pair).GetValue(outEither);
                         break;
-                    case "html":
-                        var hsettings = new RunParameters.Report.HTML();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    hsettings.Path = Path.GetFullPath(setting.GetValue());
-                                    break;
-                                case "dotdistribution":
-                                    if (setting.GetValue().ToLower() == "global")
-                                    {
-                                        hsettings.UseIncludedDotDistribution = false;
-                                    }
-                                    else if (setting.GetValue().ToLower() == "included")
-                                    {
-                                        hsettings.UseIncludedDotDistribution = true;
-                                    }
-                                    else
-                                    {
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML DotDistribution", "'Global' and 'Included'"));
-                                    }
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
-                                    break;
-                            }
-                        }
-                        if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        output.Report.Add(hsettings);
+                    case "readsalign":
+                        if (output.ReadAlignment != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.ReadAlignment = ParseHelper.ParseReadAlignment(namefilter, pair).GetValue(outEither);
                         break;
-                    case "csv":
-                        var csettings = new RunParameters.Report.CSV();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    csettings.Path = Path.GetFullPath(setting.GetValue());
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path'"));
-                                    break;
-                            }
-                        }
-                        if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        output.Report.Add(csettings);
-                        break;
-                    case "fasta":
-                        var fsettings = new RunParameters.Report.FASTA();
-
-                        foreach (var setting in pair.GetValues())
-                        {
-                            switch (setting.Name)
-                            {
-                                case "path":
-                                    if (!string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                    fsettings.Path = Path.GetFullPath(setting.GetValue());
-                                    break;
-                                case "minimalscore":
-                                    fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                    break;
-                                case "outputtype":
-                                    switch (setting.GetValue().ToLower())
-                                    {
-                                        case "paths":
-                                            fsettings.OutputType = RunParameters.Report.FastaOutputType.Paths;
-                                            break;
-                                        case "consensussequence":
-                                            fsettings.OutputType = RunParameters.Report.FastaOutputType.ConsensusSequence;
-                                            break;
-                                        default:
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Paths' and 'ConsensusSequence'"));
-                                            break;
-                                    }
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path', 'MinimalScore' and 'OutputType'"));
-                                    break;
-                            }
-                        }
-                        if (string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                        output.Report.Add(fsettings);
+                    case "report":
+                        if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.Report = ParseHelper.ParseReport(pair).GetValue(outEither);
                         break;
                     default:
                         outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "", ""));
@@ -526,21 +105,9 @@ namespace AssemblyNameSpace
             Position def_position = new Position(0, 1, new ParsedFile());
             FileRange def_range = new FileRange(def_position, def_position);
 
-            // Generate defaults
-            if (output.DuplicateThreshold.Count() == 0)
-            {
-                output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
-            }
-            if (output.MinimalHomology.Count() == 0)
-            {
-                output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
-            }
-
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
-            if (output.Report.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
-            if (output.DataParameters.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any input parameter"));
-            if (output.Alphabet.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Alphabet"));
+            if (output.Report == null || output.Report.Files.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -551,16 +118,23 @@ namespace AssemblyNameSpace
             // Reset the working directory
             Directory.SetCurrentDirectory(original_working_directory);
 
-            // Finalise all metadata names
-            foreach (var set in output.DataParameters)
+            if (output.Assembly == null)
             {
-                foreach (var read in set)
+                outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any assembly parameter"));
+            }
+            else
+            {
+                // Finalise all metadata names
+                foreach (var set in output.Assembly.Input.Data)
                 {
-                    read.Item2.FinaliseIdentifier();
+                    foreach (var read in set)
+                    {
+                        read.Item2.FinaliseIdentifier();
+                    }
                 }
             }
 
-            foreach (var db in output.Template)
+            foreach (var db in output.Databases)
             {
                 foreach (var read in db.Templates)
                 {
@@ -752,10 +326,572 @@ namespace AssemblyNameSpace
                     return new ParseEither<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
-            public static ParseEither<RunParameters.AlphabetValue> ParseAlphabet(KeyValue key)
+            public static ParseEither<RunParameters.AssemblerParameter> ParseAssembly(ParsedFile batchfile, NameFilter nameFilter, KeyValue key)
             {
-                var asettings = new RunParameters.AlphabetValue();
-                var outEither = new ParseEither<RunParameters.AlphabetValue>(asettings);
+                var outEither = new ParseEither<RunParameters.AssemblerParameter>();
+                var output = new RunParameters.AssemblerParameter();
+
+                foreach (var pair in key.GetValues())
+                {
+                    switch (pair.Name)
+                    {
+                        case "input":
+                            if (output.Input != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                            output.Input = ParseInput(nameFilter, pair).GetValue(outEither);
+                            break;
+                        case "k":
+                            if (!pair.IsSingle())
+                            {
+                                var ksettings = new RunParameters.K.Range();
+
+                                foreach (var setting in pair.GetValues())
+                                {
+                                    switch (setting.Name)
+                                    {
+                                        case "start":
+                                            if (ksettings.Start != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                            ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                            break;
+                                        case "end":
+                                            if (ksettings.End != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                            ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                            break;
+                                        case "step":
+                                            ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                            break;
+                                        default:
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "K", "'Start', 'End' and 'Step'"));
+                                            break;
+                                    }
+                                }
+                                if (ksettings.Start > 0 && ksettings.End > 0)
+                                {
+                                    output.K = ksettings;
+                                }
+                                else
+                                {
+                                    outEither.AddMessage(new ErrorMessage(pair.KeyRange.Full, "Invalid range", "A range should be set with a start and end value"));
+                                }
+                                break;
+                            }
+                            else
+                            {
+                                var kvalue = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange);
+                                if (!kvalue.HasFailed())
+                                {
+                                    // Single K value
+                                    output.K = new RunParameters.K.Single(kvalue.GetValue(outEither));
+                                }
+                                else
+                                {
+                                    // Multiple K values
+                                    var values = new List<int>();
+                                    foreach (string value in pair.GetValue().Split(",".ToCharArray()))
+                                    {
+                                        values.Add(ParseHelper.ConvertToInt(value, pair.ValueRange).GetValue(outEither));
+                                    }
+                                    output.K = new RunParameters.K.Multiple(values.ToArray());
+                                }
+                            }
+                            break;
+                        case "duplicatethreshold":
+                            output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
+                            break;
+                        case "minimalhomology":
+                            output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
+                            break;
+                        case "reverse":
+                            switch (pair.GetValue().ToLower())
+                            {
+                                case "true":
+                                    output.Reverse = RunParameters.ReverseValue.True;
+                                    break;
+                                case "false":
+                                    output.Reverse = RunParameters.ReverseValue.False;
+                                    break;
+                                case "both":
+                                    output.Reverse = RunParameters.ReverseValue.Both;
+                                    break;
+                                default:
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Reverse", "'True', 'False' and 'Both'"));
+                                    break;
+                            }
+                            break;
+                        case "alphabet":
+                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                            output.Alphabet = ParseHelper.ParseAlphabet(pair).GetValue(outEither);
+                            break;
+                        default:
+                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Assembly", "'Input', 'K', 'DuplicateThreshold', 'MinimalHomology', 'Reverse' and 'Alphabet'"));
+                            break;
+                    }
+                }
+
+                Position def_position = new Position(0, 1, new ParsedFile());
+                FileRange def_range = new FileRange(def_position, def_position);
+
+                // Generate defaults
+                if (output.DuplicateThreshold.Count() == 0)
+                {
+                    output.DuplicateThreshold.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
+                }
+                if (output.MinimalHomology.Count() == 0)
+                {
+                    output.MinimalHomology.Add(new RunParameters.KArithmetic(RunParameters.KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
+                }
+
+                if (output.Input == null || output.Input.Data.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any input parameter"));
+                if (output.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Alphabet"));
+
+                outEither.Value = output;
+                return outEither;
+            }
+            public static ParseEither<RunParameters.InputParameter> ParseInput(NameFilter namefilter, KeyValue key)
+            {
+                var outEither = new ParseEither<RunParameters.InputParameter>();
+                var output = new RunParameters.InputParameter();
+
+                foreach (var pair in key.GetValues())
+                {
+                    switch (pair.Name)
+                    {
+                        case "peaks":
+                            var settings = new RunParameters.Input.Peaks();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        break;
+                                    case "name":
+                                        if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        settings.File.Name = setting.GetValue();
+                                        break;
+                                    default:
+                                        var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
+                                        outEither.Messages.AddRange(peaks.Messages);
+
+                                        if (peaks.Value == false)
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
+
+                                        break;
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            var reads_peaks = OpenReads.Peaks(namefilter, settings.File, settings.Cutoffscore, settings.LocalCutoffscore, settings.FileFormat, settings.MinLengthPatch, settings.Separator, settings.DecimalSeparator);
+                            outEither.Messages.AddRange(reads_peaks.Messages);
+                            if (!reads_peaks.HasFailed()) output.Data.Add(reads_peaks.ReturnOrFail());
+                            break;
+
+                        case "reads":
+                            var rsettings = new RunParameters.Input.Reads();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        rsettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        break;
+                                    case "name":
+                                        if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        rsettings.File.Name = setting.GetValue();
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
+                                        break;
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            var reads_simple = OpenReads.Simple(namefilter, rsettings.File);
+                            outEither.Messages.AddRange(reads_simple.Messages);
+                            if (!reads_simple.HasFailed()) output.Data.Add(reads_simple.ReturnOrFail());
+                            break;
+
+                        case "fasta":
+                            var fastasettings = new RunParameters.Input.FASTA();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        fastasettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        break;
+                                    case "name":
+                                        if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        fastasettings.File.Name = setting.GetValue();
+                                        break;
+                                    case "identifier":
+                                        fastasettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
+                                        break;
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            var reads_fasta = OpenReads.Fasta(namefilter, fastasettings.File, fastasettings.Identifier);
+                            outEither.Messages.AddRange(reads_fasta.Messages);
+                            if (!reads_fasta.HasFailed()) output.Data.Add(reads_fasta.ReturnOrFail());
+                            break;
+                        case "folder":
+                            // Parse files one by one
+                            var folder_path = "";
+                            FileRange? folder_range = null;
+                            var startswith = "";
+                            var identifier = new Regex(".*");
+
+                            var peaks_settings = new RunParameters.Input.Peaks();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        folder_path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        folder_range = setting.ValueRange;
+                                        break;
+                                    case "startswith":
+                                        if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        startswith = setting.GetValue();
+                                        break;
+                                    case "identifier":
+                                        identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                                        break;
+                                    default:
+                                        var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
+                                        outEither.Messages.AddRange(peaks.Messages);
+
+                                        if (peaks.Value == false)
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
+
+                                        break;
+                                }
+                            }
+
+                            if (!folder_range.HasValue)
+                            {
+                                outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                                break;
+                            }
+
+                            var files = GetAllFilesPrivate(folder_path);
+
+                            if (files.Item1.Length != 0)
+                            {
+                                foreach (var file in Directory.GetFiles(folder_path))
+                                {
+                                    if (!Path.GetFileName(file).StartsWith(startswith)) continue;
+
+                                    var fileId = new MetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
+
+                                    ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
+
+                                    if (file.EndsWith(".fasta"))
+                                        folder_reads = OpenReads.Fasta(namefilter, fileId, identifier);
+                                    else if (file.EndsWith(".txt"))
+                                        folder_reads = OpenReads.Simple(namefilter, fileId);
+                                    else if (file.EndsWith(".csv"))
+                                        folder_reads = OpenReads.Peaks(namefilter, fileId, peaks_settings.Cutoffscore, peaks_settings.LocalCutoffscore, peaks_settings.FileFormat, peaks_settings.MinLengthPatch, peaks_settings.Separator, peaks_settings.DecimalSeparator);
+                                    else
+                                        continue;
+
+                                    outEither.Messages.AddRange(folder_reads.Messages);
+                                    if (!folder_reads.HasFailed()) output.Data.Add(folder_reads.ReturnOrFail());
+                                }
+                            }
+                            else
+                            {
+                                outEither.AddMessage(new ErrorMessage(folder_range.Value, files.Item2, files.Item3, files.Item4));
+                            }
+
+                            break;
+                        default:
+                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Input", "'Peaks', 'Reads', 'Fasta' or 'Folder'"));
+                            break;
+                    }
+                }
+                outEither.Value = output;
+                return outEither;
+            }
+            public static ParseEither<RunParameters.RecombineParameter> ParseRecombine(NameFilter namefilter, KeyValue key)
+            {
+                var outEither = new ParseEither<RunParameters.RecombineParameter>();
+                var output = new RunParameters.RecombineParameter();
+
+                KeyValue order = null;
+                var database_names = new List<string>();
+
+                foreach (var setting in key.GetValues())
+                {
+                    switch (setting.Name)
+                    {
+                        case "n":
+                            output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "order":
+                            if (order != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            order = setting;
+                            break;
+                        case "cutoffscore":
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "databases":
+                            if (database_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            foreach (var database in setting.GetValues())
+                            {
+                                if (database.Name == "database")
+                                {
+                                    var databasevalue = ParseHelper.ParseDatabase(namefilter, database, false).GetValue(outEither);
+                                    output.Databases.Add(databasevalue);
+
+                                    // CHeck to see if the name is valid
+                                    if (database_names.Contains(databasevalue.Name))
+                                    {
+                                        outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique."));
+                                    }
+                                    if (databasevalue.Name.Contains('*'))
+                                    {
+                                        outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
+                                    }
+                                    database_names.Add(databasevalue.Name);
+                                }
+                                else
+                                {
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Databases", "'Database'"));
+                                }
+                            }
+                            break;
+                        case "alphabet":
+                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
+                            break;
+                        case "includeshortreads":
+                            switch (setting.GetValue().ToLower())
+                            {
+                                case "true":
+                                    output.IncludeShortReads = true;
+                                    break;
+                                case "false":
+                                    output.IncludeShortReads = false;
+                                    break;
+                                default:
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
+                                    break;
+                            }
+
+                            break;
+                        default:
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
+                            break;
+                    }
+                }
+
+                if (output.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Alphabet"));
+                if (database_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Databases"));
+
+                // Parse the order
+                if (order != null)
+                {
+                    var order_string = order.GetValue();
+                    // Create a new counter
+                    var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
+
+                    while (order_string != "")
+                    {
+                        InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
+
+                        var match = false;
+                        for (int i = 0; i < output.Databases.Count(); i++)
+                        {
+                            var template = output.Databases[i];
+                            if (order_string.StartsWith(template.Name))
+                            {
+                                order_string = order_string.Remove(0, template.Name.Length);
+                                order_counter.NextColumn(template.Name.Length);
+                                output.Order.Add(new RunParameters.RecombineOrder.Template(i));
+                                match = true;
+                                break;
+                            }
+                        }
+                        if (match) continue;
+
+                        if (order_string.StartsWith('*'))
+                        {
+                            order_string = order_string.Remove(0, 1);
+                            order_counter.NextColumn();
+                            output.Order.Add(new RunParameters.RecombineOrder.Gap());
+                        }
+                        else
+                        {
+                            outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
+                            break;
+                        }
+                    }
+                }
+                else
+                {
+                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Order"));
+                }
+
+                outEither.Value = output;
+                return outEither;
+            }
+
+            public static ParseEither<RunParameters.ReadAlignmentParameter> ParseReadAlignment(NameFilter namefilter, KeyValue key)
+            {
+                var outEither = new ParseEither<RunParameters.ReadAlignmentParameter>();
+                var output = new RunParameters.ReadAlignmentParameter();
+
+                foreach (var pair in key.GetValues())
+                {
+                    switch (pair.Name)
+                    {
+                        case "input":
+                            if (output.Input != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                            output.Input = ParseInput(namefilter, pair).GetValue(outEither);
+                            break;
+                        case "cutoffscore":
+                            output.CutoffScore = ParseHelper.ConvertToDouble(pair.GetValue(), pair.ValueRange).GetValue(outEither);
+                            break;
+                        case "alphabet":
+                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                            output.Alphabet = ParseHelper.ParseAlphabet(pair).GetValue(outEither);
+                            break;
+                        default:
+                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "ReadAlign", "'Input', 'CutoffScore' and 'Alphabet'"));
+                            break;
+                    }
+                }
+
+                outEither.Value = output;
+                return outEither;
+            }
+            public static ParseEither<RunParameters.ReportParameter> ParseReport(KeyValue key)
+            {
+                var outEither = new ParseEither<RunParameters.ReportParameter>();
+                var output = new RunParameters.ReportParameter();
+
+                foreach (var pair in key.GetValues())
+                {
+                    switch (pair.Name)
+                    {
+                        case "html":
+                            var hsettings = new RunParameters.Report.HTML();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        hsettings.Path = Path.GetFullPath(setting.GetValue());
+                                        break;
+                                    case "dotdistribution":
+                                        if (setting.GetValue().ToLower() == "global")
+                                        {
+                                            hsettings.UseIncludedDotDistribution = false;
+                                        }
+                                        else if (setting.GetValue().ToLower() == "included")
+                                        {
+                                            hsettings.UseIncludedDotDistribution = true;
+                                        }
+                                        else
+                                        {
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML DotDistribution", "'Global' and 'Included'"));
+                                        }
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
+                                        break;
+                                }
+                            }
+                            if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(hsettings);
+                            break;
+                        case "csv":
+                            var csettings = new RunParameters.Report.CSV();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        csettings.Path = Path.GetFullPath(setting.GetValue());
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path'"));
+                                        break;
+                                }
+                            }
+                            if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(csettings);
+                            break;
+                        case "fasta":
+                            var fsettings = new RunParameters.Report.FASTA();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        fsettings.Path = Path.GetFullPath(setting.GetValue());
+                                        break;
+                                    case "minimalscore":
+                                        fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                        break;
+                                    case "outputtype":
+                                        switch (setting.GetValue().ToLower())
+                                        {
+                                            case "paths":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Paths;
+                                                break;
+                                            case "consensussequence":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.ConsensusSequence;
+                                                break;
+                                            default:
+                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Paths' and 'ConsensusSequence'"));
+                                                break;
+                                        }
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path', 'MinimalScore' and 'OutputType'"));
+                                        break;
+                                }
+                            }
+                            if (string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(fsettings);
+                            break;
+                        default:
+                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Report", "'HTML', 'FASTA' and 'CSV'"));
+                            break;
+                    }
+                }
+                outEither.Value = output;
+                return outEither;
+            }
+            public static ParseEither<RunParameters.AlphabetParameter> ParseAlphabet(KeyValue key)
+            {
+                var asettings = new RunParameters.AlphabetParameter();
+                var outEither = new ParseEither<RunParameters.AlphabetParameter>(asettings);
 
                 if (key.GetValues().Count() == 0)
                 {
@@ -1183,6 +1319,98 @@ namespace AssemblyNameSpace
                     catch (Exception e)
                     {
                         return ("Invalid path", $"Unknown exception occurred when reading path: {e.Message}.");
+                    }
+                }
+            }
+            static (string[], string, string, string) GetAllFilesPrivate(string path)
+            {
+                var trypath = GetFullPathPrivate(path);
+
+                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                {
+                    return (new string[0], "Invalid path", "The path contains invalid characters.", "");
+                }
+                else if (string.IsNullOrWhiteSpace(path))
+                {
+                    return (new string[0], "Invalid path", "The path is empty.", "");
+                }
+                {
+                    try
+                    {
+                        return (Directory.GetFiles(trypath.Item1), "", "", "");
+                    }
+                    catch (ArgumentException)
+                    {
+                        return (new string[0], "Invalid path", "The path contains invalid characters.", "");
+                    }
+                    catch (UnauthorizedAccessException)
+                    {
+                        return (new string[0], "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
+                    }
+                    catch (PathTooLongException)
+                    {
+                        return (new string[0], "Invalid path", "The path length exceeds the system defined width.", "");
+                    }
+                    catch (DirectoryNotFoundException)
+                    {
+                        try
+                        {
+                            var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
+                            var drive = pieces[0].Split(':')[0];
+                            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+                            {
+                                string currentpath = $"{drive}:\\";
+                                for (int i = 1; i < pieces.Length - 1; i++)
+                                {
+                                    string nextpath = currentpath + pieces[i] + "\\";
+
+                                    if (!Directory.Exists(nextpath))
+                                    {
+                                        var directories = Directory.GetDirectories(currentpath);
+                                        var extra = "";
+
+                                        if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
+                                        else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                        else
+                                        {
+                                            int maxvalue = 0;
+                                            string maxname = "";
+                                            foreach (var dir in directories)
+                                            {
+                                                int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
+                                                if (score > maxvalue)
+                                                {
+                                                    maxname = Path.GetFileName(dir);
+                                                    maxvalue = score;
+                                                }
+                                            }
+                                            extra = $"\nDid you mean '{maxname}'?";
+                                        }
+
+                                        return (new string[0], "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
+                                    }
+                                    currentpath = nextpath;
+                                }
+                                // Will likely be never used because that would raise a FileNotFoundException
+                                return (new string[0], "Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
+                            }
+                            else
+                            {
+                                return (new string[0], "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
+                            }
+                        }
+                        catch
+                        {
+                            return (new string[0], "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
+                        }
+                    }
+                    catch (IOException)
+                    {
+                        return (new string[0], "Invalid path", "The path is a file name or a network error has occurred.", "");
+                    }
+                    catch (Exception e)
+                    {
+                        return (new string[0], "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
                     }
                 }
             }

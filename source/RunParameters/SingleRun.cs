@@ -57,13 +57,13 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The alphabet used in this run.
             /// </summary>
-            public AlphabetValue Alphabet;
+            public AlphabetParameter Alphabet;
 
             /// <summary>
             /// The template(s) used in this run.
             /// </summary>
             public List<DatabaseValue> Template;
-            public RecombineValue Recombine;
+            public RecombineParameter Recombine;
 
             /// <summary>
             /// The reports to be generated.
@@ -85,7 +85,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<DatabaseValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReportParameter report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -97,7 +97,7 @@ namespace AssemblyNameSpace
                 Alphabet = alphabet;
                 Template = template;
                 Recombine = recombine;
-                Report = report;
+                Report = report.Files;
                 progressBar = bar;
             }
 
@@ -115,11 +115,11 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<List<(string, MetaData.IMetaData)>> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetValue alphabet, List<DatabaseValue> template, RecombineValue recombine, List<Report.Parameter> report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, InputParameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReportParameter report, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
-                Input = input;
+                Input = input.Data;
                 K = k;
                 DuplicateThreshold = duplicateThreshold;
                 MinimalHomology = minimalHomology;
@@ -127,7 +127,7 @@ namespace AssemblyNameSpace
                 Alphabet = alphabet;
                 Template = template;
                 Recombine = recombine;
-                Report = report;
+                Report = report.Files;
                 progressBar = bar;
             }
 

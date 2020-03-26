@@ -4,22 +4,25 @@
 Version	: 0
 Runname	: Template Matching Test
 
--Input------------------
-Reads	->
-Path: ../011/reads-IgG2-K-002-all-100,00.txt
-Name: Reads 011
+Assembly ->
+    Input ->
+        Reads	->
+        Path: ../011/reads-IgG2-K-002-all-100,00.txt
+        Name: Reads 011
+        <-
+    <-
+    -Parameters-------------
+    K	            : 6
+    MinimalHomology : K-1
+    DuplicateThreshold: K-1
+    Reverse	        : False
+    Alphabet->
+        Path	: ../alphabets/common_errors_alphabet.csv
+        Name	: Normal
+    <-
 <-
 
--Parameters-------------
-K	            : 6
-MinimalHomology : K-1
-DuplicateThreshold: K-1
-Reverse	        : False
-Alphabet->
-    Path	: ../alphabets/common_errors_alphabet.csv
-    Name	: Normal
-<-
-Database->
+Database ->
     Path    : ../templates/IGHV.fasta
     Name    : IGHV Human
     Alphabet ->
@@ -28,11 +31,12 @@ Database->
     <-
 <-
 
--Report-----------------
--FASTA	->
--Path	: ../../report-reads-{id}.fasta
--<-
-HTML ->
-Path    : ../../report-reads-{id}.html
-DotDistribution: global
+Report ->
+    -FASTA	->
+    -Path	: ../../report-reads-{id}.fasta
+    -<-
+    HTML ->
+    Path    : ../../report-reads-{id}.html
+    DotDistribution: global
+    <-
 <-

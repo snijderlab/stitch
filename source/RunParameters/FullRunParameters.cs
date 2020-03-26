@@ -30,51 +30,34 @@ namespace AssemblyNameSpace
             public RuntypeValue Runtype;
 
             /// <summary>
-            /// The inputs for this run.
+            /// Determines the maximum number of CPU cores to be used.
             /// </summary>
-            public List<List<(string, MetaData.IMetaData)>> DataParameters;
+            public int MaxNumberOfCPUCores;
 
             /// <summary>
-            /// The K or values of K for this run.
+            /// Sets the parameters for the assembly
             /// </summary>
-            public K.KValue K;
-
-            /// <summary>
-            /// The value of Reverse for this run.
-            /// </summary>
-            public ReverseValue Reverse;
-
-            /// <summary>
-            /// The value for the MinimalHomology.
-            /// </summary>
-            public List<KArithmetic> MinimalHomology;
-
-            /// <summary>
-            /// The value for the duplicatethreshold.
-            /// </summary>
-            public List<KArithmetic> DuplicateThreshold;
-
-            /// <summary>
-            /// The alphabet(s) to be used in this run.
-            /// </summary>
-            public List<AlphabetValue> Alphabet;
+            public AssemblerParameter Assembly;
 
             /// <summary>
             /// The template(s) to be used in this run.
             /// </summary>
-            public List<DatabaseValue> Template;
+            public List<DatabaseValue> Databases;
 
             /// <summary>
             /// The report(s) to be generated for this run.
             /// </summary>
-            public List<Report.Parameter> Report;
+            public ReportParameter Report;
 
             /// <summary>
             /// The recombine parameters (if given).
             /// </summary>
-            public RecombineValue Recombine;
+            public RecombineParameter Recombine;
 
-            public int MaxNumberOfCPUCores;
+            /// <summary>
+            /// The settings for the reads alignment (if given).
+            /// </summary>
+            public ReadAlignmentParameter ReadAlignment;
 
             /// <summary>
             /// A blank instance for the RunParameters with defaults and initialization.
@@ -83,15 +66,14 @@ namespace AssemblyNameSpace
             {
                 Runname = "";
                 Runtype = RuntypeValue.Group;
-                DataParameters = new List<List<(string, MetaData.IMetaData)>>();
-                Reverse = ReverseValue.False;
-                MinimalHomology = new List<KArithmetic>();
-                DuplicateThreshold = new List<KArithmetic>();
-                Alphabet = new List<AlphabetValue>();
-                Template = new List<DatabaseValue>();
-                Report = new List<Report.Parameter>();
-                Recombine = null;
                 MaxNumberOfCPUCores = Environment.ProcessorCount;
+
+                Assembly = null;
+                Databases = new List<DatabaseValue>();
+                Report = null;
+                Recombine = null;
+                ReadAlignment = null;
+
             }
 
             /// <summary>
@@ -103,7 +85,7 @@ namespace AssemblyNameSpace
                 var output = new List<SingleRun>();
 
                 var reverselist = new List<bool>();
-                switch (Reverse)
+                switch (Assembly.Reverse)
                 {
                     case ReverseValue.True:
                         reverselist.Add(true);
@@ -118,7 +100,7 @@ namespace AssemblyNameSpace
                 }
 
                 var klist = new List<int>();
-                switch (K)
+                switch (Assembly.K)
                 {
                     case K.Single s:
                         klist.Add(s.Value);
@@ -137,28 +119,25 @@ namespace AssemblyNameSpace
                 }
 
                 int id = 0;
-                foreach (var minimalHomology in MinimalHomology)
+                foreach (var minimalHomology in Assembly.MinimalHomology)
                 {
-                    foreach (var duplicateThreshold in DuplicateThreshold)
+                    foreach (var duplicateThreshold in Assembly.DuplicateThreshold)
                     {
-                        foreach (var alphabet in Alphabet)
+                        foreach (var reverse in reverselist)
                         {
-                            foreach (var reverse in reverselist)
+                            foreach (var k in klist)
                             {
-                                foreach (var k in klist)
+                                if (Runtype == RuntypeValue.Group)
                                 {
-                                    if (Runtype == RuntypeValue.Group)
+                                    id++;
+                                    output.Add(new SingleRun(id, Runname, Assembly.Input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, Report, bar));
+                                }
+                                else
+                                {
+                                    foreach (var input in Assembly.Input.Data)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, DataParameters, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report, bar));
-                                    }
-                                    else
-                                    {
-                                        foreach (var input in DataParameters)
-                                        {
-                                            id++;
-                                            output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, alphabet, Template, Recombine, Report, bar));
-                                        }
+                                        output.Add(new SingleRun(id, Runname, input, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, Report, bar));
                                     }
                                 }
                             }

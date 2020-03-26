@@ -72,7 +72,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="alphabetValue">The RunParameter to use</param>
         /// <returns></returns>
-        public Alphabet(RunParameters.AlphabetValue alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
+        public Alphabet(RunParameters.AlphabetParameter alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
 
         /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>

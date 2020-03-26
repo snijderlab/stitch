@@ -232,10 +232,88 @@ namespace AssemblyNameSpace
             Both
         }
 
+        public class AssemblerParameter
+        {
+            public InputParameter Input;
+
+            /// <summary>
+            /// The K or values of K for this run.
+            /// </summary>
+            public K.KValue K;
+
+            /// <summary>
+            /// The value of Reverse for this run.
+            /// </summary>
+            public ReverseValue Reverse;
+
+            /// <summary>
+            /// The value for the MinimalHomology.
+            /// </summary>
+            public List<KArithmetic> MinimalHomology;
+
+            /// <summary>
+            /// The value for the duplicatethreshold.
+            /// </summary>
+            public List<KArithmetic> DuplicateThreshold;
+
+            /// <summary>
+            /// The alphabets to be used in this run.
+            /// </summary>
+            public AlphabetParameter Alphabet;
+
+            public AssemblerParameter()
+            {
+                Input = null;
+                Reverse = ReverseValue.False;
+                MinimalHomology = new List<KArithmetic>();
+                DuplicateThreshold = new List<KArithmetic>();
+                Alphabet = null;
+            }
+        }
+
+        public class InputParameter
+        {
+            /// <summary>
+            /// The inputs for this run.
+            /// </summary>
+            public List<List<(string, MetaData.IMetaData)>> Data;
+
+            public InputParameter()
+            {
+                Data = new List<List<(string, MetaData.IMetaData)>>();
+            }
+        }
+
+        public class ReportParameter
+        {
+            /// <summary>
+            /// The report(s) to be generated for this run.
+            /// </summary>
+            public List<Report.Parameter> Files;
+
+            public ReportParameter()
+            {
+                Files = new List<Report.Parameter>();
+            }
+        }
+
+        public class ReadAlignmentParameter
+        {
+            public InputParameter Input;
+            public double CutoffScore = 0;
+            public AlphabetParameter Alphabet;
+
+            public ReadAlignmentParameter()
+            {
+                Input = null;
+                Alphabet = null;
+            }
+        }
+
         /// <summary>
         /// An input for an alphabet.
         /// </summary>
-        public class AlphabetValue
+        public class AlphabetParameter
         {
             /// <summary>
             /// The data, Paths should be looked up to find the data.
@@ -272,7 +350,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The alphabet to be used for template matching.
             /// </summary>
-            public AlphabetValue Alphabet;
+            public AlphabetParameter Alphabet;
 
             /// <summary>
             /// The average score needed for a path to be included in the alignment with a template.
@@ -282,7 +360,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The templates of this database
             /// </summary>
-            public List<(string, MetaData.IMetaData)> Templates;
+            public List<(string, MetaData.IMetaData)> Templates = new List<(string, MetaData.IMetaData)>();
 
             /// <summary>
             /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
@@ -303,7 +381,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To contain all parameters for recombination of Databases.
         /// </summary>
-        public class RecombineValue
+        public class RecombineParameter
         {
             /// <summary>
             /// The amount of templates to recombine from the highest scoring Databases.
@@ -318,7 +396,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The alphabet to be used for all templates.
             /// </summary>
-            public AlphabetValue Alphabet;
+            public AlphabetParameter Alphabet;
 
             /// <summary>
             /// The order in which the templates are to be recombined.
