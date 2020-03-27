@@ -6,8 +6,9 @@ stages:
   - deploy
 
 before_script:
-  - "dotnet clean"
-  - "dotnet restore"
+  - "dotnet clean source"
+  - "dotnet clean tests"
+  - "dotnet restore tests"
 
 build:
   stage: build
