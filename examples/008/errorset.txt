@@ -1,3 +1,0 @@
-# Minimal set needed to get the weird cyclethingy
-NNNNNNKA
-NNNNNNAK
