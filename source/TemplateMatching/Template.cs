@@ -362,6 +362,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < Sequence.Length; i++)
             {
                 // Create the aminoacid dictionary
+                bool placed = false;
                 foreach (var option in alignedSequences[i].Sequences)
                 {
                     if (option.SequencePosition != 0)
@@ -374,6 +375,7 @@ namespace AssemblyNameSpace
                         else
                         {
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
+                            placed = true;
                         }
 
                         if (output[i].AminoAcids.ContainsKey(aa))
@@ -386,6 +388,11 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
+                if (!placed)
+                {
+                    output[i].AminoAcids.Add(Sequence[i], 1);
+                }
+
                 // Create the gap dictionary
                 foreach (var option in alignedSequences[i].Gaps)
                 {
