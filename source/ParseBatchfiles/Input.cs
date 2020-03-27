@@ -108,6 +108,24 @@ namespace AssemblyNameSpace
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
             if (output.Report == null || output.Report.Files.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
+            else
+            {
+                // Test validity of FASTA output type
+                foreach (var report in output.Report.Files)
+                {
+                    if (report is RunParameters.Report.FASTA fa)
+                    {
+                        if (fa.OutputType == RunParameters.Report.FastaOutputType.Recombine && output.Recombine == null)
+                        {
+                            outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine, because FASTA output was set to 'Recombine'"));
+                        }
+                        else if (fa.OutputType == RunParameters.Report.FastaOutputType.ReadsAlign && output.ReadAlignment == null)
+                        {
+                            outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "ReadAlign, because FASTA output was set to 'ReadAlign'"));
+                        }
+                    }
+                }
+            }
             if (output.Recombine == null && output.ReadAlignment != null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine parameter, because ReadAlign is specified"));
 
             // Check if there is a version specified
@@ -874,14 +892,17 @@ namespace AssemblyNameSpace
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
                                         {
-                                            case "paths":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Paths;
+                                            case "assembly":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Assembly;
                                                 break;
-                                            case "consensussequence":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.ConsensusSequence;
+                                            case "recombine":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Recombine;
+                                                break;
+                                            case "readsalign":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.ReadsAlign;
                                                 break;
                                             default:
-                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Paths' and 'ConsensusSequence'"));
+                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Assembly', 'Recombine' and 'ReadsAlign'"));
                                                 break;
                                         }
                                         break;

@@ -30,16 +30,23 @@ namespace AssemblyNameSpace
         {
             var sequences = new List<(int, string)>();
 
-            if (OutputType == RunParameters.Report.FastaOutputType.Paths)
+            if (OutputType == RunParameters.Report.FastaOutputType.Assembly)
             {
                 foreach (var path in Paths)
                 {
                     sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
                 }
             }
-            else
+            else if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
             {
                 foreach (var template in RecombinedDatabase.Templates)
+                {
+                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{HelperFunctionality.ConsensusSequence(template)}"));
+                }
+            }
+            else
+            {
+                foreach (var template in ReadAlignment.Templates)
                 {
                     sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{HelperFunctionality.ConsensusSequence(template)}"));
                 }

@@ -526,7 +526,7 @@ To generate a FASTA file with all paths, with a score for each path. The score i
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)  |
 | MinimalScore    | The minimal score needed to be included in the file                                                             | 0             |
-| OutputType      | The type of sequences to give as output, `Paths` or `ConsensusSequences`                                        | `Paths`       |
+| OutputType      | The type of sequences to give as output, `Assembly`, `Recombine` or `ReadsAlign`                                | `Assembly`    |
 
 _Example_
 ```
@@ -758,11 +758,11 @@ ReadsAlign ->
 
 Report ->
     FASTA	->
-    Path	: ../../report-peaks.fasta
-    OutputType : ConsensusSequence
+        Path	: ../../report-peaks.fasta
+        OutputType : ReadsAlign
     <-
     HTML ->
-    Path    : ../../report-peaks.html
+        Path    : ../../report-peaks.html
     <-
 <-
 ```

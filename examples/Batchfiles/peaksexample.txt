@@ -37,7 +37,7 @@ Assembly ->
 
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    n : 1
+    N : 1
 
     -Minimal average score per position to be included
     CutoffScore : 8
@@ -122,7 +122,7 @@ ReadsAlign ->
 Report ->
     FASTA	->
     Path	: ../../report-peaks.fasta
-    OutputType : ConsensusSequence
+    OutputType : ReadsAlign
     <-
     HTML ->
     Path    : ../../report-peaks.html

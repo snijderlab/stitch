@@ -116,7 +116,7 @@
             "name": "constant.numeric.floating-point"
         },
         "character-constant": {
-            "match": "(?i)(?:separate|group|old|x\\+|x|both|absolute|relative|paths|consensussequences)",
+            "match": "(?i)(?:separate|group|old|x\\+|x|both|absolute|relative|assembly|recombine|readsalign|global|included)",
             "name": "constant.language"
         },
         "single-line": {

@@ -514,7 +514,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
-            public enum FastaOutputType { Paths, ConsensusSequence }
+            public enum FastaOutputType { Assembly, Recombine, ReadsAlign }
 
             /// <summary>
             /// To indicate to return a FASTA report.
@@ -529,7 +529,7 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The outputtype of the sequences
                 /// </summary>
-                public FastaOutputType OutputType = FastaOutputType.Paths;
+                public FastaOutputType OutputType = FastaOutputType.Assembly;
             }
         }
     }
