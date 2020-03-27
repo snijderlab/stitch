@@ -1,0 +1,140 @@
+{
+    "Structure": {
+        "prefix": "Structure",
+        "body": [
+            "------| Assemble |------",
+            "",
+            "-Run Info---------------",
+            "Version: 0",
+            "Runname: $1",
+            "RunType: ${2:Group}",
+            "",
+            "Assembly ->",
+            "    Input ->",
+            "        $3",
+            "    <-",
+            "    ",
+            "    K: $4",
+            "    Alphabet ->",
+            "        Path: $5",
+            "        Name: ${6:Assembly Alphabet}",
+            "    <-",
+            "<-",
+            "",
+            "Report ->",
+            "    HTML ->",
+            "        Path: $7",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Batch File structure"
+    },
+    "Assembly": {
+        "prefix": "Assembly",
+        "body": [
+            "Assembly ->",
+            "    Input ->",
+            "        $1",
+            "    <-",
+            "    ",
+            "    K: $2",
+            "    Alphabet ->",
+            "        Path: $3",
+            "        Name: ${4:Assembly Alphabet}",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Assembly structure"
+    },
+    "Database": {
+        "prefix": "Database",
+        "body": [
+            "Database ->",
+            "    Name: $1",
+            "    Path: $2",
+            "<-"
+        ],
+        "description": "Default Database structure"
+    },
+    "DatabaseFree": {
+        "prefix": "DatabaseFree",
+        "body": [
+            "Database ->",
+            "    Name: $1",
+            "    Path: $2",
+            "    Alphabet ->",
+            "        Path: $3",
+            "        Name: ${4:Database Alphabet}",
+            "    <-",
+            "<-"
+        ],
+        "description": "Extended Database structure"
+    },
+    "Recombine": {
+        "prefix": "Recombine",
+        "body": [
+            "Recombine ->",
+            "    N: $1",
+            "    CutoffScore: $2",
+            "    Order: $3",
+            "",
+            "    Databases ->",
+            "        $4",
+            "    <-",
+            "",
+            "    Alphabet ->",
+            "        Path: $3",
+            "        Name: ${4:Assembly Alphabet}",
+            "        GapStartPenalty: ${5:12}",
+            "        GapExtendPenalty: ${6:1}",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Recombine structure"
+    },
+    "ReadsAlign": {
+        "prefix": "ReadsAlign",
+        "body": [
+            "ReadsAlign ->",
+            "    Input ->",
+            "        $1",
+            "    <-",
+            "",
+            "    CutoffScore: $2",
+            "",
+            "    Alphabet ->",
+            "        Path: $3",
+            "        Name: ${4:Assembly Alphabet}",
+            "        GapStartPenalty: ${5:12}",
+            "        GapExtendPenalty: ${6:1}",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default ReadsAlign structure"
+    },
+    "Report": {
+        "prefix": "Report",
+        "body": [
+            "Report ->",
+            "    HTML ->",
+            "        Path: $1",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default ReadsAlign structure"
+    },
+    "Peaks": {
+        "prefix": "Peaks",
+        "body": [
+            "Peaks ->",
+            "    Path: $1",
+            "    Format: ${2:X+}",
+            "    Name: $3",
+            "    Separator: ${4:,}",
+            "    Cutoffscore: $5",
+            "    LocalCutoffscore: $6",
+            "    MinLengthPatch: $7",
+            "<-"
+        ]
+    }
+}

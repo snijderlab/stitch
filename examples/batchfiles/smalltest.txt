@@ -24,7 +24,7 @@ Assembly ->
     <-
 <-
 
-Database->
+Database ->
     Path    : ../013/template.txt
     Name    : Template
     Alphabet ->

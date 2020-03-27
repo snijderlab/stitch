@@ -24,6 +24,10 @@
             "language": "protein-assembler",
             "scopeName": "source.protseq",
             "path": "./syntaxes/protseq.tmLanguage.json"
+        }],
+        "snippets": [{
+            "language": "protein-assembler",
+            "path": "./snippets.json"
         }]
     }
 }

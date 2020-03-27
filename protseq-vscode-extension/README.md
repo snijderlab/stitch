@@ -8,3 +8,4 @@ Hopefully more functionality will be added in the future.
 - Syntax highlighting
 - Folding
 - Brackets autocomplete and matching
+- Snippets
