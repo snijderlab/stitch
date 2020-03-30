@@ -53,7 +53,7 @@ namespace AssemblyNameSpace
                 if (invalidchars.Contains(chars[i])) chars[i] = '_';
             }
 
-            var name = chars.ToString();
+            var name = new string(chars);
 
             BST bst;
             int count = 1;

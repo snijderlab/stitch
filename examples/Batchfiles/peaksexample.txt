@@ -8,26 +8,26 @@ Runtype : Group
 Assembly ->
     Input ->
         -Folder ->
-        -    Path: ../008/
+        -    Path       : ../008/
         -    PeaksFormat: Old
-        -    StartsWith: 190520
+        -    StartsWith : 190520
         -<-
         Peaks ->
-            Path: ..\008\200305_HER_test_04_DENOVO.csv
-            -Path: ..\008\minimalerrorset.csv
-            Format: X+
-            Name: 01
-            Separator: ,
-            Cutoffscore: 98
+            Path            : ..\008\200305_HER_test_04_DENOVO.csv
+            -Path            : ..\008\minimalerrorset.csv
+            Format          : X+
+            Name            : 01
+            Separator       : ,
+            Cutoffscore     : 98
             LocalCutoffscore: 100
-            MinLengthPatch: 100
+            MinLengthPatch  : 100
         <-
     <-
 
-    K	            : 7
-    MinimalHomology : K-1
+    K	              : 7
+    MinimalHomology   : K-1
     DuplicateThreshold: K-1
-    Reverse	        : False
+    Reverse	          : False
 
     Alphabet->
         Path : ../alphabets/common_errors_alphabet.csv
@@ -40,7 +40,7 @@ Recombine->
     N : 1
 
     -Minimal average score per position to be included
-    CutoffScore : 8
+    CutoffScore : 12
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
@@ -50,8 +50,8 @@ Recombine->
 
     Databases->
         Database->
-            Path : ../templates/IGHV.fasta
-            Name : IGHV
+            Path      : ../templates/IGHV.fasta
+            Name      : IGHV
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
@@ -60,32 +60,32 @@ Recombine->
             Scoring : Relative
         <-
         Database->
-            Path : ../templates/IGHC_uniprot.fasta
-            Name : IGHC
+            Path      : ../templates/IGHC_uniprot.fasta
+            Name      : IGHC
             Identifier: GN=([\p{P}\w*-]+)
         <-
         Database->
-            Path : ../templates/IGK+LV.fasta
-            Name : IGLV
+            Path      : ../templates/IGK+LV.fasta
+            Name      : IGLV
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
-            Path : ../templates/IGK+LJ.fasta
-            Name : IGLJ
+            Path      : ../templates/IGK+LJ.fasta
+            Name      : IGLJ
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
         Database->
-            Path : ../templates/IGK+LC.fasta
-            Name : IGLC
+            Path      : ../templates/IGK+LC.fasta
+            Name      : IGLC
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
         <-
     <-
 
     -The alphabet used for all databases
     Alphabet ->
-        Path : ../alphabets/blosum62.csv
-        Name : Blosum62
-        GapStartPenalty : 12
+        Path             : ../alphabets/blosum62.csv
+        Name             : Blosum62
+        GapStartPenalty  : 12
         GapExtendPenalty : 1
     <-
 <-
@@ -93,9 +93,9 @@ Recombine->
 ReadsAlign -> 
     Input ->
         Folder ->
-            Path: ../008/
+            Path       : ../008/
             PeaksFormat: Old
-            StartsWith: 190520
+            StartsWith : 190520
         <-
         Peaks ->
             Path: ..\008\200305_HER_test_04_DENOVO.csv
@@ -109,7 +109,7 @@ ReadsAlign ->
         <-
     <-
     
-    CutoffScore: 7
+    CutoffScore: 8
 
     Alphabet ->
         Path : ../alphabets/blosum62.csv

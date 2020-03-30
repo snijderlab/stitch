@@ -626,6 +626,8 @@ namespace AssemblyNameSpace
     <h1>Template {GetAsideIdentifier(i, AsideType.ReadAlignment, true)}</h1>
     {alignment.ConsensusSequence}
     {alignment.SequenceLogo}
+    <h2>Based on</h2>
+    <p>{GetAsideLink(i, AsideType.RecombinedTemplate, location)}</p>
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Score</h2>
@@ -683,7 +685,7 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        var type = AsideType.ReadAlignment;
+                        var type = AsideType.Read;
                         if (template.Matches[Sequences[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
 
                         lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), template.Matches[Sequences[i].MatchIndex].Index, index - 1, type));
@@ -729,7 +731,7 @@ namespace AssemblyNameSpace
 
                     var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Index;
 
-                    var type = AsideType.ReadAlignment;
+                    var type = AsideType.Read;
                     if (Gaps[i].MatchIndex >= 0 && template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
 
                     lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1, type));
@@ -789,7 +791,7 @@ namespace AssemblyNameSpace
             }
 
             // Chop it up, add numbers etc
-            const int blocklength = 10;
+            const int blocklength = 5;
 
             if (aligned.Length > 0)
             {
@@ -1142,7 +1144,7 @@ namespace AssemblyNameSpace
 
             var buffer = new StringBuilder();
 
-            const int blocklength = 10;
+            const int blocklength = 5;
 
             // Create the main blocks of the sequence alignment
             for (int pos = 0; pos <= sequence.Length / blocklength; pos++)
