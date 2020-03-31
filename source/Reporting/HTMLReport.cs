@@ -731,8 +731,8 @@ namespace AssemblyNameSpace
 
                     var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Index;
 
-                    var type = AsideType.Read;
-                    if (Gaps[i].MatchIndex >= 0 && template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
+                    var type = AsideType.Path;
+                    if (Gaps[i].MatchIndex >= 0 && !(template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path)) type = AsideType.Read;
 
                     lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1, type));
                 }

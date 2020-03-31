@@ -319,57 +319,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
-            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
-            {
-                var node = condensed_graph[node_index];
-                List<int> forward = new List<int>(node.ForwardEdges);
-                List<int> backward = new List<int>(node.BackwardEdges);
-                node.ForwardEdges.Clear();
-                node.BackwardEdges.Clear();
-
-                for (int condensed_index = 0; condensed_index < condensed_graph.Count(); condensed_index++)
-                {
-                    var cnode = condensed_graph[condensed_index];
-                    foreach (var fwe in forward)
-                    {
-                        if (cnode.GraphIndices.Contains(fwe))
-                        {
-                            node.ForwardEdges.Add(condensed_index);
-                            break;
-                        }
-                    }
-                    foreach (var bwe in backward)
-                    {
-                        if (cnode.GraphIndices.Contains(bwe))
-                        {
-                            node.BackwardEdges.Add(condensed_index);
-                            break;
-                        }
-                    }
-                }
-
-                // Remove the part of the sequence that overlaps with the previous or next node
-                if (!node.BackwardEdges.Contains(node_index) && !node.ForwardEdges.Contains(node_index))
-                {
-                    if (node.BackwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 1)
-                    {
-                        node.Prefix = node.Sequence.Take(kmer_length - 2).ToList();
-                        node.Sequence = node.Sequence.Skip(kmer_length - 2).ToList();
-                    }
-                    if (node.ForwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 1)
-                    {
-                        node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 2).ToList();
-                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 2).ToList();
-                    }
-                }
-            }
-
-            // Calculate all reads alignments for all condensed nodes
-            foreach (var node in condensed_graph)
-            {
-                node.CalculateReadsAlignment(reads, alphabet, kmer_length);
-            }
+            RemovePreAndSuffixes();
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
@@ -477,6 +427,249 @@ namespace AssemblyNameSpace
                     }
                 }
                 return opts;
+            }
+        }
+
+        void RemovePreAndSuffixes()
+        {
+            // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
+            for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
+            {
+                var node = condensed_graph[node_index];
+                List<int> forward = new List<int>(node.ForwardEdges);
+                List<int> backward = new List<int>(node.BackwardEdges);
+                node.ForwardEdges.Clear();
+                node.BackwardEdges.Clear();
+
+                for (int condensed_index = 0; condensed_index < condensed_graph.Count(); condensed_index++)
+                {
+                    var cnode = condensed_graph[condensed_index];
+                    foreach (var fwe in forward)
+                    {
+                        if (cnode.GraphIndices.Contains(fwe))
+                        {
+                            node.ForwardEdges.Add(condensed_index);
+                            break;
+                        }
+                    }
+                    foreach (var bwe in backward)
+                    {
+                        if (cnode.GraphIndices.Contains(bwe))
+                        {
+                            node.BackwardEdges.Add(condensed_index);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            // Remove overlaps
+            for (int i = 0; i < condensed_graph.Count(); i++)
+            {
+                var node = condensed_graph[i];
+                // Remove the part of the sequence that overlaps with the previous or next node
+                if (!node.BackwardEdges.Contains(i) && !node.ForwardEdges.Contains(i))
+                {
+                    if (node.BackwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 2)
+                    {
+                        node.Prefix = node.Sequence.Take(kmer_length - 2).ToList();
+                        node.Sequence = node.Sequence.Skip(kmer_length - 2).ToList();
+                    }
+                    if (node.ForwardEdges.Count() == 1 && node.Sequence.Count() >= kmer_length - 2)
+                    {
+                        node.Suffix = node.Sequence.Skip(node.Sequence.Count() - kmer_length + 2).ToList();
+                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 2).ToList();
+                    }
+                    if (node.Sequence.Count() == 0)
+                    {
+                        // Remove
+                        var bwe = node.BackwardEdges;
+                        var fwe = node.ForwardEdges;
+                        // Link the forward and backward edges and remove references to this item
+                        foreach (var b in bwe)
+                        {
+                            foreach (var f in fwe)
+                            {
+                                condensed_graph[b].ForwardEdges.Add(f);
+                                condensed_graph[f].BackwardEdges.Add(b);
+                            }
+                            condensed_graph[b].ForwardEdges.Remove(node.Index);
+                        }
+                        foreach (var f in fwe)
+                        {
+                            condensed_graph[f].BackwardEdges.Remove(node.Index);
+                        }
+                        condensed_graph[i] = null;
+                    }
+                }
+            }
+
+            // Remove repetitive pre/suffixes which are not yet removed
+            for (int i = 0; i < condensed_graph.Count(); i++)
+            {
+                var node = condensed_graph[i];
+                if (node == null) continue;
+                if (node.BackwardEdges.Count() > 1 && node.Sequence.Count() >= kmer_length - 2)
+                {
+                    // A node with multiple incoming but without a prefix removed
+                    var pattern = node.Sequence.Take(kmer_length - 2).ToArray();
+                    bool should_remove = true;
+                    bool useful = false;
+
+                    foreach (var b in node.BackwardEdges)
+                    {
+                        var bnode = condensed_graph[b];
+                        if (bnode == null || bnode.Prefix.Count() + bnode.Sequence.Count() + bnode.Suffix.Count() < kmer_length - 2)
+                        {
+                            should_remove = false;
+                            break;
+                        }
+                        else if (bnode.Suffix.Count() > 0)
+                        {
+                            if (AminoAcid.ArrayHomology(pattern, bnode.Suffix.ToArray()) < 1)
+                            {
+                                should_remove = false;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            useful = true;
+                            var bnode_full = new List<AminoAcid>();
+                            bnode_full.AddRange(bnode.Prefix);
+                            bnode_full.AddRange(bnode.Sequence);
+                            if (AminoAcid.ArrayHomology(pattern, bnode_full.GetRange(bnode_full.Count() - kmer_length + 2, kmer_length - 2).ToArray()) < 1)
+                            {
+                                should_remove = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (should_remove && useful)
+                    {
+                        node.Prefix = pattern.ToList();
+                        node.Sequence = node.Sequence.Skip(kmer_length - 2).ToList();
+
+                        foreach (var b in node.BackwardEdges)
+                        {
+                            var bnode = condensed_graph[b];
+                            if (bnode.Suffix.Count() > 0)
+                            {
+                                bnode.Suffix = new List<AminoAcid>();
+                                bnode.Sequence.AddRange(pattern);
+                            }
+                        }
+
+                        if (node.Sequence.Count() == 0)
+                        {
+                            condensed_graph[i] = null;
+                            continue;
+                        }
+                    }
+                }
+                if (node.ForwardEdges.Count() > 1 && node.Sequence.Count() >= kmer_length - 2)
+                {
+                    // A node with multiple incoming but without a prefix removed
+                    var pattern = node.Sequence.GetRange(node.Sequence.Count() - kmer_length + 2, kmer_length - 2).ToArray();
+                    bool should_remove = true;
+                    bool useful = false;
+
+                    foreach (var f in node.ForwardEdges)
+                    {
+                        var fnode = condensed_graph[f];
+                        if (fnode == null || fnode.Prefix.Count() + fnode.Sequence.Count() + fnode.Suffix.Count() < kmer_length - 2)
+                        {
+                            should_remove = false;
+                            break;
+                        }
+                        else if (fnode.Prefix.Count() > 0)
+                        {
+                            if (AminoAcid.ArrayHomology(pattern, fnode.Prefix.ToArray()) < 1)
+                            {
+                                should_remove = false;
+                                break;
+                            }
+                        }
+                        else
+                        {
+                            useful = true;
+                            var fnode_full = new List<AminoAcid>();
+                            fnode_full.AddRange(fnode.Sequence);
+                            fnode_full.AddRange(fnode.Suffix);
+                            if (AminoAcid.ArrayHomology(pattern, fnode_full.GetRange(0, kmer_length - 2).ToArray()) < 1)
+                            {
+                                should_remove = false;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (should_remove && useful)
+                    {
+                        node.Suffix = pattern.ToList();
+                        node.Sequence = node.Sequence.Take(node.Sequence.Count() - kmer_length + 2).ToList();
+
+                        foreach (var f in node.ForwardEdges)
+                        {
+                            var fnode = condensed_graph[f];
+                            if (fnode.Prefix.Count() > 0)
+                            {
+                                fnode.Prefix = new List<AminoAcid>();
+                                fnode.Sequence.InsertRange(0, pattern);
+                            }
+                        }
+
+                        if (node.Sequence.Count() == 0)
+                        {
+                            condensed_graph[i] = null;
+                            continue;
+                        }
+                    }
+                }
+            }
+
+            // Redo indexing
+            // Get new index and remove empty elements
+            var lookup = new Dictionary<int, int>();
+            for (int i = 0; i < condensed_graph.Count(); i++)
+            {
+                if (condensed_graph[i] == null)
+                {
+                    condensed_graph.RemoveAt(i);
+                    i--;
+                }
+                else
+                {
+                    lookup.Add(condensed_graph[i].Index, i);
+                }
+            }
+            // Update indices
+            foreach (var node in condensed_graph)
+            {
+                node.Index = lookup[node.Index];
+
+                var bwe = new HashSet<int>(node.BackwardEdges);
+                node.BackwardEdges = new HashSet<int>();
+                foreach (var b in bwe)
+                {
+                    if (lookup.ContainsKey(b))
+                        node.BackwardEdges.Add(lookup[b]);
+                }
+
+                var fwe = new HashSet<int>(node.ForwardEdges);
+                node.ForwardEdges = new HashSet<int>();
+                foreach (var f in fwe)
+                {
+                    if (lookup.ContainsKey(f))
+                        node.ForwardEdges.Add(lookup[f]);
+                }
+            }
+
+            // Calculate all reads alignments for all condensed nodes
+            foreach (var node in condensed_graph)
+            {
+                node.CalculateReadsAlignment(reads, alphabet, kmer_length);
             }
         }
     }

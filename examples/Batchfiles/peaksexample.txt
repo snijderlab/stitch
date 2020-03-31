@@ -22,6 +22,10 @@ Assembly ->
             LocalCutoffscore: 100
             MinLengthPatch  : 100
         <-
+        -Reads ->
+        -    Path: ../008/errorset.txt
+        -    Name: Errorset
+        -<-
     <-
 
     K	              : 7
@@ -99,7 +103,6 @@ ReadsAlign ->
         <-
         Peaks ->
             Path: ..\008\200305_HER_test_04_DENOVO.csv
-            -Path: ..\008\minimalerrorset.csv
             Format: X+
             Name: 01
             Separator: ,
@@ -120,11 +123,11 @@ ReadsAlign ->
 <-
 
 Report ->
-    FASTA	->
-    Path	: ../../report-peaks.fasta
-    OutputType : ReadsAlign
-    <-
+    -FASTA	->
+    -    Path	: ../../report-peaks.fasta
+    -    OutputType : ReadsAlign
+    -<-
     HTML ->
-    Path    : ../../report-peaks.html
+        Path    : ../../report-peaks.html
     <-
 <-

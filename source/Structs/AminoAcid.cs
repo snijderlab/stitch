@@ -83,6 +83,20 @@ namespace AssemblyNameSpace
             return true;
         }
 
+        public static bool ArrayEquals(ICollection<AminoAcid> left, ICollection<AminoAcid> right)
+        {
+            if (left.Count() != right.Count())
+                return false;
+            for (int i = 0; i < left.Count(); i++)
+            {
+                if (!left.ElementAt(i).Equals(right.ElementAt(i)))
+                {
+                    return false;
+                }
+            }
+            return true;
+        }
+
         /// <summary> To get a hashcode for this AminoAcid. </summary>
         /// <returns> Returns the hashcode of the AminoAcid. </returns>
         public override int GetHashCode()
