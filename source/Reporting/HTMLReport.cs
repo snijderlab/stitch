@@ -657,6 +657,7 @@ namespace AssemblyNameSpace
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<int>();
+            int read_offset = singleRun.Input.Select(a => a.Count()).Sum();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
@@ -686,9 +687,18 @@ namespace AssemblyNameSpace
                     else
                     {
                         var type = AsideType.Read;
-                        if (template.Matches[Sequences[i].MatchIndex].MetaData is MetaData.Path) type = AsideType.Path;
+                        var idx = template.Matches[Sequences[i].MatchIndex].Index;
+                        if (template.Matches[Sequences[i].MatchIndex].MetaData is MetaData.Path)
+                        {
+                            type = AsideType.Path;
+                        }
+                        else
+                        {
 
-                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), template.Matches[Sequences[i].MatchIndex].Index, index - 1, type));
+                            idx += read_offset;
+                        }
+
+                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), idx, index - 1, type));
                     }
                 }
 
@@ -732,9 +742,14 @@ namespace AssemblyNameSpace
                     var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Index;
 
                     var type = AsideType.Path;
-                    if (Gaps[i].MatchIndex >= 0 && !(template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path)) type = AsideType.Read;
+                    var idx = index;
+                    if (Gaps[i].MatchIndex >= 0 && !(template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path))
+                    {
+                        type = AsideType.Read;
+                        if (index != -1) idx += read_offset;
+                    }
 
-                    lines[i + 1].Add((seq.PadRight(max_length, padchar), index, Sequences[i].SequencePosition - 1, type));
+                    lines[i + 1].Add((seq.PadRight(max_length, padchar), idx, Sequences[i].SequencePosition - 1, type));
                 }
                 var depthGapCombined = new int[max_length];
                 foreach (var d in depthGap)
