@@ -38,13 +38,23 @@ namespace AssemblyNameSpace
             // Retrieve the name of the batch file to run
             string filename = "";
             bool clean = false;
+            bool languageServer = false;
             try
             {
-                filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[1].Trim();
+                filename = Environment.CommandLine.Split(" ".ToCharArray())[1].Trim();
                 if (filename == "clean")
                 {
                     clean = true;
-                    filename = Environment.CommandLine.Split(" ".ToCharArray(), 2)[2].Trim();
+                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim();
+                }
+                else if (filename == "server")
+                {
+                    languageServer = true;
+                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim();
+                }
+                else
+                {
+                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(1)).Trim();
                 }
             }
             catch
@@ -63,16 +73,21 @@ namespace AssemblyNameSpace
             var inputparams = new RunParameters.FullRunParameters();
             try
             {
-                inputparams = ParseCommandFile.Batch(filename);
+                inputparams = ParseCommandFile.Batch(filename, languageServer);
             }
             catch (ParseException e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine($"{e.Message}");
-                Console.ResetColor();
-                Console.WriteLine("The program now terminates.");
+                if (!languageServer)
+                {
+                    Console.ForegroundColor = ConsoleColor.Red;
+                    Console.Error.WriteLine($"{e.Message}");
+                    Console.ResetColor();
+                    Console.WriteLine("The program now terminates.");
+                }
                 return;
             }
+            if (languageServer) return;
+
             Console.WriteLine("Parsed file");
 
             var bar = new ProgressBar();

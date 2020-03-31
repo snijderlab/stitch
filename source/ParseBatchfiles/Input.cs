@@ -18,7 +18,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="path">The path to the batch file.</param>
         /// <returns>The runparameters as specified in the file.</returns>
-        public static RunParameters.FullRunParameters Batch(string path)
+        public static RunParameters.FullRunParameters Batch(string path, bool languageServer = false)
         {
             var output = new RunParameters.FullRunParameters();
             var outEither = new ParseEither<RunParameters.FullRunParameters>(output);
@@ -184,6 +184,14 @@ namespace AssemblyNameSpace
                 }
             }
 
+            if (languageServer)
+            {
+                foreach (var msg in outEither.Messages)
+                {
+                    msg.OutputForLanguageServer();
+                }
+                return null;
+            }
             return outEither.ReturnOrFail();
         }
     }

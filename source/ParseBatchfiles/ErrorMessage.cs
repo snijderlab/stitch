@@ -1,4 +1,5 @@
 using System;
+using System.Text;
 
 namespace AssemblyNameSpace
 {
@@ -198,6 +199,35 @@ namespace AssemblyNameSpace
                 }
                 if (helpDescription != "") Console.WriteLine(helpDescription);
                 Console.WriteLine("");
+            }
+
+            public void OutputForLanguageServer()
+            {
+                var buffer = new StringBuilder();
+                var name = Warning ? "Warning" : "Error";
+                buffer.Append($"{name}");
+
+                // Location
+                if (subject != "" || File.Filename == "" || startposition == null) // Only a file
+                {
+                    buffer.Append($"\t1 1");
+                }
+                else if (endposition == null || startposition.Line > endposition.Line) // Single position
+                {
+                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column}");
+                }
+                else if (startposition.Line == endposition.Line) // Single line
+                {
+                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column} {endposition.Column}");
+                }
+                else // Multiline
+                {
+                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column} {endposition.Line + 1} {endposition.Column}");
+                }
+
+                buffer.Append($"\t{shortDescription}\t{longDescription.Replace('\n', ' ')}\t{helpDescription.Replace('\n', ' ')}");
+
+                Console.WriteLine(buffer);
             }
         }
     }
