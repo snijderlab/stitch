@@ -225,42 +225,8 @@ namespace AssemblyNameSpace
                         var top = new List<List<Template>>();
                         foreach (var db in rec_databases)
                         {
-                            var templates = new LinkedList<Template>();
-                            var first = true;
-                            foreach (var temp in db.Templates)
-                            {
-                                if (first)
-                                {
-                                    templates.AddFirst(temp);
-                                    first = false;
-                                    continue;
-                                }
-
-                                if (temp.Score > templates.First().Score)
-                                {
-                                    bool found = false;
-                                    var current = templates.First();
-
-                                    for (var it = templates.First; it != null; it = it.Next)
-                                    {
-                                        if (temp.Score < it.Value.Score)
-                                        {
-                                            templates.AddBefore(it, temp);
-                                            found = true;
-                                            break;
-                                        }
-                                    }
-
-                                    if (!found)
-                                    {
-                                        templates.AddLast(temp);
-                                    }
-
-                                    if (templates.Count() > Recombine.N) templates.RemoveFirst();
-                                }
-
-                            }
-                            top.Add(templates.ToList());
+                            db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
+                            top.Add(db.Templates.Take(Recombine.N).ToList());
                         }
 
                         // Recombine high scoring templates
