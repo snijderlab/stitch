@@ -448,7 +448,7 @@ namespace AssemblyNameSpace
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{readsalignment.Item2.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
+    <p>{condensed_graph[i].UniqueOrigins.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
 </div>";
         }
 

@@ -111,11 +111,11 @@ namespace AssemblyNameSpace
                 string seq_rev = string.Concat(seq.Reverse());
                 int firsthit = -1;
                 int lasthit = -1;
+                bool hit = false;
 
                 // Try to find the first (and last) position it is in the originslist
                 for (int i = 0; i < positions.Count(); i++)
                 {
-                    bool hit = false;
                     for (int j = 0; j < positions[i].Count(); j++)
                     {
                         if (positions[i][j] == identifier)
@@ -126,67 +126,63 @@ namespace AssemblyNameSpace
                             break;
                         }
                     }
-                    if (!hit || i == positions.Count() - 1)
+                }
+
+                // Get the placement of the read with the given patch in which it is located
+                if (hit)
+                {
+                    lasthit += k - 1; // Because the last hit still has a length of k
+                                      // Find the placement of the read in this patch
+
+                    int lengthpatch = lasthit - firsthit;
+
+                    if (lengthpatch == seq.Length)
                     {
-                        if (firsthit >= 0 && lasthit >= 0)
+                        // Determine forwards or backwards
+                        if (reverse)
                         {
-                            lasthit += k - 1; // Because the last hit still has a length of k
-                            // Find the placement of the read in this patch
-
-                            int lengthpatch = lasthit - firsthit;
-
-                            if (lengthpatch == seq.Length)
-                            {
-                                // Determine forwards or backwards
-                                if (reverse)
-                                {
-                                    int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
-                                    int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit + 1);
-                                    if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier));
-                                    else result.Add(new ReadPlacement(seq_rev, firsthit, identifier));
-                                }
-                                else
-                                {
-                                    result.Add(new ReadPlacement(seq, firsthit, identifier));
-                                }
-
-                            }
-                            else if (lengthpatch < seq.Length)
-                            {
-                                // Offset, score, reverse
-                                var possibilities = new List<(int, ReadPlacement)>();
-
-                                for (int offset = 0; offset < seq.Length - lengthpatch + 1; offset++)
-                                {
-                                    int score = 0;
-                                    string template_seq = "";
-                                    if (reverse)
-                                    {
-                                        template_seq = seq_rev.Substring(offset, lengthpatch);
-                                        score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit + 1);
-                                        possibilities.Add((score, new ReadPlacement(template_seq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
-                                    }
-                                    template_seq = seq.Substring(offset, lengthpatch);
-                                    score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit);
-                                    possibilities.Add((score, new ReadPlacement(template_seq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
-                                }
-
-                                var best = possibilities.First();
-                                foreach (var option in possibilities)
-                                {
-                                    if (option.Item1 > best.Item1) best = option;
-                                }
-                                result.Add(best.Item2);
-                            }
-                            else
-                            {
-                                // The patch is bigger than the sequence??? how that??
-                                throw new Exception($"While aligning read {seq} onto contig {template} the read seems to be shorter than the length of the match between the read and contig. (read length: {seq.Length}, length patch: {lengthpatch}).");
-                            }
-
-                            firsthit = -1;
-                            lasthit = -1;
+                            int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
+                            int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit + 1);
+                            if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier));
+                            else result.Add(new ReadPlacement(seq_rev, firsthit, identifier));
                         }
+                        else
+                        {
+                            result.Add(new ReadPlacement(seq, firsthit, identifier));
+                        }
+
+                    }
+                    else if (lengthpatch < seq.Length)
+                    {
+                        // Offset, score, reverse
+                        var possibilities = new List<(int, ReadPlacement)>();
+
+                        for (int offset = 0; offset < seq.Length - lengthpatch + 1; offset++)
+                        {
+                            int score = 0;
+                            string template_seq = "";
+                            if (reverse)
+                            {
+                                template_seq = seq_rev.Substring(offset, lengthpatch);
+                                score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit + 1);
+                                possibilities.Add((score, new ReadPlacement(template_seq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
+                            }
+                            template_seq = seq.Substring(offset, lengthpatch);
+                            score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit);
+                            possibilities.Add((score, new ReadPlacement(template_seq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
+                        }
+
+                        var best = possibilities.First();
+                        foreach (var option in possibilities)
+                        {
+                            if (option.Item1 > best.Item1) best = option;
+                        }
+                        result.Add(best.Item2);
+                    }
+                    else
+                    {
+                        // The patch is bigger than the sequence??? how that??
+                        throw new Exception($"While aligning read {seq} onto contig {template} the read seems to be shorter than the length of the match between the read and contig. (read length: {seq.Length}, length patch: {lengthpatch}).");
                     }
                 }
             }

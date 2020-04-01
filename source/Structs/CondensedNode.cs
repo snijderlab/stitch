@@ -52,22 +52,7 @@ namespace AssemblyNameSpace
         public List<List<HelperFunctionality.ReadPlacement>> Alignment;
         public int[] DepthOfCoverageFull;
         public int[] DepthOfCoverage;
-        public List<int> UniqueOrigins
-        {
-            get
-            {
-                var output = new List<int>();
-                foreach (var outer in Origins)
-                {
-                    foreach (var inner in outer)
-                    {
-                        if (!output.Contains(inner)) output.Add(inner);
-                    }
-                }
-                output.Sort();
-                return output;
-            }
-        }
+        public readonly List<int> UniqueOrigins;
         public readonly HashSet<int> GraphIndices;
 
         /// <summary> Creates a condensed node to be used in the condensed graph. </summary>
@@ -91,6 +76,17 @@ namespace AssemblyNameSpace
             Suffix = new List<AminoAcid>();
             Prefix = new List<AminoAcid>();
             GraphIndices = graphindices.ToHashSet();
+
+            var output = new List<int>();
+            foreach (var outer in Origins)
+            {
+                foreach (var inner in outer)
+                {
+                    if (!output.Contains(inner)) output.Add(inner);
+                }
+            }
+            output.Sort();
+            UniqueOrigins = output;
         }
 
         /// <summary>
