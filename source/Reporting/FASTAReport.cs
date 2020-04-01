@@ -41,14 +41,14 @@ namespace AssemblyNameSpace
             {
                 foreach (var template in RecombinedDatabase.Templates)
                 {
-                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{HelperFunctionality.ConsensusSequence(template)}"));
+                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
                 }
             }
             else
             {
                 foreach (var template in ReadAlignment.Templates)
                 {
-                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{HelperFunctionality.ConsensusSequence(template)}"));
+                    sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
                 }
             }
 

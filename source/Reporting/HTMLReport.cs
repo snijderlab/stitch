@@ -279,7 +279,7 @@ namespace AssemblyNameSpace
                 link = GetAsideLink(templateIndex, i, AsideType.Template);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
     <td class=""center"">{sorted[i].Sequence.Length}</td>
     <td class=""center"">{sorted[i].Score}</td>
 </tr>");
@@ -339,7 +339,7 @@ namespace AssemblyNameSpace
                 link = GetAsideLink(i, AsideType.RecombinedTemplate);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
     <td class=""center"">{sorted[i].Sequence.Length}</td>
     <td class=""center"">{sorted[i].Score}</td>
 </tr>");
@@ -381,7 +381,7 @@ namespace AssemblyNameSpace
                     link = GetAsideLink(index, i, AsideType.RecombinationDatabase);
                     innerbuffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
     <td class=""center"">{sorted[i].Sequence.Length}</td>
     <td class=""center"">{sorted[i].Score}</td>
 </tr>");
@@ -417,7 +417,7 @@ namespace AssemblyNameSpace
                 link = GetAsideLink(i, AsideType.ReadAlignment);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(sorted[i].Sequence)}</td>
+    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
     <td class=""center"">{sorted[i].Sequence.Length}</td>
     <td class=""center"">{sorted[i].Score}</td>
 </tr>");
@@ -920,7 +920,7 @@ namespace AssemblyNameSpace
             }
             buffer.AppendLine("</div>");
 
-            var cons_string = $"<h2>Consensus Sequence</h2><p class='aside-seq'>{HelperFunctionality.ConsensusSequence(template)}</p>";
+            var cons_string = $"<h2>Consensus Sequence</h2><p class='aside-seq'>{template.ConsensusSequence()}</p>";
 
             // Sequence logo
             const double threshold = 0.3;

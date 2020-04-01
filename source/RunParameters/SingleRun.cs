@@ -294,7 +294,7 @@ namespace AssemblyNameSpace
 
                         List<(string, MetaData.IMetaData)> templates = parameters.RecombinedDatabase.Templates.Select(
                             a => (
-                                HelperFunctionality.ConsensusSequence(a),
+                                a.ConsensusSequence(),
                                 (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "RT"))
                             ).ToList();
 
