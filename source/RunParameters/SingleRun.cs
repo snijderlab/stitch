@@ -292,22 +292,33 @@ namespace AssemblyNameSpace
                     {
                         var namefilter = new NameFilter();
 
-                        List<(string, MetaData.IMetaData)> templates = parameters.RecombinedDatabase.Templates.Select(
-                            a => (
-                                a.ConsensusSequence(),
-                                (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "RT"))
-                            ).ToList();
+                        List<(string, MetaData.IMetaData)> templates = new List<(string, MetaData.IMetaData)>(parameters.RecombinedDatabase.Templates.Count);
 
-                        templates.ForEach(a => a.Item2.FinaliseIdentifier());
+                        Parallel.ForEach(
+                            parameters.RecombinedDatabase.Templates,
+                            new ParallelOptions { MaxDegreeOfParallelism = max_threads },
+                            (s, _) => templates.Add((
+                                s.ConsensusSequence(),
+                                (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "RT")))
+                        );
+
+                        Parallel.ForEach(
+                            templates,
+                            new ParallelOptions { MaxDegreeOfParallelism = max_threads },
+                            (s, _) => s.Item2.FinaliseIdentifier()
+                        );
+
                         var read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
 
                         var reads = new List<(string, MetaData.IMetaData)>();
                         foreach (var set in ReadAlign.Input.Data) reads.AddRange(set);
 
-                        // Match should also take reads and these should link to the original read and not a nonexisting path
                         read_templates.Match(reads, max_threads);
                         parameters.ReadAlignment = read_templates;
                     }
+
+                    // Did raedalign
+                    if (progressBar != null && ReadAlign != null) progressBar.Update();
 
                     // Generate the report(s)
                     foreach (var report in Report)
@@ -319,11 +330,11 @@ namespace AssemblyNameSpace
                                 htmlreport.Save(h.CreateName(this));
                                 break;
                             case Report.CSV c:
-                                var csvreport = new CSVReport(parameters);
+                                var csvreport = new CSVReport(parameters, max_threads);
                                 csvreport.CreateCSVLine(c.GetID(this), c.Path);
                                 break;
                             case Report.FASTA f:
-                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType);
+                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
                                 fastareport.Save(f.CreateName(this));
                                 break;
                         }

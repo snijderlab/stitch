@@ -240,6 +240,7 @@ namespace AssemblyNameSpace
             int max_value = 0;
             int max_index_t = 0;
             int max_index_q = 0;
+            int[,] alphabet_scores = alphabet.ScoringMatrix;
 
             int tem_pos, query_pos, score, a, b, c, bpos, cpos, value;
             Direction direction;
@@ -257,7 +258,8 @@ namespace AssemblyNameSpace
                         a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1]; // Match Gap, 0 penalty
                     else
                     {
-                        score = alphabet.ScoringMatrix[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
+                        //The following line is the most time consuming in this whole function, maybe cache the matrix?? - now test it
+                        score = alphabet_scores[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
                         a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] + score; // Match
                     }
 

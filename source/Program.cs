@@ -96,7 +96,7 @@ namespace AssemblyNameSpace
             string pluralsuffix = runs.Count() > 1 ? "s" : "";
             Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralsuffix} to be done.");
 
-            bar.Start(runs.Count() * 3);
+            bar.Start(runs.Count() * (3 + (inputparams.ReadAlignment != null ? 1 : 0)));
 
             if (runs.Count() == 1)
             {

@@ -28,7 +28,6 @@ namespace AssemblyNameSpace
         /// </summary>
         string AssetsFolderName;
         string FullAssetsFolderName;
-        int MaxThreads;
 
         /// <summary>
         /// To retrieve all metadata.
@@ -36,10 +35,9 @@ namespace AssemblyNameSpace
         /// <param name="assm">The assembler.</param>
         /// <param name="run">The runparameters.</param>
         /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
-        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution, int max_threads) : base(parameters)
+        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution, int max_threads) : base(parameters, max_threads)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
-            MaxThreads = max_threads;
         }
 
         /// <summary> Creates a dot file and uses it in graphviz to generate a nice plot. Generates an extended and a simple variant. </summary>
@@ -1036,7 +1034,7 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
                 {
-                    jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
+                    //jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
                 }
 
                 // Recombination Databases Tables Asides
@@ -1044,7 +1042,7 @@ namespace AssemblyNameSpace
                 {
                     for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
                     {
-                        jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
+                        //jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
                     }
                 }
             }

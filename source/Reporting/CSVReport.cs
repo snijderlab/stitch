@@ -22,7 +22,7 @@ namespace AssemblyNameSpace
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
-        public CSVReport(ReportInputParameters parameters) : base(parameters) { }
+        public CSVReport(ReportInputParameters parameters, int max_threads) : base(parameters, max_threads) { }
         public override string Create()
         {
             return "";

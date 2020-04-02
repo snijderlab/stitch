@@ -78,13 +78,14 @@ namespace AssemblyNameSpace
         protected List<GraphPath> Paths;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
+        protected readonly int MaxThreads;
 
         public readonly TemplateDatabase ReadAlignment;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
         /// /// <param name="parameters">The parameters for this report.</param>
-        public Report(ReportInputParameters parameters)
+        public Report(ReportInputParameters parameters, int max_threads)
         {
             condensed_graph = parameters.assembler.condensed_graph;
             graph = parameters.assembler.graph;
@@ -92,6 +93,7 @@ namespace AssemblyNameSpace
             reads = parameters.assembler.reads;
             reads_metadata = parameters.assembler.reads_metadata;
             singleRun = parameters.singleRun;
+            MaxThreads = max_threads;
 
             if (singleRun.ReadAlign != null)
             {

@@ -187,24 +187,23 @@ namespace AssemblyNameSpace
 
             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
 
-            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>()
-            {
-                Capacity = Sequence.Length
-            };
+            var output = new List<((int MatchIndex, int SequencePosition, int CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, int[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
 
             // Get levels (compress into somewhat lower amount of lines)
-            var levels = new List<List<(int Start, int Length)>>();
+            var levels = new List<List<(int Start, int Length)>>(Matches.Count());
             var level_lookup = new int[Matches.Count()];
+            int start, length;
+            bool placed, could_be_placed;
 
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
             {
-                var start = Matches[matchindex].StartTemplatePosition;
-                var length = Matches[matchindex].LengthOnTemplate;
-                bool placed = false;
+                start = Matches[matchindex].StartTemplatePosition;
+                length = Matches[matchindex].LengthOnTemplate;
+                placed = false;
 
                 for (int l = 0; l < levels.Count(); l++)
                 {
-                    bool could_be_placed = true;
+                    could_be_placed = true;
                     // Try to determine if it clashes
                     foreach ((var str, var len) in levels[l])
                     {
@@ -242,18 +241,21 @@ namespace AssemblyNameSpace
                 }
             }
 
+            SequenceMatch match;
+            SequenceMatch.MatchPiece piece;
+
             for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
             {
-                var match = Matches[matchindex];
+                match = Matches[matchindex];
                 // Start at StartTemplatePosition and StartQueryPosition
-                var template_pos = match.StartTemplatePosition;
+                int template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
                 int level = level_lookup[matchindex];
 
                 for (int pieceindex = 0; pieceindex < match.Alignment.Count(); pieceindex++)
                 {
-                    var piece = match.Alignment[pieceindex];
+                    piece = match.Alignment[pieceindex];
                     var inseq = pieceindex < match.Alignment.Count() - 1 && pieceindex > 0 ? true : false;
 
                     if (piece is SequenceMatch.Match m)
@@ -358,16 +360,18 @@ namespace AssemblyNameSpace
             }
 
             var alignedSequences = AlignedSequences();
+            bool placed;
+            AminoAcid aa;
+            IGap key;
 
             for (int i = 0; i < Sequence.Length; i++)
             {
                 // Create the aminoacid dictionary
-                bool placed = false;
+                placed = false;
                 foreach (var option in alignedSequences[i].Sequences)
                 {
                     if (option.SequencePosition != 0)
                     {
-                        AminoAcid aa;
                         if (option.SequencePosition == -1)
                         {
                             aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
@@ -396,7 +400,6 @@ namespace AssemblyNameSpace
                 // Create the gap dictionary
                 foreach (var option in alignedSequences[i].Gaps)
                 {
-                    IGap key;
                     if (option.Gap == null || !option.InSequence) continue;
 
                     if (option.Gap == (IGap)new None())
@@ -443,15 +446,18 @@ namespace AssemblyNameSpace
             if (ConsensusSequenceCache != "") return ConsensusSequenceCache;
 
             var consensus = new StringBuilder();
-            var consensus_sequence = CombinedSequence();
+            var combinedSequence = CombinedSequence();
+            string options = "";
+            int max;
+            List<Template.IGap> max_gap = new List<IGap>();
 
-            for (int i = 0; i < consensus_sequence.Count; i++)
+            for (int i = 0; i < combinedSequence.Count; i++)
             {
                 // Get the highest chars
-                string options = "";
-                int max = 0;
+                options = "";
+                max = 0;
 
-                foreach (var item in consensus_sequence[i].AminoAcids)
+                foreach (var item in combinedSequence[i].AminoAcids)
                 {
                     if (item.Value > max)
                     {
@@ -467,9 +473,9 @@ namespace AssemblyNameSpace
                 if (options.Length > 1)
                 {
                     // Force a single amino acid, the one of the template or just the first one
-                    if (options.Contains(consensus_sequence[i].Template.Char))
+                    if (options.Contains(combinedSequence[i].Template.Char))
                     {
-                        consensus.Append(consensus_sequence[i].Template.Char);
+                        consensus.Append(combinedSequence[i].Template.Char);
                     }
                     else
                     {
@@ -482,17 +488,18 @@ namespace AssemblyNameSpace
                 }
 
                 // Get the highest gap
-                List<Template.IGap> max_gap = new List<Template.IGap> { new Template.None() };
-                int max_gap_score = 0;
+                max_gap.Clear();
+                max = 0;
 
-                foreach (var item in consensus_sequence[i].Gaps)
+                foreach (var item in combinedSequence[i].Gaps)
                 {
-                    if (item.Value.Count > max_gap_score)
+                    if (item.Value.Count > max)
                     {
-                        max_gap = new List<Template.IGap> { item.Key };
-                        max_gap_score = item.Value.Count;
+                        max_gap.Clear();
+                        max_gap.Add(item.Key);
+                        max = item.Value.Count;
                     }
-                    else if (item.Value.Count == max_gap_score)
+                    else if (item.Value.Count == max)
                     {
                         max_gap.Add(item.Key);
                     }
