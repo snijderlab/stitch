@@ -376,7 +376,7 @@ namespace AssemblyTestNameSpace
             var alphabet = new Alphabet(run.Alphabet);
             var assm = new Assembler(run.K, run.DuplicateThreshold, run.MinimalHomology, run.Reverse, alphabet);
 
-            assm.GiveReads(run.Input[0]);
+            assm.GiveReads(run.Input);
 
             assm.Assemble();
 

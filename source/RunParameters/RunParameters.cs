@@ -276,7 +276,8 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The inputs for this run.
             /// </summary>
-            public List<List<(string, MetaData.IMetaData)>> Data;
+            public List<List<(string Sequence, MetaData.IMetaData MetaData)>> Data;
+            public List<(string Sequence, MetaData.IMetaData MetaData)> CleanedData;
 
             public InputParameter()
             {
@@ -474,7 +475,6 @@ namespace AssemblyNameSpace
                     output.Replace("{mh}", r.MinimalHomology.ToString());
                     output.Replace("{dt}", r.DuplicateThreshold.ToString());
                     output.Replace("{alph}", r.Alphabet.Name);
-                    output.Replace("{data}", r.Input.Count() == 1 ? r.Input[0][0].Item2.File.Name : "Group");
                     output.Replace("{name}", r.Runname);
                     output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
                     output.Replace("{time}", DateTime.Now.ToString("hh-mm-ss"));

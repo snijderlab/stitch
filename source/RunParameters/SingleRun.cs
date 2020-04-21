@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
             /// </summary>
-            public List<List<(string, MetaData.IMetaData)>> Input;
+            public List<(string, MetaData.IMetaData)> Input;
 
             /// <summary>
             /// The value of K used in this run.
@@ -90,38 +90,7 @@ namespace AssemblyNameSpace
             {
                 ID = id;
                 Runname = runname;
-                Input = new List<List<(string, MetaData.IMetaData)>> { input };
-                K = k;
-                DuplicateThreshold = duplicateThreshold;
-                MinimalHomology = minimalHomology;
-                Reverse = reverse;
-                Alphabet = alphabet;
-                Template = template;
-                Recombine = recombine;
-                ReadAlign = readAlign;
-                Report = report.Files;
-                progressBar = bar;
-            }
-
-            /// <summary>
-            /// To create a single run with a multiple dataparameters as input.
-            /// </summary>
-            /// <param name="id">The ID of the run.</param>
-            /// <param name="runname">The name of the run.</param>
-            /// <param name="input">The input data to be run.</param>
-            /// <param name="k">The value of K.</param>
-            /// <param name="duplicateThreshold">The value of DuplicateThreshold.</param>
-            /// <param name="minimalHomology">The value of MinimalHomology.</param>
-            /// <param name="reverse">The value of Reverse.</param>
-            /// <param name="alphabet">The alphabet to be used.</param>
-            /// <param name="template">The templates to be used.</param>
-            /// <param name="recombine">The recombination, if needed.</param>
-            /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, InputParameter input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReadAlignmentParameter readAlign, ReportParameter report, ProgressBar bar = null)
-            {
-                ID = id;
-                Runname = runname;
-                Input = input.Data;
+                Input = input;
                 K = k;
                 DuplicateThreshold = duplicateThreshold;
                 MinimalHomology = minimalHomology;
@@ -153,11 +122,7 @@ namespace AssemblyNameSpace
                     var alphabet = new Alphabet(Alphabet);
                     var assm = new Assembler(K, DuplicateThreshold, MinimalHomology, Reverse, alphabet);
 
-                    // Retrieve the input
-                    foreach (var input in Input)
-                    {
-                        assm.GiveReads(input);
-                    }
+                    assm.GiveReads(Input);
 
                     assm.Assemble();
 
@@ -310,14 +275,11 @@ namespace AssemblyNameSpace
 
                         var read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
 
-                        var reads = new List<(string, MetaData.IMetaData)>();
-                        foreach (var set in ReadAlign.Input.Data) reads.AddRange(set);
-
-                        read_templates.Match(reads, max_threads);
+                        read_templates.Match(ReadAlign.Input.CleanedData, max_threads);
                         parameters.ReadAlignment = read_templates;
                     }
 
-                    // Did raedalign
+                    // Did readalign
                     if (progressBar != null && ReadAlign != null) progressBar.Update();
 
                     // Generate the report(s)

@@ -137,22 +137,6 @@ namespace AssemblyNameSpace
             // Reset the working directory
             Directory.SetCurrentDirectory(original_working_directory);
 
-            if (output.Assembly == null)
-            {
-                outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any assembly parameter"));
-            }
-            else
-            {
-                // Finalise all metadata names
-                foreach (var set in output.Assembly.Input.Data)
-                {
-                    foreach (var read in set)
-                    {
-                        read.Item2.FinaliseIdentifier();
-                    }
-                }
-            }
-
             foreach (var db in output.Databases)
             {
                 foreach (var read in db.Templates)
@@ -176,6 +160,22 @@ namespace AssemblyNameSpace
             {
                 // Finalise all metadata names
                 foreach (var set in output.ReadAlignment.Input.Data)
+                {
+                    foreach (var read in set)
+                    {
+                        read.Item2.FinaliseIdentifier();
+                    }
+                }
+            }
+
+            if (output.Assembly == null)
+            {
+                outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any assembly parameter"));
+            }
+            else
+            {
+                // Finalise all metadata names
+                foreach (var set in output.Assembly.Input.Data)
                 {
                     foreach (var read in set)
                     {
@@ -666,6 +666,7 @@ namespace AssemblyNameSpace
                             break;
                     }
                 }
+                output.CleanedData = OpenReads.CleanUpInput(output.Data);
                 outEither.Value = output;
                 return outEither;
             }

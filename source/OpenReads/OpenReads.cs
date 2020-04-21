@@ -238,6 +238,31 @@ namespace AssemblyNameSpace
             }
             return outeither;
         }
-    }
 
+        public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<(string Sequence, MetaData.IMetaData MetaData)> reads)
+        {
+            return CleanUpInput(new List<List<(string Sequence, MetaData.IMetaData MetaData)>> { reads });
+        }
+        public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<List<(string Sequence, MetaData.IMetaData MetaData)>> reads)
+        {
+            var filtered = new Dictionary<string, MetaData.IMetaData>();
+
+            foreach (var set in reads)
+            {
+                foreach (var read in set)
+                {
+                    if (filtered.ContainsKey(read.Sequence))
+                    {
+                        filtered[read.Sequence].Intensity += read.MetaData.Intensity;
+                    }
+                    else
+                    {
+                        filtered.Add(read.Sequence, read.MetaData);
+                    }
+                }
+            }
+
+            return filtered.ToList().Select(a => (a.Key, a.Value)).ToList();
+        }
+    }
 }

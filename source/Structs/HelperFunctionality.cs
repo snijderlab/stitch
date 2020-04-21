@@ -53,6 +53,25 @@ namespace AssemblyNameSpace
             }
             return result;
         }
+        /// <summary> To copy a subarray to a new array. </summary>
+        /// <param name="data"> The old array to copy from. </param>
+        /// <param name="index"> The index to start copying. </param>
+        /// <param name="length"> The length of the created subarray. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns a new array with clones of the original array. </returns>
+        public static double[] ElementwiseAdd(this double[] data, double[] that)
+        {
+            if (data == null) return that;
+            if (that == null) return data;
+            if (data.Length != that.Length) throw new ArgumentException("To do an elementwiseAdd the two arrays should be the same length.");
+            double[] result = new double[data.Length];
+            Array.Copy(data, 0, result, 0, data.Length);
+            for (int i = 0; i < that.Length; i++)
+            {
+                result[i] += that[i];
+            }
+            return result;
+        }
         public static string TrimEnd(this string input, string suffixToRemove)
         {
             while (input != null && suffixToRemove != null && input.EndsWith(suffixToRemove))

@@ -85,8 +85,8 @@ namespace AssemblyNameSpace
             }
             return output;
         }
-        /// <summary> Assemble the reads into the graph, this is logically (one of) the last methods to 
-        /// run on an Assembler, all settings should be defined before running this. </summary>
+
+        /// <summary> Assemble the reads into the graph. </summary>
         public void Assemble()
         {
             // Start the stopwatch to be able to say how long the program ran
@@ -118,6 +118,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
+                    // Only used if IncludeShortReads is set to true
                     var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() }, new List<int>())
                     {
                         DepthOfCoverage = Enumerable.Repeat(1, read.Length).ToArray(),

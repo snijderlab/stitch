@@ -550,7 +550,6 @@ The program will also create missing folders if needed.
 | {mh}       | The value of MinimalHomology of the run                     |
 | {dt}       | The value of DuplicateThreshold of the run                  |
 | {alph}     | The name of the alphabet used                               |
-| {data}     | The name of the input data used                             |
 | {name}     | The name of the run                                         |
 | {date}     | The date of today in the format yyyy-mm-dd                  |
 | {time}     | The current time in the format hh-mm-ss                     |

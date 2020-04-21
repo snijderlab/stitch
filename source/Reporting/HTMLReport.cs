@@ -654,8 +654,8 @@ namespace AssemblyNameSpace
             var lines = new List<(string, int, int, AsideType)>[totalsequences + 1];
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
-            var depthOfCoverage = new List<int>();
-            int read_offset = singleRun.Input.Select(a => a.Count()).Sum();
+            var depthOfCoverage = new List<double>();
+            int read_offset = singleRun.Input.Count();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
@@ -666,7 +666,7 @@ namespace AssemblyNameSpace
             {
                 var (Sequences, Gaps) = alignedSequences[template_pos];
                 lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1, AsideType.Path));
-                int depth = 0;
+                double depth = 0;
 
                 // Add the aligned amino acid
                 for (int i = 0; i < Sequences.Length; i++)
@@ -716,7 +716,7 @@ namespace AssemblyNameSpace
                 // Add gap to the template
                 lines[0].Add((new string(gapchar, max_length), -1, -1, AsideType.Path));
 
-                var depthGap = new List<int[]>();
+                var depthGap = new List<double[]>();
                 // Add gap to the lines
                 for (int i = 0; i < Gaps.Length; i++)
                 {
@@ -724,12 +724,12 @@ namespace AssemblyNameSpace
                     if (Gaps[i].Gap == null)
                     {
                         seq = "";
-                        depthGap.Add(Enumerable.Repeat(0, max_length).ToArray());
+                        depthGap.Add(Enumerable.Repeat(0.0, max_length).ToArray());
                     }
                     else
                     {
                         seq = Gaps[i].Gap.ToString();
-                        var d = new int[max_length];
+                        var d = new double[max_length];
                         Gaps[i].CoverageDepth.CopyTo(d, max_length - Gaps[i].CoverageDepth.Length);
                         depthGap.Add(d);
                     }
@@ -749,12 +749,12 @@ namespace AssemblyNameSpace
 
                     lines[i + 1].Add((seq.PadRight(max_length, padchar), idx, Sequences[i].SequencePosition - 1, type));
                 }
-                var depthGapCombined = new int[max_length];
+                var depthGapCombined = new double[max_length];
                 foreach (var d in depthGap)
                 {
                     depthGapCombined = depthGapCombined.ElementwiseAdd(d);
                 }
-                depthOfCoverage.AddRange(depthGapCombined);
+                depthOfCoverage.AddRange(depthGapCombined.Select(a => (double)a));
             }
 
             var aligned = new string[alignedSequences[0].Sequences.Count() + 1];
@@ -933,7 +933,7 @@ namespace AssemblyNameSpace
             {
                 sequence_logo_buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
-                int sum = 0;
+                double sum = 0;
                 foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     sum += item.Value;
@@ -943,7 +943,7 @@ namespace AssemblyNameSpace
                 {
                     if ((double)item.Value / sum > threshold)
                     {
-                        var size = ((double)item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
                     }
                 }

@@ -41,6 +41,19 @@ namespace AssemblyNameSpace
             (string, BST, int) EscapedIdentifierBuffer;
 
             /// <summary>
+            /// Returns the positional score for this read, so for every position the confidence.
+            /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations.
+            /// </summary>
+            public virtual double[] PositionalScore { get { return new double[0]; } }
+
+            /// <summary>
+            /// Returns the overall intensity for this read. It is used to determine which read to 
+            /// choose if multiple reads exist at the same spot.
+            /// </summary>
+            public virtual double Intensity { get { return intensity; } set { intensity = value; } }
+            double intensity = 1.0;
+
+            /// <summary>
             /// To generate (an) HTML element(s) from this MetaData.
             /// </summary>
             /// <returns>A string containing the MetaData.</returns>
@@ -75,8 +88,6 @@ namespace AssemblyNameSpace
                     escapedIdentifier = $"{name}_{count:D3}";
                 }
             }
-
-            public virtual int[] PositionalScore() { return new int[0]; }
         }
 
         /// <summary>
@@ -173,13 +184,14 @@ namespace AssemblyNameSpace
 
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
+            public override double Intensity { get { return Parts_per_million; } set { Parts_per_million = value; } }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
 
             /// <summary> Local confidence scores of the peptide. </summary>
             public int[] Local_confidence = null;
-            public override int[] PositionalScore() { return Local_confidence; }
+            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a).ToArray(); } }//.Select(a => a * Intensity).ToArray(); } }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
@@ -423,7 +435,7 @@ namespace AssemblyNameSpace
         public class Path : IMetaData
         {
             GraphPath path;
-            public override int[] PositionalScore() { return path.DepthOfCoverage; }
+            public override double[] PositionalScore { get { return path.DepthOfCoverage.Select(a => (double)a).ToArray(); } }
             public int[] ContigID { get { return path.ContigID; } }
             public Path(GraphPath path_) : base(new FileIdentifier("nowhere", ""), "P", null)
             {
