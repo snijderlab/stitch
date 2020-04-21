@@ -182,7 +182,7 @@ namespace AssemblyNameSpace
                     else
                     {
                         // The patch is bigger than the sequence??? how that??
-                        throw new Exception($"While aligning read {seq} onto contig {template} the read seems to be shorter than the length of the match between the read and contig. (read length: {seq.Length}, length patch: {lengthpatch}).");
+                        new InputNameSpace.ErrorMessage($"{seq}", "Readalignment unexpected length", $"While aligning read {seq} onto contig {template} the read seems to be shorter than the length of the match between the read and contig. (read length: {seq.Length}, length patch: {lengthpatch}).", "", true).Print();
                     }
                 }
             }
