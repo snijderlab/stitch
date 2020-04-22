@@ -1034,7 +1034,7 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
                 {
-                    //jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
+                    jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
                 }
 
                 // Recombination Databases Tables Asides
@@ -1042,7 +1042,7 @@ namespace AssemblyNameSpace
                 {
                     for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
                     {
-                        //jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
+                        jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
                     }
                 }
             }

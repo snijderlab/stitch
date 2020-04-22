@@ -594,6 +594,7 @@ namespace AssemblyNameSpace
                             FileRange? folder_range = null;
                             var startswith = "";
                             var identifier = new Regex(".*");
+                            bool recursive = false;
 
                             var peaks_settings = new RunParameters.Input.Peaks();
 
@@ -613,6 +614,11 @@ namespace AssemblyNameSpace
                                     case "identifier":
                                         identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                                         break;
+                                    case "recursive":
+                                        if (setting.GetValue().ToLower() == "true") recursive = true;
+                                        else if (setting.GetValue().ToLower() == "false") recursive = false;
+                                        else outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Recursive", "'True' and 'False'"));
+                                        break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
                                         outEither.Messages.AddRange(peaks.Messages);
@@ -630,11 +636,12 @@ namespace AssemblyNameSpace
                                 break;
                             }
 
-                            var files = GetAllFilesPrivate(folder_path);
+                            var files = GetAllFilesPrivate(folder_path, recursive);
 
                             if (files.Item1.Length != 0)
                             {
-                                foreach (var file in Directory.GetFiles(folder_path))
+                                bool successful = false;
+                                foreach (var file in files.Item1)
                                 {
                                     if (!Path.GetFileName(file).StartsWith(startswith)) continue;
 
@@ -652,7 +659,15 @@ namespace AssemblyNameSpace
                                         continue;
 
                                     outEither.Messages.AddRange(folder_reads.Messages);
-                                    if (!folder_reads.HasFailed()) output.Data.Add(folder_reads.ReturnOrFail());
+                                    if (!folder_reads.HasFailed())
+                                    {
+                                        output.Data.Add(folder_reads.ReturnOrFail());
+                                        successful = true;
+                                    }
+                                }
+                                if (!successful)
+                                {
+                                    outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "No valid files", "No valid read files where found in the given directory."));
                                 }
                             }
                             else
@@ -1365,7 +1380,7 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-            static (string[], string, string, string) GetAllFilesPrivate(string path)
+            static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive)
             {
                 var trypath = GetFullPathPrivate(path);
 
@@ -1380,7 +1395,9 @@ namespace AssemblyNameSpace
                 {
                     try
                     {
-                        return (Directory.GetFiles(trypath.Item1), "", "", "");
+                        var option = SearchOption.TopDirectoryOnly;
+                        if (recursive) option = SearchOption.AllDirectories;
+                        return (Directory.GetFiles(trypath.Item1, "*", option), "", "", "");
                     }
                     catch (ArgumentException)
                     {

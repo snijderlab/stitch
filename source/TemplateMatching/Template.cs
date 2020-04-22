@@ -440,10 +440,10 @@ namespace AssemblyNameSpace
             combinedSequenceCache = output;
             return output;
         }
-        string ConsensusSequenceCache = "";
+        string ConsensusSequenceCache = null;
         public string ConsensusSequence()
         {
-            if (ConsensusSequenceCache != "") return ConsensusSequenceCache;
+            if (ConsensusSequenceCache != null) return ConsensusSequenceCache;
 
             var consensus = new StringBuilder();
             var combinedSequence = CombinedSequence();

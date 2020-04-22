@@ -184,14 +184,15 @@ namespace AssemblyNameSpace
 
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
-            public override double Intensity { get { return Parts_per_million; } set { Parts_per_million = value; } }
+            double intensity = -1;
+            public override double Intensity { get { return intensity; } set { intensity = value; } }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
 
-            /// <summary> Local confidence scores of the peptide. </summary>
+            /// <summary> Local confidence scores of the peptide. Determined as a fraction based on the local confidence of the total intensity of this read. </summary>
             public int[] Local_confidence = null;
-            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a).ToArray(); } }//.Select(a => a * Intensity).ToArray(); } }
+            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * intensity).ToArray(); } }//.Select(a => a * Intensity).ToArray(); } }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
@@ -199,7 +200,11 @@ namespace AssemblyNameSpace
             /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans = null;
 
-            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
+            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter)
+            {
+                // Normalise the PPM score to a range in 1-2 using a Sigmoid function (gaps are scored as 1 so it has to be at least 1 to be counted)
+                intensity = 1 + Parts_per_million / (1 + Math.Abs(Parts_per_million));
+            }
 
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="line"> The CSV line to parse. </param>
