@@ -184,8 +184,12 @@ namespace AssemblyNameSpace
 
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
-            double intensity = -1;
-            public override double Intensity { get { return intensity; } set { intensity = value; } }
+            double intensity = double.NaN;
+            public override double Intensity
+            {
+                get { return intensity; }
+                set { if (value != double.NaN) intensity = value; }
+            }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
@@ -202,8 +206,10 @@ namespace AssemblyNameSpace
 
             private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter)
             {
-                // Normalise the PPM score to a range in 1-2 using a Sigmoid function (gaps are scored as 1 so it has to be at least 1 to be counted)
-                intensity = 1 + Parts_per_million / (1 + Math.Abs(Parts_per_million));
+                // Normalise the Area score to a range in 1-2 using logarithmic maths (gaps are scored as 1 so it has to be at least 1 to be counted)
+                //var pArea = Math.Log10(Area);
+                //intensity = 1 + 1 - 1 / pArea;
+                //Console.WriteLine($"* {Area} {pArea} {intensity}");
             }
 
             /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
@@ -342,6 +348,10 @@ namespace AssemblyNameSpace
 
                 // Initialize list
                 peaks.Other_scans = new List<string>();
+
+                // Calculate intensity
+                var pArea = Math.Log10(peaks.Area);
+                peaks.intensity = 2 - 1 / pArea;
 
                 return outeither;
             }

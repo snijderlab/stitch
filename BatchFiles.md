@@ -186,11 +186,13 @@ Peaks           ->
 
 ##### Folder (m) *
 
-Open a specified folder and open all reads and fasta files in it. Files with `.txt` as extension will be read as Reads. Files with `.fasta` as extension will be read as Fasta. Files with `.csv` as extension will be read as Peaks. It is possible to provide a filter for the files in the form of a constant text the files have to start with.
+Open a specified folder and open all reads files in it. Files with `.txt` as extension will be read as Reads. Files with `.fasta` as extension will be read as Fasta. Files with `.csv` as extension will be read as Peaks. It is possible to provide a filter for the files in the form of a constant text the files have to start with.
 
 So in the example below (example 01) all `.txt`, `.fasta` and `.csv` files in the dictionary starting with the text `reads-IgG` will be opened.
 
-For Peaks files extra parameters can be attached. All properties used in a peaks definition can also be used in a folder definition, with the caveat that here they should be prefixed with `Peaks`. As can be seen in example 02. The same holds for the extra parameter for Fasta files, the parameter `Identifier` can be used to provide the identifier for the fasta reads.. 
+For Peaks files extra parameters can be attached. All properties used in a peaks definition can also be used in a folder definition, with the caveat that here they should be prefixed with `Peaks`. As can be seen in example 02. The same holds for the extra parameter for Fasta files, the parameter `Identifier` can be used to provide the identifier for the fasta reads.
+
+The folder can be opened recursively using `Recursive: True` which has a default value of `False`.
 
 ```
 - Example 01
@@ -201,9 +203,10 @@ Folder ->
 
 - Example 02
 Folder ->
-    Path: ../systematictest/reads
+    Path       : ../systematictest/reads
     PeaksFormat: Old
-    StartsWith: Herceptin
+    StartsWith : Herceptin
+    Recursive  : True
 <-
 ```
 
