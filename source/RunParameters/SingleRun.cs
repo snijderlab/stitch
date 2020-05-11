@@ -139,7 +139,7 @@ namespace AssemblyNameSpace
                         var database = Template[i];
                         var alph = new Alphabet(database.Alphabet);
 
-                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore, i, database.Scoring);
+                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore, i, database.Scoring, database.ClassChars);
                         database1.Match(assm.GetAllPaths(), max_threads);
 
                         if (database.IncludeShortReads)
@@ -170,7 +170,7 @@ namespace AssemblyNameSpace
                         {
                             var database = Recombine.Databases[i];
 
-                            var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring);
+                            var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring, database.ClassChars);
                             database1.Match(assm.GetAllPaths(), max_threads);
 
                             if (Recombine.IncludeShortReads)
@@ -243,15 +243,15 @@ namespace AssemblyNameSpace
 
                         recombine_sw.Stop();
 
+                        // Did recombination + databases
+                        if (progressBar != null) progressBar.Update();
+
                         parameters = new ReportInputParameters(assm, this, databases, recombined_database, rec_databases);
                     }
                     else
                     {
                         parameters = new ReportInputParameters(assm, this, databases);
                     }
-
-                    // Did recombination + databases
-                    if (progressBar != null) progressBar.Update();
 
                     if (ReadAlign != null)
                     {
@@ -275,12 +275,12 @@ namespace AssemblyNameSpace
 
                         var read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
 
-                        read_templates.Match(ReadAlign.Input.CleanedData, max_threads);
+                        read_templates.Match(ReadAlign.Input.CleanedData, max_threads, ReadAlign.ForceOnSingleTemplate);
                         parameters.ReadAlignment = read_templates;
-                    }
 
-                    // Did readalign
-                    if (progressBar != null && ReadAlign != null) progressBar.Update();
+                        // Did readalign
+                        if (progressBar != null) progressBar.Update();
+                    }
 
                     // Generate the report(s)
                     foreach (var report in Report)

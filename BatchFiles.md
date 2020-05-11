@@ -356,7 +356,7 @@ Defines how to match all paths in the graph to a database of templates.
 
 Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-When a database is used in a database list for a recombination database the `Alphabet` and `IncludeShortReads` parameters are considered invalid. These should be set on the enclosing recombination database.
+When a database is used in a database list for a recombination database the `Alphabet` and `IncludeShortReads` parameters are considered invalid. These should be set on the enclosing recombination database. Only in a recombination database the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
 ```
 Database ->

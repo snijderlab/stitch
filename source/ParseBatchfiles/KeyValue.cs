@@ -59,12 +59,13 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
+                    // TODO change to ErrorMessage
                     throw new ParseException($"Parameter {Name} {KeyRange} has multiple values but should have a single value.");
                 }
             }
 
             /// <summary>
-            /// Tries to get tha values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user.
+            /// Tries to get the values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user.
             /// </summary>
             /// <returns>The values of this KeyValue.</returns>
             public List<KeyValue> GetValues()
@@ -75,6 +76,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
+                    // TODO change to ErrorMessage
                     throw new ParseException($"Parameter {Name} {KeyRange} has a single value but should have multiple values. Value {GetValue()}");
                 }
             }

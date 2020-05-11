@@ -616,3 +616,66 @@ input:checked+.slider:before {
     line-height: 75%;
     font-size: calc(var(--scale) * 0.75em);
 }
+
+
+/* Histograms */
+
+.table-header {
+    display: flex;
+    gap: 10px;
+    padding-bottom: 1em;
+}
+
+.table-header>div {
+    flex: 1 1 1px;
+    padding: 0 0.5em;
+    box-shadow: 27px 0 0 -25px var(--color-primary);
+}
+
+.table-header>div:last-child {
+    box-shadow: none;
+}
+
+.table-header h3 {
+    margin: 0;
+    padding: 1em;
+}
+
+.histogram {
+    display: grid;
+    grid-template-rows: 150px 1fr;
+    grid-auto-flow: column;
+    grid-template-columns: 3ch;
+    gap: 2px;
+}
+
+.histogram .yaxis {
+    display: flex;
+    height: 100%;
+    flex-direction: column;
+    justify-content: space-between;
+}
+
+.histogram .bar {
+    background-color: var(--color-primary);
+    align-self: end;
+    display: flex;
+    flex-direction: column;
+}
+
+.histogram .bar span {
+    color: var(--color-primary-light);
+    opacity: 0;
+    transition: opacity 0.25s;
+    padding-top: 3px;
+    align-self: center;
+}
+
+.histogram .bar:hover span {
+    opacity: 1;
+}
+
+.histogram .label {
+    justify-self: center;
+    font-size: 0.75em;
+}

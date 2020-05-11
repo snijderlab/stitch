@@ -303,6 +303,7 @@ namespace AssemblyNameSpace
             public InputParameter Input;
             public double CutoffScore = 0;
             public AlphabetParameter Alphabet;
+            public bool ForceOnSingleTemplate = false;
 
             public ReadAlignmentParameter()
             {
@@ -375,6 +376,7 @@ namespace AssemblyNameSpace
 
             /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
+            public int ClassChars = -1;
         }
 
         public enum ScoringParameter { Absolute, Relative }

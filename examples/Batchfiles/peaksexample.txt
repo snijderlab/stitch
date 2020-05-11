@@ -57,6 +57,7 @@ Recombine->
             Path      : ../templates/IGHV.fasta
             Name      : IGHV
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 5
         <-
         Database->
             Path    : ../templates/IGHJ_simplified.fasta
@@ -67,21 +68,25 @@ Recombine->
             Path      : ../templates/IGHC_uniprot.fasta
             Name      : IGHC
             Identifier: GN=([\p{P}\w*-]+)
+            ClassChars: 5
         <-
         Database->
             Path      : ../templates/IGK+LV.fasta
             Name      : IGLV
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LJ.fasta
             Name      : IGLJ
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LC.fasta
             Name      : IGLC
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
         <-
     <-
 
@@ -96,11 +101,11 @@ Recombine->
 
 ReadsAlign -> 
     Input ->
-        Folder ->
-            Path       : ../008/
-            PeaksFormat: Old
-            StartsWith : 190520
-        <-
+        -Folder ->
+        -    Path       : ../008/
+        -    PeaksFormat: Old
+        -    StartsWith : 190520
+        -<-
         Peaks ->
             Path: ..\008\200305_HER_test_04_DENOVO.csv
             Format: X+
@@ -113,6 +118,7 @@ ReadsAlign ->
     <-
     
     CutoffScore: 8
+    ForceOnSingleTemplate: True
 
     Alphabet ->
         Path : ../alphabets/blosum62.csv

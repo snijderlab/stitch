@@ -45,6 +45,9 @@ The project is built with dotnet (SDK 3.1) this is tested on windows and linux. 
 dotnet run -p source <path to batchfile>
 ```
 
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\netcoreapp3.1\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+
+
 To generate a single executable run:
 
 ```

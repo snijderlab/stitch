@@ -24,6 +24,15 @@ namespace AssemblyNameSpace
         /// </summary>
         public readonly string Name;
 
+        public string Class
+        {
+            get
+            {
+                if (Parent.ClassChars == -1) return "";
+                return MetaData.Identifier.Substring(0, Math.Min(Parent.ClassChars, MetaData.Identifier.Length));
+            }
+        }
+
         /// <summary>
         /// The sequence of this template
         /// </summary>
@@ -65,7 +74,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The parent database, needed to get the settings for scoring, alphabet etc
         /// </summary>
-        private readonly TemplateDatabase Parent;
+        public readonly TemplateDatabase Parent;
 
         /// <summary>
         /// Creates a new template
@@ -456,9 +465,13 @@ namespace AssemblyNameSpace
                 // Get the highest chars
                 options = "";
                 max = 0;
+                //bool containsIsoleucine = false;
+                //bool containsD = false;
 
                 foreach (var item in combinedSequence[i].AminoAcids)
                 {
+                    //if (!containsIsoleucine && item.Key.ToString() == "I") containsIsoleucine = true;
+                    //if (!containsD && item.Key.ToString() == "D") containsD = true;
                     if (item.Value > max)
                     {
                         options = item.Key.ToString();
@@ -470,21 +483,19 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (options.Length > 1)
+                if (options.Length > 1 && options.Contains(combinedSequence[i].Template.Char))
                 {
-                    // Force a single amino acid, the one of the template or just the first one
-                    if (options.Contains(combinedSequence[i].Template.Char))
-                    {
-                        consensus.Append(combinedSequence[i].Template.Char);
-                    }
-                    else
-                    {
-                        consensus.Append(options[0]);
-                    }
+                    consensus.Append(combinedSequence[i].Template.Char);
                 }
-                else if (options.Length == 1 && options[0] != Alphabet.GapChar)
+                else
                 {
-                    consensus.Append(options);
+                    // Choose I over L and D over N or just the first option
+                    //if (options[0] == 'L' && containsIsoleucine)
+                    //    consensus.Append('I');
+                    //else if (options[0] == 'N' && containsD)
+                    //    consensus.Append('D');
+                    //else
+                    consensus.Append(options[0]);
                 }
 
                 // Get the highest gap

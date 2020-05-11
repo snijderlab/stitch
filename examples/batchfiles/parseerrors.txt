@@ -4,8 +4,6 @@
 Version : 1
 Runname	: Recombine Templates Test
 
-Assembly : Sure!
-
 Assembly ->
     Input ->
         Reads	->

@@ -27,7 +27,7 @@
         },
         "single-parameter": {
             "name": "entity",
-            "begin": "(?i)^\\s*(version|runname|maxcores|runtype|k|minimalhomology|duplicatethreshold|reverse|(?:(?:peaks)?(?:path|name|cutoffscore|localcutoffscore|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|database|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|order|identifier)\\s*",
+            "begin": "(?i)^\\s*(version|runname|maxcores|runtype|k|minimalhomology|duplicatethreshold|reverse|(?:(?:peaks)?(?:path|name|cutoffscore|localcutoffscore|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|database|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|order|identifier|classchars|ForceOnSingleTemplate)\\s*",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.tag"

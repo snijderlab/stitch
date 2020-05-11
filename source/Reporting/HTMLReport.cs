@@ -319,6 +319,11 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
+            var sorted = RecombinedDatabase.Templates;
+            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            buffer.Append(TableHeader(sorted));
+
             buffer.AppendLine($@"<table id=""recombination-table"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('recombination-table', 0, 'id')"" class=""smallcell"">Identifier</th>
@@ -327,9 +332,6 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('recombination-table', 3, 'number')"" class=""smallcell"">Score</th>
 </tr>");
             string id, link;
-
-            var sorted = RecombinedDatabase.Templates;
-            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             for (int i = 0; i < sorted.Count(); i++)
             {
@@ -361,6 +363,11 @@ namespace AssemblyNameSpace
                 index++;
                 var innerbuffer = new StringBuilder();
 
+                var sorted = database.Templates;
+                sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+                innerbuffer.Append(TableHeader(sorted));
+
                 innerbuffer.AppendLine($@"<table id=""recombination-table-{database.Name}"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('recombination-table-{database.Name}', 0, 'id')"" class=""smallcell"">Identifier</th>
@@ -369,9 +376,6 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('recombination-table-{database.Name}', 3, 'number')"" class=""smallcell"">Score</th>
 </tr>");
                 string id, link;
-
-                var sorted = database.Templates;
-                sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
 
                 for (int i = 0; i < sorted.Count(); i++)
                 {
@@ -397,6 +401,11 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
+            var sorted = ReadAlignment.Templates;
+            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            buffer.Append(TableHeader(sorted));
+
             buffer.AppendLine($@"<table id=""read-alignment-table"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('read-alignment-table', 0, 'id')"" class=""smallcell"">Identifier</th>
@@ -405,9 +414,6 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('read-alignment-table', 3, 'number')"" class=""smallcell"">Score</th>
 </tr>");
             string id, link;
-
-            var sorted = ReadAlignment.Templates;
-            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             for (int i = 0; i < sorted.Count(); i++)
             {
@@ -1349,6 +1355,115 @@ namespace AssemblyNameSpace
             return $@"<input type=""checkbox"" id=""{id}""/>
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
+        }
+
+        string TableHeader(List<Template> templates)
+        {
+            if (templates.Select(a => a.Score).Sum() == 0)
+            {
+                return "";
+            }
+
+            string classname = "";
+            string extended = "";
+
+            if (templates[0].Parent.ClassChars > 0)
+            {
+                var typedata = new Dictionary<string, (double, double, int)>(templates.Count);
+                foreach (var item in templates)
+                {
+                    if (typedata.ContainsKey(item.Class))
+                    {
+                        var data = typedata[item.Class];
+                        if (data.Item1 < item.Score) data.Item1 = item.Score;
+                        data.Item2 += item.Score;
+                        data.Item3 += 1;
+                        typedata[item.Class] = data;
+                    }
+                    else
+                    {
+                        typedata.Add(item.Class, (item.Score, item.Score, 1));
+                    }
+                }
+                var maxType = new List<(string, double)>(typedata.Count);
+                var averageType = new List<(string, double)>(typedata.Count);
+                foreach (var (type, data) in typedata)
+                {
+                    maxType.Add((type, data.Item1));
+                    averageType.Add((type, data.Item2 / data.Item3));
+                }
+                classname = " full";
+                extended = $@"
+<div>
+    <h3>Max Score per Type</h3>
+    {Bargraph(maxType)}
+</div>
+<div>
+    <h3>Average Score per Type</h3>
+    {Bargraph(averageType)}
+</div>";
+            }
+
+            return $@"
+<div class='table-header{classname}'>
+    <div>
+        <h3>Score</h3>
+        {ScoreHistogram(templates.Select(a => (double)a.Score).ToList())}
+    </div>
+    {extended}
+</div>";
+        }
+
+        string ScoreHistogram(List<double> data, int bins = 10)
+        {
+            double min = data.Min();
+            double max = data.Max();
+            if (max == min) bins = 1;
+            double step = (max - min) / bins;
+
+            var labeled = new (string, double)[bins];
+
+            double low = min;
+            for (int i = 0; i < bins; i++)
+            {
+                labeled[i] = ($"{low:G3}-{low + step:G3}", 0);
+                low += step;
+            }
+
+            foreach (var item in data)
+            {
+                int bin = (int)Math.Floor((item - min) / step);
+
+                if (bin > bins - 1) bin = bins - 1;
+                else if (bin < 0) bin = 0;
+
+                labeled[bin].Item2++;
+            }
+
+            return Bargraph(labeled.ToList());
+        }
+
+        string Bargraph(List<(string, double)> data, int factor = 2, bool baseYMinOnData = false)
+        {
+            var buffer = new StringBuilder();
+            buffer.Append("<div class='histogram'>");
+
+            double max = Math.Ceiling(data.Select(a => a.Item2).Max() / factor) * factor;
+            double min = 0;
+            if (baseYMinOnData) min = data.Select(a => a.Item2).Min();
+
+            // Y axis
+            buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
+
+            // Data
+            foreach (var set in data)
+            {
+                string height = (set.Item2 / max * 100).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Item2:G3}</span></span><span class='label'>{set.Item1}</span>");
+            }
+
+            buffer.Append("</div>");
+            return buffer.ToString();
         }
 
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>

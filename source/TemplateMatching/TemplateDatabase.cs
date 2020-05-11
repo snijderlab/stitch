@@ -22,6 +22,7 @@ namespace AssemblyNameSpace
         public List<Template> Templates;
         public readonly double CutoffScore;
         public readonly RunParameters.ScoringParameter Scoring;
+        public int ClassChars = -1;
         /// <summary>
         /// Create a new TemplateDatabase based on the reads found in the given file.
         /// </summary>
@@ -31,7 +32,7 @@ namespace AssemblyNameSpace
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this database</param>
-        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute, int classChars = -1)
         {
             Name = name;
             Index = index;
@@ -39,6 +40,7 @@ namespace AssemblyNameSpace
             Alphabet = alphabet;
             Templates = new List<Template>();
             Scoring = scoring;
+            ClassChars = classChars;
 
             for (int i = 0; i < sequences.Count(); i++)
             {
@@ -54,12 +56,13 @@ namespace AssemblyNameSpace
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore)
+        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore, int classChars = -1)
         {
             Name = name;
             CutoffScore = cutoffScore;
             Alphabet = alphabet;
             Templates = templates.ToList();
+            ClassChars = classChars;
         }
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
@@ -79,9 +82,27 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<GraphPath> sequences, int max_threads = 1)
+        public void Match(List<(string, MetaData.IMetaData)> sequences, int max_threads = 1, bool forceOnSingleTemplate = false)
         {
-            if (max_threads == 1)
+            var paths = new List<GraphPath>(sequences.Count());
+            foreach (var seq in sequences)
+            {
+                paths.Add(new GraphPath(StringToSequence(seq.Item1).ToList()));
+            }
+            Match(paths, max_threads, forceOnSingleTemplate);
+        }
+
+        /// <summary>
+        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// </summary>
+        /// <param name="sequences">The sequences to match with</param>
+        public void Match(List<GraphPath> sequences, int max_threads = 1, bool forceOnSingleTemplate = false)
+        {
+            if (forceOnSingleTemplate)
+            {
+                MatchParallelSingleTemplate(sequences, max_threads);
+            }
+            else if (max_threads == 1)
             {
                 MatchSerial(sequences);
             }
@@ -90,13 +111,14 @@ namespace AssemblyNameSpace
                 MatchParallel(sequences, max_threads);
             }
         }
+
         /// <summary>
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
         void MatchParallel(List<GraphPath> sequences, int max_threads)
         {
-            var runs = new List<(Template, GraphPath)>();
+            var runs = new List<(Template, GraphPath)>(Templates.Count() * sequences.Count());
 
             foreach (var tem in Templates)
             {
@@ -112,71 +134,91 @@ namespace AssemblyNameSpace
                 (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, new MetaData.Path(s.Item2), s.Item2.Index))
             );
         }
-        void MatchSerial(List<GraphPath> sequences)
+
+        void MatchParallelSingleTemplate(List<GraphPath> sequences, int max_threads)
         {
-            int y = 0;
-            foreach (var tem in Templates)
-            {
-                int x = 0;
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, new MetaData.Path(sequences[i]), sequences[i].Index));
-                    x++;
-                }
-                y++;
-            }
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<(string, MetaData.IMetaData)> sequences, int max_threads = 1)
-        {
-            if (max_threads == 1)
-            {
-                MatchSerial(sequences);
-            }
-            else
-            {
-                MatchParallel(sequences, max_threads);
-            }
-        }
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        void MatchParallel(List<(string, MetaData.IMetaData)> sequences, int max_threads)
-        {
-            var runs = new List<(Template, string, MetaData.IMetaData, int)>();
+            int numtemplates = Templates.Count();
+            // Prepare runs
+            var runs = new List<(Template Template, GraphPath Path)>(numtemplates * sequences.Count());
 
             foreach (var tem in Templates)
             {
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    runs.Add((tem, sequences[i].Item1, sequences[i].Item2, i));
+                    runs.Add((tem, sequences[i]));
+                }
+            }
+
+            // Prepare results
+            var results = new List<(GraphPath Path, List<(SequenceMatch Match, Template Template)> Matches)>(sequences.Count());
+
+            for (int i = 0; i < sequences.Count(); i++)
+            {
+                results.Add((sequences[i], new List<(SequenceMatch Match, Template Template)>(numtemplates)));
+            }
+
+            // Calculate all matches
+            void SingleMatch(Template Template, GraphPath Path)
+            {
+                foreach (var set in results)
+                {
+                    if (set.Path.Index == Path.Index)
+                    {
+                        set.Matches.Add((HelperFunctionality.SmithWaterman(Template.Sequence, Path.Sequence, Alphabet, new MetaData.Path(Path), Path.Index), Template));
+                        return;
+                    }
                 }
             }
 
             Parallel.ForEach(
                 runs,
                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, StringToSequence(s.Item2), Alphabet, s.Item3, s.Item4))
+                (s, _) => SingleMatch(s.Template, s.Path)
+            );
+
+            // Force best match(es)
+            Parallel.ForEach(
+                results,
+                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
+                (s, _) =>
+                {
+                    var Matches = s.Matches;
+                    var best = new List<int>();
+                    var best_score = 0;
+
+                    for (int i = 0; i < s.Matches.Count(); i++)
+                    {
+                        if (Matches[i].Match.Score > best_score)
+                        {
+                            best_score = Matches[i].Match.Score;
+                            best = new List<int> { i };
+                        }
+                        else if (Matches[i].Match.Score == best_score)
+                        {
+                            best.Add(i);
+                        }
+                    }
+
+                    foreach (var index in best)
+                    {
+                        var (Match, Template) = Matches[index];
+                        Template.AddMatch(Match);
+                    }
+                }
             );
         }
-        void MatchSerial(List<(string, MetaData.IMetaData)> sequences)
+
+        void MatchSerial(List<GraphPath> sequences)
         {
-            int y = 0;
             foreach (var tem in Templates)
             {
-                int x = 0;
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, StringToSequence(sequences[i].Item1), Alphabet, sequences[i].Item2, i));
-                    x++;
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, new MetaData.Path(sequences[i]), sequences[i].Index));
                 }
-                y++;
             }
         }
+
         /// <summary>
         /// Create a string summary of a template database.
         /// </summary>

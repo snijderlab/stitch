@@ -149,6 +149,58 @@ namespace AssemblyNameSpace
                     placed.Add(new List<HelperFunctionality.ReadPlacement> { current });
                 }
             }
+
+            // Overrule sequence for Leucine vs Isoleucine and deamidation
+            /*
+            for (int i = 0; i < Sequence.Count(); i++)
+            {
+                if (Sequence[i].ToString() == "L")
+                {
+                    bool containsIsoleucine = false;
+                    foreach (var row in placed)
+                    {
+                        foreach (var item in row)
+                        {
+                            if (item.StartPosition <= i && item.EndPosition > i && item.Sequence[i - item.StartPosition].ToString() == "I")
+                            {
+                                containsIsoleucine = true;
+                                goto SKIP_ISOLEUCINE;
+                            }
+                        }
+                    }
+                SKIP_ISOLEUCINE:
+                    if (containsIsoleucine)
+                    {
+                        Console.WriteLine($"Found an I in place of a L at {i}");
+                        Sequence[i] = new AminoAcid(Sequence[i].alphabet, 'I');
+                    }
+                }
+
+                if (Sequence[i].ToString() == "N")
+                {
+                    bool containsD = false;
+                    foreach (var row in placed)
+                    {
+                        foreach (var item in row)
+                        {
+                            if (item.StartPosition <= i && item.EndPosition > i && item.Sequence[i - item.StartPosition].ToString() == "D")
+                            {
+                                containsD = true;
+                                goto SKIP_DEAMIDATION;
+                            }
+                        }
+                    }
+
+                SKIP_DEAMIDATION:
+                    if (containsD)
+                    {
+                        Console.WriteLine($"Found a D in place of a N at {i}");
+                        Sequence[i] = new AminoAcid(Sequence[i].alphabet, 'D');
+                    }
+                }
+            }
+            */
+
             Alignment = placed;
             CalculateDepthOfCoverageFull();
             CalculateDepthOfCoverage();

@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        new ErrorMessage(range, "Name not followed by delimiter OUTER", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                        new ErrorMessage(range, "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
                         throw new ParseException("");
                     }
                 }
@@ -223,7 +223,7 @@ namespace AssemblyNameSpace
                             }
                             else
                             {
-                                new ErrorMessage(counter.GetPosition(), "Name not followed by delimiter INNER", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                                new ErrorMessage(counter.GetPosition(), "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
                                 throw new ParseException("");
                             }
                             endvalue = counter.GetPosition();
@@ -306,7 +306,7 @@ namespace AssemblyNameSpace
 
                     if (name_str == "")
                     {
-                        new ErrorMessage(name_range, "Empty name", $"at").Print();
+                        new ErrorMessage(name_range, "Empty name", "").Print();
                         //    throw new ParseException("");
                     }
 

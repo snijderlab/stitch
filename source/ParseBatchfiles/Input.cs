@@ -615,9 +615,7 @@ namespace AssemblyNameSpace
                                         identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                                         break;
                                     case "recursive":
-                                        if (setting.GetValue().ToLower() == "true") recursive = true;
-                                        else if (setting.GetValue().ToLower() == "false") recursive = false;
-                                        else outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Recursive", "'True' and 'False'"));
+                                        recursive = ParseHelper.ParseBool(setting, "Recursive").GetValue(outEither);
                                         break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
@@ -738,19 +736,7 @@ namespace AssemblyNameSpace
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             break;
                         case "includeshortreads":
-                            switch (setting.GetValue().ToLower())
-                            {
-                                case "true":
-                                    output.IncludeShortReads = true;
-                                    break;
-                                case "false":
-                                    output.IncludeShortReads = false;
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
-                                    break;
-                            }
-
+                            output.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
@@ -828,6 +814,9 @@ namespace AssemblyNameSpace
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             output.Alphabet = ParseHelper.ParseAlphabet(pair).GetValue(outEither);
+                            break;
+                        case "forceonsingletemplate":
+                            output.ForceOnSingleTemplate = ParseBool(pair, "ForceOnSingleTemplate").GetValue(outEither);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "ReadAlign", "'Input', 'CutoffScore' and 'Alphabet'"));
@@ -1176,20 +1165,7 @@ namespace AssemblyNameSpace
                             if (!extended)
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "IncludeShortReads cannot be defined here", "Inside a template in the templates list of a recombination IncludeShortReads can not be defined."));
                             else
-                            {
-                                switch (setting.GetValue().ToLower())
-                                {
-                                    case "true":
-                                        tsettings.IncludeShortReads = true;
-                                        break;
-                                    case "false":
-                                        tsettings.IncludeShortReads = false;
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "IncludeShortReads", "'True' or 'False'"));
-                                        break;
-                                }
-                            }
+                                tsettings.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither);
 
                             break;
                         case "scoring":
@@ -1207,14 +1183,16 @@ namespace AssemblyNameSpace
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
                             }
                             break;
-
+                        case "classchars":
+                            tsettings.ClassChars = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
 
                             if (peaks.Value == false)
                             {
-                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'IncludeShortReads', 'Scoring' and all PEAKS format parameters";
+                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'IncludeShortReads', 'Scoring', 'ClassChars' and all PEAKS format parameters";
                                 if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             }
@@ -1312,6 +1290,23 @@ namespace AssemblyNameSpace
                 }
 
                 return outEither;
+            }
+            public static ParseEither<bool> ParseBool(KeyValue setting, string context, bool def = false)
+            {
+                var output = new ParseEither<bool>(def);
+                switch (setting.GetValue().ToLower())
+                {
+                    case "true":
+                        output.Value = true;
+                        break;
+                    case "false":
+                        output.Value = false;
+                        break;
+                    default:
+                        output.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, context, "'True' or 'False'"));
+                        break;
+                }
+                return output;
             }
             public static ParseEither<string> GetFullPath(KeyValue setting)
             {

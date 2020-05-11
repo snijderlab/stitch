@@ -56,7 +56,7 @@ namespace AssemblyNameSpace
                 }
                 catch (Exception e)
                 {
-                    return new ParseEither<Arithmetic.Expression>(new InputNameSpace.ErrorMessage(range, "Exception while parsing K Arithmetic", e.Message + e.StackTrace));
+                    return new ParseEither<Arithmetic.Expression>(new InputNameSpace.ErrorMessage(range, "Exception while parsing K Arithmetic", e.Message + "\n" + e.StackTrace));
                 }
             }
 
@@ -327,7 +327,7 @@ namespace AssemblyNameSpace
                 }
                 catch
                 {
-                    outEither.AddMessage(new InputNameSpace.ErrorMessage(range, "Not valid K arithmetic"));
+                    outEither.AddMessage(new InputNameSpace.ErrorMessage(range, "Invalid K arithmetic")); // TODO: extend error message
                     return outEither;
                 }
             }
