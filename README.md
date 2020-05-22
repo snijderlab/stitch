@@ -16,7 +16,7 @@ Linux (x64, most versions):
 
 OSX (x64, minimum version macOS 10.12 Sierra):
 ```
-./assembler_linux examplebatchfile.txt
+./assembler_mac examplebatchfile.txt
 ```
 
 For help creating batch files see `BatchFiles.md`, this is included with the package.
