@@ -648,7 +648,7 @@ input:checked+.slider:before {
     grid-template-rows: 150px 1fr;
     grid-auto-flow: column;
     grid-template-columns: 3ch;
-    gap: 2px;
+    gap: 5px;
 }
 
 .histogram .yaxis {
@@ -679,11 +679,13 @@ input:checked+.slider:before {
 
 .histogram .label {
     justify-self: center;
-    font-size: .75em;
+    font-size: .8em;
+    font-weight: 500;
 }
 
 .grouped.histogram {
     grid-template-columns: none;
+    gap: 8px;
 }
 
 .group {
@@ -694,7 +696,7 @@ input:checked+.slider:before {
 .group .bar {
     flex: 1 1 1px;
     align-self: flex-end;
-    margin: 0 1px;
+    margin: 0 2px;
 }
 
 .grouped .tooltip {
@@ -729,7 +731,9 @@ input:checked+.slider:before {
 }
 
 .histogram-header {
-    margin-top: -1em;
+    margin-top: -1.25em;
+    margin-bottom: .25em;
+    font-weight: 500;
 }
 
 .histogram-header span {
