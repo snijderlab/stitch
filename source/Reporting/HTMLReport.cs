@@ -29,12 +29,6 @@ namespace AssemblyNameSpace
         string AssetsFolderName;
         string FullAssetsFolderName;
 
-        /// <summary>
-        /// To retrieve all metadata.
-        /// </summary>
-        /// <param name="assm">The assembler.</param>
-        /// <param name="run">The runparameters.</param>
-        /// <param name="useincludeddotdistribution">Indicates if the program should use the included Dot (graphviz) distribution.</param>
         public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution, int max_threads) : base(parameters, max_threads)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
@@ -249,37 +243,42 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < singleRun.Template.Count(); i++)
             {
-                buffer.AppendLine(Collapsible($"Template Matching {singleRun.Template[i].Name}", CreateTemplateTable(i)));
+                buffer.AppendLine(Collapsible($"Template Matching {singleRun.Template[i].Name}", CreateTemplateTable(databases[i].Templates, i, AsideType.Template)));
             }
 
             return buffer.ToString();
         }
 
-        string CreateTemplateTable(int templateIndex)
+        string CreateTemplateTable(List<Template> templates, int templateIndex, AsideType type, bool header = false)
         {
             var buffer = new StringBuilder();
 
-            buffer.AppendLine($@"<table id=""template-table-{templateIndex}"" class=""widetable"">
+            templates.Sort((a, b) => b.Score.CompareTo(a.Score));
+
+            if (header) buffer.Append(TableHeader(templates));
+
+            buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('template-table-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{templateIndex}', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('template-table-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 4, 'number')"" class=""smallcell"">Reads</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 5, 'number')"" class=""smallcell"">Total Area</th>
 </tr>");
+
             string id, link;
-
-            var sorted = databases[templateIndex].Templates;
-            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
-
-            for (int i = 0; i < sorted.Count(); i++)
+            for (int i = 0; i < templates.Count(); i++)
             {
-                id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
-                link = GetAsideLink(templateIndex, i, AsideType.Template);
+                id = GetAsideIdentifier(templateIndex, i, type);
+                link = GetAsideLink(templateIndex, i, type);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
-    <td class=""center"">{sorted[i].Sequence.Length}</td>
-    <td class=""center"">{sorted[i].Score}</td>
+    <td class=""seq"">{templates[i].ConsensusSequence()}</td>
+    <td class=""center"">{templates[i].Sequence.Length}</td>
+    <td class=""center"">{templates[i].Score}</td>
+    <td class=""center"">{templates[i].Matches.Count()}</td>
+    <td class=""center"">{templates[i].TotalArea.ToString("G3", new CultureInfo("en-GB"))}</td>
 </tr>");
             }
 
@@ -315,41 +314,6 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        string CreateRecombinationTable()
-        {
-            var buffer = new StringBuilder();
-
-            var sorted = RecombinedDatabase.Templates;
-            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
-
-            buffer.Append(TableHeader(sorted));
-
-            buffer.AppendLine($@"<table id=""recombination-table"" class=""widetable"">
-<tr>
-    <th onclick=""sortTable('recombination-table', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('recombination-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('recombination-table', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('recombination-table', 3, 'number')"" class=""smallcell"">Score</th>
-</tr>");
-            string id, link;
-
-            for (int i = 0; i < sorted.Count(); i++)
-            {
-                id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
-                link = GetAsideLink(i, AsideType.RecombinedTemplate);
-                buffer.AppendLine($@"<tr id=""table-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
-    <td class=""center"">{sorted[i].Sequence.Length}</td>
-    <td class=""center"">{sorted[i].Score}</td>
-</tr>");
-            }
-
-            buffer.AppendLine("</table>");
-
-            return buffer.ToString();
-        }
-
         /// <summary>
         /// Creates tables for all databases used in recombination.
         /// </summary>
@@ -361,73 +325,8 @@ namespace AssemblyNameSpace
             foreach (var database in RecombinationDatabases)
             {
                 index++;
-                var innerbuffer = new StringBuilder();
-
-                var sorted = database.Templates;
-                sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
-
-                innerbuffer.Append(TableHeader(sorted));
-
-                innerbuffer.AppendLine($@"<table id=""recombination-table-{database.Name}"" class=""widetable"">
-<tr>
-    <th onclick=""sortTable('recombination-table-{database.Name}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('recombination-table-{database.Name}', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('recombination-table-{database.Name}', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('recombination-table-{database.Name}', 3, 'number')"" class=""smallcell"">Score</th>
-</tr>");
-                string id, link;
-
-                for (int i = 0; i < sorted.Count(); i++)
-                {
-                    id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
-                    link = GetAsideLink(index, i, AsideType.RecombinationDatabase);
-                    innerbuffer.AppendLine($@"<tr id=""table-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
-    <td class=""center"">{sorted[i].Sequence.Length}</td>
-    <td class=""center"">{sorted[i].Score}</td>
-</tr>");
-                }
-
-                innerbuffer.AppendLine("</table>");
-
-                buffer.AppendLine(Collapsible($"Recombination Database {database.Name}", innerbuffer.ToString()));
+                buffer.AppendLine(Collapsible($"Recombination Database {database.Name}", CreateTemplateTable(database.Templates, index, AsideType.RecombinationDatabase, true)));
             }
-
-            return buffer.ToString();
-        }
-
-        string CreateReadAlignmentTable()
-        {
-            var buffer = new StringBuilder();
-
-            var sorted = ReadAlignment.Templates;
-            sorted.Sort((a, b) => b.Score.CompareTo(a.Score));
-
-            buffer.Append(TableHeader(sorted));
-
-            buffer.AppendLine($@"<table id=""read-alignment-table"" class=""widetable"">
-<tr>
-    <th onclick=""sortTable('read-alignment-table', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('read-alignment-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('read-alignment-table', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('read-alignment-table', 3, 'number')"" class=""smallcell"">Score</th>
-</tr>");
-            string id, link;
-
-            for (int i = 0; i < sorted.Count(); i++)
-            {
-                id = GetAsideIdentifier(i, AsideType.ReadAlignment);
-                link = GetAsideLink(i, AsideType.ReadAlignment);
-                buffer.AppendLine($@"<tr id=""table-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""seq"">{sorted[i].ConsensusSequence()}</td>
-    <td class=""center"">{sorted[i].Sequence.Length}</td>
-    <td class=""center"">{sorted[i].Score}</td>
-</tr>");
-            }
-
-            buffer.AppendLine("</table>");
 
             return buffer.ToString();
         }
@@ -1369,7 +1268,7 @@ namespace AssemblyNameSpace
 
             if (templates[0].Parent.ClassChars > 0)
             {
-                var typedata = new Dictionary<string, (double, double, int)>(templates.Count);
+                var typedata = new Dictionary<string, (double, double, int, double)>(templates.Count);
                 foreach (var item in templates)
                 {
                     if (typedata.ContainsKey(item.Class))
@@ -1378,29 +1277,25 @@ namespace AssemblyNameSpace
                         if (data.Item1 < item.Score) data.Item1 = item.Score;
                         data.Item2 += item.Score;
                         data.Item3 += 1;
+                        data.Item4 += item.TotalArea;
                         typedata[item.Class] = data;
                     }
                     else
                     {
-                        typedata.Add(item.Class, (item.Score, item.Score, 1));
+                        typedata.Add(item.Class, (item.Score, item.Score, 1, item.TotalArea));
                     }
                 }
-                var maxType = new List<(string, double)>(typedata.Count);
-                var averageType = new List<(string, double)>(typedata.Count);
+
+                var totalData = new List<(string, List<double>)>(typedata.Count);
                 foreach (var (type, data) in typedata)
                 {
-                    maxType.Add((type, data.Item1));
-                    averageType.Add((type, data.Item2 / data.Item3));
+                    totalData.Add((type, new List<double> { data.Item1, data.Item2 / data.Item3, data.Item3, data.Item4 }));
                 }
                 classname = " full";
                 extended = $@"
 <div>
-    <h3>Max Score per Type</h3>
-    {Bargraph(maxType)}
-</div>
-<div>
-    <h3>Average Score per Type</h3>
-    {Bargraph(averageType)}
+    <h3>Per Type</h3>
+    {HTMLGraph.GroupedBargraph(totalData, new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0), ("Number of Reads", 1), ("Total Area", 2) })}
 </div>";
             }
 
@@ -1408,62 +1303,10 @@ namespace AssemblyNameSpace
 <div class='table-header{classname}'>
     <div>
         <h3>Score</h3>
-        {ScoreHistogram(templates.Select(a => (double)a.Score).ToList())}
+        {HTMLGraph.Histogram(templates.Select(a => (double)a.Score).ToList())}
     </div>
     {extended}
 </div>";
-        }
-
-        string ScoreHistogram(List<double> data, int bins = 10)
-        {
-            double min = data.Min();
-            double max = data.Max();
-            if (max == min) bins = 1;
-            double step = (max - min) / bins;
-
-            var labeled = new (string, double)[bins];
-
-            double low = min;
-            for (int i = 0; i < bins; i++)
-            {
-                labeled[i] = ($"{low:G3}-{low + step:G3}", 0);
-                low += step;
-            }
-
-            foreach (var item in data)
-            {
-                int bin = (int)Math.Floor((item - min) / step);
-
-                if (bin > bins - 1) bin = bins - 1;
-                else if (bin < 0) bin = 0;
-
-                labeled[bin].Item2++;
-            }
-
-            return Bargraph(labeled.ToList());
-        }
-
-        string Bargraph(List<(string, double)> data, int factor = 2, bool baseYMinOnData = false)
-        {
-            var buffer = new StringBuilder();
-            buffer.Append("<div class='histogram'>");
-
-            double max = Math.Ceiling(data.Select(a => a.Item2).Max() / factor) * factor;
-            double min = 0;
-            if (baseYMinOnData) min = data.Select(a => a.Item2).Min();
-
-            // Y axis
-            buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
-
-            // Data
-            foreach (var set in data)
-            {
-                string height = (set.Item2 / max * 100).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Item2:G3}</span></span><span class='label'>{set.Item1}</span>");
-            }
-
-            buffer.Append("</div>");
-            return buffer.ToString();
         }
 
         /// <summary> Returns some meta information about the assembly the help validate the output of the assembly. </summary>
@@ -1629,14 +1472,14 @@ assetsfolder = '{AssetsFolderName}';
             string recombinationtable = "";
             if (RecombinedDatabase != null)
             {
-                recombinationtable = Collapsible("Recombination Table", CreateRecombinationTable());
+                recombinationtable = Collapsible("Recombination Table", CreateTemplateTable(RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true));
                 recombinationtable += CreateRecombinationDatabaseTables();
             }
 
             string readalignmenttable = "";
             if (ReadAlignment != null)
             {
-                readalignmenttable = Collapsible("Read Alignment Table", CreateReadAlignmentTable());
+                readalignmenttable = Collapsible("Read Alignment Table", CreateTemplateTable(ReadAlignment.Templates, -1, AsideType.ReadAlignment, true));
             }
 
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);

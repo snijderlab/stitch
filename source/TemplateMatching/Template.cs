@@ -56,6 +56,8 @@ namespace AssemblyNameSpace
         }
         int score;
 
+        public double TotalArea = 0;
+
         /// <summary>
         /// The list of matches on this template
         /// </summary>
@@ -110,6 +112,7 @@ namespace AssemblyNameSpace
                     if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
                         score += match.Score;
+                        TotalArea += match.MetaData.TotalArea;
                         Matches.Add(match);
                     }
                 }
@@ -150,6 +153,7 @@ namespace AssemblyNameSpace
                 Sequence = sequence;
 
                 // Precomputes a hashcode based on the actual sequence of the gap
+                // TODO: Find out if a full sequence based hash is necessary
                 int hash = 1217;
                 int pos = 0;
                 for (int i = 0; i < 5; i++)

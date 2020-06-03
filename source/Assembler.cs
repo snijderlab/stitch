@@ -119,7 +119,7 @@ namespace AssemblyNameSpace
                 else
                 {
                     // Only used if IncludeShortReads is set to true
-                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() }, new List<int>())
+                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() }, new List<int>(), reads_metadata[r].TotalArea)
                     {
                         DepthOfCoverage = Enumerable.Repeat(1, read.Length).ToArray(),
                         DepthOfCoverageFull = Enumerable.Repeat(1, read.Length).ToArray()
@@ -316,7 +316,7 @@ namespace AssemblyNameSpace
                     sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length - 2));
 
                     // I should handle back/forward index differently for 1 (k-1)mer condensed nodes. (set it to null?)
-                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices));
+                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices, TotalArea(origins)));
                 }
             }
 
@@ -429,6 +429,20 @@ namespace AssemblyNameSpace
                 }
                 return opts;
             }
+        }
+
+        double TotalArea(List<List<int>> origins)
+        {
+            double area = 0;
+            foreach (var column in origins)
+            {
+                foreach (int node in column)
+                {
+                    foreach (int read in graph[node].Origins)
+                        area += reads_metadata[read].TotalArea;
+                }
+            }
+            return area;
         }
 
         void RemovePreAndSuffixes()

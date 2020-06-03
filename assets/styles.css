@@ -14,12 +14,14 @@
     --color-secondary-dark: #006E00;
     --color-dark: #333;
     --color-light: #999;
+    --color-background: #eee;
 }
 
 body {
     font-family: "Roboto", sans-serif;
     margin: 0;
     color: var(--color-dark);
+    background-color: var(--color-background);
 }
 
 h1,
@@ -39,7 +41,7 @@ h1 {
 }
 
 .details {
-    padding: 0.5em 1em;
+    padding: .5em 1em;
     background-color: var(--color-primary-light);
 }
 
@@ -69,7 +71,7 @@ h1 {
     text-decoration: none;
     display: inline-block;
     margin-top: 1em;
-    padding: 0.25em;
+    padding: .25em;
     margin-right: 1em;
 }
 
@@ -104,7 +106,7 @@ table {
 td,
 th {
     border: 1px solid var(--color-primary-light);
-    padding: 0.1rem;
+    padding: .1rem;
 }
 
 th:first-child {
@@ -117,7 +119,7 @@ td.center {
 
 th {
     color: var(--color-primary);
-    background: white;
+    background: var(--color-background);
     border: 2px solid var(--color-primary);
     white-space: normal;
     overflow: hidden;
@@ -126,7 +128,7 @@ th {
 }
 
 th::after {
-    margin-left: 0.25em;
+    margin-left: .25em;
     color: var(--color-primary-light);
     display: inline-block;
 }
@@ -162,10 +164,10 @@ tr:hover {
     color: var(--color-primary);
     text-decoration: none;
     border: 1px solid var(--color-primary);
-    padding: 0.05em 0.1em;
-    margin: 0.1em;
-    border-radius: 0.25em;
-    font-size: 0.8em;
+    padding: .05em .1em;
+    margin: .1em;
+    border-radius: .2rem;
+    font-size: .8em;
 }
 
 .info-link:hover {
@@ -184,12 +186,12 @@ tr:hover {
 .report>label {
     display: block;
     font-size: 2em;
-    color: white;
+    color: var(--color-background);
     background-color: var(--color-primary);
-    padding: 0.1em 0.25em;
+    padding: .1em .25em;
     display: block;
-    border-radius: 0.1em;
-    margin-top: 0.5em;
+    border-radius: .2rem;
+    margin-top: .5em;
     cursor: pointer;
     user-select: none;
 }
@@ -199,15 +201,15 @@ tr:hover {
     border: 1px solid var(--color-primary-light);
     color: var(--color-primary-light);
     border-radius: 50%;
-    font-size: 0.5em;
-    padding: 0.1em 0.4em;
+    font-size: .5em;
+    padding: .1em .4em;
     float: right;
-    margin: 0.4em 0;
+    margin: .4em 0;
     font-family: "Roboto Mono", monospace;
 }
 
 input:checked+label {
-    border-radius: 0.1em 0.1em 0 0;
+    border-radius: .2rem .2rem 0 0;
 }
 
 .report input:checked+label::after {
@@ -231,12 +233,12 @@ input:checked+label+.collapsable {
 /* Meta data */
 
 .meta-collapsable {
-    padding-left: 0.25em;
+    padding-left: .25em;
 }
 
 .meta-collapsable h3:first-child {
     margin-top: 0;
-    padding-top: 0.15em;
+    padding-top: .15em;
 }
 
 
@@ -258,7 +260,7 @@ svg .node {
 }
 
 svg .node polygon {
-    fill: white;
+    fill: var(--color-background);
     stroke: var(--color-primary);
 }
 
@@ -271,7 +273,7 @@ svg .start-node polygon {
 }
 
 svg .start-node text {
-    fill: white;
+    fill: var(--color-background);
 }
 
 svg .edge {
@@ -293,7 +295,7 @@ svg .selected polygon {
 }
 
 svg .selected text {
-    fill: white;
+    fill: var(--color-background);
 }
 
 
@@ -313,8 +315,8 @@ svg .selected text {
 }
 
 .runtime p {
-    color: white;
-    margin: 0.1em;
+    color: var(--color-background);
+    margin: .1em;
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
@@ -333,8 +335,8 @@ svg .selected text {
     position: absolute;
     width: 150px;
     border: 1px solid var(--color-primary);
-    padding: 0.2em;
-    background-color: white;
+    padding: .2em;
+    background-color: var(--color-background);
     transform: translate(10px, -10px);
     z-index: 100;
 }
@@ -352,8 +354,8 @@ svg .selected text {
 }
 
 .runtime-desc {
-    margin-top: 0.5em;
-    font-size: 0.75em;
+    margin-top: .5em;
+    font-size: .75em;
     font-style: italic;
 }
 
@@ -438,8 +440,8 @@ svg .selected text {
 
 .overhang-block .symbol {
     letter-spacing: -4px;
-    opacity: 0.5;
-    margin-right: 0.25em;
+    opacity: .5;
+    margin-right: .25em;
 }
 
 .overhang-block .text {
@@ -464,7 +466,7 @@ input:checked+label .overhang-block .text {
     padding: 0;
     margin: 0;
     font-size: 1rem;
-    color: #333;
+    color: var(--color-dark);
     background-color: transparent;
 }
 
@@ -472,8 +474,8 @@ input:checked+label .overhang-block .text {
     content: "+";
     color: var(--color-primary-light);
     background-color: var(--color-primary-dark);
-    margin: 0.2em;
-    padding: 0.1em 0.4em;
+    margin: .2em;
+    padding: .1em .4em;
     border-radius: 50%;
     width: 1em;
     height: 1em;
@@ -481,7 +483,7 @@ input:checked+label .overhang-block .text {
 
 .reads-alignment input:checked+label::before {
     content: "-";
-    padding: 0.1em 0.45em;
+    padding: .1em .45em;
 }
 
 
@@ -496,7 +498,7 @@ input:checked+label .overhang-block .text {
 }
 
 .modification {
-    font-size: 0.5em;
+    font-size: .5em;
     margin: 0;
     margin-top: -2em;
     padding: 0;
@@ -530,7 +532,7 @@ input:checked+label .overhang-block .text {
 
 .js-settings p {
     margin: 0;
-    margin-right: 0.5em;
+    margin-right: .5em;
 }
 
 
@@ -570,9 +572,9 @@ input:checked+label .overhang-block .text {
     content: "";
     height: 1.1em;
     width: 1.1em;
-    left: 0.2em;
-    bottom: 0.2em;
-    background-color: white;
+    left: .2em;
+    bottom: .2em;
+    background-color: var(--color-background);
     -webkit-transition: .4s;
     transition: .4s;
     border-radius: 50%;
@@ -614,7 +616,7 @@ input:checked+.slider:before {
 
 .sequence-logo-position span {
     line-height: 75%;
-    font-size: calc(var(--scale) * 0.75em);
+    font-size: calc(var(--scale) * .75em);
 }
 
 
@@ -628,7 +630,7 @@ input:checked+.slider:before {
 
 .table-header>div {
     flex: 1 1 1px;
-    padding: 0 0.5em;
+    padding: 0 .5em;
     box-shadow: 27px 0 0 -25px var(--color-primary);
 }
 
@@ -666,7 +668,7 @@ input:checked+.slider:before {
 .histogram .bar span {
     color: var(--color-primary-light);
     opacity: 0;
-    transition: opacity 0.25s;
+    transition: opacity .25s;
     padding-top: 3px;
     align-self: center;
 }
@@ -677,5 +679,88 @@ input:checked+.slider:before {
 
 .histogram .label {
     justify-self: center;
-    font-size: 0.75em;
+    font-size: .75em;
+}
+
+.grouped.histogram {
+    grid-template-columns: none;
+}
+
+.group {
+    display: flex;
+    flex-direction: row;
+}
+
+.group .bar {
+    flex: 1 1 1px;
+    align-self: flex-end;
+    margin: 0 1px;
+}
+
+.grouped .tooltip {
+    display: none;
+    position: absolute;
+    z-index: 1;
+    padding: .5em;
+    border: 1px solid var(--color-primary);
+    background-color: var(--color-background);
+    color: var(--color-primary);
+    border-radius: .2rem;
+    font-size: .8em;
+}
+
+.tooltip .dim {
+    display: block;
+}
+
+.tooltip .dim:before,
+.histogram-header span:before {
+    content: "";
+    display: inline-block;
+    background: currentColor;
+    width: .8em;
+    height: .8em;
+    border-radius: .2rem;
+    margin-right: .5em;
+}
+
+.group:hover .tooltip {
+    display: block;
+}
+
+.histogram-header {
+    margin-top: -1em;
+}
+
+.histogram-header span {
+    color: var(--color-primary);
+    margin: .5em;
+    font-size: .8em;
+}
+
+.tooltip .dim:nth-child(4n+1),
+.histogram-header span:nth-child(4n+1) {
+    color: var(--color-primary-dark);
+}
+
+.tooltip .dim:nth-child(4n+2),
+.histogram-header span:nth-child(4n+2) {
+    color: var(--color-secondary);
+}
+
+.tooltip .dim:nth-child(4n+3),
+.histogram-header span:nth-child(4n+3) {
+    color: var(--color-secondary-dark);
+}
+
+.group .bar:nth-child(4n+1) {
+    background-color: var(--color-primary-dark);
+}
+
+.group .bar:nth-child(4n+2) {
+    background-color: var(--color-secondary);
+}
+
+.group .bar:nth-child(4n+3) {
+    background-color: var(--color-secondary-dark);
 }

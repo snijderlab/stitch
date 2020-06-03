@@ -25,9 +25,9 @@ namespace AssemblyNameSpace
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Simple(NameFilter filter, MetaData.FileIdentifier inputFile, char commentChar = '#')
+        public static ParseResult<List<(string, MetaData.IMetaData)>> Simple(NameFilter filter, MetaData.FileIdentifier inputFile, char commentChar = '#')
         {
-            var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
             var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
 
@@ -59,9 +59,9 @@ namespace AssemblyNameSpace
         /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
+        public static ParseResult<List<(string, MetaData.IMetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
-            var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
             var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
 
@@ -151,9 +151,9 @@ namespace AssemblyNameSpace
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
         /// <returns> A list of all reads found with their metadata. </returns>
-        public static ParseEither<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
+        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
         {
-            var outeither = new ParseEither<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
             var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
 

@@ -52,6 +52,7 @@ namespace AssemblyNameSpace
         public List<List<HelperFunctionality.ReadPlacement>> Alignment;
         public int[] DepthOfCoverageFull;
         public int[] DepthOfCoverage;
+        public double TotalArea;
         public readonly List<int> UniqueOrigins;
         public readonly HashSet<int> GraphIndices;
 
@@ -63,7 +64,7 @@ namespace AssemblyNameSpace
         /// <param name="forward_edges"> The forward edges from this node (indices). See <see cref="CondensedNode.ForwardEdges"/>.</param>
         /// <param name="backward_edges"> The backward edges from this node (indices). See <see cref="CondensedNode.BackwardEdges"/>.</param>
         /// <param name="origins"> The origins where the (k-1)-mers used for this sequence come from. See <see cref="CondensedNode.Origins"/>.</param>
-        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins, List<int> graphindices)
+        public CondensedNode(List<AminoAcid> sequence, int index, int forward_index, int backward_index, List<int> forward_edges, List<int> backward_edges, List<List<int>> origins, List<int> graphindices, double totalArea)
         {
             Sequence = sequence;
             Index = index;
@@ -76,6 +77,7 @@ namespace AssemblyNameSpace
             Suffix = new List<AminoAcid>();
             Prefix = new List<AminoAcid>();
             GraphIndices = graphindices.ToHashSet();
+            TotalArea = totalArea;
 
             var output = new List<int>();
             foreach (var outer in Origins)

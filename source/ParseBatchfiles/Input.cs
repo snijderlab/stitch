@@ -21,7 +21,7 @@ namespace AssemblyNameSpace
         public static RunParameters.FullRunParameters Batch(string path, bool languageServer = false)
         {
             var output = new RunParameters.FullRunParameters();
-            var outEither = new ParseEither<RunParameters.FullRunParameters>(output);
+            var outEither = new ParseResult<RunParameters.FullRunParameters>(output);
             var namefilter = new NameFilter();
 
             // Get the contents
@@ -208,23 +208,23 @@ namespace AssemblyNameSpace
             : base(msg) { }
     }
     /// <summary>To save a result of a parse action, the value or a errormessage. </summary>
-    public class ParseEither<T>
+    public class ParseResult<T>
     {
         public T Value;
         public List<ErrorMessage> Messages = new List<ErrorMessage>();
-        public ParseEither(T t)
+        public ParseResult(T t)
         {
             Value = t;
         }
-        public ParseEither(ErrorMessage error)
+        public ParseResult(ErrorMessage error)
         {
             Messages.Add(error);
         }
-        public ParseEither(List<ErrorMessage> errors)
+        public ParseResult(List<ErrorMessage> errors)
         {
             Messages.AddRange(errors);
         }
-        public ParseEither() { }
+        public ParseResult() { }
         public bool HasFailed()
         {
             foreach (var msg in Messages)
@@ -242,16 +242,16 @@ namespace AssemblyNameSpace
             }
             return true;
         }
-        public ParseEither<Tout> Do<Tout>(Func<T, Tout> func, ErrorMessage failMessage = null)
+        public ParseResult<Tout> Do<Tout>(Func<T, Tout> func, ErrorMessage failMessage = null)
         {
             if (!this.HasFailed())
             {
-                return new ParseEither<Tout>(func(this.Value));
+                return new ParseResult<Tout>(func(this.Value));
             }
             else
             {
                 if (failMessage != null) this.Messages.Add(failMessage);
-                return new ParseEither<Tout>(Messages);
+                return new ParseResult<Tout>(Messages);
             }
         }
         public T ReturnOrFail()
@@ -277,7 +277,7 @@ namespace AssemblyNameSpace
             if (this.HasFailed()) return def;
             else return this.Value;
         }
-        public T GetValue<Tout>(ParseEither<Tout> fail)
+        public T GetValue<Tout>(ParseResult<Tout> fail)
         {
             fail.Messages.AddRange(Messages);
             return Value;
@@ -318,25 +318,25 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
             /// <returns>If successfull: the number (int32)</returns>
-            public static ParseEither<int> ConvertToInt(string input, FileRange pos)
+            public static ParseResult<int> ConvertToInt(string input, FileRange pos)
             {
                 try
                 {
-                    return new ParseEither<int>(Convert.ToInt32(input));
+                    return new ParseResult<int>(Convert.ToInt32(input));
                 }
                 catch (FormatException)
                 {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
-                    return new ParseEither<int>(new ErrorMessage(pos, "Not a valid number", msg));
+                    return new ParseResult<int>(new ErrorMessage(pos, "Not a valid number", msg));
                 }
                 catch (OverflowException)
                 {
-                    return new ParseEither<int>(new ErrorMessage(pos, "Outside bounds"));
+                    return new ParseResult<int>(new ErrorMessage(pos, "Outside bounds"));
                 }
                 catch
                 {
-                    return new ParseEither<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
+                    return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
             /// <summary>
@@ -344,30 +344,30 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
-            public static ParseEither<double> ConvertToDouble(string input, FileRange pos)
+            public static ParseResult<double> ConvertToDouble(string input, FileRange pos)
             {
                 try
                 {
-                    return new ParseEither<double>(Convert.ToDouble(input, new System.Globalization.CultureInfo("en-US")));
+                    return new ParseResult<double>(Convert.ToDouble(input, new System.Globalization.CultureInfo("en-US")));
                 }
                 catch (FormatException)
                 {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
-                    return new ParseEither<double>(new ErrorMessage(pos, "Not a valid number", msg));
+                    return new ParseResult<double>(new ErrorMessage(pos, "Not a valid number", msg));
                 }
                 catch (OverflowException)
                 {
-                    return new ParseEither<double>(new ErrorMessage(pos, "Outside bounds"));
+                    return new ParseResult<double>(new ErrorMessage(pos, "Outside bounds"));
                 }
                 catch
                 {
-                    return new ParseEither<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
+                    return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
-            public static ParseEither<RunParameters.AssemblerParameter> ParseAssembly(ParsedFile batchfile, NameFilter nameFilter, KeyValue key)
+            public static ParseResult<RunParameters.AssemblerParameter> ParseAssembly(ParsedFile batchfile, NameFilter nameFilter, KeyValue key)
             {
-                var outEither = new ParseEither<RunParameters.AssemblerParameter>();
+                var outEither = new ParseResult<RunParameters.AssemblerParameter>();
                 var output = new RunParameters.AssemblerParameter();
 
                 foreach (var pair in key.GetValues())
@@ -485,9 +485,9 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseEither<RunParameters.InputParameter> ParseInput(NameFilter namefilter, KeyValue key)
+            public static ParseResult<RunParameters.InputParameter> ParseInput(NameFilter namefilter, KeyValue key)
             {
-                var outEither = new ParseEither<RunParameters.InputParameter>();
+                var outEither = new ParseResult<RunParameters.InputParameter>();
                 var output = new RunParameters.InputParameter();
 
                 foreach (var pair in key.GetValues())
@@ -645,7 +645,7 @@ namespace AssemblyNameSpace
 
                                     var fileId = new MetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
 
-                                    ParseEither<List<(string, MetaData.IMetaData)>> folder_reads;
+                                    ParseResult<List<(string, MetaData.IMetaData)>> folder_reads;
 
                                     if (file.EndsWith(".fasta"))
                                         folder_reads = OpenReads.Fasta(namefilter, fileId, identifier);
@@ -683,9 +683,9 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseEither<RunParameters.RecombineParameter> ParseRecombine(NameFilter namefilter, KeyValue key)
+            public static ParseResult<RunParameters.RecombineParameter> ParseRecombine(NameFilter namefilter, KeyValue key)
             {
-                var outEither = new ParseEither<RunParameters.RecombineParameter>();
+                var outEither = new ParseResult<RunParameters.RecombineParameter>();
                 var output = new RunParameters.RecombineParameter();
 
                 KeyValue order = null;
@@ -795,9 +795,9 @@ namespace AssemblyNameSpace
                 return outEither;
             }
 
-            public static ParseEither<RunParameters.ReadAlignmentParameter> ParseReadAlignment(NameFilter namefilter, KeyValue key)
+            public static ParseResult<RunParameters.ReadAlignmentParameter> ParseReadAlignment(NameFilter namefilter, KeyValue key)
             {
-                var outEither = new ParseEither<RunParameters.ReadAlignmentParameter>();
+                var outEither = new ParseResult<RunParameters.ReadAlignmentParameter>();
                 var output = new RunParameters.ReadAlignmentParameter();
 
                 foreach (var pair in key.GetValues())
@@ -827,9 +827,9 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseEither<RunParameters.ReportParameter> ParseReport(KeyValue key)
+            public static ParseResult<RunParameters.ReportParameter> ParseReport(KeyValue key)
             {
-                var outEither = new ParseEither<RunParameters.ReportParameter>();
+                var outEither = new ParseResult<RunParameters.ReportParameter>();
                 var output = new RunParameters.ReportParameter();
 
                 foreach (var pair in key.GetValues())
@@ -935,10 +935,10 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseEither<RunParameters.AlphabetParameter> ParseAlphabet(KeyValue key)
+            public static ParseResult<RunParameters.AlphabetParameter> ParseAlphabet(KeyValue key)
             {
                 var asettings = new RunParameters.AlphabetParameter();
-                var outEither = new ParseEither<RunParameters.AlphabetParameter>(asettings);
+                var outEither = new ParseResult<RunParameters.AlphabetParameter>(asettings);
 
                 if (key.GetValues().Count() == 0)
                 {
@@ -1012,9 +1012,9 @@ namespace AssemblyNameSpace
                 var counter = new Tokenizer.Counter(file);
                 return ParseAlphabetData(lines, counter).ReturnOrFail();
             }
-            public static ParseEither<(char[], int[,])> ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
+            public static ParseResult<(char[], int[,])> ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
             {
-                var outEither = new ParseEither<(char[], int[,])>();
+                var outEither = new ParseResult<(char[], int[,])>();
 
                 int rows = lines.Length;
                 var cells = new List<(Position, List<(string, FileRange)>)>();
@@ -1092,9 +1092,9 @@ namespace AssemblyNameSpace
                 outEither.Value = (alphabet, scoring_matrix);
                 return outEither;
             }
-            public static ParseEither<Regex> ParseRegex(KeyValue node)
+            public static ParseResult<Regex> ParseRegex(KeyValue node)
             {
-                var outEither = new ParseEither<Regex>();
+                var outEither = new ParseResult<Regex>();
                 try
                 {
                     outEither.Value = new Regex(node.GetValue().Trim());
@@ -1119,7 +1119,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseEither<RunParameters.DatabaseValue> ParseDatabase(NameFilter namefilter, KeyValue node, bool extended)
+            public static ParseResult<RunParameters.DatabaseValue> ParseDatabase(NameFilter namefilter, KeyValue node, bool extended)
             {
                 // Parse files one by one
                 var file_path = "";
@@ -1128,7 +1128,7 @@ namespace AssemblyNameSpace
                 var peaks_settings = new RunParameters.Input.Peaks();
 
                 var tsettings = new RunParameters.DatabaseValue();
-                var outEither = new ParseEither<RunParameters.DatabaseValue>(tsettings);
+                var outEither = new ParseResult<RunParameters.DatabaseValue>(tsettings);
 
                 foreach (var setting in node.GetValues())
                 {
@@ -1207,7 +1207,7 @@ namespace AssemblyNameSpace
                 // Open the file
                 var fileId = new MetaData.FileIdentifier() { Name = tsettings.Name, Path = ParseHelper.GetFullPath(file_path).GetValue(outEither) };
 
-                ParseEither<List<(string, MetaData.IMetaData)>> folder_reads = new ParseEither<List<(string, MetaData.IMetaData)>>();
+                ParseResult<List<(string, MetaData.IMetaData)>> folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
                     folder_reads = OpenReads.Fasta(namefilter, fileId, tsettings.Identifier);
@@ -1223,9 +1223,9 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseEither<bool> GetPeaksSettings(KeyValue setting, bool withprefix, RunParameters.Input.Peaks peaks_settings)
+            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool withprefix, RunParameters.Input.Peaks peaks_settings)
             {
-                var outEither = new ParseEither<bool>(true);
+                var outEither = new ParseResult<bool>(true);
                 var name = setting.Name;
 
                 if (withprefix && !name.StartsWith("peaks"))
@@ -1291,9 +1291,9 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseEither<bool> ParseBool(KeyValue setting, string context, bool def = false)
+            public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false)
             {
-                var output = new ParseEither<bool>(def);
+                var output = new ParseResult<bool>(def);
                 switch (setting.GetValue().ToLower())
                 {
                     case "true":
@@ -1308,9 +1308,9 @@ namespace AssemblyNameSpace
                 }
                 return output;
             }
-            public static ParseEither<string> GetFullPath(KeyValue setting)
+            public static ParseResult<string> GetFullPath(KeyValue setting)
             {
-                var outEither = new ParseEither<string>();
+                var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(setting.GetValue());
 
                 if (res.Item2 == "")
@@ -1323,9 +1323,9 @@ namespace AssemblyNameSpace
                 }
                 return outEither;
             }
-            public static ParseEither<string> GetFullPath(string path)
+            public static ParseResult<string> GetFullPath(string path)
             {
-                var outEither = new ParseEither<string>();
+                var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(path);
 
                 if (res.Item2 == "")
@@ -1469,9 +1469,9 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-            public static ParseEither<string> GetAllText(KeyValue setting)
+            public static ParseResult<string> GetAllText(KeyValue setting)
             {
-                var outEither = new ParseEither<string>();
+                var outEither = new ParseResult<string>();
 
                 var res = GetAllTextPrivate(setting.GetValue());
 
@@ -1480,9 +1480,9 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseEither<string> GetAllText(string path)
+            public static ParseResult<string> GetAllText(string path)
             {
-                var outEither = new ParseEither<string>();
+                var outEither = new ParseResult<string>();
 
                 var res = GetAllTextPrivate(path);
 

@@ -48,7 +48,7 @@ namespace AssemblyNameSpace
             {
                 expression = exp;
             }
-            public static ParseEither<Arithmetic.Expression> TryParse(string value, FileRange range, ParsedFile file)
+            public static ParseResult<Arithmetic.Expression> TryParse(string value, FileRange range, ParsedFile file)
             {
                 try
                 {
@@ -56,7 +56,7 @@ namespace AssemblyNameSpace
                 }
                 catch (Exception e)
                 {
-                    return new ParseEither<Arithmetic.Expression>(new InputNameSpace.ErrorMessage(range, "Exception while parsing K Arithmetic", e.Message + "\n" + e.StackTrace));
+                    return new ParseResult<Arithmetic.Expression>(new InputNameSpace.ErrorMessage(range, "Exception while parsing K Arithmetic", e.Message + "\n" + e.StackTrace));
                 }
             }
 
@@ -260,9 +260,9 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="input">The string to parse.</param>
             /// <returns>The expression (if successfull).</returns>
-            static ParseEither<Arithmetic.Expression> Parse(string input, FileRange range, ParsedFile file)
+            static ParseResult<Arithmetic.Expression> Parse(string input, FileRange range, ParsedFile file)
             {
-                var outEither = new ParseEither<Arithmetic.Expression>();
+                var outEither = new ParseResult<Arithmetic.Expression>();
                 int len = input.Length;
                 input = input.TrimEnd();
                 int endlen = input.Length;

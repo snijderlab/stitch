@@ -45,7 +45,6 @@ namespace AssemblyNameSpace
         /// The total amount of (mis)matching aminoacids in the alignment
         /// </summary>
         public readonly int TotalMatches;
-
         /// <summary>
         /// The total length on the template (matches + gaps in query)
         /// </summary>

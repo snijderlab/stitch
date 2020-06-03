@@ -54,6 +54,11 @@ namespace AssemblyNameSpace
             double intensity = 1.0;
 
             /// <summary>
+            /// Contains the total are as measured by mass spectrometry to be able to report this back to the user and help him/her get a better picture of the data.
+            /// </summary>
+            public double TotalArea = 0;
+
+            /// <summary>
             /// To generate (an) HTML element(s) from this MetaData.
             /// </summary>
             /// <returns>A string containing the MetaData.</returns>
@@ -218,9 +223,9 @@ namespace AssemblyNameSpace
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
             /// <param name="file">Identifier for the originating file.</param>
-            public static ParseEither<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
+            public static ParseResult<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
             {
-                var outeither = new ParseEither<Peaks>();
+                var outeither = new ParseResult<Peaks>();
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
@@ -353,6 +358,8 @@ namespace AssemblyNameSpace
                 var pArea = Math.Log10(peaks.Area);
                 peaks.intensity = 2 - 1 / pArea;
 
+                peaks.TotalArea = peaks.Area;
+
                 return outeither;
             }
 
@@ -457,6 +464,7 @@ namespace AssemblyNameSpace
                 path = path_;
                 identifier = $"P{path.Index:D4}";
                 escapedIdentifier = $"P{path.Index:D4}";
+                TotalArea = path.Nodes.Select(a => a.TotalArea).Sum();
             }
             public override string ToHTML()
             {
