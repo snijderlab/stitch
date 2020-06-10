@@ -58,10 +58,10 @@ namespace AssemblyNameSpace
         /// Creates a basic graphpath, mainly for testing purposes
         /// </summary>
         /// <param name="Sequence"></param>
-        public GraphPath(List<AminoAcid> sequence)
+        public GraphPath(List<AminoAcid> sequence, int index = -1)
         {
             Nodes = new List<CondensedNode>();
-            Index = -1;
+            Index = index;
 
             Sequence = sequence.ToArray();
             DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();

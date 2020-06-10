@@ -85,9 +85,9 @@ namespace AssemblyNameSpace
         public void Match(List<(string, MetaData.IMetaData)> sequences, int max_threads = 1, bool forceOnSingleTemplate = false)
         {
             var paths = new List<GraphPath>(sequences.Count());
-            foreach (var seq in sequences)
+            for (int i = 0; i < sequences.Count(); i++)
             {
-                paths.Add(new GraphPath(StringToSequence(seq.Item1).ToList()));
+                paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), i));
             }
             Match(paths, max_threads, forceOnSingleTemplate);
         }
