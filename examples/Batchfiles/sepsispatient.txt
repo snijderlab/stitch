@@ -7,25 +7,15 @@ Runtype : Group
 
 Assembly ->
     Input ->
-        -Folder ->
-        -    Path       : ../008/
-        -    PeaksFormat: Old
-        -    StartsWith : 190520
-        -<-
         Peaks ->
-            Path            : ..\008\200305_HER_test_04_DENOVO.csv
-            -Path            : ..\008\minimalerrorset.csv
+            Path            : ..\..\PEAKS_DATA\20200504_Sepsis_T3_DENOVO_2\de novo peptides.csv
             Format          : X+
             Name            : 01
             Separator       : ,
-            Cutoffscore     : 98
+            Cutoffscore     : 95
             LocalCutoffscore: 100
             MinLengthPatch  : 100
         <-
-        -Reads ->
-        -    Path: ../008/errorset.txt
-        -    Name: Errorset
-        -<-
     <-
 
     K	              : 7
@@ -41,16 +31,16 @@ Assembly ->
 
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    N : 1
+    N : 2
 
     -Minimal average score per position to be included
     CutoffScore : 12
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
+    Order : IGHV IGHJ IGHC IGLV IGLJ IGLC
 
-    IncludeShortReads: True
+    IncludeShortReads: False
 
     Databases->
         Database->
@@ -101,24 +91,19 @@ Recombine->
 
 ReadsAlign -> 
     Input ->
-        -Folder ->
-        -    Path       : ../008/
-        -    PeaksFormat: Old
-        -    StartsWith : 190520
-        -<-
         Peaks ->
-            Path: ..\008\200305_HER_test_04_DENOVO.csv
+            Path: ..\..\PEAKS_DATA\20200504_Sepsis_T3_DENOVO_2\de novo peptides.csv
             Format: X+
             Name: 01
             Separator: ,
-            Cutoffscore: 90
+            Cutoffscore: 70
             LocalCutoffscore: 100
             MinLengthPatch: 100
         <-
     <-
     
     CutoffScore: 8
-    ForceOnSingleTemplate: False
+    ForceOnSingleTemplate: True
 
     Alphabet ->
         Path : ../alphabets/blosum62.csv
@@ -129,10 +114,6 @@ ReadsAlign ->
 <-
 
 Report ->
-    -FASTA	->
-    -    Path	: ../../report-peaks.fasta
-    -    OutputType : ReadsAlign
-    -<-
     HTML ->
         Path    : ../../report-peaks.html
     <-
