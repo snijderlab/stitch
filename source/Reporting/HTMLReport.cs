@@ -371,31 +371,6 @@ namespace AssemblyNameSpace
 </div>";
         }
 
-        /// <summary> Returns an aside for details viewing of a template. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateTemplateAside(int templateIndex, int i)
-        {
-            string id = GetAsideIdentifier(templateIndex, i, AsideType.Template);
-            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Template) + "s" };
-            var template = databases[templateIndex].Templates[i];
-            var alignment = CreateTemplateAlignment(template, id, location);
-
-            return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(templateIndex, i, AsideType.Template, true)}</h1>
-    <h2>Consensus Sequence</h2>
-    {alignment.ConsensusSequence}
-    {alignment.SequenceLogo}
-    <h2>Sequence Length</h2>
-    <p>{template.Sequence.Length}</p>
-    <h2>Score</h2>
-    <p>{template.Score}</p>
-    {alignment.Alignment}
-    <h2>Template Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
-    {template.MetaData.ToHTML()}
-</div>";
-        }
-
         /// <summary>
         /// Creates an aside for a path.
         /// </summary>
@@ -460,84 +435,52 @@ namespace AssemblyNameSpace
 </div>";
         }
 
-        /// <summary> Returns an aside for details viewing of a recombination. </summary>
+        /// <summary> Returns an aside for details viewing of a template. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateRecombinationAside(int i)
+        string CreateTemplateAside(AsideType type, Template template, int index, int i)
         {
-            string id = GetAsideIdentifier(i, AsideType.RecombinedTemplate);
-            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinedTemplate) + "s" };
-            var template = RecombinedDatabase.Templates[i];
+            string id = GetAsideIdentifier(index, i, type);
+            var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
             var alignment = CreateTemplateAlignment(template, id, location);
 
-            string order = "";
-            if (template.Recombination != null)
+            string meta = "";
+            if (template.MetaData != null && (type == AsideType.RecombinedTemplate || type == AsideType.Template))
             {
-                order = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
+                meta = template.MetaData.ToHTML();
+            }
+
+            string based = "";
+            switch (type)
+            {
+                case AsideType.ReadAlignment:
+                    based = $"<h2>Based on</h2><p>{GetAsideLink(i, AsideType.RecombinedTemplate, location)}</p>";
+                    break;
+                case AsideType.RecombinationDatabase:
+                    based = $"<h2>Out of database</h2><p>{template.Name}</p>";
+                    break;
+                case AsideType.RecombinedTemplate:
+                    if (template.Recombination != null)
+                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
+                    break;
+                default:
+                    break;
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(i, AsideType.RecombinedTemplate, true)}</h1>
+    <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
     {alignment.ConsensusSequence}
     {alignment.SequenceLogo}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
+    <h2>Total Area</h2>
+    <p>{template.TotalArea}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
-    {order}
+    {based}
     {alignment.Alignment}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
-</div>";
-        }
-
-        /// <summary> Returns an aside for details viewing of a recombination database. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateRecombinationDatabaseAside(int index, int i)
-        {
-            string id = GetAsideIdentifier(index, i, AsideType.RecombinationDatabase);
-            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.RecombinationDatabase) + "s" };
-            var template = RecombinationDatabases[index].Templates[i];
-            var alignment = CreateTemplateAlignment(template, id, location);
-
-            return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(index, i, AsideType.RecombinationDatabase, true)}</h1>
-    {alignment.ConsensusSequence}
-    {alignment.SequenceLogo}
-    <h2>Sequence Length</h2>
-    <p>{template.Sequence.Length}</p>
-    <h2>Out of database</h2>
-    <p>{template.Name}</p>
-    <h2>Score</h2>
-    <p>{template.Score}</p>
-    {alignment.Alignment}
-    <h2>Template Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
-    {template.MetaData.ToHTML()}
-</div>";
-        }
-
-        /// <summary> Returns an aside for details viewing of a recombination. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateReadAlignmentAside(int i)
-        {
-            string id = GetAsideIdentifier(i, AsideType.ReadAlignment);
-            var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.ReadAlignment) + "s" };
-            var template = ReadAlignment.Templates[i];
-            var alignment = CreateTemplateAlignment(template, id, location);
-
-            return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(i, AsideType.ReadAlignment, true)}</h1>
-    {alignment.ConsensusSequence}
-    {alignment.SequenceLogo}
-    <h2>Based on</h2>
-    <p>{GetAsideLink(i, AsideType.RecombinedTemplate, location)}</p>
-    <h2>Sequence Length</h2>
-    <p>{template.Sequence.Length}</p>
-    <h2>Score</h2>
-    <p>{template.Score}</p>
-    {alignment.Alignment}
-    <h2>Template Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
+    {meta}
 </div>";
         }
 
@@ -904,10 +847,10 @@ namespace AssemblyNameSpace
                     case AsideType.Path: SaveAside(CreatePathAside(index1), AsideType.Path, -1, index1); break;
                     case AsideType.Contig: SaveAside(CreateContigAside(index1), AsideType.Contig, -1, index1); break;
                     case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, index1); break;
-                    case AsideType.Template: SaveAside(CreateTemplateAside(index2, index1), AsideType.Template, index2, index1); break;
-                    case AsideType.RecombinedTemplate: SaveAside(CreateRecombinationAside(index1), AsideType.RecombinedTemplate, -1, index1); break;
-                    case AsideType.RecombinationDatabase: SaveAside(CreateRecombinationDatabaseAside(index2, index1), AsideType.RecombinationDatabase, index2, index1); break;
-                    case AsideType.ReadAlignment: SaveAside(CreateReadAlignmentAside(index1), AsideType.ReadAlignment, -1, index1); break;
+                    case AsideType.Template: SaveTemplateAside(databases[index2].Templates[index1], AsideType.Template, index2, index1); break;
+                    case AsideType.RecombinedTemplate: SaveTemplateAside(RecombinedDatabase.Templates[index1], AsideType.RecombinedTemplate, -1, index1); break;
+                    case AsideType.RecombinationDatabase: SaveTemplateAside(RecombinationDatabases[index2].Templates[index1], AsideType.RecombinationDatabase, index2, index1); break;
+                    case AsideType.ReadAlignment: SaveTemplateAside(ReadAlignment.Templates[index1], AsideType.ReadAlignment, -1, index1); break;
                 };
             }
 
@@ -974,6 +917,11 @@ namespace AssemblyNameSpace
                     ExecuteJob(t, i2, i1);
                 }
             }
+        }
+
+        void SaveTemplateAside(Template template, AsideType type, int index1, int index2)
+        {
+            SaveAside(CreateTemplateAside(type, template, index1, index2), type, index1, index2);
         }
 
         void SaveAside(string content, AsideType type, int index1, int index2)
