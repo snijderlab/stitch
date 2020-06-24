@@ -499,7 +499,7 @@ namespace AssemblyNameSpace
             // Convert to lines: (creates List<string>)
             // Combine horizontally
             var totalsequences = alignedSequences[0].Sequences.Count();
-            var lines = new List<(string, int, int, AsideType)>[totalsequences + 1];
+            var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[totalsequences + 1];
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<double>();
@@ -507,7 +507,7 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
-                lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType type)>();
+                lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>();
             }
 
             for (int template_pos = 0; template_pos < alignedSequences.Count(); template_pos++)
@@ -533,15 +533,10 @@ namespace AssemblyNameSpace
                     else
                     {
                         var type = AsideType.Read;
-                        var idx = template.Matches[Sequences[i].MatchIndex].Index;
+                        var idx = Sequences[i].MatchIndex;
                         if (template.Matches[Sequences[i].MatchIndex].MetaData is MetaData.Path)
                         {
                             type = AsideType.Path;
-                        }
-                        else
-                        {
-
-                            idx += read_offset;
                         }
 
                         lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), idx, index - 1, type));
@@ -585,14 +580,13 @@ namespace AssemblyNameSpace
                     char padchar = nonbreakingspace;
                     if (Gaps[i].InSequence) padchar = gapchar;
 
-                    var index = Gaps[i].ContigID == -1 ? -1 : template.Matches[Gaps[i].MatchIndex].Index;
+                    var index = Gaps[i].ContigID == -1 ? -1 : Gaps[i].MatchIndex;
 
                     var type = AsideType.Path;
                     var idx = index;
                     if (Gaps[i].MatchIndex >= 0 && !(template.Matches[Gaps[i].MatchIndex].MetaData is MetaData.Path))
                     {
                         type = AsideType.Read;
-                        if (index != -1) idx += read_offset;
                     }
 
                     lines[i + 1].Add((seq.PadRight(max_length, padchar), idx, Sequences[i].SequencePosition - 1, type));
@@ -663,7 +657,7 @@ namespace AssemblyNameSpace
                     // Get the right id's to generate the right links
                     while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count())
                     {
-                        alignedlength += lines[0][alignedindex].Item1.Length;
+                        alignedlength += lines[0][alignedindex].Sequence.Length;
                         alignedindex++;
                     }
 
@@ -672,15 +666,15 @@ namespace AssemblyNameSpace
 
                     for (int i = 1; i < aligned.Length; i++)
                     {
-                        int index = lines[i][alignedindex].Item2;
-                        int position = lines[i][alignedindex].Item3;
+                        int index = lines[i][alignedindex].Index;
+                        int position = lines[i][alignedindex].SequencePosition;
                         int additionallength = 0;
                         int additionalindex = 1;
 
                         while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count())
                         {
-                            int thisindex = lines[i][alignedindex + additionalindex].Item2;
-                            int thisposition = lines[i][alignedindex + additionalindex].Item3;
+                            int thisindex = lines[i][alignedindex + additionalindex].Index;
+                            int thisposition = lines[i][alignedindex + additionalindex].SequencePosition;
 
                             if (index == -1)
                             {
@@ -695,7 +689,7 @@ namespace AssemblyNameSpace
                                 break;
                             }
 
-                            additionallength += lines[0][alignedindex + additionalindex].Item1.Length;
+                            additionallength += lines[0][alignedindex + additionalindex].Sequence.Length;
                             additionalindex++;
                         }
 
@@ -719,8 +713,16 @@ namespace AssemblyNameSpace
                         string result = "";
                         if (indices[i] >= 0)
                         {
-                            var rid = GetAsideIdentifier(indices[i], types[i][block * blocklength]);
-                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, GetAsideName(types[i][block * blocklength]) + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
+                            var rid = "none";
+                            var name = GetAsideName(AsideType.Read);
+                            try
+                            {
+                                var meta = template.Matches[indices[i]].MetaData;
+                                rid = meta.EscapedIdentifier;
+                                if (meta.GetType() == typeof(MetaData.Path)) name = GetAsideName(AsideType.Path);
+                            }
+                            catch { }
+                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
                             if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
                         else if (indices[i] == -2) // Clashing sequences remove link but display sequence

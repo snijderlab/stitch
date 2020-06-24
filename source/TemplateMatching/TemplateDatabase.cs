@@ -87,7 +87,7 @@ namespace AssemblyNameSpace
             var paths = new List<GraphPath>(sequences.Count());
             for (int i = 0; i < sequences.Count(); i++)
             {
-                paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), i));
+                paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), sequences[i].Item2, i));
             }
             Match(paths, max_threads, forceOnSingleTemplate);
         }
@@ -131,7 +131,7 @@ namespace AssemblyNameSpace
             Parallel.ForEach(
                 runs,
                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, new MetaData.Path(s.Item2), s.Item2.Index))
+                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, s.Item2.MetaData, s.Item2.Index))
             );
         }
 
@@ -164,7 +164,7 @@ namespace AssemblyNameSpace
                 {
                     if (set.Path.Index == Path.Index)
                     {
-                        set.Matches.Add((HelperFunctionality.SmithWaterman(Template.Sequence, Path.Sequence, Alphabet, new MetaData.Path(Path), Path.Index), Template));
+                        set.Matches.Add((HelperFunctionality.SmithWaterman(Template.Sequence, Path.Sequence, Alphabet, Path.MetaData, Path.Index), Template));
                         return;
                     }
                 }
@@ -214,7 +214,7 @@ namespace AssemblyNameSpace
             {
                 for (int i = 0; i < sequences.Count(); i++)
                 {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, new MetaData.Path(sequences[i]), sequences[i].Index));
+                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, sequences[i].MetaData, sequences[i].Index));
                 }
             }
         }

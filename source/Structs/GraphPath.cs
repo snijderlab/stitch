@@ -21,6 +21,7 @@ namespace AssemblyNameSpace
         public readonly int[] ContigID;
         public readonly int Score;
         public int Index;
+        public readonly MetaData.IMetaData MetaData;
         public string Identifiers
         {
             get
@@ -53,15 +54,17 @@ namespace AssemblyNameSpace
             DepthOfCoverage = depth.ToArray();
             Score = depth.Sum();
             ContigID = id.ToArray();
+            MetaData = new MetaData.Path(this);
         }
         /// <summary>
-        /// Creates a basic graphpath, mainly for testing purposes
+        /// Creates a basic graphpath, mainly for testing purposes but also used for included short reads
         /// </summary>
         /// <param name="Sequence"></param>
-        public GraphPath(List<AminoAcid> sequence, int index = -1)
+        public GraphPath(List<AminoAcid> sequence, MetaData.IMetaData metaData = null, int index = -1)
         {
             Nodes = new List<CondensedNode>();
             Index = index;
+            MetaData = metaData;
 
             Sequence = sequence.ToArray();
             DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();

@@ -175,8 +175,9 @@ namespace AssemblyNameSpace
 
                             if (Recombine.IncludeShortReads)
                             {
-                                var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
-                                for (int j = 0; j < assm.reads.Count; j++) reads.Add((AminoAcid.ArrayToString(assm.reads[j]), assm.reads_metadata[j]));
+                                var reads = new List<(string, MetaData.IMetaData)>(assm.shortReads.Count);
+                                foreach (var read in assm.shortReads)
+                                    reads.Add((AminoAcid.ArrayToString(read.Sequence), read.MetaData));
                                 database1.Match(reads, max_threads);
                             }
 

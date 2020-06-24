@@ -262,7 +262,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            return filtered.ToList().Select(a => (a.Key, a.Value)).ToList();
+            return filtered.Select(a => (a.Key, a.Value)).ToList();
         }
     }
 }

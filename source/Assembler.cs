@@ -10,7 +10,7 @@ namespace AssemblyNameSpace
     {
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
-        public List<GraphPath> shortReads = new List<GraphPath>();
+        public List<(AminoAcid[] Sequence, MetaData.IMetaData MetaData)> shortReads = new List<(AminoAcid[], MetaData.IMetaData)>();
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         public List<MetaData.IMetaData> reads_metadata = null;
@@ -119,12 +119,7 @@ namespace AssemblyNameSpace
                 else
                 {
                     // Only used if IncludeShortReads is set to true
-                    var node = new CondensedNode(read.ToList(), 0, 0, 0, new List<int>(), new List<int>(), new List<List<int>> { Enumerable.Repeat(0, read.Length).ToList() }, new List<int>(), reads_metadata[r].TotalArea)
-                    {
-                        DepthOfCoverage = Enumerable.Repeat(1, read.Length).ToArray(),
-                        DepthOfCoverageFull = Enumerable.Repeat(1, read.Length).ToArray()
-                    };
-                    shortReads.Add(new GraphPath(new List<CondensedNode> { node }, 0));
+                    shortReads.Add((read, reads_metadata[r]));
                 }
             }
             meta_data.kmers = kmers.Count;
