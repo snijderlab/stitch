@@ -65,6 +65,8 @@ namespace AssemblyNameSpace
             Nodes = new List<CondensedNode>();
             Index = index;
             MetaData = metaData;
+            if (metaData == null)
+                MetaData = new MetaData.Path(this);
 
             Sequence = sequence.ToArray();
             DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();
