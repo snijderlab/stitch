@@ -405,6 +405,10 @@ Determines if short reads (< K) will be added to the list of paths in recombinat
 
 The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. Default: `Absolute`.
 
+##### ForceOnSingleTemplate (s)
+
+Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `False`.
+
 
 #### Recombine
 
@@ -470,6 +474,10 @@ Determines if short reads (< K) will be added to the list of paths in recombinat
 
 The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. Default: `Absolute`.
 
+##### ForceOnSingleTemplate (s)
+
+Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `False`.
+
 #### ReadAlign
 
 ##### Input (m)
@@ -483,6 +491,10 @@ The mean score per position needed for a path to be included in the Database sco
 ##### Alphabet (m)
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
+
+##### ForceOnSingleTemplate (s)
+
+Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default: `False`.
 
 #### Report
 

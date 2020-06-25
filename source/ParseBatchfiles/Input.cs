@@ -738,6 +738,9 @@ namespace AssemblyNameSpace
                         case "includeshortreads":
                             output.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither);
                             break;
+                        case "forceonsingletemplate":
+                            output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither);
+                            break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'Databases' and 'Alphabet'"));
                             break;
@@ -1185,6 +1188,9 @@ namespace AssemblyNameSpace
                             break;
                         case "classchars":
                             tsettings.ClassChars = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "forceonsingletemplate":
+                            tsettings.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? RunParameters.Trilean.True : RunParameters.Trilean.False;
                             break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);

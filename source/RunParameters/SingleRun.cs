@@ -146,7 +146,7 @@ namespace AssemblyNameSpace
                         {
                             var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
                             for (int j = 0; j < assm.reads.Count; j++) reads.Add((AminoAcid.ArrayToString(assm.reads[j]), assm.reads_metadata[j]));
-                            database1.Match(reads, max_threads);
+                            database1.Match(reads, max_threads, database.ForceOnSingleTemplate == Trilean.True); // Treat Trilean.Unspecified as False
                         }
 
                         databases.Add(database1);
@@ -169,16 +169,23 @@ namespace AssemblyNameSpace
                         for (int i = 0; i < Recombine.Databases.Count(); i++)
                         {
                             var database = Recombine.Databases[i];
+                            var forceOnSingleTemplate = database.ForceOnSingleTemplate switch
+                            {
+                                Trilean.True => true,
+                                Trilean.False => false,
+                                Trilean.Unspecified => Recombine.ForceOnSingleTemplate,
+                                _ => throw new ArgumentException("A Trilean had a value which does not exist")
+                            };
 
                             var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring, database.ClassChars);
-                            database1.Match(assm.GetAllPaths(), max_threads);
+                            database1.Match(assm.GetAllPaths(), max_threads, forceOnSingleTemplate);
 
                             if (Recombine.IncludeShortReads)
                             {
                                 var reads = new List<(string, MetaData.IMetaData)>(assm.shortReads.Count);
                                 foreach (var read in assm.shortReads)
                                     reads.Add((AminoAcid.ArrayToString(read.Sequence), read.MetaData));
-                                database1.Match(reads, max_threads);
+                                database1.Match(reads, max_threads, forceOnSingleTemplate);
                             }
 
                             rec_databases.Add(database1);
@@ -233,13 +240,13 @@ namespace AssemblyNameSpace
 
                         recombined_database.Templates = recombined_templates;
 
-                        recombined_database.Match(assm.GetAllPaths(), max_threads);
+                        recombined_database.Match(assm.GetAllPaths(), max_threads, Recombine.ForceOnSingleTemplate);
 
                         if (Recombine.IncludeShortReads)
                         {
                             var reads = new List<(string, MetaData.IMetaData)>(assm.reads.Count);
                             for (int i = 0; i < assm.reads.Count; i++) reads.Add((AminoAcid.ArrayToString(assm.reads[i]), assm.reads_metadata[i]));
-                            recombined_database.Match(reads, max_threads);
+                            recombined_database.Match(reads, max_threads, Recombine.ForceOnSingleTemplate);
                         }
 
                         recombine_sw.Stop();

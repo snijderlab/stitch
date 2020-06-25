@@ -377,7 +377,17 @@ namespace AssemblyNameSpace
             /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
             public int ClassChars = -1;
+
+            /// <summary>
+            /// Whether or not this database should be matched using the ForceOnSingleTemplate option, Unspecified will use the value of the enclosing structure.
+            /// </summary>
+            public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
         }
+
+        /// <summary>
+        /// Like a boolean but with a third option 'Unspecified' to represent three states of a system.
+        /// </summary>
+        public enum Trilean { True, False, Unspecified }
 
         public enum ScoringParameter { Absolute, Relative }
 
@@ -415,6 +425,11 @@ namespace AssemblyNameSpace
             /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
             /// </summary>
             public bool IncludeShortReads = true;
+
+            /// <summary>
+            /// Whether or not reads/paths will be forced to a single template.
+            /// </summary>
+            public bool ForceOnSingleTemplate = false;
         }
 
         namespace RecombineOrder
