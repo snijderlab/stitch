@@ -5,8 +5,6 @@ using System.Linq;
 using System.Text;
 using System.Diagnostics;
 using System.Text.RegularExpressions;
-using System.Collections.Concurrent;
-using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
@@ -252,10 +250,13 @@ namespace AssemblyNameSpace
         string CreateTemplateTable(List<Template> templates, int templateIndex, AsideType type, bool header = false)
         {
             var buffer = new StringBuilder();
+            bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             if (header) buffer.Append(TableHeader(templates));
+            string unique = "";
+            if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
 <tr>
@@ -265,6 +266,7 @@ namespace AssemblyNameSpace
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 4, 'number')"" class=""smallcell"">Reads</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 5, 'number')"" class=""smallcell"">Total Area</th>
+    {unique}
 </tr>");
 
             string id, link;
@@ -272,6 +274,7 @@ namespace AssemblyNameSpace
             {
                 id = GetAsideIdentifier(templateIndex, i, type);
                 link = GetAsideLink(templateIndex, i, type);
+                if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
     <td class=""seq"">{templates[i].ConsensusSequence()}</td>
@@ -279,6 +282,7 @@ namespace AssemblyNameSpace
     <td class=""center"">{templates[i].Score}</td>
     <td class=""center"">{templates[i].Matches.Count()}</td>
     <td class=""center"">{templates[i].TotalArea.ToString("G3", new CultureInfo("en-GB"))}</td>
+    {unique}
 </tr>");
             }
 
@@ -470,16 +474,30 @@ namespace AssemblyNameSpace
                     break;
             }
 
+            string unique = "";
+            if (template.ForcedOnSingleTemplate)
+            {
+                unique = $@"<h2>Unique Matches</h2>
+    <p>{template.UniqueMatches.Count()}</p>
+    <h2>Unique Area</h2>
+    <p>{template.TotalUniqueArea}</p>
+    <h2>Unique Score</h2>
+    <p>{template.UniqueScore}</p>";
+            }
+
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
     {alignment.ConsensusSequence}
     {alignment.SequenceLogo}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
+    <h2>Total Matches</h2>
+    <p>{template.Matches.Count()}</p>
     <h2>Total Area</h2>
     <p>{template.TotalArea}</p>
     <h2>Score</h2>
     <p>{template.Score}</p>
+    {unique}
     {based}
     {alignment.Alignment}
     <h2>Template Sequence</h2>
@@ -1219,10 +1237,11 @@ namespace AssemblyNameSpace
 
             string classname = "";
             string extended = "";
+            bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
             if (templates[0].Parent.ClassChars > 0)
             {
-                var typedata = new Dictionary<string, (double, double, int, double)>(templates.Count);
+                var typedata = new Dictionary<string, (double, double, int, double, double)>(templates.Count);
                 foreach (var item in templates)
                 {
                     if (typedata.ContainsKey(item.Class))
@@ -1232,24 +1251,31 @@ namespace AssemblyNameSpace
                         data.Item2 += item.Score;
                         data.Item3 += 1;
                         data.Item4 += item.TotalArea;
+                        data.Item5 += item.TotalUniqueArea;
                         typedata[item.Class] = data;
                     }
                     else
                     {
-                        typedata.Add(item.Class, (item.Score, item.Score, 1, item.TotalArea));
+                        typedata.Add(item.Class, (item.Score, item.Score, 1, item.TotalArea, item.TotalUniqueArea));
                     }
                 }
 
                 var totalData = new List<(string, List<double>)>(typedata.Count);
                 foreach (var (type, data) in typedata)
                 {
-                    totalData.Add((type, new List<double> { data.Item1, data.Item2 / data.Item3, data.Item3, data.Item4 }));
+                    var list = new List<double> { data.Item1, data.Item2 / data.Item3, data.Item3, data.Item4 };
+                    if (displayUnique) list.Add(data.Item5);
+                    totalData.Add((type, list));
                 }
+
                 classname = " full";
+                var labels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0), ("Number of Reads", 1), ("Total Area", 2) };
+                if (displayUnique) labels.Add(("Unique Area", 3));
+
                 extended = $@"
 <div>
     <h3>Per Type</h3>
-    {HTMLGraph.GroupedBargraph(totalData, new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0), ("Number of Reads", 1), ("Total Area", 2) })}
+    {HTMLGraph.GroupedBargraph(totalData, labels)}
 </div>";
             }
 

@@ -101,6 +101,7 @@ namespace AssemblyNameSpace
             if (forceOnSingleTemplate)
             {
                 MatchParallelSingleTemplate(sequences, max_threads);
+                foreach (var tem in Templates) tem.ForcedOnSingleTemplate = true;
             }
             else if (max_threads == 1)
             {
@@ -199,10 +200,11 @@ namespace AssemblyNameSpace
                         }
                     }
 
+                    bool unique = best.Count() == 1; // Only count is as unique if it is only placed on one template
                     foreach (var index in best)
                     {
                         var (Match, Template) = Matches[index];
-                        Template.AddMatch(Match);
+                        Template.AddMatch(Match, unique);
                     }
                 }
             );

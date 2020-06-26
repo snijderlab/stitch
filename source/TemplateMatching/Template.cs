@@ -56,12 +56,36 @@ namespace AssemblyNameSpace
         }
         int score;
 
+        /// <summary>
+        /// To signify if this template was used in a match run which used ForceOnSingleTemplate.
+        /// </summary>
+        public bool ForcedOnSingleTemplate;
+
+        /// <summary>
+        /// The unique score for this template
+        /// </summary>
+        public int UniqueScore
+        {
+            get
+            {
+                if (Parent.Scoring == RunParameters.ScoringParameter.Absolute) return uniqueScore;
+                else return (int)Math.Round((double)uniqueScore / Sequence.Length);
+            }
+        }
+        int uniqueScore;
+
         public double TotalArea = 0;
+        public double TotalUniqueArea = 0;
 
         /// <summary>
         /// The list of matches on this template
         /// </summary>
         public List<SequenceMatch> Matches;
+
+        /// <summary>
+        /// The list of unique matches on this template
+        /// </summary>
+        public List<SequenceMatch> UniqueMatches;
 
         /// <summary>
         /// If this template is recombinated this are the templates it consists of.
@@ -94,6 +118,7 @@ namespace AssemblyNameSpace
             MetaData = meta;
             score = 0;
             Matches = new List<SequenceMatch>();
+            UniqueMatches = new List<SequenceMatch>();
             Recombination = recombination;
             Location = location;
             Parent = parent;
@@ -103,7 +128,8 @@ namespace AssemblyNameSpace
         /// Adds a new match to the list of matches, if the score is above the cutoff
         /// </summary>
         /// <param name="match">The match to add</param>
-        public void AddMatch(SequenceMatch match)
+        /// <param name="unique">To signify if this read is only placed here (ForceOnSingleTemplate) or that it is a normal placement.</param>
+        public void AddMatch(SequenceMatch match, bool unique = false)
         {
             lock (Matches)
             {
@@ -114,6 +140,13 @@ namespace AssemblyNameSpace
                         score += match.Score;
                         TotalArea += match.MetaData.TotalArea;
                         Matches.Add(match);
+
+                        if (unique)
+                        {
+                            uniqueScore += match.Score;
+                            TotalUniqueArea += match.MetaData.TotalArea;
+                            UniqueMatches.Add(match);
+                        }
                     }
                 }
             }

@@ -16,6 +16,7 @@ namespace AssemblyNameSpace
         int interval = 1000;
         long estimate = 0;
         long lasttask = 0;
+        bool terminalContact = true;
 
         public ProgressBar()
         {
@@ -64,23 +65,29 @@ namespace AssemblyNameSpace
             {
                 free = false;
 
-                if (clear)
+                if (clear && terminalContact)
                 {
                     try
                     {
                         Console.SetCursorPosition(0, Console.CursorTop);
                     }
-                    catch { }
+                    catch
+                    {
+                        terminalContact = false;
+                    }
                 }
 
-                int width;
-                try
+                int width = 30;
+                if (terminalContact)
                 {
-                    width = Console.BufferWidth;
-                }
-                catch
-                {
-                    width = 30;
+                    try
+                    {
+                        width = Console.BufferWidth;
+                    }
+                    catch
+                    {
+                        terminalContact = false;
+                    }
                 }
 
                 int value;
