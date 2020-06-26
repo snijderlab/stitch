@@ -348,6 +348,8 @@ namespace AssemblyNameSpace
     <h1>Contig {GetAsideIdentifier(i, AsideType.Contig, true)}</h1>
     <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
     <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
+    <h2>Total Area</h2>
+    <p>{condensed_graph[i].TotalArea}</p>
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
@@ -425,6 +427,8 @@ namespace AssemblyNameSpace
     <p class=""aside-seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</p>
     <h2>Sequence Length</h2>
     <p>{Paths[i].Sequence.Length}</p>
+    <h2>Total Area</h2>
+    <p>{Paths[i].MetaData.TotalArea}</p>
     <h2>Path</h2>
     <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
     <h2>Alignment</h2>
