@@ -478,7 +478,7 @@ namespace AssemblyNameSpace
             if (template.ForcedOnSingleTemplate)
             {
                 unique = $@"<h2>Unique Matches</h2>
-    <p>{template.UniqueMatches.Count()}</p>
+    <p>{template.UniqueMatches}</p>
     <h2>Unique Area</h2>
     <p>{template.TotalUniqueArea}</p>
     <h2>Unique Score</h2>
@@ -737,15 +737,17 @@ namespace AssemblyNameSpace
                         {
                             var rid = "none";
                             var name = GetAsideName(AsideType.Read);
+                            var unique = "";
                             try
                             {
                                 var meta = template.Matches[indices[i]].MetaData;
+                                if (template.Matches[indices[i]].Unique) unique = " unique";
                                 rid = meta.EscapedIdentifier;
                                 if (meta.GetType() == typeof(MetaData.Path)) name = GetAsideName(AsideType.Path);
                             }
                             catch { }
                             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
-                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link{unique}\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
                         else if (indices[i] == -2) // Clashing sequences remove link but display sequence
                         {

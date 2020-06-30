@@ -408,6 +408,10 @@ svg .selected text {
     text-decoration: none;
 }
 
+.align-link.unique {
+    font-weight: 500;
+}
+
 .coverage-depth-wrapper {
     height: 50px;
     order: 1;

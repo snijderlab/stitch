@@ -51,6 +51,7 @@ namespace AssemblyNameSpace
         public readonly int LengthOnTemplate;
 
         public readonly int Index;
+        public bool Unique;
 
         public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, MetaData.IMetaData metadata, int index)
         {

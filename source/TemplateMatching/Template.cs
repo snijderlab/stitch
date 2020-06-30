@@ -76,16 +76,12 @@ namespace AssemblyNameSpace
 
         public double TotalArea = 0;
         public double TotalUniqueArea = 0;
+        public int UniqueMatches = 0;
 
         /// <summary>
         /// The list of matches on this template
         /// </summary>
         public List<SequenceMatch> Matches;
-
-        /// <summary>
-        /// The list of unique matches on this template
-        /// </summary>
-        public List<SequenceMatch> UniqueMatches;
 
         /// <summary>
         /// If this template is recombinated this are the templates it consists of.
@@ -118,7 +114,6 @@ namespace AssemblyNameSpace
             MetaData = meta;
             score = 0;
             Matches = new List<SequenceMatch>();
-            UniqueMatches = new List<SequenceMatch>();
             Recombination = recombination;
             Location = location;
             Parent = parent;
@@ -143,9 +138,10 @@ namespace AssemblyNameSpace
 
                         if (unique)
                         {
+                            match.Unique = true;
                             uniqueScore += match.Score;
                             TotalUniqueArea += match.MetaData.TotalArea;
-                            UniqueMatches.Add(match);
+                            UniqueMatches++;
                         }
                     }
                 }
