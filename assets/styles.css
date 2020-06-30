@@ -221,6 +221,12 @@ input:checked+label {
     border-left: 2px solid var(--color-primary);
 }
 
+.collapsable>pre:first-child,
+.collapsable>h3:first-child {
+    margin: 0;
+    padding: 1em;
+}
+
 input[type="checkbox"] {
     display: none;
 }

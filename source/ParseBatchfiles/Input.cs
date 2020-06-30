@@ -36,6 +36,7 @@ namespace AssemblyNameSpace
 
             // Save the batchfile for use in the construction of error messages
             var batchfile = new ParsedFile(path, batchfilecontent.Split('\n'));
+            output.BatchFile = batchfile;
 
             // Tokenize the file, into a key value pair tree
             var parsed = InputNameSpace.Tokenizer.Tokenize(batchfile);

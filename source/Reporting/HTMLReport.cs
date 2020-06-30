@@ -1441,6 +1441,16 @@ assetsfolder = '{AssetsFolderName}';
 </head>";
         }
 
+        private string BatchFile()
+        {
+            var buffer = new StringBuilder();
+            var bf = singleRun.BatchFile;
+            buffer.Append($"<pre><i>{bf.Filename}</i>");
+            foreach (var line in bf.Lines) buffer.Append($"<br>{line}");
+            buffer.Append("</pre>");
+            return buffer.ToString();
+        }
+
         private string CreateMain()
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -1480,6 +1490,7 @@ assetsfolder = '{AssetsFolderName}';
  {Collapsible("Contigs Table", CreateContigsTable())}
  {Collapsible("Reads Table", CreateReadsTable())}
  {Collapsible("Meta Information", MetaInformation())}
+ {Collapsible("Batch File", BatchFile())}
 
 <div class=""footer"">
     <p>Code written in 2019-2020</p>

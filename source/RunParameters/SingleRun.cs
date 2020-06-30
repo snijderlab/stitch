@@ -71,6 +71,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public List<Report.Parameter> Report;
             readonly ProgressBar progressBar;
+            public readonly ParsedFile BatchFile;
 
             /// <summary>
             /// To create a single run with a single dataparameter as input.
@@ -86,7 +87,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReadAlignmentParameter readAlign, ReportParameter report, ProgressBar bar = null)
+            public SingleRun(int id, string runname, List<(string, MetaData.IMetaData)> input, int k, int duplicateThreshold, int minimalHomology, bool reverse, AlphabetParameter alphabet, List<DatabaseValue> template, RecombineParameter recombine, ReadAlignmentParameter readAlign, ReportParameter report, ParsedFile batchfile, ProgressBar bar = null)
             {
                 ID = id;
                 Runname = runname;
@@ -100,6 +101,7 @@ namespace AssemblyNameSpace
                 Recombine = recombine;
                 ReadAlign = readAlign;
                 Report = report.Files;
+                BatchFile = batchfile;
                 progressBar = bar;
             }
 

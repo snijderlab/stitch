@@ -60,6 +60,11 @@ namespace AssemblyNameSpace
             public ReadAlignmentParameter ReadAlignment;
 
             /// <summary>
+            /// To save the original batchfile
+            /// </summary>
+            public ParsedFile BatchFile;
+
+            /// <summary>
             /// A blank instance for the RunParameters with defaults and initialization.
             /// </summary>
             public FullRunParameters()
@@ -130,14 +135,14 @@ namespace AssemblyNameSpace
                                 if (Runtype == RuntypeValue.Group)
                                 {
                                     id++;
-                                    output.Add(new SingleRun(id, Runname, Assembly.Input.CleanedData, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, bar));
+                                    output.Add(new SingleRun(id, Runname, Assembly.Input.CleanedData, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, BatchFile, bar));
                                 }
                                 else
                                 {
                                     foreach (var input in Assembly.Input.Data)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, bar));
+                                        output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, BatchFile, bar));
                                     }
                                 }
                             }
