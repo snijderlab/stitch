@@ -256,12 +256,14 @@ namespace AssemblyNameSpace
 
             if (header) buffer.Append(TableHeader(templates));
             string unique = "";
+            var seq = "Consensus Sequence";
+            if (type == AsideType.RecombinationDatabase) seq = "Template Sequence";
             if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">Sequence</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">{seq}</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 4, 'number')"" class=""smallcell"">Reads</th>
@@ -274,10 +276,11 @@ namespace AssemblyNameSpace
             {
                 id = GetAsideIdentifier(templateIndex, i, type);
                 link = GetAsideLink(templateIndex, i, type);
+                seq = type == AsideType.RecombinationDatabase ? AminoAcid.ArrayToString(templates[i].Sequence) : templates[i].ConsensusSequence();
                 if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{templates[i].ConsensusSequence()}</td>
+    <td class=""seq"">{seq}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center"">{templates[i].Score}</td>
     <td class=""center"">{templates[i].Matches.Count()}</td>
