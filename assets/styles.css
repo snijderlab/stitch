@@ -79,6 +79,14 @@ img {
     max-width: 100%;
 }
 
+.template-graphs {
+    display: flex;
+}
+
+.template-graphs>* {
+    margin: 1em;
+}
+
 
 /* Table*/
 

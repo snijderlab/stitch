@@ -452,7 +452,7 @@ namespace AssemblyNameSpace
             var alignment = CreateTemplateAlignment(template, id, location);
 
             string meta = "";
-            if (template.MetaData != null && (type == AsideType.RecombinedTemplate || type == AsideType.Template))
+            if (template.MetaData != null && (type == AsideType.RecombinationDatabase || type == AsideType.Template))
             {
                 meta = template.MetaData.ToHTML();
             }
@@ -500,10 +500,44 @@ namespace AssemblyNameSpace
     {unique}
     {based}
     {alignment.Alignment}
+    {CreateTemplateGraphs(template)}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>";
+        }
+
+        string CreateTemplateGraphs(Template template)
+        {
+            var buffer = new StringBuilder();
+            buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
+
+            if (template.ForcedOnSingleTemplate)
+            {
+                // Histogram of Scores
+                var scores = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
+                buffer.Append($"<div><h3>Score</h3>{scores}</div>");
+
+                // Histogram of Length On Template
+                var lengths = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") });
+                buffer.Append($"<div><h3>Length on Template</h3>{lengths}</div>");
+
+                // Histogram of coverage, coverage per position excluding gaps
+                buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+            }
+            else
+            {
+                // Histogram of Scores
+                buffer.Append($"<div><h3>Score</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList())}</div>");
+
+                // Histogram of Length On Template
+                buffer.Append($"<div><h3>Length on Template</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList())}</div>");
+
+                // Histogram of coverage, coverage per position excluding gaps
+                buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+            }
+            buffer.Append("</div>");
+            return buffer.ToString();
         }
 
         (string Alignment, string ConsensusSequence, string SequenceLogo) CreateTemplateAlignment(Template template, string id, List<string> location)
@@ -848,14 +882,6 @@ namespace AssemblyNameSpace
                 sequence_logo_buffer.Append("</div>");
             }
             sequence_logo_buffer.Append("</div>");
-
-            // Display matches table
-            buffer.Append("<h2>Matches Table</h2><table><tr><th>ID</th><th>Score</th><th>Match Length</th></tr>");
-            foreach (var match in template.Matches)
-            {
-                buffer.AppendLine($"<tr><td>{GetAsideLink(match.Index, AsideType.Path, location)}</td><td>{match.Score}</td><td>{match.TotalMatches}</td></tr>");
-            }
-            buffer.Append("</table>");
 
             return (buffer.ToString(), cons_string, sequence_logo_buffer.ToString());
         }

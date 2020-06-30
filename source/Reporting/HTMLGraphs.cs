@@ -7,8 +7,43 @@ namespace AssemblyNameSpace
 {
     static class HTMLGraph
     {
+        public static string GroupedHistogram(List<(List<double> Data, string Label)> data, int bins = 10)
+        {
+            if (data.Count == 0 || data.Any(a => a.Item1.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
+            double min = data.Select(a => a.Data.Min()).Min();
+            double max = data.Select(a => a.Data.Max()).Max();
+
+            if (max == min) bins = 1;
+            double step = (max - min) / bins;
+
+            var labeled = new (string, List<double>)[bins];
+
+            double low = min;
+            for (int i = 0; i < bins; i++)
+            {
+                labeled[i] = ($"{low:G3}-{low + step:G3}", Enumerable.Repeat(0.0, data.Count).ToList());
+                low += step;
+            }
+
+            for (int setindex = 0; setindex < data.Count; setindex++)
+            {
+                foreach (var item in data[setindex].Data)
+                {
+                    int bin = (int)Math.Floor((item - min) / step);
+
+                    if (bin > bins - 1) bin = bins - 1;
+                    else if (bin < 0) bin = 0;
+
+                    labeled[bin].Item2[setindex]++;
+                }
+            }
+
+            return GroupedBargraph(labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList());
+        }
+
         public static string Histogram(List<double> data, int bins = 10)
         {
+            if (data.Count == 0) return "<em>No data.</em>";
             double min = data.Min();
             double max = data.Max();
             if (max == min) bins = 1;
@@ -38,6 +73,7 @@ namespace AssemblyNameSpace
 
         public static string Bargraph(List<(string, double)> data, int factor = 2, bool baseYMinOnData = false)
         {
+            if (data.Count == 0) return "<em>No data.</em>";
             var buffer = new StringBuilder();
             buffer.Append("<div class='histogram'>");
 
@@ -59,8 +95,18 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
+        /// <summary>
+        /// Creates a grouped bargraph
+        /// a = la, b = lb, c = lc
+        /// (a,b,c) (a,b,c) (a,b,c)
+        /// A lA    B lB    C lC
+        /// </summary>
+        /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
+        /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
+        /// <returns></returns>
         public static string GroupedBargraph(List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, int factor = 2, bool baseYMinOnData = false)
         {
+            if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
             int dimensions = header.Count();
             double[] maxvalues = new double[dimensions];
             double[] minvalues = new double[dimensions];
@@ -70,7 +116,7 @@ namespace AssemblyNameSpace
 
             foreach ((_, var dims) in data)
             {
-                if (dims.Count() != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dimensions}) as the rest.");
+                if (dims.Count() != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dims.Count()}) as the rest ({dimensions}).");
                 for (int i = 0; i < dimensions; i++)
                 {
                     if (dims[i] > maxvalues[i]) maxvalues[i] = dims[i];
