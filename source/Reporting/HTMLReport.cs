@@ -503,51 +503,63 @@ namespace AssemblyNameSpace
     {unique}
     {based}
     {alignment.Alignment}
-    {CreateTemplateGraphs(template)}
+    {CreateTemplateGraphs(template, alignment.DepthOfCoverage)}
     <h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>";
         }
 
-        string CreateTemplateGraphs(Template template)
+        string CreateTemplateGraphs(Template template, List<double> DepthOfCoverage)
         {
+            if (template.Matches.Count == 0) return "";
             var buffer = new StringBuilder();
             buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
+
+            // There will always be 10 labels
+            int doclabel = DepthOfCoverage.Count / 10;
+
+            // Full DOC plot
+            var doc = new List<(string, double)>(DepthOfCoverage.Count);
+            for (int i = 0; i < DepthOfCoverage.Count; i++)
+                doc.Add((i % doclabel == 0 ? $"{i:G3}" : "", DepthOfCoverage[i]));
+
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(doc)}</div>");
+
+            // Log DOC plot
+            var logdoc = new List<(string, double)>(DepthOfCoverage.Count);
+            for (int i = 0; i < DepthOfCoverage.Count; i++)
+                logdoc.Add((i % doclabel == 0 ? $"{i:G3}" : "", DepthOfCoverage[i] == 0 ? 0 : Math.Log10(DepthOfCoverage[i])));
+
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(logdoc)}</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
                 var scores = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
-                buffer.Append($"<div><h3>Score</h3>{scores}</div>");
+                buffer.Append($"<div><h3>Histogram of Score</h3>{scores}</div>");
 
                 // Histogram of Length On Template
                 var lengths = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") });
-                buffer.Append($"<div><h3>Length on Template</h3>{lengths}</div>");
-
-                // Histogram of coverage, coverage per position excluding gaps
-                buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
-            }
-            else if (template.Matches.Count > 0)
-            {
-                // Histogram of Scores
-                buffer.Append($"<div><h3>Score</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList())}</div>");
-
-                // Histogram of Length On Template
-                buffer.Append($"<div><h3>Length on Template</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList())}</div>");
-
-                // Histogram of coverage, coverage per position excluding gaps
-                buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+                buffer.Append($"<div><h3>Histogram of Length on Template</h3>{lengths}</div>");
             }
             else
             {
-                return "";
+                // Histogram of Scores
+                buffer.Append($"<div><h3>Histogram of Score</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList())}</div>");
+
+                // Histogram of Length On Template
+                buffer.Append($"<div><h3>Histogram of Length on Template</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList())}</div>");
             }
+
+            // Histogram of coverage, coverage per position excluding gaps
+            buffer.Append($"<div><h3>Histogram of Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+
             buffer.Append("</div>");
             return buffer.ToString();
         }
 
-        (string Alignment, string ConsensusSequence, string SequenceLogo) CreateTemplateAlignment(Template template, string id, List<string> location)
+        (string Alignment, string ConsensusSequence, string SequenceLogo, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -890,7 +902,7 @@ namespace AssemblyNameSpace
             }
             sequence_logo_buffer.Append("</div>");
 
-            return (buffer.ToString(), cons_string, sequence_logo_buffer.ToString());
+            return (buffer.ToString(), cons_string, sequence_logo_buffer.ToString(), depthOfCoverage);
         }
 
         /// <summary> Returns a list of asides for details viewing. </summary>

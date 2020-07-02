@@ -81,10 +81,13 @@ img {
 
 .template-graphs {
     display: flex;
+    flex-wrap: wrap;
 }
 
 .template-graphs>* {
     margin: 1em;
+    flex-grow: 1;
+    flex-basis: 30%;
 }
 
 
@@ -785,4 +788,26 @@ input:checked+.slider:before {
 
 .group .bar:nth-child(4n+3) {
     background-color: var(--color-secondary-dark);
+}
+
+
+/* Special rules for depth of coverage plots */
+
+.docplot {
+    flex-basis: 100%;
+}
+
+.docplot .histogram {
+    grid-template-rows: 50px 1fr;
+    gap: 0;
+    grid-auto-columns: minmax(0, 1fr);
+}
+
+.docplot .histogram .bar span {
+    position: absolute;
+    color: var(--color-dark)
+}
+
+.docplot .histogram .label {
+    overflow-x: visible;
 }
