@@ -515,7 +515,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
 
-            if (template.ForcedOnSingleTemplate)
+            if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
                 var scores = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
@@ -528,7 +528,7 @@ namespace AssemblyNameSpace
                 // Histogram of coverage, coverage per position excluding gaps
                 buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
             }
-            else
+            else if (template.Matches.Count > 0)
             {
                 // Histogram of Scores
                 buffer.Append($"<div><h3>Score</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList())}</div>");
@@ -538,6 +538,10 @@ namespace AssemblyNameSpace
 
                 // Histogram of coverage, coverage per position excluding gaps
                 buffer.Append($"<div><h3>Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+            }
+            else
+            {
+                return "";
             }
             buffer.Append("</div>");
             return buffer.ToString();
