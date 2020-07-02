@@ -811,3 +811,63 @@ input:checked+.slider:before {
 .docplot .histogram .label {
     overflow-x: visible;
 }
+
+
+/* Alignment details index menu */
+
+.alignment-details {
+    display: none;
+    position: fixed;
+    bottom: 0;
+    right: 0;
+    background: var(--color-background);
+    padding: 1em;
+}
+
+.alignment-details.active {
+    display: block;
+}
+
+.alignment-details h4 {
+    padding: 1em;
+    margin: 0;
+}
+
+.alignment-details td {
+    border: none;
+}
+
+.alignment-details .histogram {
+    grid-template-rows: 1ch 1fr;
+    grid-template-columns: none;
+}
+
+.alignment-details .histogram .label {
+    font-size: .7em;
+}
+
+.alignment-details .histogram .yaxis,
+.alignment-details .histogram .empty {
+    display: none;
+}
+
+.sequence-match-graphic {
+    display: flex;
+}
+
+.sequence-match-graphic>* {
+    padding: 1px;
+    height: 1ch
+}
+
+.sequence-match-graphic .match {
+    background-color: var(--color-primary);
+}
+
+.sequence-match-graphic .gap-in-template {
+    background-color: var(--color-secondary);
+}
+
+.sequence-match-graphic .gap-in-query {
+    background-color: var(--color-dark);
+}

@@ -451,5 +451,19 @@ namespace AssemblyNameSpace
                 return $"{seconds,2}.{milliseconds / 100:D1} s";
             return $"{milliseconds,3} ms";
         }
+
+        public static int RoundToHumanLogicalFactor(int input)
+        {
+            if (input == 0) return 0;
+
+            int factor = (int)Math.Floor(Math.Log10(input)) * 10;
+            int abs = Math.Abs(input);
+
+            if (factor == 0) return input;
+            else if (abs < 10) factor = 2;
+            else if (abs < 50) factor = 5;
+
+            return input / factor * factor;
+        }
     }
 }

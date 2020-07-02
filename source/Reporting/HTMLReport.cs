@@ -490,8 +490,10 @@ namespace AssemblyNameSpace
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
-    {alignment.ConsensusSequence}
-    {alignment.SequenceLogo}
+    <h2>Consensus Sequence</h2>
+    <p class='aside-seq'>{template.ConsensusSequence()}</p>
+    <h2>Sequence Logo</h2>
+    {SequenceLogo(template)}
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Total Matches</h2>
@@ -516,22 +518,9 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
 
-            // There will always be 10 labels
-            int doclabel = DepthOfCoverage.Count / 10;
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage))}</div>");
 
-            // Full DOC plot
-            var doc = new List<(string, double)>(DepthOfCoverage.Count);
-            for (int i = 0; i < DepthOfCoverage.Count; i++)
-                doc.Add((i % doclabel == 0 ? $"{i:G3}" : "", DepthOfCoverage[i]));
-
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(doc)}</div>");
-
-            // Log DOC plot
-            var logdoc = new List<(string, double)>(DepthOfCoverage.Count);
-            for (int i = 0; i < DepthOfCoverage.Count; i++)
-                logdoc.Add((i % doclabel == 0 ? $"{i:G3}" : "", DepthOfCoverage[i] == 0 ? 0 : Math.Log10(DepthOfCoverage[i])));
-
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(logdoc)}</div>");
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()))}</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
@@ -559,7 +548,7 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        (string Alignment, string ConsensusSequence, string SequenceLogo, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location)
+        (string Alignment, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -621,7 +610,7 @@ namespace AssemblyNameSpace
                 depthOfCoverage.Add(depth);
 
                 // Add the gap
-                // TODO: Unaligned for now
+                // TODO: Unaligned for now: the gaps are not aligned to each other, this could make it more good looking
                 int max_length = 0;
                 // Get the max length of the gaps 
                 for (int i = 0; i < Gaps.Length; i++)
@@ -800,7 +789,7 @@ namespace AssemblyNameSpace
                             }
                             catch { }
                             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
-                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link{unique}\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[indices[i]].Index})\" onmouseout=\"AlignmentDetailsClear()\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
                         }
                         else if (indices[i] == -2) // Clashing sequences remove link but display sequence
                         {
@@ -843,10 +832,93 @@ namespace AssemblyNameSpace
                 buffer.Append(endoverhangbuffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
                 buffer.AppendLine($"</p></div></label></div>");
             }
-            buffer.AppendLine("</div>");
 
-            var cons_string = $"<h2>Consensus Sequence</h2><p class='aside-seq'>{template.ConsensusSequence()}</p>";
+            // Index menus
+            buffer.Append("<div id='index-menus'>");
+            foreach (var match in template.Matches)
+            {
+                var doctitle = "Positional Score";
+                var type = "Read";
 
+                if (match.MetaData is MetaData.Path)
+                {
+                    doctitle = "Depth of Coverage";
+                    type = "Path";
+                }
+
+                var unique = "";
+                if (template.ForcedOnSingleTemplate) unique = "<tr><td>Unique</td><td>" + (match.Unique ? "Yes" : "No") + "</td></tr>";
+
+                buffer.Append($@"
+    <div class='alignment-details' id='alignment-details-{match.Index}'>
+        <h4>{match.MetaData.Identifier}</h4>
+        <table>
+            <tr>
+                <td>Type</td>
+                <td>{type}</td>
+            </tr>
+            <tr>
+                <td>Score</td>
+                <td>{match.Score}</td>
+            </tr>
+            <tr>
+                <td>Total Area</td>
+                <td>{match.MetaData.TotalArea:G4}</td>
+            </tr>
+            <tr>
+                <td>Length on Template</td>
+                <td>{match.LengthOnTemplate}</td>
+            </tr>
+            <tr>
+                <td>Position on Template</td>
+                <td>{match.StartTemplatePosition}</td>
+            </tr>
+            <tr>
+                <td>Start on {type}</td>
+                <td>{match.StartQueryPosition}</td>
+            </tr>
+            <tr>
+                <td>Length of {type}</td>
+                <td>{match.QuerySequence.Length}</td>
+            </tr>
+            {unique}
+            <tr>
+                <td>{doctitle}</td>
+                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList()))}</td>
+            </tr>
+            <tr>
+                <td>Alignment graphic</td>
+                <td>{SequenceMatchGraphic(match)}</td>
+            </tr>
+        </table>
+    </div>");
+            }
+
+            buffer.AppendLine("</div></div>");
+            return (buffer.ToString(), depthOfCoverage);
+        }
+
+        string SequenceMatchGraphic(SequenceMatch match)
+        {
+            var buffer = new StringBuilder("<div class='sequence-match-graphic'>");
+            var id = "none";
+            foreach (var piece in match.Alignment)
+            {
+                if (piece is SequenceMatch.Match)
+                    id = "match";
+                else if (piece is SequenceMatch.GapInTemplate)
+                    id = "gap-in-template";
+                else if (piece is SequenceMatch.GapInQuery)
+                    id = "gap-in-query";
+
+                buffer.Append($"<span class='{id}' style='flex-grow:{piece.Length}'></span>");
+            }
+            buffer.Append("</div>");
+            return buffer.ToString();
+        }
+
+        string SequenceLogo(Template template)
+        {
             // Sequence logo
             const double threshold = 0.3;
             const int height = 50;
@@ -855,7 +927,7 @@ namespace AssemblyNameSpace
 
             var sequence_logo_buffer = new StringBuilder();
 
-            sequence_logo_buffer.Append($"<h2>Sequence Logo</h2><div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            sequence_logo_buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
                 sequence_logo_buffer.Append("<div class='sequence-logo-position'>");
@@ -901,8 +973,7 @@ namespace AssemblyNameSpace
                 sequence_logo_buffer.Append("</div>");
             }
             sequence_logo_buffer.Append("</div>");
-
-            return (buffer.ToString(), cons_string, sequence_logo_buffer.ToString(), depthOfCoverage);
+            return sequence_logo_buffer.ToString();
         }
 
         /// <summary> Returns a list of asides for details viewing. </summary>

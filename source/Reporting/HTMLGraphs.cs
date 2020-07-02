@@ -7,6 +7,16 @@ namespace AssemblyNameSpace
 {
     static class HTMLGraph
     {
+        public static List<(string, double)> AnnotateDOCData(List<double> data, int factor = 10)
+        {
+            int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
+            if (label == 0) label = 1;
+            var annotated = new List<(string, double)>();
+            for (int i = 0; i < data.Count; i++)
+                annotated.Add((i % label == 0 ? $"{i:G3}" : "", data[i]));
+
+            return annotated;
+        }
         public static string GroupedHistogram(List<(List<double> Data, string Label)> data, int bins = 10)
         {
             if (data.Count == 0 || data.Any(a => a.Item1.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";

@@ -7,7 +7,10 @@ function sortTable(id, column_number, type) {
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
 
     sorted = false
-    if (headers[column_number].getAttribute('data-sortorder') == "asc") { dir = "desc"; sorted = true }
+    if (headers[column_number].getAttribute('data-sortorder') == "asc") {
+        dir = "desc";
+        sorted = true
+    }
     if (headers[column_number].getAttribute('data-sortorder') == "desc") { sorted = true }
 
     for (var j = 0; j < headers.length; j++) {
@@ -62,7 +65,7 @@ function sortTable(id, column_number, type) {
             el = values[i + 1]
             values.splice(i + 1, 1)
             values.splice(i, 0, el)
-            //rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+                //rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
             switching = true;
         }
     }
@@ -129,4 +132,13 @@ function GoBack() {
     var url = history.pop();
     window.name = history.join('|');
     window.location.href = url;
+}
+
+function AlignmentDetails(number) {
+    AlignmentDetailsClear();
+    document.getElementById("alignment-details-" + number).className += " active";
+}
+
+function AlignmentDetailsClear() {
+    document.getElementById("index-menus").childNodes.forEach(a => a.className = "alignment-details");
 }
