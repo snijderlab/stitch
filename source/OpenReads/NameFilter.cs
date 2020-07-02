@@ -74,6 +74,9 @@ namespace AssemblyNameSpace
 
     }
 
+    /// <summary>
+    /// Binary Search Tree a single node
+    /// </summary>
     public class BST
     {
         public readonly string Name;

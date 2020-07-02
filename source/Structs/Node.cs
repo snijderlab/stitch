@@ -24,25 +24,25 @@ namespace AssemblyNameSpace
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
-        private readonly List<ValueTuple<int, int, int>> forwardEdges;
+        private readonly List<(int NodeIndex, int HomologyFirstNode, int HomologySecondNode)> forwardEdges;
 
         /// <summary> The list of edges going from this node. </summary>
         /// <value> The list of edges from this Node. The tuples contain the index
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. Only has a getter. </value>
-        public List<ValueTuple<int, int, int>> ForwardEdges { get { return forwardEdges; } }
+        public List<(int NodeIndex, int HomologyFirstNode, int HomologySecondNode)> ForwardEdges { get { return forwardEdges; } }
 
         /// <summary> The list of edges to this Node. The tuples contain the index
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. The private
         /// member to store the list. </summary>
-        private readonly List<ValueTuple<int, int, int>> backwardEdges;
+        private readonly List<(int NodeIndex, int HomologyFirstNode, int HomologySecondNode)> backwardEdges;
 
         /// <summary> The list of edges going to this node. </summary>
         /// <value> The list of edges to this Node. The tuples contain the index
         /// of the Node where the edge goes to, the homology with the first Node
         /// and the homology with the second Node in this order. Only has a getter. </value>
-        public List<ValueTuple<int, int, int>> BackwardEdges { get { return backwardEdges; } }
+        public List<(int NodeIndex, int HomologyFirstNode, int HomologySecondNode)> BackwardEdges { get { return backwardEdges; } }
 
         /// <summary> Whether or not this node is visited yet. </summary>
         public bool Visited;
@@ -55,8 +55,8 @@ namespace AssemblyNameSpace
         {
             sequence = seq;
             origins = origin;
-            forwardEdges = new List<ValueTuple<int, int, int>>();
-            backwardEdges = new List<ValueTuple<int, int, int>>();
+            forwardEdges = new List<(int, int, int)>();
+            backwardEdges = new List<(int, int, int)>();
             Visited = false;
         }
 
@@ -69,7 +69,7 @@ namespace AssemblyNameSpace
             bool inlist = false;
             foreach (var edge in forwardEdges)
             {
-                if (edge.Item1 == target)
+                if (edge.NodeIndex == target)
                 {
                     inlist = true;
                     break;
@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
             bool inlist = false;
             foreach (var edge in backwardEdges)
             {
-                if (edge.Item1 == target)
+                if (edge.NodeIndex == target)
                 {
                     inlist = true;
                     break;
@@ -96,20 +96,6 @@ namespace AssemblyNameSpace
             }
             if (!inlist) backwardEdges.Add((target, score1, score2));
             return;
-        }
-
-        /// <summary> To check if the Node has forward edges. </summary>
-        /// <returns> Returns true if the node has forward edges. </returns>
-        public bool HasForwardEdges()
-        {
-            return forwardEdges.Count > 0;
-        }
-
-        /// <summary> To check if the Node has backward edges. </summary>
-        /// <returns> Returns true if the node has backward edges. </returns>
-        public bool HasBackwardEdges()
-        {
-            return backwardEdges.Count > 0;
         }
 
         /// <summary> To get the amount of edges (forward and backward). </summary>

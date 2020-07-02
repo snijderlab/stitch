@@ -20,14 +20,10 @@ namespace AssemblyNameSpace
         public List<CondensedNode> condensed_graph;
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
         private readonly int kmer_length;
-        /// <summary> The length of the k-mers used to create the De Bruijn graph. Get and Set is public. </summary>
-        /// <value> The length of the k-mers. </value>
-        public int Kmer_length
-        {
-            get { return kmer_length; }
-        }
+
         /// <summary> The private member to store the minimum homology value in. </summary>
         private readonly int minimum_homology;
+
         /// <summary> The minimum homology value of an edge to include it in the graph. Lowering the limit 
         /// could result in a longer sequence retrieved from the algorithm but would also greatly increase
         /// the computational cost of the calculation. </summary>
@@ -96,7 +92,7 @@ namespace AssemblyNameSpace
             // Generate all k-mers
             // All k-mers of length (kmer_length)
 
-            var kmers = new List<(AminoAcid[], int)>();
+            var kmers = new List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)>();
             AminoAcid[] read;
 
             for (int r = 0; r < reads.Count(); r++)
@@ -107,14 +103,14 @@ namespace AssemblyNameSpace
                     for (int i = 0; i < read.Length - kmer_length + 1; i++)
                     {
                         AminoAcid[] kmer = read.SubArray(i, kmer_length);
-                        kmers.Add((kmer, r));
-                        if (reverse) kmers.Add((kmer.Reverse().ToArray(), r)); //Also add the reverse
+                        kmers.Add((kmer, r, i));
+                        if (reverse) kmers.Add((kmer.Reverse().ToArray(), r, i)); //Also add the reverse
                     }
                 }
                 else if (read.Length == kmer_length)
                 {
-                    kmers.Add((read, r));
-                    if (reverse) kmers.Add((read.Reverse().ToArray(), r)); //Also add the reverse
+                    kmers.Add((read, r, 0));
+                    if (reverse) kmers.Add((read.Reverse().ToArray(), r, 0)); //Also add the reverse
                 }
                 else
                 {
@@ -127,18 +123,18 @@ namespace AssemblyNameSpace
             // Building the graph
             // Generating all (k-1)-mers
 
-            var kmin1_mers_raw = new List<(AminoAcid[], int)>();
+            var kmin1_mers_raw = new List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)>();
 
             kmers.ForEach(kmer =>
             {
-                kmin1_mers_raw.Add((kmer.Item1.SubArray(0, kmer_length - 1), kmer.Item2));
-                kmin1_mers_raw.Add((kmer.Item1.SubArray(1, kmer_length - 1), kmer.Item2));
+                kmin1_mers_raw.Add((kmer.Sequence.SubArray(0, kmer_length - 1), kmer.ReadIndex, kmer.ReadOffset));
+                kmin1_mers_raw.Add((kmer.Sequence.SubArray(1, kmer_length - 1), kmer.ReadIndex, kmer.ReadOffset));
             });
 
             meta_data.kmin1_mers_raw = kmin1_mers_raw.Count;
 
             // All kmin1_mers, the sequence and its origins
-            var kmin1_mers = new List<(AminoAcid[], List<int>)>();
+            var kmin1_mers = new List<(AminoAcid[] Sequence, List<(int ReadIndex, int ReadOffset)> SupportingReads)>();
 
             foreach (var kmin1_mer in kmin1_mers_raw)
             {
@@ -146,14 +142,14 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < kmin1_mers.Count(); i++)
                 {
                     // Find if it is already in the list
-                    if (AminoAcid.ArrayHomology(kmin1_mer.Item1, kmin1_mers[i].Item1) >= duplicate_threshold)
+                    if (AminoAcid.ArrayHomology(kmin1_mer.Sequence, kmin1_mers[i].Sequence) >= duplicate_threshold)
                     {
-                        if (!kmin1_mers[i].Item2.Contains(kmin1_mer.Item2)) kmin1_mers[i].Item2.Add(kmin1_mer.Item2); // Update origins
+                        if (!kmin1_mers[i].SupportingReads.Select(a => a.ReadIndex).Contains(kmin1_mer.ReadIndex)) kmin1_mers[i].SupportingReads.Add((kmin1_mer.ReadIndex, kmin1_mer.ReadOffset)); // Update origins
                         inlist = true;
                         break;
                     }
                 }
-                if (!inlist) kmin1_mers.Add((kmin1_mer.Item1, new List<int>(kmin1_mer.Item2)));
+                if (!inlist) kmin1_mers.Add((kmin1_mer.Sequence, new List<(int, int)> { (kmin1_mer.ReadIndex, kmin1_mer.ReadOffset) }));
             }
 
             meta_data.kmin1_mers = kmin1_mers.Count;
@@ -166,7 +162,7 @@ namespace AssemblyNameSpace
             int index = 0;
             kmin1_mers.ForEach(kmin1_mer =>
             {
-                graph[index] = new Node(kmin1_mer.Item1, kmin1_mer.Item2);
+                graph[index] = new Node(kmin1_mer.Sequence, kmin1_mer.SupportingReads.Select(a => a.ReadIndex).ToList());
                 index++;
             });
 
@@ -181,8 +177,8 @@ namespace AssemblyNameSpace
 
             kmers.ForEach(kmer =>
             {
-                prefix = kmer.Item1.SubArray(0, kmer_length - 1);
-                suffix = kmer.Item1.SubArray(1, kmer_length - 1);
+                prefix = kmer.Sequence.SubArray(0, kmer_length - 1);
+                suffix = kmer.Sequence.SubArray(1, kmer_length - 1);
 
                 // Precompute the homology with every node to speed up computation
                 for (int i = 0; i < graph.Length; i++)
@@ -242,7 +238,7 @@ namespace AssemblyNameSpace
                     {
                         forward_indices.Add(forward_node_index);
                         forward_node.Visited = true;
-                        forward_node_index = forward_node.ForwardEdges[0].Item1;
+                        forward_node_index = forward_node.ForwardEdges[0].NodeIndex;
 
                         prev_forward_node = forward_node;
                         forward_node = graph[forward_node_index];
@@ -258,12 +254,12 @@ namespace AssemblyNameSpace
 
                         if (forward_node.ForwardEdges.Count() > 0)
                         {
-                            forward_nodes = (from node in forward_node.ForwardEdges select node.Item1).ToList();
+                            forward_nodes = (from node in forward_node.ForwardEdges select node.NodeIndex).ToList();
                         }
                     }
                     else if (prev_forward_node.ForwardEdges.Count() > 0)
                     {
-                        forward_nodes = (from node in prev_forward_node.ForwardEdges select node.Item1).ToList();
+                        forward_nodes = (from node in prev_forward_node.ForwardEdges select node.NodeIndex).ToList();
                     }
 
 
@@ -272,7 +268,7 @@ namespace AssemblyNameSpace
                     {
                         backward_indices.Add(backward_node_index);
                         backward_node.Visited = true;
-                        backward_node_index = backward_node.BackwardEdges[0].Item1;
+                        backward_node_index = backward_node.BackwardEdges[0].NodeIndex;
 
                         prev_backward_node = backward_node;
                         backward_node = graph[backward_node_index];
@@ -288,12 +284,12 @@ namespace AssemblyNameSpace
 
                         if (backward_node.BackwardEdges.Count() > 0)
                         {
-                            backward_nodes = (from node in backward_node.BackwardEdges select node.Item1).ToList();
+                            backward_nodes = (from node in backward_node.BackwardEdges select node.NodeIndex).ToList();
                         }
                     }
                     else if (prev_backward_node.BackwardEdges.Count() > 0)
                     {
-                        backward_nodes = (from node in prev_backward_node.BackwardEdges select node.Item1).ToList();
+                        backward_nodes = (from node in prev_backward_node.BackwardEdges select node.NodeIndex).ToList();
                     }
 
                     backward_indices.Reverse();
@@ -324,6 +320,7 @@ namespace AssemblyNameSpace
             meta_data.sequences = condensed_graph.Count();
             meta_data.total_time = stopWatch.ElapsedMilliseconds;
         }
+
         /// <summary>
         /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
         /// </summary>
@@ -356,6 +353,7 @@ namespace AssemblyNameSpace
 
             return result;
         }
+
         /// <summary>
         /// Gets all paths in all subgraphs, also to be described as all possible sequences for all peptides in the graph
         /// </summary>
@@ -388,6 +386,7 @@ namespace AssemblyNameSpace
 
             return result;
         }
+
         /// <summary>
         /// Gets all paths starting from the given node.
         /// </summary>
