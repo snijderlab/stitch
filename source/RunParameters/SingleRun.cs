@@ -236,7 +236,7 @@ namespace AssemblyNameSpace
                                     t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                                 }
                             }
-                            recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "REC"), recombined_database, new RecombinedTemplateLocation(i), t));
+                            recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "REC"), recombined_database, new RecombinedTemplateLocation(i), t));
                         }
                         foreach (var read in recombined_templates) read.MetaData.FinaliseIdentifier();
 
@@ -274,7 +274,7 @@ namespace AssemblyNameSpace
                             new ParallelOptions { MaxDegreeOfParallelism = max_threads },
                             (s, _) => templates.Add((
                                 s.ConsensusSequence(),
-                                (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("nowhere", ""), namefilter, "RT")))
+                                (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "RT")))
                         );
 
                         Parallel.ForEach(

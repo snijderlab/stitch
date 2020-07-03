@@ -140,7 +140,7 @@ namespace AssemblyNameSpace
 
             foreach (var read in reads)
             {
-                var id = ((MetaData.Fasta)read.Item2).FullLine;
+                var id = ((MetaData.Fasta)read.Item2).FastaHeader;
                 if (!id.Contains("partial"))
                 {
                     if (dict.ContainsKey(read.Item1))

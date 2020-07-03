@@ -18,7 +18,8 @@ namespace AssemblyNameSpace
     public static class MetaData
     {
         /// <summary>
-        /// The interface which proper metadata instances should implement.
+        /// To save metadata of a read/path of which could be used in calculations to determine the likelyhood
+        ///  of certain assignments or for quality control or ease of use for humans.
         /// </summary>
         public abstract class IMetaData
         {
@@ -26,18 +27,20 @@ namespace AssemblyNameSpace
             /// The Identifier of the originating file.
             /// </summary>
             public readonly FileIdentifier File;
-            protected string identifier;
 
+            protected string identifier;
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
             public string Identifier { get { return identifier; } }
-            protected string escapedIdentifier;
 
+            protected string escapedIdentifier;
             /// <summary>
             /// The Identifier of the read escaped for use in filenames.
             /// </summary>
             public string EscapedIdentifier { get { return escapedIdentifier; } }
+
+            /// <summary> To save the output of the namefilter. </summary>
             (string, BST, int) EscapedIdentifierBuffer;
 
             /// <summary>
@@ -54,18 +57,19 @@ namespace AssemblyNameSpace
             double intensity = 1.0;
 
             /// <summary>
-            /// Contains the total are as measured by mass spectrometry to be able to report this back to the user and help him/her get a better picture of the data.
+            /// Contains the total area as measured by mass spectrometry to be able to report this back to the user 
+            /// and help him/her get a better picture of the validity of the data.
             /// </summary>
             public double TotalArea = 0;
 
             /// <summary>
-            /// To generate (an) HTML element(s) from this MetaData.
+            /// To generate a HTML representation of this metadata for use in the HTML report.
             /// </summary>
             /// <returns>A string containing the MetaData.</returns>
             public abstract string ToHTML();
 
             /// <summary>
-            /// To create an instance.
+            /// To create the base metadat for a read.
             /// </summary>
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="identifier_">The identifier of the read.</param>
@@ -103,12 +107,14 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Create a new Simple MetaData.
             /// </summary>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
+            /// <param name="identifier">The identifier for this read, does not have to be unique, the namefilter will enforce that.</param>
             public Simple(FileIdentifier file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
 
             /// <summary>
-            /// Returns Simple MetaData to HTML (which is always "").
+            /// Returns Simple MetaData to HTML.
             /// </summary>
-            /// <returns>"".</returns>
             public override string ToHTML()
             {
                 return File.ToHTML();
@@ -121,24 +127,26 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The identifier from the fasta file.
             /// </summary>
-            public readonly string FullLine;
+            public readonly string FastaHeader;
 
             /// <summary>
             /// To create a new metadata instance with this metadata.
             /// </summary>
             /// <param name="identifier">The fasta identifier.</param>
+            /// <param name="fastaHeader">The header for this read as in the fasta file, without the '>'.</param>
             /// <param name="file">The originating file.</param>
-            public Fasta(string identifier, string fullLine, FileIdentifier file, NameFilter filter)
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            public Fasta(string identifier, string fastaHeader, FileIdentifier file, NameFilter filter)
                 : base(file, identifier, filter)
             {
-                this.FullLine = fullLine;
+                this.FastaHeader = fastaHeader;
             }
 
             /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
             /// <returns> Returns an HTML string with the metainformation. </returns>
             public override string ToHTML()
             {
-                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>\n<h3>Fasta header</h3>\n<p>{FullLine}</p>{File.ToHTML()}";
+                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>\n<h3>Fasta header</h3>\n<p>{FastaHeader}</p>{File.ToHTML()}";
             }
         }
 
@@ -189,6 +197,7 @@ namespace AssemblyNameSpace
 
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
+
             double intensity = double.NaN;
             public override double Intensity
             {
@@ -201,7 +210,7 @@ namespace AssemblyNameSpace
 
             /// <summary> Local confidence scores of the peptide. Determined as a fraction based on the local confidence of the total intensity of this read. </summary>
             public int[] Local_confidence = null;
-            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * intensity).ToArray(); } }//.Select(a => a * Intensity).ToArray(); } }
+            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * intensity).ToArray(); } }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
@@ -209,23 +218,26 @@ namespace AssemblyNameSpace
             /// <summary> Other scans giving the same sequence. </summary>
             public List<string> Other_scans = null;
 
-            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter)
-            {
-                // Normalise the Area score to a range in 1-2 using logarithmic maths (gaps are scored as 1 so it has to be at least 1 to be counted)
-                //var pArea = Math.Log10(Area);
-                //intensity = 1 + 1 - 1 / pArea;
-                //Console.WriteLine($"* {Area} {pArea} {intensity}");
-            }
+            /// <summary>
+            /// To create a new metadata instance with this metadata.
+            /// </summary>
+            /// <param name="identifier">The fasta identifier.</param>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
 
-            /// <summary> Create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
-            /// <param name="line"> The CSV line to parse. </param>
+            /// <summary> Tries to create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
+            /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
+            /// <param name="linenumber"> The index of the to be parsed. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
             /// <param name="file">Identifier for the originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
             public static ParseResult<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
             {
-                var outeither = new ParseResult<Peaks>();
+                var result = new ParseResult<Peaks>();
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
@@ -236,10 +248,11 @@ namespace AssemblyNameSpace
 
                 if (String.IsNullOrWhiteSpace(line))
                 {
-                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line is empty", "", "", true));
-                    return outeither;
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line is empty", "", "", true));
+                    return result;
                 }
 
+                // Find the fields on this line
                 for (int pos = 0; pos < line.Length; pos++)
                 {
                     if (line[pos] == separator)
@@ -253,10 +266,10 @@ namespace AssemblyNameSpace
                 fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
                 positions.Add(new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
 
-                if (fields.Count() < 3)
+                if (fields.Count < 3)
                 {
-                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line has low amount of fields", "", "", true));
-                    return outeither;
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), $"Line has too low amount of fields ({fields.Count})", "", "", true));
+                    return result;
                 }
 
                 // Some helper functions
@@ -274,18 +287,18 @@ namespace AssemblyNameSpace
                 {
                     if (pos > fields.Count() - 1)
                     {
-                        outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
                     }
                     return true;
                 }
 
                 if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
-                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                 var peaks = new Peaks(file, fields[pf.scan], filter);
-                outeither.Value = peaks;
+                result.Value = peaks;
 
-                // Assign all values
+                // Get all the properties of this peptide and save them in the MetaData 
                 if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))
                     peaks.Fraction = fields[pf.fraction];
 
@@ -340,18 +353,18 @@ namespace AssemblyNameSpace
                     {
                         peaks.Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
                         if (peaks.Local_confidence.Length != peaks.Cleaned_sequence.Length)
-                            outeither.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                            result.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
                     }
                     catch
                     {
-                        outeither.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
                     }
                 }
 
                 if (pf.mode >= 0 && CheckFieldExists(pf.mode))
                     peaks.Fragmentation_mode = fields[pf.mode];
 
-                // Initialize list
+                // Initialize other scans list
                 peaks.Other_scans = new List<string>();
 
                 // Calculate intensity
@@ -360,7 +373,7 @@ namespace AssemblyNameSpace
 
                 peaks.TotalArea = peaks.Area;
 
-                return outeither;
+                return result;
             }
 
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
@@ -374,6 +387,7 @@ namespace AssemblyNameSpace
                 if (ScanID != null)
                     output.Append($"<h3>Scan Identifier</h3>\n<p>{ScanID}</p>");
 
+                // Create a display of the sequence with local confidence and modifications (if present)
                 if (Original_tag != null && Local_confidence != null)
                 {
                     output.Append($"<h3>Original Sequence (length={Original_tag.Length})</h3>\n<div class='original-sequence' style='--max-value:100'>");
@@ -403,6 +417,7 @@ namespace AssemblyNameSpace
                     }
                     output.Append("</div>");
                 }
+
                 if (Post_translational_modifications != null)
                     output.Append($"<h3>Posttranslational Modifications</h3>\n<p>{Post_translational_modifications}</p>");
 
@@ -454,27 +469,40 @@ namespace AssemblyNameSpace
             }
         }
 
+        /// <summary>
+        /// To save metadata of a path as generated by the Assembler.
+        /// </summary>
         public class Path : IMetaData
         {
+            /// <summary> The path for which this is the MetaData. </summary>
             GraphPath path;
-            public override double[] PositionalScore { get { return path.DepthOfCoverage.Select(a => (double)a).ToArray(); } }
+
+            /// <summary> The depth of coverage per position for this path.</summary>
+            public override double[] PositionalScore { get { return positionalScore; } }
+            double[] positionalScore;
             public int[] ContigID { get { return path.ContigID; } }
-            public Path(GraphPath path_) : base(new FileIdentifier("nowhere", ""), "P", null)
+
+            /// <summary>
+            /// Creates the metadata for a path.
+            /// </summary>
+            /// <param name="path_">The path to create metadata for.</param>
+            public Path(GraphPath path_) : base(new FileIdentifier(), "P", null)
             {
                 path = path_;
                 identifier = $"P{path.Index:D4}";
                 escapedIdentifier = $"P{path.Index:D4}";
                 TotalArea = path.Nodes.Select(a => a.TotalArea).Sum();
+                positionalScore = path.DepthOfCoverage.Select(a => (double)a).ToArray();
             }
+
             public override string ToHTML()
             {
                 return "";
             }
 
+            /// <summary> For Path metadata the identifier does not have to be finalised as it is guaranteed to be unique and valid. </summary>
             public override void FinaliseIdentifier()
-            {
-
-            }
+            { }
         }
 
         /// <summary>
@@ -482,12 +510,15 @@ namespace AssemblyNameSpace
         /// </summary>
         public class FileIdentifier
         {
-            /// <value>The absolute path to the file.</value>
+            /// <summary>The absolute path to the file.</summary>
             public string Path { get { return path; } set { path = System.IO.Path.GetFullPath(value); } }
             string path;
 
-            /// <value>The name or identifier given to the file.</value>
+            /// <summary>The name or identifier given to the file.</summary>
             public string Name;
+
+            /// <summary> To signify if this FileIdentifier points to a file or to nothing. </summary>
+            bool RefersToFile;
 
             /// <summary>
             /// Creating a new FileIdentifier.
@@ -498,6 +529,7 @@ namespace AssemblyNameSpace
             {
                 path = System.IO.Path.GetFullPath(path_input);
                 Name = name;
+                RefersToFile = true;
             }
 
             /// <summary>
@@ -507,6 +539,7 @@ namespace AssemblyNameSpace
             {
                 path = "";
                 Name = "";
+                RefersToFile = false;
             }
 
             /// <summary>
@@ -515,6 +548,7 @@ namespace AssemblyNameSpace
             /// <returns>A string containing the HTML.</returns>
             public string ToHTML()
             {
+                if (!RefersToFile) return "";
                 return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<a href='file:///{path}' target='_blank'>{Path}</a>";
             }
         }

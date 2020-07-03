@@ -17,7 +17,7 @@ namespace AssemblyNameSpace
     /// </summary>
     public class NameFilter
     {
-        // If the lookup in the BST at one point becomes a bottleneck please consider implementing a way of reorganising the BST (splay tree?)
+        // SideNote: If the lookup in the BST at one point becomes a bottleneck please consider implementing a way of reorganising the BST (splay tree?)
 
         /// <summary>
         /// The Binary Search Tree containing the names of each identifier.
@@ -44,7 +44,14 @@ namespace AssemblyNameSpace
             invalidchars.Add(' ');
         }
 
-        public (string, BST, int) EscapeIdentifier(string identifier)
+        /// <summary>
+        /// Escapes the given identifier and returns the amount of read with exactly the same identifer
+        /// that were already Escaped by this namefilter plus one. So it can be seen as the index 
+        /// (1-based) of this identifier in the list of identical identifiers. The total number of 
+        /// duplicates can be found by using the 'Count' member of the IdenticalIdentifiersNode (BST).
+        /// </summary>
+        /// <param name="identifier">The identifier to escape.</param>
+        public (string EscapedIdentifier, BST IdenticalIdentifiersNode, int Index) EscapeIdentifier(string identifier)
         {
             var chars = identifier.ToCharArray();
 
@@ -79,11 +86,18 @@ namespace AssemblyNameSpace
     /// </summary>
     public class BST
     {
+        /// <summary> The identifier of this node. </summary>
         public readonly string Name;
+
+        /// <summary> The total number of duplicates found. </summary>
         public int Count;
         public BST Left;
         public BST Right;
 
+        /// <summary>
+        /// Creates a new BST node
+        /// </summary>
+        /// <param name="name"> The identifier to be the name of this node. </param>
         public BST(string name)
         {
             Name = name;
@@ -92,7 +106,12 @@ namespace AssemblyNameSpace
             Right = null;
         }
 
-        public (BST, int) Append(string name)
+        /// <summary>
+        /// Add an extra identifier to the tree. Append if it does not exist yet. 
+        /// Increment the Count if this identifier was already found.
+        /// </summary>
+        /// <param name="name"> The identifier to add. </param>
+        public (BST IdenticalIdentifiersNode, int Index) Append(string name)
         {
             var sort = name.CompareTo(Name);
 

@@ -18,13 +18,12 @@ namespace AssemblyNameSpace
     public class FileFormat
     {
         /// <summary>
-        /// To contain all options for PEAKS file formats.
+        /// To contain the positions of a piece of information in the CSV export file. 
+        /// The position signifies the column in the CSV file and a value of -1 signifies 
+        /// that that piece of information is not included in this particular format.
         /// </summary>
         public class Peaks
         {
-            /// <summary>
-            /// The position of this column in this peaks file format version.
-            /// </summary>
             public int fraction = -1;
             public int source_file = -1;
             public int feature = -1;
@@ -133,7 +132,7 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// An custom version of a PEAKS fileformat.
+            /// A custom version of a PEAKS fileformat.
             /// </summary>
             /// <returns>The fileformat.</returns>
             public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int de_novo_score, int alc, int length, int mz, int z, int rt, int predicted_rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)

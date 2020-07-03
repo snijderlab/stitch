@@ -199,7 +199,7 @@ namespace AssemblyTestNameSpace
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
             var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -226,7 +226,7 @@ namespace AssemblyTestNameSpace
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
             var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -328,7 +328,7 @@ namespace AssemblyTestNameSpace
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
             var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
@@ -423,7 +423,7 @@ namespace AssemblyTestNameSpace
 
             TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
             var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
+            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
             db.Templates.Add(template);
 
             db.Match(new List<GraphPath> { new GraphPath(b.ToList()), new GraphPath(b.ToList()), new GraphPath(c.ToList()) });

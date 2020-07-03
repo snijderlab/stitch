@@ -239,10 +239,19 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
+        /// <summary>
+        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
+        /// </summary>
+        /// <param name="reads"> The input reads to clean up. </param>
         public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<(string Sequence, MetaData.IMetaData MetaData)> reads)
         {
             return CleanUpInput(new List<List<(string Sequence, MetaData.IMetaData MetaData)>> { reads });
         }
+
+        /// <summary>
+        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
+        /// </summary>
+        /// <param name="reads"> The input reads to clean up. </param>
         public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<List<(string Sequence, MetaData.IMetaData MetaData)>> reads)
         {
             var filtered = new Dictionary<string, MetaData.IMetaData>();
