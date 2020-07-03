@@ -64,14 +64,14 @@ namespace AssemblyNameSpace
         {
             Nodes = new List<CondensedNode>();
             Index = index;
-            MetaData = metaData;
-            if (metaData == null)
-                MetaData = new MetaData.Path(this);
-
             Sequence = sequence.ToArray();
             DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();
             Score = sequence.Count;
             ContigID = Enumerable.Repeat(-1, sequence.Count).ToArray();
+            MetaData = metaData;
+
+            if (metaData == null)
+                MetaData = new MetaData.Path(this);
         }
     }
 

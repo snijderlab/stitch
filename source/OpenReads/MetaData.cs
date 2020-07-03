@@ -492,7 +492,10 @@ namespace AssemblyNameSpace
                 identifier = $"P{path.Index:D4}";
                 escapedIdentifier = $"P{path.Index:D4}";
                 TotalArea = path.Nodes.Select(a => a.TotalArea).Sum();
-                positionalScore = path.DepthOfCoverage.Select(a => (double)a).ToArray();
+                if (path.DepthOfCoverage != null)
+                    positionalScore = path.DepthOfCoverage.Select(a => (double)a).ToArray();
+                else
+                    positionalScore = Enumerable.Repeat(1.0, path.Sequence.Length).ToArray();
             }
 
             public override string ToHTML()
