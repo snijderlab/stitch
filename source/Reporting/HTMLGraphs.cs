@@ -7,12 +7,12 @@ namespace AssemblyNameSpace
 {
     static class HTMLGraph
     {
-        public static List<(string, double)> AnnotateDOCData(List<double> data, int factor = 10)
+        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, int factor = 10)
         {
             int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
             if (label == 0) label = 1;
             var annotated = new List<(string, double)>();
-            for (int i = 0; i < data.Count; i++)
+            for (int i = offset; i < data.Count + offset; i++)
                 annotated.Add((i % label == 0 ? $"{i:G3}" : "", data[i]));
 
             return annotated;

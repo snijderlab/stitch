@@ -837,19 +837,28 @@ namespace AssemblyNameSpace
             buffer.Append("<div id='index-menus'>");
             foreach (var match in template.Matches)
             {
-                var doctitle = "Positional Score";
-                var type = "Read";
+                buffer.Append(AlignmentDetails(match, template));
+            }
 
-                if (match.MetaData is MetaData.Path)
-                {
-                    doctitle = "Depth of Coverage";
-                    type = "Path";
-                }
+            buffer.AppendLine("</div></div>");
+            return (buffer.ToString(), depthOfCoverage);
+        }
 
-                var unique = "";
-                if (template.ForcedOnSingleTemplate) unique = "<tr><td>Unique</td><td>" + (match.Unique ? "Yes" : "No") + "</td></tr>";
+        string AlignmentDetails(SequenceMatch match, Template template)
+        {
+            var doctitle = "Positional Score";
+            var type = "Read";
 
-                buffer.Append($@"
+            if (match.MetaData is MetaData.Path)
+            {
+                doctitle = "Depth of Coverage";
+                type = "Path";
+            }
+
+            var unique = "";
+            if (template.ForcedOnSingleTemplate) unique = "<tr><td>Unique</td><td>" + (match.Unique ? "Yes" : "No") + "</td></tr>";
+
+            return $@"
     <div class='alignment-details' id='alignment-details-{match.Index}'>
         <h4>{match.MetaData.Identifier}</h4>
         <table>
@@ -884,18 +893,14 @@ namespace AssemblyNameSpace
             {unique}
             <tr>
                 <td>{doctitle}</td>
-                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList()))}</td>
+                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td>
             </tr>
             <tr>
                 <td>Alignment graphic</td>
                 <td>{SequenceMatchGraphic(match)}</td>
             </tr>
         </table>
-    </div>");
-            }
-
-            buffer.AppendLine("</div></div>");
-            return (buffer.ToString(), depthOfCoverage);
+    </div>";
         }
 
         string SequenceMatchGraphic(SequenceMatch match)
