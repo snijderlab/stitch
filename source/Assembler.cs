@@ -10,16 +10,23 @@ namespace AssemblyNameSpace
     {
         /// <summary> The reads fed into the Assembler, as opened by OpenReads. </summary>
         public List<AminoAcid[]> reads = new List<AminoAcid[]>();
+
+        /// <summary> The reads that were shorter than the kmer_length, to be able to reuse if needed. </summary>
         public List<(AminoAcid[] Sequence, MetaData.IMetaData MetaData)> shortReads = new List<(AminoAcid[], MetaData.IMetaData)>();
+
         /// <summary> The meta information as delivered by PEAKS. By definition every index in this list matches 
         /// with the index in reads. When the data was not imported via PEAKS this list is null.</summary>
         public List<MetaData.IMetaData> reads_metadata = null;
+
         /// <summary> The De Bruijn graph used by the Assembler. </summary>
         public Node[] graph;
+
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
         public List<CondensedNode> condensed_graph;
+
         /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
         private readonly int kmer_length;
+
 
         /// <summary> The private member to store the minimum homology value in. </summary>
         private readonly int minimum_homology;
@@ -33,14 +40,18 @@ namespace AssemblyNameSpace
             get { return minimum_homology; }
         }
         private readonly int duplicate_threshold;
+
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
         public MetaInformation meta_data;
+
         /// <summary>
         /// The alphabet used
         /// </summary>
         public Alphabet alphabet;
+
         private readonly bool reverse;
+
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>
         /// <param name="minimum_homology_input"> The minimum homology needed to be inserted in the graph as an edge. <see cref="Minimum_homology"/> </param>
@@ -58,6 +69,7 @@ namespace AssemblyNameSpace
             reads = new List<AminoAcid[]>();
             reads_metadata = new List<MetaData.IMetaData>();
         }
+
         /// <summary>
         /// Give a list of reads to the assembler
         /// </summary>
@@ -67,6 +79,7 @@ namespace AssemblyNameSpace
             reads_metadata.AddRange(reads_i.Select(x => x.Item2));
             meta_data.reads = reads.Count();
         }
+
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
         /// </summary>
@@ -82,16 +95,11 @@ namespace AssemblyNameSpace
             return output;
         }
 
-        /// <summary> Assemble the reads into the graph. </summary>
-        public void Assemble()
+        /// <summary>
+        /// Generates all k-mers of length (kmer_length).
+        /// </summary>
+        List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)> GenerateKMers()
         {
-            // Start the stopwatch to be able to say how long the program ran
-            Stopwatch stopWatch = new Stopwatch();
-            stopWatch.Start();
-
-            // Generate all k-mers
-            // All k-mers of length (kmer_length)
-
             var kmers = new List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)>();
             AminoAcid[] read;
 
@@ -119,10 +127,15 @@ namespace AssemblyNameSpace
                 }
             }
             meta_data.kmers = kmers.Count;
+            return kmers;
+        }
 
-            // Building the graph
-            // Generating all (k-1)-mers
-
+        /// <summary>
+        /// Generates all (k-1)-mers.
+        /// </summary>
+        /// <param name="kmers"> The kmers to base the (k-1)-mers on. </param>
+        List<(AminoAcid[] Sequence, List<(int ReadIndex, int ReadOffset)> SupportingReads)> GenerateKMin1Mers(List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)> kmers)
+        {
             var kmin1_mers_raw = new List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)>();
 
             kmers.ForEach(kmer =>
@@ -153,10 +166,17 @@ namespace AssemblyNameSpace
             }
 
             meta_data.kmin1_mers = kmin1_mers.Count;
+            return kmin1_mers;
+        }
 
-            // Create a node for every possible (k-1)-mer
-
-            // Implement the graph as a adjacency list (array)
+        /// <summary>
+        /// Generate a De Bruijn graph based on the kmers and kmin1_mers.
+        /// </summary>
+        /// <param name="kmers"> The kmers to use. </param>
+        /// <param name="kmin1_mers"> The kmin1_mers to use. </param>
+        /// <returns> The graph as an adjacency list. </returns>
+        Node[] GenerateGraph(List<(AminoAcid[] Sequence, int ReadIndex, int ReadOffset)> kmers, List<(AminoAcid[] Sequence, List<(int ReadIndex, int ReadOffset)> SupportingReads)> kmin1_mers)
+        {
             graph = new Node[kmin1_mers.Count];
 
             int index = 0;
@@ -165,8 +185,6 @@ namespace AssemblyNameSpace
                 graph[index] = new Node(kmin1_mer.Sequence, kmin1_mer.SupportingReads.Select(a => a.ReadIndex).ToList());
                 index++;
             });
-
-            meta_data.pre_time = stopWatch.ElapsedMilliseconds;
 
             // Connect the nodes based on the k-mers
 
@@ -205,11 +223,16 @@ namespace AssemblyNameSpace
                 }
             });
 
-            meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
+            return graph;
+        }
 
-            // Create a condensed graph
-
-            condensed_graph = new List<CondensedNode>();
+        /// <summary>
+        /// Generates the condensed graph
+        /// </summary>
+        /// <param name="graph"> The De Bruijn graph </param>
+        List<CondensedNode> GenerateCondensedGraph(Node[] graph)
+        {
+            var result = new List<CondensedNode>();
 
             for (int i = 0; i < graph.Length; i++)
             {
@@ -307,9 +330,31 @@ namespace AssemblyNameSpace
                     sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length - 2));
 
                     // I should handle back/forward index differently for 1 (k-1)mer condensed nodes. (set it to null?)
-                    condensed_graph.Add(new CondensedNode(sequence, condensed_graph.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices, TotalArea(origins)));
+                    result.Add(new CondensedNode(sequence, result.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices, TotalArea(origins)));
                 }
             }
+
+            return result;
+        }
+
+        /// <summary> Assemble the reads into the graph. </summary>
+        public void Assemble()
+        {
+            // Start the stopwatch to be able to say how long the program ran
+            Stopwatch stopWatch = new Stopwatch();
+            stopWatch.Start();
+
+            var kmers = GenerateKMers();
+
+            var kmin1_mers = GenerateKMin1Mers(kmers);
+
+            meta_data.pre_time = stopWatch.ElapsedMilliseconds;
+
+            var graph = GenerateGraph(kmers, kmin1_mers);
+
+            meta_data.graph_time = stopWatch.ElapsedMilliseconds - meta_data.pre_time;
+
+            condensed_graph = GenerateCondensedGraph(graph);
 
             RemovePreAndSuffixes();
 

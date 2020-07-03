@@ -12,16 +12,6 @@ using System.Globalization;
 
 namespace AssemblyNameSpace
 {
-    /// <summary> This is a project to build a piece of software that is able to rebuild a protein sequence
-    /// from reads of a massspectrometer.
-    /// The software is build by Douwe Schulte and was started on 25-03-2019.
-    /// It is build in collaboration with and under supervision of Joost Snijder,
-    /// from the group "Massspectrometry and Proteomics" at the university of Utrecht. </summary>
-    [System.Runtime.CompilerServices.CompilerGeneratedAttribute()]
-    class NamespaceDoc
-    {
-    }
-
     /// <summary> The main class which is the entry point from the command line. </summary>
     class ToRunWithCommandLine
     {
@@ -35,7 +25,7 @@ namespace AssemblyNameSpace
 
             Console.CancelKeyPress += HandleUserAbort;
 
-            // Retrieve the name of the batch file to run
+            // Retrieve the name of the batch file to run or file to clean
             string filename = "";
             bool clean = false;
             bool languageServer = false;
@@ -49,6 +39,7 @@ namespace AssemblyNameSpace
                 }
                 else if (filename == "server")
                 {
+                    // The language server should in the future be able to support error messages inside code editors like VS Code
                     languageServer = true;
                     filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim();
                 }
@@ -118,6 +109,9 @@ namespace AssemblyNameSpace
             Console.WriteLine($"Assembled all {runs.Count()} run{pluralsuffix} in {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}");
         }
 
+        /// <summary>
+        /// Gracefully handles user abort by printing a final message and the total time the program ran, after that it aborts.
+        /// </summary>
         static void HandleUserAbort(object sender, ConsoleCancelEventArgs e)
         {
             e.Cancel = true;
@@ -130,7 +124,7 @@ namespace AssemblyNameSpace
             Environment.Exit(1);
         }
 
-        /// <summary>Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'.</summary>
+        /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
         static void CleanFasta(string filename)
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
