@@ -239,9 +239,9 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
-            for (int i = 0; i < singleRun.Template.Count(); i++)
+            for (int i = 0; i < Parameters.templateDatabases.Count(); i++)
             {
-                buffer.AppendLine(Collapsible($"Template Matching {singleRun.Template[i].Name}", CreateTemplateTable(databases[i].Templates, i, AsideType.Template)));
+                buffer.AppendLine(Collapsible($"Template Matching {Parameters.templateDatabases[i].Name}", CreateTemplateTable(databases[i].Templates, i, AsideType.Template)));
             }
 
             return buffer.ToString();
@@ -567,7 +567,7 @@ namespace AssemblyNameSpace
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<double>();
-            int read_offset = singleRun.Input.Count();
+            int read_offset = Parameters.assembler.reads.Count();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
@@ -1421,7 +1421,7 @@ namespace AssemblyNameSpace
             long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L;
 
             string template_matching = "";
-            if (singleRun.Template.Count() > 0)
+            if (Parameters.templateDatabases.Count() > 0)
             {
                 template_matching = $@"<div class=""template-matching"" style=""flex:{meta_data.template_matching_time}"">
     <p>Template Matching</p>
@@ -1436,13 +1436,13 @@ namespace AssemblyNameSpace
             string html = $@"
 <h3>General information</h3>
 <table>
-<tr><td>Runname</td><td>{singleRun.Runname}</td></tr>
+<tr><td>Runname</td><td>{Parameters.Runname}</td></tr>
 <tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VersionString}</td></tr>
-<tr><td>K (length of k-mer)</td><td>{singleRun.K}</td></tr>
-<tr><td>Minimum homology</td><td>{singleRun.MinimalHomology}</td></tr>
-<tr><td>Duplicate Threshold</td><td>{singleRun.DuplicateThreshold}</td></tr>
-<tr><td>Reverse</td><td>{singleRun.Reverse}</td></tr>
-<tr><td>Alphabet</td><td>{singleRun.Alphabet.Name}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{Parameters.assembler.kmer_length}</td></tr>
+<tr><td>Minimum homology</td><td>{Parameters.assembler.Minimum_homology}</td></tr>
+<tr><td>Duplicate Threshold</td><td>{Parameters.assembler.duplicate_threshold}</td></tr>
+<tr><td>Reverse</td><td>{Parameters.assembler.reverse}</td></tr>
+<tr><td>Alphabet</td><td>{Parameters.assembler.alphabet}</td></tr>
 <tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
 <tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
 <tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
@@ -1564,14 +1564,21 @@ assetsfolder = '{AssetsFolderName}';
 </head>";
         }
 
-        private string BatchFile()
+        private string BatchFileHTML()
         {
-            var buffer = new StringBuilder();
-            var bf = singleRun.BatchFile;
-            buffer.Append($"<pre><i>{bf.Filename}</i>");
-            foreach (var line in bf.Lines) buffer.Append($"<br>{line}");
-            buffer.Append("</pre>");
-            return buffer.ToString();
+            if (BatchFile != null)
+            {
+                var buffer = new StringBuilder();
+                var bf = BatchFile;
+                buffer.Append($"<pre><i>{bf.Filename}</i>");
+                foreach (var line in bf.Lines) buffer.Append($"<br>{line}");
+                buffer.Append("</pre>");
+                return buffer.ToString();
+            }
+            else
+            {
+                return "<em>No BatchFile</em>";
+            }
         }
 
         private string CreateMain()
@@ -1613,7 +1620,7 @@ assetsfolder = '{AssetsFolderName}';
  {Collapsible("Contigs Table", CreateContigsTable())}
  {Collapsible("Reads Table", CreateReadsTable())}
  {Collapsible("Meta Information", MetaInformation())}
- {Collapsible("Batch File", BatchFile())}
+ {Collapsible("Batch File", BatchFileHTML())}
 
 <div class=""footer"">
     <p>Code written in 2019-2020</p>

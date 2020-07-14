@@ -24,8 +24,8 @@ namespace AssemblyNameSpace
         /// <summary> The condensed graph used to store the output of the assembly. </summary>
         public List<CondensedNode> condensed_graph;
 
-        /// <summary> The length of the k-mers used to create the De Bruijn graph. Private member where it is stored. </summary>
-        private readonly int kmer_length;
+        /// <summary> The length of the k-mers used to create the De Bruijn graph. </summary>
+        public readonly int kmer_length;
 
 
         /// <summary> The private member to store the minimum homology value in. </summary>
@@ -39,7 +39,7 @@ namespace AssemblyNameSpace
         {
             get { return minimum_homology; }
         }
-        private readonly int duplicate_threshold;
+        public readonly int duplicate_threshold;
 
         /// <summary> To contain meta information about how the program ran to make informed decisions on 
         /// how to choose the values of variables and to aid in debugging. </summary>
@@ -50,7 +50,7 @@ namespace AssemblyNameSpace
         /// </summary>
         public Alphabet alphabet;
 
-        private readonly bool reverse;
+        public readonly bool reverse;
 
         /// <summary> The creator, to set up the default values. Also sets the standard alphabet. </summary>
         /// <param name="kmer_length_input"> The lengths of the k-mers. </param>

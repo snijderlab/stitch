@@ -17,28 +17,21 @@ namespace AssemblyNameSpace
     struct ReportInputParameters
     {
         public readonly Assembler assembler;
-        public readonly RunParameters.SingleRun singleRun;
         public readonly List<TemplateDatabase> templateDatabases;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
-        public TemplateDatabase ReadAlignment;
-        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases)
+        public readonly TemplateDatabase ReadAlignment;
+        public readonly ParsedFile BatchFile;
+        public readonly string Runname;
+        public ReportInputParameters(Assembler assm, List<TemplateDatabase> databases = null, TemplateDatabase recombineddatabase = null, List<TemplateDatabase> recombinationdatabases = null, TemplateDatabase readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             assembler = assm;
-            singleRun = run;
-            templateDatabases = databases;
-            RecombinedDatabase = null;
-            RecombinationDatabases = null;
-            ReadAlignment = null;
-        }
-        public ReportInputParameters(Assembler assm, RunParameters.SingleRun run, List<TemplateDatabase> databases, TemplateDatabase recombineddatabase, List<TemplateDatabase> recombinationdatabases)
-        {
-            assembler = assm;
-            singleRun = run;
             templateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
             RecombinationDatabases = recombinationdatabases;
-            ReadAlignment = null;
+            ReadAlignment = readAlignment;
+            BatchFile = batchFile;
+            Runname = runname;
         }
     }
     /// <summary>
@@ -70,17 +63,14 @@ namespace AssemblyNameSpace
         /// The alphabet used in the assembly
         /// </summary>
         protected Alphabet alphabet;
-        /// <summary>
-        /// The runparameters
-        /// </summary>
-        protected RunParameters.SingleRun singleRun;
         protected List<TemplateDatabase> databases;
         protected List<GraphPath> Paths;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
         protected readonly int MaxThreads;
-
         public readonly TemplateDatabase ReadAlignment;
+        public readonly ParsedFile BatchFile;
+        public readonly ReportInputParameters Parameters;
         /// <summary>
         /// To create a report, gets all metadata.
         /// </summary>
@@ -92,16 +82,12 @@ namespace AssemblyNameSpace
             meta_data = parameters.assembler.meta_data;
             reads = parameters.assembler.reads;
             reads_metadata = parameters.assembler.reads_metadata;
-            singleRun = parameters.singleRun;
             MaxThreads = max_threads;
 
-            if (singleRun.ReadAlign != null)
+            if (parameters.ReadAlignment != null)
             {
-                foreach (var set in singleRun.ReadAlign.Input.Data)
-                {
-                    reads.AddRange(set.Select(a => HelperFunctionality.StringToSequence(a.Item1, new Alphabet(singleRun.ReadAlign.Alphabet))));
-                    reads_metadata.AddRange(set.Select(a => a.Item2));
-                }
+                reads.AddRange(parameters.assembler.shortReads.Select(a => a.Item1));
+                reads_metadata.AddRange(parameters.assembler.shortReads.Select(a => a.Item2));
             }
 
             alphabet = parameters.assembler.alphabet;
@@ -110,6 +96,8 @@ namespace AssemblyNameSpace
             RecombinedDatabase = parameters.RecombinedDatabase;
             RecombinationDatabases = parameters.RecombinationDatabases;
             ReadAlignment = parameters.ReadAlignment;
+            BatchFile = parameters.BatchFile;
+            Parameters = parameters;
         }
         /// <summary>
         /// Creates a report, has to be implemented by all reports.

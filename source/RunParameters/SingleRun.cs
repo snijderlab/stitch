@@ -157,7 +157,8 @@ namespace AssemblyNameSpace
                     stopWatch.Stop();
                     assm.meta_data.template_matching_time = stopWatch.ElapsedMilliseconds;
 
-                    ReportInputParameters parameters;
+                    TemplateDatabase recombined_database = null;
+                    List<TemplateDatabase> rec_databases = null;
 
                     // Recombine
                     if (Recombine != null)
@@ -165,20 +166,21 @@ namespace AssemblyNameSpace
                         Stopwatch recombine_sw = new Stopwatch();
                         recombine_sw.Start();
 
-                        var rec_databases = new List<TemplateDatabase>();
+                        rec_databases = new List<TemplateDatabase>();
                         var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : alphabet;
 
                         for (int i = 0; i < Recombine.Databases.Count(); i++)
                         {
                             var database = Recombine.Databases[i];
-                            var forceOnSingleTemplate = database.ForceOnSingleTemplate switch
+                            var forceOnSingleTemplate = Recombine.ForceOnSingleTemplate;
+                            if (database.ForceOnSingleTemplate == Trilean.True)
                             {
-                                Trilean.True => true,
-                                Trilean.False => false,
-                                Trilean.Unspecified => Recombine.ForceOnSingleTemplate,
-                                _ => throw new ArgumentException("A Trilean had a value which does not exist")
-                            };
-
+                                forceOnSingleTemplate = true;
+                            }
+                            else if (database.ForceOnSingleTemplate == Trilean.False)
+                            {
+                                forceOnSingleTemplate = false;
+                            }
                             var database1 = new TemplateDatabase(database.Templates, alph, database.Name, Recombine.CutoffScore, i, database.Scoring, database.ClassChars);
                             database1.Match(assm.GetAllPaths(), max_threads, forceOnSingleTemplate);
 
@@ -215,7 +217,7 @@ namespace AssemblyNameSpace
                             from item in sequence
                             select acc.Concat(new[] { item }));
 
-                        var recombined_database = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
+                        recombined_database = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
                         var recombined_templates = new List<Template>();
                         var namefilter = new NameFilter();
 
@@ -255,22 +257,18 @@ namespace AssemblyNameSpace
 
                         // Did recombination + databases
                         if (progressBar != null) progressBar.Update();
+                    }
 
-                        parameters = new ReportInputParameters(assm, this, databases, recombined_database, rec_databases);
-                    }
-                    else
-                    {
-                        parameters = new ReportInputParameters(assm, this, databases);
-                    }
+                    TemplateDatabase read_templates = null;
 
                     if (ReadAlign != null)
                     {
                         var namefilter = new NameFilter();
 
-                        List<(string, MetaData.IMetaData)> templates = new List<(string, MetaData.IMetaData)>(parameters.RecombinedDatabase.Templates.Count);
+                        List<(string, MetaData.IMetaData)> templates = new List<(string, MetaData.IMetaData)>(recombined_database.Templates.Count);
 
                         Parallel.ForEach(
-                            parameters.RecombinedDatabase.Templates,
+                            recombined_database.Templates,
                             new ParallelOptions { MaxDegreeOfParallelism = max_threads },
                             (s, _) => templates.Add((
                                 s.ConsensusSequence(),
@@ -283,14 +281,15 @@ namespace AssemblyNameSpace
                             (s, _) => s.Item2.FinaliseIdentifier()
                         );
 
-                        var read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
+                        read_templates = new TemplateDatabase(templates, new Alphabet(ReadAlign.Alphabet), "ReadAlignDatabase", ReadAlign.CutoffScore, 0);
 
                         read_templates.Match(ReadAlign.Input.CleanedData, max_threads, ReadAlign.ForceOnSingleTemplate);
-                        parameters.ReadAlignment = read_templates;
 
                         // Did readalign
                         if (progressBar != null) progressBar.Update();
                     }
+
+                    var parameters = new ReportInputParameters(assm, databases, recombined_database, rec_databases, read_templates, this.BatchFile, this.Runname);
 
                     // Generate the report(s)
                     foreach (var report in Report)
@@ -300,10 +299,6 @@ namespace AssemblyNameSpace
                             case Report.HTML h:
                                 var htmlreport = new HTMLReport(parameters, h.UseIncludedDotDistribution, max_threads);
                                 htmlreport.Save(h.CreateName(this));
-                                break;
-                            case Report.CSV c:
-                                var csvreport = new CSVReport(parameters, max_threads);
-                                csvreport.CreateCSVLine(c.GetID(this), c.Path);
                                 break;
                             case Report.FASTA f:
                                 var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
