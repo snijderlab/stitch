@@ -50,9 +50,6 @@ Assembly ->
 
 -Report-----------------
 Report ->
-    CSV	->
-        Path	: ../../report-reads.csv
-    <-
     HTML ->
         Path    : ../../report-reads-{id}.html
     <-

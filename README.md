@@ -66,11 +66,6 @@ dotnet test tests
 ```
 
 
-# Documentation
-
-Documentation can be build using docfx.
-
-
 # Examples
 
 The 'examples' folder contains some examples which can be run to see what the program is up to.

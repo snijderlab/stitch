@@ -14,7 +14,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// An HTML report.
     /// </summary>
-    class HTMLReport : Report
+    public class HTMLReport : Report
     {
         /// <summary>
         /// Indicates if the program should use the included Dot (graphviz) distribution.
@@ -27,7 +27,7 @@ namespace AssemblyNameSpace
         string AssetsFolderName;
         string FullAssetsFolderName;
 
-        public HTMLReport(ReportInputParameters parameters, bool useincludeddotdistribution, int max_threads) : base(parameters, max_threads)
+        public HTMLReport(ReportInputParameters Parameters, bool useincludeddotdistribution, int max_threads) : base(Parameters, max_threads)
         {
             UseIncludedDotDistribution = useincludeddotdistribution;
         }
@@ -44,10 +44,10 @@ namespace AssemblyNameSpace
             simplebuffer.AppendLine(header);
             string style;
 
-            for (int i = 0; i < condensed_graph.Count(); i++)
+            for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
             {
                 //Test if it is a starting node
-                if (condensed_graph[i].BackwardEdges.Count() == 0 || (condensed_graph[i].BackwardEdges.Count() == 1 && condensed_graph[i].BackwardEdges.ToArray()[0] == i))
+                if (Parameters.Assembler.condensed_graph[i].BackwardEdges.Count() == 0 || (Parameters.Assembler.condensed_graph[i].BackwardEdges.Count() == 1 && Parameters.Assembler.condensed_graph[i].BackwardEdges.ToArray()[0] == i))
                 {
                     style = ", style=filled, fillcolor=\"blue\", fontcolor=\"white\"";
                 }
@@ -55,11 +55,11 @@ namespace AssemblyNameSpace
 
                 string id = GetAsideIdentifier(i, AsideType.Contig);
 
-                buffer.AppendLine($"\t{id} [label=\"{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}\"{style}]");
+                buffer.AppendLine($"\t{id} [label=\"{AminoAcid.ArrayToString(Parameters.Assembler.condensed_graph[i].Sequence.ToArray())}\"{style}]");
 
                 simplebuffer.AppendLine($"\t{id} [label=\"{id}\"{style}]");
 
-                foreach (var fwe in condensed_graph[i].ForwardEdges)
+                foreach (var fwe in Parameters.Assembler.condensed_graph[i].ForwardEdges)
                 {
                     string fid = GetAsideIdentifier(fwe, AsideType.Contig);
                     buffer.AppendLine($"\t{id} -> {fid}");
@@ -138,12 +138,12 @@ namespace AssemblyNameSpace
                 simplesvggraph = Regex.Replace(simplesvggraph, "<title>[^<]*</title>", "");
 
                 // Add all paths as classes to the nodes
-                for (int i = 0; i < condensed_graph.Count(); i++)
+                for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
                 {
                     string extra_classes;
                     try
                     {
-                        extra_classes = AllPathsContaining(condensed_graph[i].Index).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b.Index, AsideType.Path)).Substring(1);
+                        extra_classes = AllPathsContaining(Parameters.Assembler.condensed_graph[i].Index).Aggregate("", (a, b) => a + " " + GetAsideIdentifier(b.Index, AsideType.Path)).Substring(1);
                     }
                     catch
                     {
@@ -161,7 +161,7 @@ namespace AssemblyNameSpace
                     new InputNameSpace.ErrorMessage("", "Could not start Dot", "Please make sure Dot (Graphviz) is installed and added to your PATH.").Print();
                 else
                     new InputNameSpace.ErrorMessage("", "Could not start Dot", "Make sure you execute this program when the assets folder is accessible.", "Dot is included for Windows in the assets folder.").Print();
-                throw new Exception("");
+                return ("<p>Could not start Dot</p>", "<p>Could not start Dot</p>");
             }
             catch (Exception e)
             {
@@ -216,17 +216,18 @@ namespace AssemblyNameSpace
 </tr>");
             string id, link;
 
-            for (int i = 0; i < condensed_graph.Count(); i++)
+            for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
             {
+                var item = Parameters.Assembler.condensed_graph[i];
                 id = GetAsideIdentifier(i, AsideType.Contig);
                 link = GetAsideLink(i, AsideType.Contig);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}</td>
-    <td class=""center"">{condensed_graph[i].Sequence.Count()}</td>
-    <td class=""center"">{condensed_graph[i].ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
-    <td class=""center"">{condensed_graph[i].BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
-    <td>{condensed_graph[i].UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(item.Sequence.ToArray())}</td>
+    <td class=""center"">{item.Sequence.Count()}</td>
+    <td class=""center"">{item.ForwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td class=""center"">{item.BackwardEdges.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Contig))}</td>
+    <td>{item.UniqueOrigins.Aggregate<int, string>("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read))}</td>
 </tr>");
             }
 
@@ -237,11 +238,13 @@ namespace AssemblyNameSpace
 
         string CreateTemplateTables()
         {
+            if (Parameters.TemplateDatabases == null) return "";
+
             var buffer = new StringBuilder();
 
-            for (int i = 0; i < Parameters.templateDatabases.Count(); i++)
+            for (int i = 0; i < Parameters.TemplateDatabases.Count(); i++)
             {
-                buffer.AppendLine(Collapsible($"Template Matching {Parameters.templateDatabases[i].Name}", CreateTemplateTable(databases[i].Templates, i, AsideType.Template)));
+                buffer.AppendLine(Collapsible($"Template Matching {Parameters.TemplateDatabases[i].Name}", CreateTemplateTable(Parameters.TemplateDatabases[i].Templates, i, AsideType.Template)));
             }
 
             return buffer.ToString();
@@ -305,14 +308,14 @@ namespace AssemblyNameSpace
 </tr>");
             string id, link;
 
-            for (int i = 0; i < Paths.Count(); i++)
+            for (int i = 0; i < Parameters.Paths.Count(); i++)
             {
                 id = GetAsideIdentifier(i, AsideType.Path);
                 link = GetAsideLink(i, AsideType.Path);
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</td>
-    <td class=""center"">{Paths[i].Sequence.Length}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(Parameters.Paths[i].Sequence)}</td>
+    <td class=""center"">{Parameters.Paths[i].Sequence.Length}</td>
 </tr>");
             }
 
@@ -329,7 +332,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
 
             int index = -1;
-            foreach (var database in RecombinationDatabases)
+            foreach (var database in Parameters.RecombinationDatabases)
             {
                 index++;
                 buffer.AppendLine(Collapsible($"Recombination Database {database.Name}", CreateTemplateTable(database.Templates, index, AsideType.RecombinationDatabase, true)));
@@ -345,22 +348,22 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(i, AsideType.Contig);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Contig) + "s" };
             string prefix = "";
-            if (condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(condensed_graph[i].Prefix.ToArray());
+            if (Parameters.Assembler.condensed_graph[i].Prefix != null) prefix = AminoAcid.ArrayToString(Parameters.Assembler.condensed_graph[i].Prefix.ToArray());
             string suffix = "";
-            if (condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(condensed_graph[i].Suffix.ToArray());
+            if (Parameters.Assembler.condensed_graph[i].Suffix != null) suffix = AminoAcid.ArrayToString(Parameters.Assembler.condensed_graph[i].Suffix.ToArray());
 
-            var readsalignment = CreateReadsAlignment(condensed_graph[i], location);
+            var readsalignment = CreateReadsAlignment(Parameters.Assembler.condensed_graph[i], location);
 
             return $@"<div id=""{id}"" class=""info-block contig-info"">
     <h1>Contig {GetAsideIdentifier(i, AsideType.Contig, true)}</h1>
-    <h2>Sequence (length={condensed_graph[i].Sequence.Count()})</h2>
-    <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
+    <h2>Sequence (length={Parameters.Assembler.condensed_graph[i].Sequence.Count()})</h2>
+    <p class=""aside-seq""><span class='prefix'>{prefix}</span>{AminoAcid.ArrayToString(Parameters.Assembler.condensed_graph[i].Sequence.ToArray())}<span class='suffix'>{suffix}</span></p>
     <h2>Total Area</h2>
-    <p>{condensed_graph[i].TotalArea}</p>
+    <p>{Parameters.Assembler.condensed_graph[i].TotalArea}</p>
     <h2>Reads Alignment</h4>
     {readsalignment.Item1}
     <h2>Based on</h2>
-    <p>{condensed_graph[i].UniqueOrigins.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
+    <p>{Parameters.Assembler.condensed_graph[i].UniqueOrigins.Aggregate("", (a, b) => a + " " + GetAsideLink(b, AsideType.Read, location))}</p>
 </div>";
         }
 
@@ -389,39 +392,45 @@ namespace AssemblyNameSpace
         {
             string id = GetAsideIdentifier(i, AsideType.Path);
             var location = new List<string>() { AssetsFolderName, GetAsideName(AsideType.Path) + "s" };
-            const int number = 10;
-            var best_templates = new List<(int, int, int)>();
-            int cutoff = 0;
-            //Pick each database
-            for (int k = 0; k < databases.Count(); k++)
-            { // Pick each template
-                for (int j = 0; j < databases[k].Templates.Count(); j++)
-                {
-                    var match = databases[k].Templates[j].Matches[i];
-                    if (match.Score > cutoff || best_templates.Count() < number)
+            var sb = new StringBuilder();
+            var templateString = "";
+
+            if (Parameters.TemplateDatabases != null)
+            {
+                const int number = 10;
+                var best_templates = new List<(int, int, int)>();
+                int cutoff = 0;
+
+                //Pick each database
+                for (int k = 0; k < Parameters.TemplateDatabases.Count(); k++)
+                { // Pick each template
+                    for (int j = 0; j < Parameters.TemplateDatabases[k].Templates.Count(); j++)
                     {
-                        best_templates.Add((k, j, match.Score));
-                        best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));
+                        var match = Parameters.TemplateDatabases[k].Templates[j].Matches[i];
+                        if (match.Score > cutoff || best_templates.Count() < number)
+                        {
+                            best_templates.Add((k, j, match.Score));
+                            best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));
 
-                        int count = best_templates.Count();
-                        if (count > number) best_templates.RemoveRange(10, count - number);
+                            int count = best_templates.Count();
+                            if (count > number) best_templates.RemoveRange(10, count - number);
 
-                        cutoff = best_templates.Last().Item3;
+                            cutoff = best_templates.Last().Item3;
+                        }
                     }
                 }
-            }
 
-            var sb = new StringBuilder();
-            foreach (var tem in best_templates)
-            {
-                sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
-            }
+                foreach (var tem in best_templates)
+                {
+                    sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
+                }
 
-            var templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top 10 templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
+                templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top {number} templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
+            }
 
             sb.Clear();
             var maxCoverage = new List<int>();
-            foreach (var node in Paths[i].Nodes)
+            foreach (var node in Parameters.Paths[i].Nodes)
             {
                 var core = CreateReadsAlignmentCore(node, location);
                 sb.Append(core.Item1);
@@ -431,13 +440,13 @@ namespace AssemblyNameSpace
             return $@"<div id=""{id}"" class=""info-block read-info path-info"">
     <h1>Path {GetAsideIdentifier(i, AsideType.Path, true)}</h1>
     <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(Paths[i].Sequence)}</p>
+    <p class=""aside-seq"">{AminoAcid.ArrayToString(Parameters.Paths[i].Sequence)}</p>
     <h2>Sequence Length</h2>
-    <p>{Paths[i].Sequence.Length}</p>
+    <p>{Parameters.Paths[i].Sequence.Length}</p>
     <h2>Total Area</h2>
-    <p>{Paths[i].MetaData.TotalArea}</p>
+    <p>{Parameters.Paths[i].MetaData.TotalArea}</p>
     <h2>Path</h2>
-    <p>{Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
+    <p>{Parameters.Paths[i].Nodes.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Index, AsideType.Contig, location)).Substring(3)}</p>
     <h2>Alignment</h2>
     <div class=""reads-alignment"" style=""--max-value:{maxCoverage.Max()}"">
     {sb}
@@ -567,7 +576,7 @@ namespace AssemblyNameSpace
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<double>();
-            int read_offset = Parameters.assembler.reads.Count();
+            int read_offset = Parameters.Assembler.reads.Count();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
@@ -994,20 +1003,20 @@ namespace AssemblyNameSpace
                     case AsideType.Path: SaveAside(CreatePathAside(index1), AsideType.Path, -1, index1); break;
                     case AsideType.Contig: SaveAside(CreateContigAside(index1), AsideType.Contig, -1, index1); break;
                     case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, index1); break;
-                    case AsideType.Template: SaveTemplateAside(databases[index2].Templates[index1], AsideType.Template, index2, index1); break;
-                    case AsideType.RecombinedTemplate: SaveTemplateAside(RecombinedDatabase.Templates[index1], AsideType.RecombinedTemplate, -1, index1); break;
-                    case AsideType.RecombinationDatabase: SaveTemplateAside(RecombinationDatabases[index2].Templates[index1], AsideType.RecombinationDatabase, index2, index1); break;
-                    case AsideType.ReadAlignment: SaveTemplateAside(ReadAlignment.Templates[index1], AsideType.ReadAlignment, -1, index1); break;
+                    case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index2].Templates[index1], AsideType.Template, index2, index1); break;
+                    case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase.Templates[index1], AsideType.RecombinedTemplate, -1, index1); break;
+                    case AsideType.RecombinationDatabase: SaveTemplateAside(Parameters.RecombinationDatabases[index2].Templates[index1], AsideType.RecombinationDatabase, index2, index1); break;
+                    case AsideType.ReadAlignment: SaveTemplateAside(Parameters.ReadAlignment.Templates[index1], AsideType.ReadAlignment, -1, index1); break;
                 };
             }
 
             // Path Asides
-            for (int i = 0; i < Paths.Count(); i++)
+            for (int i = 0; i < Parameters.Paths.Count(); i++)
             {
                 jobbuffer.Add((AsideType.Path, -1, i));
             }
             // Contigs Asides
-            for (int i = 0; i < condensed_graph.Count(); i++)
+            for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
             {
                 jobbuffer.Add((AsideType.Contig, -1, i));
             }
@@ -1017,34 +1026,37 @@ namespace AssemblyNameSpace
                 jobbuffer.Add((AsideType.Read, -1, i));
             }
             // Template Tables Asides
-            for (int t = 0; t < databases.Count(); t++)
+            if (Parameters.TemplateDatabases != null)
             {
-                for (int i = 0; i < databases[t].Templates.Count(); i++)
+                for (int t = 0; t < Parameters.TemplateDatabases.Count(); t++)
                 {
-                    jobbuffer.Add((AsideType.Template, t, i));
+                    for (int i = 0; i < Parameters.TemplateDatabases[t].Templates.Count(); i++)
+                    {
+                        jobbuffer.Add((AsideType.Template, t, i));
+                    }
                 }
             }
             // Recombination Table Asides
-            if (RecombinedDatabase != null)
+            if (Parameters.RecombinedDatabase != null)
             {
-                for (int i = 0; i < RecombinedDatabase.Templates.Count(); i++)
+                for (int i = 0; i < Parameters.RecombinedDatabase.Templates.Count(); i++)
                 {
                     jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
                 }
 
                 // Recombination Databases Tables Asides
-                for (int t = 0; t < RecombinationDatabases.Count(); t++)
+                for (int t = 0; t < Parameters.RecombinationDatabases.Count(); t++)
                 {
-                    for (int i = 0; i < RecombinationDatabases[t].Templates.Count(); i++)
+                    for (int i = 0; i < Parameters.RecombinationDatabases[t].Templates.Count(); i++)
                     {
                         jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
                     }
                 }
             }
             // Reads Alignment Table Asides
-            if (ReadAlignment != null)
+            if (Parameters.ReadAlignment != null)
             {
-                for (int i = 0; i < ReadAlignment.Templates.Count(); i++)
+                for (int i = 0; i < Parameters.ReadAlignment.Templates.Count(); i++)
                 {
                     jobbuffer.Add((AsideType.ReadAlignment, -1, i));
                 }
@@ -1276,11 +1288,11 @@ namespace AssemblyNameSpace
             }
             else if (type == AsideType.Template)
             {
-                metadata = databases[index1].Templates[index2].MetaData;
+                metadata = Parameters.TemplateDatabases[index1].Templates[index2].MetaData;
             }
             else if (type == AsideType.RecombinationDatabase)
             {
-                metadata = RecombinationDatabases[index1].Templates[index2].MetaData;
+                metadata = Parameters.RecombinationDatabases[index1].Templates[index2].MetaData;
             }
             if (metadata != null && metadata.Identifier != null)
             {
@@ -1417,17 +1429,17 @@ namespace AssemblyNameSpace
         string MetaInformation()
         {
             //TODO needs time for recombined template matching
-            long number_edges = graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
-            long number_edges_condensed = condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L;
+            long number_edges = Parameters.Assembler.graph.Aggregate(0L, (a, b) => a + b.EdgesCount()) / 2L;
+            long number_edges_condensed = Parameters.Assembler.condensed_graph.Aggregate(0L, (a, b) => a + b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2L;
 
             string template_matching = "";
-            if (Parameters.templateDatabases.Count() > 0)
+            if (Parameters.TemplateDatabases != null && Parameters.TemplateDatabases.Count() > 0)
             {
-                template_matching = $@"<div class=""template-matching"" style=""flex:{meta_data.template_matching_time}"">
+                template_matching = $@"<div class=""template-matching"" style=""flex:{Parameters.Assembler.meta_data.template_matching_time}"">
     <p>Template Matching</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Template Matching</span>
-        <span class=""runtime-time"">{meta_data.template_matching_time} ms</span>
+        <span class=""runtime-time"">{Parameters.Assembler.meta_data.template_matching_time} ms</span>
         <span class=""runtime-desc"">Matching the contigs to the given templates</span>
     </div>
 </div>";
@@ -1438,69 +1450,69 @@ namespace AssemblyNameSpace
 <table>
 <tr><td>Runname</td><td>{Parameters.Runname}</td></tr>
 <tr><td>Assemblerversion</td><td>{ToRunWithCommandLine.VersionString}</td></tr>
-<tr><td>K (length of k-mer)</td><td>{Parameters.assembler.kmer_length}</td></tr>
-<tr><td>Minimum homology</td><td>{Parameters.assembler.Minimum_homology}</td></tr>
-<tr><td>Duplicate Threshold</td><td>{Parameters.assembler.duplicate_threshold}</td></tr>
-<tr><td>Reverse</td><td>{Parameters.assembler.reverse}</td></tr>
-<tr><td>Alphabet</td><td>{Parameters.assembler.alphabet}</td></tr>
-<tr><td>Number of reads</td><td>{meta_data.reads}</td></tr>
-<tr><td>Number of k-mers</td><td>{meta_data.kmers}</td></tr>
-<tr><td>Number of (k-1)-mers</td><td>{meta_data.kmin1_mers}</td></tr>
-<tr><td>Number of duplicate (k-1)-mers</td><td>{meta_data.kmin1_mers_raw - meta_data.kmin1_mers}</td></tr>
-<tr><td>Number of contigs found</td><td>{meta_data.sequences}</td></tr>
-<tr><td>Number of paths found</td><td>{Paths.Count()}</td></tr>
+<tr><td>K (length of k-mer)</td><td>{Parameters.Assembler.kmer_length}</td></tr>
+<tr><td>Minimum homology</td><td>{Parameters.Assembler.Minimum_homology}</td></tr>
+<tr><td>Duplicate Threshold</td><td>{Parameters.Assembler.duplicate_threshold}</td></tr>
+<tr><td>Reverse</td><td>{Parameters.Assembler.reverse}</td></tr>
+<tr><td>Alphabet</td><td>{Parameters.Assembler.alphabet}</td></tr>
+<tr><td>Number of reads</td><td>{Parameters.Assembler.meta_data.reads}</td></tr>
+<tr><td>Number of k-mers</td><td>{Parameters.Assembler.meta_data.kmers}</td></tr>
+<tr><td>Number of (k-1)-mers</td><td>{Parameters.Assembler.meta_data.kmin1_mers}</td></tr>
+<tr><td>Number of duplicate (k-1)-mers</td><td>{Parameters.Assembler.meta_data.kmin1_mers_raw - Parameters.Assembler.meta_data.kmin1_mers}</td></tr>
+<tr><td>Number of contigs found</td><td>{Parameters.Assembler.meta_data.sequences}</td></tr>
+<tr><td>Number of paths found</td><td>{Parameters.Paths.Count()}</td></tr>
 </table>
 
 <h3>de Bruijn Graph information</h3>
 <table>
-<tr><td>Number of nodes</td><td>{graph.Length}</td></tr>
+<tr><td>Number of nodes</td><td>{Parameters.Assembler.graph.Length}</td></tr>
 <tr><td>Number of edges</td><td>{number_edges}</td></tr>
-<tr><td>Mean Connectivity</td><td>{(double)number_edges / graph.Length:F3}</td></tr>
-<tr><td>Highest Connectivity</td><td>{graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double)a : (double)b.EdgesCount()) / 2D}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double)number_edges / Parameters.Assembler.graph.Length:F3}</td></tr>
+<tr><td>Highest Connectivity</td><td>{Parameters.Assembler.graph.Aggregate(0D, (a, b) => (a > b.EdgesCount()) ? (double)a : (double)b.EdgesCount()) / 2D}</td></tr>
 </table>
 
 <h3>Condensed Graph information</h3>
 <table>
-<tr><td>Number of nodes</td><td>{condensed_graph.Count()}</td></tr>
+<tr><td>Number of nodes</td><td>{Parameters.Assembler.condensed_graph.Count()}</td></tr>
 <tr><td>Number of edges</td><td>{number_edges_condensed}</td></tr>
-<tr><td>Mean Connectivity</td><td>{(double)number_edges_condensed / condensed_graph.Count():F3}</td></tr>
-<tr><td>Highest Connectivity</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double)b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
-<tr><td>Average sequence length</td><td>{condensed_graph.Aggregate(0D, (a, b) => (a + b.Sequence.Count())) / condensed_graph.Count():F3}</td></tr>
-<tr><td>Total sequence length</td><td>{condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))}</td></tr>
+<tr><td>Mean Connectivity</td><td>{(double)number_edges_condensed / Parameters.Assembler.condensed_graph.Count():F3}</td></tr>
+<tr><td>Highest Connectivity</td><td>{Parameters.Assembler.condensed_graph.Aggregate(0D, (a, b) => (a > b.ForwardEdges.Count() + b.BackwardEdges.Count()) ? a : (double)b.ForwardEdges.Count() + b.BackwardEdges.Count()) / 2D}</td></tr>
+<tr><td>Average sequence length</td><td>{Parameters.Assembler.condensed_graph.Aggregate(0D, (a, b) => (a + b.Sequence.Count())) / Parameters.Assembler.condensed_graph.Count():F3}</td></tr>
+<tr><td>Total sequence length</td><td>{Parameters.Assembler.condensed_graph.Aggregate(0, (a, b) => (a + b.Sequence.Count()))}</td></tr>
 </table>
 
 <h3>Runtime information</h3>
-<p>Total computation time: {meta_data.total_time + meta_data.drawingtime + meta_data.template_matching_time} ms</p>
+<p>Total computation time: {Parameters.Assembler.meta_data.total_time + Parameters.Assembler.meta_data.drawingtime + Parameters.Assembler.meta_data.template_matching_time} ms</p>
 <div class=""runtime"">
-<div class=""pre-work"" style=""flex:{meta_data.pre_time}"">
+<div class=""pre-work"" style=""flex:{Parameters.Assembler.meta_data.pre_time}"">
     <p>Pre</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Pre work</span>
-        <span class=""runtime-time"">{meta_data.pre_time} ms</span>
+        <span class=""runtime-time"">{Parameters.Assembler.meta_data.pre_time} ms</span>
         <span class=""runtime-desc"">Work done on generating k-mers and (k-1)-mers.</span>
     </div>
 </div>
-<div class=""linking-graph"" style=""flex:{meta_data.graph_time}"">
+<div class=""linking-graph"" style=""flex:{Parameters.Assembler.meta_data.graph_time}"">
     <p>Linking</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Linking graph</span>
-        <span class=""runtime-time"">{meta_data.graph_time} ms</span>
+        <span class=""runtime-time"">{Parameters.Assembler.meta_data.graph_time} ms</span>
         <span class=""runtime-desc"">Work done to build the de Bruijn graph.</span>
     </div>
 </div>
-<div class=""finding-paths"" style=""flex:{meta_data.path_time}"">
+<div class=""finding-paths"" style=""flex:{Parameters.Assembler.meta_data.path_time}"">
     <p>Path</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Finding paths</span>
-        <span class=""runtime-time"">{meta_data.path_time} ms</span>
+        <span class=""runtime-time"">{Parameters.Assembler.meta_data.path_time} ms</span>
         <span class=""runtime-desc"">Work done to find the paths through the graph.</span>
     </div>
 </div>
-<div class=""drawing"" style=""flex:{meta_data.drawingtime}"">
+<div class=""drawing"" style=""flex:{Parameters.Assembler.meta_data.drawingtime}"">
     <p>Drawing</p>
     <div class=""runtime-hover"">
         <span class=""runtime-title"">Drawing the graphs</span>
-        <span class=""runtime-time"">{meta_data.drawingtime} ms</span>
+        <span class=""runtime-time"">{Parameters.Assembler.meta_data.drawingtime} ms</span>
         <span class=""runtime-desc"">Work done by graphviz (dot) to draw the graphs.</span>
     </div>
 </div>
@@ -1587,19 +1599,19 @@ assetsfolder = '{AssetsFolderName}';
             stopwatch.Start();
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
+            Parameters.Assembler.meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
 
             string recombinationtable = "";
-            if (RecombinedDatabase != null)
+            if (Parameters.RecombinedDatabase != null)
             {
-                recombinationtable = Collapsible("Recombination Table", CreateTemplateTable(RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true));
+                recombinationtable = Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true));
                 recombinationtable += CreateRecombinationDatabaseTables();
             }
 
             string readalignmenttable = "";
-            if (ReadAlignment != null)
+            if (Parameters.ReadAlignment != null)
             {
-                readalignmenttable = Collapsible("Read Alignment Table", CreateTemplateTable(ReadAlignment.Templates, -1, AsideType.ReadAlignment, true));
+                readalignmenttable = Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment.Templates, -1, AsideType.ReadAlignment, true));
             }
 
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
@@ -1616,7 +1628,7 @@ assetsfolder = '{AssetsFolderName}';
  {CreateTemplateTables()}
  {Collapsible("Graph", $"<img src='{AssetFolderName}/graph.svg' alt='The De Bruijn graph as resulting from the assembler.'>")}
  {Collapsible("Simplified Graph", $"<img src='{AssetFolderName}/simplified-graph.svg' alt='The De Bruijn graph as resulting from the assembler. But now with the contig ids instead of the sequences.'>")}
- {Collapsible("Paths Table", CreatePathsTable())}
+ {Collapsible("Parameters.Paths Table", CreatePathsTable())}
  {Collapsible("Contigs Table", CreateContigsTable())}
  {Collapsible("Reads Table", CreateReadsTable())}
  {Collapsible("Meta Information", MetaInformation())}
@@ -1691,7 +1703,7 @@ assetsfolder = '{AssetsFolderName}';
             CreateAsides();
 
             stopwatch.Stop();
-            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");
+            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - Parameters.Assembler.meta_data.drawingtime}");
             SaveAndCreateDirectories(filename, html);
         }
     }

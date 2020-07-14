@@ -873,25 +873,6 @@ namespace AssemblyNameSpace
                             if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             output.Files.Add(hsettings);
                             break;
-                        case "csv":
-                            var csettings = new RunParameters.Report.CSV();
-
-                            foreach (var setting in pair.GetValues())
-                            {
-                                switch (setting.Name)
-                                {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        csettings.Path = Path.GetFullPath(setting.GetValue());
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path'"));
-                                        break;
-                                }
-                            }
-                            if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(csettings);
-                            break;
                         case "fasta":
                             var fsettings = new RunParameters.Report.FASTA();
 

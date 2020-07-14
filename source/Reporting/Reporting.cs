@@ -14,43 +14,33 @@ using System.ComponentModel;
 namespace AssemblyNameSpace
 {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
-    struct ReportInputParameters
+    public struct ReportInputParameters
     {
-        public readonly Assembler assembler;
-        public readonly List<TemplateDatabase> templateDatabases;
+        public readonly Assembler Assembler;
+        public readonly List<TemplateDatabase> TemplateDatabases;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly List<TemplateDatabase> RecombinationDatabases;
         public readonly TemplateDatabase ReadAlignment;
         public readonly ParsedFile BatchFile;
+        public readonly List<GraphPath> Paths;
         public readonly string Runname;
         public ReportInputParameters(Assembler assm, List<TemplateDatabase> databases = null, TemplateDatabase recombineddatabase = null, List<TemplateDatabase> recombinationdatabases = null, TemplateDatabase readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
-            assembler = assm;
-            templateDatabases = databases;
+            Assembler = assm;
+            TemplateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
             RecombinationDatabases = recombinationdatabases;
             ReadAlignment = readAlignment;
             BatchFile = batchFile;
             Runname = runname;
+            Paths = Assembler.GetAllPaths();
         }
     }
     /// <summary>
     /// To be a basepoint for any reporting options, handling all the metadata.
     /// </summary>
-    abstract class Report
+    public abstract class Report
     {
-        /// <summary>
-        /// The condensed graph.
-        /// </summary>
-        protected List<CondensedNode> condensed_graph;
-        /// <summary>
-        /// The not condensed graph.
-        /// </summary>
-        protected Node[] graph;
-        /// <summary>
-        /// The metadata of the run.
-        /// </summary>
-        protected MetaInformation meta_data;
         /// <summary>
         /// The reads used as input in the run.
         /// </summary>
@@ -59,16 +49,7 @@ namespace AssemblyNameSpace
         /// Possibly the reads from PEAKS used in the run.
         /// </summary>
         protected List<MetaData.IMetaData> reads_metadata;
-        /// <summary>
-        /// The alphabet used in the assembly
-        /// </summary>
-        protected Alphabet alphabet;
-        protected List<TemplateDatabase> databases;
-        protected List<GraphPath> Paths;
-        public readonly TemplateDatabase RecombinedDatabase;
-        public readonly List<TemplateDatabase> RecombinationDatabases;
         protected readonly int MaxThreads;
-        public readonly TemplateDatabase ReadAlignment;
         public readonly ParsedFile BatchFile;
         public readonly ReportInputParameters Parameters;
         /// <summary>
@@ -77,25 +58,16 @@ namespace AssemblyNameSpace
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int max_threads)
         {
-            condensed_graph = parameters.assembler.condensed_graph;
-            graph = parameters.assembler.graph;
-            meta_data = parameters.assembler.meta_data;
-            reads = parameters.assembler.reads;
-            reads_metadata = parameters.assembler.reads_metadata;
+            reads = parameters.Assembler.reads;
+            reads_metadata = parameters.Assembler.reads_metadata;
             MaxThreads = max_threads;
 
             if (parameters.ReadAlignment != null)
             {
-                reads.AddRange(parameters.assembler.shortReads.Select(a => a.Item1));
-                reads_metadata.AddRange(parameters.assembler.shortReads.Select(a => a.Item2));
+                reads.AddRange(parameters.Assembler.shortReads.Select(a => a.Item1));
+                reads_metadata.AddRange(parameters.Assembler.shortReads.Select(a => a.Item2));
             }
 
-            alphabet = parameters.assembler.alphabet;
-            databases = parameters.templateDatabases;
-            Paths = parameters.assembler.GetAllPaths();
-            RecombinedDatabase = parameters.RecombinedDatabase;
-            RecombinationDatabases = parameters.RecombinationDatabases;
-            ReadAlignment = parameters.ReadAlignment;
             BatchFile = parameters.BatchFile;
             Parameters = parameters;
         }
@@ -114,7 +86,7 @@ namespace AssemblyNameSpace
             stopwatch.Start();
             var buffer = Create();
             stopwatch.Stop();
-            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - meta_data.drawingtime}");
+            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - Parameters.Assembler.meta_data.drawingtime}");
             SaveAndCreateDirectories(filename, buffer);
         }
 
@@ -151,7 +123,7 @@ namespace AssemblyNameSpace
         protected List<GraphPath> AllPathsContaining(int id)
         {
             var output = new List<GraphPath>();
-            foreach (var path in Paths)
+            foreach (var path in Parameters.Paths)
             {
                 foreach (var node in path.Nodes)
                 {

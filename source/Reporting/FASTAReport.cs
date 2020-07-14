@@ -6,7 +6,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// A FASTA report.
     /// </summary>
-    class FASTAReport : Report
+    public class FASTAReport : Report
     {
         readonly int MinScore;
         readonly RunParameters.Report.FastaOutputType OutputType;
@@ -32,8 +32,8 @@ namespace AssemblyNameSpace
 
             if (OutputType == RunParameters.Report.FastaOutputType.Assembly)
             {
-                sequences.Capacity = Paths.Count;
-                foreach (var path in Paths)
+                sequences.Capacity = Parameters.Paths.Count;
+                foreach (var path in Parameters.Paths)
                 {
                     if (path.Score >= MinScore)
                         sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
@@ -41,8 +41,8 @@ namespace AssemblyNameSpace
             }
             else if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
             {
-                sequences.Capacity = RecombinedDatabase.Templates.Count;
-                foreach (var template in RecombinedDatabase.Templates)
+                sequences.Capacity = Parameters.RecombinedDatabase.Templates.Count;
+                foreach (var template in Parameters.RecombinedDatabase.Templates)
                 {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
@@ -50,8 +50,8 @@ namespace AssemblyNameSpace
             }
             else
             {
-                sequences.Capacity = ReadAlignment.Templates.Count;
-                foreach (var template in ReadAlignment.Templates)
+                sequences.Capacity = Parameters.ReadAlignment.Templates.Count;
+                foreach (var template in Parameters.ReadAlignment.Templates)
                 {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
