@@ -151,7 +151,7 @@ namespace AssemblyNameSpace
         /// <param name="separator"> CSV separator used. </param>
         /// <param name="decimalseparator"> Separator used in decimals. </param>
         /// <returns> A list of all reads found with their metadata. </returns>
-        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, int cutoffscore, int localcutoffscore, FileFormat.Peaks peaksformat, int min_length_patch, char separator = ',', char decimalseparator = '.')
+        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, FileFormat.Peaks peaksformat, RunParameters.Input.PeaksParameters parameters)
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
@@ -172,7 +172,7 @@ namespace AssemblyNameSpace
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, separator, decimalseparator, peaksformat, inputFile, filter);
+                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, parameters.Separator, parameters.DecimalSeparator, peaksformat, inputFile, filter);
 
                 if (parsed.HasOnlyWarnings()) continue;
 
@@ -191,7 +191,7 @@ namespace AssemblyNameSpace
 
                 var meta = parsed.ReturnOrFail();
 
-                if (meta.Confidence >= cutoffscore)
+                if (meta.Confidence >= parameters.CutoffALC)
                 {
                     if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
                     {
@@ -210,17 +210,17 @@ namespace AssemblyNameSpace
                     int startpos = 0;
                     for (int i = 0; i < meta.Local_confidence.Length; i++)
                     {
-                        if (!patch && meta.Local_confidence[i] >= localcutoffscore)
+                        if (!patch && meta.Local_confidence[i] >= parameters.LocalCutoffALC)
                         {
                             // Found a potential starting position
                             startpos = i;
                             patch = true;
                         }
-                        else if (patch && meta.Local_confidence[i] < localcutoffscore)
+                        else if (patch && meta.Local_confidence[i] < parameters.LocalCutoffALC)
                         {
                             // Ends a patch
                             patch = false;
-                            if (i - startpos >= min_length_patch)
+                            if (i - startpos >= parameters.MinLengthPatch)
                             {
                                 // Long enough use it for assembly
                                 char[] chunk = new char[i - startpos];

@@ -95,11 +95,11 @@ namespace AssemblyNameSpace
             singleRun = parameters.singleRun;
             MaxThreads = max_threads;
 
-            if (singleRun.ReadAlign != null)
+            if (singleRun.Recombine.ReadAlignment != null)
             {
-                foreach (var set in singleRun.ReadAlign.Input.Data)
+                foreach (var set in singleRun.Recombine.ReadAlignment.Input.Data.Raw)
                 {
-                    reads.AddRange(set.Select(a => HelperFunctionality.StringToSequence(a.Item1, new Alphabet(singleRun.ReadAlign.Alphabet))));
+                    reads.AddRange(set.Select(a => HelperFunctionality.StringToSequence(a.Item1, new Alphabet(singleRun.Recombine.ReadAlignment.Alphabet))));
                     reads_metadata.AddRange(set.Select(a => a.Item2));
                 }
             }

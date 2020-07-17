@@ -1,0 +1,134 @@
+------| Assemble |------
+
+-Run Info---------------
+Version	: 0
+Runname	: Peaks Example
+Runtype : Group
+
+Input ->
+    Peaks ->
+        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        Format          : X+
+        Name            : 01
+        Separator       : ,
+        DecimalSeparator: .
+        parameters...
+    <-
+    FASTA ->
+        Path
+        Name
+        Identifier
+    <-
+    Simple ->
+        Path
+        Name
+    <-
+    Folder ->
+        Path
+        Excludes
+    <-
+<-
+
+Assembly ->
+    InputParameters ->
+        Peaks ->
+            CutoffALC     : 98
+            LocalCutoffALC: 100
+            MinLengthPatch  : 100
+        <-
+    <-
+
+    K	              : 7
+    MinimalHomology   : K-1
+    DuplicateThreshold: K-1
+    Reverse	          : False
+
+    Alphabet->
+        Path : ../alphabets/common_errors_alphabet.csv
+        Name : Normal
+    <-
+<-
+
+TemplateMatching ->
+
+    IncludeShortReads: True
+    CutoffScore : 8
+
+    Databases->
+        Database->
+            Path      : ../templates/IGHV.fasta
+            Name      : IGHV
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 5
+        <-
+        Database->
+            Path    : ../templates/IGHJ_simplified.fasta
+            Name    : IGHJ
+            Scoring : Relative
+        <-
+        Database->
+            Path      : ../templates/IGHC_uniprot.fasta
+            Name      : IGHC
+            Identifier: GN=([\p{P}\w*-]+)
+            ClassChars: 5
+        <-
+        Database->
+            Path      : ../templates/IGK+LV.fasta
+            Name      : IGLV
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
+        <-
+        Database->
+            Path      : ../templates/IGK+LJ.fasta
+            Name      : IGLJ
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
+        <-
+        Database->
+            Path      : ../templates/IGK+LC.fasta
+            Name      : IGLC
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            ClassChars: 4
+        <-
+    <-
+<-
+
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    N : 1
+
+    -Minimal average score per position to be included
+    CutoffScore : 12
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
+
+
+    -The alphabet used for all databases
+    Alphabet ->
+        Path             : ../alphabets/blosum62.csv
+        Name             : Blosum62
+        GapStartPenalty  : 12
+        GapExtendPenalty : 1
+    <-
+
+    DirectReadsAlign -> 
+        InputParameters ->
+            Peaks ->
+                CutoffALC     : 98
+                LocalCutoffALC: 100
+                MinLengthPatch  : 100
+            <-
+        <-
+        
+        CutoffScore: 8
+        ForceOnSingleTemplate: False
+    <-
+<-
+
+Report ->
+    HTML ->
+        Path    : ../../report-peaks.html
+    <-
+<-

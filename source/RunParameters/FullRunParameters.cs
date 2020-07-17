@@ -35,19 +35,19 @@ namespace AssemblyNameSpace
             public int MaxNumberOfCPUCores;
 
             /// <summary>
+            /// The input for this run
+            /// </summary>
+            public RunParameters.Input.InputParameters Input;
+
+            /// <summary>
             /// Sets the parameters for the assembly
             /// </summary>
             public AssemblerParameter Assembly;
 
             /// <summary>
-            /// The template(s) to be used in this run.
+            /// The parameters for the template matching
             /// </summary>
-            public List<DatabaseValue> Databases;
-
-            /// <summary>
-            /// The report(s) to be generated for this run.
-            /// </summary>
-            public ReportParameter Report;
+            public TemplateMatchingParameter TemplateMatching;
 
             /// <summary>
             /// The recombine parameters (if given).
@@ -55,9 +55,9 @@ namespace AssemblyNameSpace
             public RecombineParameter Recombine;
 
             /// <summary>
-            /// The settings for the reads alignment (if given).
+            /// The report(s) to be generated for this run.
             /// </summary>
-            public ReadAlignmentParameter ReadAlignment;
+            public ReportParameter Report;
 
             /// <summary>
             /// To save the original batchfile
@@ -73,12 +73,11 @@ namespace AssemblyNameSpace
                 Runtype = RuntypeValue.Group;
                 MaxNumberOfCPUCores = Environment.ProcessorCount;
 
+                Input = null;
                 Assembly = null;
-                Databases = new List<DatabaseValue>();
-                Report = null;
+                TemplateMatching = null;
                 Recombine = null;
-                ReadAlignment = null;
-
+                Report = null;
             }
 
             /// <summary>
@@ -135,14 +134,14 @@ namespace AssemblyNameSpace
                                 if (Runtype == RuntypeValue.Group)
                                 {
                                     id++;
-                                    output.Add(new SingleRun(id, Runname, Assembly.Input.CleanedData, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, BatchFile, bar));
+                                    output.Add(new SingleRun(id, Runname, Assembly.Input.Data.Cleaned, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
                                 }
                                 else
                                 {
-                                    foreach (var input in Assembly.Input.Data)
+                                    foreach (var input in Assembly.Input.Data.Raw)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, Databases, Recombine, ReadAlignment, Report, BatchFile, bar));
+                                        output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
                                     }
                                 }
                             }

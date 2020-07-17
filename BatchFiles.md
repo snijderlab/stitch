@@ -514,25 +514,6 @@ HTML ->
 <-
 ```
 
-##### CSV (m) *
-
-_(TODO outdated)_ 
-
-To generate a CSV report, it will add summary information of each run on a single line to the file.
-If the file exists already it will append the new data lines to it, so that multiple runs after each other will not destroy previous work.
-If also HTML reports are generated the CSV file will contain a hyperlink (in Microsoft Excel style) to every HTML report.
-
-| Inner parameter | Explanation                    | Default Value |
-| --------------- | ------------------------------ | ------------- |
-| Path            | The path to save the report to | (No Default)  |
-
-_Example_
-```
-CSV ->
-    Path: Report.csv
-<-
-```
-
 ##### FASTA (m) *
 
 To generate a FASTA file with all paths, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
@@ -582,9 +563,33 @@ Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
 Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fasta
 ```
 
+### Scoring
+
+#### Input/Reads
+
+All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `2 - 1 / (log10(Area))`, and the positional score is the local confidence as reported by peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score).
+
+#### Assembler
+
+If there are duplicate reads the intensities are added together.
+
+When the paths in the graph are found these also get an intensity and positional score. The intensity is always 1 and the positional score is the depth of coverage for each position in the sequence of the path.
+
+#### Template Matching
+
+The score of a match (read or path against a template) is calculated by the smith waterman algorithm solely based on the alphabet used. If the score of a match is bigger than or equal to the cutoff score as defined in the input batch file times the square root of the length of the template the match is added to the list of matches of the template, otherwise it is discarded.
+
+```
+matchScore >= cutoffScore * sqrt(templateLength)
+```
+
+#### Consensus Sequence
+
+The consensus sequence for each position is based on the positional score of each amino acid.
+
 ### Example Batch Files
 
-A somewhat minimal batch files.
+A somewhat minimal batch file.
 
 ```
 ------| Assemble |------

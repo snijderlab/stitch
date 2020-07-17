@@ -465,5 +465,27 @@ namespace AssemblyNameSpace
 
             return input / factor * factor;
         }
+
+        public static bool EvaluateTrilean(RunParameters.Trilean trilean, bool baseValue)
+        {
+            return trilean switch
+            {
+                RunParameters.Trilean.True => true,
+                RunParameters.Trilean.False => false,
+                RunParameters.Trilean.Unspecified => baseValue,
+                _ => throw new ArgumentException("Tried to evaluate a trilean type which does not exist.")
+            };
+        }
+
+        public static bool EvaluateTrilean(RunParameters.Trilean trilean1, RunParameters.Trilean trilean2, bool baseValue)
+        {
+            return trilean1 switch
+            {
+                RunParameters.Trilean.True => true,
+                RunParameters.Trilean.False => false,
+                RunParameters.Trilean.Unspecified => EvaluateTrilean(trilean2, baseValue),
+                _ => throw new ArgumentException("Tried to evaluate a trilean type which does not exist.")
+            };
+        }
     }
 }
