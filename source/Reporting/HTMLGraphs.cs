@@ -13,7 +13,7 @@ namespace AssemblyNameSpace
             if (label == 0) label = 1;
             var annotated = new List<(string, double)>();
             for (int i = offset; i < data.Count + offset; i++)
-                annotated.Add((i % label == 0 ? $"{i:G3}" : "", data[i]));
+                annotated.Add((i % label == 0 ? $"{i:G3}" : "", data[i - offset]));
 
             return annotated;
         }

@@ -512,22 +512,6 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// To indicate to return a CSV report.
-            /// </summary>
-            public class CSV : Parameter
-            {
-                /// <summary>
-                /// To get an ID for a CSV line.
-                /// </summary>
-                /// <param name="r">The values of the parameters for this run.</param>
-                /// <returns>An ID.</returns>
-                public string GetID(SingleRun r)
-                {
-                    return r.ID.ToString();
-                }
-            }
-
-            /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
             public enum FastaOutputType { Assembly, Recombine, ReadsAlign }
