@@ -48,7 +48,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To contain the input data itself
             /// </summary>
-            public InputData Data = null;
+            public InputData Data = new InputData();
 
             public class InputData
             {
@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
 
             public class InputLocalParameters
             {
-                public PeaksParameters Peaks;
+                public PeaksParameters Peaks = null;
             }
 
             /// <summary>
@@ -114,6 +114,11 @@ namespace AssemblyNameSpace
                 public int CutoffALC = 95;
                 public int LocalCutoffALC = 90;
                 public int MinLengthPatch = 8;
+
+                public string Display()
+                {
+                    return $"Peaks ->\n\tSeparator: {Separator}\n\tDecimalSeparator: {DecimalSeparator}\n\tCutoffALC: {CutoffALC}\n\tLocalCutoffALC: {LocalCutoffALC}\n\tMinLengthPatch: {MinLengthPatch}\n<-";
+                }
             }
         }
 
@@ -257,7 +262,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To contain a local definition of the input
             /// </summary>
-            public Input Input = null;
+            public Input Input = new Input();
 
             /// <summary>
             /// The K or values of K for this run.
@@ -451,7 +456,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
 
-            public Input Input;
+            public Input Input = new Input();
         }
 
         public class ReportParameter

@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
 
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
-            if (output.Recombine != null || output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
+            if (output.Recombine != null && output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
             if (output.Report == null || output.Report.Files.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
             else
             {
@@ -134,7 +134,9 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-            if (output.Recombine != null)
+
+            // Parse Recombination order
+            if (output.Recombine != null && output.TemplateMatching != null)
             {
                 var order_string = order.GetValue();
                 // Create a new counter
@@ -173,6 +175,10 @@ namespace AssemblyNameSpace
                 }
             }
 
+            // Propagate alphabets
+            if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
+            if (output.Recombine != null && output.Recombine.ReadAlignment != null && output.Recombine.ReadAlignment.Alphabet == null) output.Recombine.ReadAlignment.Alphabet = output.Recombine.Alphabet;
+
             // Prepare the input
             if (assemblyKey != null) ParseHelper.PrepareInput(namefilter, assemblyKey, output.Assembly.Input, output.Input);
             if (readAlignmentKey != null) ParseHelper.PrepareInput(namefilter, readAlignmentKey, output.Recombine.ReadAlignment.Input, output.Input);
@@ -197,7 +203,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            if (output.Recombine.ReadAlignment != null)
+            if (output.Recombine != null && output.Recombine.ReadAlignment != null)
             {
                 // Finalise all metadata names
                 foreach (var set in output.Recombine.ReadAlignment.Input.Data.Raw)
@@ -415,18 +421,22 @@ namespace AssemblyNameSpace
                 {
                     switch (pair.Name)
                     {
-                        case "input":
+                        case "inputparameters":
                             if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
                             var peaks = new Input.PeaksParameters();
                             foreach (var setting in pair.GetValues())
                             {
                                 if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
-                                else GetLocalPeaksParameters(pair, false, peaks).GetValue(outEither);
+                                else
+                                {
+                                    foreach (var parameter in setting.GetValues())
+                                        GetLocalPeaksParameters(parameter, false, peaks).GetValue(outEither);
+                                }
                             }
                             output.Input.LocalParameters = new Input.InputLocalParameters() { Peaks = peaks };
                             break;
-                        case "inputparameters":
+                        case "input":
                             if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             output.Input.Parameters = ParseInputParameters(nameFilter, pair).GetValue(outEither);
                             break;
@@ -518,15 +528,15 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                Position def_position = new Position(0, 1, new ParsedFile());
+                Position def_position = new Position(0, 1, batchfile);
                 FileRange def_range = new FileRange(def_position, def_position);
 
                 // Generate defaults and return error messages
                 if (output.DuplicateThreshold.Count() == 0)
-                    output.DuplicateThreshold.Add(new KArithmetic(KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
+                    output.DuplicateThreshold.Add(new KArithmetic(new KArithmetic.Arithmetic.Operator(KArithmetic.Arithmetic.OpType.Minus, new KArithmetic.Arithmetic.K(), new KArithmetic.Arithmetic.Constant(1))));
 
                 if (output.MinimalHomology.Count() == 0)
-                    output.MinimalHomology.Add(new KArithmetic(KArithmetic.TryParse("K-1", def_range, new ParsedFile()).GetValue(outEither)));
+                    output.MinimalHomology.Add(new KArithmetic(new KArithmetic.Arithmetic.Operator(KArithmetic.Arithmetic.OpType.Minus, new KArithmetic.Arithmetic.K(), new KArithmetic.Arithmetic.Constant(1))));
 
                 if (output.Alphabet == null)
                     outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Alphabet"));
@@ -810,6 +820,7 @@ namespace AssemblyNameSpace
                 if (output.Databases.Count() == 0)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any database"));
 
+                outEither.Value = output;
                 return outEither;
             }
             public static ParseResult<(RecombineParameter, KeyValue, KeyValue)> ParseRecombine(NameFilter namefilter, KeyValue key)
@@ -819,7 +830,6 @@ namespace AssemblyNameSpace
 
                 KeyValue order = null;
                 KeyValue readAlignmentKey = null;
-                var database_names = new List<string>();
 
                 foreach (var setting in key.GetValues())
                 {
@@ -856,10 +866,6 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (output.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Alphabet"));
-                if (database_names.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Databases"));
-
-                // Parse the order
                 if (order == null)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Order"));
 
@@ -876,18 +882,22 @@ namespace AssemblyNameSpace
                 {
                     switch (pair.Name)
                     {
-                        case "input":
+                        case "inputparameters":
                             if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
                             var peaks = new Input.PeaksParameters();
                             foreach (var setting in pair.GetValues())
                             {
                                 if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
-                                else GetLocalPeaksParameters(pair, false, peaks).GetValue(outEither);
+                                else
+                                {
+                                    foreach (var parameter in setting.GetValues())
+                                        GetLocalPeaksParameters(parameter, false, peaks).GetValue(outEither);
+                                }
                             }
                             output.Input.LocalParameters = new Input.InputLocalParameters() { Peaks = peaks };
                             break;
-                        case "inputparameters":
+                        case "input":
                             if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             output.Input.Parameters = ParseInputParameters(namefilter, pair).GetValue(outEither);
                             break;
@@ -1323,24 +1333,25 @@ namespace AssemblyNameSpace
                         }
                         break;
                     default:
-                        var parameters = GetLocalPeaksParameters(setting, true, peaks_settings.Parameter);
-                        outEither.Messages.AddRange(parameters.Messages);
+                        var (parameters, succes) = GetLocalPeaksParameters(setting, withprefix, peaks_settings.Parameter).GetValue(outEither);
+                        peaks_settings.Parameter = parameters;
 
-                        if (parameters.Value == false)
+                        if (succes == false)
                             outEither.Value = false;
                         break;
                 }
 
                 return outEither;
             }
-            public static ParseResult<bool> GetLocalPeaksParameters(KeyValue setting, bool withprefix, Input.PeaksParameters parameters)
+            public static ParseResult<(Input.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool withprefix, Input.PeaksParameters parameters)
             {
-                var outEither = new ParseResult<bool>(true);
+                var outEither = new ParseResult<(Input.PeaksParameters, bool)>();
+                outEither.Value = (parameters, true);
                 var name = setting.Name;
 
                 if (withprefix && !name.StartsWith("peaks"))
                 {
-                    outEither.Value = false;
+                    outEither.Value = (parameters, false);
                     return outEither;
                 }
 
@@ -1370,7 +1381,7 @@ namespace AssemblyNameSpace
                             parameters.DecimalSeparator = setting.GetValue().First();
                         break;
                     default:
-                        outEither.Value = false;
+                        outEither.Value = (parameters, false);
                         break;
                 }
 

@@ -360,57 +360,6 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaBatchFile()
-        {
-            Console.WriteLine(Directory.GetCurrentDirectory());
-            Console.WriteLine(Path.GetFullPath(Globals.Root + "examples/batchfiles/smalltest.txt"));
-            var parameters = ParseCommandFile.Batch(Globals.Root + "examples/batchfiles/smalltest.txt");
-            var runs = parameters.CreateRuns();
-            Assert.AreEqual(1, runs.Count());
-            Assert.AreEqual(1, runs[0].Input.Count());
-            Assert.AreEqual(1, runs[0].Template.Count());
-
-            var run = runs[0];
-            var template_parameter = run.Template[0];
-
-            var alphabet = new Alphabet(run.Alphabet);
-            var assm = new Assembler(run.K, run.DuplicateThreshold, run.MinimalHomology, run.Reverse, alphabet);
-
-            assm.GiveReads(run.Input);
-
-            assm.Assemble();
-
-            var database = new TemplateDatabase(template_parameter.Templates, new Alphabet(template_parameter.Alphabet), template_parameter.Name, template_parameter.CutoffScore, 0);
-
-            database.Match(assm.GetAllPaths(), Environment.ProcessorCount);
-
-            // Test if something went wrong
-            Assert.AreEqual(1, database.Templates.Count());
-            Assert.AreEqual(1, database.Templates[0].Matches.Count());
-            var template = database.Templates[0];
-            var match = template.Matches[0];
-            var reference_alphabet = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-
-            Console.WriteLine(match);
-            Console.WriteLine(reference_alphabet);
-
-            // Alphabet
-            Assert.AreEqual("Blosum62", template_parameter.Alphabet.Name);
-            Assert.AreEqual(12, template_parameter.Alphabet.GapStartPenalty);
-            Assert.AreEqual(2, template_parameter.Alphabet.GapExtendPenalty);
-            Assert.IsNotNull(template_parameter.Alphabet);
-            // Template sequence
-            Assert.AreEqual("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", AminoAcid.ArrayToString(template.Sequence));
-            // Path sequence
-            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(match.QuerySequence));
-            Assert.AreEqual("TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF", AminoAcid.ArrayToString(assm.GetAllPaths()[0].Sequence));
-            // Match
-            Assert.AreEqual(147, match.Score);
-            Assert.AreEqual(68, match.StartTemplatePosition);
-            Assert.AreEqual(0, match.StartQueryPosition);
-            Assert.AreEqual("30M", match.Alignment.CIGAR());
-        }
-        [TestMethod]
         public void TestGapInConsensusSequence()
         {
             var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);

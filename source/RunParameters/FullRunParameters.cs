@@ -22,63 +22,47 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The name of this run.
             /// </summary>
-            public string Runname;
+            public string Runname = "";
 
             /// <summary>
             /// The type of this run.
             /// </summary>
-            public RuntypeValue Runtype;
+            public RuntypeValue Runtype = RuntypeValue.Group;
 
             /// <summary>
             /// Determines the maximum number of CPU cores to be used.
             /// </summary>
-            public int MaxNumberOfCPUCores;
+            public int MaxNumberOfCPUCores = Environment.ProcessorCount;
 
             /// <summary>
             /// The input for this run
             /// </summary>
-            public RunParameters.Input.InputParameters Input;
+            public RunParameters.Input.InputParameters Input = null;
 
             /// <summary>
             /// Sets the parameters for the assembly
             /// </summary>
-            public AssemblerParameter Assembly;
+            public AssemblerParameter Assembly = null;
 
             /// <summary>
             /// The parameters for the template matching
             /// </summary>
-            public TemplateMatchingParameter TemplateMatching;
+            public TemplateMatchingParameter TemplateMatching = null;
 
             /// <summary>
             /// The recombine parameters (if given).
             /// </summary>
-            public RecombineParameter Recombine;
+            public RecombineParameter Recombine = null;
 
             /// <summary>
             /// The report(s) to be generated for this run.
             /// </summary>
-            public ReportParameter Report;
+            public ReportParameter Report = null;
 
             /// <summary>
             /// To save the original batchfile
             /// </summary>
-            public ParsedFile BatchFile;
-
-            /// <summary>
-            /// A blank instance for the RunParameters with defaults and initialization.
-            /// </summary>
-            public FullRunParameters()
-            {
-                Runname = "";
-                Runtype = RuntypeValue.Group;
-                MaxNumberOfCPUCores = Environment.ProcessorCount;
-
-                Input = null;
-                Assembly = null;
-                TemplateMatching = null;
-                Recombine = null;
-                Report = null;
-            }
+            public ParsedFile BatchFile = null;
 
             /// <summary>
             /// Creates a list of all single runs contained in this run.abstract TO be ran in parallel.

@@ -458,6 +458,7 @@ namespace AssemblyNameSpace
                     if (indices.Contains(next))
                     {
                         // Cycle: end the following of the path and generate the output
+                        // TODO: Should this also include the next node? To really indicate (in the sequence) that it is a cycle
                         opts.Add(indices);
                     }
                     else

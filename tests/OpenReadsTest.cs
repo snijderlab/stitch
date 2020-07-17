@@ -47,7 +47,7 @@ namespace AssemblyTestNameSpace
         public void ExamplePeaksFiles(string file)
         {
             var namefilter = new NameFilter();
-            OpenReads.Peaks(namefilter, new MetaData.FileIdentifier(Globals.Root + file, ""), 99, 90, FileFormat.Peaks.PeaksX(), 5);
+            OpenReads.Peaks(namefilter, new MetaData.FileIdentifier(Globals.Root + file, ""), FileFormat.Peaks.PeaksX(), new AssemblyNameSpace.RunParameters.Input.PeaksParameters());
         }
         /// <summary>
         /// All templates given as examples should be valid FASTA files

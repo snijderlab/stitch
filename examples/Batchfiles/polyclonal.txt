@@ -1,12 +1,15 @@
 -Run Info---------------
 Version	: 0
-Runname	: Basic run with fasta data
+Runname	: Polyclonal Herceptin
 
 - Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
 Input ->
-    Fasta ->
-        Path       : ..\008\200305_HER_test_04_DENOVO.csv
-        Name       : De Novo data
+    Peaks ->
+        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        Format          : X+
+        Name            : 01
+        Separator       : ,
+        DecimalSeparator: .
     <-
 <-
 
@@ -42,8 +45,8 @@ TemplateMatching ->
         GapExtendPenalty : 1
     <-
 
-    Databases ->
-        Database ->
+    Databases->
+        Database->
             Path      : ../templates/IGHV.fasta
             Name      : IGHV
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
@@ -78,6 +81,31 @@ TemplateMatching ->
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
             ClassChars: 4
         <-
+    <-
+<-
+
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    N : 1
+
+    -Minimal average score per position to be included
+    CutoffScore : 12
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
+
+    ReadAlignment -> 
+        InputParameters ->
+            Peaks ->
+                CutoffALC     : 98
+                LocalCutoffALC: 100
+                MinLengthPatch  : 100
+            <-
+        <-
+        
+        CutoffScore: 8
+        ForceOnSingleTemplate: False
     <-
 <-
 

@@ -259,14 +259,12 @@ namespace AssemblyNameSpace
 
             if (header) buffer.Append(TableHeader(templates));
             string unique = "";
-            var seq = "Consensus Sequence";
-            if (type == AsideType.RecombinationDatabase) seq = "Template Sequence";
             if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">{seq}</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">Consensus Sequence</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}', 4, 'number')"" class=""smallcell"">Reads</th>
@@ -279,11 +277,10 @@ namespace AssemblyNameSpace
             {
                 id = GetAsideIdentifier(templateIndex, i, type);
                 link = GetAsideLink(templateIndex, i, type);
-                seq = type == AsideType.RecombinationDatabase ? AminoAcid.ArrayToString(templates[i].Sequence) : templates[i].ConsensusSequence();
                 if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{seq}</td>
+    <td class=""seq"">{templates[i].ConsensusSequence()}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center"">{templates[i].Score}</td>
     <td class=""center"">{templates[i].Matches.Count()}</td>
@@ -320,23 +317,6 @@ namespace AssemblyNameSpace
             }
 
             buffer.AppendLine("</table>");
-
-            return buffer.ToString();
-        }
-
-        /// <summary>
-        /// Creates tables for all databases used in recombination.
-        /// </summary>
-        string CreateRecombinationDatabaseTables()
-        {
-            var buffer = new StringBuilder();
-
-            int index = -1;
-            foreach (var database in Parameters.RecombinationDatabases)
-            {
-                index++;
-                buffer.AppendLine(Collapsible($"Recombination Database {database.Name}", CreateTemplateTable(database.Templates, index, AsideType.RecombinationDatabase, true)));
-            }
 
             return buffer.ToString();
         }
@@ -464,7 +444,7 @@ namespace AssemblyNameSpace
             var alignment = CreateTemplateAlignment(template, id, location);
 
             string meta = "";
-            if (template.MetaData != null && (type == AsideType.RecombinationDatabase || type == AsideType.Template))
+            if (template.MetaData != null && type == AsideType.Template)
             {
                 meta = template.MetaData.ToHTML();
             }
@@ -475,12 +455,9 @@ namespace AssemblyNameSpace
                 case AsideType.ReadAlignment:
                     based = $"<h2>Based on</h2><p>{GetAsideLink(i, AsideType.RecombinedTemplate, location)}</p>";
                     break;
-                case AsideType.RecombinationDatabase:
-                    based = $"<h2>Out of database</h2><p>{template.Name}</p>";
-                    break;
                 case AsideType.RecombinedTemplate:
                     if (template.Recombination != null)
-                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.RecombinationDatabase, location)).Substring(3)}</p>";
+                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
                     break;
                 default:
                     break;
@@ -1005,7 +982,6 @@ namespace AssemblyNameSpace
                     case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, index1); break;
                     case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index2].Templates[index1], AsideType.Template, index2, index1); break;
                     case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase.Templates[index1], AsideType.RecombinedTemplate, -1, index1); break;
-                    case AsideType.RecombinationDatabase: SaveTemplateAside(Parameters.RecombinationDatabases[index2].Templates[index1], AsideType.RecombinationDatabase, index2, index1); break;
                     case AsideType.ReadAlignment: SaveTemplateAside(Parameters.ReadAlignment.Templates[index1], AsideType.ReadAlignment, -1, index1); break;
                 };
             }
@@ -1042,15 +1018,6 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < Parameters.RecombinedDatabase.Templates.Count(); i++)
                 {
                     jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
-                }
-
-                // Recombination Databases Tables Asides
-                for (int t = 0; t < Parameters.RecombinationDatabases.Count(); t++)
-                {
-                    for (int i = 0; i < Parameters.RecombinationDatabases[t].Templates.Count(); i++)
-                    {
-                        jobbuffer.Add((AsideType.RecombinationDatabase, t, i));
-                    }
                 }
             }
             // Reads Alignment Table Asides
@@ -1219,7 +1186,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Contig, Read, Template, Path, RecombinedTemplate, RecombinationDatabase, ReadAlignment }
+        enum AsideType { Contig, Read, Template, Path, RecombinedTemplate, ReadAlignment }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -1234,8 +1201,6 @@ namespace AssemblyNameSpace
                     return "P";
                 case AsideType.RecombinedTemplate:
                     return "RC";
-                case AsideType.RecombinationDatabase:
-                    return "RT";
                 case AsideType.ReadAlignment:
                     return "RA";
             }
@@ -1255,8 +1220,6 @@ namespace AssemblyNameSpace
                     return "path";
                 case AsideType.RecombinedTemplate:
                     return "recombined-template";
-                case AsideType.RecombinationDatabase:
-                    return "recombination-database";
                 case AsideType.ReadAlignment:
                     return "read-alignment";
             }
@@ -1289,10 +1252,6 @@ namespace AssemblyNameSpace
             else if (type == AsideType.Template)
             {
                 metadata = Parameters.TemplateDatabases[index1].Templates[index2].MetaData;
-            }
-            else if (type == AsideType.RecombinationDatabase)
-            {
-                metadata = Parameters.RecombinationDatabases[index1].Templates[index2].MetaData;
             }
             if (metadata != null && metadata.Identifier != null)
             {
@@ -1583,7 +1542,7 @@ assetsfolder = '{AssetsFolderName}';
                 var buffer = new StringBuilder();
                 var bf = BatchFile;
                 buffer.Append($"<pre><i>{bf.Filename}</i>");
-                foreach (var line in bf.Lines) buffer.Append($"<br>{line}");
+                foreach (var line in bf.Lines) buffer.Append(line);
                 buffer.Append("</pre>");
                 return buffer.ToString();
             }
@@ -1605,7 +1564,6 @@ assetsfolder = '{AssetsFolderName}';
             if (Parameters.RecombinedDatabase != null)
             {
                 recombinationtable = Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true));
-                recombinationtable += CreateRecombinationDatabaseTables();
             }
 
             string readalignmenttable = "";

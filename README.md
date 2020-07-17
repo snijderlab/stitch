@@ -6,17 +6,17 @@ There are distributed executable files for windows (x64), linux (x64) and mac (x
 
 Windows (x64):
 ```
-.\assembler.exe examplebatchfile.txt
+.\assembler.exe batchfiles\monoclonal.txt
 ```
 
 Linux (x64, most versions):
 ```
-./assembler_linux examplebatchfile.txt
+./assembler_linux batchfiles/monoclonal.txt
 ```
 
 OSX (x64, minimum version macOS 10.12 Sierra):
 ```
-./assembler_mac examplebatchfile.txt
+./assembler_mac batchfiles/monoclonal.txt
 ```
 
 For help creating batch files see `BatchFiles.md`, this is included with the package.
@@ -75,10 +75,11 @@ Example 008 is an example of real world data gotten with PEAKS.
 Example 009 is an example of a FASTA input file.
 
 
-# Authors
+# Credits
 
-* Douwe Schulte - Wrote the software
-* Joost Snijder - Supervised and collaborated
+* Douwe Schulte - Software engineer
+* Joost Snijder - Principal investigator
+* Bastiaan de Graaf - Thanks for the code reviews
 
 
 # Acknowledgements

@@ -1,19 +1,24 @@
-------| Assemble |------
-
 -Run Info---------------
 Version	: 0
-Runname	: Peaks Example
-Runtype : Group
+Runname	: Basic run
 
+- Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
+Input ->
+    Peaks ->
+        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        Format          : X+
+        Name            : 01
+        Separator       : ,
+        DecimalSeparator: .
+    <-
+<-
+
+- These define the parameters for the de bruijn assembler
 Assembly ->
-    Input ->
+    InputParameters ->
         Peaks ->
-            Path            : ..\008\200305_HER_test_04_DENOVO.csv
-            Format          : X+
-            Name            : 01
-            Separator       : ,
-            Cutoffscore     : 98
-            LocalCutoffscore: 100
+            CutoffALC     : 98
+            LocalCutoffALC: 100
             MinLengthPatch  : 100
         <-
     <-
@@ -29,18 +34,16 @@ Assembly ->
     <-
 <-
 
-Recombine->
-    -Pick the <n> highest scoring templates from each database
-    N : 1
-
-    -Minimal average score per position to be included
-    CutoffScore : 12
-
-    -Separated by whitespace means directly attached
-    -Separated by * means with a gap attached
-    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
-
+TemplateMatching ->
     IncludeShortReads: True
+    CutoffScore : 8
+
+    Alphabet ->
+        Path             : ../alphabets/blosum62.csv
+        Name             : Blosum62
+        GapStartPenalty  : 12
+        GapExtendPenalty : 1
+    <-
 
     Databases->
         Database->
@@ -78,38 +81,6 @@ Recombine->
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
             ClassChars: 4
         <-
-    <-
-
-    -The alphabet used for all databases
-    Alphabet ->
-        Path             : ../alphabets/blosum62.csv
-        Name             : Blosum62
-        GapStartPenalty  : 12
-        GapExtendPenalty : 1
-    <-
-<-
-
-ReadsAlign -> 
-    Input ->
-        Peaks ->
-            Path: ..\008\200305_HER_test_04_DENOVO.csv
-            Format: X+
-            Name: 01
-            Separator: ,
-            Cutoffscore: 90
-            LocalCutoffscore: 100
-            MinLengthPatch: 100
-        <-
-    <-
-    
-    CutoffScore: 8
-    ForceOnSingleTemplate: False
-
-    Alphabet ->
-        Path : ../alphabets/blosum62.csv
-        Name : Blosum62
-        GapStartPenalty : 12
-        GapExtendPenalty : 1
     <-
 <-
 
