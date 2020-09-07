@@ -44,6 +44,7 @@ namespace AssemblyNameSpace
             public int local_confidence = -1;
             public int tag = -1;
             public int mode = -1;
+            public string name = "undefined";
 
             /// <summary>
             /// An older version of a PEAKS export.
@@ -67,7 +68,8 @@ namespace AssemblyNameSpace
                     ptm = 11,
                     local_confidence = 12,
                     tag = 13,
-                    mode = 14
+                    mode = 14,
+                    name = "Old"
                 };
             }
 
@@ -96,7 +98,8 @@ namespace AssemblyNameSpace
                     ptm = 14,
                     local_confidence = 15,
                     tag = 16,
-                    mode = 17
+                    mode = 17,
+                    name = "X"
                 };
             }
 
@@ -127,7 +130,8 @@ namespace AssemblyNameSpace
                     ptm = 16,
                     local_confidence = 17,
                     tag = 18,
-                    mode = 19
+                    mode = 19,
+                    name = "X+"
                 };
             }
 
@@ -158,7 +162,8 @@ namespace AssemblyNameSpace
                     ptm = ptm,
                     local_confidence = local_confidence,
                     tag = tag,
-                    mode = mode
+                    mode = mode,
+                    name = "Custom"
                 };
             }
         }

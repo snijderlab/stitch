@@ -85,7 +85,7 @@ namespace AssemblyNameSpace
             var runs = inputparams.CreateRuns(bar);
 
             string pluralsuffix = runs.Count() > 1 ? "s" : "";
-            Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralsuffix} to be done.");
+            Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralsuffix} to be done. Using {inputparams.MaxNumberOfCPUCores} CPU core(s).");
 
             bar.Start(runs.Count() * (2 + (inputparams.Recombine != null ? 1 : 0) + (inputparams.Recombine != null && inputparams.Recombine.ReadAlignment != null ? 1 : 0)));
 

@@ -554,6 +554,11 @@ namespace AssemblyNameSpace
                 if (!RefersToFile) return "";
                 return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<a href='file:///{path}' target='_blank'>{Path}</a>";
             }
+
+            public string Display()
+            {
+                return $"Path: {path}\nName: {Name}";
+            }
         }
     }
 }

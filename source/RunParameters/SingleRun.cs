@@ -247,6 +247,8 @@ namespace AssemblyNameSpace
                                 (s, _) => s.Item2.FinaliseIdentifier()
                             );
 
+                            Console.WriteLine($"Amount of reads for ReadAlign: {Recombine.ReadAlignment.Input.Data.Cleaned.Count}");
+
                             read_templates = new TemplateDatabase(templates, new Alphabet(Recombine.ReadAlignment.Alphabet), "ReadAlignDatabase", Recombine.ReadAlignment.CutoffScore, 0);
 
                             read_templates.Match(Recombine.ReadAlignment.Input.Data.Cleaned, max_threads, HelperFunctionality.EvaluateTrilean(Recombine.ReadAlignment.ForceOnSingleTemplate, Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate));

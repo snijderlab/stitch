@@ -62,11 +62,38 @@ namespace AssemblyNameSpace
             public class InputParameters
             {
                 public List<Input.Parameter> Files = new List<Input.Parameter>();
+
+                public string Display()
+                {
+                    var buf = new StringBuilder();
+                    buf.AppendLine("InputParameters ->");
+                    foreach (var file in Files)
+                    {
+                        buf.AppendLine(file.Display());
+                    }
+                    buf.Append("<-");
+                    return buf.ToString();
+                }
             }
 
             public class InputLocalParameters
             {
                 public PeaksParameters Peaks = null;
+
+                public string Display()
+                {
+                    if (Peaks == null) return "";
+                    return $"InputLocalParameters ->\n{Peaks.Display()}\n<-";
+                }
+            }
+
+            public string Display()
+            {
+                var output = "Input ->\n";
+                if (LocalParameters != null) output += LocalParameters.Display();
+                if (Parameters != null) output += Parameters.Display();
+                output += "<-";
+                return output;
             }
 
             /// <summary>
@@ -78,6 +105,8 @@ namespace AssemblyNameSpace
                 /// The identifier of the file.
                 /// </summary>
                 public MetaData.FileIdentifier File = new MetaData.FileIdentifier();
+
+                public abstract string Display();
             }
 
             /// <summary>
@@ -91,12 +120,23 @@ namespace AssemblyNameSpace
                 /// The file format of the PEAKS file.
                 /// </summary>
                 public FileFormat.Peaks FileFormat = AssemblyNameSpace.FileFormat.Peaks.PeaksX();
+
+                public override string Display()
+                {
+                    return $"Peaks ->\n{File.Display()}\n{Parameter.Display()}\nFileFormat: {FileFormat.name}\n<-";
+                }
             }
 
             /// <summary>
             /// A parameter for simple reads files.
             /// </summary>
-            public class Reads : Parameter { }
+            public class Reads : Parameter
+            {
+                public override string Display()
+                {
+                    return $"Simple ->\n{File.Display()}\n<-";
+                }
+            }
 
             /// <summary>
             /// A parameter for FASTA reads files.
@@ -105,6 +145,11 @@ namespace AssemblyNameSpace
             {
                 /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
                 public Regex Identifier = new Regex("(.*)");
+
+                public override string Display()
+                {
+                    return $"FASTA ->\n{File.Display()}\nIdentifier: {Identifier}\n<-";
+                }
             }
 
             public class PeaksParameters
@@ -130,7 +175,10 @@ namespace AssemblyNameSpace
             /// <summary>
             /// A value for K.
             /// </summary>
-            public abstract class KValue { }
+            public abstract class KValue
+            {
+                public abstract string Display();
+            }
 
             /// <summary>
             /// A single value for K.
@@ -149,6 +197,11 @@ namespace AssemblyNameSpace
                 public Single(int value)
                 {
                     Value = value;
+                }
+
+                public override string Display()
+                {
+                    return Value.ToString();
                 }
             }
 
@@ -169,6 +222,16 @@ namespace AssemblyNameSpace
                 public Multiple(int[] values)
                 {
                     Values = values;
+                }
+
+                public override string Display()
+                {
+                    var output = Values[0].ToString();
+                    for (int i = 1; i < Values.Length; i++)
+                    {
+                        output += $", {Values[i]}";
+                    }
+                    return output;
                 }
             }
 
@@ -198,6 +261,11 @@ namespace AssemblyNameSpace
                 public Range()
                 {
                     Step = 1;
+                }
+
+                public override string Display()
+                {
+                    return $"Start: {Start}, End: {End}, Step: {Step}";
                 }
             }
         }
@@ -255,6 +323,11 @@ namespace AssemblyNameSpace
             /// </summary>
             public int GapExtendPenalty = 1;
             public string Name = "";
+
+            public string Display()
+            {
+                return $"Alphabet ->\nName: {Name}\nGapStartPenalty: {GapStartPenalty}\nGapExtendPenalty: {GapExtendPenalty}\n<-";
+            }
         }
 
         public class AssemblerParameter
@@ -288,6 +361,11 @@ namespace AssemblyNameSpace
             /// The alphabets to be used in this run.
             /// </summary>
             public AlphabetParameter Alphabet = null;
+
+            public string Display()
+            {
+                return $"Assembly ->\n{Input.Display()}\nK: {K.Display()}\nReverse: {Reverse}\nMinimalHomology: {MinimalHomology}\nDuplicateThreshold: {DuplicateThreshold}\n{Alphabet.Display()}\n<-";
+            }
         }
 
         /// <summary>
@@ -401,6 +479,11 @@ namespace AssemblyNameSpace
             /// The parameters for the read alignment, if the step is to be taken
             /// </summary>
             public ReadAlignmentParameter ReadAlignment = null;
+
+            public string Display()
+            {
+                return $"Recombine->\nAlphabet: {Alphabet.Display()}\nCutoffScore: {CutoffScore}\nIncludeShortReads: {IncludeShortReads}\nForceOnSingleTemplate: {ForceOnSingleTemplate}\nN: {N}\nOrder: {Order.Aggregate("", (a, b) => a + b.Display())}\n{ReadAlignment.Display()}<-";
+            }
         }
 
         namespace RecombineOrder
@@ -408,7 +491,10 @@ namespace AssemblyNameSpace
             /// <summary>
             /// An abstract class to contain the order of templates.
             /// </summary>
-            public abstract class OrderPiece { }
+            public abstract class OrderPiece
+            {
+                public abstract string Display();
+            }
 
             /// <summary>
             /// Introduce a gap in the recombined templates.
@@ -416,6 +502,11 @@ namespace AssemblyNameSpace
             public class Gap : OrderPiece
             {
                 public Gap() { }
+
+                public override string Display()
+                {
+                    return "*";
+                }
             }
 
             /// <summary>
@@ -430,6 +521,11 @@ namespace AssemblyNameSpace
                 public Template(int i)
                 {
                     Index = i;
+                }
+
+                public override string Display()
+                {
+                    return Index.ToString();
                 }
             }
         }
@@ -447,16 +543,16 @@ namespace AssemblyNameSpace
             public double CutoffScore = 0;
 
             /// <summary>
-            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
-            /// </summary>
-            public Trilean IncludeShortReads = Trilean.Unspecified;
-
-            /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
             public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
 
             public Input Input = new Input();
+
+            public string Display()
+            {
+                return $"ReadAlignment ->\nAlphabet: {Alphabet.Display()}\nCutoffScore: {CutoffScore}\nForceOnSingleTemplate: {ForceOnSingleTemplate}\nInput: {Input.Display()}";
+            }
         }
 
         public class ReportParameter
