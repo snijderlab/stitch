@@ -58,6 +58,7 @@ namespace AssemblyNameSpace
         /// of a line after every line this is stripped away.  </summary>
         /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The path to the file to read from. </param>
+        /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
         public static ParseResult<List<(string, MetaData.IMetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
@@ -138,19 +139,11 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
-        /// <summary> Open a PEAKS CSV file and save the reads to be used in assembly. </summary>
-        /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
-        /// <param name="inputFile"> Path to the CSV file. </param>
-        /// <param name="cutoffscore"> Score used to filter peptides, lower will be discarded. </param>
-        /// <param name="localcutoffscore"> Score used to filter patches in peptides
-        /// with high enough confidence to be used contrary their low global confidence,
-        /// lower will be discarded. </param>
-        /// <param name="peaksformat"> The peaksformat to use, this depends on the
-        /// version of peaks used to generate the CSVs. </param>
-        /// <param name="min_length_patch"> The minimal length of a patch. </param>
-        /// <param name="separator"> CSV separator used. </param>
-        /// <param name="decimalseparator"> Separator used in decimals. </param>
-        /// <returns> A list of all reads found with their metadata. </returns>
+        /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>
+        /// <param name="filter">The namefilter to use to filter the name of the reads.</param>
+        /// <param name="inputFile">The file to open</param>
+        /// <param name="peaksformat">The peaksformat to use</param>
+        /// <param name="parameters">The parameters to be used to open and filter the file</param>
         public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, FileFormat.Peaks peaksformat, RunParameters.Input.PeaksParameters parameters)
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();

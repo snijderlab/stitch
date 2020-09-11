@@ -175,6 +175,8 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
 
+            buffer.Append(TableHeader("reads", reads.Select(a => (double)a.Count())));
+
             buffer.AppendLine(@"<table id=""reads-table"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('reads-table', 0, 'string')"" class=""smallcell"">Identifier</th>
@@ -204,6 +206,8 @@ namespace AssemblyNameSpace
         string CreateContigsTable()
         {
             var buffer = new StringBuilder();
+
+            buffer.Append(TableHeader("contigs", Parameters.Assembler.condensed_graph.Select(a => (double)a.Sequence.Count()), Parameters.Assembler.condensed_graph.Select(a => a.TotalArea)));
 
             buffer.AppendLine(@"<table id=""contigs-table"" class=""widetable"">
 <tr>
@@ -244,7 +248,7 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < Parameters.TemplateDatabases.Count(); i++)
             {
-                buffer.AppendLine(Collapsible($"Template Matching {Parameters.TemplateDatabases[i].Name}", CreateTemplateTable(Parameters.TemplateDatabases[i].Templates, i, AsideType.Template)));
+                buffer.AppendLine(Collapsible($"Template Matching {Parameters.TemplateDatabases[i].Name}", CreateTemplateTable(Parameters.TemplateDatabases[i].Templates, i, AsideType.Template, true)));
             }
 
             return buffer.ToString();
@@ -296,6 +300,8 @@ namespace AssemblyNameSpace
         string CreatePathsTable()
         {
             var buffer = new StringBuilder();
+
+            buffer.Append(TableHeader("paths", Parameters.Paths.Select(a => (double)a.Sequence.Count()), Parameters.Paths.Select(a => a.MetaData.TotalArea)));
 
             buffer.AppendLine(@"<table id=""paths-table"" class=""widetable"">
 <tr>
@@ -1378,6 +1384,21 @@ namespace AssemblyNameSpace
     <div>
         <h3>Score</h3>
         {HTMLGraph.Histogram(templates.Select(a => (double)a.Score).ToList())}
+    </div>
+    {extended}
+</div>";
+        }
+
+        string TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
+        {
+            string extended = "";
+            if (area != null) extended = $"<div><h3>Area</h3>{HTMLGraph.Histogram(area.ToList())}</div>";
+
+            return $@"
+<div class='table-header-{identifier}'>
+    <div>
+        <h3>Length</h3>
+        {HTMLGraph.Histogram(lengths.ToList())}
     </div>
     {extended}
 </div>";

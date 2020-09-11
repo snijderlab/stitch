@@ -61,7 +61,7 @@ namespace AssemblyNameSpace
         public Assembler(int kmer_length_input, int duplicate_threshold_input, int minimum_homology_input, bool should_reverse, Alphabet alphabet_input)
         {
             kmer_length = kmer_length_input;
-            minimum_homology = minimum_homology_input < 0 ? kmer_length - 1 : minimum_homology_input;
+            minimum_homology = minimum_homology_input;
             duplicate_threshold = duplicate_threshold_input;
             reverse = should_reverse;
             meta_data = new MetaInformation();
@@ -329,7 +329,7 @@ namespace AssemblyNameSpace
                     }
                     sequence.AddRange(graph[backward_indices.Last()].Sequence.SubArray(1, kmer_length - 2));
 
-                    // I should handle back/forward index differently for 1 (k-1)mer condensed nodes. (set it to null?)
+                    // TODO: I should handle back/forward index differently for 1 (k-1)mer condensed nodes. (set it to null?)
                     result.Add(new CondensedNode(sequence, result.Count(), forward_node_index, backward_node_index, forward_nodes, backward_nodes, origins, backward_indices, TotalArea(origins)));
                 }
             }
@@ -356,7 +356,7 @@ namespace AssemblyNameSpace
 
             condensed_graph = GenerateCondensedGraph(graph);
 
-            RemovePreAndSuffixes();
+            CleanUpCondensedGraph();
 
             meta_data.path_time = stopWatch.ElapsedMilliseconds - meta_data.graph_time - meta_data.pre_time;
 
@@ -485,7 +485,7 @@ namespace AssemblyNameSpace
             return area;
         }
 
-        void RemovePreAndSuffixes()
+        void CleanUpCondensedGraph()
         {
             // Update the condensed graph to point to elements in the condensed graph instead of to elements in the de Bruijn graph
             for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)

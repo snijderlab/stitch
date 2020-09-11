@@ -74,11 +74,13 @@ namespace AssemblyNameSpace
         }
         public static string TrimEnd(this string input, string suffixToRemove)
         {
-            while (input != null && suffixToRemove != null && input.EndsWith(suffixToRemove))
+            if (input == null || suffixToRemove == null) return input;
+            int location = input.Length - 1 - suffixToRemove.Length;
+            while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0)
             {
-                input = input.Substring(0, input.Length - suffixToRemove.Length);
+                location -= suffixToRemove.Length;
             }
-            return input;
+            return input.Remove(location);
         }
         public struct ReadPlacement
         {
