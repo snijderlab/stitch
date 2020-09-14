@@ -246,10 +246,11 @@ namespace AssemblyNameSpace
 
             var buffer = new StringBuilder();
 
-            for (int i = 0; i < Parameters.TemplateDatabases.Count(); i++)
-            {
-                buffer.AppendLine(Collapsible($"Template Matching {Parameters.TemplateDatabases[i].Name}", CreateTemplateTable(Parameters.TemplateDatabases[i].Templates, i, AsideType.Template, true)));
-            }
+            Parallel.ForEach(
+                Parameters.TemplateDatabases,
+                new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
+                db => buffer.AppendLine(Collapsible($"Template Matching {db.Name}", CreateTemplateTable(db.Templates, db.Index, AsideType.Template, true)))
+            );
 
             return buffer.ToString();
         }
@@ -1563,7 +1564,7 @@ assetsfolder = '{AssetsFolderName}';
                 var buffer = new StringBuilder();
                 var bf = BatchFile;
                 buffer.Append($"<pre><i>{bf.Filename}</i>");
-                foreach (var line in bf.Lines) buffer.Append(line);
+                foreach (var line in bf.Lines) buffer.AppendLine(line);
                 buffer.Append("</pre>");
                 return buffer.ToString();
             }

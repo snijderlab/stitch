@@ -70,9 +70,9 @@ namespace AssemblyNameSpace
             /// <returns>All single runs.</returns>
             public List<SingleRun> CreateRuns(ProgressBar bar = null)
             {
-                Console.WriteLine(Input.Display());
-                Console.WriteLine(Assembly.Display());
-                if (Recombine != null) Console.WriteLine(Recombine.Display());
+                //Console.WriteLine(Input.Display());
+                //Console.WriteLine(Assembly.Display());
+                //if (Recombine != null) Console.WriteLine(Recombine.Display());
 
                 var output = new List<SingleRun>();
 

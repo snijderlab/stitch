@@ -9,6 +9,8 @@
 *.svg
 *.cache
 */bin
+*.dtp
+*.DotSettings
 source_linux_x64
 release
 generate_tests/*
