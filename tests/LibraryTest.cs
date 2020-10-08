@@ -25,7 +25,7 @@ namespace AssemblyTestNameSpace
 
             assembler.GiveReads(reads);
             assembler.Assemble();
-            new HTMLReport(new ReportInputParameters(assembler), true, Environment.ProcessorCount).Save(System.IO.Path.GetTempPath() + "/test.html");
+            new HTMLReport(new ReportInputParameters(assembler, null), true, Environment.ProcessorCount).Save(System.IO.Path.GetTempPath() + "/test.html");
             var paths = assembler.GetAllPathsMultipleReads().Select(x => AminoAcid.ArrayToString(x.Sequence)).ToArray();
         }
     }
