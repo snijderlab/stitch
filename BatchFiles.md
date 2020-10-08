@@ -6,7 +6,7 @@ Batch files are used to aggregate all information for one run of the program. Th
 
 ## VS Code plugin WIP
 
-In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (user/.vscode/extensions) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be show to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
+In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (user/.vscode/extensions) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
 
 ## Structure
 
@@ -234,9 +234,6 @@ This parameter can be used to determine the filter settings to be used in openin
 | CutoffALC      | The score a reads must at least have to be included in the list of reads                                                                                                                 | 99            |
 | LocalCutoffALC | The score a patch in a read should at least have to be included.                                                                                                                         | 90            |
 | MinLengthPatch   | The minimal length of a patch before it is included                                                                                                                                      | 3             |
-| Separator        | The separator used to separate cells in the csv                                                                                                                                          | `,`           |
-| DecimalSeparator | The separator used to separate decimals                                                                                                                                                  | `.`           |
-
 
 ##### K (s or m)
 
@@ -467,9 +464,6 @@ This parameter can be used to determine the filter settings to be used in openin
 | CutoffALC      | The score a reads must at least have to be included in the list of reads                                                                                                                 | 99            |
 | LocalCutoffALC | The score a patch in a read should at least have to be included.                                                                                                                         | 90            |
 | MinLengthPatch   | The minimal length of a patch before it is included                                                                                                                                      | 3             |
-| Separator        | The separator used to separate cells in the csv                                                                                                                                          | `,`           |
-| DecimalSeparator | The separator used to separate decimals                                                                                                                                                  | `.`           |
-
 
 ###### CutoffScore (s)
 

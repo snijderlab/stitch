@@ -424,7 +424,7 @@ namespace AssemblyNameSpace
                         case "inputparameters":
                             if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
-                            var peaks = new Input.PeaksParameters();
+                            var peaks = new Input.PeaksParameters(false);
                             foreach (var setting in pair.GetValues())
                             {
                                 if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
@@ -739,13 +739,13 @@ namespace AssemblyNameSpace
                     return result;
                 }
 
-                var input = GlobalInput == null ? Input.Parameters : GlobalInput;
+                var input = GlobalInput ?? Input.Parameters;
 
                 foreach (var file in input.Files)
                 {
                     var reads = file switch
                     {
-                        Input.Peaks peaks => OpenReads.Peaks(namefilter, peaks.File, peaks.FileFormat, Input.LocalParameters != null ? Input.LocalParameters.Peaks : peaks.Parameter),
+                        Input.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
                         Input.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
                         Input.Reads simple => OpenReads.Simple(namefilter, simple.File),
                         _ => throw new ArgumentException("An unkown inputformat was provided to PrepareInput")
@@ -885,7 +885,7 @@ namespace AssemblyNameSpace
                         case "inputparameters":
                             if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
-                            var peaks = new Input.PeaksParameters();
+                            var peaks = new Input.PeaksParameters(false);
                             foreach (var setting in pair.GetValues())
                             {
                                 if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
@@ -1291,7 +1291,7 @@ namespace AssemblyNameSpace
                 else if (file_path.EndsWith(".txt"))
                     folder_reads = OpenReads.Simple(namefilter, fileId);
                 else if (file_path.EndsWith(".csv"))
-                    folder_reads = OpenReads.Peaks(namefilter, fileId, peaks_settings.FileFormat, peaks_settings.Parameter);
+                    folder_reads = OpenReads.Peaks(namefilter, peaks_settings);
                 else
                     outEither.AddMessage(new ErrorMessage(file_pos, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
 
@@ -1332,6 +1332,18 @@ namespace AssemblyNameSpace
                                 break;
                         }
                         break;
+                    case "separator":
+                        if (setting.GetValue().Length != 1)
+                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                        else
+                            peaks_settings.Separator = setting.GetValue().First();
+                        break;
+                    case "decimalseparator":
+                        if (setting.GetValue().Length != 1)
+                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                        else
+                            peaks_settings.DecimalSeparator = setting.GetValue().First();
+                        break;
                     default:
                         var (parameters, succes) = GetLocalPeaksParameters(setting, withprefix, peaks_settings.Parameter).GetValue(outEither);
                         peaks_settings.Parameter = parameters;
@@ -1360,25 +1372,13 @@ namespace AssemblyNameSpace
                 switch (name)
                 {
                     case "cutoffalc":
-                        parameters.CutoffALC = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        parameters.CutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        parameters.LocalCutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                         break;
                     case "minlengthpatch":
                         parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                        break;
-                    case "separator":
-                        if (setting.GetValue().Length != 1)
-                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                        else
-                            parameters.Separator = setting.GetValue().First();
-                        break;
-                    case "decimalseparator":
-                        if (setting.GetValue().Length != 1)
-                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                        else
-                            parameters.DecimalSeparator = setting.GetValue().First();
                         break;
                     default:
                         outEither.Value = (parameters, false);

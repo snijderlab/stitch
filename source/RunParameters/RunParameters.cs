@@ -114,16 +114,18 @@ namespace AssemblyNameSpace
             /// </summary>
             public class Peaks : Parameter
             {
-                public PeaksParameters Parameter = new PeaksParameters();
+                public PeaksParameters Parameter = new PeaksParameters(true);
 
                 /// <summary>
                 /// The file format of the PEAKS file.
                 /// </summary>
                 public FileFormat.Peaks FileFormat = AssemblyNameSpace.FileFormat.Peaks.PeaksX();
+                public char Separator = ',';
+                public char DecimalSeparator = '.';
 
                 public override string Display()
                 {
-                    return $"Peaks ->\n{File.Display()}\n{Parameter.Display()}\nFileFormat: {FileFormat.name}\n<-";
+                    return $"Peaks ->\n{File.Display()}\n{Parameter.Display()}\nFileFormat: {FileFormat.name}\nSeparator: {Separator}\nDecimalSeparator: {DecimalSeparator}\n<-";
                 }
             }
 
@@ -154,15 +156,20 @@ namespace AssemblyNameSpace
 
             public class PeaksParameters
             {
-                public char Separator = ',';
-                public char DecimalSeparator = '.';
-                public int CutoffALC = 95;
-                public int LocalCutoffALC = 90;
-                public int MinLengthPatch = 8;
+                public int CutoffALC;
+                public int LocalCutoffALC;
+                public int MinLengthPatch;
+
+                public PeaksParameters(bool defaultValues)
+                {
+                    CutoffALC = defaultValues ? 95 : -1;
+                    LocalCutoffALC = defaultValues ? 90 : -1;
+                    MinLengthPatch = defaultValues ? 8 : -1;
+                }
 
                 public string Display()
                 {
-                    return $"Peaks ->\n\tSeparator: {Separator}\n\tDecimalSeparator: {DecimalSeparator}\n\tCutoffALC: {CutoffALC}\n\tLocalCutoffALC: {LocalCutoffALC}\n\tMinLengthPatch: {MinLengthPatch}\n<-";
+                    return $"Peaks ->\n\tCutoffALC: {CutoffALC}\n\tLocalCutoffALC: {LocalCutoffALC}\n\tMinLengthPatch: {MinLengthPatch}\n<-";
                 }
             }
         }
