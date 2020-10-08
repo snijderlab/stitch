@@ -215,11 +215,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            if (output.Assembly == null)
-            {
-                outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any assembly parameter"));
-            }
-            else
+            if (output.Assembly != null)
             {
                 // Finalise all metadata names
                 foreach (var set in output.Assembly.Input.Data.Raw)

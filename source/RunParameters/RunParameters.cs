@@ -598,7 +598,7 @@ namespace AssemblyNameSpace
                     output.Replace("{k}", r.K.ToString());
                     output.Replace("{mh}", r.MinimalHomology.ToString());
                     output.Replace("{dt}", r.DuplicateThreshold.ToString());
-                    output.Replace("{alph}", r.Alphabet.Name);
+                    output.Replace("{alph}", r.Alphabet != null ? r.Alphabet.Name : "NoAlphabet");
                     output.Replace("{name}", r.Runname);
                     output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
                     output.Replace("{time}", DateTime.Now.ToString("hh-mm-ss"));

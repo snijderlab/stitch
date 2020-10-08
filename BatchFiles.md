@@ -30,7 +30,6 @@ Assembly ->
     -Has parameters determining the behaviour of the assembler
     -Like input parameters, alphabet, k etc
     -Can only be specified once
-    -Has to be specified
 <-
 
 TemplateMatching ->
@@ -217,7 +216,7 @@ Folder ->
 
 #### Assembly
 
-Has parameters determining the behaviour of the assembly step. Can only be specified once. Has to be specified.
+Has parameters determining the behaviour of the assembly step. Can only be specified once.
 
 ##### Input (m)
 

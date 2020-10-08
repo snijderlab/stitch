@@ -191,8 +191,8 @@ namespace AssemblyNameSpace
                 link = GetAsideLink(i, AsideType.Read);
                 buffer.AppendLine($@"<tr id=""reads-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(reads[i])}</td>
-    <td class=""center"">{AminoAcid.ArrayToString(reads[i]).Count()}</td>
+    <td class=""seq"">{reads[i]}</td>
+    <td class=""center"">{reads[i].Length}</td>
 </tr>");
             }
 
@@ -363,9 +363,9 @@ namespace AssemblyNameSpace
             return $@"<div id=""{id}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(i, AsideType.Read, true)}</h1>
     <h2>Sequence</h2>
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(reads[i])}</p>
+    <p class=""aside-seq"">{reads[i]}</p>
     <h2>Sequence Length</h2>
-    <p>{AminoAcid.ArrayToString(reads[i]).Count()}</p>
+    <p>{reads[i].Length}</p>
     {meta}
 </div>";
         }
@@ -560,7 +560,7 @@ namespace AssemblyNameSpace
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
             var depthOfCoverage = new List<double>();
-            int read_offset = Parameters.Assembler.reads.Count();
+            int read_offset = Parameters.Assembler != null ? Parameters.Assembler.reads.Count() : Parameters.Input.Count();
 
             for (int i = 0; i < totalsequences + 1; i++)
             {
@@ -993,15 +993,18 @@ namespace AssemblyNameSpace
                 };
             }
 
-            // Path Asides
-            for (int i = 0; i < Parameters.Paths.Count(); i++)
+            if (Parameters.Assembler != null)
             {
-                jobbuffer.Add((AsideType.Path, -1, i));
-            }
-            // Contigs Asides
-            for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
-            {
-                jobbuffer.Add((AsideType.Contig, -1, i));
+                // Path Asides
+                for (int i = 0; i < Parameters.Paths.Count(); i++)
+                {
+                    jobbuffer.Add((AsideType.Path, -1, i));
+                }
+                // Contigs Asides
+                for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
+                {
+                    jobbuffer.Add((AsideType.Contig, -1, i));
+                }
             }
             // Read Asides
             for (int i = 0; i < reads.Count(); i++)
@@ -1578,23 +1581,32 @@ assetsfolder = '{AssetsFolderName}';
         {
             Stopwatch stopwatch = new Stopwatch();
             stopwatch.Start();
+            var innerbuffer = new StringBuilder();
 
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            Parameters.Assembler.meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
-
-            string recombinationtable = "";
-            if (Parameters.RecombinedDatabase != null)
-            {
-                recombinationtable = Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true));
-            }
-
-            string readalignmenttable = "";
-            if (Parameters.ReadAlignment != null)
-            {
-                readalignmenttable = Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment.Templates, -1, AsideType.ReadAlignment, true));
-            }
-
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
+
+            if (Parameters.RecombinedDatabase != null)
+                innerbuffer.Append(Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true)));
+
+            if (Parameters.ReadAlignment != null)
+                innerbuffer.Append(Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment.Templates, -1, AsideType.ReadAlignment, true)));
+
+            innerbuffer.Append(CreateTemplateTables());
+
+            if (Parameters.Assembler != null)
+            {
+                Parameters.Assembler.meta_data.drawingtime = stopwatch.ElapsedMilliseconds;
+
+                innerbuffer.Append(Collapsible("Graph", $"<img src='{AssetFolderName}/graph.svg' alt='The De Bruijn graph as resulting from the assembler.'>"));
+                innerbuffer.Append(Collapsible("Simplified Graph", $"<img src='{AssetFolderName}/simplified-graph.svg' alt='The De Bruijn graph as resulting from the assembler. But now with the contig ids instead of the sequences.'>"));
+                innerbuffer.Append(Collapsible("Paths Table", CreatePathsTable()));
+                innerbuffer.Append(Collapsible("Contigs Table", CreateContigsTable()));
+                innerbuffer.Append(Collapsible("Meta Information", MetaInformation()));
+            }
+
+            innerbuffer.Append(Collapsible("Reads Table", CreateReadsTable()));
+            innerbuffer.Append(Collapsible("Batch File", BatchFileHTML()));
 
             var html = $@"<html>
 {CreateHeader("Report Protein Sequence Run", new List<string>())}
@@ -1603,16 +1615,7 @@ assetsfolder = '{AssetsFolderName}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
- {readalignmenttable}
- {recombinationtable}
- {CreateTemplateTables()}
- {Collapsible("Graph", $"<img src='{AssetFolderName}/graph.svg' alt='The De Bruijn graph as resulting from the assembler.'>")}
- {Collapsible("Simplified Graph", $"<img src='{AssetFolderName}/simplified-graph.svg' alt='The De Bruijn graph as resulting from the assembler. But now with the contig ids instead of the sequences.'>")}
- {Collapsible("Parameters.Paths Table", CreatePathsTable())}
- {Collapsible("Contigs Table", CreateContigsTable())}
- {Collapsible("Reads Table", CreateReadsTable())}
- {Collapsible("Meta Information", MetaInformation())}
- {Collapsible("Batch File", BatchFileHTML())}
+ {innerbuffer}
 
 <div class=""footer"">
     <p>Code written in 2019-2020</p>
@@ -1658,10 +1661,13 @@ assetsfolder = '{AssetsFolderName}';
                 CopyAssetsFile("RobotoMono-Regular.ttf");
                 CopyAssetsFile("RobotoMono-Medium.ttf");
 
-                string svg, simplesvg;
-                (svg, simplesvg) = CreateGraph();
-                File.WriteAllText(Path.Join(FullAssetsFolderName, "graph.svg"), svg);
-                File.WriteAllText(Path.Join(FullAssetsFolderName, "simplified-graph.svg"), simplesvg);
+                if (Parameters.Assembler != null)
+                {
+                    string svg, simplesvg;
+                    (svg, simplesvg) = CreateGraph();
+                    File.WriteAllText(Path.Join(FullAssetsFolderName, "graph.svg"), svg);
+                    File.WriteAllText(Path.Join(FullAssetsFolderName, "simplified-graph.svg"), simplesvg);
+                }
             });
         }
 
@@ -1683,7 +1689,7 @@ assetsfolder = '{AssetsFolderName}';
             CreateAsides();
 
             stopwatch.Stop();
-            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - Parameters.Assembler.meta_data.drawingtime}");
+            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - (Parameters.Assembler != null ? Parameters.Assembler.meta_data.drawingtime : 0)}");
             SaveAndCreateDirectories(filename, html);
         }
     }
