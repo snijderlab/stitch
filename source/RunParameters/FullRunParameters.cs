@@ -75,61 +75,80 @@ namespace AssemblyNameSpace
                 //if (Recombine != null) Console.WriteLine(Recombine.Display());
 
                 var output = new List<SingleRun>();
-
-                var reverselist = new List<bool>();
-                switch (Assembly.Reverse)
-                {
-                    case ReverseValue.True:
-                        reverselist.Add(true);
-                        break;
-                    case ReverseValue.False:
-                        reverselist.Add(false);
-                        break;
-                    case ReverseValue.Both:
-                        reverselist.Add(true);
-                        reverselist.Add(false);
-                        break;
-                }
-
-                var klist = new List<int>();
-                switch (Assembly.K)
-                {
-                    case K.Single s:
-                        klist.Add(s.Value);
-                        break;
-                    case K.Multiple m:
-                        klist.AddRange(m.Values);
-                        break;
-                    case K.Range r:
-                        int v = r.Start;
-                        while (v <= r.End)
-                        {
-                            klist.Add(v);
-                            v += r.Step;
-                        }
-                        break;
-                }
-
                 int id = 0;
-                foreach (var minimalHomology in Assembly.MinimalHomology)
+
+                if (Assembly == null)
                 {
-                    foreach (var duplicateThreshold in Assembly.DuplicateThreshold)
+                    var input = new RunParameters.Input();
+                    InputNameSpace.ParseHelper.PrepareInput(new NameFilter(), null, input, Input).ReturnOrFail();
+
+                    // Finalise all metadata names
+                    foreach (var set in input.Data.Raw)
                     {
-                        foreach (var reverse in reverselist)
+                        foreach (var read in set)
                         {
-                            foreach (var k in klist)
+                            read.MetaData.FinaliseIdentifier();
+                        }
+                    }
+
+                    output.Add(new SingleRun(1, Runname, input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, bar));
+                }
+                else
+                {
+                    var reverselist = new List<bool>();
+                    switch (Assembly.Reverse)
+                    {
+                        case ReverseValue.True:
+                            reverselist.Add(true);
+                            break;
+                        case ReverseValue.False:
+                            reverselist.Add(false);
+                            break;
+                        case ReverseValue.Both:
+                            reverselist.Add(true);
+                            reverselist.Add(false);
+                            break;
+                    }
+
+                    var klist = new List<int>();
+                    switch (Assembly.K)
+                    {
+                        case K.Single s:
+                            klist.Add(s.Value);
+                            break;
+                        case K.Multiple m:
+                            klist.AddRange(m.Values);
+                            break;
+                        case K.Range r:
+                            int v = r.Start;
+                            while (v <= r.End)
                             {
-                                if (Runtype == RuntypeValue.Group)
+                                klist.Add(v);
+                                v += r.Step;
+                            }
+                            break;
+                    }
+
+                    foreach (var minimalHomology in Assembly.MinimalHomology)
+                    {
+                        foreach (var duplicateThreshold in Assembly.DuplicateThreshold)
+                        {
+                            foreach (var reverse in reverselist)
+                            {
+                                foreach (var k in klist)
                                 {
-                                    id++;
-                                    output.Add(new SingleRun(id, Runname, Assembly.Input.Data.Cleaned, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
-                                }
-                                else
-                                {
-                                    foreach (var input in Assembly.Input.Data.Raw)
+                                    if (Runtype == RuntypeValue.Group)
                                     {
                                         id++;
-                                        output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
+                                        output.Add(new SingleRun(id, Runname, Assembly.Input.Data.Cleaned, k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
+                                    }
+                                    else
+                                    {
+                                        foreach (var input in Assembly.Input.Data.Raw)
+                                        {
+                                            id++;
+                                            output.Add(new SingleRun(id, Runname, OpenReads.CleanUpInput(input), k, duplicateThreshold.GetValue(k), minimalHomology.GetValue(k), reverse, Assembly.Alphabet, TemplateMatching, Recombine, Report, BatchFile, bar));
+                                        }
                                     }
                                 }
                             }

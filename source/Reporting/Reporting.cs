@@ -17,21 +17,23 @@ namespace AssemblyNameSpace
     public struct ReportInputParameters
     {
         public readonly Assembler Assembler;
+        public readonly List<(string, MetaData.IMetaData)> Input;
         public readonly List<TemplateDatabase> TemplateDatabases;
         public readonly TemplateDatabase RecombinedDatabase;
         public readonly TemplateDatabase ReadAlignment;
         public readonly ParsedFile BatchFile;
         public readonly List<GraphPath> Paths;
         public readonly string Runname;
-        public ReportInputParameters(Assembler assm, List<TemplateDatabase> databases = null, TemplateDatabase recombineddatabase = null, TemplateDatabase readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(Assembler assm, List<(string, MetaData.IMetaData)> input, List<TemplateDatabase> databases = null, TemplateDatabase recombineddatabase = null, TemplateDatabase readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             Assembler = assm;
+            Input = input;
             TemplateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
             ReadAlignment = readAlignment;
             BatchFile = batchFile;
             Runname = runname;
-            Paths = Assembler.GetAllPaths();
+            Paths = Assembler != null ? Assembler.GetAllPaths() : null;
         }
     }
     /// <summary>
@@ -42,7 +44,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The reads used as input in the run.
         /// </summary>
-        protected List<AminoAcid[]> reads;
+        protected List<string> reads;
         /// <summary>
         /// Possibly the reads from PEAKS used in the run.
         /// </summary>
@@ -56,15 +58,23 @@ namespace AssemblyNameSpace
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int max_threads)
         {
-            reads = parameters.Assembler.reads;
-            reads_metadata = parameters.Assembler.reads_metadata;
-            MaxThreads = max_threads;
-
-            if (parameters.ReadAlignment != null)
+            if (parameters.Assembler != null)
             {
-                reads.AddRange(parameters.Assembler.shortReads.Select(a => a.Item1));
-                reads_metadata.AddRange(parameters.Assembler.shortReads.Select(a => a.Item2));
+                reads = parameters.Assembler.reads.Select(a => AminoAcid.ArrayToString(a)).ToList();
+                reads_metadata = parameters.Assembler.reads_metadata;
+
+                if (parameters.ReadAlignment != null)
+                {
+                    reads.AddRange(parameters.Assembler.shortReads.Select(a => AminoAcid.ArrayToString(a.Sequence)));
+                    reads_metadata.AddRange(parameters.Assembler.shortReads.Select(a => a.MetaData));
+                }
             }
+            else
+            {
+                reads = new List<string>(parameters.Input.Select(a => a.Item1));
+                reads_metadata = new List<MetaData.IMetaData>(parameters.Input.Select(a => a.Item2));
+            }
+            MaxThreads = max_threads;
 
             BatchFile = parameters.BatchFile;
             Parameters = parameters;

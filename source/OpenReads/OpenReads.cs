@@ -141,14 +141,18 @@ namespace AssemblyNameSpace
 
         /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>
         /// <param name="filter">The namefilter to use to filter the name of the reads.</param>
-        /// <param name="inputFile">The file to open</param>
-        /// <param name="peaksformat">The peaksformat to use</param>
-        /// <param name="parameters">The parameters to be used to open and filter the file</param>
-        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, MetaData.FileIdentifier inputFile, FileFormat.Peaks peaksformat, RunParameters.Input.PeaksParameters parameters)
+        /// <param name="peaks">The peaks settings to use</param>
+        /// <param name="local">If defined the local peaks parameters to use</param>
+        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, RunParameters.Input.Peaks peaks, RunParameters.Input.InputLocalParameters local = null)
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
+            var peaksparameters = local == null ? new RunParameters.Input.PeaksParameters(false) : local.Peaks;
+            if (peaksparameters.CutoffALC == -1) peaksparameters.CutoffALC = peaks.Parameter.CutoffALC;
+            if (peaksparameters.LocalCutoffALC == -1) peaksparameters.LocalCutoffALC = peaks.Parameter.LocalCutoffALC;
+            if (peaksparameters.MinLengthPatch == -1) peaksparameters.MinLengthPatch = peaks.Parameter.MinLengthPatch;
+
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(peaks.File.Path);
 
             if (possiblecontent.HasFailed())
             {
@@ -158,14 +162,14 @@ namespace AssemblyNameSpace
 
             List<string> lines = possiblecontent.ReturnOrFail().Split('\n').ToList();
             var reads = new List<(string, MetaData.IMetaData)>();
-            var parsefile = new ParsedFile(inputFile.Name, lines.ToArray());
+            var parsefile = new ParsedFile(peaks.File.Name, lines.ToArray());
 
             outeither.Value = reads;
 
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, parameters.Separator, parameters.DecimalSeparator, peaksformat, inputFile, filter);
+                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, peaks.File, filter);
 
                 if (parsed.HasOnlyWarnings()) continue;
 
@@ -184,7 +188,7 @@ namespace AssemblyNameSpace
 
                 var meta = parsed.ReturnOrFail();
 
-                if (meta.Confidence >= parameters.CutoffALC)
+                if (meta.Confidence >= peaksparameters.CutoffALC)
                 {
                     if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
                     {
@@ -203,17 +207,17 @@ namespace AssemblyNameSpace
                     int startpos = 0;
                     for (int i = 0; i < meta.Local_confidence.Length; i++)
                     {
-                        if (!patch && meta.Local_confidence[i] >= parameters.LocalCutoffALC)
+                        if (!patch && meta.Local_confidence[i] >= peaksparameters.LocalCutoffALC)
                         {
                             // Found a potential starting position
                             startpos = i;
                             patch = true;
                         }
-                        else if (patch && meta.Local_confidence[i] < parameters.LocalCutoffALC)
+                        else if (patch && meta.Local_confidence[i] < peaksparameters.LocalCutoffALC)
                         {
                             // Ends a patch
                             patch = false;
-                            if (i - startpos >= parameters.MinLengthPatch)
+                            if (i - startpos >= peaksparameters.MinLengthPatch)
                             {
                                 // Long enough use it for assembly
                                 char[] chunk = new char[i - startpos];
