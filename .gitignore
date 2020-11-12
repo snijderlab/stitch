@@ -23,3 +23,4 @@ _site
 .vs/*
 .vs
 report*/**
+all_addmatch_cseq.txt

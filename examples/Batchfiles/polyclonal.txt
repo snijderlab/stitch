@@ -86,7 +86,7 @@ TemplateMatching ->
 
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    N : 1
+    N : 2
 
     -Minimal average score per position to be included
     CutoffScore : 12
@@ -94,19 +94,6 @@ Recombine->
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
-
-    ReadAlignment -> 
-        InputParameters ->
-            Peaks ->
-                CutoffALC     : 98
-                LocalCutoffALC: 100
-                MinLengthPatch  : 100
-            <-
-        <-
-        
-        CutoffScore: 8
-        ForceOnSingleTemplate: False
-    <-
 <-
 
 Report ->

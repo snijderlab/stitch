@@ -31,7 +31,7 @@ Assembly ->
 
 TemplateMatching ->
     IncludeShortReads: True
-    CutoffScore : 8
+    CutoffScore : 4
 
     Alphabet ->
         Path             : ../alphabets/blosum62.csv
@@ -84,7 +84,7 @@ Recombine->
     N : 1
 
     -Minimal average score per position to be included
-    CutoffScore : 12
+    CutoffScore : 2
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
@@ -99,7 +99,7 @@ Recombine->
             <-
         <-
         
-        CutoffScore: 8
+        CutoffScore: 2
         ForceOnSingleTemplate: False
     <-
 <-
