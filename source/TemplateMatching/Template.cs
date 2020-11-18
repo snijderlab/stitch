@@ -130,7 +130,7 @@ namespace AssemblyNameSpace
             {
                 if (match != null)
                 {
-                    if (match.Score >= Parent.CutoffScore * match.QuerySequence.Length)
+                    if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
                     {
                         score += match.Score;
                         TotalArea += match.MetaData.TotalArea;
