@@ -2,14 +2,13 @@
 Version	: 0
 Runname	: Basic run
 
-- Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
+- Here the input can be defined, this will be used in the Assemble step
 Input ->
     Peaks ->
-        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        - A dataset where mapping to the human proteome is logical
+        Path            : ..\015\HLAII_Test_JS20201204_DENOVO_2.csv
         Format          : X+
-        Name            : 01
-        Separator       : ,
-        DecimalSeparator: .
+        Name            : HLA II Test
     <-
 <-
 
@@ -17,9 +16,9 @@ Input ->
 Assembly ->
     InputParameters ->
         Peaks ->
-            CutoffALC     : 98
-            LocalCutoffALC: 100
-            MinLengthPatch  : 100
+            CutoffALC     : 70
+            LocalCutoffALC: 70
+            MinLengthPatch  : 5
         <-
     <-
 
@@ -36,7 +35,7 @@ Assembly ->
 
 TemplateMatching ->
     IncludeShortReads: True
-    CutoffScore : 8
+    CutoffScore : 4
 
     Alphabet ->
         Path             : ../alphabets/blosum62.csv
@@ -47,39 +46,10 @@ TemplateMatching ->
 
     Databases->
         Database->
-            Path      : ../templates/IGHV.fasta
-            Name      : IGHV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Path      : ../templates/uniprot-proteome_UP000005640_20201124.fasta
+            Name      : Human proteome
+            Identifier: ^\w+\|([\w\d]+)\|
             ClassChars: 5
-        <-
-        Database->
-            Path    : ../templates/IGHJ_simplified.fasta
-            Name    : IGHJ
-            Scoring : Relative
-        <-
-        Database->
-            Path      : ../templates/IGHC_uniprot.fasta
-            Name      : IGHC
-            Identifier: GN=([\p{P}\w*-]+)
-            ClassChars: 5
-        <-
-        Database->
-            Path      : ../templates/IGK+LV.fasta
-            Name      : IGLV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
-            ClassChars: 4
-        <-
-        Database->
-            Path      : ../templates/IGK+LJ.fasta
-            Name      : IGLJ
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
-            ClassChars: 4
-        <-
-        Database->
-            Path      : ../templates/IGK+LC.fasta
-            Name      : IGLC
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
-            ClassChars: 4
         <-
     <-
 <-
