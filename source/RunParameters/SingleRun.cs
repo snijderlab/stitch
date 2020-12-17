@@ -169,8 +169,9 @@ namespace AssemblyNameSpace
                         var alph = new Alphabet(database.Alphabet ?? TemplateMatching.Alphabet);
 
                         var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore, i, database.Scoring, database.ClassChars);
-                        if (Assemble) database1.Match(assm.GetAllPaths(), max_threads);
-                        else database1.Match(Input, max_threads);
+                        
+                        if (Assemble) database1.Match(assm.GetAllPaths(), max_threads, HelperFunctionality.EvaluateTrilean(database.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate));
+                        else database1.Match(Input, max_threads, HelperFunctionality.EvaluateTrilean(database.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate));
 
                         if (Assemble && HelperFunctionality.EvaluateTrilean(database.IncludeShortReads, TemplateMatching.IncludeShortReads))
                         {
