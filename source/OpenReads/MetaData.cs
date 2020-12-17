@@ -68,6 +68,8 @@ namespace AssemblyNameSpace
             /// <returns>A string containing the MetaData.</returns>
             public abstract string ToHTML();
 
+            protected NameFilter nameFilter;
+
             /// <summary>
             /// To create the base metadat for a read.
             /// </summary>
@@ -76,6 +78,7 @@ namespace AssemblyNameSpace
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             public IMetaData(FileIdentifier file, string identifier_, NameFilter filter)
             {
+                nameFilter = filter;
                 File = file;
                 identifier = identifier_;
                 if (filter != null)
@@ -198,10 +201,20 @@ namespace AssemblyNameSpace
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
 
-            double intensity = double.NaN;
+            /// <summary>
+            /// The intensity of this read, find out how it should be handled if it if later updated. #TODO
+            /// </summary>
+            double intensity = 1;
             public override double Intensity
             {
-                get { return intensity; }
+                get
+                {
+                    if (Area != 0 && nameFilter != null && nameFilter.MinimalPeaksArea != Double.MaxValue && nameFilter.MaximalPeaksArea != Double.MinValue)
+                    {
+                        return 1 + (Math.Log10(Area) - nameFilter.MinimalPeaksArea) / (nameFilter.MaximalPeaksArea - nameFilter.MinimalPeaksArea);
+                    }
+                    return 1;
+                }
                 set { if (value != double.NaN) intensity = value; }
             }
 
@@ -210,7 +223,7 @@ namespace AssemblyNameSpace
 
             /// <summary> Local confidence scores of the peptide. Determined as a fraction based on the local confidence of the total intensity of this read. </summary>
             public int[] Local_confidence = null;
-            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * intensity).ToArray(); } }
+            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * Intensity).ToArray(); } }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
@@ -368,8 +381,12 @@ namespace AssemblyNameSpace
                 peaks.Other_scans = new List<string>();
 
                 // Calculate intensity
-                var pArea = Math.Log10(peaks.Area);
-                peaks.intensity = 2 - 1 / pArea;
+                if (peaks.Area != 0)
+                {
+                    var pArea = Math.Log10(peaks.Area);
+                    if (pArea < filter.MinimalPeaksArea) filter.MinimalPeaksArea = pArea;
+                    if (pArea > filter.MaximalPeaksArea) filter.MaximalPeaksArea = pArea;
+                }
 
                 peaks.TotalArea = peaks.Area;
 

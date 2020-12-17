@@ -25,6 +25,16 @@ namespace AssemblyNameSpace
         BST Names;
 
         /// <summary>
+        /// The minimal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads.
+        /// </summary>
+        public double MinimalPeaksArea = Double.MaxValue;
+
+        /// <summary>
+        /// The maximal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads.
+        /// </summary>
+        public double MaximalPeaksArea = Double.MinValue;
+
+        /// <summary>
         /// The invalid chars in a file path
         /// </summary>
         readonly HashSet<char> invalidchars;
