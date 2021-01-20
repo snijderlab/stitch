@@ -6,32 +6,32 @@ Runname	: Basic run
 Input ->
     Peaks ->
         - A dataset where mapping to the human proteome is logical
-        Path            : ..\015\HLAII_Test_JS20201204_DENOVO_2.csv
+        Path            : ..\008\200305_HER_test_04_DENOVO.csv
         Format          : X+
-        Name            : HLA II Test
+        Name            : Herceptin
     <-
 <-
 
 - These define the parameters for the de bruijn assembler
-Assembly ->
-    InputParameters ->
-        Peaks ->
-            CutoffALC     : 70
-            LocalCutoffALC: 70
-            MinLengthPatch  : 5
-        <-
-    <-
-
-    K	              : 7
-    MinimalHomology   : K-1
-    DuplicateThreshold: K-1
-    Reverse	          : False
-
-    Alphabet->
-        Path : ../alphabets/common_errors_alphabet.csv
-        Name : Normal
-    <-
-<-
+- Assembly ->
+-     InputParameters ->
+-         Peaks ->
+-             CutoffALC     : 95
+-             LocalCutoffALC: 90
+-             MinLengthPatch  : 5
+-         <-
+-     <-
+- 
+-     K	              : 7
+-     MinimalHomology   : K-1
+-     DuplicateThreshold: K-1
+-     Reverse	          : False
+- 
+-     Alphabet->
+-         Path : ../alphabets/default_alphabet.csv
+-         Name : Normal
+-     <-
+- <-
 
 TemplateMatching ->
     IncludeShortReads: True
@@ -46,8 +46,8 @@ TemplateMatching ->
 
     Databases->
         Database->
-            Path      : ../templates/uniprot-proteome_UP000005640_20201124.fasta
-            Name      : Human proteome
+            Path      : ../008/herceptin_sequence.txt
+            Name      : Herceptin Sequence
             Identifier: ^\w+\|([\w\d]+)\|
             ClassChars: 5
         <-
