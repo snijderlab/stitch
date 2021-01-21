@@ -382,19 +382,20 @@ namespace AssemblyNameSpace
             var sb = new StringBuilder();
             var templateString = "";
 
+            // Find the highest scoring templates to link back to
             if (Parameters.TemplateDatabases != null)
             {
                 const int number = 10;
                 var best_templates = new List<(int, int, int)>();
                 int cutoff = 0;
 
-                //Pick each database
+                // Pick each database
                 for (int k = 0; k < Parameters.TemplateDatabases.Count(); k++)
                 { // Pick each template
                     for (int j = 0; j < Parameters.TemplateDatabases[k].Templates.Count(); j++)
                     {
-                        var match = Parameters.TemplateDatabases[k].Templates[j].Matches[i];
-                        if (match.Score > cutoff || best_templates.Count() < number)
+                        var match = Parameters.TemplateDatabases[k].Templates[j].Matches.Find(sm => sm.Index == i);
+                        if (match != null && (match.Score > cutoff || best_templates.Count() < number))
                         {
                             best_templates.Add((k, j, match.Score));
                             best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));

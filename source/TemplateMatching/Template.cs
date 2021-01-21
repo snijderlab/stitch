@@ -128,23 +128,23 @@ namespace AssemblyNameSpace
         {
             lock (Matches)
             {
-                if (match != null)
+                //if (match != null)
+                //{
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
                 {
-                    if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length))
-                    {
-                        score += match.Score;
-                        TotalArea += match.MetaData.TotalArea;
-                        Matches.Add(match);
+                    score += match.Score;
+                    TotalArea += match.MetaData.TotalArea;
+                    Matches.Add(match);
 
-                        if (unique)
-                        {
-                            match.Unique = true;
-                            uniqueScore += match.Score;
-                            TotalUniqueArea += match.MetaData.TotalArea;
-                            UniqueMatches++;
-                        }
+                    if (unique)
+                    {
+                        match.Unique = true;
+                        uniqueScore += match.Score;
+                        TotalUniqueArea += match.MetaData.TotalArea;
+                        UniqueMatches++;
                     }
                 }
+                //}
             }
         }
         /// <summary>

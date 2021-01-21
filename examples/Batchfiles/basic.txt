@@ -2,36 +2,13 @@
 Version	: 0
 Runname	: Basic run
 
-- Here the input can be defined, this will be used in the Assemble step
 Input ->
     Peaks ->
-        - A dataset where mapping to the human proteome is logical
         Path            : ..\008\200305_HER_test_04_DENOVO.csv
         Format          : X+
         Name            : Herceptin
     <-
 <-
-
-- These define the parameters for the de bruijn assembler
-- Assembly ->
--     InputParameters ->
--         Peaks ->
--             CutoffALC     : 95
--             LocalCutoffALC: 90
--             MinLengthPatch  : 5
--         <-
--     <-
-- 
--     K	              : 7
--     MinimalHomology   : K-1
--     DuplicateThreshold: K-1
--     Reverse	          : False
-- 
--     Alphabet->
--         Path : ../alphabets/default_alphabet.csv
--         Name : Normal
--     <-
-- <-
 
 TemplateMatching ->
     IncludeShortReads: True
@@ -46,10 +23,8 @@ TemplateMatching ->
 
     Databases->
         Database->
-            Path      : ../008/herceptin_sequence.txt
+            Path      : ../008/herceptin_sequence.fasta
             Name      : Herceptin Sequence
-            Identifier: ^\w+\|([\w\d]+)\|
-            ClassChars: 5
         <-
     <-
 <-

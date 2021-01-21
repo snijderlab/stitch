@@ -372,7 +372,8 @@ namespace AssemblyNameSpace
         /// <returns>A list with all possible paths</returns>
         public List<GraphPath> GetAllPaths()
         {
-            var opts = new List<(int, List<int>)>();
+            var result = new List<GraphPath>();
+            var index = 0;
             for (int node_index = 0; node_index < condensed_graph.Count(); node_index++)
             {
                 var node = condensed_graph[node_index];
@@ -383,17 +384,10 @@ namespace AssemblyNameSpace
                     var paths = GetPaths(node_index, new List<int>());
                     foreach (var path in paths)
                     {
-                        opts.Add((node_index, path));
+                        result.Add(new GraphPath(path.Select(index => condensed_graph[index]).ToList(), index));
+                        index++;
                     }
                 }
-            }
-
-            var result = new List<GraphPath>() { Capacity = opts.Count() };
-
-            for (int i = 0; i < opts.Count(); i++)
-            {
-                var nodes = opts[i].Item2.Select(index => condensed_graph[index]).ToList();
-                result.Add(new GraphPath(nodes, i));
             }
 
             return result;
@@ -478,8 +472,16 @@ namespace AssemblyNameSpace
             {
                 foreach (int node in column)
                 {
-                    foreach (int read in graph[node].Origins)
-                        area += reads_metadata[read].TotalArea;
+                    if (node < graph.Length)
+                    {
+                        foreach (int read in graph[node].Origins)
+                            area += reads_metadata[read].TotalArea;
+                    }
+                    else
+                    {
+                        area += shortReads[node - graph.Length].MetaData.TotalArea;
+                        //Console.WriteLine($"Error in TotalAre node {node} does not exist in the graph (len: {graph.Length})");
+                    }
                 }
             }
             return area;
