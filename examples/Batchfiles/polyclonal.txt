@@ -31,7 +31,7 @@ TemplateMatching ->
         Database->
             Path      : ../templates/IGHV.fasta
             Name      : IGHV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 5
         <-
         Database->
@@ -48,19 +48,19 @@ TemplateMatching ->
         Database->
             Path      : ../templates/IGK+LV.fasta
             Name      : IGLV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LJ.fasta
             Name      : IGLJ
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LC.fasta
             Name      : IGLC
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
     <-
@@ -68,6 +68,6 @@ TemplateMatching ->
 
 Report ->
     HTML ->
-        Path    : ../../polyclonal-report.html
+        Path    : ../../report-polyclonal.html
     <-
 <-

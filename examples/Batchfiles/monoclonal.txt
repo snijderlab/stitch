@@ -88,6 +88,6 @@ Recombine->
 
 Report ->
     HTML ->
-        Path    : ../../report-peaks.html
+        Path    : ../../report-monoclonal.html
     <-
 <-
