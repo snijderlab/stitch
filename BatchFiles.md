@@ -319,7 +319,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 #### TemplateMatching (m)
 
-To determine the parameters for template matching. Can only be specified once.
+To determine the parameters for template matching. Can only be specified once. Often used with the reference set from IMGT (http://www.imgt.org/vquest/refseqh.html).
 
 ##### CutoffScore (s)
 

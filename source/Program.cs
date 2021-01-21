@@ -27,6 +27,7 @@ namespace AssemblyNameSpace
 
             // Retrieve the name of the batch file to run or file to clean
             string filename = "";
+            string output_filename = "";
             bool clean = false;
             bool languageServer = false;
             try
@@ -35,7 +36,8 @@ namespace AssemblyNameSpace
                 if (filename == "clean")
                 {
                     clean = true;
-                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim();
+                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2).Take(1)).Trim();
+                    output_filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(3)).Trim();
                 }
                 else if (filename == "server")
                 {
@@ -56,7 +58,7 @@ namespace AssemblyNameSpace
 
             if (clean)
             {
-                CleanFasta(filename);
+                CleanFasta(filename, output_filename);
                 return;
             }
 
@@ -126,37 +128,38 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
-        static void CleanFasta(string filename)
+        static void CleanFasta(string filename, string output)
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name"), new Regex("(.*)")).ReturnOrFail();
-            var dict = new Dictionary<string, string>();
+            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name"), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
+            var dict = new Dictionary<string, (string, string)>();
 
+            // Condens all isoforms
             foreach (var read in reads)
             {
                 var id = ((MetaData.Fasta)read.Item2).FastaHeader;
-                if (!id.Contains("partial"))
+                if (!id.Contains("partial") && !id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
-                    if (dict.ContainsKey(read.Item1))
+                    if (dict.ContainsKey(read.Item2.Identifier))
                     {
-                        dict[read.Item1] = dict[read.Item1] + " " + id;
+                        dict[read.Item2.Identifier] = (dict[read.Item2.Identifier].Item1 + " " + id, read.Item1);
                     }
                     else
                     {
-                        dict[read.Item1] = id;
+                        dict[read.Item2.Identifier] = (id, read.Item1);
                     }
                 }
             }
 
             var sb = new StringBuilder();
             string EOL = Environment.NewLine;
-            foreach (var (seq, id) in dict)
+            foreach (var (_, (id, seq)) in dict)
             {
                 sb.AppendLine($">{id}{EOL}{seq}");
             }
 
-            File.WriteAllText(path, sb.ToString());
+            File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
         }
     }
 }

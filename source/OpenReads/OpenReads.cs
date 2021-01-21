@@ -85,7 +85,6 @@ namespace AssemblyNameSpace
 
             foreach (var line in lines)
             {
-                linenumber++;
                 if (line.Length == 0) continue;
                 if (line[0] == '>')
                 {
@@ -115,6 +114,7 @@ namespace AssemblyNameSpace
                 {
                     sequence.Append(line.Trim().Where(x => Char.IsLetter(x)).ToArray());
                 }
+                linenumber++;
             }
             if (identifierLine != "")
             {

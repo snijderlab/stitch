@@ -1,6 +1,6 @@
 -Run Info---------------
-Version	: 0
-Runname	: Monoclonal Herceptin
+Version    : 0
+Runname    : Monoclonal Herceptin
 
 - Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
 Input ->
@@ -11,27 +11,9 @@ Input ->
     <-
 <-
 
-- These define the parameters for the de bruijn assembler
-Assembly ->
-    InputParameters ->
-        Peaks ->
-            CutoffALC     : 98
-            LocalCutoffALC: 100
-            MinLengthPatch  : 100
-        <-
-    <-
-
-    K: 7
-
-    Alphabet->
-        Path : ../alphabets/common_errors_alphabet.csv
-        Name : Common Errors Alphabet
-    <-
-<-
-
 TemplateMatching ->
     IncludeShortReads: True
-    CutoffScore : 4
+    CutoffScore : 7
 
     Alphabet ->
         Path             : ../alphabets/blosum62.csv
@@ -44,7 +26,7 @@ TemplateMatching ->
         Database->
             Path      : ../templates/IGHV.fasta
             Name      : IGHV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 5
         <-
         Database->
@@ -61,19 +43,19 @@ TemplateMatching ->
         Database->
             Path      : ../templates/IGK+LV.fasta
             Name      : IGLV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LJ.fasta
             Name      : IGLJ
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
         Database->
             Path      : ../templates/IGK+LC.fasta
             Name      : IGLC
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\|
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
             ClassChars: 4
         <-
     <-
@@ -99,7 +81,7 @@ Recombine->
             <-
         <-
         
-        CutoffScore: 2
+        CutoffScore: 12
         ForceOnSingleTemplate: False
     <-
 <-
