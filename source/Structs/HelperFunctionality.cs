@@ -75,6 +75,7 @@ namespace AssemblyNameSpace
         public static string TrimEnd(this string input, string suffixToRemove)
         {
             if (input == null || suffixToRemove == null || input == "" || input.Length < suffixToRemove.Length) return input;
+            if (input == suffixToRemove) return "";
             int location = input.Length - 1 - suffixToRemove.Length;
             while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0)
             {

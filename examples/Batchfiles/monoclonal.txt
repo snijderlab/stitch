@@ -13,7 +13,7 @@ Input ->
 
 TemplateMatching ->
     IncludeShortReads: True
-    CutoffScore : 7
+    CutoffScore : 8
 
     Alphabet ->
         Path             : ../alphabets/blosum62.csv
