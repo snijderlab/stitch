@@ -22,17 +22,14 @@ namespace AssemblyTestNameSpace
             var files = Directory.GetFiles(path);
             foreach (var file in files)
             {
-                if (Path.GetFileName(file) != "parseerrors.txt")
+                try
                 {
-                    try
-                    {
-                        ParseCommandFile.Batch(file);
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"At file {file}");
-                        throw e;
-                    }
+                    AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file);
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine($"At file {file}");
+                    throw e;
                 }
             }
         }

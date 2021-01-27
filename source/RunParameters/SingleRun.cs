@@ -317,11 +317,8 @@ namespace AssemblyNameSpace
                 }
                 catch (Exception e)
                 {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.WriteLine("ERROR: " + e.Message);
-                    Console.ResetColor();
-                    Console.WriteLine("STACKTRACE: " + e.StackTrace);
-                    Console.WriteLine("RUNPARAMETERS:\n" + Display());
+                    var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}\nRUNPARAMETERS:\n{Display()}";
+                    throw new Exception(msg, e);
                 }
             }
         }

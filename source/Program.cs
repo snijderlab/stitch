@@ -13,7 +13,7 @@ using System.Globalization;
 namespace AssemblyNameSpace
 {
     /// <summary> The main class which is the entry point from the command line. </summary>
-    class ToRunWithCommandLine
+    public class ToRunWithCommandLine
     {
         public const string VersionString = "0.0.0";
         static readonly Stopwatch stopwatch = new Stopwatch();
@@ -21,15 +21,12 @@ namespace AssemblyNameSpace
         /// <summary> The entry point. </summary>
         static void Main()
         {
-            stopwatch.Start();
-
             Console.CancelKeyPress += HandleUserAbort;
 
             // Retrieve the name of the batch file to run or file to clean
             string filename = "";
             string output_filename = "";
             bool clean = false;
-            bool languageServer = false;
             try
             {
                 filename = Environment.CommandLine.Split(" ".ToCharArray())[1].Trim();
@@ -38,12 +35,6 @@ namespace AssemblyNameSpace
                     clean = true;
                     filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2).Take(1)).Trim();
                     output_filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(3)).Trim();
-                }
-                else if (filename == "server")
-                {
-                    // The language server should in the future be able to support error messages inside code editors like VS Code
-                    languageServer = true;
-                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim();
                 }
                 else
                 {
@@ -56,31 +47,31 @@ namespace AssemblyNameSpace
                 return;
             }
 
-            if (clean)
-            {
-                CleanFasta(filename, output_filename);
-                return;
-            }
-
-            // Try to parse the batch file
-            var inputparams = new RunParameters.FullRunParameters();
             try
             {
-                inputparams = ParseCommandFile.Batch(filename, languageServer);
+                if (clean)
+                    CleanFasta(filename, output_filename);
+                else
+                    RunBatchFile(filename);
             }
-            catch (ParseException e)
+            catch (Exception e)
             {
-                if (!languageServer)
-                {
-                    Console.ForegroundColor = ConsoleColor.Red;
-                    Console.Error.WriteLine($"{e.Message}");
-                    Console.ResetColor();
-                    Console.WriteLine("The program now terminates.");
-                }
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.Error.WriteLine($"{e.Message}");
+                Console.ResetColor();
+                Console.WriteLine("The program now terminates.");
                 return;
             }
-            if (languageServer) return;
+        }
 
+        /// <summary>
+        /// Run the given batch file
+        /// </summary>
+        /// <param name="filename"></param>
+        public static void RunBatchFile(string filename)
+        {
+            stopwatch.Start();
+            var inputparams = ParseCommandFile.Batch(filename, false);
             Console.WriteLine("Parsed file");
 
             var bar = new ProgressBar();
