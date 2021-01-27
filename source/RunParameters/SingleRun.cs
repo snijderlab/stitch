@@ -275,7 +275,7 @@ namespace AssemblyNameSpace
                                 recombined_database.Templates,
                                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
                                 (s, _) => templates.Add((
-                                    s.ConsensusSequence(),
+                                    s.ConsensusSequence().Item1,
                                     (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "RT")))
                             );
 

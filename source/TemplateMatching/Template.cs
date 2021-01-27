@@ -482,15 +482,17 @@ namespace AssemblyNameSpace
             combinedSequenceCache = output;
             return output;
         }
-        string ConsensusSequenceCache = null;
-        public string ConsensusSequence()
+        (string, List<double>) ConsensusSequenceCache = (null, null);
+        public (string, List<double>) ConsensusSequence()
         {
-            if (ConsensusSequenceCache != null) return ConsensusSequenceCache;
+            if (ConsensusSequenceCache != (null, null)) return ConsensusSequenceCache;
 
             var consensus = new StringBuilder();
+            var doc = new List<double>();
             var combinedSequence = CombinedSequence();
             string options = "";
             double max;
+            double coverage;
             List<Template.IGap> max_gap = new List<IGap>();
 
             for (int i = 0; i < combinedSequence.Count; i++)
@@ -498,13 +500,11 @@ namespace AssemblyNameSpace
                 // Get the highest chars
                 options = "";
                 max = 0;
-                //bool containsIsoleucine = false;
-                //bool containsD = false;
+                coverage = 0;
 
                 foreach (var item in combinedSequence[i].AminoAcids)
                 {
-                    //if (!containsIsoleucine && item.Key.ToString() == "I") containsIsoleucine = true;
-                    //if (!containsD && item.Key.ToString() == "D") containsD = true;
+                    coverage += item.Value;
                     if (item.Value > max)
                     {
                         options = item.Key.ToString();
@@ -522,18 +522,14 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    // Choose I over L and D over N or just the first option
-                    //if (options[0] == 'L' && containsIsoleucine)
-                    //    consensus.Append('I');
-                    //else if (options[0] == 'N' && containsD)
-                    //    consensus.Append('D');
-                    //else
                     consensus.Append(options[0]);
                 }
+                doc.Add(coverage);
 
                 // Get the highest gap
                 max_gap.Clear();
                 max = 0;
+                var gap_coverage = new double[0];
 
                 foreach (var item in combinedSequence[i].Gaps)
                 {
@@ -542,6 +538,7 @@ namespace AssemblyNameSpace
                         max_gap.Clear();
                         max_gap.Add(item.Key);
                         max = item.Value.Count;
+                        gap_coverage = item.Value.CoverageDepth;
                     }
                     else if (item.Value.Count == max)
                     {
@@ -552,9 +549,10 @@ namespace AssemblyNameSpace
                 if (max_gap.Count >= 1 && max_gap[0].GetType() != typeof(Template.None))
                 {
                     consensus.Append(max_gap[0].ToString());
+                    doc.AddRange(gap_coverage);
                 }
             }
-            ConsensusSequenceCache = consensus.ToString();
+            ConsensusSequenceCache = (consensus.ToString(), doc);
             return ConsensusSequenceCache;
         }
     }

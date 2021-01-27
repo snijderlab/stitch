@@ -244,15 +244,23 @@ namespace AssemblyNameSpace
         {
             if (Parameters.TemplateDatabases == null) return "";
 
-            var buffer = new StringBuilder();
+            var buffer = new List<(int, string)>();
 
             Parallel.ForEach(
                 Parameters.TemplateDatabases,
                 new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                db => buffer.AppendLine(Collapsible($"Template Matching {db.Name}", CreateTemplateTable(db.Templates, db.Index, AsideType.Template, true)))
+                db => buffer.Add((db.Index, Collapsible($"Template Matching {db.Name}", CreateTemplateTable(db.Templates, db.Index, AsideType.Template, true))))
             );
 
-            return buffer.ToString();
+            buffer.Sort((a, b) => a.Item1.CompareTo(b.Item1));
+            var output = new StringBuilder();
+
+            foreach (var line in buffer)
+            {
+                output.Append(line.Item2);
+            }
+
+            return output.ToString();
         }
 
         string CreateTemplateTable(List<Template> templates, int templateIndex, AsideType type, bool header = false)
@@ -450,6 +458,7 @@ namespace AssemblyNameSpace
             string id = GetAsideIdentifier(index, i, type);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
             var alignment = CreateTemplateAlignment(template, id, location);
+            var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
 
             string meta = "";
             if (template.MetaData != null && type == AsideType.Template)
@@ -485,9 +494,10 @@ namespace AssemblyNameSpace
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
-    <p class='aside-seq'>{template.ConsensusSequence()}</p>
-    <h2>Sequence Logo</h2>
-    {SequenceLogo(template)}
+    <p class='aside-seq'>{consensus_sequence}</p>
+    <h2>Sequence Consensus Overview</h2>
+    {SequenceConsensusOverview(template)}
+    <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Total Matches</h2>
@@ -916,9 +926,8 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        string SequenceLogo(Template template)
+        string SequenceConsensusOverview(Template template)
         {
-            // Sequence logo
             const double threshold = 0.3;
             const int height = 50;
             const int fontsize = 20;
@@ -1587,11 +1596,11 @@ assetsfolder = '{AssetsFolderName}';
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
-            if (Parameters.RecombinedDatabase != null)
-                innerbuffer.Append(Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true)));
-
             if (Parameters.ReadAlignment != null)
                 innerbuffer.Append(Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment.Templates, -1, AsideType.ReadAlignment, true)));
+
+            if (Parameters.RecombinedDatabase != null)
+                innerbuffer.Append(Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true)));
 
             innerbuffer.Append(CreateTemplateTables());
 
