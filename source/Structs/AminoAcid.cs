@@ -111,11 +111,11 @@ namespace AssemblyNameSpace
         /// <c>b.Homology(a)</c>. </remarks>
         /// <param name="right"> The other AminoAcid to use. </param>
         /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-        public int Homology(AminoAcid right)
+        public int Homology(AminoAcid right, Alphabet other_alphabet = null)
         {
             try
             {
-                return alphabet.ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
+                return (other_alphabet ?? alphabet).ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
             }
             catch (Exception e)
             {
@@ -131,7 +131,7 @@ namespace AssemblyNameSpace
         /// <param name="left"> The first object to calculate homology with. </param>
         /// <param name="right"> The second object to calculate homology with. </param>
         /// <returns> Returns the homology between the two aminoacid arrays. </returns>
-        public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right)
+        public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right, Alphabet alphabet = null)
         {
             int score = 0;
             if (left.Length != right.Length)
@@ -139,7 +139,7 @@ namespace AssemblyNameSpace
                 return 0;
             for (int i = 0; i < left.Length; i++)
             {
-                score += left[i].Homology(right[i]);
+                score += left[i].Homology(right[i], alphabet);
             }
             return score;
         }

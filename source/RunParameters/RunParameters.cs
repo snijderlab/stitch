@@ -417,6 +417,8 @@ namespace AssemblyNameSpace
             /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
             public int ClassChars = -1;
+            public bool GapTail = false;
+            public bool GapHead = false;
         }
 
         public class TemplateMatchingParameter
@@ -500,6 +502,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public abstract class OrderPiece
             {
+                public abstract bool IsGap();
                 public abstract string Display();
             }
 
@@ -513,6 +516,11 @@ namespace AssemblyNameSpace
                 public override string Display()
                 {
                     return "*";
+                }
+
+                public override bool IsGap()
+                {
+                    return true;
                 }
             }
 
@@ -533,6 +541,11 @@ namespace AssemblyNameSpace
                 public override string Display()
                 {
                     return Index.ToString();
+                }
+
+                public override bool IsGap()
+                {
+                    return false;
                 }
             }
         }

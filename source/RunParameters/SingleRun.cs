@@ -233,15 +233,38 @@ namespace AssemblyNameSpace
                             var sequence = combinations.ElementAt(i);
                             var s = new List<AminoAcid>();
                             var t = new List<Template>();
+                            var join = false;
                             foreach (var element in Recombine.Order)
                             {
                                 if (element.GetType() == typeof(RecombineOrder.Gap))
                                 {
-                                    s.Add(new AminoAcid(alph, '*'));
+                                    join = true;
                                 }
                                 else
                                 {
-                                    s.AddRange(sequence.ElementAt(((RecombineOrder.Template)element).Index).Sequence);
+                                    var seq = sequence.ElementAt(((RecombineOrder.Template)element).Index).ConsensusSequence().Item1;
+                                    if (join)
+                                    {
+                                        // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                                        // and removed from the Template sequence for the recombine round.
+                                        join = false;
+                                        s = s.TakeWhile(a => a.Char != 'X').ToList();
+                                        seq = seq.SkipWhile(a => a.Char == 'X').ToList();
+                                        Console.WriteLine(AminoAcid.ArrayToString(s));
+                                        Console.WriteLine(AminoAcid.ArrayToString(seq));
+                                        var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), recombined_database.Alphabet, 20);
+                                        // When no good overlap is found just paste them one after the other
+                                        if (aligned_template.Item2 >= 0)
+                                            s.AddRange(seq.Skip(aligned_template.Item1));
+                                        else
+                                            s.AddRange(seq);
+                                        Console.WriteLine(AminoAcid.ArrayToString(s));
+                                        Console.WriteLine(aligned_template);
+                                    }
+                                    else
+                                    {
+                                        s.AddRange(seq);
+                                    }
                                     t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                                 }
                             }
@@ -275,7 +298,7 @@ namespace AssemblyNameSpace
                                 recombined_database.Templates,
                                 new ParallelOptions { MaxDegreeOfParallelism = max_threads },
                                 (s, _) => templates.Add((
-                                    s.ConsensusSequence().Item1,
+                                    AminoAcid.ArrayToString(s.ConsensusSequence().Item1),
                                     (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "RT")))
                             );
 

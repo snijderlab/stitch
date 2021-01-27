@@ -213,7 +213,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
 
             const string expected = "VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK";
-            var seq = db.Templates[0].ConsensusSequence().Item1;
+            var seq = AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1);
             Console.Write($"\rExpected: {expected}\nActual:   {seq}");
             Assert.AreEqual(expected, seq);
         }
@@ -240,7 +240,7 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("49M10I27M", r.Alignment.CIGAR());
 
             const string expected = "LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP";
-            var seq = db.Templates[0].ConsensusSequence().Item1;
+            var seq = AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1);
             Console.Write($"\rExpected: {expected}\nActual:   {seq}");
             Assert.AreEqual(expected, seq);
         }
@@ -384,7 +384,7 @@ namespace AssemblyTestNameSpace
             {
                 Console.WriteLine($"{gap.ToString()} {gap.GetHashCode()} {gap.Value.Count}");
             }
-            Assert.AreEqual(path1, db.Templates[0].ConsensusSequence().Item1);
+            Assert.AreEqual(path1, AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1));
         }
         /*
         [TestMethod]

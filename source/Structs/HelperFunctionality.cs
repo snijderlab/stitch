@@ -426,6 +426,19 @@ namespace AssemblyNameSpace
             return max_value;
         }
 
+        public static (int, int) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
+        {
+            var scores = new List<(int, int)>();
+            for (int i = 1; i < max_overlap && i < query.Length && i < template.Length; i++)
+            {
+                scores.Add((i, AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet)));
+            }
+            var best = scores[0];
+            foreach (var item in scores)
+                if (item.Item2 > best.Item2) best = item;
+            return best;
+        }
+
         enum Direction { NoMatch, GapInTemplate, GapInQuery, Match, MatchGap }
 
         public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)

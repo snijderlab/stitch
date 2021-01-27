@@ -132,6 +132,7 @@ namespace AssemblyNameSpace
                 var id = ((MetaData.Fasta)read.Item2).FastaHeader;
                 if (!id.Contains("partial") && !id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
+                    // Join all isoforms
                     if (dict.ContainsKey(read.Item2.Identifier))
                     {
                         dict[read.Item2.Identifier] = (dict[read.Item2.Identifier].Item1 + " " + id, read.Item1);

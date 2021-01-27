@@ -1,0 +1,100 @@
+-Run Info---------------
+Version    : 0
+Runname    : Monoclonal Herceptin
+
+- Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
+Input ->
+    Peaks ->
+        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        Format          : X+
+        Name            : 01
+    <-
+<-
+
+TemplateMatching ->
+    IncludeShortReads: True
+    CutoffScore : 8
+
+    Alphabet ->
+        Path             : ../alphabets/blosum62.csv
+        Name             : Blosum62
+        GapStartPenalty  : 12
+        GapExtendPenalty : 1
+    <-
+
+    Databases->
+        Heavy ->
+            Database->
+                Path      : ../templates/IGHV.fasta
+                Name      : IGHV
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 5
+            <-
+            Database->
+                Path    : ../templates/IGHJ_simplified.fasta
+                Name    : IGHJ
+                Scoring : Relative
+            <-
+            Database->
+                Path      : ../templates/IGHC_uniprot.fasta
+                Name      : IGHC
+                Identifier: GN=([\p{P}\w*-]+)
+                ClassChars: 5
+            <-
+        <-
+        Light ->
+            Database->
+                Path      : ../templates/IGK+LV.fasta
+                Name      : IGLV
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
+            Database->
+                Path      : ../templates/IGK+LJ.fasta
+                Name      : IGLJ
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
+            Database->
+                Path      : ../templates/IGK+LC.fasta
+                Name      : IGLC
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
+        <-
+    <-
+<-
+
+Recombine->
+    -Pick the <n> highest scoring templates from each database
+    N : 1
+
+    -Minimal average score per position to be included
+    CutoffScore : 2
+
+    -Separated by whitespace means directly attached
+    -Separated by {gap} means with a gap attached
+    Order ->
+        Heavy: IGHV * IGHJ IGHC
+        Light: IGLV IGLJ IGLC
+    <-
+
+    ReadAlignment -> 
+        InputParameters ->
+            Peaks ->
+                CutoffALC     : 90
+                LocalCutoffALC: 100
+                MinLengthPatch  : 100
+            <-
+        <-
+        
+        CutoffScore: 12
+        ForceOnSingleTemplate: False
+    <-
+<-
+
+Report ->
+    HTML ->
+        Path    : ../../report-monoclonal.html
+    <-
+<-

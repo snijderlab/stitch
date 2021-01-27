@@ -482,15 +482,15 @@ namespace AssemblyNameSpace
             combinedSequenceCache = output;
             return output;
         }
-        (string, List<double>) ConsensusSequenceCache = (null, null);
-        public (string, List<double>) ConsensusSequence()
+        (List<AminoAcid>, List<double>) ConsensusSequenceCache = (null, null);
+        public (List<AminoAcid>, List<double>) ConsensusSequence()
         {
             if (ConsensusSequenceCache != (null, null)) return ConsensusSequenceCache;
 
-            var consensus = new StringBuilder();
+            var consensus = new List<AminoAcid>();
             var doc = new List<double>();
             var combinedSequence = CombinedSequence();
-            string options = "";
+            List<AminoAcid> options = new List<AminoAcid>();
             double max;
             double coverage;
             List<Template.IGap> max_gap = new List<IGap>();
@@ -498,7 +498,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < combinedSequence.Count; i++)
             {
                 // Get the highest chars
-                options = "";
+                options.Clear();
                 max = 0;
                 coverage = 0;
 
@@ -507,22 +507,23 @@ namespace AssemblyNameSpace
                     coverage += item.Value;
                     if (item.Value > max)
                     {
-                        options = item.Key.ToString();
+                        options.Clear();
+                        options.Add(item.Key);
                         max = item.Value;
                     }
                     else if (item.Value == max)
                     {
-                        options += item.Key.ToString();
+                        options.Add(item.Key);
                     }
                 }
 
-                if (options.Length > 1 && options.Contains(combinedSequence[i].Template.Char))
+                if (options.Count() > 1 && options.Contains(combinedSequence[i].Template))
                 {
-                    consensus.Append(combinedSequence[i].Template.Char);
+                    consensus.Add(combinedSequence[i].Template);
                 }
                 else
                 {
-                    consensus.Append(options[0]);
+                    consensus.Add(options[0]);
                 }
                 doc.Add(coverage);
 
@@ -548,11 +549,11 @@ namespace AssemblyNameSpace
 
                 if (max_gap.Count >= 1 && max_gap[0].GetType() != typeof(Template.None))
                 {
-                    consensus.Append(max_gap[0].ToString());
+                    consensus.AddRange(((Template.Gap)max_gap[0]).Sequence);
                     doc.AddRange(gap_coverage);
                 }
             }
-            ConsensusSequenceCache = (consensus.ToString(), doc);
+            ConsensusSequenceCache = (consensus, doc);
             return ConsensusSequenceCache;
         }
     }

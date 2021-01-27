@@ -13,13 +13,14 @@ Input ->
 
 TemplateMatching ->
     IncludeShortReads: True
-    CutoffScore : 8
+    ForceOnSingleTemplate: True
+    CutoffScore : 80
 
     Alphabet ->
-        Path             : ../alphabets/blosum62.csv
+        Path             : ../alphabets/blosum62_positiveX.csv
         Name             : Blosum62
-        GapStartPenalty  : 12
-        GapExtendPenalty : 1
+        GapStartPenalty  : 80
+        GapExtendPenalty : 8
     <-
 
     Databases->
@@ -66,11 +67,11 @@ Recombine->
     N : 1
 
     -Minimal average score per position to be included
-    CutoffScore : 2
+    CutoffScore : 20
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV IGHJ IGHC  IGLV IGLJ IGLC
+    Order : IGHV * IGHJ IGHC  IGLV IGLJ IGLC
 
     ReadAlignment -> 
         InputParameters ->
@@ -81,7 +82,7 @@ Recombine->
             <-
         <-
         
-        CutoffScore: 12
+        CutoffScore: 120
         ForceOnSingleTemplate: False
     <-
 <-

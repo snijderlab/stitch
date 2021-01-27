@@ -293,7 +293,7 @@ namespace AssemblyNameSpace
                 if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{templates[i].ConsensusSequence()}</td>
+    <td class=""seq"">{AminoAcid.ArrayToString(templates[i].ConsensusSequence().Item1)}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center"">{templates[i].Score}</td>
     <td class=""center"">{templates[i].Matches.Count()}</td>
@@ -494,7 +494,7 @@ namespace AssemblyNameSpace
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
-    <p class='aside-seq'>{consensus_sequence}</p>
+    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
     <h2>Sequence Consensus Overview</h2>
     {SequenceConsensusOverview(template)}
     <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
@@ -556,6 +556,9 @@ namespace AssemblyNameSpace
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
+
+            if (alignedSequences.Count() == 0)
+                return ("", new List<double>());
 
             buffer.Append("<h2>Alignment</h2>");
 

@@ -175,6 +175,37 @@ namespace AssemblyNameSpace
                 }
             }
 
+            if (output.Recombine != null && output.Recombine.Order.Count() != 0)
+            {
+                int last = -2;
+                foreach (var piece in output.Recombine.Order)
+                {
+                    if (piece.IsGap())
+                    {
+                        if (last == -1)
+                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "Gaps cannot follow consecutively."));
+                        else if (last == -2)
+                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
+                        else
+                        {
+                            output.TemplateMatching.Databases[last].GapTail = true;
+                            last = -1;
+                        }
+                    }
+                    else
+                    {
+                        var db = ((RunParameters.RecombineOrder.Template)piece).Index;
+                        if (last == -1)
+                            output.TemplateMatching.Databases[db].GapHead = true;
+                        last = db;
+                    }
+                }
+                if (last == -1)
+                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot end with a gap (*)."));
+                if (last == -2)
+                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot be empty."));
+            }
+
             // Propagate alphabets
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
             if (output.Recombine != null && output.Recombine.ReadAlignment != null && output.Recombine.ReadAlignment.Alphabet == null) output.Recombine.ReadAlignment.Alphabet = output.Recombine.Alphabet;
@@ -196,9 +227,15 @@ namespace AssemblyNameSpace
             {
                 foreach (var db in output.TemplateMatching.Databases)
                 {
-                    foreach (var read in db.Templates)
+                    for (var i = 0; i < db.Templates.Count; i++)
                     {
+                        var read = db.Templates[i];
                         read.Item2.FinaliseIdentifier();
+                        if (db.GapTail)
+                            read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
+                        if (db.GapHead)
+                            read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
+                        db.Templates[i] = read;
                     }
                 }
             }
