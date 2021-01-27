@@ -50,8 +50,8 @@ namespace AssemblyNameSpace
         /// <summary> The origins where the (k-1)-mers used for this sequence come from. Defined as the index in the list with reads. </summary>
         public List<List<int>> Origins;
         public List<List<HelperFunctionality.ReadPlacement>> Alignment;
-        public int[] DepthOfCoverageFull;
-        public int[] DepthOfCoverage;
+        public double[] DepthOfCoverageFull;
+        public double[] DepthOfCoverage;
         public double TotalArea;
         public readonly List<int> UniqueOrigins;
         public readonly HashSet<int> GraphIndices;
@@ -97,10 +97,10 @@ namespace AssemblyNameSpace
         /// <param name="reads"> All the reads of the assembly (the indices should be the same as in the UniqueOrigins).</param>
         /// <param name="alphabet">The alphabet for the alignment.</param>
         /// <param name="K">The K for the alignment.</param>
-        public List<List<HelperFunctionality.ReadPlacement>> CalculateReadsAlignment(List<AminoAcid[]> reads, Alphabet alphabet, int K)
+        public List<List<HelperFunctionality.ReadPlacement>> CalculateReadsAlignment(List<AminoAcid[]> reads, List<MetaData.IMetaData> metadata, Alphabet alphabet, int K)
         {
             string sequence = AminoAcid.ArrayToString(Prefix) + AminoAcid.ArrayToString(Sequence) + AminoAcid.ArrayToString(Suffix);
-            Dictionary<int, string> lookup = UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => item.Item2);
+            Dictionary<int, (string, MetaData.IMetaData)> lookup = UniqueOrigins.Select(x => (x, AminoAcid.ArrayToString(reads[x]))).ToDictionary(item => item.x, item => (item.Item2, metadata[item.x]));
             var positions = HelperFunctionality.MultipleSequenceAlignmentToTemplate(sequence, lookup, Origins, alphabet, K, true);
             sequence = AminoAcid.ArrayToString(Sequence);
             int prefixoffset = Prefix.Count();
@@ -216,15 +216,19 @@ namespace AssemblyNameSpace
         {
             var placement = Alignment;
             int sequenceLength = Prefix.Count() + Sequence.Count() + Suffix.Count();
-            int[] depthOfCoverage = new int[sequenceLength];
+            double[] depthOfCoverage = new double[sequenceLength];
 
             foreach (var row in placement)
             {
                 foreach (var read in row)
                 {
+                    var positional = read.MetaData.PositionalScore.Length != 0;
                     for (int i = read.StartPosition; i < read.StartPosition + read.Sequence.Length && i < depthOfCoverage.Length; i++)
                     {
-                        depthOfCoverage[i]++;
+                        if (positional)
+                            depthOfCoverage[i] += read.MetaData.PositionalScore[i - read.StartPosition];
+                        else
+                            depthOfCoverage[i]++;
                     }
                 }
             }

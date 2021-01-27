@@ -417,7 +417,7 @@ namespace AssemblyNameSpace
             }
 
             sb.Clear();
-            var maxCoverage = new List<int>();
+            var maxCoverage = new List<double>();
             foreach (var node in Parameters.Paths[i].Nodes)
             {
                 var core = CreateReadsAlignmentCore(node, location);
@@ -1138,7 +1138,7 @@ namespace AssemblyNameSpace
 
             return (buffer.ToString().Replace("<div class=\"reads-alignment\">", $"<div class='reads-alignment' style='--max-value:{core.Item2}'>"), node.UniqueOrigins);
         }
-        (string, int) CreateReadsAlignmentCore(CondensedNode node, List<string> location)
+        (string, double) CreateReadsAlignmentCore(CondensedNode node, List<string> location)
         {
             var placed = node.Alignment;
             var depthOfCoverage = node.DepthOfCoverageFull;

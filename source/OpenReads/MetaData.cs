@@ -71,7 +71,7 @@ namespace AssemblyNameSpace
             protected NameFilter nameFilter;
 
             /// <summary>
-            /// To create the base metadat for a read.
+            /// To create the base metadata for a read.
             /// </summary>
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="identifier_">The identifier of the read.</param>

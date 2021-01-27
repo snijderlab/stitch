@@ -17,9 +17,9 @@ namespace AssemblyNameSpace
     {
         public readonly List<CondensedNode> Nodes;
         public readonly AminoAcid[] Sequence;
-        public readonly int[] DepthOfCoverage;
+        public readonly double[] DepthOfCoverage;
         public readonly int[] ContigID;
-        public readonly int Score;
+        public readonly double Score;
         public int Index;
         public readonly MetaData.IMetaData MetaData;
         public string Identifiers
@@ -41,7 +41,7 @@ namespace AssemblyNameSpace
 
             int totallength = Nodes.Aggregate(0, (a, b) => a + b.Sequence.Count());
             var list = new List<AminoAcid>() { Capacity = totallength };
-            var depth = new List<int>() { Capacity = totallength };
+            var depth = new List<double>() { Capacity = totallength };
             var id = new List<int>() { Capacity = totallength };
 
             foreach (var node in Nodes)
@@ -52,7 +52,7 @@ namespace AssemblyNameSpace
             }
             Sequence = list.ToArray();
             DepthOfCoverage = depth.ToArray();
-            Score = depth.Sum();
+            Score = DepthOfCoverage.Sum();
             ContigID = id.ToArray();
             MetaData = new MetaData.Path(this);
         }
@@ -65,8 +65,11 @@ namespace AssemblyNameSpace
             Nodes = new List<CondensedNode>();
             Index = index;
             Sequence = sequence.ToArray();
-            DepthOfCoverage = Enumerable.Repeat(1, sequence.Count).ToArray();
-            Score = sequence.Count;
+            if (metaData != null)
+                DepthOfCoverage = metaData.PositionalScore;
+            else
+                DepthOfCoverage = Enumerable.Repeat(1.0, sequence.Count).ToArray();
+            Score = DepthOfCoverage.Sum();
             ContigID = Enumerable.Repeat(-1, sequence.Count).ToArray();
             MetaData = metaData;
 

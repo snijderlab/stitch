@@ -28,7 +28,7 @@ namespace AssemblyNameSpace
         /// <returns>A string containing the file.</returns>
         public override string Create()
         {
-            var sequences = new List<(int, string)>();
+            var sequences = new List<(double, string)>();
 
             if (OutputType == RunParameters.Report.FastaOutputType.Assembly)
             {

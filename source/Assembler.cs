@@ -726,7 +726,7 @@ namespace AssemblyNameSpace
             // Calculate all reads alignments for all condensed nodes
             foreach (var node in condensed_graph)
             {
-                node.CalculateReadsAlignment(reads, alphabet, kmer_length);
+                node.CalculateReadsAlignment(reads, reads_metadata, alphabet, kmer_length);
             }
         }
     }

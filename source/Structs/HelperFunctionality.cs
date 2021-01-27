@@ -91,7 +91,8 @@ namespace AssemblyNameSpace
             public int Identifier;
             public string StartOverhang;
             public string EndOverhang;
-            public ReadPlacement(string sequence, int startposition, int identifier)
+            public MetaData.IMetaData MetaData;
+            public ReadPlacement(string sequence, int startposition, int identifier, MetaData.IMetaData metaData)
             {
                 Sequence = sequence;
                 StartPosition = startposition;
@@ -99,8 +100,9 @@ namespace AssemblyNameSpace
                 Identifier = identifier;
                 StartOverhang = "";
                 EndOverhang = "";
+                MetaData = metaData;
             }
-            public ReadPlacement(string sequence, int startposition, int identifier, string startoverhang, string endoverhang)
+            public ReadPlacement(string sequence, int startposition, int identifier, string startoverhang, string endoverhang, MetaData.IMetaData metaData)
             {
                 Sequence = sequence;
                 StartPosition = startposition;
@@ -108,6 +110,7 @@ namespace AssemblyNameSpace
                 Identifier = identifier;
                 StartOverhang = startoverhang;
                 EndOverhang = endoverhang;
+                MetaData = metaData;
             }
         }
 
@@ -120,7 +123,7 @@ namespace AssemblyNameSpace
         /// <param name="sequences"> The sequences to match with. </param>
         /// <param name="reverse"> Whether or not the alignment should also be done in reverse direction. </param>
         /// <param name="alphabet"> The alphabet to be used. </param>
-        public static List<ReadPlacement> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, string> sequences, List<List<int>> positions, Alphabet alphabet, int k, bool reverse = false)
+        public static List<ReadPlacement> MultipleSequenceAlignmentToTemplate(string template, Dictionary<int, (string Sequence, MetaData.IMetaData MetaData)> sequences, List<List<int>> positions, Alphabet alphabet, int k, bool reverse = false)
         {
             // Keep track of all places already covered
             var result = new List<ReadPlacement>();
@@ -129,7 +132,7 @@ namespace AssemblyNameSpace
             foreach (var current in sequences)
             {
                 int identifier = current.Key;
-                string seq = current.Value;
+                string seq = current.Value.Sequence;
                 string seq_rev = string.Concat(seq.Reverse());
                 int firsthit = -1;
                 int lasthit = -1;
@@ -165,12 +168,12 @@ namespace AssemblyNameSpace
                         {
                             int score_fw = GetPositionScore(ref template, ref seq, alphabet, firsthit);
                             int score_bw = GetPositionScore(ref template, ref seq_rev, alphabet, firsthit + 1);
-                            if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier));
-                            else result.Add(new ReadPlacement(seq_rev, firsthit, identifier));
+                            if (score_fw >= score_bw) result.Add(new ReadPlacement(seq, firsthit, identifier, current.Value.MetaData));
+                            else result.Add(new ReadPlacement(seq_rev, firsthit, identifier, current.Value.MetaData));
                         }
                         else
                         {
-                            result.Add(new ReadPlacement(seq, firsthit, identifier));
+                            result.Add(new ReadPlacement(seq, firsthit, identifier, current.Value.MetaData));
                         }
 
                     }
@@ -187,11 +190,11 @@ namespace AssemblyNameSpace
                             {
                                 template_seq = seq_rev.Substring(offset, lengthpatch);
                                 score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit + 1);
-                                possibilities.Add((score, new ReadPlacement(template_seq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch))));
+                                possibilities.Add((score, new ReadPlacement(template_seq, firsthit + 1, identifier, seq_rev.Substring(0, offset), seq_rev.Substring(offset + lengthpatch), current.Value.MetaData)));
                             }
                             template_seq = seq.Substring(offset, lengthpatch);
                             score = GetPositionScore(ref template, ref template_seq, alphabet, firsthit);
-                            possibilities.Add((score, new ReadPlacement(template_seq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch))));
+                            possibilities.Add((score, new ReadPlacement(template_seq, firsthit, identifier, seq.Substring(0, offset), seq.Substring(offset + lengthpatch), current.Value.MetaData)));
                         }
 
                         var best = possibilities.First();
