@@ -250,16 +250,12 @@ namespace AssemblyNameSpace
                                         join = false;
                                         s = s.TakeWhile(a => a.Char != 'X').ToList();
                                         seq = seq.SkipWhile(a => a.Char == 'X').ToList();
-                                        Console.WriteLine(AminoAcid.ArrayToString(s));
-                                        Console.WriteLine(AminoAcid.ArrayToString(seq));
                                         var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), recombined_database.Alphabet, 20);
                                         // When no good overlap is found just paste them one after the other
                                         if (aligned_template.Item2 >= 0)
                                             s.AddRange(seq.Skip(aligned_template.Item1));
                                         else
                                             s.AddRange(seq);
-                                        Console.WriteLine(AminoAcid.ArrayToString(s));
-                                        Console.WriteLine(aligned_template);
                                     }
                                     else
                                     {

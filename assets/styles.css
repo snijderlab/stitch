@@ -259,63 +259,6 @@ input:checked+label+.collapsable {
 }
 
 
-/* Graphs */
-
-svg {
-    max-width: 100%;
-    height: auto;
-    margin: 0 auto;
-    user-select: none;
-}
-
-svg text {
-    transform: translate(-5px, 1px);
-}
-
-svg .node {
-    cursor: pointer;
-}
-
-svg .node polygon {
-    fill: var(--color-background);
-    stroke: var(--color-primary);
-}
-
-svg .node text {
-    fill: var(--color-primary);
-}
-
-svg .start-node polygon {
-    fill: var(--color-primary);
-}
-
-svg .start-node text {
-    fill: var(--color-background);
-}
-
-svg .edge {
-    transform: translate(-2px, 0);
-}
-
-svg .edge polygon,
-svg .edge path {
-    stroke: var(--color-primary);
-}
-
-svg .edge polygon {
-    fill: var(--color-primary);
-}
-
-svg .selected polygon {
-    fill: var(--color-secondary);
-    stroke: var(--color-secondary);
-}
-
-svg .selected text {
-    fill: var(--color-background);
-}
-
-
 /* Runtime */
 
 .runtime {
@@ -670,6 +613,7 @@ input:checked+.slider:before {
     grid-auto-flow: column;
     grid-template-columns: 3ch;
     gap: 5px;
+    font-size: .25rem;
 }
 
 .histogram .yaxis {

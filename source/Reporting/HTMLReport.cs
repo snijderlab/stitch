@@ -497,7 +497,7 @@ namespace AssemblyNameSpace
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
     <h2>Sequence Consensus Overview</h2>
     {SequenceConsensusOverview(template)}
-    <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
+    <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), 10)}</div>
     <h2>Sequence Length</h2>
     <p>{template.Sequence.Length}</p>
     <h2>Total Matches</h2>
@@ -522,9 +522,9 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
 
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage))}</div>");
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage), 10)}</div>");
 
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()))}</div>");
+            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), 10)}</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
@@ -900,7 +900,7 @@ namespace AssemblyNameSpace
             {unique}
             <tr>
                 <td>{doctitle}</td>
-                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td>
+                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition), 5, true)}</td>
             </tr>
             <tr>
                 <td>Alignment graphic</td>
@@ -1400,7 +1400,7 @@ namespace AssemblyNameSpace
 <div class='table-header{classname}'>
     <div>
         <h3>Score</h3>
-        {HTMLGraph.Histogram(templates.Select(a => (double)a.Score).ToList())}
+        {HTMLGraph.Histogram(templates.Select(a => (double)a.Score).ToList(), 10, 3)}
     </div>
     {extended}
 </div>";
@@ -1409,13 +1409,13 @@ namespace AssemblyNameSpace
         string TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
         {
             string extended = "";
-            if (area != null) extended = $"<div><h3>Area</h3>{HTMLGraph.Histogram(area.ToList())}</div>";
+            if (area != null) extended = $"<div><h3>Area</h3>{HTMLGraph.Histogram(area.ToList(), 10, 3)}</div>";
 
             return $@"
 <div class='table-header-{identifier}'>
     <div>
         <h3>Length</h3>
-        {HTMLGraph.Histogram(lengths.ToList())}
+        {HTMLGraph.Histogram(lengths.ToList(), 10, 3)}
     </div>
     {extended}
 </div>";

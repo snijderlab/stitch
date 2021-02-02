@@ -51,7 +51,7 @@ namespace AssemblyNameSpace
             return GroupedBargraph(labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList());
         }
 
-        public static string Histogram(List<double> data, int bins = 10)
+        public static string Histogram(List<double> data, int bins = 10, double aspect_ratio = 1)
         {
             if (data.Count == 0) return "<em>No data.</em>";
             double min = data.Min();
@@ -78,30 +78,70 @@ namespace AssemblyNameSpace
                 labeled[bin].Item2++;
             }
 
-            return Bargraph(labeled.ToList());
+            return Bargraph(labeled.ToList(), aspect_ratio);
         }
 
-        public static string Bargraph(List<(string, double)> data, int factor = 2, bool baseYMinOnData = false)
+        public static string Bargraph(List<(string, double)> data, double aspect_ratio = 1, bool hideText = false, bool baseYMinOnData = false)
         {
             if (data.Count == 0) return "<em>No data.</em>";
             var buffer = new StringBuilder();
-            buffer.Append("<div class='histogram'>");
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            double max = Math.Ceiling(data.Select(a => a.Item2).Max() / factor) * factor;
+            // Get the best max value based on 2^x, 5^x or 10^x
+            //Math.Min(Math.Pow(2, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 2))), Math.Min(Math.Pow(5, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 5))), Math.Pow(10, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 10)))));
+            double max_value = data.Select(a => a.Item2).Max();
+            double base_number = Math.Pow(10, Math.Floor(Math.Log(max_value, 10))) * 0.5;
+            double max = Math.Ceiling(max_value / base_number) * base_number;
             double min = 0;
             if (baseYMinOnData) min = data.Select(a => a.Item2).Min();
 
-            // Y axis
-            buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
+            double bar_height = 90;
+            double font_height = aspect_ratio == 1 ? 4 : 4 * Math.Floor(Math.Log(aspect_ratio, 2));
+            double width = 100.0 * aspect_ratio;
+            double axis_width = Math.Floor(Math.Log(max_value, 10)) * .5 * font_height;
 
-            // Data
-            foreach (var set in data)
+            if (hideText)
             {
-                string height = ((set.Item2 - min) / max * 100).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Item2:G3}</span></span><span class='label'>{set.Item1}</span>");
+                font_height = 0;
+                axis_width = 0;
+                bar_height = 100;
             }
 
-            buffer.Append("</div>");
+            double box_width = (width - axis_width) / data.Count();
+
+            buffer.Append($@"<svg xmlns='http://www.w3.org/2000/svg' class='histogram' viewBox='0 0 {width} 100'><g class='yaxis' font-size='{font_height}px'><text class='max' x='0' y='0' dominant-baseline='hanging'>{max:G3}</text><text class='min' x='0' y='{bar_height}'>{min:G3}</text></g><g dominant-baseline='hanging' font-size='{font_height}px'>");
+
+            // Data
+            int index = 0;
+            foreach (var set in data)
+            {
+                double height = (set.Item2 - min) / max * bar_height;
+                //<text x='{box_width * index}' y='{bar_height - height}'>{set.Item2:G3}</text>
+                buffer.Append($@"<g class='bar'><rect x='{box_width * index + axis_width}' y='{bar_height - height}' width='{box_width}' height='{height}'/><text x='{box_width * index + axis_width}' y='{bar_height}' class='label'>{set.Item1}</text></g>");
+                index++;
+            }
+
+            buffer.Append("</g></svg>");
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+            return "<img src=\"data:image/svg+xml," + URLEncode(buffer.ToString()) + "\">";
+        }
+
+        private static string URLEncode(string input)
+        {
+            var buffer = new StringBuilder(input.Length);
+            char[] escape_chars = { ':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '\"', '\'', '(', ')', '*', '+', ',', ';', '=', '<', '>', '%', ' ' };
+            foreach (char character in input.ToCharArray())
+            {
+                if (character == '<' || character == '>')
+                {
+                    buffer.Append("%" + ((uint)character).ToString("X"));
+                }
+                else
+                {
+                    buffer.Append(character);
+                }
+            }
             return buffer.ToString();
         }
 
