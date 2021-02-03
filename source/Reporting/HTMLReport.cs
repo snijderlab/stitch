@@ -240,16 +240,14 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        string CreateTemplateTables()
+        string CreateTemplateTables(List<TemplateDatabase> databases, int templateGroup)
         {
-            if (Parameters.TemplateDatabases == null) return "";
-
             var buffer = new List<(int, string)>();
 
             Parallel.ForEach(
-                Parameters.TemplateDatabases,
+                databases.Select((item, index) => (index, item)),
                 new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                db => buffer.Add((db.Index, Collapsible($"Template Matching {db.Name}", CreateTemplateTable(db.Templates, db.Index, AsideType.Template, true))))
+                set => buffer.Add((set.index, Collapsible($"Template Matching {set.item.Name}", CreateTemplateTable(set.item.Templates, templateGroup, set.index, AsideType.Template, true))))
             );
 
             buffer.Sort((a, b) => a.Item1.CompareTo(b.Item1));
@@ -263,7 +261,7 @@ namespace AssemblyNameSpace
             return output.ToString();
         }
 
-        string CreateTemplateTable(List<Template> templates, int templateIndex, AsideType type, bool header = false)
+        string CreateTemplateTable(List<Template> templates, int templateGroup, int templateIndex, AsideType type, bool header = false)
         {
             var buffer = new StringBuilder();
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
@@ -272,24 +270,24 @@ namespace AssemblyNameSpace
 
             if (header) buffer.Append(TableHeader(templates));
             string unique = "";
-            if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
+            if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 1, 'string')"">Consensus Sequence</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 3, 'number')"" class=""smallcell"">Score</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 4, 'number')"" class=""smallcell"">Reads</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}', 5, 'number')"" class=""smallcell"">Total Area</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 0, 'id')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'string')"">Consensus Sequence</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 3, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 4, 'number')"" class=""smallcell"">Reads</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 5, 'number')"" class=""smallcell"">Total Area</th>
     {unique}
 </tr>");
 
             string id, link;
             for (int i = 0; i < templates.Count(); i++)
             {
-                id = GetAsideIdentifier(templateIndex, i, type);
-                link = GetAsideLink(templateIndex, i, type);
+                id = GetAsideIdentifier(templateGroup, templateIndex, i, type);
+                link = GetAsideLink(templateGroup, templateIndex, i, type);
                 if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
@@ -394,31 +392,34 @@ namespace AssemblyNameSpace
             if (Parameters.TemplateDatabases != null)
             {
                 const int number = 10;
-                var best_templates = new List<(int, int, int)>();
+                var best_templates = new List<(int, int, int, int)>();
                 int cutoff = 0;
 
-                // Pick each database
-                for (int k = 0; k < Parameters.TemplateDatabases.Count(); k++)
-                { // Pick each template
-                    for (int j = 0; j < Parameters.TemplateDatabases[k].Templates.Count(); j++)
-                    {
-                        var match = Parameters.TemplateDatabases[k].Templates[j].Matches.Find(sm => sm.Index == i);
-                        if (match != null && (match.Score > cutoff || best_templates.Count() < number))
+                // Pick each database group
+                for (int l = 0; l < Parameters.TemplateDatabases.Count(); l++)
+                { // Pick each database
+                    for (int k = 0; k < Parameters.TemplateDatabases[l].Item2.Count(); k++)
+                    { // Pick each template
+                        for (int j = 0; j < Parameters.TemplateDatabases[l].Item2[k].Templates.Count(); j++)
                         {
-                            best_templates.Add((k, j, match.Score));
-                            best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));
+                            var match = Parameters.TemplateDatabases[l].Item2[k].Templates[j].Matches.Find(sm => sm.Index == i);
+                            if (match != null && (match.Score > cutoff || best_templates.Count() < number))
+                            {
+                                best_templates.Add((l, k, j, match.Score));
+                                best_templates.Sort((a, b) => b.Item3.CompareTo(a.Item3));
 
-                            int count = best_templates.Count();
-                            if (count > number) best_templates.RemoveRange(10, count - number);
+                                int count = best_templates.Count();
+                                if (count > number) best_templates.RemoveRange(10, count - number);
 
-                            cutoff = best_templates.Last().Item3;
+                                cutoff = best_templates.Last().Item3;
+                            }
                         }
                     }
                 }
 
                 foreach (var tem in best_templates)
                 {
-                    sb.Append($"<tr><td>{tem.Item3}</td><td>{GetAsideLink(tem.Item1, tem.Item2, AsideType.Template, location)}</td></tr>");
+                    sb.Append($"<tr><td>{tem.Item4}</td><td>{GetAsideLink(tem.Item1, tem.Item2, tem.Item3, AsideType.Template, location)}</td></tr>");
                 }
 
                 templateString = sb.ToString().Length == 0 ? "" : $"<h2>Top {number} templates</h2><table><tr><th>Score</th><th>Template</th></tr>{sb}</table>";
@@ -453,9 +454,9 @@ namespace AssemblyNameSpace
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        string CreateTemplateAside(AsideType type, Template template, int index, int i)
+        string CreateTemplateAside(AsideType type, Template template, int superindex, int index, int i)
         {
-            string id = GetAsideIdentifier(index, i, type);
+            string id = GetAsideIdentifier(superindex, index, i, type);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
             var alignment = CreateTemplateAlignment(template, id, location);
             var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
@@ -474,7 +475,7 @@ namespace AssemblyNameSpace
                     break;
                 case AsideType.RecombinedTemplate:
                     if (template.Recombination != null)
-                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
+                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(superindex, b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
                     break;
                 default:
                     break;
@@ -492,7 +493,7 @@ namespace AssemblyNameSpace
             }
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(index, i, type, true)}</h1>
+    <h1>Template {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
     <h2>Sequence Consensus Overview</h2>
@@ -991,18 +992,18 @@ namespace AssemblyNameSpace
         /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
         void CreateAsides()
         {
-            var jobbuffer = new List<(AsideType, int, int)>();
+            var jobbuffer = new List<(AsideType, int, int, int)>();
 
-            void ExecuteJob(AsideType aside, int index2, int index1)
+            void ExecuteJob(AsideType aside, int index3, int index2, int index1)
             {
                 switch (aside)
                 {
-                    case AsideType.Path: SaveAside(CreatePathAside(index1), AsideType.Path, -1, index1); break;
-                    case AsideType.Contig: SaveAside(CreateContigAside(index1), AsideType.Contig, -1, index1); break;
-                    case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, index1); break;
-                    case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index2].Templates[index1], AsideType.Template, index2, index1); break;
-                    case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase.Templates[index1], AsideType.RecombinedTemplate, -1, index1); break;
-                    case AsideType.ReadAlignment: SaveTemplateAside(Parameters.ReadAlignment.Templates[index1], AsideType.ReadAlignment, -1, index1); break;
+                    case AsideType.Path: SaveAside(CreatePathAside(index1), AsideType.Path, -1, -1, index1); break;
+                    case AsideType.Contig: SaveAside(CreateContigAside(index1), AsideType.Contig, -1, -1, index1); break;
+                    case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, -1, index1); break;
+                    case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index3].Item2[index2].Templates[index1], AsideType.Template, index3, index2, index1); break;
+                    case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase[index3].Templates[index1], AsideType.RecombinedTemplate, index3, index2, index1); break;
+                    case AsideType.ReadAlignment: SaveTemplateAside(Parameters.ReadAlignment[index3].Templates[index1], AsideType.ReadAlignment, index3, index2, index1); break;
                 };
             }
 
@@ -1011,73 +1012,68 @@ namespace AssemblyNameSpace
                 // Path Asides
                 for (int i = 0; i < Parameters.Paths.Count(); i++)
                 {
-                    jobbuffer.Add((AsideType.Path, -1, i));
+                    jobbuffer.Add((AsideType.Path, -1, -1, i));
                 }
                 // Contigs Asides
                 for (int i = 0; i < Parameters.Assembler.condensed_graph.Count(); i++)
                 {
-                    jobbuffer.Add((AsideType.Contig, -1, i));
+                    jobbuffer.Add((AsideType.Contig, -1, -1, i));
                 }
             }
             // Read Asides
             for (int i = 0; i < reads.Count(); i++)
             {
-                jobbuffer.Add((AsideType.Read, -1, i));
+                jobbuffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
             if (Parameters.TemplateDatabases != null)
             {
-                for (int t = 0; t < Parameters.TemplateDatabases.Count(); t++)
-                {
-                    for (int i = 0; i < Parameters.TemplateDatabases[t].Templates.Count(); i++)
-                    {
-                        jobbuffer.Add((AsideType.Template, t, i));
-                    }
-                }
+                for (int i = 0; i < Parameters.TemplateDatabases.Count(); i++)
+                    for (int j = 0; j < Parameters.TemplateDatabases[i].Item2.Count(); j++)
+                        for (int k = 0; k < Parameters.TemplateDatabases[i].Item2[j].Templates.Count(); k++)
+                            jobbuffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
             if (Parameters.RecombinedDatabase != null)
             {
-                for (int i = 0; i < Parameters.RecombinedDatabase.Templates.Count(); i++)
-                {
-                    jobbuffer.Add((AsideType.RecombinedTemplate, -1, i));
-                }
+                for (int i = 0; i < Parameters.RecombinedDatabase.Count(); i++)
+                    for (int j = 0; j < Parameters.RecombinedDatabase[i].Templates.Count(); j++)
+                        jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
             // Reads Alignment Table Asides
             if (Parameters.ReadAlignment != null)
             {
-                for (int i = 0; i < Parameters.ReadAlignment.Templates.Count(); i++)
-                {
-                    jobbuffer.Add((AsideType.ReadAlignment, -1, i));
-                }
+                for (int i = 0; i < Parameters.ReadAlignment.Count(); i++)
+                    for (int j = 0; j < Parameters.ReadAlignment[i].Templates.Count(); j++)
+                        jobbuffer.Add((AsideType.ReadAlignment, i, -1, j));
             }
             if (MaxThreads > 1)
             {
                 Parallel.ForEach(
                     jobbuffer,
                     new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                    (a, _) => ExecuteJob(a.Item1, a.Item2, a.Item3)
+                    (a, _) => ExecuteJob(a.Item1, a.Item2, a.Item3, a.Item4)
                 );
             }
             else
             {
-                foreach (var (t, i2, i1) in jobbuffer)
+                foreach (var (t, i3, i2, i1) in jobbuffer)
                 {
-                    ExecuteJob(t, i2, i1);
+                    ExecuteJob(t, i3, i2, i1);
                 }
             }
         }
 
-        void SaveTemplateAside(Template template, AsideType type, int index1, int index2)
+        void SaveTemplateAside(Template template, AsideType type, int index3, int index2, int index1)
         {
-            SaveAside(CreateTemplateAside(type, template, index1, index2), type, index1, index2);
+            SaveAside(CreateTemplateAside(type, template, index3, index2, index1), type, index3, index2, index1);
         }
 
-        void SaveAside(string content, AsideType type, int index1, int index2)
+        void SaveAside(string content, AsideType type, int index3, int index2, int index1)
         {
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
             var homelocation = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
-            var id = GetAsideIdentifier(index1, index2, type);
+            var id = GetAsideIdentifier(index3, index2, index1, type);
             var link = GetLinkToFolder(location, new List<string>());
             var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
@@ -1255,26 +1251,37 @@ namespace AssemblyNameSpace
         /// <returns>A ready for use identifier.</returns>
         string GetAsideIdentifier(int index, AsideType type, bool humanvisible = false)
         {
-            return GetAsideIdentifier(-1, index, type, humanvisible);
+            return GetAsideIdentifier(-1, -1, index, type, humanvisible);
         }
 
-        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container.</summary>
         /// <param name="index1">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
         /// <param name="index2">The index in the container of the element.</param>
         /// <param name="type">The type of the element.</param>
-        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
         string GetAsideIdentifier(int index1, int index2, AsideType type, bool humanvisible = false)
+        {
+            return GetAsideIdentifier(-1, index1, index2, type, humanvisible);
+        }
+
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <param name="index1">The index in the supercontainer of the supercontrainer. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index2">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index3">The index in the container of the element.</param>
+        /// <param name="type">The type of the element.</param>
+        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
+        /// <returns>A ready for use identifier.</returns>
+        string GetAsideIdentifier(int index1, int index2, int index3, AsideType type, bool humanvisible = false)
         {
             // Try to use the identifiers as retrieved from the metadata
             MetaData.IMetaData metadata = null;
             if (type == AsideType.Read)
             {
-                metadata = reads_metadata[index2];
+                metadata = reads_metadata[index3];
             }
             else if (type == AsideType.Template)
             {
-                metadata = Parameters.TemplateDatabases[index1].Templates[index2].MetaData;
+                metadata = Parameters.TemplateDatabases[index1].Item2[index2].Templates[index3].MetaData;
             }
             if (metadata != null && metadata.Identifier != null)
             {
@@ -1289,10 +1296,14 @@ namespace AssemblyNameSpace
             else i1 = $"{index1}:";
 
             string i2;
-            if (index2 < 9999) i2 = $"{index2:D4}";
-            else i2 = $"{index2}";
+            if (index2 == -1) i2 = "";
+            else i2 = $"{index2}:";
 
-            return $"{pre}{i1}{i2}";
+            string i3;
+            if (index3 < 9999) i3 = $"{index3:D4}";
+            else i3 = $"{index3}";
+
+            return $"{pre}{i1}{i2}{i3}";
         }
 
         /// <summary> Returns a link to the given aside. </summary>
@@ -1301,7 +1312,7 @@ namespace AssemblyNameSpace
         /// <returns>A valid HTML link.</returns>
         string GetAsideLink(int index, AsideType type, List<string> location = null)
         {
-            return GetAsideLink(-1, index, type, location);
+            return GetAsideLink(-1, -1, index, type, location);
         }
 
         /// <summary> Returns a link to the given aside. </summary>
@@ -1311,12 +1322,23 @@ namespace AssemblyNameSpace
         /// <returns> A valid HTML link.</returns>
         string GetAsideLink(int index1, int index2, AsideType type, List<string> location = null)
         {
+            return GetAsideLink(-1, index1, index2, type, location);
+        }
+
+        /// <summary> Returns a link to the given aside. </summary>
+        /// <param name="index1">The index in the supercontainer of the supercontainer. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index2">The index in the supercontainer of the container. A value of -1 removes the index in the supercontainer.</param>
+        /// <param name="index3">The index in the container of the element.</param>
+        /// <param name="type">The type of the element.</param>
+        /// <returns> A valid HTML link.</returns>
+        string GetAsideLink(int index1, int index2, int index3, AsideType type, List<string> location = null)
+        {
             if (location == null) location = new List<string>();
-            string id = GetAsideIdentifier(index1, index2, type);
+            string id = GetAsideIdentifier(index1, index2, index3, type);
             if (id == null) throw new Exception("ID is null");
             string classname = GetAsideName(type);
             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
-            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(index1, index2, type, true)}</a>";
+            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(index1, index2, index3, type, true)}</a>";
         }
 
         string GetLinkToFolder(List<string> target, List<string> location)
@@ -1337,9 +1359,9 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="name">The name to display.</param>
         /// <param name="content">The content.</param>
-        string Collapsible(string name, string content)
+        string Collapsible(string name, string content, string extra_id = "")
         {
-            string id = name.ToLower().Replace(" ", "-") + "-collapsible";
+            string id = (name + extra_id).ToLower().Replace(" ", "-") + "-collapsible";
             return $@"<input type=""checkbox"" id=""{id}""/>
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
@@ -1599,13 +1621,21 @@ assetsfolder = '{AssetsFolderName}';
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
-            if (Parameters.ReadAlignment != null)
-                innerbuffer.Append(Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment.Templates, -1, AsideType.ReadAlignment, true)));
+            if (Parameters.TemplateDatabases != null)
+                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                {
+                    var groupbuffer = "";
 
-            if (Parameters.RecombinedDatabase != null)
-                innerbuffer.Append(Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase.Templates, -1, AsideType.RecombinedTemplate, true)));
+                    if (Parameters.ReadAlignment != null)
+                        groupbuffer += Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment[group].Templates, -1, group, AsideType.ReadAlignment, true), group.ToString());
 
-            innerbuffer.Append(CreateTemplateTables());
+                    if (Parameters.RecombinedDatabase != null)
+                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
+
+                    groupbuffer += CreateTemplateTables(Parameters.TemplateDatabases[group].Item2, group);
+
+                    innerbuffer.Append(Collapsible(Parameters.TemplateDatabases[group].Item1, groupbuffer));
+                }
 
             if (Parameters.Assembler != null)
             {

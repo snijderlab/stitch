@@ -444,9 +444,9 @@ namespace AssemblyNameSpace
             public bool ForceOnSingleTemplate = false;
 
             /// <summary>
-            /// The templates themselves.
+            /// The templates themselves. Grouped by their template group.
             /// </summary>
-            public List<DatabaseValue> Databases = new List<DatabaseValue>();
+            public List<(String Name, List<DatabaseValue> Databases)> Databases = new List<(String, List<DatabaseValue>)>();
         }
 
         /// <summary>
@@ -480,19 +480,14 @@ namespace AssemblyNameSpace
             public int N = 0;
 
             /// <summary>
-            /// The order in which the templates are to be recombined.
+            /// The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition.
             /// </summary>
-            public List<RecombineOrder.OrderPiece> Order = new List<RecombineOrder.OrderPiece>();
+            public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
 
             /// <summary>
             /// The parameters for the read alignment, if the step is to be taken
             /// </summary>
             public ReadAlignmentParameter ReadAlignment = null;
-
-            public string Display()
-            {
-                return $"Recombine->\nAlphabet: {Alphabet.Display()}\nCutoffScore: {CutoffScore}\nIncludeShortReads: {IncludeShortReads}\nForceOnSingleTemplate: {ForceOnSingleTemplate}\nN: {N}\nOrder: {Order.Aggregate("", (a, b) => a + b.Display())}\n{ReadAlignment.Display()}<-";
-            }
         }
 
         namespace RecombineOrder

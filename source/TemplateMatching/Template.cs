@@ -84,7 +84,7 @@ namespace AssemblyNameSpace
         public List<SequenceMatch> Matches;
 
         /// <summary>
-        /// If this template is recombinated this are the templates it consists of.
+        /// If this template is recombinated these are the templates it consists of.
         /// </summary>
         public readonly List<Template> Recombination;
 

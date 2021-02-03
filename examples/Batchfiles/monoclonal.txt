@@ -24,40 +24,44 @@ TemplateMatching ->
     <-
 
     Databases->
-        Database->
-            Path      : ../templates/IGHV.fasta
-            Name      : IGHV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-            ClassChars: 5
+        Heavy Chain->
+            Database->
+                Path      : ../templates/IGHV.fasta
+                Name      : IGHV
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 5
+            <-
+            Database->
+                Path    : ../templates/IGHJ_simplified.fasta
+                Name    : IGHJ
+                Scoring : Relative
+            <-
+            Database->
+                Path      : ../templates/IGHC_uniprot.fasta
+                Name      : IGHC
+                Identifier: GN=([\p{P}\w*-]+)
+                ClassChars: 5
+            <-
         <-
-        Database->
-            Path    : ../templates/IGHJ_simplified.fasta
-            Name    : IGHJ
-            Scoring : Relative
-        <-
-        Database->
-            Path      : ../templates/IGHC_uniprot.fasta
-            Name      : IGHC
-            Identifier: GN=([\p{P}\w*-]+)
-            ClassChars: 5
-        <-
-        Database->
-            Path      : ../templates/IGK+LV.fasta
-            Name      : IGLV
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-            ClassChars: 4
-        <-
-        Database->
-            Path      : ../templates/IGK+LJ.fasta
-            Name      : IGLJ
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-            ClassChars: 4
-        <-
-        Database->
-            Path      : ../templates/IGK+LC.fasta
-            Name      : IGLC
-            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-            ClassChars: 4
+        Light Chain->
+            Database->
+                Path      : ../templates/IGK+LV.fasta
+                Name      : IGLV
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
+            Database->
+                Path      : ../templates/IGK+LJ.fasta
+                Name      : IGLJ
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
+            Database->
+                Path      : ../templates/IGK+LC.fasta
+                Name      : IGLC
+                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 4
+            <-
         <-
     <-
 <-
@@ -71,7 +75,10 @@ Recombine->
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
-    Order : IGHV * IGHJ IGHC  IGLV IGLJ IGLC
+    Order->
+        Heavy Chain: IGHV * IGHJ IGHC
+        Light Chain: IGLV IGLJ IGLC
+    <-
 
     ReadAlignment -> 
         InputParameters ->

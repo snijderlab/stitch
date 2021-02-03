@@ -194,7 +194,7 @@ tr:hover {
 
 /* Collapsible regions */
 
-.report>label {
+.report label {
     display: block;
     font-size: 2em;
     color: var(--color-background);
@@ -207,7 +207,7 @@ tr:hover {
     user-select: none;
 }
 
-.report>label::after {
+.report label::after {
     content: "+";
     border: 1px solid var(--color-primary-light);
     color: var(--color-primary-light);

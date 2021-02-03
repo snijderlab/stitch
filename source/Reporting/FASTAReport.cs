@@ -1,5 +1,6 @@
 using System.Collections.Generic;
 using System.Text;
+using System.Linq;
 
 namespace AssemblyNameSpace
 {
@@ -41,8 +42,8 @@ namespace AssemblyNameSpace
             }
             else if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
             {
-                sequences.Capacity = Parameters.RecombinedDatabase.Templates.Count;
-                foreach (var template in Parameters.RecombinedDatabase.Templates)
+                sequences.Capacity = Parameters.RecombinedDatabase.Select(a => a.Templates.Count).Sum();
+                foreach (var template in Parameters.RecombinedDatabase.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
@@ -50,8 +51,8 @@ namespace AssemblyNameSpace
             }
             else
             {
-                sequences.Capacity = Parameters.ReadAlignment.Templates.Count;
-                foreach (var template in Parameters.ReadAlignment.Templates)
+                sequences.Capacity = Parameters.ReadAlignment.Select(a => a.Templates.Count).Sum();
+                foreach (var template in Parameters.ReadAlignment.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));

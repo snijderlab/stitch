@@ -294,7 +294,7 @@ namespace AssemblyNameSpace
                     }
                     content = content.Remove(0, count);
 
-                    var name_str = name.ToString().ToLower();
+                    var name_str = name.ToString();
 
                     Position greedy = counter.GetPosition();
                     Position end = new Position(greedy.Line, greedy.Column + name_str.TrimEnd().Length - name_str.Length, counter.File);

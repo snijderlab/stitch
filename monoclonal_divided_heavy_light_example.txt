@@ -23,7 +23,7 @@ TemplateMatching ->
     <-
 
     Databases->
-        Heavy ->
+        Heavy Chain->
             Database->
                 Path      : ../templates/IGHV.fasta
                 Name      : IGHV
@@ -42,7 +42,7 @@ TemplateMatching ->
                 ClassChars: 5
             <-
         <-
-        Light ->
+        Light Chain->
             Database->
                 Path      : ../templates/IGK+LV.fasta
                 Name      : IGLV
@@ -75,8 +75,8 @@ Recombine->
     -Separated by whitespace means directly attached
     -Separated by {gap} means with a gap attached
     Order ->
-        Heavy: IGHV * IGHJ IGHC
-        Light: IGLV IGLJ IGLC
+        Heavy Chain: IGHV * IGHJ IGHC
+        Light Chain: IGLV IGLJ IGLC
     <-
 
     ReadAlignment -> 

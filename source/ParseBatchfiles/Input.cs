@@ -46,7 +46,7 @@ namespace AssemblyNameSpace
             // Now parse the key value pairs into RunParameters
 
             bool versionspecified = false;
-            KeyValue order = null;
+            List<KeyValue> order_groups = null;
             KeyValue assemblyKey = null;
             KeyValue readAlignmentKey = null;
 
@@ -97,7 +97,7 @@ namespace AssemblyNameSpace
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        (output.Recombine, order, readAlignmentKey) = ParseHelper.ParseRecombine(namefilter, pair).GetValue(outEither);
+                        (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(namefilter, pair).GetValue(outEither);
                         break;
                     case "report":
                         if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -138,72 +138,90 @@ namespace AssemblyNameSpace
             // Parse Recombination order
             if (output.Recombine != null && output.TemplateMatching != null)
             {
-                var order_string = order.GetValue();
-                // Create a new counter
-                var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
-
-                while (order_string != "")
+                foreach (var group in output.TemplateMatching.Databases)
                 {
-                    InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
-
-                    var match = false;
-                    for (int i = 0; i < output.TemplateMatching.Databases.Count(); i++)
-                    {
-                        var template = output.TemplateMatching.Databases[i];
-                        if (order_string.StartsWith(template.Name))
-                        {
-                            order_string = order_string.Remove(0, template.Name.Length);
-                            order_counter.NextColumn(template.Name.Length);
-                            output.Recombine.Order.Add(new RunParameters.RecombineOrder.Template(i));
-                            match = true;
-                            break;
-                        }
-                    }
-                    if (match) continue;
-
-                    if (order_string.StartsWith('*'))
-                    {
-                        order_string = order_string.Remove(0, 1);
-                        order_counter.NextColumn();
-                        output.Recombine.Order.Add(new RunParameters.RecombineOrder.Gap());
-                    }
+                    if (!order_groups.Exists(o => o.OriginalName == group.Name))
+                        outEither.AddMessage(new ErrorMessage(batchfile, "Missing order definition for template group", "For group \"{}\" there is no corresponding order definition.", "If there is a definition make sure it is written exactly the same and with the same casing."));
                     else
                     {
-                        outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
-                        break;
+                        var order = order_groups.Find(o => o.OriginalName == group.Name);
+                        var order_string = order.GetValue();
+                        // Create a new counter
+                        var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
+                        var order_output = new List<RunParameters.RecombineOrder.OrderPiece>();
+
+                        while (order_string != "")
+                        {
+                            InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
+
+                            var match = false;
+
+                            for (int j = 0; j < group.Databases.Count(); j++)
+                            {
+                                var template = group.Databases[j];
+                                if (order_string.StartsWith(template.Name))
+                                {
+                                    order_string = order_string.Remove(0, template.Name.Length);
+                                    order_counter.NextColumn(template.Name.Length);
+                                    order_output.Add(new RunParameters.RecombineOrder.Template(j));
+                                    match = true;
+                                    break;
+                                }
+
+                            }
+                            if (match) continue;
+
+                            if (order_string.StartsWith('*'))
+                            {
+                                order_string = order_string.Remove(0, 1);
+                                order_counter.NextColumn();
+                                order_output.Add(new RunParameters.RecombineOrder.Gap());
+                            }
+                            else
+                            {
+                                outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
+                                break;
+                            }
+                        }
+
+                        output.Recombine.Order.Add(order_output);
                     }
                 }
             }
 
             if (output.Recombine != null && output.Recombine.Order.Count() != 0)
             {
-                int last = -2;
-                foreach (var piece in output.Recombine.Order)
+                for (int i = 0; i < output.TemplateMatching.Databases.Count(); i++)
                 {
-                    if (piece.IsGap())
+                    var order = order_groups[i];
+                    int last = -2;
+                    foreach (var piece in output.Recombine.Order[i])
                     {
-                        if (last == -1)
-                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "Gaps cannot follow consecutively."));
-                        else if (last == -2)
-                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
+                        if (piece.IsGap())
+                        {
+                            if (last == -1)
+                                outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "Gaps cannot follow consecutively."));
+                            else if (last == -2)
+                                outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
+                            else
+                            {
+                                output.TemplateMatching.Databases[i].Databases[last].GapTail = true;
+                                last = -1;
+                            }
+                        }
                         else
                         {
-                            output.TemplateMatching.Databases[last].GapTail = true;
-                            last = -1;
+                            var db = ((RunParameters.RecombineOrder.Template)piece).Index;
+                            if (last == -1)
+                                output.TemplateMatching.Databases[i].Databases[db].GapHead = true;
+                            last = db;
                         }
                     }
-                    else
-                    {
-                        var db = ((RunParameters.RecombineOrder.Template)piece).Index;
-                        if (last == -1)
-                            output.TemplateMatching.Databases[db].GapHead = true;
-                        last = db;
-                    }
+                    if (last == -1)
+                        outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot end with a gap (*)."));
+                    if (last == -2)
+                        outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot be empty."));
                 }
-                if (last == -1)
-                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot end with a gap (*)."));
-                if (last == -2)
-                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot be empty."));
             }
 
             // Propagate alphabets
@@ -225,7 +243,7 @@ namespace AssemblyNameSpace
 
             if (output.TemplateMatching != null)
             {
-                foreach (var db in output.TemplateMatching.Databases)
+                foreach (var db in output.TemplateMatching.Databases.SelectMany(group => group.Item2))
                 {
                     for (var i = 0; i < db.Templates.Count; i++)
                     {
@@ -796,8 +814,6 @@ namespace AssemblyNameSpace
                 var outEither = new ParseResult<TemplateMatchingParameter>();
                 var output = new TemplateMatchingParameter();
 
-                var database_names = new List<string>();
-
                 foreach (var setting in key.GetValues())
                 {
                     switch (setting.Name)
@@ -806,30 +822,40 @@ namespace AssemblyNameSpace
                             output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         case "databases":
-                            if (database_names.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (output.Databases.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            var outer_children = new List<DatabaseValue>();
                             foreach (var database in setting.GetValues())
                             {
                                 if (database.Name == "database")
                                 {
                                     var databasevalue = ParseHelper.ParseDatabase(nameFilter, database, false).GetValue(outEither);
-                                    output.Databases.Add(databasevalue);
 
                                     // Check to see if the name is valid
-                                    if (database_names.Contains(databasevalue.Name))
-                                    {
+                                    if (outer_children.Select(db => db.Name).Contains(databasevalue.Name))
                                         outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique."));
-                                    }
                                     if (databasevalue.Name.Contains('*'))
-                                    {
                                         outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
-                                    }
-                                    database_names.Add(databasevalue.Name);
+                                    outer_children.Add(databasevalue);
                                 }
                                 else
                                 {
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Databases", "'Database'"));
+                                    var children = new List<DatabaseValue>();
+                                    foreach (var sub_database in database.GetValues())
+                                    {
+                                        var databasevalue = ParseHelper.ParseDatabase(nameFilter, sub_database, false).GetValue(outEither);
+
+                                        // Check to see if the name is valid
+                                        if (children.Select(db => db.Name).Contains(databasevalue.Name))
+                                            outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique, within their scope."));
+                                        if (databasevalue.Name.Contains('*'))
+                                            outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
+                                        children.Add(databasevalue);
+                                    }
+                                    Console.WriteLine($"Loaded all database for group \"{database.OriginalName}\" or \"{database.Name}\"");
+                                    output.Databases.Add((database.OriginalName, children));
                                 }
                             }
+                            if (outer_children.Count > 0) output.Databases.Add(("", outer_children));
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -847,6 +873,11 @@ namespace AssemblyNameSpace
                     }
                 }
 
+                if (output.Databases.Count() > 1)
+                    foreach (var db in output.Databases)
+                        if (db.Item1 == "")
+                            outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single databases in grouped database list", "You cannot define a single database when there are also database groups defined."));
+
                 if (output.Alphabet == null)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Alphabet"));
 
@@ -856,12 +887,12 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<(RecombineParameter, KeyValue, KeyValue)> ParseRecombine(NameFilter namefilter, KeyValue key)
+            public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(NameFilter namefilter, KeyValue key)
             {
-                var outEither = new ParseResult<(RecombineParameter, KeyValue, KeyValue)>();
+                var outEither = new ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)>();
                 var output = new RecombineParameter();
 
-                KeyValue order = null;
+                List<KeyValue> order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
                 foreach (var setting in key.GetValues())
@@ -872,8 +903,11 @@ namespace AssemblyNameSpace
                             output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         case "order":
-                            if (order != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            order = setting;
+                            if (order.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (setting.IsSingle()) order.Add(setting);
+                            else
+                                foreach (var group in setting.GetValues())
+                                    order.Add(group);
                             break;
                         case "cutoffscore":
                             output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
@@ -1378,10 +1412,10 @@ namespace AssemblyNameSpace
                             peaks_settings.DecimalSeparator = setting.GetValue().First();
                         break;
                     default:
-                        var (parameters, succes) = GetLocalPeaksParameters(setting, withprefix, peaks_settings.Parameter).GetValue(outEither);
+                        var (parameters, success) = GetLocalPeaksParameters(setting, withprefix, peaks_settings.Parameter).GetValue(outEither);
                         peaks_settings.Parameter = parameters;
 
-                        if (succes == false)
+                        if (success == false)
                             outEither.Value = false;
                         break;
                 }

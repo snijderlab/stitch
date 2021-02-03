@@ -15,6 +15,11 @@ namespace AssemblyNameSpace
             public string Name;
 
             /// <summary>
+            /// The name of a key with original casing.
+            /// </summary>
+            public string OriginalName;
+
+            /// <summary>
             /// The value for this key.
             /// </summary>
             readonly ValueType Value;
@@ -28,6 +33,7 @@ namespace AssemblyNameSpace
             /// <param name="value">The value of the key.</param>
             public KeyValue(string name, string value, KeyRange key_r, FileRange value_r)
             {
+                OriginalName = name;
                 Name = name.ToLower();
                 Value = new Single(value);
                 KeyRange = key_r;
@@ -41,6 +47,7 @@ namespace AssemblyNameSpace
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
             public KeyValue(string name, List<KeyValue> values, KeyRange key_r, FileRange value_r)
             {
+                OriginalName = name;
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
                 KeyRange = key_r;

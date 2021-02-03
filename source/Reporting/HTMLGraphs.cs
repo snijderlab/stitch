@@ -85,14 +85,16 @@ namespace AssemblyNameSpace
         {
             if (data.Count == 0) return "<em>No data.</em>";
             var buffer = new StringBuilder();
+
+            // Make sure all numbers are written in the standard way, so no dutch commas
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            // Get the best max value based on 2^x, 5^x or 10^x
-            //Math.Min(Math.Pow(2, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 2))), Math.Min(Math.Pow(5, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 5))), Math.Pow(10, Math.Ceiling(Math.Log(data.Select(a => a.Item2).Max(), 10)))));
+            // Determine an axis boundary which is higher than the max value and a human pleasing value 
             double max_value = data.Select(a => a.Item2).Max();
             double base_number = Math.Pow(10, Math.Floor(Math.Log(max_value, 10))) * 0.5;
             double max = Math.Ceiling(max_value / base_number) * base_number;
+
             double min = 0;
             if (baseYMinOnData) min = data.Select(a => a.Item2).Min();
 
@@ -112,12 +114,10 @@ namespace AssemblyNameSpace
 
             buffer.Append($@"<svg xmlns='http://www.w3.org/2000/svg' class='histogram' viewBox='0 0 {width} 100'><g class='yaxis' font-size='{font_height}px'><text class='max' x='0' y='0' dominant-baseline='hanging'>{max:G3}</text><text class='min' x='0' y='{bar_height}'>{min:G3}</text></g><g dominant-baseline='hanging' font-size='{font_height}px'>");
 
-            // Data
             int index = 0;
             foreach (var set in data)
             {
                 double height = (set.Item2 - min) / max * bar_height;
-                //<text x='{box_width * index}' y='{bar_height - height}'>{set.Item2:G3}</text>
                 buffer.Append($@"<g class='bar'><rect x='{box_width * index + axis_width}' y='{bar_height - height}' width='{box_width}' height='{height}'/><text x='{box_width * index + axis_width}' y='{bar_height}' class='label'>{set.Item1}</text></g>");
                 index++;
             }
@@ -130,17 +130,12 @@ namespace AssemblyNameSpace
         private static string URLEncode(string input)
         {
             var buffer = new StringBuilder(input.Length);
-            char[] escape_chars = { ':', '/', '?', '#', '[', ']', '@', '!', '$', '&', '\"', '\'', '(', ')', '*', '+', ',', ';', '=', '<', '>', '%', ' ' };
             foreach (char character in input.ToCharArray())
             {
                 if (character == '<' || character == '>')
-                {
                     buffer.Append("%" + ((uint)character).ToString("X"));
-                }
                 else
-                {
                     buffer.Append(character);
-                }
             }
             return buffer.ToString();
         }

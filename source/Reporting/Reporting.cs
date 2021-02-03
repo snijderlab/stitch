@@ -18,13 +18,13 @@ namespace AssemblyNameSpace
     {
         public readonly Assembler Assembler;
         public readonly List<(string, MetaData.IMetaData)> Input;
-        public readonly List<TemplateDatabase> TemplateDatabases;
-        public readonly TemplateDatabase RecombinedDatabase;
-        public readonly TemplateDatabase ReadAlignment;
+        public readonly List<(string, List<TemplateDatabase>)> TemplateDatabases;
+        public readonly List<TemplateDatabase> RecombinedDatabase;
+        public readonly List<TemplateDatabase> ReadAlignment;
         public readonly ParsedFile BatchFile;
         public readonly List<GraphPath> Paths;
         public readonly string Runname;
-        public ReportInputParameters(Assembler assm, List<(string, MetaData.IMetaData)> input, List<TemplateDatabase> databases = null, TemplateDatabase recombineddatabase = null, TemplateDatabase readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(Assembler assm, List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, List<TemplateDatabase> readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             Assembler = assm;
             Input = input;
