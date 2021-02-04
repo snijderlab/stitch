@@ -246,6 +246,8 @@ namespace AssemblyNameSpace
                                 {
                                     if (element.GetType() == typeof(RecombineOrder.Gap))
                                     {
+                                        // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                                        // and removed from the Template sequence for the recombine round.
                                         join = true;
                                     }
                                     else

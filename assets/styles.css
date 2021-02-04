@@ -613,7 +613,6 @@ input:checked+.slider:before {
     grid-auto-flow: column;
     grid-template-columns: 3ch;
     gap: 5px;
-    font-size: .25rem;
 }
 
 .histogram .yaxis {
