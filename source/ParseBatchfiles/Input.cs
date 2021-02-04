@@ -851,7 +851,6 @@ namespace AssemblyNameSpace
                                             outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
                                         children.Add(databasevalue);
                                     }
-                                    Console.WriteLine($"Loaded all database for group \"{database.OriginalName}\" or \"{database.Name}\"");
                                     output.Databases.Add((database.OriginalName, children));
                                 }
                             }

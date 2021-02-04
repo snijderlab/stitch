@@ -1626,15 +1626,18 @@ assetsfolder = '{AssetsFolderName}';
                 {
                     var groupbuffer = "";
 
-                    if (Parameters.ReadAlignment != null)
+                    if (Parameters.ReadAlignment.Count() != 0)
                         groupbuffer += Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment[group].Templates, -1, group, AsideType.ReadAlignment, true), group.ToString());
 
-                    if (Parameters.RecombinedDatabase != null)
+                    if (Parameters.RecombinedDatabase.Count() != 0)
                         groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
 
                     groupbuffer += CreateTemplateTables(Parameters.TemplateDatabases[group].Item2, group);
 
-                    innerbuffer.Append(Collapsible(Parameters.TemplateDatabases[group].Item1, groupbuffer));
+                    if (Parameters.TemplateDatabases.Count() == 1)
+                        innerbuffer.Append(groupbuffer);
+                    else
+                        innerbuffer.Append(Collapsible(Parameters.TemplateDatabases[group].Item1, groupbuffer));
                 }
 
             if (Parameters.Assembler != null)
