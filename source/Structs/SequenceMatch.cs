@@ -156,6 +156,36 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
+        /// Finds if the whole match is only based on Xs in the template
+        /// </summary>
+        /// <returns></returns>
+        public bool AllGap()
+        {
+            int tem_pos = StartTemplatePosition;
+            int query_pos = StartQueryPosition;
+
+            foreach (MatchPiece element in Alignment)
+            {
+                switch (element)
+                {
+                    case Match match:
+                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Char == 'X')) return false;
+                        tem_pos += match.Length;
+                        query_pos += match.Length;
+                        break;
+                    case GapInQuery gapC:
+                        query_pos += gapC.Length;
+                        break;
+                    case GapInTemplate gapT:
+                        tem_pos += gapT.Length;
+                        break;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
         /// Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other
         /// </summary>
         void Simplify()

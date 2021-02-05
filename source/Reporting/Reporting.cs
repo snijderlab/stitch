@@ -94,7 +94,8 @@ namespace AssemblyNameSpace
             stopwatch.Start();
             var buffer = Create();
             stopwatch.Stop();
-            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - Parameters.Assembler.meta_data.drawingtime}");
+            var timeadjust = Parameters.Assembler != null ? Parameters.Assembler.meta_data.drawingtime : 0;
+            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - timeadjust}");
             SaveAndCreateDirectories(filename, buffer);
         }
 

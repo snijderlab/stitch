@@ -46,7 +46,7 @@ namespace AssemblyNameSpace
                 foreach (var template in Parameters.RecombinedDatabase.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
-                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
+                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
                 }
             }
             else
@@ -55,7 +55,7 @@ namespace AssemblyNameSpace
                 foreach (var template in Parameters.ReadAlignment.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
-                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{template.ConsensusSequence()}"));
+                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
                 }
             }
 
