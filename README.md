@@ -31,12 +31,6 @@ Then run the following command to run the program:
 dotnet path/to/source.dll <arguments>
 ```
 
-
-## Installing Dot
-
-On windows [Graphviz](https://www.graphviz.org) is included in the assets, so there is no need to install it. On Linux or other platforms you will have to install Graphviz, [see this site](https://graphviz.gitlab.io/download/). Do not forget when you installed Graphviz on your own machine to add the option `DotDistribution: Global` to all HTML reports and check if the program should be added to your `PATH` variable.
-
-
 # Building
 
 The project is built with dotnet (SDK 3.1) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
@@ -85,7 +79,6 @@ Example 009 is an example of a FASTA input file.
 # Acknowledgements
 
 * Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
-* The [Graphviz software](https://www.graphviz.org) is included to visualize the graphs in the HTML reports
 
 
 # License

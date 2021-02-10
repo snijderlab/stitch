@@ -70,37 +70,12 @@ namespace AssemblyNameSpace
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename)
         {
-            stopwatch.Start();
             var inputparams = ParseCommandFile.Batch(filename, false);
-            Console.WriteLine("Parsed file");
 
             var bar = new ProgressBar();
-            var runs = inputparams.CreateRuns(bar);
+            bar.Start(1 + inputparams.TemplateMatching.Databases.Count() * ((inputparams.Recombine != null ? 1 : 0) + (inputparams.Recombine != null && inputparams.Recombine.ReadAlignment != null ? 1 : 0)));
 
-            string pluralrunsuffix = runs.Count() > 1 ? "s" : "";
-            string pluralcoresuffix = inputparams.MaxNumberOfCPUCores > 1 ? "s" : "";
-            Console.WriteLine($"Read the file, it will now start working on the {runs.Count()} run{pluralrunsuffix} to be done using {inputparams.MaxNumberOfCPUCores} CPU core{pluralcoresuffix}.");
-
-            bar.Start(runs.Count() * (2 + (inputparams.Recombine != null ? 1 : 0) + (inputparams.Recombine != null && inputparams.Recombine.ReadAlignment != null ? 1 : 0)));
-
-            if (runs.Count() == 1)
-            {
-                runs[0].Calculate(inputparams.MaxNumberOfCPUCores);
-            }
-            else if (runs.Count() < inputparams.MaxNumberOfCPUCores)
-            {
-                Parallel.ForEach(
-                    runs,
-                    new ParallelOptions { MaxDegreeOfParallelism = runs.Count() },
-                    (i) => i.Calculate((int)Math.Round((double)inputparams.MaxNumberOfCPUCores / runs.Count())));
-            }
-            else
-            {
-                Parallel.ForEach(runs, (i) => i.Calculate(1));
-            }
-
-            stopwatch.Stop();
-            Console.WriteLine($"Assembled all {runs.Count()} run{pluralrunsuffix} in {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}");
+            inputparams.CreateRun(bar).Calculate(inputparams.MaxNumberOfCPUCores);
         }
 
         /// <summary>

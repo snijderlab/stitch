@@ -163,37 +163,6 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Creates a KeyRange
         /// </summary>
-        /// <param name="start">Start position, <see cref="Start"/></param>
-        /// <param name="nameEnd">NameEnd position, <see cref="NameEnd"/></param>
-        /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
-        /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>
-        public KeyRange(Position start, Position nameEnd, Position fieldEnd)
-        {
-            Start = start;
-            NameEnd = nameEnd;
-            FieldEnd = fieldEnd;
-            File = start.File;
-            if (start.File != nameEnd.File || nameEnd.File != fieldEnd.File)
-            {
-                throw new ArgumentException("Three positions in different files do not form a range in a single file.");
-            }
-            if (Start.Line > NameEnd.Line || (Start.Line == NameEnd.Line && Start.Column > NameEnd.Column))
-            {
-                throw new ArgumentException("The Start position cannot be before the NameEnd position.");
-            }
-            if (Start.Line > FieldEnd.Line || (Start.Line == FieldEnd.Line && Start.Column > FieldEnd.Column))
-            {
-                throw new ArgumentException("The Start position cannot be before the FieldEnd position.");
-            }
-            if (NameEnd.Line > FieldEnd.Line || (NameEnd.Line == FieldEnd.Line && NameEnd.Column > FieldEnd.Column))
-            {
-                throw new ArgumentException("The NameEnd position cannot be before the FieldEnd position.");
-            }
-        }
-
-        /// <summary>
-        /// Creates a KeyRange
-        /// </summary>
         /// <param name="name">Name range, from <see cref="Start"/> to <see cref="NameEnd"/></param>
         /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
         /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>

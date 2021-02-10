@@ -47,7 +47,6 @@ namespace AssemblyNameSpace
 
             bool versionspecified = false;
             List<KeyValue> order_groups = null;
-            KeyValue assemblyKey = null;
             KeyValue readAlignmentKey = null;
 
             // Match every possible key to the corresponding action
@@ -68,28 +67,9 @@ namespace AssemblyNameSpace
                     case "maxcores":
                         output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).GetValue(outEither);
                         break;
-                    case "runtype":
-                        switch (pair.GetValue().ToLower())
-                        {
-                            case "separate":
-                                output.Runtype = RuntypeValue.Separate;
-                                break;
-                            case "group":
-                                output.Runtype = RuntypeValue.Group;
-                                break;
-                            default:
-                                outEither.AddMessage(new ErrorMessage(pair.KeyRange.Name, "Unknown option", "Unknown option in Runtype definition", "Valid options are: 'Group' and 'Separate'."));
-                                break;
-                        }
-                        break;
                     case "input":
                         if (output.Input != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                         output.Input = ParseHelper.ParseInputParameters(namefilter, pair).GetValue(outEither);
-                        break;
-                    case "assembly":
-                        if (output.Assembly != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Assembly = ParseHelper.ParseAssembly(batchfile, namefilter, pair).GetValue(outEither);
-                        assemblyKey = pair;
                         break;
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -229,7 +209,6 @@ namespace AssemblyNameSpace
             if (output.Recombine != null && output.Recombine.ReadAlignment != null && output.Recombine.ReadAlignment.Alphabet == null) output.Recombine.ReadAlignment.Alphabet = output.Recombine.Alphabet;
 
             // Prepare the input
-            if (assemblyKey != null) ParseHelper.PrepareInput(namefilter, assemblyKey, output.Assembly.Input, output.Input);
             if (readAlignmentKey != null) ParseHelper.PrepareInput(namefilter, readAlignmentKey, output.Recombine.ReadAlignment.Input, output.Input);
 
             // Check if there is a version specified
@@ -262,18 +241,6 @@ namespace AssemblyNameSpace
             {
                 // Finalise all metadata names
                 foreach (var set in output.Recombine.ReadAlignment.Input.Data.Raw)
-                {
-                    foreach (var read in set)
-                    {
-                        read.Item2.FinaliseIdentifier();
-                    }
-                }
-            }
-
-            if (output.Assembly != null)
-            {
-                // Finalise all metadata names
-                foreach (var set in output.Assembly.Input.Data.Raw)
                 {
                     foreach (var read in set)
                     {
@@ -339,18 +306,6 @@ namespace AssemblyNameSpace
                 if (!msg.Warning) return false;
             }
             return true;
-        }
-        public ParseResult<Tout> Do<Tout>(Func<T, Tout> func, ErrorMessage failMessage = null)
-        {
-            if (!this.HasFailed())
-            {
-                return new ParseResult<Tout>(func(this.Value));
-            }
-            else
-            {
-                if (failMessage != null) this.Messages.Add(failMessage);
-                return new ParseResult<Tout>(Messages);
-            }
         }
         public T ReturnOrFail()
         {
@@ -462,138 +417,6 @@ namespace AssemblyNameSpace
                 {
                     return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
-            }
-            public static ParseResult<AssemblerParameter> ParseAssembly(ParsedFile batchfile, NameFilter nameFilter, KeyValue key)
-            {
-                var outEither = new ParseResult<AssemblerParameter>();
-                var output = new AssemblerParameter();
-
-                foreach (var pair in key.GetValues())
-                {
-                    switch (pair.Name)
-                    {
-                        case "inputparameters":
-                            if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
-                            var peaks = new Input.PeaksParameters(false);
-                            foreach (var setting in pair.GetValues())
-                            {
-                                if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
-                                else
-                                {
-                                    foreach (var parameter in setting.GetValues())
-                                        GetLocalPeaksParameters(parameter, false, peaks).GetValue(outEither);
-                                }
-                            }
-                            output.Input.LocalParameters = new Input.InputLocalParameters() { Peaks = peaks };
-                            break;
-                        case "input":
-                            if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Input.Parameters = ParseInputParameters(nameFilter, pair).GetValue(outEither);
-                            break;
-                        case "k":
-                            if (!pair.IsSingle())
-                            {
-                                var ksettings = new K.Range();
-
-                                foreach (var setting in pair.GetValues())
-                                {
-                                    switch (setting.Name)
-                                    {
-                                        case "start":
-                                            if (ksettings.Start != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                            ksettings.Start = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                            break;
-                                        case "end":
-                                            if (ksettings.End != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                            ksettings.End = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                            break;
-                                        case "step":
-                                            ksettings.Step = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                            break;
-                                        default:
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "K", "'Start', 'End' and 'Step'"));
-                                            break;
-                                    }
-                                }
-                                if (ksettings.Start > 0 && ksettings.End > 0)
-                                {
-                                    output.K = ksettings;
-                                }
-                                else
-                                {
-                                    outEither.AddMessage(new ErrorMessage(pair.KeyRange.Full, "Invalid range", "A range should be set with a start and end value"));
-                                }
-                                break;
-                            }
-                            else
-                            {
-                                var kvalue = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange);
-                                if (!kvalue.HasFailed())
-                                {
-                                    // Single K value
-                                    output.K = new K.Single(kvalue.GetValue(outEither));
-                                }
-                                else
-                                {
-                                    // Multiple K values
-                                    var values = new List<int>();
-                                    foreach (string value in pair.GetValue().Split(",".ToCharArray()))
-                                    {
-                                        values.Add(ParseHelper.ConvertToInt(value, pair.ValueRange).GetValue(outEither));
-                                    }
-                                    output.K = new K.Multiple(values.ToArray());
-                                }
-                            }
-                            break;
-                        case "duplicatethreshold":
-                            output.DuplicateThreshold.Add(new KArithmetic(KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
-                            break;
-                        case "minimalhomology":
-                            output.MinimalHomology.Add(new KArithmetic(KArithmetic.TryParse(pair.GetValue(), pair.ValueRange, batchfile).GetValue(outEither)));
-                            break;
-                        case "reverse":
-                            switch (pair.GetValue().ToLower())
-                            {
-                                case "true":
-                                    output.Reverse = ReverseValue.True;
-                                    break;
-                                case "false":
-                                    output.Reverse = ReverseValue.False;
-                                    break;
-                                case "both":
-                                    output.Reverse = ReverseValue.Both;
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Reverse", "'True', 'False' and 'Both'"));
-                                    break;
-                            }
-                            break;
-                        case "alphabet":
-                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(pair).GetValue(outEither);
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Assembly", "'Input', 'K', 'DuplicateThreshold', 'MinimalHomology', 'Reverse' and 'Alphabet'"));
-                            break;
-                    }
-                }
-
-                Position def_position = new Position(0, 1, batchfile);
-                FileRange def_range = new FileRange(def_position, def_position);
-
-                // Generate defaults and return error messages
-                if (output.DuplicateThreshold.Count() == 0)
-                    output.DuplicateThreshold.Add(new KArithmetic(new KArithmetic.Arithmetic.Operator(KArithmetic.Arithmetic.OpType.Minus, new KArithmetic.Arithmetic.K(), new KArithmetic.Arithmetic.Constant(1))));
-
-                if (output.MinimalHomology.Count() == 0)
-                    output.MinimalHomology.Add(new KArithmetic(new KArithmetic.Arithmetic.Operator(KArithmetic.Arithmetic.OpType.Minus, new KArithmetic.Arithmetic.K(), new KArithmetic.Arithmetic.Constant(1))));
-
-                if (output.Alphabet == null)
-                    outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Alphabet"));
-
-                outEither.Value = output;
-                return outEither;
             }
             public static ParseResult<Input.InputParameters> ParseInputParameters(NameFilter namefilter, KeyValue key)
             {
@@ -1006,20 +829,6 @@ namespace AssemblyNameSpace
                                         if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         hsettings.Path = Path.GetFullPath(setting.GetValue());
                                         break;
-                                    case "dotdistribution":
-                                        if (setting.GetValue().ToLower() == "global")
-                                        {
-                                            hsettings.UseIncludedDotDistribution = false;
-                                        }
-                                        else if (setting.GetValue().ToLower() == "included")
-                                        {
-                                            hsettings.UseIncludedDotDistribution = true;
-                                        }
-                                        else
-                                        {
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML DotDistribution", "'Global' and 'Included'"));
-                                        }
-                                        break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
                                         break;
@@ -1045,9 +854,6 @@ namespace AssemblyNameSpace
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
                                         {
-                                            case "assembly":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Assembly;
-                                                break;
                                             case "recombine":
                                                 fsettings.OutputType = RunParameters.Report.FastaOutputType.Recombine;
                                                 break;
@@ -1055,7 +861,7 @@ namespace AssemblyNameSpace
                                                 fsettings.OutputType = RunParameters.Report.FastaOutputType.ReadsAlign;
                                                 break;
                                             default:
-                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Assembly', 'Recombine' and 'ReadsAlign'"));
+                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Recombine' and 'ReadsAlign'"));
                                                 break;
                                         }
                                         break;

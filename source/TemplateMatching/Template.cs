@@ -305,7 +305,6 @@ namespace AssemblyNameSpace
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
                         {
                             var contigid = match.Index;
-                            if (match.MetaData is MetaData.Path mp) contigid = mp.ContigID[seq_pos];
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
@@ -329,7 +328,6 @@ namespace AssemblyNameSpace
                         double[] cov = match.MetaData.PositionalScore.SubArray(seq_pos, len);
 
                         var contigid = match.Index;
-                        if (match.MetaData is MetaData.Path mp) contigid = mp.ContigID[seq_pos - 1];
 
                         seq_pos += len;
                         output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, contigid, inseq);

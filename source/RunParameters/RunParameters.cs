@@ -15,22 +15,6 @@ namespace AssemblyNameSpace
     namespace RunParameters
     {
         /// <summary>
-        /// To dictate how this run should behave.
-        /// </summary>
-        public enum RuntypeValue
-        {
-            /// <summary>
-            /// Dictates that all input files should be run separate from each other.
-            /// </summary>
-            Separate,
-
-            /// <summary>
-            /// Dictates that all input files should be run in one group, with all information aggregated.
-            /// </summary>
-            Group
-        }
-
-        /// <summary>
         /// To contain parameters for the input of data.
         /// </summary>
         public class Input
@@ -175,135 +159,11 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// To contain options for values of K.
-        /// </summary>
-        public class K
-        {
-            /// <summary>
-            /// A value for K.
-            /// </summary>
-            public abstract class KValue
-            {
-                public abstract string Display();
-            }
-
-            /// <summary>
-            /// A single value for K.
-            /// </summary>
-            public class Single : KValue
-            {
-                /// <summary>
-                /// The value of K.
-                /// </summary>
-                public int Value;
-
-                /// <summary>
-                /// Sets the value.
-                /// </summary>
-                /// <param name="value">The value.</param>
-                public Single(int value)
-                {
-                    Value = value;
-                }
-
-                public override string Display()
-                {
-                    return Value.ToString();
-                }
-            }
-
-            /// <summary>
-            /// Multiple values for K, will be run in different SingleRuns.
-            /// </summary>
-            public class Multiple : KValue
-            {
-                /// <summary>
-                /// The values.
-                /// </summary>
-                public int[] Values;
-
-                /// <summary>
-                /// Sets the values.
-                /// </summary>
-                /// <param name="values">The values.</param>
-                public Multiple(int[] values)
-                {
-                    Values = values;
-                }
-
-                public override string Display()
-                {
-                    var output = Values[0].ToString();
-                    for (int i = 1; i < Values.Length; i++)
-                    {
-                        output += $", {Values[i]}";
-                    }
-                    return output;
-                }
-            }
-
-            /// <summary>
-            /// A range of values for K, will be run in different SingleRuns.
-            /// </summary>
-            public class Range : KValue
-            {
-                /// <summary>
-                /// The start of the range (included).
-                /// </summary>
-                public int Start;
-
-                /// <summary>
-                /// The end of the range (if an integral amount of steps from the start it is included).
-                /// </summary>
-                public int End;
-
-                /// <summary>
-                /// The size of the steps, default is 1.
-                /// </summary>
-                public int Step;
-
-                /// <summary>
-                /// Sets the default stepsize.
-                /// </summary>
-                public Range()
-                {
-                    Step = 1;
-                }
-
-                public override string Display()
-                {
-                    return $"Start: {Start}, End: {End}, Step: {Step}";
-                }
-            }
-        }
-
-        /// <summary>
         /// Like a boolean but with a third option 'Unspecified' to represent three states of a system.
         /// </summary>
         public enum Trilean { True, False, Unspecified }
 
         public enum ScoringParameter { Absolute, Relative }
-
-        /// <summary>
-        /// The possible values for Reverse.
-        /// </summary>
-        public enum ReverseValue
-        {
-            /// <summary>
-            /// Turns on Reverse
-            /// </summary>
-            True,
-
-            /// <summary>
-            /// Turns off reverse
-            /// </summary>
-            False,
-
-            /// <summary>
-            /// Runs both with and without Reverse in different SingleRuns
-            /// </summary>
-            Both
-        }
 
         /// <summary>
         /// An input for an alphabet.
@@ -334,44 +194,6 @@ namespace AssemblyNameSpace
             public string Display()
             {
                 return $"Alphabet ->\nName: {Name}\nGapStartPenalty: {GapStartPenalty}\nGapExtendPenalty: {GapExtendPenalty}\n<-";
-            }
-        }
-
-        public class AssemblerParameter
-        {
-            /// <summary>
-            /// To contain a local definition of the input
-            /// </summary>
-            public Input Input = new Input();
-
-            /// <summary>
-            /// The K or values of K for this run.
-            /// </summary>
-            public K.KValue K = null;
-
-            /// <summary>
-            /// The value of Reverse for this run.
-            /// </summary>
-            public ReverseValue Reverse = ReverseValue.False;
-
-            /// <summary>
-            /// The value for the MinimalHomology.
-            /// </summary>
-            public List<KArithmetic> MinimalHomology = new List<KArithmetic>();
-
-            /// <summary>
-            /// The value for the duplicatethreshold.
-            /// </summary>
-            public List<KArithmetic> DuplicateThreshold = new List<KArithmetic>();
-
-            /// <summary>
-            /// The alphabets to be used in this run.
-            /// </summary>
-            public AlphabetParameter Alphabet = null;
-
-            public string Display()
-            {
-                return $"Assembly ->\n{Input.Display()}\nK: {K.Display()}\nReverse: {Reverse}\nMinimalHomology: {MinimalHomology}\nDuplicateThreshold: {DuplicateThreshold}\n{Alphabet.Display()}\n<-";
             }
         }
 
@@ -602,10 +424,6 @@ namespace AssemblyNameSpace
                 {
                     var output = new StringBuilder(Path);
 
-                    output.Replace("{id}", r.ID.ToString());
-                    output.Replace("{k}", r.K.ToString());
-                    output.Replace("{mh}", r.MinimalHomology.ToString());
-                    output.Replace("{dt}", r.DuplicateThreshold.ToString());
                     output.Replace("{alph}", r.Alphabet != null ? r.Alphabet.Name : "NoAlphabet");
                     output.Replace("{name}", r.Runname);
                     output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
@@ -619,13 +437,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To indicate to return an HTML report.
             /// </summary>
-            public class HTML : Parameter
-            {
-                /// <summary>
-                /// To indicate if the included Dot distribution should be used.
-                /// </summary>
-                public bool UseIncludedDotDistribution = true;
-            }
+            public class HTML : Parameter { }
 
             /// <summary>
             /// The type sequences in the fasta to give as output

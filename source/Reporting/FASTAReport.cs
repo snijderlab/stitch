@@ -31,16 +31,7 @@ namespace AssemblyNameSpace
         {
             var sequences = new List<(double, string)>();
 
-            if (OutputType == RunParameters.Report.FastaOutputType.Assembly)
-            {
-                sequences.Capacity = Parameters.Paths.Count;
-                foreach (var path in Parameters.Paths)
-                {
-                    if (path.Score >= MinScore)
-                        sequences.Add((path.Score, $">{path.Identifiers} score:{path.Score}\n{AminoAcid.ArrayToString(path.Sequence)}"));
-                }
-            }
-            else if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
+            if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
             {
                 sequences.Capacity = Parameters.RecombinedDatabase.Select(a => a.Templates.Count).Sum();
                 foreach (var template in Parameters.RecombinedDatabase.SelectMany(a => a.Templates))

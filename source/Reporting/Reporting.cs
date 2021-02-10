@@ -16,24 +16,20 @@ namespace AssemblyNameSpace
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public struct ReportInputParameters
     {
-        public readonly Assembler Assembler;
         public readonly List<(string, MetaData.IMetaData)> Input;
         public readonly List<(string, List<TemplateDatabase>)> TemplateDatabases;
         public readonly List<TemplateDatabase> RecombinedDatabase;
         public readonly List<TemplateDatabase> ReadAlignment;
         public readonly ParsedFile BatchFile;
-        public readonly List<GraphPath> Paths;
         public readonly string Runname;
-        public ReportInputParameters(Assembler assm, List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, List<TemplateDatabase> readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, List<TemplateDatabase> readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
-            Assembler = assm;
             Input = input;
             TemplateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
             ReadAlignment = readAlignment;
             BatchFile = batchFile;
             Runname = runname;
-            Paths = Assembler != null ? Assembler.GetAllPaths() : null;
         }
     }
     /// <summary>
@@ -58,22 +54,8 @@ namespace AssemblyNameSpace
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int max_threads)
         {
-            if (parameters.Assembler != null)
-            {
-                reads = parameters.Assembler.reads.Select(a => AminoAcid.ArrayToString(a)).ToList();
-                reads_metadata = parameters.Assembler.reads_metadata;
-
-                if (parameters.ReadAlignment != null)
-                {
-                    reads.AddRange(parameters.Assembler.shortReads.Select(a => AminoAcid.ArrayToString(a.Sequence)));
-                    reads_metadata.AddRange(parameters.Assembler.shortReads.Select(a => a.MetaData));
-                }
-            }
-            else
-            {
-                reads = new List<string>(parameters.Input.Select(a => a.Item1));
-                reads_metadata = new List<MetaData.IMetaData>(parameters.Input.Select(a => a.Item2));
-            }
+            reads = new List<string>(parameters.Input.Select(a => a.Item1));
+            reads_metadata = new List<MetaData.IMetaData>(parameters.Input.Select(a => a.Item2));
             MaxThreads = max_threads;
 
             BatchFile = parameters.BatchFile;
@@ -94,8 +76,7 @@ namespace AssemblyNameSpace
             stopwatch.Start();
             var buffer = Create();
             stopwatch.Stop();
-            var timeadjust = Parameters.Assembler != null ? Parameters.Assembler.meta_data.drawingtime : 0;
-            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds - timeadjust}");
+            buffer = buffer.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
             SaveAndCreateDirectories(filename, buffer);
         }
 
@@ -123,27 +104,6 @@ namespace AssemblyNameSpace
             {
                 new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
             }
-        }
-        /// <summary>
-        /// Retrieves all paths containing the specified condensed node id.
-        /// </summary>
-        /// <param name="id">The id of the specified node</param>
-        /// <returns>A list of all path ids</returns>
-        protected List<GraphPath> AllPathsContaining(int id)
-        {
-            var output = new List<GraphPath>();
-            foreach (var path in Parameters.Paths)
-            {
-                foreach (var node in path.Nodes)
-                {
-                    if (node.Index == id)
-                    {
-                        output.Add(path);
-                        break;
-                    }
-                }
-            }
-            return output;
         }
     }
 }

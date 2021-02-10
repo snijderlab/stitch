@@ -191,60 +191,6 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void AlreadyAddedGapViaTemplate01()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-
-            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
-            db.Templates.Add(template);
-
-            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
-            var r = db.Templates[0].Matches[0];
-
-            Console.WriteLine(r.ToString());
-
-            Assert.AreEqual(419, r.Score);
-            Assert.AreEqual(0, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
-
-            const string expected = "VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK";
-            var seq = AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1);
-            Console.Write($"\rExpected: {expected}\nActual:   {seq}");
-            Assert.AreEqual(expected, seq);
-        }
-        [TestMethod]
-        public void AlreadyAddedGapViaTemplate02()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var a = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCAR*DIWGQGTVVTVSSASTKGPSVFPLAP", alp);
-            var b = StringToSequence("LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP", alp);
-
-            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
-            db.Templates.Add(template);
-
-            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
-            var r = db.Templates[0].Matches[0];
-
-            Console.WriteLine(r.ToString());
-
-            Assert.AreEqual(366, r.Score);
-            Assert.AreEqual(0, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("49M10I27M", r.Alignment.CIGAR());
-
-            const string expected = "LIWYDGSNEDYTDSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVFPLAP";
-            var seq = AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1);
-            Console.Write($"\rExpected: {expected}\nActual:   {seq}");
-            Assert.AreEqual(expected, seq);
-        }
-        [TestMethod]
         public void GFPAlignment()
         {
             // Shuffled the sequence a bit
@@ -316,56 +262,6 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("30M", r.Alignment.CIGAR());
-        }
-        [TestMethod]
-        public void RealWorldViaTemplateDatabaseList()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
-            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
-            var a = StringToSequence(tem, alp);
-            var b = StringToSequence(path, alp);
-
-            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
-            db.Templates.Add(template);
-
-            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
-            var r = db.Templates[0].Matches[0];
-
-            Console.WriteLine(r.ToString());
-            Assert.AreEqual(147, r.Score);
-            Assert.AreEqual(68, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("30M", r.Alignment.CIGAR());
-        }
-        [TestMethod]
-        public void TestGapInConsensusSequence()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var tem = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
-            var path1 = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
-            var path2 = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVQWTDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
-            var a = StringToSequence(tem, alp);
-            var b = StringToSequence(path1, alp);
-            var c = StringToSequence(path2, alp);
-
-            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            var namefilter = new NameFilter();
-            Template template = new Template("", a, new MetaData.Simple(new MetaData.FileIdentifier(), namefilter), db);
-            db.Templates.Add(template);
-
-            db.Match(new List<GraphPath> { new GraphPath(b.ToList()), new GraphPath(b.ToList()), new GraphPath(c.ToList()) });
-            var r = db.Templates[0].Matches[0];
-
-            Console.WriteLine(r.ToString());
-            var gaps = db.Templates[0].CombinedSequence()[47].Gaps;
-            foreach (var gap in gaps)
-            {
-                Console.WriteLine($"{gap.ToString()} {gap.GetHashCode()} {gap.Value.Count}");
-            }
-            Assert.AreEqual(path1, AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1));
         }
         AminoAcid[] StringToSequence(string input)
         {

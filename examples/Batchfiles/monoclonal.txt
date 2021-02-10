@@ -2,7 +2,7 @@
 Version    : 0
 Runname    : Monoclonal Herceptin
 
-- Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
+- Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
     Peaks ->
         Path          : ..\datasets\200305_HER_test_04_DENOVO.csv
