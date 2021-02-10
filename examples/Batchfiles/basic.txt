@@ -4,7 +4,7 @@ Runname	: Basic run
 
 Input ->
     Peaks ->
-        Path            : ..\008\200305_HER_test_04_DENOVO.csv
+        Path            : ..\datasets\200305_HER_test_04_DENOVO.csv
         Format          : X+
         Name            : Herceptin
     <-
@@ -23,7 +23,7 @@ TemplateMatching ->
 
     Databases->
         Database->
-            Path      : ../008/herceptin_sequence.fasta
+            Path      : ../datasets/herceptin_sequence.fasta
             Name      : Herceptin Sequence
         <-
     <-

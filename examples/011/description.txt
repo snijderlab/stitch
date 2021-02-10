@@ -1,3 +1,0 @@
-Here 4 different in silico digests of the given sequence "IgG2-K-002.txt" are saved.
-The percentage in the name gives the sampling percentage used in the generation of
- the reads, higher percentages should result in a higher depth of coverage.

@@ -5,7 +5,7 @@ Runname    : Monoclonal Herceptin
 - Here the input can be defined, this will be used in the Assemble and ReadAlignment steps
 Input ->
     Peaks ->
-        Path          : ..\008\200305_HER_test_04_DENOVO.csv
+        Path          : ..\datasets\200305_HER_test_04_DENOVO.csv
         Format        : X+
         Name          : 01
         CutoffALC     : 98
@@ -95,11 +95,11 @@ Recombine->
 <-
 
 Report ->
-    -HTML ->
-    -    Path    : ../../report-monoclonal.html
-    -<-
-    FASTA ->
-        Path: ../../report-monoclonal.fasta
-        OutputType: ReadsAlign
+    HTML ->
+        Path    : ../../report-monoclonal.html
     <-
+    -FASTA ->
+    -    Path: ../../report-monoclonal.fasta
+    -    OutputType: ReadsAlign
+    -<-
 <-

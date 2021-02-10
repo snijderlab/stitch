@@ -341,25 +341,6 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldViaTemplateDatabaseFile()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
-            var b = StringToSequence(path, alp);
-            var namefilter = new NameFilter();
-
-            TemplateDatabase db = new TemplateDatabase(OpenReads.Simple(namefilter, new MetaData.FileIdentifier(Globals.Root + "examples/013/template.txt", "TEMPLATE")).ReturnOrFail(), alp, "TEST DB", 0, 0);
-
-            db.Match(new List<GraphPath> { new GraphPath(b.ToList()) });
-            var r = db.Templates[0].Matches[0];
-
-            Console.WriteLine(r.ToString());
-            Assert.AreEqual(147, r.Score);
-            Assert.AreEqual(68, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("30M", r.Alignment.CIGAR());
-        }
-        [TestMethod]
         public void TestGapInConsensusSequence()
         {
             var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
@@ -386,36 +367,6 @@ namespace AssemblyTestNameSpace
             }
             Assert.AreEqual(path1, AminoAcid.ArrayToString(db.Templates[0].ConsensusSequence().Item1));
         }
-        /*
-        [TestMethod]
-        public void TestForceOnSingleTemplate()
-        {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 12, 2);
-            var tem1 = StringToSequence("EVQLVESGGGLVQPGGSLRLSCAASGFTFSSY", alp);
-            var tem2 = StringToSequence("RFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR", alp);
-            var path1 = StringToSequence("ESGGGLVQPGGSLRLSCAASGFTF", alp);
-            var path2 = StringToSequence("SRDNAKNSLYLQMNSLRAEDTAVYYC", alp);
-
-            TemplateDatabase db = new TemplateDatabase(new List<Template>(), alp, "TEST DB", 0);
-            var namefilter = new NameFilter();
-            Template template1 = new Template("", tem1, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
-            Template template2 = new Template("", tem2, new MetaData.Simple(new MetaData.FileIdentifier("not empty", ""), namefilter), db);
-            db.Templates.Add(template1);
-            db.Templates.Add(template2);
-
-            db.Match(new List<GraphPath> { new GraphPath(path1.ToList()), new GraphPath(path2.ToList()) }, 1, true);
-
-            Console.WriteLine($"Templates: {db.Templates.Count}");
-            Console.WriteLine($" 0: matches {db.Templates[0].Matches.Count()}");
-            Console.WriteLine($" 1: matches {db.Templates[1].Matches.Count()}");
-
-            //Console.WriteLine(db.Templates[0].Matches[0]);
-            Console.WriteLine(db.Templates[1].Matches[0]);
-
-            Assert.AreEqual(db.Templates[0].Matches.Count(), db.Templates[1].Matches.Count());
-            Assert.IsTrue(AminoAcid.ArrayEquals(db.Templates[0].Matches[0].QuerySequence, path1));
-            Assert.IsTrue(AminoAcid.ArrayEquals(db.Templates[1].Matches[0].QuerySequence, path2));
-        }*/
         AminoAcid[] StringToSequence(string input)
         {
             AminoAcid[] output = new AminoAcid[input.Length];
