@@ -910,50 +910,70 @@ namespace AssemblyNameSpace
 
             if (templates[0].Parent.ClassChars > 0)
             {
-                var typedata = new Dictionary<string, (double, double, int, double, double)>(templates.Count);
+                var typedata = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
                 foreach (var item in templates)
                 {
                     if (typedata.ContainsKey(item.Class))
                     {
                         var data = typedata[item.Class];
-                        if (data.Item1 < item.Score) data.Item1 = item.Score;
-                        data.Item2 += item.Score;
-                        data.Item3 += 1;
-                        data.Item4 += item.TotalArea;
-                        data.Item5 += item.TotalUniqueArea;
+                        if (data.MaxScore < item.Score) data.MaxScore = item.Score;
+                        data.TotalScore += item.Score;
+                        if (data.UniqueMaxScore < item.Score) data.UniqueMaxScore = item.UniqueScore;
+                        data.UniqueTotalScore += item.UniqueScore;
+                        data.Num += 1;
+                        data.Matches += item.Matches.Count();
+                        data.UniqueMatches += item.UniqueMatches;
+                        data.Area += item.TotalArea;
+                        data.UniqueArea += item.TotalUniqueArea;
                         typedata[item.Class] = data;
                     }
                     else
                     {
-                        typedata.Add(item.Class, (item.Score, item.Score, 1, item.TotalArea, item.TotalUniqueArea));
+                        typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count(), item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
                     }
                 }
 
-                var totalData = new List<(string, List<double>)>(typedata.Count);
+                var scoreData = new List<(string, List<double>)>(typedata.Count);
+                var areaData = new List<(string, List<double>)>(typedata.Count);
                 foreach (var (type, data) in typedata)
                 {
-                    var list = new List<double> { data.Item1, data.Item2 / data.Item3, data.Item3, data.Item4 };
-                    if (displayUnique) list.Add(data.Item5);
-                    totalData.Add((type, list));
+                    var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
+                    var areaList = new List<double> { data.Matches, data.Area };
+                    if (displayUnique)
+                    {
+                        scoreList.Add(data.UniqueMaxScore);
+                        scoreList.Add(data.UniqueTotalScore / data.Num);
+                        areaList.Add(data.UniqueMatches);
+                        areaList.Add(data.UniqueArea);
+                    }
+                    scoreData.Add((type, scoreList));
+                    areaData.Add((type, areaList));
                 }
 
                 classname = " full";
-                var labels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0), ("Number of Reads", 1), ("Total Area", 2) };
-                if (displayUnique) labels.Add(("Unique Area", 3));
+                var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
+                var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
+                if (displayUnique)
+                {
+                    scoreLabels.Add(("Unique Max Score", 0));
+                    scoreLabels.Add(("Unique Average Score", 0));
+                    areaLabels.Add(("Unique Matches", 0));
+                    areaLabels.Add(("Unique Total Area", 1));
+                }
 
                 extended = $@"
 <div>
-    <h3>Per Type</h3>
-    {HTMLGraph.GroupedBargraph(totalData, labels)}
+    <h3>Scores per type</h3>
+    {HTMLGraph.GroupedBargraph(scoreData, scoreLabels)}
+</div>
+<div>
+    <h3>Area per type</h3>
+    {HTMLGraph.GroupedBargraph(areaData, areaLabels)}
 </div>";
             }
 
             return $@"
 <div class='table-header{classname}'>
-    <div>
-        <h3>Score</h3>
-        {HTMLGraph.Histogram(templates.Select(a => (double)a.Score).ToList())}
-    </div>
     {extended}
 </div>";
         }
