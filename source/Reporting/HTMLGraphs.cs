@@ -81,15 +81,19 @@ namespace AssemblyNameSpace
             return Bargraph(labeled.ToList());
         }
 
-        public static string Bargraph(List<(string, double)> data, int factor = 2, bool baseYMinOnData = false)
+        public static string Bargraph(List<(string Label, double Value)> data, int factor = 2, bool baseYMinOnData = false)
         {
             if (data.Count == 0) return "<em>No data.</em>";
             var buffer = new StringBuilder();
-            buffer.Append("<div class='histogram'>");
+            var dataBuffer = new StringBuilder("Label,Value");
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            double max = Math.Ceiling(data.Select(a => a.Item2).Max() / factor) * factor;
+            buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
+
+            double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = 0;
-            if (baseYMinOnData) min = data.Select(a => a.Item2).Min();
+            if (baseYMinOnData) min = data.Select(a => a.Value).Min();
 
             // Y axis
             buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
@@ -97,11 +101,15 @@ namespace AssemblyNameSpace
             // Data
             foreach (var set in data)
             {
-                string height = ((set.Item2 - min) / max * 100).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Item2:G3}</span></span><span class='label'>{set.Item1}</span>");
+                string height = ((set.Value - min) / max * 100).ToString();
+                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                dataBuffer.Append($"\n\"{set.Label}\",{set.Value}");
             }
 
-            buffer.Append("</div>");
+            buffer.Append($"<input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+
             return buffer.ToString();
         }
 
@@ -153,25 +161,34 @@ namespace AssemblyNameSpace
 
             // Create Legend
             var buffer = new StringBuilder();
+            var dataBuffer = new StringBuilder("Group");
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
+
             buffer.Append("<div class='histogram-header'>");
             for (int i = 0; i < dimensions; i++)
+            {
                 buffer.Append($"<span>{header[i].Label}</span>");
+                dataBuffer.Append($",\"{header[i].Label}\"");
+            }
 
             // Create Graph
-            buffer.Append("</div><div class='histogram grouped'>");
+            buffer.Append("</div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
+                dataBuffer.Append($"\n\"{set.Label}\"");
 
                 // Create Bars
                 for (int i = 0; i < dimensions; i++)
                 {
                     var dimensionIndex = header[i].Dimension;
-                    string height = ((set.Dimensions[i] - dimensionMin[dimensionIndex]) / (dimensionMax[dimensionIndex] - dimensionMin[dimensionIndex]) * 100).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                    string height = ((set.Dimensions[i] - dimensionMin[dimensionIndex]) / (dimensionMax[dimensionIndex] - dimensionMin[dimensionIndex]) * 100).ToString();
                     buffer.Append($"<span class='bar' style='height:{height}%'></span>");
+                    dataBuffer.Append($",{set.Dimensions[i]}");
                 }
 
-                //Create Tooltip
+                // Create Tooltip
                 buffer.Append($"<span class='tooltip'>{set.Label}");
                 for (int i = 0; i < dimensions; i++)
                     buffer.Append($"<span class='dim'>{set.Dimensions[i]:G3}</span>");
@@ -180,7 +197,10 @@ namespace AssemblyNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append("</div>");
+            buffer.Append($"<input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+
             return buffer.ToString();
         }
     }

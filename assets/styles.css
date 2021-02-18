@@ -814,3 +814,10 @@ input:checked+.slider:before {
 .sequence-match-graphic .gap-in-query {
     background-color: var(--color-dark);
 }
+
+[aria-hidden="true"] {
+    opacity: 0;
+    position: absolute;
+    z-index: -9999;
+    pointer-events: none;
+}

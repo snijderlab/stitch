@@ -142,3 +142,13 @@ function AlignmentDetails(number) {
 function AlignmentDetailsClear() {
     document.getElementById("index-menus").childNodes.forEach(a => a.className = "alignment-details");
 }
+
+// Copy the graph data for the clicked on graph
+function CopyGraphData() {
+    var children = event.currentTarget.getElementsByClassName("graph-data");
+    if (children.length > 0) {
+        children[0].select();
+        children[0].setSelectionRange(0, 99999);
+        document.execCommand("copy");
+    }
+}
