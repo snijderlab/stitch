@@ -263,7 +263,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
-            public bool ForceOnSingleTemplate = false;
+            public bool ForceOnSingleTemplate = true;
 
             /// <summary>
             /// The templates themselves. Grouped by their template group.

@@ -335,7 +335,7 @@ Determines if short reads (< K) will be added to the list of paths in recombinat
 
 ##### ForceOnSingleTemplate (s)
 
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `False`.
+Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### Databases (m)
 
@@ -396,7 +396,7 @@ The scoring strategy used when determining the score of this database. `Absolute
 
 ###### ForceOnSingleTemplate (s)
 
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `False`.
+Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 #### Recombine
 
@@ -442,7 +442,7 @@ Determines if short reads (< K) will be added to the list of paths in recombinat
 
 ##### ForceOnSingleTemplate (s)
 
-Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `False`.
+Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### ReadAlignment
 
@@ -474,7 +474,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ###### ForceOnSingleTemplate (s)
 
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default: `False`.
+Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default: `True`.
 
 #### Report
 
