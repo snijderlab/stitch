@@ -251,7 +251,15 @@ namespace AssemblyNameSpace
             return max_value;
         }
 
-        public static (int, int) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
+        /// <summary>
+        /// End align two sequences
+        /// </summary>
+        /// <param name="template">The front sequence</param>
+        /// <param name="query">The tail sequence</param>
+        /// <param name="alphabet">The alphabet to use</param>
+        /// <param name="max_overlap">The maximal length of the overlap</param>
+        /// <returns>A tuple with the best position and its score</returns>
+        public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
         {
             var scores = new List<(int, int)>();
             for (int i = 1; i < max_overlap && i < query.Length && i < template.Length; i++)

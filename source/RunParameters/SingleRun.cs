@@ -178,10 +178,13 @@ namespace AssemblyNameSpace
                                             seq = seq.SkipWhile(a => a.Char == 'X').ToList();
                                             var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), recombined_database_group.Alphabet, 20);
                                             // When no good overlap is found just paste them one after the other
-                                            if (aligned_template.Item2 >= 0)
-                                                s.AddRange(seq.Skip(aligned_template.Item1));
+                                            if (aligned_template.Score >= 0)
+                                                s.AddRange(seq.Skip(aligned_template.Position));
                                             else
+                                            {
+                                                s.Add(new AminoAcid(recombined_database_group.Alphabet, '*'));
                                                 s.AddRange(seq);
+                                            }
                                         }
                                         else
                                         {
