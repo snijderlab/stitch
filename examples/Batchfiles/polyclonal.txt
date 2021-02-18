@@ -35,9 +35,9 @@ TemplateMatching ->
             ClassChars: 5
         <-
         Database->
-            Path    : ../templates/IGHJ_simplified.fasta
-            Name    : IGHJ
-            Scoring : Relative
+            Path      : ../templates/IGHJ.fasta
+            Name      : IGHJ
+            Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
         <-
         Database->
             Path      : ../templates/IGHC_uniprot.fasta
