@@ -519,9 +519,14 @@ namespace AssemblyNameSpace
                 {
                     consensus.Add(combinedSequence[i].Template);
                 }
-                else
+                else if (options.Count() > 0)
                 {
                     consensus.Add(options[0]);
+                }
+                else
+                {
+                    // There is no data from reads so take the template sequence
+                    consensus.Add(combinedSequence[i].Template);
                 }
                 doc.Add(coverage);
 

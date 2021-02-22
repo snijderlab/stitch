@@ -121,7 +121,7 @@ namespace AssemblyNameSpace
                 foreach (var group in output.TemplateMatching.Databases)
                 {
                     if (!order_groups.Exists(o => o.OriginalName == group.Name))
-                        outEither.AddMessage(new ErrorMessage(batchfile, "Missing order definition for template group", "For group \"{}\" there is no corresponding order definition.", "If there is a definition make sure it is written exactly the same and with the same casing."));
+                        outEither.AddMessage(new ErrorMessage(batchfile, "Missing order definition for template group", $"For group \"{group.Name}\" there is no corresponding order definition.", "If there is a definition make sure it is written exactly the same and with the same casing."));
                     else
                     {
                         var order = order_groups.Find(o => o.OriginalName == group.Name);
@@ -171,36 +171,44 @@ namespace AssemblyNameSpace
 
             if (output.Recombine != null && output.Recombine.Order.Count() != 0)
             {
-                for (int i = 0; i < output.TemplateMatching.Databases.Count(); i++)
+
+                if (output.TemplateMatching.Databases.Count != output.Recombine.Order.Count)
                 {
-                    var order = order_groups[i];
-                    int last = -2;
-                    foreach (var piece in output.Recombine.Order[i])
+                    outEither.AddMessage(new ErrorMessage(def_range, "Invalid database groups definition", $"The number of order definitions ({output.Recombine.Order.Count}) should equal the number of database groups ({output.TemplateMatching.Databases.Count})."));
+                }
+                else
+                {
+                    for (int i = 0; i < output.TemplateMatching.Databases.Count(); i++)
                     {
-                        if (piece.IsGap())
+                        var order = order_groups[i];
+                        int last = -2;
+                        foreach (var piece in output.Recombine.Order[i])
                         {
-                            if (last == -1)
-                                outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "Gaps cannot follow consecutively."));
-                            else if (last == -2)
-                                outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
+                            if (piece.IsGap())
+                            {
+                                if (last == -1)
+                                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "Gaps cannot follow consecutively."));
+                                else if (last == -2)
+                                    outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
+                                else
+                                {
+                                    output.TemplateMatching.Databases[i].Databases[last].GapTail = true;
+                                    last = -1;
+                                }
+                            }
                             else
                             {
-                                output.TemplateMatching.Databases[i].Databases[last].GapTail = true;
-                                last = -1;
+                                var db = ((RunParameters.RecombineOrder.Template)piece).Index;
+                                if (last == -1)
+                                    output.TemplateMatching.Databases[i].Databases[db].GapHead = true;
+                                last = db;
                             }
                         }
-                        else
-                        {
-                            var db = ((RunParameters.RecombineOrder.Template)piece).Index;
-                            if (last == -1)
-                                output.TemplateMatching.Databases[i].Databases[db].GapHead = true;
-                            last = db;
-                        }
+                        if (last == -1)
+                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot end with a gap (*)."));
+                        if (last == -2)
+                            outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot be empty."));
                     }
-                    if (last == -1)
-                        outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot end with a gap (*)."));
-                    if (last == -2)
-                        outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot be empty."));
                 }
             }
 

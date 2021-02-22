@@ -26,6 +26,7 @@ TemplateMatching ->
     <-
 
     Databases->
+        - Homo Sapiens databases
         Heavy Chain->
             Database->
                 Path      : ../templates/IGHV.fasta
@@ -37,11 +38,12 @@ TemplateMatching ->
                 Path      : ../templates/IGHJ.fasta
                 Name      : IGHJ
                 Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+                ClassChars: 5
             <-
             Database->
                 Path      : ../templates/IGHC_uniprot.fasta
                 Name      : IGHC
-                Identifier: GN=([\p{P}\w*-]+)
+                Identifier: ^[\p{P}\w*-]*\|[\p{P}\w*-]*|([\p{P}\w*-]+)
                 ClassChars: 5
             <-
         <-
@@ -65,6 +67,47 @@ TemplateMatching ->
                 ClassChars: 4
             <-
         <-
+        - Mus Musculus databases
+        - Mus Heavy Chain->
+        -     Database->
+        -         Path      : ../templates/Mus_IGHV.fasta
+        -         Name      : IGHV
+        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+        -         ClassChars: 5
+        -     <-
+        -     Database->
+        -         Path      : ../templates/Mus_IGHJ.fasta
+        -         Name      : IGHJ
+        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+        -         ClassChars: 5
+        -     <-
+        -     Database->
+        -         Path      : ../templates/Mus_IGHC_uniprot.fasta
+        -         Name      : IGHC
+        -         Identifier: ^[\p{P}\w*-]*\|[\p{P}\w*-]*|([\p{P}\w*-]+)
+        -         ClassChars: 5
+        -     <-
+        - <-
+        - Mus Light Chain->
+        -     Database->
+        -         Path      : ../templates/Mus_IGK+LV.fasta
+        -         Name      : IGLV
+        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+        -         ClassChars: 4
+        -     <-
+        -     Database->
+        -         Path      : ../templates/Mus_IGK+LJ.fasta
+        -         Name      : IGLJ
+        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+        -         ClassChars: 4
+        -     <-
+        -     Database->
+        -         Path      : ../templates/Mus_IGK+LC.fasta
+        -         Name      : IGLC
+        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+        -         ClassChars: 4
+        -     <-
+        - <-
     <-
 <-
 
@@ -79,6 +122,8 @@ Recombine->
     Order->
         Heavy Chain: IGHV * IGHJ IGHC
         Light Chain: IGLV IGLJ IGLC
+        - Mus Heavy Chain: IGHV * IGHJ IGHC
+        - Mus Light Chain: IGLV IGLJ IGLC
     <-
 
     ReadAlignment -> 
