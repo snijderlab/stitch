@@ -213,11 +213,6 @@ namespace AssemblyNameSpace
             public double CutoffScore = 0;
 
             /// <summary>
-            /// Whether or not reads/paths will be forced to a single template.
-            /// </summary>
-            public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
-
-            /// <summary>
             /// The name for this template, to recognize it.
             /// </summary>
             public string Name = null;

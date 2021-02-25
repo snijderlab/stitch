@@ -120,10 +120,6 @@ th {
     padding: .1rem;
 }
 
-th:first-child {
-    border-left-width: 1px;
-}
-
 td.center {
     text-align: center;
 }
@@ -136,6 +132,7 @@ th {
     overflow: hidden;
     text-overflow: ellipsis;
     user-select: none;
+    font-weight: 500;
 }
 
 th::after {
@@ -209,14 +206,28 @@ tr:hover {
 
 .report label::after {
     content: "+";
-    border: 1px solid var(--color-primary-light);
+    border: 2px solid var(--color-primary-light);
     color: var(--color-primary-light);
     border-radius: 50%;
     font-size: .5em;
-    padding: .1em .4em;
+    font-weight: bold;
+    padding: 0 .4em .1em .4em;
     float: right;
     margin: .4em 0;
     font-family: "Roboto Mono", monospace;
+}
+
+.report .collapsable label {
+    font-size: 1.5em;
+    border: 2px solid var(--color-primary);
+    background-color: var(--color-background);
+    color: var(--color-primary);
+    font-weight: 500;
+}
+
+.report .collapsable label::after {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
 }
 
 input:checked+label {
@@ -230,6 +241,8 @@ input:checked+label {
 .collapsable {
     display: none;
     border-left: 2px solid var(--color-primary);
+    padding-left: .5rem;
+    overflow: auto;
 }
 
 .collapsable>pre:first-child,
@@ -595,7 +608,6 @@ input:checked+.slider:before {
 .table-header>div {
     flex: 1 1 1px;
     padding: 0 .5em;
-    box-shadow: 27px 0 0 -25px var(--color-primary);
 }
 
 .table-header>div:last-child {
@@ -604,7 +616,8 @@ input:checked+.slider:before {
 
 .table-header h3 {
     margin: 0;
-    padding: 1em;
+    padding: 1.5em 0;
+    color: var(--color-primary);
 }
 
 .histogram {

@@ -100,7 +100,6 @@ A `*` indicates that the scope or parameter can be defined multiple times.
             * Path
             * CutoffScore
             * Alphabet
-            * ForceOnSingleTemplate
             * Identifier
             * ClassChars
 * Recombine

@@ -43,7 +43,7 @@ TemplateMatching ->
             Database->
                 Path      : ../templates/IGHC_uniprot.fasta
                 Name      : IGHC
-                Identifier: ^[\p{P}\w*-]*\|[\p{P}\w*-]*|([\p{P}\w*-]+)
+                Identifier: ^sp\|[\w]*\|([\w]+)_
                 ClassChars: 5
             <-
         <-
@@ -84,7 +84,7 @@ TemplateMatching ->
         -     Database->
         -         Path      : ../templates/Mus_IGHC_uniprot.fasta
         -         Name      : IGHC
-        -         Identifier: ^[\p{P}\w*-]*\|[\p{P}\w*-]*|([\p{P}\w*-]+)
+        -         Identifier: ^sp\|[\w]*\|([\w]+)_
         -         ClassChars: 5
         -     <-
         - <-

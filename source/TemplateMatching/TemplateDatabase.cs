@@ -82,143 +82,33 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<(string, MetaData.IMetaData)> sequences, int max_threads = 1, bool forceOnSingleTemplate = false)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, MetaData.IMetaData)> sequences)
         {
             var paths = new List<GraphPath>(sequences.Count());
             for (int i = 0; i < sequences.Count(); i++)
             {
                 paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), sequences[i].Item2, i));
             }
-            Match(paths, max_threads, forceOnSingleTemplate);
+            return Match(paths);
         }
 
         /// <summary>
         /// Match the given sequences to the database. Saves the results in this instance of the database.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public void Match(List<GraphPath> sequences, int max_threads = 1, bool forceOnSingleTemplate = false)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
         {
-            if (forceOnSingleTemplate)
+            var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count());
+            for (int j = 0; j < sequences.Count(); j++)
             {
-                MatchParallelSingleTemplate(sequences, max_threads);
-                foreach (var tem in Templates) tem.ForcedOnSingleTemplate = true;
-            }
-            else if (max_threads == 1)
-            {
-                MatchSerial(sequences);
-            }
-            else
-            {
-                MatchParallel(sequences, max_threads);
-            }
-        }
-
-        /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
-        /// </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        void MatchParallel(List<GraphPath> sequences, int max_threads)
-        {
-            var runs = new List<(Template, GraphPath)>(Templates.Count() * sequences.Count());
-
-            foreach (var tem in Templates)
-            {
-                for (int i = 0; i < sequences.Count(); i++)
+                var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count());
+                for (int i = 0; i < Templates.Count(); i++)
                 {
-                    runs.Add((tem, sequences[i]));
+                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j].MetaData, sequences[j].Index)));
                 }
+                output.Add(row);
             }
-
-            Parallel.ForEach(
-                runs,
-                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => s.Item1.AddMatch(HelperFunctionality.SmithWaterman(s.Item1.Sequence, s.Item2.Sequence, Alphabet, s.Item2.MetaData, s.Item2.Index))
-            );
-        }
-
-        void MatchParallelSingleTemplate(List<GraphPath> sequences, int max_threads)
-        {
-            int numtemplates = Templates.Count();
-            // Prepare runs
-            var runs = new List<(Template Template, GraphPath Path)>(numtemplates * sequences.Count());
-
-            foreach (var tem in Templates)
-            {
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    runs.Add((tem, sequences[i]));
-                }
-            }
-
-            // Prepare results
-            var results = new List<(GraphPath Path, List<(SequenceMatch Match, Template Template)> Matches)>(sequences.Count());
-
-            for (int i = 0; i < sequences.Count(); i++)
-            {
-                results.Add((sequences[i], new List<(SequenceMatch Match, Template Template)>(numtemplates)));
-            }
-
-            // Calculate all matches
-            void SingleMatch(Template Template, GraphPath Path)
-            {
-                foreach (var set in results)
-                {
-                    if (set.Path.Index == Path.Index)
-                    {
-                        set.Matches.Add((HelperFunctionality.SmithWaterman(Template.Sequence, Path.Sequence, Alphabet, Path.MetaData, Path.Index), Template));
-                        return;
-                    }
-                }
-            }
-
-            Parallel.ForEach(
-                runs,
-                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) => SingleMatch(s.Template, s.Path)
-            );
-
-            // Force best match(es)
-            Parallel.ForEach(
-                results,
-                new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                (s, _) =>
-                {
-                    var Matches = s.Matches;
-                    var best = new List<int>();
-                    var best_score = 0;
-
-                    for (int i = 0; i < s.Matches.Count(); i++)
-                    {
-                        if (Matches[i].Match.Score > best_score)
-                        {
-                            best_score = Matches[i].Match.Score;
-                            best = new List<int> { i };
-                        }
-                        else if (Matches[i].Match.Score == best_score)
-                        {
-                            best.Add(i);
-                        }
-                    }
-
-                    bool unique = best.Count() == 1; // Only count is as unique if it is only placed on one template
-                    foreach (var index in best)
-                    {
-                        var (Match, Template) = Matches[index];
-                        Template.AddMatch(Match, unique);
-                    }
-                }
-            );
-        }
-
-        void MatchSerial(List<GraphPath> sequences)
-        {
-            foreach (var tem in Templates)
-            {
-                for (int i = 0; i < sequences.Count(); i++)
-                {
-                    tem.AddMatch(HelperFunctionality.SmithWaterman(tem.Sequence, sequences[i].Sequence, Alphabet, sequences[i].MetaData, sequences[i].Index));
-                }
-            }
+            return output;
         }
 
         /// <summary>

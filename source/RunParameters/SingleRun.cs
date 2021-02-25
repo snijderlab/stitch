@@ -87,28 +87,18 @@ namespace AssemblyNameSpace
                     Stopwatch stopWatch = new Stopwatch();
                     stopWatch.Start();
 
-                    var databases = new List<(string, List<TemplateDatabase>)>();
-                    for (int i = 0; i < TemplateMatching.Databases.Count(); i++)
-                    {
-                        var current_group = new List<TemplateDatabase>();
-                        for (int j = 0; j < TemplateMatching.Databases[i].Databases.Count(); j++)
-                        {
-                            var database = TemplateMatching.Databases[i].Databases[j];
-                            var alph = new Alphabet(database.Alphabet ?? TemplateMatching.Alphabet);
-
-                            var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore == 0 ? TemplateMatching.CutoffScore : database.CutoffScore, j, database.Scoring, database.ClassChars);
-
-                            database1.Match(Input, max_threads, HelperFunctionality.EvaluateTrilean(database.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate));
-
-                            current_group.Add(database1);
-                        }
-                        databases.Add((TemplateMatching.Databases[i].Name, current_group));
-                    }
+                    var databases = RunTemplateMatching();
 
                     stopWatch.Stop();
 
                     List<TemplateDatabase> recombined_database = new List<TemplateDatabase>();
+                    var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
+                    for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+
                     List<TemplateDatabase> read_templates = new List<TemplateDatabase>();
+                    int read_template_number = (Recombine != null && Recombine.ReadAlignment != null) ? Recombine.ReadAlignment.Input.Data.Cleaned.Count() : 0;
+                    var read_matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(read_template_number);
+                    for (int i = 0; i < read_template_number; i++) read_matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                     // Recombine
                     if (Recombine != null)
@@ -116,12 +106,7 @@ namespace AssemblyNameSpace
                         Stopwatch recombine_sw = new Stopwatch();
                         recombine_sw.Start();
 
-                        if (Recombine.Alphabet == null && TemplateMatching.Alphabet == null)
-                        {
-                            new InputNameSpace.ErrorMessage("No alphabet defined", "Please make define an alphabet for recombination if no alphabet for template matching is defined takes place", "").Print();
-                            return;
-                        }
-                        var alph = Recombine.Alphabet != null ? new Alphabet(Recombine.Alphabet) : new Alphabet(TemplateMatching.Alphabet);
+                        var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
 
                         for (int database_group_index = 0; database_group_index < databases.Count(); database_group_index++)
                         {
@@ -149,58 +134,12 @@ namespace AssemblyNameSpace
                                 select acc.Concat(new[] { item }));
 
                             var recombined_database_group = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
-                            var recombined_templates = new List<Template>();
-                            var namefilter = new NameFilter();
+                            CreateRecombinationTemplates(combinations, database_group_index, alph, recombined_database_group);
 
-                            for (int i = 0; i < combinations.Count(); i++)
-                            {
-                                var sequence = combinations.ElementAt(i);
-                                var s = new List<AminoAcid>();
-                                var t = new List<Template>();
-                                var join = false;
-                                foreach (var element in Recombine.Order[database_group_index])
-                                {
-                                    if (element.GetType() == typeof(RecombineOrder.Gap))
-                                    {
-                                        // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
-                                        // and removed from the Template sequence for the recombine round.
-                                        join = true;
-                                    }
-                                    else
-                                    {
-                                        var seq = sequence.ElementAt(((RecombineOrder.Template)element).Index).ConsensusSequence().Item1;
-                                        if (join)
-                                        {
-                                            // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
-                                            // and removed from the Template sequence for the recombine round.
-                                            join = false;
-                                            s = s.TakeWhile(a => a.Char != 'X').ToList();
-                                            seq = seq.SkipWhile(a => a.Char == 'X').ToList();
-                                            var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), recombined_database_group.Alphabet, 20);
-                                            // When no good overlap is found just paste them one after the other
-                                            if (aligned_template.Score >= 0)
-                                                s.AddRange(seq.Skip(aligned_template.Position));
-                                            else
-                                            {
-                                                s.Add(new AminoAcid(recombined_database_group.Alphabet, '*'));
-                                                s.AddRange(seq);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            s.AddRange(seq);
-                                        }
-                                        t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
-                                    }
-                                }
-                                recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "REC"), recombined_database_group, new RecombinedTemplateLocation(i), t));
-                            }
-                            foreach (var read in recombined_templates) read.MetaData.FinaliseIdentifier();
+                            var local_matches = recombined_database_group.Match(Input);
 
-                            recombined_database_group.Templates = recombined_templates;
-
-                            var force = HelperFunctionality.EvaluateTrilean(Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate);
-                            recombined_database_group.Match(Input, max_threads, force);
+                            for (int read = 0; read < Input.Count(); read++)
+                                matches[read].AddRange(local_matches[read].Select(a => (database_group_index, 0, a.Item1, a.Item2)));
 
                             recombined_database.Add(recombined_database_group);
 
@@ -212,6 +151,7 @@ namespace AssemblyNameSpace
                             if (Recombine.ReadAlignment != null)
                             {
                                 List<(string, MetaData.IMetaData)> templates = new List<(string, MetaData.IMetaData)>(recombined_database_group.Templates.Count());
+                                var namefilter = new NameFilter();
 
                                 Parallel.ForEach(
                                     recombined_database_group.Templates,
@@ -229,12 +169,41 @@ namespace AssemblyNameSpace
 
                                 var read_templates_group = new TemplateDatabase(templates, new Alphabet(Recombine.ReadAlignment.Alphabet), "ReadAlignDatabase", Recombine.ReadAlignment.CutoffScore, 0);
 
-                                read_templates_group.Match(Recombine.ReadAlignment.Input.Data.Cleaned, max_threads, HelperFunctionality.EvaluateTrilean(Recombine.ReadAlignment.ForceOnSingleTemplate, Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate));
+                                var read_local_matches = read_templates_group.Match(Recombine.ReadAlignment.Input.Data.Cleaned);
+
+                                for (int read = 0; read < Recombine.ReadAlignment.Input.Data.Cleaned.Count(); read++)
+                                    read_matches[read].AddRange(read_local_matches[read].Select(a => (database_group_index, 0, a.Item1, a.Item2)));
 
                                 read_templates.Add(read_templates_group);
 
                                 // Did readalign
                                 if (progressBar != null) progressBar.Update();
+                            }
+                        }
+
+                        // Filter matches if Forced
+                        if (HelperFunctionality.EvaluateTrilean(Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate))
+                            ForceOnSingleTemplate(matches);
+
+                        // Do the same for readalign matches
+                        if (HelperFunctionality.EvaluateTrilean(Recombine.ReadAlignment.ForceOnSingleTemplate, Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate))
+                            ForceOnSingleTemplate(read_matches);
+
+                        // Add all matches to the right templates
+                        foreach (var row in matches)
+                        {
+                            var unique = row.Count() == 1;
+                            foreach (var match in row)
+                            {
+                                recombined_database[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
+                            }
+                        }
+                        foreach (var row in read_matches)
+                        {
+                            var unique = row.Count() == 1;
+                            foreach (var match in row)
+                            {
+                                read_templates[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                             }
                         }
                     }
@@ -268,6 +237,128 @@ namespace AssemblyNameSpace
                 {
                     var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}\nRUNPARAMETERS:\n{Display()}";
                     throw new Exception(msg, e);
+                }
+            }
+
+            List<(string, List<TemplateDatabase>)> RunTemplateMatching()
+            {
+                // Initialise the matches list with empty lists for every input read
+                var matches = new List<List<(int GroupIndex, int DatabaseIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
+                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+
+                var databases = new List<(string, List<TemplateDatabase>)>();
+                for (int i = 0; i < TemplateMatching.Databases.Count(); i++)
+                {
+                    var current_group = new List<TemplateDatabase>();
+                    for (int j = 0; j < TemplateMatching.Databases[i].Databases.Count(); j++)
+                    {
+                        var database = TemplateMatching.Databases[i].Databases[j];
+                        var alph = new Alphabet(database.Alphabet ?? TemplateMatching.Alphabet);
+
+                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore == 0 ? TemplateMatching.CutoffScore : database.CutoffScore, j, database.Scoring, database.ClassChars);
+
+                        // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
+                        var local_matches = database1.Match(Input);
+
+                        for (int read = 0; read < Input.Count(); read++)
+                            matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
+
+                        current_group.Add(database1);
+                    }
+                    databases.Add((TemplateMatching.Databases[i].Name, current_group));
+                }
+                // Filter matches if Forced
+                if (TemplateMatching.ForceOnSingleTemplate)
+                    ForceOnSingleTemplate(matches);
+
+                // Add all matches to the right templates
+                foreach (var row in matches)
+                {
+                    var unique = row.Count() == 1;
+                    foreach (var match in row)
+                    {
+                        databases[match.GroupIndex].Item2[match.DatabaseIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
+                    }
+                }
+
+                return databases;
+            }
+
+            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int database_group_index, Alphabet alphabet, TemplateDatabase parent)
+            {
+                var recombined_templates = new List<Template>();
+                var namefilter = new NameFilter();
+
+                for (int i = 0; i < combinations.Count(); i++)
+                {
+                    var sequence = combinations.ElementAt(i);
+                    var s = new List<AminoAcid>();
+                    var t = new List<Template>();
+                    var join = false;
+                    foreach (var element in Recombine.Order[database_group_index])
+                    {
+                        if (element.GetType() == typeof(RecombineOrder.Gap))
+                        {
+                            // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                            // and removed from the Template sequence for the recombine round.
+                            join = true;
+                        }
+                        else
+                        {
+                            var seq = sequence.ElementAt(((RecombineOrder.Template)element).Index).ConsensusSequence().Item1;
+                            if (join)
+                            {
+                                // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                                // and removed from the Template sequence for the recombine round.
+                                join = false;
+                                s = s.TakeWhile(a => a.Char != 'X').ToList();
+                                seq = seq.SkipWhile(a => a.Char == 'X').ToList();
+                                var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 20);
+                                // When no good overlap is found just paste them one after the other
+                                if (aligned_template.Score >= 0)
+                                    s.AddRange(seq.Skip(aligned_template.Position));
+                                else
+                                {
+                                    s.Add(new AminoAcid(alphabet, '*'));
+                                    s.AddRange(seq);
+                                }
+                            }
+                            else
+                            {
+                                s.AddRange(seq);
+                            }
+                            t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
+                        }
+                    }
+                    recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "REC"), parent, new RecombinedTemplateLocation(i), t));
+                }
+                foreach (var read in recombined_templates) read.MetaData.FinaliseIdentifier();
+
+                parent.Templates = recombined_templates;
+            }
+
+            void ForceOnSingleTemplate(List<List<(int, int, int, SequenceMatch Match)>> matches)
+            {
+                for (int read_index = 0; read_index < matches.Count(); read_index++)
+                {
+                    var best = new List<(int, int, int, SequenceMatch)>();
+                    var best_score = 0;
+                    for (int template_index = 0; template_index < matches[read_index].Count(); template_index++)
+                    {
+                        var match = matches[read_index][template_index];
+                        if (match.Match.Score > best_score)
+                        {
+                            best.Clear();
+                            best.Add(match);
+                            best_score = match.Match.Score;
+                        }
+                        else if (match.Match.Score == best_score)
+                        {
+                            best.Add(match);
+                        }
+                    }
+                    matches[read_index].Clear();
+                    matches[read_index].AddRange(best);
                 }
             }
         }

@@ -1127,9 +1127,6 @@ namespace AssemblyNameSpace
                         case "classchars":
                             tsettings.ClassChars = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
-                        case "forceonsingletemplate":
-                            tsettings.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
-                            break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
