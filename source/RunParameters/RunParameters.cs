@@ -213,11 +213,6 @@ namespace AssemblyNameSpace
             public double CutoffScore = 0;
 
             /// <summary>
-            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
-            /// </summary>
-            public Trilean IncludeShortReads = Trilean.Unspecified;
-
-            /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
             public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
@@ -256,11 +251,6 @@ namespace AssemblyNameSpace
             public double CutoffScore = 0;
 
             /// <summary>
-            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
-            /// </summary>
-            public bool IncludeShortReads = true;
-
-            /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
             public bool ForceOnSingleTemplate = true;
@@ -285,11 +275,6 @@ namespace AssemblyNameSpace
             /// The average score needed for a path to be included in the alignment with a template.
             /// </summary>
             public double CutoffScore = 0;
-
-            /// <summary>
-            /// To determine if short reads (&lt;K) should be added back to the recombination database after assembly
-            /// </summary>
-            public Trilean IncludeShortReads = Trilean.Unspecified;
 
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
@@ -442,7 +427,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
-            public enum FastaOutputType { Assembly, Recombine, ReadsAlign }
+            public enum FastaOutputType { Recombine, ReadsAlign }
 
             /// <summary>
             /// To indicate to return a FASTA report.
@@ -457,7 +442,7 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The outputtype of the sequences
                 /// </summary>
-                public FastaOutputType OutputType = FastaOutputType.Assembly;
+                public FastaOutputType OutputType = FastaOutputType.Recombine;
             }
         }
     }

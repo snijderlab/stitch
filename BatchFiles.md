@@ -6,7 +6,7 @@ Batch files are used to aggregate all information for one run of the program. Th
 
 ## VS Code plugin WIP
 
-In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (user/.vscode/extensions) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
+In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
 
 ## Structure
 
@@ -23,12 +23,6 @@ The parameters are organised in multiple scopes each having a specified set of p
 
 Input ->
     -Determines the input files to be used
-    -Can only be specified once
-<-
-
-Assembly ->
-    -Has parameters determining the behaviour of the assembler
-    -Like input parameters, alphabet, k etc
     -Can only be specified once
 <-
 
@@ -66,6 +60,79 @@ All paths are specified from the directory of the batch file.
 
 All assets are loaded from the folder `assets` in the folder of the binary.
 
+#### The full list of all parameters
+A `*` indicates that the scope or parameter can be defined multiple times.
+
+* Run Info
+    * Version
+    * Runname
+    * MaxCores
+* Input
+    * Reads *
+        * Path
+        * Name
+    * FASTA *
+        * Path
+        * Name
+        * Identifier
+    * Peaks *
+        * Path
+        * CutoffALC
+        * LocalCutoffALC
+        * Format
+        * MinLengthPatch
+        * Name
+        * Separator
+        * DecimalSeparator
+    * Folder (m) *
+        * Path
+        * StartsWith
+        * Recursive
+        * Identifier
+        * All Peaks parameters prefixed with `Peaks`
+* TemplateMatching
+    * CutoffScore
+    * Alphabet
+    * ForceOnSingleTemplate
+    * Databases
+        * Database *
+            * Name
+            * Path
+            * CutoffScore
+            * Alphabet
+            * ForceOnSingleTemplate
+            * Identifier
+            * ClassChars
+* Recombine
+    * N
+    * Order
+    * CutoffScore
+    * Alphabet
+    * ForceOnSingleTemplate
+    * ReadAlignment
+        * Input
+            * See Input
+        * InputParameters
+        * CutoffScore
+        * Alphabet
+        * ForceOnSingleTemplate
+* Report
+    * HTML *
+        * Path
+    * FASTA *
+        * Path
+        * MinimalScore
+        * OutputType
+
+Recurring definitions:
+* Alphabet
+    * Path
+    * Data
+    * Name
+    * GapStartPenalty
+    * GapExtendPenalty
+
+
 #### Run Info
 
 These parameters are placed in the outer scope. So not nested in any other parameter. These parameters dictate general settings for the whole run.
@@ -98,17 +165,6 @@ _Examples_
 MaxCores: 4
 MaxCores: 86
 ```
-
-##### Runtype (s)
-
-If the different input files in this run should be ran separate from each other trough the assembler (`Separate`), or be grouped together into one heap of data (`Group`). The default is `Group`.
-
-_Examples_
-```
-Runtype: Separate
-Runtype: Group
-```
-
 #### Input
 
 This scope contains parameters to load reads.
@@ -214,109 +270,6 @@ Folder ->
 <-
 ```
 
-#### Assembly
-
-Has parameters determining the behaviour of the assembly step. Can only be specified once.
-
-##### Input (m)
-
-The reads to use in the alignment. See the scope Input for more information about its definition. The input can also be defined in the outer scope, in which case the input can be reused be other steps in the process, for example by ReadAlign.
-
-##### InputParameters (m)
-
-This parameter can be used to determine the filter settings to be used in opening the reads for the Assembly. These will overrule any settings set in the Input in the outer scope.
-
-###### Peaks (m)
-
-| Inner parameter  | Explanation                                                                                                                                                                              | Default Value |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| CutoffALC      | The score a reads must at least have to be included in the list of reads                                                                                                                 | 99            |
-| LocalCutoffALC | The score a patch in a read should at least have to be included.                                                                                                                         | 90            |
-| MinLengthPatch   | The minimal length of a patch before it is included                                                                                                                                      | 3             |
-
-##### K (s or m)
-
-The value or values of K to be used.
-
-If multiple values are entered multiple runs are generated each with a different values for K.
-
-For the range definition some inner parameters are available. `Start` and `End` have to be defined.
-
-| Inner parameter | Explanation              | Default Value |
-| --------------- | ------------------------ | ------------- |
-| Start           | The lowest value to use  | (No Default)  |
-| End             | The highest value to use | (No Default)  |
-| Step            | The size of the steps    | 1             |
-
-_Examples_
-```
--Single value
-K: 8
-
--Multiple values
-K: 8, 10, 15
-
--Range definition
-K ->
-    Start: 8
-    End: 20
-    Step: 2
-<-
-```
-
-##### MinimalHomology (s)
-
-The minimal homology to use, this is the minimal score before an edge is included in the De Bruijn graph. This value is mainly dependent on the alphabet used.
-
-It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmetic, - + * /, the variable 'K' and constants (positive integer numbers).
-
-The default value is `K-1`.
-
-_Examples_
-```
--Constant value
-MinimalHomology: 7
-MinimalHomology: 14
-
--Calculation
-MinimalHomology: K-1
-MinimalHomology: K*2-3
-```
-
-##### DuplicateThreshold (s)
-
-The threshold score which has to be reached before two edges are considered equal. This is used in the detection of duplicates while filtering reads. This value is mainly depending on the alphabet used.
-
-It can be defined as a constant value or as a calculation based on K. It only supports very basic arithmetic, - + * /, the variable 'K' and constants (positive integer numbers).
-
-The default value is `K-1`.
-
-_Examples_
-```
--Constant value
-DuplicateThreshold: 7
-DuplicateThreshold: 14
-
--Calculation
-DuplicateThreshold: K-1
-DuplicateThreshold: K*2-3
-```
-
-##### Reverse (s)
-
-Defines if the reads should also be generated in reverse, which is useful if some reads are/could be backwards compared to others. The possible values are `True`, `False` and `Both`. The last option will run the runs two times, one with `True` and one with `False`. The default if `False`.
-
-_Examples_
-```
-Reverse: True
-Reverse: False
-Reverse: Both
-```
-
-##### Alphabet (m)
-
-Determines the alphabet to use. See the scope Alphabet for more information about its definition.
-
 #### TemplateMatching (m)
 
 To determine the parameters for template matching. Can only be specified once. Often used with the reference set from IMGT (http://www.imgt.org/vquest/refseqh.html).
@@ -329,10 +282,6 @@ The mean score per position needed for a path to be included in the Database sco
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
 
-##### IncludeShortReads (s)
-
-Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`). Default: `True`.
-
 ##### ForceOnSingleTemplate (s)
 
 Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
@@ -341,10 +290,13 @@ Determines of the paths/reads of this database will be forced to the best templa
 
 Defines a list of databases to match against. A single database is defined by the parameter `Database` which can be defined multiple times within `Databases`. Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-`CutoffScore`, `Alphabet`, `ForceOnSingleTemplate`, `Scoring` and `IncludeShortReads` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
+`CutoffScore`, `Alphabet`, `ForceOnSingleTemplate`, and `Scoring` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
+The databases can be grouped into database groups. These will be presented separately in the output HTML report. This is extremely useful for example to separate the Heavy and Light chain of an antibody.
+
+_Example_
 ```
 Databases ->
     Database ->
@@ -362,11 +314,24 @@ Databases ->
         PeaksFormat : Old
         Name        : IGHV Human
         CutoffScore : 4
-        IncludeShortReads : False
         Alphabet ->
             Path	: ../alphabets/blosum62.csv
             Name	: Blosum62
         <-
+    <-
+<-
+
+- Or with groups
+Databases ->
+    Heavy Chain ->
+        Database ->
+            Path    : ../templates/smallIGHV.fasta
+            Name    : IGHV Human
+        <-
+        - Any number of other databases can be defined here, but logically IGHJ and IGHC will follow
+    <-
+    Light Chain ->
+        - All light chain databases can be defined here
     <-
 <-
 ```
@@ -386,9 +351,13 @@ The mean score per position needed for a path to be included in the Database sco
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
 
-###### IncludeShortReads (s)
+###### Identifier (s) 
 
-Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`). Default: `True`.
+Specifies a Regular Expression to parse the identifier from the Fasta header of the templates. The default value is `(.*)`, the first capturing group will be used as the identifier.
+
+###### ClassChars (s)
+
+Specifies the amount of characters to be taken from the start of the identifier which indicate the class of the template, like IgH1/IgH2 etc. On default it will take the full identifier.
 
 ###### Scoring (s)
 
@@ -400,7 +369,7 @@ Determines of the paths/reads of this database will be forced to the best templa
 
 #### Recombine
 
-Defines how to recombine the TemplateMatched databases, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each database, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime exponentially increases with _n_.
+Defines how to recombine the TemplateMatched databases, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each database, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime factorially increases with _n_.
 
 _Example_
 ```
@@ -417,16 +386,28 @@ Recombine->
 
 ##### N (s)
 
-The amount of templates to recombine from each database.
+The amount of templates to recombine from each database. From every database it will take the top N templates and join all of them together in all possible configurations, this means that the number of recombined templates factorially increases with N.
 
 ##### Order (s)
 
-The order in which the databases will be recombined. Defined as a list of the names of the database in order possibly with gaps ('*') in between.
+The order in which the databases will be recombined. Defined as a list of the names of the database in order possibly with gaps (`*`) in between.
 
 _Example_
 ```
 Order: IGHV IGHJ * IGHC
 ```
+
+If there are multiple database groups defined the order should be defined separately for each group. The names are matches to the database group names disregarding casing.
+
+_Example_
+```
+Order -> 
+    Heavy Chain: IGHV IGHJ * IGHC
+    Light Chain: IGLV IGLJ IGLC
+<-
+```
+
+A gap (`*`) indicates that there should be more sequence in between the segments but that no appropriate template is available, this for example is the case in the CDR3 region. To find the correct sequence in this case the program will try to find back the sequence. This is done by expanding both surrounding segments with Xs which allows the template matching step to add all heads/tails of matched reads to the consensus sequence of that template. On recombination the consensus sequences are compared to find the overlap. If the template matching was successful and the input data was of high enough quality both templates will have the full sequence of the missing region, which can be combined into the correct template for recombination. If there is no overlap found, so no reads where matches on the Xs, or not enough to find the whole sequence a gap will be placed between the two consensus sequences. This signals to the users that some part of the sequence could be missing and leaves the opportunity to match reads with the full sequence to this gap in recombination.
 
 ##### CutoffScore (s)
 
@@ -436,10 +417,6 @@ The mean score per position needed for a path to be included in the Database sco
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
 
-##### IncludeShortReads (s)
-
-Determines if short reads (< K) will be added to the list of paths in recombination. (`True` or `False`). Default: `True`.
-
 ##### ForceOnSingleTemplate (s)
 
 Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
@@ -448,7 +425,7 @@ Determines of the paths/reads of these databases will be forced to the best temp
 
 This defines the parameters used for ReadAlignment to the templates created by Recombine. Most parameters will be reused from Recombine, but these can be overruled if a different value is needed.
 
-##### Input (m)
+###### Input (m)
 
 The reads to use in the alignment. See the scope Input for more information about its definition. The input can also be defined in the outer scope, in which case the input can be reused be other steps in the process, for example by Assembly.
 
@@ -458,11 +435,11 @@ This parameter can be used to determine the filter settings to be used in openin
 
 ####### Peaks (m)
 
-| Inner parameter  | Explanation                                                                                                                                                                              | Default Value |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| CutoffALC      | The score a reads must at least have to be included in the list of reads                                                                                                                 | 99            |
-| LocalCutoffALC | The score a patch in a read should at least have to be included.                                                                                                                         | 90            |
-| MinLengthPatch   | The minimal length of a patch before it is included                                                                                                                                      | 3             |
+| Inner parameter | Explanation                                                              | Default Value |
+| --------------- | ------------------------------------------------------------------------ | ------------- |
+| CutoffALC       | The score a reads must at least have to be included in the list of reads | 99            |
+| LocalCutoffALC  | The score a patch in a read should at least have to be included.         | 90            |
+| MinLengthPatch  | The minimal length of a patch before it is included                      | 3             |
 
 ###### CutoffScore (s)
 
@@ -485,7 +462,6 @@ To generate an HTML report. This report displays all information about this run,
 | Inner parameter | Explanation                                                                                                     | Default Value |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)  |
-| DotDistribution | To use a `global` install of the Dot engine or the `included` one.                                                | `included`    |
 
 _Example_
 ```
@@ -502,14 +478,14 @@ To generate a FASTA file with all paths, with a score for each path. The score i
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)  |
 | MinimalScore    | The minimal score needed to be included in the file                                                             | 0             |
-| OutputType      | The type of sequences to give as output, `Assembly`, `Recombine` or `ReadsAlign`                                | `Assembly`    |
+| OutputType      | The type of sequences to give as output, `Recombine` or `ReadsAlign`                                            | `Recombine`   |
 
 _Example_
 ```
 FASTA ->
-    Path         : Contigs.fasta
+    Path         : contigs.fasta
     MinimalScore : 50
-    OutputType   : Paths
+    OutputType   : ReadsAlign
 <-
 ```
 
@@ -521,10 +497,6 @@ The program will also create missing folders if needed.
 
 | Key        | Explanation                                                 |
 | ---------- | ----------------------------------------------------------- |
-| {id}       | A unique numerical ID of the run (automatically generated)  |
-| {k}        | The value of K of the run                                   |
-| {mh}       | The value of MinimalHomology of the run                     |
-| {dt}       | The value of DuplicateThreshold of the run                  |
 | {alph}     | The name of the alphabet used                               |
 | {name}     | The name of the run                                         |
 | {date}     | The date of today in the format yyyy-mm-dd                  |
@@ -534,13 +506,13 @@ The program will also create missing folders if needed.
 _Examples_
 ```
 -To be sure of unique names
-Path: Folder/Structure/Report-{id}.html
+Path: Folder/Structure/Report-{date}.html
 
 -More advanced naming scheme
-Path: Folder/Structure/{name}-{data}-{k}-{mh}-{dt}-{alph}.csv
+Path: Folder/Structure/{name}-{date}-{alph}.csv
 
 -Creates the folders needed
-Path: Folder/{data}/{alph}/{k}-{mh}-{dt}.fasta
+Path: Folder/{date}/{alph}/{time}.fasta
 ```
 
 #### Alphabet

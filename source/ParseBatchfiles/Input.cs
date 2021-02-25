@@ -691,14 +691,11 @@ namespace AssemblyNameSpace
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             break;
-                        case "includeshortreads":
-                            output.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither);
-                            break;
                         case "forceonsingletemplate":
                             output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Databases', 'Alphabet', 'IncludeShortReads', and 'ForceOnSingleTemplate'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Databases', 'Alphabet', and 'ForceOnSingleTemplate'"));
                             break;
                     }
                 }
@@ -746,9 +743,6 @@ namespace AssemblyNameSpace
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             break;
-                        case "includeshortreads":
-                            output.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither) ? Trilean.True : Trilean.False;
-                            break;
                         case "forceonsingletemplate":
                             output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
                             break;
@@ -758,7 +752,7 @@ namespace AssemblyNameSpace
                             readAlignmentKey = setting;
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'IncludeShortReads', 'ForceOnSingleTemplate' and 'ReadAlignment'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'ForceOnSingleTemplate' and 'ReadAlignment'"));
                             break;
                     }
                 }
@@ -1115,13 +1109,6 @@ namespace AssemblyNameSpace
                         case "identifier":
                             tsettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                             break;
-                        case "includeshortreads":
-                            if (!extended)
-                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "IncludeShortReads cannot be defined here", "Inside a template in the templates list of a recombination IncludeShortReads can not be defined."));
-                            else
-                                tsettings.IncludeShortReads = ParseHelper.ParseBool(setting, "IncludeShortReads").GetValue(outEither) ? Trilean.True : Trilean.False;
-
-                            break;
                         case "scoring":
                             var scoring = setting.GetValue().ToLower();
                             if (scoring == "absolute")
@@ -1149,7 +1136,7 @@ namespace AssemblyNameSpace
 
                             if (peaks.Value == false)
                             {
-                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'IncludeShortReads', 'Scoring', 'ClassChars' and all PEAKS format parameters";
+                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', 'ClassChars' and all PEAKS format parameters";
                                 if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             }
