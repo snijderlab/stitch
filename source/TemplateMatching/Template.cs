@@ -138,6 +138,7 @@ namespace AssemblyNameSpace
 
                     if (unique)
                     {
+                        this.ForcedOnSingleTemplate = true;
                         match.Unique = true;
                         uniqueScore += match.Score;
                         TotalUniqueArea += match.MetaData.TotalArea;

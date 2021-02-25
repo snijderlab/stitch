@@ -38,6 +38,7 @@ TemplateMatching ->
             Path      : ../templates/IGHJ.fasta
             Name      : IGHJ
             Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
+            ClassChars: 5
         <-
         Database->
             Path      : ../templates/IGHC_uniprot.fasta

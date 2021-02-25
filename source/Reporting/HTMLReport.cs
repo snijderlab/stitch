@@ -602,8 +602,8 @@ namespace AssemblyNameSpace
         string SequenceConsensusOverview(Template template)
         {
             const double threshold = 0.3;
-            const int height = 50;
-            const int fontsize = 20;
+            const int height = 25;
+            const int fontsize = 10;
             var consensus_sequence = template.CombinedSequence();
 
             var sequence_logo_buffer = new StringBuilder();
@@ -1054,6 +1054,53 @@ assetsfolder = '{AssetsFolderName}';
             }
         }
 
+        private string CreateOverview()
+        {
+            var buffer = new StringBuilder();
+            if (Parameters.ReadAlignment.Count() != 0)
+            {
+                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                {
+                    var (seq, doc) = Parameters.ReadAlignment[group].Templates[0].ConsensusSequence();
+                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3>");
+
+                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
+                    {
+                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
+                        buffer.Append($"<p>{seg.Name}: {seg.Templates[0].Class}</p>");
+                    }
+                }
+            }
+            else if (Parameters.RecombinedDatabase.Count() != 0)
+            {
+                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                {
+                    var (seq, doc) = Parameters.RecombinedDatabase[group].Templates[0].ConsensusSequence();
+                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3>");
+
+                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
+                    {
+                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
+                        buffer.Append($"<p>{seg.Name}: {seg.Templates[0].Class}</p>");
+                    }
+                }
+            }
+            else
+            {
+                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                {
+                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2>");
+
+                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
+                    {
+                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
+                        buffer.Append($"<h3>{seg.Name}</h3>{TableHeader(seg.Templates)}");
+                    }
+                }
+            }
+            return buffer.ToString();
+        }
+
         private string CreateMain()
         {
             Stopwatch stopwatch = new Stopwatch();
@@ -1092,10 +1139,11 @@ assetsfolder = '{AssetsFolderName}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
+ <div class='overview'>{CreateOverview()}</div>
  {innerbuffer}
 
 <div class=""footer"">
-    <p>Code written in 2019-2020</p>
+    <p>Code written in 2019-2021</p>
     <p>Made by the Hecklab</p>
 </div>
 
