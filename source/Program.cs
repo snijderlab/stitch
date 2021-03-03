@@ -56,11 +56,8 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                Console.ForegroundColor = ConsoleColor.Red;
-                Console.Error.WriteLine($"{e.Message}");
-                Console.ResetColor();
-                Console.WriteLine("The program now terminates.");
-                return;
+                var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}";
+                throw new Exception(msg, e);
             }
         }
 
@@ -73,7 +70,14 @@ namespace AssemblyNameSpace
             var inputparams = ParseCommandFile.Batch(filename, false);
 
             var bar = new ProgressBar();
-            bar.Start(1 + inputparams.TemplateMatching.Databases.Count() * ((inputparams.Recombine != null ? 1 : 0) + (inputparams.Recombine != null && inputparams.Recombine.ReadAlignment != null ? 1 : 0)));
+            var bars = 1 + inputparams.TemplateMatching.Databases.Count();
+            if (inputparams.Recombine != null)
+            {
+                bars += inputparams.TemplateMatching.Databases.Count();
+                if (inputparams.Recombine.ReadAlignment != null)
+                    bars += inputparams.TemplateMatching.Databases.Count();
+            }
+            bar.Start(bars);
 
             inputparams.CreateRun(bar).Calculate(inputparams.MaxNumberOfCPUCores);
         }

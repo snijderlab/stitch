@@ -1043,7 +1043,7 @@ assetsfolder = '{AssetsFolderName}';
             {
                 var buffer = new StringBuilder();
                 var bf = BatchFile;
-                buffer.Append($"<pre><i>{bf.Filename}</i>");
+                buffer.Append($"<pre class='source-code'><i>{bf.Filename}</i>\n");
                 foreach (var line in bf.Lines) buffer.AppendLine(line);
                 buffer.Append("</pre>");
                 return buffer.ToString();
@@ -1193,7 +1193,6 @@ assetsfolder = '{AssetsFolderName}';
             AssetsFolderName = Path.GetFileNameWithoutExtension(filename);
 
             Directory.CreateDirectory(FullAssetsFolderName);
-            Directory.CreateDirectory(Path.Join(FullAssetsFolderName, "paths"));
 
             Task t = Task.Run(() => CopyAssets());
 

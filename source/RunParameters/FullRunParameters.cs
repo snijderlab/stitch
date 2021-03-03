@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input for this run
             /// </summary>
-            public RunParameters.Input.InputParameters Input = null;
+            public RunParameters.Input Input = new Input();
 
             /// <summary>
             /// The parameters for the template matching
@@ -59,19 +59,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public SingleRun CreateRun(ProgressBar bar = null)
             {
-                var input = new RunParameters.Input();
-                InputNameSpace.ParseHelper.PrepareInput(new NameFilter(), null, input, Input).ReturnOrFail();
-
-                // Finalise all metadata names
-                foreach (var set in input.Data.Raw)
-                {
-                    foreach (var read in set)
-                    {
-                        read.MetaData.FinaliseIdentifier();
-                    }
-                }
-
-                return new SingleRun(Runname, input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, bar);
+                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, bar);
             }
         }
     }

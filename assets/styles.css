@@ -59,6 +59,7 @@ h1 {
 .aside-seq {
     word-break: break-all;
     font-family: Roboto Mono, monospace;
+    user-select: all;
 }
 
 .aside-seq .highlight {
@@ -256,10 +257,12 @@ input:checked+label {
     overflow: auto;
 }
 
-.collapsable>pre:first-child,
-.collapsable>h3:first-child {
+.source-code {
     margin: 0;
-    padding: 1em;
+    padding-top: 1em;
+    line-height: 8px;
+    font-family: 'Roboto Mono';
+    font-size: 12px;
 }
 
 input[type="checkbox"] {

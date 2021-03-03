@@ -81,70 +81,63 @@ namespace AssemblyNameSpace
             /// </summary>
             public void Calculate(int max_threads = 1)
             {
-                try
+
+                // Template Matching
+                Stopwatch stopWatch = new Stopwatch();
+                stopWatch.Start();
+
+                var databases = RunTemplateMatching();
+
+                stopWatch.Stop();
+
+                List<TemplateDatabase> recombined_database = new List<TemplateDatabase>();
+                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
+                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+
+                List<TemplateDatabase> read_templates = new List<TemplateDatabase>();
+                int read_template_number = (Recombine != null && Recombine.ReadAlignment != null) ? Recombine.ReadAlignment.Input.Data.Cleaned.Count() : 0;
+                var read_matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(read_template_number);
+                for (int i = 0; i < read_template_number; i++) read_matches.Add(new List<(int, int, int, SequenceMatch)>());
+
+                // Recombine
+                if (Recombine != null)
                 {
-                    // Template Matching
-                    Stopwatch stopWatch = new Stopwatch();
-                    stopWatch.Start();
+                    Stopwatch recombine_sw = new Stopwatch();
+                    recombine_sw.Start();
 
-                    var databases = RunTemplateMatching();
+                    RunRecombine(databases, matches, recombined_database);
 
-                    stopWatch.Stop();
+                    recombine_sw.Stop();
 
-                    List<TemplateDatabase> recombined_database = new List<TemplateDatabase>();
-                    var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
-                    for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
-
-                    List<TemplateDatabase> read_templates = new List<TemplateDatabase>();
-                    int read_template_number = (Recombine != null && Recombine.ReadAlignment != null) ? Recombine.ReadAlignment.Input.Data.Cleaned.Count() : 0;
-                    var read_matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(read_template_number);
-                    for (int i = 0; i < read_template_number; i++) read_matches.Add(new List<(int, int, int, SequenceMatch)>());
-
-                    // Recombine
-                    if (Recombine != null)
-                    {
-                        Stopwatch recombine_sw = new Stopwatch();
-                        recombine_sw.Start();
-
-                        RunRecombine(databases, matches, recombined_database);
-
-                        recombine_sw.Stop();
-
-                        // Do ReadAlignment
-                        if (Recombine.ReadAlignment != null)
-                            RunReadAlign(read_matches, read_templates, recombined_database, max_threads);
-                    }
-
-                    var input = Input;
-                    if (Recombine != null && Recombine.ReadAlignment != null)
-                        input.AddRange(Recombine.ReadAlignment.Input.Data.Cleaned);
-
-                    var parameters = new ReportInputParameters(input, databases, recombined_database, read_templates, this.BatchFile, this.Runname);
-
-                    // Generate the report(s)
-                    foreach (var report in Report)
-                    {
-                        switch (report)
-                        {
-                            case Report.HTML h:
-                                var htmlreport = new HTMLReport(parameters, max_threads);
-                                htmlreport.Save(h.CreateName(this));
-                                break;
-                            case Report.FASTA f:
-                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
-                                fastareport.Save(f.CreateName(this));
-                                break;
-                        }
-                    }
-
-                    // Did reports
-                    if (progressBar != null) progressBar.Update();
+                    // Do ReadAlignment
+                    if (Recombine.ReadAlignment != null)
+                        RunReadAlign(read_matches, read_templates, recombined_database, max_threads);
                 }
-                catch (Exception e)
+
+                var input = Input;
+                if (Recombine != null && Recombine.ReadAlignment != null)
+                    input.AddRange(Recombine.ReadAlignment.Input.Data.Cleaned);
+
+                var parameters = new ReportInputParameters(input, databases, recombined_database, read_templates, this.BatchFile, this.Runname);
+
+                // Generate the report(s)
+                foreach (var report in Report)
                 {
-                    var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}\nRUNPARAMETERS:\n{Display()}";
-                    throw new Exception(msg, e);
+                    switch (report)
+                    {
+                        case Report.HTML h:
+                            var htmlreport = new HTMLReport(parameters, max_threads);
+                            htmlreport.Save(h.CreateName(this));
+                            break;
+                        case Report.FASTA f:
+                            var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
+                            fastareport.Save(f.CreateName(this));
+                            break;
+                    }
                 }
+
+                // Did reports
+                if (progressBar != null) progressBar.Update();
             }
 
             List<(string, List<TemplateDatabase>)> RunTemplateMatching()
@@ -173,6 +166,9 @@ namespace AssemblyNameSpace
                         current_group.Add(database1);
                     }
                     databases.Add((TemplateMatching.Databases[i].Name, current_group));
+
+                    // Save the progress, finished a group
+                    if (progressBar != null) progressBar.Update();
                 }
                 // Filter matches if Forced
                 if (TemplateMatching.ForceOnSingleTemplate)
@@ -271,11 +267,13 @@ namespace AssemblyNameSpace
                         (s, _) => s.Item2.FinaliseIdentifier()
                     );
 
+                    var input = Recombine.ReadAlignment.Input.Data.Cleaned ?? Input;
+
                     var read_templates_group = new TemplateDatabase(templates, new Alphabet(Recombine.ReadAlignment.Alphabet), "ReadAlignDatabase", Recombine.ReadAlignment.CutoffScore, 0);
 
-                    var read_local_matches = read_templates_group.Match(Recombine.ReadAlignment.Input.Data.Cleaned);
+                    var read_local_matches = read_templates_group.Match(input);
 
-                    for (int read = 0; read < Recombine.ReadAlignment.Input.Data.Cleaned.Count(); read++)
+                    for (int read = 0; read < input.Count(); read++)
                         read_matches[read].AddRange(read_local_matches[read].Select(a => (database_group_index, 0, a.Item1, a.Item2)));
 
                     read_templates.Add(read_templates_group);
@@ -284,10 +282,11 @@ namespace AssemblyNameSpace
                     if (progressBar != null) progressBar.Update();
                 }
 
-                // Do the same for readalign matches
+                // Filter matches if Forced
                 if (HelperFunctionality.EvaluateTrilean(Recombine.ReadAlignment.ForceOnSingleTemplate, Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate))
                     ForceOnSingleTemplate(read_matches);
 
+                // Add all matches to the right templates
                 foreach (var row in read_matches)
                 {
                     var unique = row.Count() == 1;

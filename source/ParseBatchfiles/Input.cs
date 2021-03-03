@@ -68,8 +68,8 @@ namespace AssemblyNameSpace
                         output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).GetValue(outEither);
                         break;
                     case "input":
-                        if (output.Input != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Input = ParseHelper.ParseInputParameters(namefilter, pair).GetValue(outEither);
+                        if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.Input.Parameters = ParseHelper.ParseInputParameters(namefilter, pair).GetValue(outEither);
                         break;
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -217,7 +217,8 @@ namespace AssemblyNameSpace
             if (output.Recombine != null && output.Recombine.ReadAlignment != null && output.Recombine.ReadAlignment.Alphabet == null) output.Recombine.ReadAlignment.Alphabet = output.Recombine.Alphabet;
 
             // Prepare the input
-            if (readAlignmentKey != null) ParseHelper.PrepareInput(namefilter, readAlignmentKey, output.Recombine.ReadAlignment.Input, output.Input);
+            if (output.Input != null) ParseHelper.PrepareInput(namefilter, null, output.Input, null);
+            if (readAlignmentKey != null) ParseHelper.PrepareInput(namefilter, readAlignmentKey, output.Recombine.ReadAlignment.Input, output.Input.Parameters);
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -245,6 +246,14 @@ namespace AssemblyNameSpace
                 }
             }
 
+            // Finalise all metadata names
+            foreach (var set in output.Input.Data.Raw)
+            {
+                foreach (var read in set)
+                {
+                    read.MetaData.FinaliseIdentifier();
+                }
+            }
             if (output.Recombine != null && output.Recombine.ReadAlignment != null)
             {
                 // Finalise all metadata names
