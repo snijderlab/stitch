@@ -146,9 +146,9 @@ namespace AssemblyNameSpace
 
                 public PeaksParameters(bool defaultValues)
                 {
-                    CutoffALC = defaultValues ? 95 : -1;
-                    LocalCutoffALC = defaultValues ? 90 : -1;
-                    MinLengthPatch = defaultValues ? 8 : -1;
+                    CutoffALC = defaultValues ? 90 : -1;
+                    LocalCutoffALC = -1;
+                    MinLengthPatch = -1;
                 }
 
                 public string Display()
@@ -243,7 +243,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The average score needed for a path to be included in the alignment with a template.
             /// </summary>
-            public double CutoffScore = 0;
+            public double CutoffScore = 10;
 
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
@@ -269,7 +269,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The average score needed for a path to be included in the alignment with a template.
             /// </summary>
-            public double CutoffScore = 0;
+            public double CutoffScore = 10;
 
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.

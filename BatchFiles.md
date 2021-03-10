@@ -198,16 +198,16 @@ From this file the reads that score high enough are included (>=`CutoffALC`). As
 
 Any parameter with a default value can be left out.
 
-| Inner parameter  | Explanation                                                                                                                                                                              | Default Value |
-| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Path             | The path to the file                                                                                                                                                                     | (No Default)  |
-| CutoffALC      | The score a reads must at least have to be included in the list of reads                                                                                                                 | 99            |
-| LocalCutoffALC | The score a patch in a read should at least have to be included.                                                                                                                         | 90            |
+| Inner parameter  | Explanation         | Default Value |
+| ---------------- | ------------------- | ------------- |
+| Path             | The path to the file                                                      | (No Default)  |
+| CutoffALC        | The score a reads must at least have to be included in the list of reads  | 90            |
+| LocalCutoffALC   | The score a patch in a read should at least have to be included.          | (not used)    |
+| MinLengthPatch   | The minimal length of a patch before it is included.                      | (not used)    |
 | Format           | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `X` and `X+`. If any gives errors in reading the file maybe another one will work. | `X+`          |
-| MinLengthPatch   | The minimal length of a patch before it is included                                                                                                                                      | 3             |
-| Name             | Used to recognize the origin of reads from this file                                                                                                                                     | (No Default)  |
-| Separator        | The separator used to separate cells in the csv                                                                                                                                          | `,`           |
-| DecimalSeparator | The separator used to separate decimals                                                                                                                                                  | `.`           |
+| Name             | Used to recognize the origin of reads from this file                      | (No Default)  |
+| Separator        | The separator used to separate cells in the csv                           | `,`           |
+| DecimalSeparator | The separator used to separate decimals                                   | `.`           |
 
 _Examples_
 ```
@@ -221,8 +221,8 @@ Peaks ->
 Peaks           ->
     Path            : Path/To/My/FileWithPeaksReads.txt
     Name            : NameForMyFile
-    Cutoffscore     : 98
-    LocalCutoffscore: 85
+    CutoffALC       : 98
+    LocalCutoffALC  : 85
     Format          : Old
     MinLengthPatch  : 5
     Separator       : ;
@@ -262,7 +262,7 @@ To determine the parameters for template matching. Can only be specified once. O
 
 ##### CutoffScore (s)
 
-The mean score per position needed for a path to be included in the Database score. Default value: 0.
+The mean score per position needed for a path to be included in the Database score. Default value: 10.
 
 ##### Alphabet (m)
 
@@ -393,7 +393,7 @@ A gap (`*`) indicates that there should be more sequence in between the segments
 
 ##### CutoffScore (s)
 
-The mean score per position needed for a path to be included in the Database score. Default value: 0.
+The mean score per position needed for a path to be included in the Database score. Default value: 10.
 
 ##### Alphabet (m)
 

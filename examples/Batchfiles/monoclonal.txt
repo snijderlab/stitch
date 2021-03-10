@@ -5,12 +5,10 @@ Runname    : Monoclonal Herceptin
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
     Peaks ->
-        Path          : ..\datasets\200305_HER_test_04_DENOVO.csv
-        Format        : X+
-        Name          : 01
-        CutoffALC     : 90
-        LocalCutoffALC: 100
-        MinLengthPatch: 100
+        Path     : ..\datasets\200305_HER_test_04_DENOVO.csv
+        Format   : X+
+        Name     : 01
+        CutoffALC: 90
     <-
 <-
 
@@ -133,6 +131,6 @@ Report ->
     <-
     -FASTA ->
     -    Path: ../../report-monoclonal.fasta
-    -    OutputType: ReadsAlign
+    -    OutputType: Recombine
     -<-
 <-

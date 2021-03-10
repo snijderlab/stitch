@@ -201,7 +201,7 @@ namespace AssemblyNameSpace
                     }
                 }
                 // Find local patches of high enough confidence
-                else
+                else if (peaksparameters.LocalCutoffALC != -1 && peaksparameters.MinLengthPatch != -1)
                 {
                     bool patch = false;
                     int startpos = 0;
