@@ -1039,13 +1039,14 @@ assetsfolder = '{AssetsFolderName}';
                 for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
                 {
                     var (seq, doc) = Parameters.RecombinedDatabase[group].Templates[0].ConsensusSequence();
-                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3>");
+                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3><p>");
 
                     for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
                     {
                         var seg = Parameters.TemplateDatabases[group].Item2[segment];
-                        buffer.Append($"<p>{seg.Name}: {seg.Templates[0].Class}</p>");
+                        buffer.Append(GetAsideLink(group, segment, seg.Index, AsideType.Template));
                     }
+                    buffer.Append("</p>");
                 }
             }
             else
@@ -1066,10 +1067,7 @@ assetsfolder = '{AssetsFolderName}';
 
         private string CreateMain()
         {
-            Stopwatch stopwatch = new Stopwatch();
-            stopwatch.Start();
             var innerbuffer = new StringBuilder();
-
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
@@ -1156,12 +1154,20 @@ assetsfolder = '{AssetsFolderName}';
 
             Task t = Task.Run(() => CopyAssets());
 
-            var html = CreateMain();
-            CreateAsides();
+            try
+            {
+                var html = CreateMain();
+                CreateAsides();
 
-            stopwatch.Stop();
-            html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
-            SaveAndCreateDirectories(filename, html);
+                stopwatch.Stop();
+                html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
+                SaveAndCreateDirectories(filename, html);
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine(e);
+            }
+
             await t;
         }
     }
