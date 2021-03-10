@@ -1064,6 +1064,12 @@ namespace AssemblyNameSpace
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
                             }
                             break;
+                        case "gaphead":
+                            tsettings.GapHead = ParseBool(setting, "GapHead").GetValue(outEither);
+                            break;
+                        case "gaptail":
+                            tsettings.GapTail = ParseBool(setting, "GapTail").GetValue(outEither);
+                            break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);

@@ -349,6 +349,14 @@ The scoring strategy used when determining the score of this database. `Absolute
 
 Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
+###### GapHead (s)
+
+Adds 20 gaps (`X`) at the front of all templates in this database. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed before this database in the Recombination order. Default: `False`.
+
+###### GapTail (s)
+
+Adds 20 gaps (`X`) at the end of all templates in this database. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed after this database in the Recombination order. Default: `False`.
+
 #### Recombine
 
 Defines how to recombine the TemplateMatched databases, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each database, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime factorially increases with _n_.
