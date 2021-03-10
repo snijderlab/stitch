@@ -22,7 +22,6 @@ namespace AssemblyNameSpace
         public List<Template> Templates;
         public readonly double CutoffScore;
         public readonly RunParameters.ScoringParameter Scoring;
-        public int ClassChars = -1;
         /// <summary>
         /// Create a new TemplateDatabase based on the reads found in the given file.
         /// </summary>
@@ -32,7 +31,7 @@ namespace AssemblyNameSpace
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this database</param>
-        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute, int classChars = -1)
+        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -40,7 +39,6 @@ namespace AssemblyNameSpace
             Alphabet = alphabet;
             Templates = new List<Template>();
             Scoring = scoring;
-            ClassChars = classChars;
 
             for (int i = 0; i < sequences.Count(); i++)
             {
@@ -56,13 +54,12 @@ namespace AssemblyNameSpace
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this templatedatabase</param>
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore, int classChars = -1)
+        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore)
         {
             Name = name;
             CutoffScore = cutoffScore;
             Alphabet = alphabet;
             Templates = templates.ToList();
-            ClassChars = classChars;
         }
         /// <summary>
         /// Gets the sequence in AminoAcids from a string

@@ -228,7 +228,6 @@ namespace AssemblyNameSpace
 
             /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
-            public int ClassChars = -1;
             public bool GapTail = false;
             public bool GapHead = false;
         }

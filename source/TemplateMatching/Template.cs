@@ -28,8 +28,7 @@ namespace AssemblyNameSpace
         {
             get
             {
-                if (Parent.ClassChars == -1) return "";
-                return MetaData.Identifier.Substring(0, Math.Min(Parent.ClassChars, MetaData.Identifier.Length));
+                return MetaData.ClassIdentifier;
             }
         }
 

@@ -142,7 +142,7 @@ namespace AssemblyNameSpace
                         var database = TemplateMatching.Databases[i].Databases[j];
                         var alph = new Alphabet(database.Alphabet ?? TemplateMatching.Alphabet);
 
-                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore == 0 ? TemplateMatching.CutoffScore : database.CutoffScore, j, database.Scoring, database.ClassChars);
+                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore == 0 ? TemplateMatching.CutoffScore : database.CutoffScore, j, database.Scoring);
 
                         // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
                         var local_matches = database1.Match(Input);

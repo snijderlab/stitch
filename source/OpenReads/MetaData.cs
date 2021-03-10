@@ -34,6 +34,12 @@ namespace AssemblyNameSpace
             /// </summary>
             public string Identifier { get { return identifier; } }
 
+            protected string classIdentifier;
+            /// <summary>
+            /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
+            /// </summary>
+            public string ClassIdentifier { get { return classIdentifier; } }
+
             protected string escapedIdentifier;
             /// <summary>
             /// The Identifier of the read escaped for use in filenames.
@@ -76,11 +82,12 @@ namespace AssemblyNameSpace
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="identifier_">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(FileIdentifier file, string identifier_, NameFilter filter)
+            public IMetaData(FileIdentifier file, string identifier_, NameFilter filter, string classIdentifier_ = null)
             {
                 nameFilter = filter;
                 File = file;
                 identifier = identifier_;
+                classIdentifier = classIdentifier_ ?? identifier_;
                 if (filter != null)
                     EscapedIdentifierBuffer = filter.EscapeIdentifier(identifier);
             }
@@ -139,8 +146,8 @@ namespace AssemblyNameSpace
             /// <param name="fastaHeader">The header for this read as in the fasta file, without the '>'.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            public Fasta(string identifier, string fastaHeader, FileIdentifier file, NameFilter filter)
-                : base(file, identifier, filter)
+            public Fasta(string identifier, string fastaHeader, FileIdentifier file, NameFilter filter, string classIdentifier = null)
+                : base(file, identifier, filter, classIdentifier)
             {
                 this.FastaHeader = fastaHeader;
             }

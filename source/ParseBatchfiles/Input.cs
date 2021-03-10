@@ -991,9 +991,9 @@ namespace AssemblyNameSpace
                     {
                         outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no caputuring groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
                     }
-                    else if (outEither.Value.GetGroupNumbers().Length > 2)
+                    else if (outEither.Value.GetGroupNumbers().Length > 3)
                     {
-                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first one will be used.", "", true));
+                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first two will be used.", "", true));
                     }
                 }
                 catch (ArgumentException)
@@ -1064,16 +1064,13 @@ namespace AssemblyNameSpace
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
                             }
                             break;
-                        case "classchars":
-                            tsettings.ClassChars = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                            break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
 
                             if (peaks.Value == false)
                             {
-                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', 'ClassChars' and all PEAKS format parameters";
+                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', and all PEAKS format parameters";
                                 if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
                             }

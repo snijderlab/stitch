@@ -890,77 +890,69 @@ namespace AssemblyNameSpace
             }
 
             string classname = "";
-            string extended = "";
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
-            if (templates[0].Parent.ClassChars > 0)
+            var typedata = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
+            foreach (var item in templates)
             {
-                var typedata = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
-                foreach (var item in templates)
+                if (typedata.ContainsKey(item.Class))
                 {
-                    if (typedata.ContainsKey(item.Class))
-                    {
-                        var data = typedata[item.Class];
-                        if (data.MaxScore < item.Score) data.MaxScore = item.Score;
-                        data.TotalScore += item.Score;
-                        if (data.UniqueMaxScore < item.Score) data.UniqueMaxScore = item.UniqueScore;
-                        data.UniqueTotalScore += item.UniqueScore;
-                        data.Num += 1;
-                        data.Matches += item.Matches.Count();
-                        data.UniqueMatches += item.UniqueMatches;
-                        data.Area += item.TotalArea;
-                        data.UniqueArea += item.TotalUniqueArea;
-                        typedata[item.Class] = data;
-                    }
-                    else
-                    {
-                        typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count(), item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
-                    }
+                    var data = typedata[item.Class];
+                    if (data.MaxScore < item.Score) data.MaxScore = item.Score;
+                    data.TotalScore += item.Score;
+                    if (data.UniqueMaxScore < item.Score) data.UniqueMaxScore = item.UniqueScore;
+                    data.UniqueTotalScore += item.UniqueScore;
+                    data.Num += 1;
+                    data.Matches += item.Matches.Count();
+                    data.UniqueMatches += item.UniqueMatches;
+                    data.Area += item.TotalArea;
+                    data.UniqueArea += item.TotalUniqueArea;
+                    typedata[item.Class] = data;
                 }
-
-                var scoreData = new List<(string, List<double>)>(typedata.Count);
-                var areaData = new List<(string, List<double>)>(typedata.Count);
-                foreach (var (type, data) in typedata)
+                else
                 {
-                    var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
-                    var areaList = new List<double> { data.Matches, data.Area };
-                    if (displayUnique)
-                    {
-                        scoreList.Add(data.UniqueMaxScore);
-                        scoreList.Add(data.UniqueTotalScore / data.Num);
-                        areaList.Add(data.UniqueMatches);
-                        areaList.Add(data.UniqueArea);
-                    }
-                    scoreData.Add((type, scoreList));
-                    areaData.Add((type, areaList));
+                    typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count(), item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
                 }
+            }
 
-                classname = " full";
-                var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
-                var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
+            var scoreData = new List<(string, List<double>)>(typedata.Count);
+            var areaData = new List<(string, List<double>)>(typedata.Count);
+            foreach (var (type, data) in typedata)
+            {
+                var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
+                var areaList = new List<double> { data.Matches, data.Area };
                 if (displayUnique)
                 {
-                    scoreLabels.Add(("Unique Max Score", 0));
-                    scoreLabels.Add(("Unique Average Score", 0));
-                    areaLabels.Add(("Unique Matches", 0));
-                    areaLabels.Add(("Unique Total Area", 1));
+                    scoreList.Add(data.UniqueMaxScore);
+                    scoreList.Add(data.UniqueTotalScore / data.Num);
+                    areaList.Add(data.UniqueMatches);
+                    areaList.Add(data.UniqueArea);
                 }
+                scoreData.Add((type, scoreList));
+                areaData.Add((type, areaList));
+            }
 
-                extended = $@"
-<div>
+            classname = " full";
+            var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
+            var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
+            if (displayUnique)
+            {
+                scoreLabels.Add(("Unique Max Score", 0));
+                scoreLabels.Add(("Unique Average Score", 0));
+                areaLabels.Add(("Unique Matches", 0));
+                areaLabels.Add(("Unique Total Area", 1));
+            }
+
+            return $@"
+<div class='table-header{classname}'>
+    <div>
     <h3>Scores per type</h3>
     {HTMLGraph.GroupedBargraph(scoreData, scoreLabels)}
 </div>
 <div>
     <h3>Area per type</h3>
     {HTMLGraph.GroupedBargraph(areaData, areaLabels)}
-</div>";
-            }
-
-            return $@"
-<div class='table-header{classname}'>
-    {extended}
-</div>";
+</div></div>";
         }
 
         string TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)

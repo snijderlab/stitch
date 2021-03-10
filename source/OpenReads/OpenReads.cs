@@ -94,7 +94,24 @@ namespace AssemblyNameSpace
                         var match = parseIdentifier.Match(identifierLine);
                         if (match.Success)
                         {
-                            reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                            if (match.Groups.Count == 3)
+                            {
+                                reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                            }
+                            else if (match.Groups.Count == 2)
+                            {
+                                reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                            }
+                            else
+                            {
+                                outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                                    parseIdentifier.ToString(),
+                                    "Identifier Regex has invalid number of capturing groups",
+                                    "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
+                                    )
+                                );
+                                return outeither;
+                            }
                         }
                         else
                         {
@@ -123,7 +140,24 @@ namespace AssemblyNameSpace
 
                 if (match.Success)
                 {
-                    reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                    if (match.Groups.Count == 3)
+                    {
+                        reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                    }
+                    else if (match.Groups.Count == 2)
+                    {
+                        reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                    }
+                    else
+                    {
+                        outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                            parseIdentifier.ToString(),
+                            "Identifier Regex has invalid number of capturing groups",
+                            "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
+                            )
+                        );
+                        return outeither;
+                    }
                 }
                 else
                 {

@@ -29,40 +29,34 @@ TemplateMatching ->
             Database->
                 Path      : ../templates/IGHV.fasta
                 Name      : IGHV
-                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-                ClassChars: 5
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Database->
                 Path      : ../templates/IGHJ.fasta
                 Name      : IGHJ
-                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-                ClassChars: 5
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Database->
                 Path      : ../templates/IGHC_uniprot.fasta
                 Name      : IGHC
                 Identifier: ^sp\|[\w]*\|([\w]+)_
-                ClassChars: 5
             <-
         <-
         Light Chain->
             Database->
                 Path      : ../templates/IGK+LV.fasta
                 Name      : IGLV
-                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-                ClassChars: 4
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Database->
                 Path      : ../templates/IGK+LJ.fasta
                 Name      : IGLJ
-                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-                ClassChars: 4
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Database->
                 Path      : ../templates/IGK+LC.fasta
                 Name      : IGLC
-                Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-                ClassChars: 4
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
         <-
         - Mus Musculus databases
@@ -70,40 +64,34 @@ TemplateMatching ->
         -     Database->
         -         Path      : ../templates/Mus_IGHV.fasta
         -         Name      : IGHV
-        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-        -         ClassChars: 5
+        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         -     Database->
         -         Path      : ../templates/Mus_IGHJ.fasta
         -         Name      : IGHJ
-        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-        -         ClassChars: 5
+        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         -     Database->
         -         Path      : ../templates/Mus_IGHC_uniprot.fasta
         -         Name      : IGHC
         -         Identifier: ^sp\|[\w]*\|([\w]+)_
-        -         ClassChars: 5
         -     <-
         - <-
         - Mus Light Chain->
         -     Database->
         -         Path      : ../templates/Mus_IGK+LV.fasta
         -         Name      : IGLV
-        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-        -         ClassChars: 4
+        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         -     Database->
         -         Path      : ../templates/Mus_IGK+LJ.fasta
         -         Name      : IGLJ
-        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-        -         ClassChars: 4
+        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         -     Database->
         -         Path      : ../templates/Mus_IGK+LC.fasta
         -         Name      : IGLC
-        -         Identifier: ^[\p{P}\w*-]*\|([\p{P}\w*-]+)\*\d\d\|
-        -         ClassChars: 4
+        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         - <-
     <-

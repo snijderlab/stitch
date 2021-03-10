@@ -339,11 +339,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ###### Identifier (s) 
 
-Specifies a Regular Expression to parse the identifier from the Fasta header of the templates. The default value is `(.*)`, the first capturing group will be used as the identifier.
-
-###### ClassChars (s)
-
-Specifies the amount of characters to be taken from the start of the identifier which indicate the class of the template, like IgH1/IgH2 etc. On default it will take the full identifier.
+Specifies a Regular Expression to parse the identifier from the Fasta header of the templates. The default value is `(.*)`, the first capturing group will be used as the identifier. The second capturing group (if available) will be used as the class name of the template.
 
 ###### Scoring (s)
 
