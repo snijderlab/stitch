@@ -22,6 +22,7 @@ namespace AssemblyNameSpace
         static void Main()
         {
             Console.CancelKeyPress += HandleUserAbort;
+            var args = Environment.CommandLine.Split(" ".ToCharArray());
 
             // Retrieve the name of the batch file to run or file to clean
             string filename = "";
@@ -29,12 +30,15 @@ namespace AssemblyNameSpace
             bool clean = false;
             try
             {
-                filename = Environment.CommandLine.Split(" ".ToCharArray())[1].Trim();
+                filename = args[1].Trim();
                 if (filename == "clean")
                 {
                     clean = true;
-                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2).Take(1)).Trim();
-                    output_filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(3)).Trim();
+                    filename = string.Join(' ', args[2]).Trim();
+                    if (args.Count() > 3)
+                        output_filename = string.Join(' ', args[3]).Trim();
+                    else
+                        output_filename = filename;
                 }
                 else
                 {
