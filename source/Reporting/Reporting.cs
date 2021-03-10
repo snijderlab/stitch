@@ -19,15 +19,13 @@ namespace AssemblyNameSpace
         public readonly List<(string, MetaData.IMetaData)> Input;
         public readonly List<(string, List<TemplateDatabase>)> TemplateDatabases;
         public readonly List<TemplateDatabase> RecombinedDatabase;
-        public readonly List<TemplateDatabase> ReadAlignment;
         public readonly ParsedFile BatchFile;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, List<TemplateDatabase> readAlignment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             Input = input;
             TemplateDatabases = databases;
             RecombinedDatabase = recombineddatabase;
-            ReadAlignment = readAlignment;
             BatchFile = batchFile;
             Runname = runname;
         }

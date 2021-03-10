@@ -285,11 +285,6 @@ namespace AssemblyNameSpace
             /// The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition.
             /// </summary>
             public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
-
-            /// <summary>
-            /// The parameters for the read alignment, if the step is to be taken
-            /// </summary>
-            public ReadAlignmentParameter ReadAlignment = null;
         }
 
         namespace RecombineOrder
@@ -347,31 +342,6 @@ namespace AssemblyNameSpace
             }
         }
 
-        public class ReadAlignmentParameter
-        {
-            /// <summary>
-            /// The alphabet to be used for all templates.
-            /// </summary>
-            public AlphabetParameter Alphabet = null;
-
-            /// <summary>
-            /// The average score needed for a path to be included in the alignment with a template.
-            /// </summary>
-            public double CutoffScore = 0;
-
-            /// <summary>
-            /// Whether or not reads/paths will be forced to a single template.
-            /// </summary>
-            public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
-
-            public Input Input = new Input();
-
-            public string Display()
-            {
-                return $"ReadAlignment ->\nAlphabet: {Alphabet.Display()}\nCutoffScore: {CutoffScore}\nForceOnSingleTemplate: {ForceOnSingleTemplate}\nInput: {Input.Display()}";
-            }
-        }
-
         public class ReportParameter
         {
             /// <summary>
@@ -422,7 +392,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
-            public enum FastaOutputType { Recombine, ReadsAlign }
+            public enum FastaOutputType { TemplateMatches, Recombine }
 
             /// <summary>
             /// To indicate to return a FASTA report.
@@ -437,7 +407,7 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The outputtype of the sequences
                 /// </summary>
-                public FastaOutputType OutputType = FastaOutputType.Recombine;
+                public FastaOutputType OutputType = FastaOutputType.TemplateMatches;
             }
         }
     }

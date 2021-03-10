@@ -37,12 +37,6 @@ Recombine ->
     -Aligns the databases from TemplateMatching with the paths from the assembler
     -Can only be specified once
     -TemplateMatching has to be specified for recombination te be specified
-
-    ReadAlign ->
-        -Has parameters defining the behaviour of the read alignment step
-        -Aligns the input reads (as defined in Input) to the consensus sequences retrieved by recombination
-        -Can only be specified once
-    <-
 <-
 
 Report ->
@@ -108,13 +102,6 @@ A `*` indicates that the scope or parameter can be defined multiple times.
     * CutoffScore
     * Alphabet
     * ForceOnSingleTemplate
-    * ReadAlignment
-        * Input
-            * See Input
-        * InputParameters
-        * CutoffScore
-        * Alphabet
-        * ForceOnSingleTemplate
 * Report
     * HTML *
         * Path
@@ -376,10 +363,6 @@ Recombine->
     n : 1
     CutoffScore : 2.6
     Order : IGHV * IGHJ IGHC
-
-    ReadAlignment ->
-        -Will follow
-    <-
 <-
 ```
 
@@ -420,38 +403,6 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
-##### ReadAlignment
-
-This defines the parameters used for ReadAlignment to the templates created by Recombine. Most parameters will be reused from Recombine, but these can be overruled if a different value is needed.
-
-###### Input (m)
-
-The reads to use in the alignment. See the scope Input for more information about its definition. The input can also be defined in the outer scope, in which case the input can be reused be other steps in the process, for example by Assembly.
-
-###### InputParameters (m)
-
-This parameter can be used to determine the filter settings to be used in opening the reads for the ReadAlignment. These will overrule any settings set in the Input in the outer scope.
-
-####### Peaks (m)
-
-| Inner parameter | Explanation                                                              | Default Value |
-| --------------- | ------------------------------------------------------------------------ | ------------- |
-| CutoffALC       | The score a reads must at least have to be included in the list of reads | 99            |
-| LocalCutoffALC  | The score a patch in a read should at least have to be included.         | 90            |
-| MinLengthPatch  | The minimal length of a patch before it is included                      | 3             |
-
-###### CutoffScore (s)
-
-The mean score per position needed for a path to be included in the Database score. Default value: 0.
-
-###### Alphabet (m)
-
-Determines the alphabet to use. See the scope Alphabet for more information about its definition.
-
-###### ForceOnSingleTemplate (s)
-
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default: `True`.
-
 #### Report
 
 ##### HTML (m) *
@@ -473,18 +424,18 @@ HTML ->
 
 To generate a FASTA file with all paths, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
 
-| Inner parameter | Explanation                                                                                                     | Default Value |
-| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
-| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)  |
-| MinimalScore    | The minimal score needed to be included in the file                                                             | 0             |
-| OutputType      | The type of sequences to give as output, `Recombine` or `ReadsAlign`                                            | `Recombine`   |
+| Inner parameter | Explanation                                                                                                     |   Default Value    |
+| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
+| MinimalScore    | The minimal score needed to be included in the file                                                             | 0                  |
+| OutputType      | The type of sequences to give as output, `TemplateMatching` or `Recombine`                                      | `TemplateMatching` |
 
 _Example_
 ```
 FASTA ->
     Path         : contigs.fasta
     MinimalScore : 50
-    OutputType   : ReadsAlign
+    OutputType   : Recombine
 <-
 ```
 

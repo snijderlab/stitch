@@ -76,11 +76,7 @@ namespace AssemblyNameSpace
             var bar = new ProgressBar();
             var bars = 1 + inputparams.TemplateMatching.Databases.Count();
             if (inputparams.Recombine != null)
-            {
                 bars += inputparams.TemplateMatching.Databases.Count();
-                if (inputparams.Recombine.ReadAlignment != null)
-                    bars += inputparams.TemplateMatching.Databases.Count();
-            }
             bar.Start(bars);
 
             inputparams.CreateRun(bar).Calculate(inputparams.MaxNumberOfCPUCores);

@@ -94,11 +94,6 @@ namespace AssemblyNameSpace
                 var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
                 for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
-                List<TemplateDatabase> read_templates = new List<TemplateDatabase>();
-                int read_template_number = (Recombine != null && Recombine.ReadAlignment != null) ? Recombine.ReadAlignment.Input.Data.Cleaned.Count() : 0;
-                var read_matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(read_template_number);
-                for (int i = 0; i < read_template_number; i++) read_matches.Add(new List<(int, int, int, SequenceMatch)>());
-
                 // Recombine
                 if (Recombine != null)
                 {
@@ -108,17 +103,9 @@ namespace AssemblyNameSpace
                     RunRecombine(databases, matches, recombined_database);
 
                     recombine_sw.Stop();
-
-                    // Do ReadAlignment
-                    if (Recombine.ReadAlignment != null)
-                        RunReadAlign(read_matches, read_templates, recombined_database, max_threads);
                 }
 
-                var input = Input;
-                if (Recombine != null && Recombine.ReadAlignment != null)
-                    input.AddRange(Recombine.ReadAlignment.Input.Data.Cleaned);
-
-                var parameters = new ReportInputParameters(input, databases, recombined_database, read_templates, this.BatchFile, this.Runname);
+                var parameters = new ReportInputParameters(Input, databases, recombined_database, this.BatchFile, this.Runname);
 
                 // Generate the report(s)
                 foreach (var report in Report)
@@ -242,57 +229,6 @@ namespace AssemblyNameSpace
                     foreach (var match in row)
                     {
                         recombined_database[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
-                    }
-                }
-            }
-
-            void RunReadAlign(List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>> read_matches, List<TemplateDatabase> read_templates, List<TemplateDatabase> recombined_database, int max_threads)
-            {
-                for (int database_group_index = 0; database_group_index < recombined_database.Count(); database_group_index++)
-                {
-                    List<(string, MetaData.IMetaData)> templates = new List<(string, MetaData.IMetaData)>(recombined_database[database_group_index].Templates.Count());
-                    var namefilter = new NameFilter();
-
-                    Parallel.ForEach(
-                        recombined_database[database_group_index].Templates,
-                        new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                        (s, _) => templates.Add((
-                            AminoAcid.ArrayToString(s.ConsensusSequence().Item1),
-                            (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "RT")))
-                    );
-
-                    Parallel.ForEach(
-                        templates,
-                        new ParallelOptions { MaxDegreeOfParallelism = max_threads },
-                        (s, _) => s.Item2.FinaliseIdentifier()
-                    );
-
-                    var input = Recombine.ReadAlignment.Input.Data.Cleaned ?? Input;
-
-                    var read_templates_group = new TemplateDatabase(templates, new Alphabet(Recombine.ReadAlignment.Alphabet), "ReadAlignDatabase", Recombine.ReadAlignment.CutoffScore, 0);
-
-                    var read_local_matches = read_templates_group.Match(input);
-
-                    for (int read = 0; read < input.Count(); read++)
-                        read_matches[read].AddRange(read_local_matches[read].Select(a => (database_group_index, 0, a.Item1, a.Item2)));
-
-                    read_templates.Add(read_templates_group);
-
-                    // Did readalign
-                    if (progressBar != null) progressBar.Update();
-                }
-
-                // Filter matches if Forced
-                if (HelperFunctionality.EvaluateTrilean(Recombine.ReadAlignment.ForceOnSingleTemplate, Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate))
-                    ForceOnSingleTemplate(read_matches);
-
-                // Add all matches to the right templates
-                foreach (var row in read_matches)
-                {
-                    var unique = row.Count() == 1;
-                    foreach (var match in row)
-                    {
-                        read_templates[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                     }
                 }
             }

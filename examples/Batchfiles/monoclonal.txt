@@ -8,7 +8,7 @@ Input ->
         Path          : ..\datasets\200305_HER_test_04_DENOVO.csv
         Format        : X+
         Name          : 01
-        CutoffALC     : 98
+        CutoffALC     : 90
         LocalCutoffALC: 100
         MinLengthPatch: 100
     <-
@@ -124,19 +124,6 @@ Recombine->
         Light Chain: IGLV IGLJ IGLC
         - Mus Heavy Chain: IGHV * IGHJ IGHC
         - Mus Light Chain: IGLV IGLJ IGLC
-    <-
-
-    ReadAlignment -> 
-        InputParameters ->
-            Peaks ->
-                CutoffALC     : 50
-                LocalCutoffALC: 50
-                MinLengthPatch: 1
-            <-
-        <-
-        
-        CutoffScore          : 20
-        ForceOnSingleTemplate: False
     <-
 <-
 

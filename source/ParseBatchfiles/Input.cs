@@ -107,10 +107,6 @@ namespace AssemblyNameSpace
                         {
                             outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine, because FASTA output was set to 'Recombine'"));
                         }
-                        else if (fa.OutputType == RunParameters.Report.FastaOutputType.ReadsAlign && output.Recombine.ReadAlignment == null)
-                        {
-                            outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine -> ReadAlign, because FASTA output was set to 'ReadAlign'"));
-                        }
                     }
                 }
             }
@@ -214,11 +210,9 @@ namespace AssemblyNameSpace
 
             // Propagate alphabets
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
-            if (output.Recombine != null && output.Recombine.ReadAlignment != null && output.Recombine.ReadAlignment.Alphabet == null) output.Recombine.ReadAlignment.Alphabet = output.Recombine.Alphabet;
 
             // Prepare the input
             if (output.Input != null) ParseHelper.PrepareInput(namefilter, null, output.Input, null);
-            if (readAlignmentKey != null) ParseHelper.PrepareInput(namefilter, readAlignmentKey, output.Recombine.ReadAlignment.Input, output.Input.Parameters);
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -252,17 +246,6 @@ namespace AssemblyNameSpace
                 foreach (var read in set)
                 {
                     read.MetaData.FinaliseIdentifier();
-                }
-            }
-            if (output.Recombine != null && output.Recombine.ReadAlignment != null)
-            {
-                // Finalise all metadata names
-                foreach (var set in output.Recombine.ReadAlignment.Input.Data.Raw)
-                {
-                    foreach (var read in set)
-                    {
-                        read.Item2.FinaliseIdentifier();
-                    }
                 }
             }
 
@@ -755,13 +738,8 @@ namespace AssemblyNameSpace
                         case "forceonsingletemplate":
                             output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
                             break;
-                        case "readalignment":
-                            if (output.ReadAlignment != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            output.ReadAlignment = ParseReadAlignment(namefilter, setting).GetValue(outEither);
-                            readAlignmentKey = setting;
-                            break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'ForceOnSingleTemplate' and 'ReadAlignment'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', and 'ForceOnSingleTemplate'"));
                             break;
                     }
                 }
@@ -773,53 +751,6 @@ namespace AssemblyNameSpace
                 return outEither;
             }
 
-            public static ParseResult<ReadAlignmentParameter> ParseReadAlignment(NameFilter namefilter, KeyValue key)
-            {
-                var outEither = new ParseResult<ReadAlignmentParameter>();
-                var output = new ReadAlignmentParameter();
-
-                foreach (var pair in key.GetValues())
-                {
-                    switch (pair.Name)
-                    {
-                        case "inputparameters":
-                            if (output.Input.LocalParameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            if (pair.GetValues().Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(pair.ValueRange, "'Peaks'"));
-                            var peaks = new Input.PeaksParameters(false);
-                            foreach (var setting in pair.GetValues())
-                            {
-                                if (setting.Name != "peaks") outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Input", "'Peaks'"));
-                                else
-                                {
-                                    foreach (var parameter in setting.GetValues())
-                                        GetLocalPeaksParameters(parameter, false, peaks).GetValue(outEither);
-                                }
-                            }
-                            output.Input.LocalParameters = new Input.InputLocalParameters() { Peaks = peaks };
-                            break;
-                        case "input":
-                            if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Input.Parameters = ParseInputParameters(namefilter, pair).GetValue(outEither);
-                            break;
-                        case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(pair.GetValue(), pair.ValueRange).GetValue(outEither);
-                            break;
-                        case "alphabet":
-                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(pair).GetValue(outEither);
-                            break;
-                        case "forceonsingletemplate":
-                            output.ForceOnSingleTemplate = ParseBool(pair, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "ReadAlign", "'Input', 'InputParameters', 'CutoffScore', 'Alphabet' and 'ForceOnSingleTemplate"));
-                            break;
-                    }
-                }
-
-                outEither.Value = output;
-                return outEither;
-            }
             public static ParseResult<ReportParameter> ParseReport(KeyValue key)
             {
                 var outEither = new ParseResult<ReportParameter>();
@@ -865,14 +796,14 @@ namespace AssemblyNameSpace
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
                                         {
+                                            case "templatematching":
+                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.TemplateMatches;
+                                                break;
                                             case "recombine":
                                                 fsettings.OutputType = RunParameters.Report.FastaOutputType.Recombine;
                                                 break;
-                                            case "readsalign":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.ReadsAlign;
-                                                break;
                                             default:
-                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'Recombine' and 'ReadsAlign'"));
+                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
                                                 break;
                                         }
                                         break;

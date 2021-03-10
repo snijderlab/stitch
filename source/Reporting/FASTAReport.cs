@@ -40,13 +40,16 @@ namespace AssemblyNameSpace
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
                 }
             }
-            else
+            else // TemplateMatching
             {
-                sequences.Capacity = Parameters.ReadAlignment.Select(a => a.Templates.Count).Sum();
-                foreach (var template in Parameters.ReadAlignment.SelectMany(a => a.Templates))
+                sequences.Capacity = Parameters.TemplateDatabases.Select(a => a.Item2.Count).Sum();
+                foreach (var (group, dbs) in Parameters.TemplateDatabases)
                 {
-                    if (template.Score >= MinScore)
-                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                    foreach (var template in dbs.SelectMany(a => a.Templates))
+                    {
+                        if (template.Score >= MinScore)
+                            sequences.Add((template.Score, $">{group}-{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                    }
                 }
             }
 

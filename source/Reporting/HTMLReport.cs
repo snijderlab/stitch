@@ -154,9 +154,6 @@ namespace AssemblyNameSpace
             string based = "";
             switch (type)
             {
-                case AsideType.ReadAlignment:
-                    based = $"<h2>Based on</h2><p>{GetAsideLink(i, AsideType.RecombinedTemplate, location)}</p>";
-                    break;
                 case AsideType.RecombinedTemplate:
                     if (template.Recombination != null)
                         based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(superindex, b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
@@ -670,7 +667,6 @@ namespace AssemblyNameSpace
                     case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, -1, index1); break;
                     case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index3].Item2[index2].Templates[index1], AsideType.Template, index3, index2, index1); break;
                     case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase[index3].Templates[index1], AsideType.RecombinedTemplate, index3, index2, index1); break;
-                    case AsideType.ReadAlignment: SaveTemplateAside(Parameters.ReadAlignment[index3].Templates[index1], AsideType.ReadAlignment, index3, index2, index1); break;
                 };
             }
 
@@ -693,13 +689,6 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < Parameters.RecombinedDatabase.Count(); i++)
                     for (int j = 0; j < Parameters.RecombinedDatabase[i].Templates.Count(); j++)
                         jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
-            }
-            // Reads Alignment Table Asides
-            if (Parameters.ReadAlignment != null)
-            {
-                for (int i = 0; i < Parameters.ReadAlignment.Count(); i++)
-                    for (int j = 0; j < Parameters.ReadAlignment[i].Templates.Count(); j++)
-                        jobbuffer.Add((AsideType.ReadAlignment, i, -1, j));
             }
             if (MaxThreads > 1)
             {
@@ -743,7 +732,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>An enum to save what type of detail aside it is.</summary>
-        enum AsideType { Read, Template, RecombinedTemplate, ReadAlignment }
+        enum AsideType { Read, Template, RecombinedTemplate }
         string GetAsidePrefix(AsideType type)
         {
             switch (type)
@@ -754,8 +743,6 @@ namespace AssemblyNameSpace
                     return "T";
                 case AsideType.RecombinedTemplate:
                     return "RC";
-                case AsideType.ReadAlignment:
-                    return "RA";
             }
             throw new ArgumentException("Invalid AsideType in GetAsidePrefix.");
         }
@@ -769,8 +756,6 @@ namespace AssemblyNameSpace
                     return "template";
                 case AsideType.RecombinedTemplate:
                     return "recombined-template";
-                case AsideType.ReadAlignment:
-                    return "read-alignment";
             }
             throw new ArgumentException("Invalid AsideType in GetAsideName.");
         }
@@ -1057,21 +1042,7 @@ assetsfolder = '{AssetsFolderName}';
         private string CreateOverview()
         {
             var buffer = new StringBuilder();
-            if (Parameters.ReadAlignment.Count() != 0)
-            {
-                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
-                {
-                    var (seq, doc) = Parameters.ReadAlignment[group].Templates[0].ConsensusSequence();
-                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3>");
-
-                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
-                    {
-                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
-                        buffer.Append($"<p>{seg.Name}: {seg.Templates[0].Class}</p>");
-                    }
-                }
-            }
-            else if (Parameters.RecombinedDatabase.Count() != 0)
+            if (Parameters.RecombinedDatabase.Count() != 0)
             {
                 for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
                 {
@@ -1114,9 +1085,6 @@ assetsfolder = '{AssetsFolderName}';
                 for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
                 {
                     var groupbuffer = "";
-
-                    if (Parameters.ReadAlignment.Count() != 0)
-                        groupbuffer += Collapsible("Read Alignment Table", CreateTemplateTable(Parameters.ReadAlignment[group].Templates, -1, group, AsideType.ReadAlignment, true), group.ToString());
 
                     if (Parameters.RecombinedDatabase.Count() != 0)
                         groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
