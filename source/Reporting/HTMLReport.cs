@@ -87,7 +87,7 @@ namespace AssemblyNameSpace
             string unique = "";
             if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
 
-            buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}"" class=""widetable"">
+            buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}-{templateGroup}"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 0, 'id')"" class=""smallcell"">Identifier</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'string')"">Consensus Sequence</th>
