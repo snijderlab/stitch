@@ -26,6 +26,9 @@ function sortTable(id, column_number, type) {
             case "string":
                 values.push(x.innerHTML.toLowerCase())
                 break
+            case "id":
+                values.push(x.firstChild.innerHTML.toLowerCase())
+                break
             case "number":
                 values.push(Number(x.innerHTML))
                 break

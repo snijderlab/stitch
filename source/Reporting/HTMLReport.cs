@@ -55,22 +55,15 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+
         string CreateTemplateTables(List<TemplateDatabase> databases, int templateGroup)
         {
-            var buffer = new List<(int, string)>();
-
-            Parallel.ForEach(
-                databases.Select((item, index) => (index, item)),
-                new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                set => buffer.Add((set.index, Collapsible($"Template Matching {set.item.Name}", CreateTemplateTable(set.item.Templates, templateGroup, set.index, AsideType.Template, true))))
-            );
-
-            buffer.Sort((a, b) => a.Item1.CompareTo(b.Item1));
             var output = new StringBuilder();
 
-            foreach (var line in buffer)
+            for (var i = 0; i < databases.Count(); i++)
             {
-                output.Append(line.Item2);
+                var item = databases[i];
+                output.Append(Collapsible($"Template Matching {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
             }
 
             return output.ToString();
@@ -79,43 +72,65 @@ namespace AssemblyNameSpace
         string CreateTemplateTable(List<Template> templates, int templateGroup, int templateIndex, AsideType type, bool header = false)
         {
             var buffer = new StringBuilder();
+            var culture = CultureInfo.CurrentCulture;
+            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             if (header) buffer.Append(TableHeader(templates));
             string unique = "";
-            if (displayUnique) unique = $"<th onclick=\"sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 6, 'number')\" class=\"smallcell\">Unique Area</th>";
+            if (displayUnique) unique = $@"
+<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 5, 'number')"" class=""smallcell"">Unique Score</th>
+<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 6, 'number')"" class=""smallcell"">Unique Matches</th>
+<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 7, 'number')"" class=""smallcell"">Unique Area</th>
+";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}-{templateGroup}"" class=""widetable"">
 <tr>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'string')"">Consensus Sequence</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 3, 'number')"" class=""smallcell"">Score</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 4, 'number')"" class=""smallcell"">Reads</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 5, 'number')"" class=""smallcell"">Total Area</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'number')"" class=""smallcell"">Length</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 3, 'number')"" class=""smallcell"">Matches</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 4, 'number')"" class=""smallcell"">Total Area</th>
     {unique}
 </tr>");
+
+            (double, double, double, double, double, double) max_values = (Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue);
+            foreach (var template in templates)
+            {
+                max_values = (
+                    Math.Max(max_values.Item1, template.Score),
+                    Math.Max(max_values.Item2, template.Matches.Count()),
+                    Math.Max(max_values.Item3, template.TotalArea),
+                    Math.Max(max_values.Item4, template.UniqueScore),
+                    Math.Max(max_values.Item5, template.UniqueMatches),
+                    Math.Max(max_values.Item6, template.TotalUniqueArea)
+                    );
+            }
 
             string id, link;
             for (int i = 0; i < templates.Count(); i++)
             {
                 id = GetAsideIdentifier(templateGroup, templateIndex, i, type);
                 link = GetAsideLink(templateGroup, templateIndex, i, type);
-                if (displayUnique) unique = $"<td class=\"center\">{templates[i].TotalUniqueArea.ToString("G3", new CultureInfo("en-GB"))}</td>";
+                if (displayUnique) unique = $@"
+<td class=""center bar"" style=""--relative-value:{templates[i].UniqueScore / max_values.Item4}"">{templates[i].UniqueScore}</td>
+<td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
+<td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea.ToString("G3")}</td>
+";
                 buffer.AppendLine($@"<tr id=""table-{id}"">
     <td class=""center"">{link}</td>
-    <td class=""seq"">{AminoAcid.ArrayToString(templates[i].ConsensusSequence().Item1)}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
-    <td class=""center"">{templates[i].Score}</td>
-    <td class=""center"">{templates[i].Matches.Count()}</td>
-    <td class=""center"">{templates[i].TotalArea.ToString("G3", new CultureInfo("en-GB"))}</td>
+    <td class=""center bar"" style=""--relative-value:{templates[i].Score / max_values.Item1}"">{templates[i].Score}</td>
+    <td class=""center bar"" style=""--relative-value:{templates[i].Matches.Count() / max_values.Item2}"">{templates[i].Matches.Count()}</td>
+    <td class=""center bar"" style=""--relative-value:{templates[i].TotalArea / max_values.Item3}"">{templates[i].TotalArea.ToString("G3")}</td>
     {unique}
 </tr>");
             }
 
             buffer.AppendLine("</table>");
+            CultureInfo.CurrentCulture = culture;
 
             return buffer.ToString();
         }
