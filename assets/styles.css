@@ -171,12 +171,24 @@ td.seq {
     text-overflow: ellipsis;
 }
 
+tr:target,
+tr:hover,
 tr.selected {
-    background-color: var(--color-tertiary);
+    color: var(--color-tertiary);
+    --color-primary: var(--color-tertiary);
 }
 
-tr:hover {
-    background-color: var(--color-tertiary);
+tr:target .info-link,
+tr:hover .info-link,
+tr.selected .info-link {
+    border-color: var(--color-tertiary);
+    color: var(--color-tertiary);
+}
+
+tr:target td.bar::before,
+tr:hover td.bar::before,
+tr.selected td.bar::before {
+    background: var(--color-tertiary);
 }
 
 .info-link {
@@ -789,6 +801,10 @@ input:checked+.slider:before {
     margin-right: .5em;
 }
 
+.point-graph .values:hover+.label a {
+    color: var(--color-tertiary);
+}
+
 .point-graph input:checked+label {
     border-color: var(--color-primary);
     border-radius: .2rem;
@@ -918,6 +934,7 @@ input:checked+.slider:before {
     transform-origin: left;
     font-size: 10px;
     transform: rotate(90deg);
+    color: var(--color-dark);
 }
 
 .point-graph .group-label {
@@ -925,7 +942,7 @@ input:checked+.slider:before {
     right: -15px;
     top: 30px;
     color: var(--color-background);
-    font-weight: bold;
+    font-weight: 500;
     font-size: 1.5em;
     overflow: hidden;
     transform: rotate( 90deg);

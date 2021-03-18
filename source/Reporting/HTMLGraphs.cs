@@ -257,14 +257,14 @@ namespace AssemblyNameSpace
 
                 foreach (var point in group.Points)
                 {
-                    buffer.Append("<span class='values'>");
+                    buffer.Append($"<a href='#{identifier}-{point.Label}' class='values'>");
                     // Create Points
                     for (int i = 0; i < dimensions; i++)
                     {
                         buffer.Append($"<span class='point' style='--x:{(point.Values[i] - minvalues[i]) / (maxvalues[i] - minvalues[1])}'></span>");
                         //dataBuffer.Append($",{group.Dimensions[i]}");
                     }
-                    buffer.Append($"</span><span class='label'><span>{point.Label}</span></span>");
+                    buffer.Append($"</a><span class='label'><a href='#{identifier}-{point.Label}'>{point.Label}</a></span>");
                 }
 
                 // Create Tooltip

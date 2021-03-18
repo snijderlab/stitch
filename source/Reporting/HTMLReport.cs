@@ -75,11 +75,12 @@ namespace AssemblyNameSpace
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
+            var groupIdentifier = $"{templateGroup}-{templateIndex}";
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             if (header)
-                if (templates.Count() > 15) buffer.Append(PointsTableHeader(templates, $"{templateGroup}-{templateIndex}"));
+                if (templates.Count() > 15) buffer.Append(PointsTableHeader(templates, groupIdentifier));
                 else buffer.Append(TableHeader(templates));
 
             string unique = "";
@@ -122,7 +123,7 @@ namespace AssemblyNameSpace
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
 <td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea.ToString("G3")}</td>
 ";
-                buffer.AppendLine($@"<tr id=""table-{id}"">
+                buffer.AppendLine($@"<tr id=""{groupIdentifier}-{id}"">
     <td class=""center"">{link}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center bar"" style=""--relative-value:{templates[i].Score / max_values.Item1}"">{templates[i].Score}</td>
