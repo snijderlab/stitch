@@ -32,10 +32,6 @@ function sortTable(id, column_number, type) {
             case "number":
                 values.push(Number(x.innerHTML))
                 break
-            case "id":
-                var p = x.innerText.slice(1).split(":")
-                values.push(Number(p[p.length - 1]))
-                break
         }
     }
 
@@ -56,7 +52,12 @@ function sortTable(id, column_number, type) {
         first, which contains table headers): */
         for (i = 1; i < (rows.length - 1); i++) {
             shouldSwitch = false;
-            if (values[i] > values[i + 1]) {
+            if (typeof values[i] == "string") {
+                if (values[i].localeCompare(values[i + 1], undefined, { numeric: true, sensitivity: "base" }) == -1) {
+                    shouldSwitch = true;
+                    break;
+                }
+            } else if (values[i] > values[i + 1]) {
                 shouldSwitch = true;
                 break;
             }
