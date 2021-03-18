@@ -78,7 +78,10 @@ namespace AssemblyNameSpace
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
-            if (header) buffer.Append(TableHeader(templates));
+            if (header)
+                if (templates.Count() > 15) buffer.Append(PointsTableHeader(templates, $"{templateGroup}-{templateIndex}"));
+                else buffer.Append(TableHeader(templates));
+
             string unique = "";
             if (displayUnique) unique = $@"
 <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 5, 'number')"" class=""smallcell"">Unique Score</th>
@@ -897,6 +900,41 @@ namespace AssemblyNameSpace
 <div class=""collapsable"">{content}</div>";
         }
 
+        string PointsTableHeader(List<Template> templates, string identifier)
+        {
+            if (templates.Select(a => a.Score).Sum() == 0)
+            {
+                return "";
+            }
+
+            bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
+            var data = new List<(string, List<(string, List<double>)>)>();
+
+            foreach (var template in templates)
+            {
+                var group = data.FindIndex(a => a.Item1 == template.MetaData.ClassIdentifier);
+                if (group == -1)
+                {
+                    data.Add((template.MetaData.ClassIdentifier, new List<(string, List<double>)>()));
+                    group = data.Count() - 1;
+                }
+                if (displayUnique)
+                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count(), template.TotalArea, template.UniqueScore, template.UniqueMatches, template.TotalUniqueArea }));
+                else
+                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count(), template.TotalArea }));
+            }
+
+            List<string> header;
+            if (displayUnique)
+                header = new List<string> { "Score", "Matches", "Area", "UniqueScore", "UniqueMatches", "UniqueArea" };
+            else
+                header = new List<string> { "Score", "Matches", "Area" };
+
+            return $@"
+<div class='table-header'><div>
+    {HTMLGraph.GroupedPointGraph(data, header, identifier)}</div></div>";
+        }
+
         string TableHeader(List<Template> templates)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
@@ -904,7 +942,6 @@ namespace AssemblyNameSpace
                 return "";
             }
 
-            string classname = "";
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
             var typedata = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
@@ -947,7 +984,6 @@ namespace AssemblyNameSpace
                 areaData.Add((type, areaList));
             }
 
-            classname = " full";
             var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
             var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
             if (displayUnique)
@@ -959,7 +995,7 @@ namespace AssemblyNameSpace
             }
 
             return $@"
-<div class='table-header{classname}'>
+<div class='table-header full'>
     <div>
     <h3>Scores per type</h3>
     {HTMLGraph.GroupedBargraph(scoreData, scoreLabels)}

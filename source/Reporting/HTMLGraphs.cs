@@ -203,5 +203,84 @@ namespace AssemblyNameSpace
 
             return buffer.ToString();
         }
+
+        /// <summary>
+        /// Generates a grouped point graph, with a multiple values per point which will be linearly normalised to fit the same range.
+        /// </summary>
+        /// <param name="data"></param>
+        /// <param name="header"></param>
+        /// <returns></returns>
+        public static string GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string identifier)
+        {
+            if (data.Count == 0 || data.Any(a => a.Points.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
+            int dimensions = header.Count();
+            double[] maxvalues = new double[dimensions];
+            double[] minvalues = new double[dimensions];
+
+            Array.Fill(maxvalues, Double.MinValue);
+            Array.Fill(minvalues, Double.MaxValue);
+
+            foreach ((_, var group) in data)
+            {
+                foreach ((_, var values) in group)
+                {
+                    if (values.Count() != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({values.Count()}) as the rest ({dimensions}).");
+                    for (int i = 0; i < dimensions; i++)
+                    {
+                        if (values[i] > maxvalues[i]) maxvalues[i] = values[i];
+                        if (values[i] < minvalues[i]) minvalues[i] = values[i];
+                    }
+                }
+            }
+
+            // Create Legend
+            var buffer = new StringBuilder();
+            var dataBuffer = new StringBuilder("Group");
+            var culture = System.Globalization.CultureInfo.CurrentCulture;
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
+
+            buffer.Append("<div class='point-graph' oncontextmenu='CopyGraphData()'>");
+            for (int i = 0; i < dimensions; i++)
+            {
+                var check = i < 3 ? " checked " : "";
+                buffer.Append($"<input type='checkbox' class='showdata-{i}' id='{identifier}-showdata-{i}'{check}/>");
+                buffer.Append($"<label for='{identifier}-showdata-{i}'>{header[i]}</label>");
+                //dataBuffer.Append($",\"{header[i]}\"");
+            }
+
+            buffer.Append("<div class='graph'>");
+            // Create Graph
+            foreach (var group in data)
+            {
+                buffer.Append($"<div class='group' style='flex-grow:{group.Points.Count()}'>");
+                //dataBuffer.Append($"\n\"{group.GroupLabel}\"");
+
+                foreach (var point in group.Points)
+                {
+                    buffer.Append("<span class='values'>");
+                    // Create Points
+                    for (int i = 0; i < dimensions; i++)
+                    {
+                        buffer.Append($"<span class='point' style='--x:{(point.Values[i] - minvalues[i]) / (maxvalues[i] - minvalues[1])}'></span>");
+                        //dataBuffer.Append($",{group.Dimensions[i]}");
+                    }
+                    buffer.Append($"</span><span class='label'><span>{point.Label}</span></span>");
+                }
+
+                // Create Tooltip
+                //buffer.Append($"<span class='tooltip'>{group.Label}");
+                //for (int i = 0; i < dimensions; i++)
+                //    buffer.Append($"<span class='dim'>{group.Dimensions[i]:G3}</span>");
+                if (group.Points.Count() > 2)
+                    buffer.Append($"<span class='group-label'>{group.GroupLabel}</span>");
+                buffer.Append("</div>");
+            }
+
+            buffer.Append($"</div><input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+
+            System.Globalization.CultureInfo.CurrentCulture = culture;
+
+            return buffer.ToString();
+        }
     }
 }
