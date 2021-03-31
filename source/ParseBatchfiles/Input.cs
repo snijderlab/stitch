@@ -313,8 +313,7 @@ namespace AssemblyNameSpace
             {
                 PrintMessages();
 
-                Environment.Exit(1);
-                return Value;
+                throw new ParseException("");
             }
             else
             {
