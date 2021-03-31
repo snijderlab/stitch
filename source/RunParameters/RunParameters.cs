@@ -284,6 +284,11 @@ namespace AssemblyNameSpace
             /// The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition.
             /// </summary>
             public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
+
+            /// <summary>
+            /// To determine if an automatic decoy database has to be set up. This database will contain all unused templates from template matching to remove background from the recombination step.
+            /// </summary>
+            public bool Decoy = false;
         }
 
         namespace RecombineOrder

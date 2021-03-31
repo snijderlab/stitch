@@ -186,10 +186,12 @@ namespace AssemblyNameSpace
                     // a new high scoring template to its right position this snippet is still
                     // approximately O(n) in respect to the database. Worst case O(top_n * l_database)
                     var top = new List<List<Template>>();
+                    var decoy = new List<Template>();
                     foreach (var db in database_group.Item2)
                     {
                         db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
                         top.Add(db.Templates.Take(Recombine.N).ToList());
+                        if (Recombine.Decoy) decoy.AddRange(db.Templates.Skip(Recombine.N));
                     }
 
                     // Recombine high scoring templates
@@ -205,6 +207,7 @@ namespace AssemblyNameSpace
 
                     var recombined_database_group = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
                     CreateRecombinationTemplates(combinations, database_group_index, alph, recombined_database_group);
+                    if (Recombine.Decoy) recombined_database_group.Templates.AddRange(decoy);
 
                     var local_matches = recombined_database_group.Match(Input);
 

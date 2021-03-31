@@ -212,7 +212,7 @@ namespace AssemblyNameSpace
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null) ParseHelper.PrepareInput(namefilter, null, output.Input, null);
+            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(namefilter, null, output.Input, null).Messages);
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -313,7 +313,8 @@ namespace AssemblyNameSpace
             {
                 PrintMessages();
 
-                throw new ParseException("");
+                Environment.Exit(1);
+                return Value;
             }
             else
             {
@@ -738,8 +739,11 @@ namespace AssemblyNameSpace
                         case "forceonsingletemplate":
                             output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
                             break;
+                        case "decoy":
+                            output.Decoy = ParseBool(setting, "Decoy").GetValue(outEither);
+                            break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', and 'ForceOnSingleTemplate'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', and 'ForceOnSingleTemplate'"));
                             break;
                     }
                 }

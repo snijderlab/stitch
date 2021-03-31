@@ -99,9 +99,9 @@ TemplateMatching ->
 
 Recombine->
     -Pick the <n> highest scoring templates from each database
-    N : 1
-
-    CutoffScore : 10
+    N          : 1
+    -Decoy      : True
+    CutoffScore: 10
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
