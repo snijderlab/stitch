@@ -528,12 +528,6 @@ Alphabet->
 
 All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `2 - 1 / (log10(Area))`, and the positional score is the local confidence (localALC) as reported by Peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score).
 
-#### Assembler
-
-If there are duplicate reads the intensities are added together.
-
-When the paths in the graph are found these also get an intensity and positional score. The intensity is always 1 and the positional score is the depth of coverage for each position in the sequence of the path.
-
 #### Template Matching
 
 The score of a match (read or path against a template) is calculated by the smith waterman algorithm solely based on the alphabet used. If the score of a match is bigger than or equal to the cutoff score as defined in the input batch file times the square root of the length of the template the match is added to the list of matches of the template, otherwise it is discarded.
@@ -545,6 +539,10 @@ matchScore >= cutoffScore * sqrt(templateLength)
 #### Consensus Sequence
 
 The consensus sequence for each position is based on the positional score of each amino acid.
+
+#### Gap detection (* in Order definition)
+
+If in the order definition a gap is added (`*`) the program will try to fill in the sequence between the two segments. For this it adds 20 Xs to the end of the templates that would precede this gap, and to the start of the templates that would follow this gap. After Template Matching the overlap is detected between the consensus sequences from the segments. This is done by scoring the sequences with increasing overlap, so for every overlap starting with 1 and including the total number of positions filled in (40 - the number of Xs left after Template Matching). These scores are then corrected for the length by subtracting 2 times the overlap. This factor of 2 is the average score for a piece of sequence with 50% matches and 50% mismatches with the Blosum matrix. It then selects the highest scoring overlap. If its score is positive the sequences are joined with this number of amino acids removed from the second sequence. If its score is zero or negative it joins the two sequences with a gap (`*`) in between them.
 
 ### Example Batch Files
 

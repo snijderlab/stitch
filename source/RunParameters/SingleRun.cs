@@ -263,11 +263,13 @@ namespace AssemblyNameSpace
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
+                                var deleted_gaps = s.Count() + seq.Count();
                                 s = s.TakeWhile(a => a.Char != 'X').ToList();
                                 seq = seq.SkipWhile(a => a.Char == 'X').ToList();
-                                var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 20);
+                                deleted_gaps -= s.Count() + seq.Count();
+                                var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 // When no good overlap is found just paste them one after the other
-                                if (aligned_template.Score >= 0)
+                                if (aligned_template.Score > 0)
                                     s.AddRange(seq.Skip(aligned_template.Position));
                                 else
                                 {
