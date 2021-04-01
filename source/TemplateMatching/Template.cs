@@ -345,36 +345,6 @@ namespace AssemblyNameSpace
                     }
                 }
             }
-
-            // Filter DOC for duplicate entries
-            foreach (var (Sequences, Gaps) in output)
-            {
-                // Filter aminoAcids
-                for (int outer = 0; outer < Sequences.Length; outer++)
-                {
-                    if (Sequences[outer].CoverageDepth == 0) continue;
-
-                    for (int inner = 0; inner < Sequences.Length; inner++)
-                    {
-                        if (inner == outer) continue;
-                        if (Sequences[outer].ContigID == Sequences[inner].ContigID && Sequences[outer].SequencePosition == Sequences[inner].SequencePosition)
-                            Sequences[inner].CoverageDepth = 0;
-                    }
-                }
-
-                // Filter Gaps
-                for (int outer = 0; outer < Gaps.Length; outer++)
-                {
-                    if (Gaps[outer].CoverageDepth == null) continue;
-
-                    for (int inner = 0; inner < Gaps.Length; inner++)
-                    {
-                        if (inner == outer) continue;
-                        if (Gaps[outer].ContigID == Gaps[inner].ContigID && Gaps[outer].Gap == Gaps[inner].Gap)
-                            Gaps[inner].CoverageDepth = null;
-                    }
-                }
-            }
             alignedSequencesCache = output;
             return output;
         }
@@ -395,46 +365,29 @@ namespace AssemblyNameSpace
 
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
-            {
                 output.Add((Sequence[i], new Dictionary<AminoAcid, double>(), new Dictionary<IGap, (int, double[])>()));
-            }
 
             var alignedSequences = AlignedSequences();
-            bool placed;
             AminoAcid aa;
             IGap key;
 
             for (int i = 0; i < Sequence.Length; i++)
             {
                 // Create the aminoacid dictionary
-                placed = false;
                 foreach (var option in alignedSequences[i].Sequences)
                 {
                     if (option.SequencePosition != 0)
                     {
-                        if (option.SequencePosition == -1)
-                        {
+                        if (option.SequencePosition == -1) // If there is a deletion in the placed read in respect to the template
                             aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
-                        }
                         else
-                        {
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
-                            placed = true;
-                        }
 
                         if (output[i].AminoAcids.ContainsKey(aa))
-                        {
                             output[i].AminoAcids[aa] += option.CoverageDepth;
-                        }
                         else
-                        {
                             output[i].AminoAcids.Add(aa, option.CoverageDepth);
-                        }
                     }
-                }
-                if (!placed)
-                {
-                    output[i].AminoAcids.Add(Sequence[i], 1);
                 }
 
                 // Create the gap dictionary
@@ -445,13 +398,9 @@ namespace AssemblyNameSpace
                     if (option.Gap == (IGap)new None())
                     {
                         if (output[i].Gaps.ContainsKey(new None()))
-                        {
                             output[i].Gaps[new None()] = (output[i].Gaps[new None()].Count + 1, new double[0]);
-                        }
                         else
-                        {
                             output[i].Gaps.Add(new None(), (1, new double[0]));
-                        }
                     }
                     else
                     {
@@ -461,13 +410,10 @@ namespace AssemblyNameSpace
                         {
                             double[] cov;
                             if (output[i].Gaps[key].CoverageDepth == null)
-                            {
                                 cov = option.CoverageDepth;
-                            }
                             else
-                            {
                                 cov = output[i].Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
-                            }
+
                             output[i].Gaps[key] = (output[i].Gaps[key].Count + 1, cov);
                         }
                         else
