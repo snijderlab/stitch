@@ -270,12 +270,10 @@ namespace AssemblyNameSpace
             {
                 var score = AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
                 scores.Add((i, score));
-                Console.WriteLine($"EndAlign\t{i}\t{score}");
             }
             var best = scores[0];
             foreach (var item in scores)
                 if (item.Item2 > best.Item2) best = item;
-            Console.WriteLine($"Selected\t{best.Item1}\t{best.Item2}");
             return best;
         }
 
