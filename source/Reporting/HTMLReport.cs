@@ -188,17 +188,6 @@ namespace AssemblyNameSpace
                     break;
             }
 
-            string unique = "";
-            if (template.ForcedOnSingleTemplate)
-            {
-                unique = $@"<h2>Unique Matches</h2>
-    <p>{template.UniqueMatches}</p>
-    <h2>Unique Area</h2>
-    <p>{template.TotalUniqueArea}</p>
-    <h2>Unique Score</h2>
-    <p>{template.UniqueScore}</p>";
-            }
-
             return $@"<div id=""{id}"" class=""info-block template-info"">
     <h1>Template {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
@@ -206,15 +195,8 @@ namespace AssemblyNameSpace
     <h2>Sequence Consensus Overview</h2>
     {SequenceConsensusOverview(template)}
     <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
-    <h2>Sequence Length</h2>
-    <p>{template.Sequence.Length}</p>
-    <h2>Total Matches</h2>
-    <p>{template.Matches.Count()}</p>
-    <h2>Total Area</h2>
-    <p>{template.TotalArea}</p>
-    <h2>Score</h2>
-    <p>{template.Score}</p>
-    {unique}
+    <h2>Scores</h2>
+    {CreateTemplateTable(new List<Template> { template }, superindex, index, type)}
     {based}
     {alignment.Alignment}
     {CreateTemplateGraphs(template, alignment.DepthOfCoverage)}

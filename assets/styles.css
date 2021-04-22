@@ -163,23 +163,23 @@ td.seq {
     text-overflow: ellipsis;
 }
 
-tr:target,
-tr:hover,
-tr.selected {
+.report tr:target,
+.report tr:hover,
+.report tr.selected {
     color: var(--color-tertiary);
     --color-primary: var(--color-tertiary);
 }
 
-tr:target .info-link,
-tr:hover .info-link,
-tr.selected .info-link {
+.report tr:target .info-link,
+.report tr:hover .info-link,
+.report tr.selected .info-link {
     border-color: var(--color-tertiary);
     color: var(--color-tertiary);
 }
 
-tr:target td.bar::before,
-tr:hover td.bar::before,
-tr.selected td.bar::before {
+.report tr:target td.bar::before,
+.report tr:hover td.bar::before,
+.report tr.selected td.bar::before {
     background: var(--color-tertiary);
 }
 
@@ -199,11 +199,6 @@ tr.selected td.bar::before {
     border-color: var(--color-secondary);
 }
 
-.details th {
-    background: none;
-    border: none;
-}
-
 td.bar {
     position: relative;
 }
@@ -218,6 +213,25 @@ td.bar::before {
     opacity: 0.35;
     z-index: -1;
     background: var(--color-primary);
+}
+
+
+/* Tables on template detail pages */
+
+.details table[id^="template-table"] th:first-child {
+    display: none;
+}
+
+.details table[id^="template-table"] th::after {
+    display: none;
+}
+
+.details table[id^="template-table"] td:first-child {
+    display: none;
+}
+
+.details table[id^="template-table"] td.bar:before {
+    display: none;
 }
 
 
