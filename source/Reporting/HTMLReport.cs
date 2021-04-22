@@ -63,7 +63,7 @@ namespace AssemblyNameSpace
             for (var i = 0; i < segments.Count(); i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Template Matching {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
+                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
             }
 
             return output.ToString();
@@ -171,6 +171,7 @@ namespace AssemblyNameSpace
             }
 
             string based = "";
+            string title = "Segment";
             switch (type)
             {
                 case AsideType.RecombinedTemplate:
@@ -182,13 +183,15 @@ namespace AssemblyNameSpace
                         ).Substring(3);
                         based = $"<h2>Order</h2><p>{order}</p>";
                     }
+                    title = "Recombined Template";
                     break;
                 default:
                     break;
             }
 
+
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>Template {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
+    <h1>{title} {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
     <h2>Sequence Consensus Overview</h2>
