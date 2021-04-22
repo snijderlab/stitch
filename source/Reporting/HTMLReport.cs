@@ -176,7 +176,13 @@ namespace AssemblyNameSpace
                 case AsideType.RecombinedTemplate:
                     // Broken
                     if (template.Recombination != null)
-                        based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(superindex, b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
+                    {
+                        var order = template.Recombination.Aggregate(
+                            "",
+                            (acc, seg) => acc + " → " + GetAsideLink(seg.MetaData, AsideType.Template, location)
+                        ).Substring(3);
+                        based = $"<h2>Order</h2><p>{order}</p>";
+                    }
                     break;
                 default:
                     break;
@@ -850,6 +856,16 @@ namespace AssemblyNameSpace
             return $"{pre}{i1}{i2}{i3}";
         }
 
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <param name="metadata">The metadata for a Read or Template.</param>
+        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
+        /// <returns>A ready for use identifier.</returns>
+        string GetAsideIdentifier(MetaData.IMetaData metadata, bool humanvisible = false)
+        {
+            if (humanvisible) return metadata.Identifier;
+            else return metadata.EscapedIdentifier;
+        }
+
         /// <summary> Returns a link to the given aside. </summary>
         /// <param name="index">The index of the element.</param>
         /// <param name="type">The type of the element.</param>
@@ -883,6 +899,20 @@ namespace AssemblyNameSpace
             string classname = GetAsideName(type);
             string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
             return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(index1, index2, index3, type, true)}</a>";
+        }
+
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <param name="metadata">The metadata for a Read or Template.</param>
+        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
+        /// <returns>A ready for use identifier.</returns>
+        string GetAsideLink(MetaData.IMetaData metadata, AsideType type, List<string> location = null)
+        {
+            if (location == null) location = new List<string>();
+            string id = GetAsideIdentifier(metadata);
+            if (id == null) throw new Exception("ID is null");
+            string classname = GetAsideName(type);
+            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
+            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(metadata, true)}</a>";
         }
 
         string GetLinkToFolder(List<string> target, List<string> location)
