@@ -551,6 +551,9 @@ namespace AssemblyNameSpace
             var unique = "";
             if (template.ForcedOnSingleTemplate) unique = "<tr><td>Unique</td><td>" + (match.Unique ? "Yes" : "No") + "</td></tr>";
 
+            var peaks = "";
+            if (match.MetaData is MetaData.Peaks p) peaks = $"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>";
+
             return $@"
     <div class='alignment-details' id='alignment-details-{match.Index}'>
         <h4>{match.MetaData.Identifier}</h4>
@@ -584,6 +587,7 @@ namespace AssemblyNameSpace
                 <td>{match.QuerySequence.Length}</td>
             </tr>
             {unique}
+            {peaks}
             <tr>
                 <td>{doctitle}</td>
                 <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td>
