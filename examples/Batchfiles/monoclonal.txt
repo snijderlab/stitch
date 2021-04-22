@@ -23,72 +23,72 @@ TemplateMatching ->
         GapExtendPenalty: 1
     <-
 
-    Databases->
-        - Homo Sapiens databases
+    Segments->
+        - Homo Sapiens segments
         Heavy Chain->
-            Database->
+            Segment->
                 Path      : ../templates/IGHV.fasta
                 Name      : IGHV
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
-            Database->
+            Segment->
                 Path      : ../templates/IGHJ.fasta
                 Name      : IGHJ
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
-            Database->
+            Segment->
                 Path      : ../templates/IGHC_uniprot.fasta
                 Name      : IGHC
                 Identifier: ^sp\|[\w]*\|([\w]+)_
             <-
         <-
         Light Chain->
-            Database->
+            Segment->
                 Path      : ../templates/IGK+LV.fasta
                 Name      : IGLV
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
-            Database->
+            Segment->
                 Path      : ../templates/IGK+LJ.fasta
                 Name      : IGLJ
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
-            Database->
+            Segment->
                 Path      : ../templates/IGK+LC.fasta
                 Name      : IGLC
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
         <-
-        - Mus Musculus databases
+        - Mus Musculus segments
         - Mus Heavy Chain->
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGHV.fasta
         -         Name      : IGHV
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGHJ.fasta
         -         Name      : IGHJ
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGHC_uniprot.fasta
         -         Name      : IGHC
         -         Identifier: ^sp\|[\w]*\|([\w]+)_
         -     <-
         - <-
         - Mus Light Chain->
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGK+LV.fasta
         -         Name      : IGLV
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGK+LJ.fasta
         -         Name      : IGLJ
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
-        -     Database->
+        -     Segment->
         -         Path      : ../templates/Mus_IGK+LC.fasta
         -         Name      : IGLC
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
@@ -98,7 +98,7 @@ TemplateMatching ->
 <-
 
 Recombine->
-    -Pick the <n> highest scoring templates from each database
+    -Pick the <n> highest scoring templates from each segment
     N          : 1
     -Decoy      : True
     CutoffScore: 10

@@ -74,9 +74,9 @@ namespace AssemblyNameSpace
             var inputparams = ParseCommandFile.Batch(filename, false);
 
             var bar = new ProgressBar();
-            var bars = 1 + inputparams.TemplateMatching.Databases.Count();
+            var bars = 1 + inputparams.TemplateMatching.Segments.Count();
             if (inputparams.Recombine != null)
-                bars += inputparams.TemplateMatching.Databases.Count();
+                bars += inputparams.TemplateMatching.Segments.Count();
             bar.Start(bars);
 
             inputparams.CreateRun(bar).Calculate(inputparams.MaxNumberOfCPUCores);

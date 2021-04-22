@@ -200,7 +200,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// An input for a template.
         /// </summary>
-        public class DatabaseValue
+        public class SegmentValue
         {
             /// <summary>
             /// The alphabet to be used for all templates.
@@ -218,11 +218,11 @@ namespace AssemblyNameSpace
             public string Name = null;
 
             /// <summary>
-            /// The templates of this database
+            /// The templates of this segment
             /// </summary>
             public List<(string, MetaData.IMetaData)> Templates = new List<(string, MetaData.IMetaData)>();
             /// <summary>
-            /// The scoring system of this database, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template).
+            /// The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template).
             /// </summary>
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 
@@ -252,11 +252,11 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The templates themselves. Grouped by their template group.
             /// </summary>
-            public List<(String Name, List<DatabaseValue> Databases)> Databases = new List<(String, List<DatabaseValue>)>();
+            public List<(String Name, List<SegmentValue> Segments)> Segments = new List<(String, List<SegmentValue>)>();
         }
 
         /// <summary>
-        /// To contain all parameters for recombination of Databases.
+        /// To contain all parameters for recombination of Segments.
         /// </summary>
         public class RecombineParameter
         {
@@ -276,7 +276,7 @@ namespace AssemblyNameSpace
             public Trilean EnforceUnique = Trilean.Unspecified;
 
             /// <summary>
-            /// The amount of templates to recombine from the highest scoring Databases.
+            /// The amount of templates to recombine from the highest scoring Segments.
             /// </summary>
             public int N = 0;
 
@@ -286,7 +286,7 @@ namespace AssemblyNameSpace
             public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
 
             /// <summary>
-            /// To determine if an automatic decoy database has to be set up. This database will contain all unused templates from template matching to remove background from the recombination step.
+            /// To determine if an automatic decoy segment has to be set up. This segment will contain all unused templates from template matching to remove background from the recombination step.
             /// </summary>
             public bool Decoy = false;
         }

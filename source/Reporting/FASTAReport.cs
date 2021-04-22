@@ -33,8 +33,8 @@ namespace AssemblyNameSpace
 
             if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
             {
-                sequences.Capacity = Parameters.RecombinedDatabase.Select(a => a.Templates.Count).Sum();
-                foreach (var template in Parameters.RecombinedDatabase.SelectMany(a => a.Templates))
+                sequences.Capacity = Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum();
+                foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
@@ -42,8 +42,8 @@ namespace AssemblyNameSpace
             }
             else // TemplateMatching
             {
-                sequences.Capacity = Parameters.TemplateDatabases.Select(a => a.Item2.Count).Sum();
-                foreach (var (group, dbs) in Parameters.TemplateDatabases)
+                sequences.Capacity = Parameters.Segments.Select(a => a.Item2.Count).Sum();
+                foreach (var (group, dbs) in Parameters.Segments)
                 {
                     foreach (var template in dbs.SelectMany(a => a.Templates))
                     {

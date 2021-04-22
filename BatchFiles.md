@@ -27,14 +27,14 @@ Input ->
 <-
 
 TemplateMatching ->
-    -Has parameters defining the database matching step
-    -Like scoring, alphabet and the databases itself
+    -Has parameters defining the segment matching step
+    -Like scoring, alphabet and the segments itself
     -Can only be specified once
 <-
 
 Recombine ->
     -Has parameters defining the behaviour of the recombination step
-    -Aligns the databases from TemplateMatching with the paths from the assembler
+    -Aligns the segments from TemplateMatching with the paths from the assembler
     -Can only be specified once
     -TemplateMatching has to be specified for recombination te be specified
 <-
@@ -88,8 +88,8 @@ A `*` indicates that the scope or parameter can be defined multiple times.
     * CutoffScore
     * Alphabet
     * EnforceUnique
-    * Databases
-        * Database *
+    * Segments
+        * Segment *
             * Name
             * Path
             * CutoffScore
@@ -262,7 +262,7 @@ To determine the parameters for template matching. Can only be specified once. O
 
 ##### CutoffScore (s)
 
-The mean score per position needed for a path to be included in the Database score. Default value: 10.
+The mean score per position needed for a path to be included in the Segment score. Default value: 10.
 
 ##### Alphabet (m)
 
@@ -270,22 +270,22 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
-##### Databases (m)
+##### Segments (m)
 
-Defines a list of databases to match against. A single database is defined by the parameter `Database` which can be defined multiple times within `Databases`. Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
+Defines a list of segments to match against. A single segment is defined by the parameter `Segment` which can be defined multiple times within `Segments`. Segments will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
 `CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
-The databases can be grouped into database groups. These will be presented separately in the output HTML report. This is extremely useful for example to separate the Heavy and Light chain of an antibody.
+The segments can be grouped into segment groups. These will be presented separately in the output HTML report. This is extremely useful for example to separate the Heavy and Light chain of an antibody.
 
 _Example_
 ```
-Databases ->
-    Database ->
+Segments ->
+    Segment ->
         Path    : ../templates/smallIGHV.fasta
         Name    : IGHV Human
         CutoffScore : 0.75
@@ -295,7 +295,7 @@ Databases ->
         <-
     <-
 
-    Database ->
+    Segment ->
         Path        : ../templates/smallIGHV.csv
         PeaksFormat : Old
         Name        : IGHV Human
@@ -308,30 +308,30 @@ Databases ->
 <-
 
 - Or with groups
-Databases ->
+Segments ->
     Heavy Chain ->
-        Database ->
+        Segment ->
             Path    : ../templates/smallIGHV.fasta
             Name    : IGHV Human
         <-
-        - Any number of other databases can be defined here, but logically IGHJ and IGHC will follow
+        - Any number of other segments can be defined here, but logically IGHJ and IGHC will follow
     <-
     Light Chain ->
-        - All light chain databases can be defined here
+        - All light chain segments can be defined here
     <-
 <-
 ```
 ###### Name (s) 
 
-The name of this database, will be used to make the report more descriptive.
+The name of this segment, will be used to make the report more descriptive.
 
 ###### Path (s)
 
-The templates to be used in this database. Uses the same logic as Input->Folder to load the file. So uses the extension to determine the right file format. And like Folder extra parameters can be supplied to have finer control over the loading of the files. Like 'Identifier, for Fasta files and all Peaks parameters with the prefix `peaks`.
+The templates to be used in this segment. Uses the same logic as Input->Folder to load the file. So uses the extension to determine the right file format. And like Folder extra parameters can be supplied to have finer control over the loading of the files. Like 'Identifier, for Fasta files and all Peaks parameters with the prefix `peaks`.
 
 ###### CutoffScore (s)
 
-The mean score per position needed for a path to be included in the Database score. Default value: 0.
+The mean score per position needed for a path to be included in the Segment score. Default value: 0.
 
 ###### Alphabet (m)
 
@@ -343,23 +343,23 @@ Specifies a Regular Expression to parse the identifier from the Fasta header of 
 
 ###### Scoring (s)
 
-The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. Default: `Absolute`.
+The scoring strategy used when determining the score of this segment. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. Default: `Absolute`.
 
 ###### EnforceUnique (s)
 
-Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ###### GapHead (s)
 
-Adds 20 gaps (`X`) at the front of all templates in this database. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed before this database in the Recombination order. Default: `False`.
+Adds 20 gaps (`X`) at the front of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed before this segment in the Recombination order. Default: `False`.
 
 ###### GapTail (s)
 
-Adds 20 gaps (`X`) at the end of all templates in this database. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed after this database in the Recombination order. Default: `False`.
+Adds 20 gaps (`X`) at the end of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed after this segment in the Recombination order. Default: `False`.
 
 #### Recombine
 
-Defines how to recombine the TemplateMatched databases, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each database, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the database the input matches with. Be warned, the runtime factorially increases with _n_.
+Defines how to recombine the TemplateMatched segments, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each segment, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the segment the input matches with. Be warned, the runtime factorially increases with _n_.
 
 _Example_
 ```
@@ -372,18 +372,18 @@ Recombine->
 
 ##### N (s)
 
-The amount of templates to recombine from each database. From every database it will take the top N templates and join all of them together in all possible configurations, this means that the number of recombined templates factorially increases with N.
+The amount of templates to recombine from each segment. From every segment it will take the top N templates and join all of them together in all possible configurations, this means that the number of recombined templates factorially increases with N.
 
 ##### Order (s)
 
-The order in which the databases will be recombined. Defined as a list of the names of the database in order possibly with gaps (`*`) in between.
+The order in which the segments will be recombined. Defined as a list of the names of the segment in order possibly with gaps (`*`) in between.
 
 _Example_
 ```
 Order: IGHV IGHJ * IGHC
 ```
 
-If there are multiple database groups defined the order should be defined separately for each group. The names are matches to the database group names disregarding casing.
+If there are multiple segment groups defined the order should be defined separately for each group. The names are matches to the segment group names disregarding casing.
 
 _Example_
 ```
@@ -397,7 +397,7 @@ A gap (`*`) indicates that there should be more sequence in between the segments
 
 ##### CutoffScore (s)
 
-The mean score per position needed for a path to be included in the Database score. Default value: 10.
+The mean score per position needed for a path to be included in the Segment score. Default value: 10.
 
 ##### Alphabet (m)
 
@@ -405,7 +405,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of these segments will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 #### Report
 

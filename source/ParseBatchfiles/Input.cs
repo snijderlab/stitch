@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
             // Parse Recombination order
             if (output.Recombine != null && output.TemplateMatching != null)
             {
-                foreach (var group in output.TemplateMatching.Databases)
+                foreach (var group in output.TemplateMatching.Segments)
                 {
                     if (!order_groups.Exists(o => o.OriginalName == group.Name))
                         outEither.AddMessage(new ErrorMessage(batchfile, "Missing order definition for template group", $"For group \"{group.Name}\" there is no corresponding order definition.", "If there is a definition make sure it is written exactly the same and with the same casing."));
@@ -132,9 +132,9 @@ namespace AssemblyNameSpace
 
                             var match = false;
 
-                            for (int j = 0; j < group.Databases.Count(); j++)
+                            for (int j = 0; j < group.Segments.Count(); j++)
                             {
-                                var template = group.Databases[j];
+                                var template = group.Segments[j];
                                 if (order_string.StartsWith(template.Name))
                                 {
                                     order_string = order_string.Remove(0, template.Name.Length);
@@ -168,13 +168,13 @@ namespace AssemblyNameSpace
             if (output.Recombine != null && output.Recombine.Order.Count() != 0)
             {
 
-                if (output.TemplateMatching.Databases.Count != output.Recombine.Order.Count)
+                if (output.TemplateMatching.Segments.Count != output.Recombine.Order.Count)
                 {
-                    outEither.AddMessage(new ErrorMessage(def_range, "Invalid database groups definition", $"The number of order definitions ({output.Recombine.Order.Count}) should equal the number of database groups ({output.TemplateMatching.Databases.Count})."));
+                    outEither.AddMessage(new ErrorMessage(def_range, "Invalid segment groups definition", $"The number of order definitions ({output.Recombine.Order.Count}) should equal the number of segment groups ({output.TemplateMatching.Segments.Count})."));
                 }
                 else
                 {
-                    for (int i = 0; i < output.TemplateMatching.Databases.Count(); i++)
+                    for (int i = 0; i < output.TemplateMatching.Segments.Count(); i++)
                     {
                         var order = order_groups[i];
                         int last = -2;
@@ -188,7 +188,7 @@ namespace AssemblyNameSpace
                                     outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
                                 else
                                 {
-                                    output.TemplateMatching.Databases[i].Databases[last].GapTail = true;
+                                    output.TemplateMatching.Segments[i].Segments[last].GapTail = true;
                                     last = -1;
                                 }
                             }
@@ -196,7 +196,7 @@ namespace AssemblyNameSpace
                             {
                                 var db = ((RunParameters.RecombineOrder.Template)piece).Index;
                                 if (last == -1)
-                                    output.TemplateMatching.Databases[i].Databases[db].GapHead = true;
+                                    output.TemplateMatching.Segments[i].Segments[db].GapHead = true;
                                 last = db;
                             }
                         }
@@ -225,7 +225,7 @@ namespace AssemblyNameSpace
 
             if (output.TemplateMatching != null)
             {
-                foreach (var db in output.TemplateMatching.Databases.SelectMany(group => group.Item2))
+                foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Item2))
                 {
                     for (var i = 0; i < db.Templates.Count; i++)
                     {
@@ -644,40 +644,40 @@ namespace AssemblyNameSpace
                         case "cutoffscore":
                             output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
-                        case "databases":
-                            if (output.Databases.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var outer_children = new List<DatabaseValue>();
-                            foreach (var database in setting.GetValues())
+                        case "segments":
+                            if (output.Segments.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            var outer_children = new List<SegmentValue>();
+                            foreach (var segment in setting.GetValues())
                             {
-                                if (database.Name == "database")
+                                if (segment.Name == "segment")
                                 {
-                                    var databasevalue = ParseHelper.ParseDatabase(nameFilter, database, false).GetValue(outEither);
+                                    var segmentvalue = ParseHelper.ParseSegment(nameFilter, segment, false).GetValue(outEither);
 
                                     // Check to see if the name is valid
-                                    if (outer_children.Select(db => db.Name).Contains(databasevalue.Name))
-                                        outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique."));
-                                    if (databasevalue.Name.Contains('*'))
-                                        outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
-                                    outer_children.Add(databasevalue);
+                                    if (outer_children.Select(db => db.Name).Contains(segmentvalue.Name))
+                                        outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique."));
+                                    if (segmentvalue.Name.Contains('*'))
+                                        outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
+                                    outer_children.Add(segmentvalue);
                                 }
                                 else
                                 {
-                                    var children = new List<DatabaseValue>();
-                                    foreach (var sub_database in database.GetValues())
+                                    var children = new List<SegmentValue>();
+                                    foreach (var sub_segment in segment.GetValues())
                                     {
-                                        var databasevalue = ParseHelper.ParseDatabase(nameFilter, sub_database, false).GetValue(outEither);
+                                        var segmentvalue = ParseHelper.ParseSegment(nameFilter, sub_segment, false).GetValue(outEither);
 
                                         // Check to see if the name is valid
-                                        if (children.Select(db => db.Name).Contains(databasevalue.Name))
-                                            outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names have to be unique, within their scope."));
-                                        if (databasevalue.Name.Contains('*'))
-                                            outEither.AddMessage(new ErrorMessage(database.KeyRange.Full, "Invalid name", "Database names cannot contain '*'."));
-                                        children.Add(databasevalue);
+                                        if (children.Select(db => db.Name).Contains(segmentvalue.Name))
+                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
+                                        if (segmentvalue.Name.Contains('*'))
+                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
+                                        children.Add(segmentvalue);
                                     }
-                                    output.Databases.Add((database.OriginalName, children));
+                                    output.Segments.Add((segment.OriginalName, children));
                                 }
                             }
-                            if (outer_children.Count > 0) output.Databases.Add(("", outer_children));
+                            if (outer_children.Count > 0) output.Segments.Add(("", outer_children));
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -687,21 +687,21 @@ namespace AssemblyNameSpace
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Databases', 'Alphabet', and 'EnforceUnique'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', and 'EnforceUnique'"));
                             break;
                     }
                 }
 
-                if (output.Databases.Count() > 1)
-                    foreach (var db in output.Databases)
+                if (output.Segments.Count() > 1)
+                    foreach (var db in output.Segments)
                         if (db.Item1 == "")
-                            outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single databases in grouped database list", "You cannot define a single database when there are also database groups defined."));
+                            outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single segments in grouped segment list", "You cannot define a single segment when there are also segment groups defined."));
 
                 if (output.Alphabet == null)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Alphabet"));
 
-                if (output.Databases.Count() == 0)
-                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any database"));
+                if (output.Segments.Count() == 0)
+                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any segment"));
 
                 outEither.Value = output;
                 return outEither;
@@ -1010,7 +1010,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<DatabaseValue> ParseDatabase(NameFilter namefilter, KeyValue node, bool extended)
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter namefilter, KeyValue node, bool extended)
             {
                 // Parse files one by one
                 var file_path = "";
@@ -1018,8 +1018,8 @@ namespace AssemblyNameSpace
 
                 var peaks_settings = new Input.Peaks();
 
-                var tsettings = new DatabaseValue();
-                var outEither = new ParseResult<DatabaseValue>(tsettings);
+                var tsettings = new SegmentValue();
+                var outEither = new ParseResult<SegmentValue>(tsettings);
 
                 foreach (var setting in node.GetValues())
                 {

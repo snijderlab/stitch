@@ -20,7 +20,7 @@ namespace AssemblyNameSpace
     public class Template
     {
         /// <summary>
-        /// The name of the containing TemplateDatabase. <see cref="TemplateDatabase.Name"/>
+        /// The name of the containing Segment. <see cref="Segment.Name"/>
         /// </summary>
         public readonly string Name;
 
@@ -88,25 +88,25 @@ namespace AssemblyNameSpace
         public readonly List<Template> Recombination;
 
         /// <summary>
-        /// The location this template resides (index in the containing TemplateDatabase and its location)
+        /// The location this template resides (index in the containing Segment and its location)
         /// </summary>
         public readonly TemplateLocation Location;
 
         /// <summary>
-        /// The parent database, needed to get the settings for scoring, alphabet etc
+        /// The parent segment, needed to get the settings for scoring, alphabet etc
         /// </summary>
-        public readonly TemplateDatabase Parent;
+        public readonly Segment Parent;
 
         /// <summary>
         /// Creates a new template
         /// </summary>
-        /// <param name="name">The name of the enclosing TemplateDatabase, <see cref="Name"/>.</param>
+        /// <param name="name">The name of the enclosing Segment, <see cref="Name"/>.</param>
         /// <param name="seq">The sequence, <see cref="Sequence"/>.</param>
         /// <param name="meta">The metadata, <see cref="MetaData"/>.</param>
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, TemplateDatabase parent, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Segment parent, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;
@@ -508,28 +508,28 @@ namespace AssemblyNameSpace
     }
 
     /// <summary>
-    /// The location of a template, in its TemplateDatabase and its location
+    /// The location of a template, in its Segment and its location
     /// </summary>
     public class TemplateLocation
     {
         /// <summary>
-        /// The location of the <see cref="TemplateDatabase"/>, see <see cref="TemplateDatabase.Index"/>.
+        /// The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>.
         /// </summary>
-        public readonly int TemplateDatabaseIndex;
+        public readonly int SegmentIndex;
 
         /// <summary>
-        /// The index of the <see cref="Template"/>, defined as the index in the containing TemplateDatabase list of Templates, see <see cref="TemplateDatabase.Templates"/>.
+        /// The index of the <see cref="Template"/>, defined as the index in the containing Segment list of Templates, see <see cref="Segment.Templates"/>.
         /// </summary>
         public readonly int TemplateIndex;
 
         /// <summary>
         /// Creates a new TemplateLocation
         /// </summary>
-        /// <param name="templateDatabaseIndex"> The TemplateDatabase index, see <see cref="TemplateDatabaseIndex"/>.</param>
+        /// <param name="segmentIndex"> The Segment index, see <see cref="SegmentIndex"/>.</param>
         /// <param name="templateIndex"> The Template index, see <see cref="TemplateIndex"/>.</param>
-        public TemplateLocation(int templateDatabaseIndex, int templateIndex)
+        public TemplateLocation(int segmentIndex, int templateIndex)
         {
-            TemplateDatabaseIndex = templateDatabaseIndex;
+            SegmentIndex = segmentIndex;
             TemplateIndex = templateIndex;
         }
     }

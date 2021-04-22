@@ -20,8 +20,8 @@ TemplateMatching ->
         GapExtendPenalty : 1
     <-
 
-    Databases->
-        Database->
+    Segments->
+        Segment->
             Path      : ../datasets/herceptin_sequence.fasta
             Name      : Herceptin Sequence
         <-

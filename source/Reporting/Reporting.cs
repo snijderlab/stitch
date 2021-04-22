@@ -17,15 +17,15 @@ namespace AssemblyNameSpace
     public struct ReportInputParameters
     {
         public readonly List<(string, MetaData.IMetaData)> Input;
-        public readonly List<(string, List<TemplateDatabase>)> TemplateDatabases;
-        public readonly List<TemplateDatabase> RecombinedDatabase;
+        public readonly List<(string, List<Segment>)> Segments;
+        public readonly List<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<TemplateDatabase>)> databases = null, List<TemplateDatabase> recombineddatabase = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<Segment>)> segments = null, List<Segment> recombinedsegment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             Input = input;
-            TemplateDatabases = databases;
-            RecombinedDatabase = recombineddatabase;
+            Segments = segments;
+            RecombinedSegment = recombinedsegment;
             BatchFile = batchFile;
             Runname = runname;
         }

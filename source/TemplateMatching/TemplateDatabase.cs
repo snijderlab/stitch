@@ -14,7 +14,7 @@ using System.ComponentModel;
 
 namespace AssemblyNameSpace
 {
-    public class TemplateDatabase
+    public class Segment
     {
         public readonly int Index;
         public readonly string Name;
@@ -23,15 +23,15 @@ namespace AssemblyNameSpace
         public readonly double CutoffScore;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
-        /// Create a new TemplateDatabase based on the reads found in the given file.
+        /// Create a new Segment based on the reads found in the given file.
         /// </summary>
         /// <param name="sequences">The reads to generate templates from</param>
         /// <param name="alphabet">The alphabet to use</param>
-        /// <param name="name">The name for this templatedatabase</param>
+        /// <param name="name">The name for this segment</param>
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
-        /// <param name="scoring">The scoring behaviour to use in this database</param>
-        public TemplateDatabase(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        /// <param name="scoring">The scoring behaviour to use in this segment</param>
+        public Segment(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -48,13 +48,13 @@ namespace AssemblyNameSpace
             }
         }
         /// <summary>
-        /// Create a new TemplateDatabase based on the templates provided.
+        /// Create a new Segment based on the templates provided.
         /// </summary>
         /// <param name="templates">The templates</param>
         /// <param name="alphabet">The alphabet to use</param>
-        /// <param name="name">The name for this templatedatabase</param>
+        /// <param name="name">The name for this segment</param>
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
-        public TemplateDatabase(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore)
+        public Segment(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore)
         {
             Name = name;
             CutoffScore = cutoffScore;
@@ -76,7 +76,7 @@ namespace AssemblyNameSpace
             return output;
         }
         /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
         public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, MetaData.IMetaData)> sequences)
@@ -90,7 +90,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// Match the given sequences to the database. Saves the results in this instance of the database.
+        /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
         public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
@@ -109,11 +109,11 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// Create a string summary of a template database.
+        /// Create a string summary of a template segment.
         /// </summary>
         public override string ToString()
         {
-            return $"TemplateDatabase {Name} with {Templates.Count()} templates in total";
+            return $"Segment {Name} with {Templates.Count()} templates in total";
         }
     }
 }

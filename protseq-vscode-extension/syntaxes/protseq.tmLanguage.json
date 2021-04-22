@@ -27,7 +27,7 @@
         },
         "single-parameter": {
             "name": "entity",
-            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|database|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|EnforceUnique)\\s*",
+            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|segment|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|EnforceUnique)\\s*",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.tag"
@@ -84,7 +84,7 @@
             }]
         },
         "multiple-parameter": {
-            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|alphabet|recombine|html|csv|fasta|database|inputparameters|input|report|templatematching)\\s*(->)",
+            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|alphabet|recombine|html|csv|fasta|segment|inputparameters|input|report|templatematching)\\s*(->)",
             "end": "(<-)",
             "beginCaptures": {
                 "1": {
@@ -102,7 +102,7 @@
             "patterns": [{
                 "include": "#multiple-parameter"
             }, {
-                "include": "#databases"
+                "include": "#segments"
             }, {
                 "include": "#order"
             }, {
@@ -111,8 +111,8 @@
                 "include": "#comment"
             }]
         },
-        "databases": {
-            "begin": "(?i)^\\s*(databases)\\s*(->)",
+        "segments": {
+            "begin": "(?i)^\\s*(segments)\\s*(->)",
             "end": "(<-)",
             "beginCaptures": {
                 "1": {
@@ -130,12 +130,12 @@
             "patterns": [{
                 "include": "#multiple-parameter"
             }, {
-                "include": "#database-group"
+                "include": "#segment-group"
             }, {
                 "include": "#comment"
             }]
         },
-        "database-group": {
+        "segment-group": {
             "begin": "(?i)^\\s*([\\w\\s]+)\\s*(->)",
             "end": "(<-)",
             "beginCaptures": {

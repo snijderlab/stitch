@@ -86,11 +86,11 @@ namespace AssemblyNameSpace
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
 
-                var databases = RunTemplateMatching();
+                var segments = RunTemplateMatching();
 
                 stopWatch.Stop();
 
-                List<TemplateDatabase> recombined_database = new List<TemplateDatabase>();
+                List<Segment> recombined_segment = new List<Segment>();
                 var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
                 for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
@@ -100,12 +100,12 @@ namespace AssemblyNameSpace
                     Stopwatch recombine_sw = new Stopwatch();
                     recombine_sw.Start();
 
-                    RunRecombine(databases, matches, recombined_database);
+                    RunRecombine(segments, matches, recombined_segment);
 
                     recombine_sw.Stop();
                 }
 
-                var parameters = new ReportInputParameters(Input, databases, recombined_database, this.BatchFile, this.Runname);
+                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.Runname);
 
                 // Generate the report(s)
                 foreach (var report in Report)
@@ -127,32 +127,32 @@ namespace AssemblyNameSpace
                 if (progressBar != null) progressBar.Update();
             }
 
-            List<(string, List<TemplateDatabase>)> RunTemplateMatching()
+            List<(string, List<Segment>)> RunTemplateMatching()
             {
                 // Initialise the matches list with empty lists for every input read
-                var matches = new List<List<(int GroupIndex, int DatabaseIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
+                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
                 for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
-                var databases = new List<(string, List<TemplateDatabase>)>();
-                for (int i = 0; i < TemplateMatching.Databases.Count(); i++)
+                var segments = new List<(string, List<Segment>)>();
+                for (int i = 0; i < TemplateMatching.Segments.Count(); i++)
                 {
-                    var current_group = new List<TemplateDatabase>();
-                    for (int j = 0; j < TemplateMatching.Databases[i].Databases.Count(); j++)
+                    var current_group = new List<Segment>();
+                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count(); j++)
                     {
-                        var database = TemplateMatching.Databases[i].Databases[j];
-                        var alph = new Alphabet(database.Alphabet ?? TemplateMatching.Alphabet);
+                        var segment = TemplateMatching.Segments[i].Segments[j];
+                        var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
 
-                        var database1 = new TemplateDatabase(database.Templates, alph, database.Name, database.CutoffScore == 0 ? TemplateMatching.CutoffScore : database.CutoffScore, j, database.Scoring);
+                        var segment1 = new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, segment.Scoring);
 
                         // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
-                        var local_matches = database1.Match(Input);
+                        var local_matches = segment1.Match(Input);
 
                         for (int read = 0; read < Input.Count(); read++)
                             matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
 
-                        current_group.Add(database1);
+                        current_group.Add(segment1);
                     }
-                    databases.Add((TemplateMatching.Databases[i].Name, current_group));
+                    segments.Add((TemplateMatching.Segments[i].Name, current_group));
 
                     // Save the progress, finished a group
                     if (progressBar != null) progressBar.Update();
@@ -167,27 +167,27 @@ namespace AssemblyNameSpace
                     var unique = row.Count() == 1;
                     foreach (var match in row)
                     {
-                        databases[match.GroupIndex].Item2[match.DatabaseIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
+                        segments[match.GroupIndex].Item2[match.SegmentIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                     }
                 }
 
-                return databases;
+                return segments;
             }
 
-            void RunRecombine(List<(string, List<TemplateDatabase>)> databases, List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>> matches, List<TemplateDatabase> recombined_database)
+            void RunRecombine(List<(string, List<Segment>)> segments, List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>> matches, List<Segment> recombined_segment)
             {
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
 
-                for (int database_group_index = 0; database_group_index < databases.Count(); database_group_index++)
+                for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
                 {
-                    var database_group = databases[database_group_index];
-                    // Create a list for every database with the top n highest scoring templates.
+                    var segment_group = segments[segment_group_index];
+                    // Create a list for every segment with the top n highest scoring templates.
                     // By having the lowest of these always at the first position at shuffling in
                     // a new high scoring template to its right position this snippet is still
-                    // approximately O(n) in respect to the database. Worst case O(top_n * l_database)
+                    // approximately O(n) in respect to the segment. Worst case O(top_n * l_segment)
                     var top = new List<List<Template>>();
                     var decoy = new List<Template>();
-                    foreach (var db in database_group.Item2)
+                    foreach (var db in segment_group.Item2)
                     {
                         db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
                         top.Add(db.Templates.Take(Recombine.N).ToList());
@@ -205,18 +205,18 @@ namespace AssemblyNameSpace
                         from item in sequence
                         select acc.Concat(new[] { item }));
 
-                    var recombined_database_group = new TemplateDatabase(new List<Template>(), alph, "Recombined Database", Recombine.CutoffScore);
-                    CreateRecombinationTemplates(combinations, database_group_index, alph, recombined_database_group);
-                    if (Recombine.Decoy) recombined_database_group.Templates.AddRange(decoy);
+                    var recombined_segment_group = new Segment(new List<Template>(), alph, "Recombined Segment", Recombine.CutoffScore);
+                    CreateRecombinationTemplates(combinations, segment_group_index, alph, recombined_segment_group);
+                    if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
-                    var local_matches = recombined_database_group.Match(Input);
+                    var local_matches = recombined_segment_group.Match(Input);
 
                     for (int read = 0; read < Input.Count(); read++)
-                        matches[read].AddRange(local_matches[read].Select(a => (database_group_index, 0, a.Item1, a.Item2)));
+                        matches[read].AddRange(local_matches[read].Select(a => (segment_group_index, 0, a.Item1, a.Item2)));
 
-                    recombined_database.Add(recombined_database_group);
+                    recombined_segment.Add(recombined_segment_group);
 
-                    // Did recombination + databases
+                    // Did recombination + segments
                     if (progressBar != null) progressBar.Update();
                 }
 
@@ -231,12 +231,12 @@ namespace AssemblyNameSpace
                     var unique = row.Count() == 1;
                     foreach (var match in row)
                     {
-                        recombined_database[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
+                        recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                     }
                 }
             }
 
-            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int database_group_index, Alphabet alphabet, TemplateDatabase parent)
+            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent)
             {
                 var recombined_templates = new List<Template>();
                 var namefilter = new NameFilter();
@@ -247,7 +247,7 @@ namespace AssemblyNameSpace
                     var s = new List<AminoAcid>();
                     var t = new List<Template>();
                     var join = false;
-                    foreach (var element in Recombine.Order[database_group_index])
+                    foreach (var element in Recombine.Order[segment_group_index])
                     {
                         if (element.GetType() == typeof(RecombineOrder.Gap))
                         {

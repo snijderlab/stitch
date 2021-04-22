@@ -56,13 +56,13 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        string CreateTemplateTables(List<TemplateDatabase> databases, int templateGroup)
+        string CreateTemplateTables(List<Segment> segments, int templateGroup)
         {
             var output = new StringBuilder();
 
-            for (var i = 0; i < databases.Count(); i++)
+            for (var i = 0; i < segments.Count(); i++)
             {
-                var item = databases[i];
+                var item = segments[i];
                 output.Append(Collapsible($"Template Matching {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
             }
 
@@ -700,8 +700,8 @@ namespace AssemblyNameSpace
                 switch (aside)
                 {
                     case AsideType.Read: SaveAside(CreateReadAside(index1), AsideType.Read, -1, -1, index1); break;
-                    case AsideType.Template: SaveTemplateAside(Parameters.TemplateDatabases[index3].Item2[index2].Templates[index1], AsideType.Template, index3, index2, index1); break;
-                    case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedDatabase[index3].Templates[index1], AsideType.RecombinedTemplate, index3, index2, index1); break;
+                    case AsideType.Template: SaveTemplateAside(Parameters.Segments[index3].Item2[index2].Templates[index1], AsideType.Template, index3, index2, index1); break;
+                    case AsideType.RecombinedTemplate: SaveTemplateAside(Parameters.RecombinedSegment[index3].Templates[index1], AsideType.RecombinedTemplate, index3, index2, index1); break;
                 };
             }
 
@@ -711,18 +711,18 @@ namespace AssemblyNameSpace
                 jobbuffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
-            if (Parameters.TemplateDatabases != null)
+            if (Parameters.Segments != null)
             {
-                for (int i = 0; i < Parameters.TemplateDatabases.Count(); i++)
-                    for (int j = 0; j < Parameters.TemplateDatabases[i].Item2.Count(); j++)
-                        for (int k = 0; k < Parameters.TemplateDatabases[i].Item2[j].Templates.Count(); k++)
+                for (int i = 0; i < Parameters.Segments.Count(); i++)
+                    for (int j = 0; j < Parameters.Segments[i].Item2.Count(); j++)
+                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count(); k++)
                             jobbuffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
-            if (Parameters.RecombinedDatabase != null)
+            if (Parameters.RecombinedSegment != null)
             {
-                for (int i = 0; i < Parameters.RecombinedDatabase.Count(); i++)
-                    for (int j = 0; j < Parameters.RecombinedDatabase[i].Templates.Count(); j++)
+                for (int i = 0; i < Parameters.RecombinedSegment.Count(); i++)
+                    for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count(); j++)
                         jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
             if (MaxThreads > 1)
@@ -831,7 +831,7 @@ namespace AssemblyNameSpace
             }
             else if (type == AsideType.Template)
             {
-                metadata = Parameters.TemplateDatabases[index1].Item2[index2].Templates[index3].MetaData;
+                metadata = Parameters.Segments[index1].Item2[index2].Templates[index3].MetaData;
             }
             if (metadata != null && metadata.Identifier != null)
             {
@@ -1126,16 +1126,16 @@ assetsfolder = '{AssetsFolderName}';
         private string CreateOverview()
         {
             var buffer = new StringBuilder();
-            if (Parameters.RecombinedDatabase.Count() != 0)
+            if (Parameters.RecombinedSegment.Count() != 0)
             {
-                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count(); group++)
                 {
-                    var (seq, doc) = Parameters.RecombinedDatabase[group].Templates[0].ConsensusSequence();
-                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3><p>");
+                    var (seq, doc) = Parameters.RecombinedSegment[group].Templates[0].ConsensusSequence();
+                    buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3><p>");
 
-                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
+                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
-                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
+                        var seg = Parameters.Segments[group].Item2[segment];
                         buffer.Append(GetAsideLink(group, segment, 0, AsideType.Template));
                     }
                     buffer.Append("</p>");
@@ -1143,13 +1143,13 @@ assetsfolder = '{AssetsFolderName}';
             }
             else
             {
-                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count(); group++)
                 {
-                    buffer.Append($"<h2>{Parameters.TemplateDatabases[group].Item1}</h2>");
+                    buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2>");
 
-                    for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
+                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
-                        var seg = Parameters.TemplateDatabases[group].Item2[segment];
+                        var seg = Parameters.Segments[group].Item2[segment];
                         buffer.Append($"<h3>{seg.Name}</h3>{TableHeader(seg.Templates)}");
                     }
                 }
@@ -1163,20 +1163,20 @@ assetsfolder = '{AssetsFolderName}';
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
-            if (Parameters.TemplateDatabases != null)
-                for (int group = 0; group < Parameters.TemplateDatabases.Count(); group++)
+            if (Parameters.Segments != null)
+                for (int group = 0; group < Parameters.Segments.Count(); group++)
                 {
                     var groupbuffer = "";
 
-                    if (Parameters.RecombinedDatabase.Count() != 0)
-                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedDatabase[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
+                    if (Parameters.RecombinedSegment.Count() != 0)
+                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedSegment[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
 
-                    groupbuffer += CreateTemplateTables(Parameters.TemplateDatabases[group].Item2, group);
+                    groupbuffer += CreateTemplateTables(Parameters.Segments[group].Item2, group);
 
-                    if (Parameters.TemplateDatabases.Count() == 1)
+                    if (Parameters.Segments.Count() == 1)
                         innerbuffer.Append(groupbuffer);
                     else
-                        innerbuffer.Append(Collapsible(Parameters.TemplateDatabases[group].Item1, groupbuffer));
+                        innerbuffer.Append(Collapsible(Parameters.Segments[group].Item1, groupbuffer));
                 }
 
             innerbuffer.Append(Collapsible("Reads Table", CreateReadsTable()));

@@ -46,29 +46,29 @@
         ],
         "description": "Default Assembly structure"
     },
-    "Database": {
-        "prefix": "Database",
+    "Segment": {
+        "prefix": "Segment",
         "body": [
-            "Database ->",
+            "Segment ->",
             "    Name: $1",
             "    Path: $2",
             "<-"
         ],
-        "description": "Default Database structure"
+        "description": "Default Segment structure"
     },
-    "DatabaseFree": {
-        "prefix": "DatabaseFree",
+    "SegmentFree": {
+        "prefix": "SegmentFree",
         "body": [
-            "Database ->",
+            "Segment ->",
             "    Name: $1",
             "    Path: $2",
             "    Alphabet ->",
             "        Path: $3",
-            "        Name: ${4:Database Alphabet}",
+            "        Name: ${4:Segment Alphabet}",
             "    <-",
             "<-"
         ],
-        "description": "Extended Database structure"
+        "description": "Extended Segment structure"
     },
     "Recombine": {
         "prefix": "Recombine",
@@ -78,7 +78,7 @@
             "    CutoffScore: $2",
             "    Order: $3",
             "",
-            "    Databases ->",
+            "    Segments ->",
             "        $4",
             "    <-",
             "",
