@@ -158,8 +158,8 @@ namespace AssemblyNameSpace
                     if (progressBar != null) progressBar.Update();
                 }
                 // Filter matches if Forced
-                if (TemplateMatching.ForceOnSingleTemplate)
-                    ForceOnSingleTemplate(matches);
+                if (TemplateMatching.EnforceUnique)
+                    EnforceUnique(matches);
 
                 // Add all matches to the right templates
                 foreach (var row in matches)
@@ -221,8 +221,8 @@ namespace AssemblyNameSpace
                 }
 
                 // Filter matches if Forced
-                if (HelperFunctionality.EvaluateTrilean(Recombine.ForceOnSingleTemplate, TemplateMatching.ForceOnSingleTemplate))
-                    ForceOnSingleTemplate(matches);
+                if (HelperFunctionality.EvaluateTrilean(Recombine.EnforceUnique, TemplateMatching.EnforceUnique))
+                    EnforceUnique(matches);
 
 
                 // Add all matches to the right templates
@@ -291,7 +291,7 @@ namespace AssemblyNameSpace
                 parent.Templates = recombined_templates;
             }
 
-            void ForceOnSingleTemplate(List<List<(int, int, int, SequenceMatch Match)>> matches)
+            void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)
             {
                 for (int read_index = 0; read_index < matches.Count(); read_index++)
                 {

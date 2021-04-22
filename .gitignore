@@ -25,3 +25,4 @@ _site
 .vs
 report*/**
 all_addmatch_cseq.txt
+textual.md

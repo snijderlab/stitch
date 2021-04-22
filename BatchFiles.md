@@ -87,7 +87,7 @@ A `*` indicates that the scope or parameter can be defined multiple times.
 * TemplateMatching
     * CutoffScore
     * Alphabet
-    * ForceOnSingleTemplate
+    * EnforceUnique
     * Databases
         * Database *
             * Name
@@ -101,7 +101,7 @@ A `*` indicates that the scope or parameter can be defined multiple times.
     * Order
     * CutoffScore
     * Alphabet
-    * ForceOnSingleTemplate
+    * EnforceUnique
 * Report
     * HTML *
         * Path
@@ -268,7 +268,7 @@ The mean score per position needed for a path to be included in the Database sco
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
 
-##### ForceOnSingleTemplate (s)
+##### EnforceUnique (s)
 
 Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
@@ -276,7 +276,7 @@ Determines of the paths/reads of this database will be forced to the best templa
 
 Defines a list of databases to match against. A single database is defined by the parameter `Database` which can be defined multiple times within `Databases`. Databases will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-`CutoffScore`, `Alphabet`, `ForceOnSingleTemplate`, and `Scoring` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
+`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
@@ -345,7 +345,7 @@ Specifies a Regular Expression to parse the identifier from the Fasta header of 
 
 The scoring strategy used when determining the score of this database. `Absolute` will just add the scores of all individual templates. `Relative` will divide the scores for individual templates by their respective length, giving lengthwise very different templates a fairer chance of being chosen for recombination. Default: `Absolute`.
 
-###### ForceOnSingleTemplate (s)
+###### EnforceUnique (s)
 
 Determines of the paths/reads of this database will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
@@ -403,7 +403,7 @@ The mean score per position needed for a path to be included in the Database sco
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.
 
-##### ForceOnSingleTemplate (s)
+##### EnforceUnique (s)
 
 Determines of the paths/reads of these databases will be forced to the best template(s) or just all templates which score high enough. Setting this options for a database in the databases list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 

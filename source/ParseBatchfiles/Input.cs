@@ -683,11 +683,11 @@ namespace AssemblyNameSpace
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             break;
-                        case "forceonsingletemplate":
-                            output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither);
+                        case "enforceunique":
+                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Databases', 'Alphabet', and 'ForceOnSingleTemplate'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Databases', 'Alphabet', and 'EnforceUnique'"));
                             break;
                     }
                 }
@@ -735,14 +735,14 @@ namespace AssemblyNameSpace
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
                             break;
-                        case "forceonsingletemplate":
-                            output.ForceOnSingleTemplate = ParseBool(setting, "ForceOnSingleTemplate").GetValue(outEither) ? Trilean.True : Trilean.False;
+                        case "enforceunique":
+                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither) ? Trilean.True : Trilean.False;
                             break;
                         case "decoy":
                             output.Decoy = ParseBool(setting, "Decoy").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', and 'ForceOnSingleTemplate'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', and 'EnforceUnique'"));
                             break;
                     }
                 }

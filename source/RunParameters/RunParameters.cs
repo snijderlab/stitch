@@ -247,7 +247,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
-            public bool ForceOnSingleTemplate = true;
+            public bool EnforceUnique = true;
 
             /// <summary>
             /// The templates themselves. Grouped by their template group.
@@ -273,7 +273,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
-            public Trilean ForceOnSingleTemplate = Trilean.Unspecified;
+            public Trilean EnforceUnique = Trilean.Unspecified;
 
             /// <summary>
             /// The amount of templates to recombine from the highest scoring Databases.

@@ -13,7 +13,7 @@ Input ->
 <-
 
 TemplateMatching ->
-    ForceOnSingleTemplate: True
+    EnforceUnique: True
     CutoffScore          : 10
 
     Alphabet ->

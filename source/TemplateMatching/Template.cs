@@ -56,7 +56,7 @@ namespace AssemblyNameSpace
         int score;
 
         /// <summary>
-        /// To signify if this template was used in a match run which used ForceOnSingleTemplate.
+        /// To signify if this template was used in a match run which used EnforceUnique.
         /// </summary>
         public bool ForcedOnSingleTemplate;
 
@@ -122,7 +122,7 @@ namespace AssemblyNameSpace
         /// Adds a new match to the list of matches, if the score is above the cutoff
         /// </summary>
         /// <param name="match">The match to add</param>
-        /// <param name="unique">To signify if this read is only placed here (ForceOnSingleTemplate) or that it is a normal placement.</param>
+        /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
         public void AddMatch(SequenceMatch match, bool unique = false)
         {
             lock (Matches)
