@@ -635,14 +635,19 @@ namespace AssemblyNameSpace
                     sum += item.Value;
                 }
 
+                bool placed = false;
                 foreach (var item in consensus_sequence[i].AminoAcids)
                 {
                     if ((double)item.Value / sum > threshold)
                     {
                         var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        placed = true;
                     }
                 }
+                if (!placed)
+                    sequence_logo_buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
+
                 sequence_logo_buffer.Append("</div><div class='sequence-logo-position sequence-logo-gap'>");
                 // Get the highest chars
                 int gap_sum = 0;
