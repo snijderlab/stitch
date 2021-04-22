@@ -174,7 +174,6 @@ namespace AssemblyNameSpace
             switch (type)
             {
                 case AsideType.RecombinedTemplate:
-                    // Broken
                     if (template.Recombination != null)
                     {
                         var order = template.Recombination.Aggregate(
