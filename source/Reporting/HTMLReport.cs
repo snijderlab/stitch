@@ -174,6 +174,7 @@ namespace AssemblyNameSpace
             switch (type)
             {
                 case AsideType.RecombinedTemplate:
+                    // Broken
                     if (template.Recombination != null)
                         based = $"<h2>Order</h2><p>{template.Recombination.Aggregate("", (a, b) => a + " → " + GetAsideLink(superindex, b.Location.TemplateDatabaseIndex, b.Location.TemplateIndex, AsideType.Template, location)).Substring(3)}</p>";
                     break;
@@ -1105,7 +1106,7 @@ assetsfolder = '{AssetsFolderName}';
                     for (int segment = 0; segment < Parameters.TemplateDatabases[group].Item2.Count(); segment++)
                     {
                         var seg = Parameters.TemplateDatabases[group].Item2[segment];
-                        buffer.Append(GetAsideLink(group, segment, seg.Index, AsideType.Template));
+                        buffer.Append(GetAsideLink(group, segment, 0, AsideType.Template));
                     }
                     buffer.Append("</p>");
                 }
