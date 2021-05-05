@@ -10,14 +10,14 @@ namespace AssemblyNameSpace
     public class FASTAReport : Report
     {
         readonly int MinScore;
-        readonly RunParameters.Report.FastaOutputType OutputType;
+        readonly RunParameters.Report.OutputType OutputType;
 
         /// <summary>
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
         /// <param name="minscore">The minimal score needed to be included in the file.</param>
-        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.FastaOutputType outputType, int max_threads) : base(parameters, max_threads)
+        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.OutputType outputType, int max_threads) : base(parameters, max_threads)
         {
             MinScore = minscore;
             OutputType = outputType;
@@ -31,7 +31,7 @@ namespace AssemblyNameSpace
         {
             var sequences = new List<(double, string)>();
 
-            if (OutputType == RunParameters.Report.FastaOutputType.Recombine)
+            if (OutputType == RunParameters.Report.OutputType.Recombine)
             {
                 sequences.Capacity = Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum();
                 foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates))

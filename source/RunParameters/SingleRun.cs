@@ -120,6 +120,10 @@ namespace AssemblyNameSpace
                             var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
                             fastareport.Save(f.CreateName(this));
                             break;
+                        case Report.CSV c:
+                            var csvreport = new CSVReport(parameters, c.OutputType, max_threads);
+                            csvreport.Save(c.CreateName(this));
+                            break;
                     }
                 }
 

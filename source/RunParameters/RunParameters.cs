@@ -396,7 +396,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
-            public enum FastaOutputType { TemplateMatches, Recombine }
+            public enum OutputType { TemplateMatches, Recombine }
 
             /// <summary>
             /// To indicate to return a FASTA report.
@@ -411,7 +411,18 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The outputtype of the sequences
                 /// </summary>
-                public FastaOutputType OutputType = FastaOutputType.TemplateMatches;
+                public OutputType OutputType = OutputType.TemplateMatches;
+            }
+
+            /// <summary>
+            /// To indicate to return a CSV report.
+            /// </summary>
+            public class CSV : Parameter
+            {
+                /// <summary>
+                /// The outputtype of the sequences
+                /// </summary>
+                public OutputType OutputType = OutputType.TemplateMatches;
             }
         }
     }

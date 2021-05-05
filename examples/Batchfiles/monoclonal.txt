@@ -117,8 +117,20 @@ Report ->
     HTML ->
         Path    : ../../report-monoclonal.html
     <-
-    -FASTA ->
-    -    Path: ../../report-monoclonal.fasta
-    -    OutputType: Recombine
-    -<-
+    FASTA ->
+        Path: ../../report-monoclonal-tm.fasta
+        OutputType: TemplateMatching
+    <-
+    CSV ->
+        Path: ../../report-monoclonal-tm.csv
+        OutputType: TemplateMatching
+    <-
+    FASTA ->
+        Path: ../../report-monoclonal-rec.fasta
+        OutputType: Recombine
+    <-
+    CSV ->
+        Path: ../../report-monoclonal-rec.csv
+        OutputType: Recombine
+    <-
 <-

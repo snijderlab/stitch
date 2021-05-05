@@ -103,7 +103,7 @@ namespace AssemblyNameSpace
                 {
                     if (report is RunParameters.Report.FASTA fa)
                     {
-                        if (fa.OutputType == RunParameters.Report.FastaOutputType.Recombine && output.Recombine == null)
+                        if (fa.OutputType == RunParameters.Report.OutputType.Recombine && output.Recombine == null)
                         {
                             outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Recombine, because FASTA output was set to 'Recombine'"));
                         }
@@ -800,10 +800,10 @@ namespace AssemblyNameSpace
                                         switch (setting.GetValue().ToLower())
                                         {
                                             case "templatematching":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.TemplateMatches;
+                                                fsettings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
                                                 break;
                                             case "recombine":
-                                                fsettings.OutputType = RunParameters.Report.FastaOutputType.Recombine;
+                                                fsettings.OutputType = RunParameters.Report.OutputType.Recombine;
                                                 break;
                                             default:
                                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
@@ -817,6 +817,39 @@ namespace AssemblyNameSpace
                             }
                             if (string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             output.Files.Add(fsettings);
+                            break;
+                        case "csv":
+                            var csettings = new RunParameters.Report.CSV();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        csettings.Path = Path.GetFullPath(setting.GetValue());
+                                        break;
+                                    case "outputtype":
+                                        switch (setting.GetValue().ToLower())
+                                        {
+                                            case "templatematching":
+                                                csettings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
+                                                break;
+                                            case "recombine":
+                                                csettings.OutputType = RunParameters.Report.OutputType.Recombine;
+                                                break;
+                                            default:
+                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "CSV OutputType", "'TemplateMatching' and 'Recombine'"));
+                                                break;
+                                        }
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path' and 'OutputType"));
+                                        break;
+                                }
+                            }
+                            if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(csettings);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Report", "'HTML', 'FASTA' and 'CSV'"));

@@ -283,7 +283,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                fields.Add(line.Substring(lastpos, line.Length - lastpos - 1));
+                fields.Add(line.Substring(lastpos, line.Length - lastpos));
                 positions.Add(new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
 
                 if (fields.Count < 3)
