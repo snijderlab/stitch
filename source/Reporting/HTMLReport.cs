@@ -1120,7 +1120,10 @@ assetsfolder = '{AssetsFolderName}';
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
-                        buffer.Append(GetAsideLink(group, segment, 0, AsideType.Template));
+                        if (seg.Templates.Count() > 0)
+                        {
+                            buffer.Append(GetAsideLink(seg.Templates[0].MetaData, AsideType.Template));
+                        }
                     }
                     buffer.Append("</p>");
                 }
