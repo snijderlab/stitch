@@ -286,9 +286,9 @@ namespace AssemblyNameSpace
                 fields.Add(line.Substring(lastpos, line.Length - lastpos));
                 positions.Add(new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
 
-                if (fields.Count < 3)
+                if (fields.Count < 5)
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), $"Line has too low amount of fields ({fields.Count})", "", "", true));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
                     return result;
                 }
 
@@ -314,7 +314,10 @@ namespace AssemblyNameSpace
                 }
 
                 if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
+                {
                     result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                    return result;
+                }
                 var peaks = new Peaks(file, fields[pf.scan], filter);
                 result.Value = peaks;
 

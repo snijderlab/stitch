@@ -215,6 +215,8 @@ namespace AssemblyNameSpace
                     {
                         // If the first real line already has errors it is very likely that the peaks format is chosen wrong so it should not overload the user with errors
                         outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Parsing stopped", "See above error messages for errors.", "Maybe try another version of the PEAKS format.", true));
+                        outeither.PrintMessages();
+                        Environment.Exit(1);
                         break;
                     }
                     continue;
