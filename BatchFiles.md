@@ -1,10 +1,19 @@
-# Batch Files
+---
+geometry:
+- margin=2.5cm
+hyperrefoptions:
+- linktoc=all
+- pdfwindowui
+documentclass: report
+---
+
+# Assembler Batch Files Manual
 
 ## Introduction
 
 Batch files are used to aggregate all information for one run of the program. These files can be edited with any plain text editor. There is no specific extension required by the program so `.txt` is recommended because these will automatically be opened by an editor in plain text.
 
-## VS Code plugin WIP
+## VS Code plugin
 
 In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
 
@@ -443,6 +452,23 @@ _Example_
 FASTA ->
     Path         : contigs.fasta
     MinimalScore : 50
+    OutputType   : Recombine
+<-
+```
+
+##### CSV (m) *
+
+To generate a CSV file with all aligned reads for the given step. It includes all information about the position, alignment, and meta data (in the case of Peaks reads) for the reads. 
+
+| Inner parameter | Explanation                                                                                                     |   Default Value    |
+| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
+| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
+| OutputType      | The type of sequences to give as output, `TemplateMatching` or `Recombine`                                      | `TemplateMatching` |
+
+_Example_
+```
+CSV ->
+    Path         : aligned-reads.csv
     OutputType   : Recombine
 <-
 ```

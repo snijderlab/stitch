@@ -30,13 +30,14 @@ deploy:
     - Copy-Item "source\bin\release\netcoreapp3.1\linux-x64\publish\source" -Destination "assembler_linux" -Force
     - Copy-Item "source\bin\release\netcoreapp3.1\osx-x64\publish\source" -Destination "assembler_mac" -Force
     - Copy-Item "source\obj\release\netcoreapp3.1\win-x64\source.dll" -Destination "assembler.dll" -Force
+    - "pandoc -o manual.pdf BatchFiles.md"
   artifacts: 
     paths:
       - assembler.exe
       - assembler_linux
       - assembler_mac
       - assembler.dll
-      - BatchFiles.md
+      - manual.pdf
       - License.md
       - README.md
       - assets/
