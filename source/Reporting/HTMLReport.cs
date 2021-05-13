@@ -80,8 +80,7 @@ namespace AssemblyNameSpace
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             if (header)
-                if (templates.Count() > 15) buffer.Append(PointsTableHeader(templates, groupIdentifier));
-                else buffer.Append(TableHeader(templates));
+                buffer.Append(TableHeader(templates, groupIdentifier));
 
             string unique = "";
             if (displayUnique) unique = $@"
@@ -960,7 +959,14 @@ namespace AssemblyNameSpace
     {HTMLGraph.GroupedPointGraph(data, header, identifier)}</div></div>";
         }
 
-        string TableHeader(List<Template> templates)
+        string TableHeader(List<Template> templates, string groupIdentifier = "")
+        {
+            if (templates.Count() > 15) return PointsTableHeader(templates, groupIdentifier);
+            if (templates.Count() > 5) return BarTableHeader(templates);
+            return $"";
+        }
+
+        string BarTableHeader(List<Template> templates)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
             {
@@ -1137,7 +1143,7 @@ assetsfolder = '{AssetsFolderName}';
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
-                        buffer.Append($"<h3>{seg.Name}</h3>{TableHeader(seg.Templates)}");
+                        buffer.Append($"<h3>{seg.Name}</h3>{TableHeader(seg.Templates, seg.Name)}");
                     }
                 }
             }
