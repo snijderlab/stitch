@@ -415,8 +415,7 @@ namespace AssemblyNameSpace
                         alignedindex++;
                     }
 
-                    var indices = new int[aligned.Length];
-                    var positions = new int[aligned.Length];
+                    var positions = new List<(int index, int position, int length)>[aligned.Length];
 
                     for (int i = 1; i < aligned.Length; i++)
                     {
@@ -424,6 +423,7 @@ namespace AssemblyNameSpace
                         int position = lines[i][alignedindex].SequencePosition;
                         int additionallength = 0;
                         int additionalindex = 1;
+                        positions[i] = new List<(int index, int position, int length)>();
 
                         while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count())
                         {
@@ -437,9 +437,9 @@ namespace AssemblyNameSpace
                             }
                             else if (thisindex != -1 && thisindex != index)
                             {
-                                // If two reads are on this patch just set the link to none.
-                                index = -2;
-                                position = -2;
+                                positions[i].Add((index, position, additionallength));
+                                index = thisindex;
+                                position = thisposition;
                                 break;
                             }
 
@@ -447,8 +447,8 @@ namespace AssemblyNameSpace
                             additionalindex++;
                         }
 
-                        indices[i] = index;
-                        positions[i] = position;
+                        if (index >= 0)
+                            positions[i].Add((index, position, blocklength));
                     }
 
 
@@ -465,24 +465,42 @@ namespace AssemblyNameSpace
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         string result = "";
-                        if (indices[i] >= 0)
+                        if (positions[i].Count() > 0)
                         {
-                            var rid = "none";
-                            var name = GetAsideName(AsideType.Read);
-                            var unique = "";
-                            try
+                            alignblock.Append("<span class=\"align-link\">");
+                            int offset = 0;
+                            foreach (var piece in positions[i])
                             {
-                                var meta = template.Matches[indices[i]].MetaData;
-                                if (template.Matches[indices[i]].Unique) unique = " unique";
-                                rid = meta.EscapedIdentifier;
+                                var rid = "none";
+                                var name = GetAsideName(AsideType.Read);
+                                var unique = "";
+                                try
+                                {
+                                    var meta = template.Matches[piece.index].MetaData;
+                                    if (template.Matches[piece.index].Unique) unique = " unique";
+                                    rid = meta.EscapedIdentifier;
+                                }
+                                catch { }
+                                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + piece.position;
+                                if (aligned[i].Length > block * blocklength + offset)
+                                {
+                                    // Get the block of sequence for this piece, determine if there are leading or trailing spaces and add empty text for those
+                                    var seq = aligned[i].Substring(block * blocklength + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * blocklength - offset), blocklength - offset), 0));
+                                    var length = seq.Length;
+                                    seq = seq.TrimStart(nonbreakingspace);
+                                    if (length > seq.Length)
+                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", length - seq.Length)));
+                                    length = seq.Length;
+                                    seq = seq.TrimEnd(nonbreakingspace);
+
+                                    alignblock.Append($"<a href=\"{path}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+
+                                    if (length > seq.Length)
+                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", length - seq.Length)));
+                                }
+                                offset = piece.length;
                             }
-                            catch { }
-                            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + positions[i];
-                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"{path}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[indices[i]].Index})\" onmouseout=\"AlignmentDetailsClear()\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
-                        }
-                        else if (indices[i] == -2) // Clashing sequences remove link but display sequence
-                        {
-                            if (aligned[i].Length > block * blocklength) result = $"<a href=\"#\" class=\"align-link clash\">{aligned[i].Substring(block * blocklength, Math.Min(blocklength, aligned[i].Length - block * blocklength))}</a>";
+                            alignblock.Append("</span>");
                         }
                         alignblock.Append(result);
                         alignblock.Append("<br>");

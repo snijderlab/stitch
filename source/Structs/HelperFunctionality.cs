@@ -64,6 +64,17 @@ namespace AssemblyNameSpace
             }
             return input.Remove(location);
         }
+        public static string TrimStart(this string input, string prefixToRemove)
+        {
+            if (input == null || prefixToRemove == null || input == "" || input.Length < prefixToRemove.Length) return input;
+            if (input == prefixToRemove) return "";
+            int location = 0;
+            while (location < input.Length - 1 - prefixToRemove.Length && string.CompareOrdinal(input, location, prefixToRemove, 0, prefixToRemove.Length) == 0)
+            {
+                location += prefixToRemove.Length;
+            }
+            return input.Remove(location);
+        }
 
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
