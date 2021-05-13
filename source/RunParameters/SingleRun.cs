@@ -181,6 +181,7 @@ namespace AssemblyNameSpace
             void RunRecombine(List<(string, List<Segment>)> segments, List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>> matches, List<Segment> recombined_segment)
             {
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
+                var namefilter = new NameFilter();
 
                 for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
                 {
@@ -210,7 +211,7 @@ namespace AssemblyNameSpace
                         select acc.Concat(new[] { item }));
 
                     var recombined_segment_group = new Segment(new List<Template>(), alph, "Recombined Segment", Recombine.CutoffScore);
-                    CreateRecombinationTemplates(combinations, segment_group_index, alph, recombined_segment_group);
+                    CreateRecombinationTemplates(combinations, segment_group_index, alph, recombined_segment_group, namefilter);
                     if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
                     var local_matches = recombined_segment_group.Match(Input);
@@ -238,12 +239,14 @@ namespace AssemblyNameSpace
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                     }
                 }
+
+                // Finalise Identifiers
+                foreach (var segment in recombined_segment) foreach (var template in segment.Templates) template.MetaData.FinaliseIdentifier();
             }
 
-            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent)
+            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent, NameFilter namefilter)
             {
                 var recombined_templates = new List<Template>();
-                var namefilter = new NameFilter();
 
                 for (int i = 0; i < combinations.Count(); i++)
                 {
@@ -288,10 +291,8 @@ namespace AssemblyNameSpace
                             t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                         }
                     }
-                    recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, "REC"), parent, new RecombinedTemplateLocation(i), t));
+                    recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{segment_group_index + 1}-{i + 1}"), parent, new RecombinedTemplateLocation(i), t));
                 }
-                foreach (var read in recombined_templates) read.MetaData.FinaliseIdentifier();
-
                 parent.Templates = recombined_templates;
             }
 

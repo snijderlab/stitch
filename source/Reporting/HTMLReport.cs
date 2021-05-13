@@ -115,8 +115,8 @@ namespace AssemblyNameSpace
             string id, link;
             for (int i = 0; i < templates.Count(); i++)
             {
-                id = GetAsideIdentifier(templateGroup, templateIndex, i, type);
-                link = GetAsideLink(templateGroup, templateIndex, i, type);
+                id = GetAsideIdentifier(templates[i].MetaData);
+                link = GetAsideLink(templates[i].MetaData, type);
                 if (displayUnique) unique = $@"
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueScore / max_values.Item4}"">{templates[i].UniqueScore}</td>
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
@@ -827,13 +827,12 @@ namespace AssemblyNameSpace
             // Try to use the identifiers as retrieved from the metadata
             MetaData.IMetaData metadata = null;
             if (type == AsideType.Read)
-            {
                 metadata = reads_metadata[index3];
-            }
             else if (type == AsideType.Template)
-            {
                 metadata = Parameters.Segments[index1].Item2[index2].Templates[index3].MetaData;
-            }
+            else if (type == AsideType.RecombinedTemplate)
+                metadata = Parameters.RecombinedSegment[index1].Templates[index3].MetaData;
+
             if (metadata != null && metadata.Identifier != null)
             {
                 if (humanvisible) return metadata.Identifier;
@@ -1180,7 +1179,13 @@ assetsfolder = '{AssetsFolderName}';
                     var groupbuffer = "";
 
                     if (Parameters.RecombinedSegment.Count() != 0)
-                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(Parameters.RecombinedSegment[group].Templates, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
+                    {
+                        var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
+                        var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
+                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(recombined, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
+                        if (decoy.Count() > 0)
+                            groupbuffer += Collapsible("Recombination Decoy", CreateTemplateTable(decoy, -1, group, AsideType.RecombinedTemplate, true), group.ToString() + "_decoy");
+                    }
 
                     groupbuffer += CreateTemplateTables(Parameters.Segments[group].Item2, group);
 
