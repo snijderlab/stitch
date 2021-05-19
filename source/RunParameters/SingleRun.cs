@@ -196,7 +196,9 @@ namespace AssemblyNameSpace
                     {
                         db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
                         top.Add(db.Templates.Take(Recombine.N).ToList());
-                        if (Recombine.Decoy) decoy.AddRange(db.Templates.Skip(Recombine.N));
+                        if (Recombine.Decoy)
+                            foreach (var template in db.Templates.Skip(Recombine.N))
+                                decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, new TemplateLocation(-1, decoy.Count())));
                     }
 
                     // Recombine high scoring templates
