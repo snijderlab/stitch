@@ -272,16 +272,14 @@ namespace AssemblyNameSpace
         /// <returns>A tuple with the best position and its score</returns>
         public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
         {
-            if (max_overlap == 0)
-            {
-                return (0, 0);
-            }
             var scores = new List<(int, int)>();
             for (int i = 1; i < max_overlap && i < query.Length && i < template.Length; i++)
             {
                 var score = AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
                 scores.Add((i, score));
             }
+            if (scores.Count() == 0) return (0, 0);
+
             var best = scores[0];
             foreach (var item in scores)
                 if (item.Item2 > best.Item2) best = item;
