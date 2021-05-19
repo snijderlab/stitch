@@ -63,7 +63,7 @@ namespace AssemblyNameSpace
             for (var i = 0; i < segments.Count(); i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
+                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true), $"{templateGroup}-"));
             }
 
             return output.ToString();
