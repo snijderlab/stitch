@@ -19,7 +19,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The name of the assets folder
         /// </summary>
-        string AssetsFolderName;
+        public string AssetsFolderName;
         string FullAssetsFolderName;
 
         public HTMLReport(ReportInputParameters Parameters, int max_threads) : base(Parameters, max_threads) { }
@@ -243,7 +243,7 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
-        (string Alignment, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location)
+        public (string Alignment, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location)
         {
             var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
@@ -562,6 +562,9 @@ namespace AssemblyNameSpace
             var peaks = "";
             if (match.MetaData is MetaData.Peaks p) peaks = $"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>";
 
+            var docplot = "";
+            if (match.MetaData.PositionalScore.Count() != 0) docplot = $"<tr><td>{doctitle}</td><td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td></tr>";
+
             return $@"
     <div class='alignment-details' id='alignment-details-{match.Index}'>
         <h4>{match.MetaData.Identifier}</h4>
@@ -596,10 +599,7 @@ namespace AssemblyNameSpace
             </tr>
             {unique}
             {peaks}
-            <tr>
-                <td>{doctitle}</td>
-                <td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td>
-            </tr>
+            {docplot}
             <tr>
                 <td>Alignment graphic</td>
                 <td>{SequenceMatchGraphic(match)}</td>

@@ -310,7 +310,7 @@ namespace AssemblyNameSpace
                                            || (i < m.Length - 1) // Not the last AA
                                            || (pieceindex < match.Alignment.Count() - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore[seq_pos], contigid);
+                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore.Count() > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
