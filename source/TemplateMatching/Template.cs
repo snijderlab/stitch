@@ -363,16 +363,13 @@ namespace AssemblyNameSpace
                 Capacity = Sequence.Length
             };
 
-            // Add all the positions
-            for (int i = 0; i < Sequence.Length; i++)
-                output.Add((Sequence[i], new Dictionary<AminoAcid, double>(), new Dictionary<IGap, (int, double[])>()));
-
             var alignedSequences = AlignedSequences();
             AminoAcid aa;
             IGap key;
 
             for (int i = 0; i < Sequence.Length; i++)
             {
+                (AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps) position = (Sequence[i], new Dictionary<AminoAcid, double>(), new Dictionary<IGap, (int, double[])>());
                 // Create the aminoacid dictionary
                 foreach (var option in alignedSequences[i].Sequences)
                 {
@@ -383,10 +380,10 @@ namespace AssemblyNameSpace
                         else
                             aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
 
-                        if (output[i].AminoAcids.ContainsKey(aa))
-                            output[i].AminoAcids[aa] += option.CoverageDepth;
+                        if (position.AminoAcids.ContainsKey(aa))
+                            position.AminoAcids[aa] += option.CoverageDepth;
                         else
-                            output[i].AminoAcids.Add(aa, option.CoverageDepth);
+                            position.AminoAcids.Add(aa, option.CoverageDepth);
                     }
                 }
 
@@ -397,31 +394,32 @@ namespace AssemblyNameSpace
 
                     if (option.Gap == (IGap)new None())
                     {
-                        if (output[i].Gaps.ContainsKey(new None()))
-                            output[i].Gaps[new None()] = (output[i].Gaps[new None()].Count + 1, new double[0]);
+                        if (position.Gaps.ContainsKey(new None()))
+                            position.Gaps[new None()] = (position.Gaps[new None()].Count + 1, new double[0]);
                         else
-                            output[i].Gaps.Add(new None(), (1, new double[0]));
+                            position.Gaps.Add(new None(), (1, new double[0]));
                     }
                     else
                     {
                         key = option.Gap;
 
-                        if (output[i].Gaps.ContainsKey(key))
+                        if (position.Gaps.ContainsKey(key))
                         {
                             double[] cov;
-                            if (output[i].Gaps[key].CoverageDepth == null)
+                            if (position.Gaps[key].CoverageDepth == null)
                                 cov = option.CoverageDepth;
                             else
-                                cov = output[i].Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
+                                cov = position.Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
 
-                            output[i].Gaps[key] = (output[i].Gaps[key].Count + 1, cov);
+                            position.Gaps[key] = (position.Gaps[key].Count + 1, cov);
                         }
                         else
                         {
-                            output[i].Gaps.Add(key, (1, option.CoverageDepth));
+                            position.Gaps.Add(key, (1, option.CoverageDepth));
                         }
                     }
                 }
+                output.Add(position);
             }
             combinedSequenceCache = output;
             return output;
@@ -461,20 +459,26 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (options.Count() > 1 && options.Contains(combinedSequence[i].Template))
+                if (options.Count() == 1 && options[0].Char == Alphabet.GapChar)
+                {
+                    // Do not add gaps, as those are not part of the final sequence
+                }
+                else if (options.Count() > 1 && options.Contains(combinedSequence[i].Template))
                 {
                     consensus.Add(combinedSequence[i].Template);
+                    doc.Add(coverage);
                 }
                 else if (options.Count() > 0)
                 {
                     consensus.Add(options[0]);
+                    doc.Add(coverage);
                 }
                 else
                 {
                     // There is no data from reads so take the template sequence
                     consensus.Add(combinedSequence[i].Template);
+                    doc.Add(coverage);
                 }
-                doc.Add(coverage);
 
                 // Get the highest gap
                 max_gap.Clear();
