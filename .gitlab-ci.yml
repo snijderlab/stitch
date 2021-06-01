@@ -8,8 +8,10 @@ stages:
 
 before_script:
   - "dotnet clean source"
-  - "dotnet clean tests"
-  - "dotnet restore tests"
+  - "dotnet clean tests/small_tests"
+  - "dotnet clean tests/batchfiles"
+  - "dotnet restore tests/small_tests"
+  - "dotnet restore tests/batchfiles"
 
 build:
   stage: build
