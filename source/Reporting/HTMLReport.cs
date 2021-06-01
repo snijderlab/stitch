@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
+using System.Reflection;
 
 namespace AssemblyNameSpace
 {
@@ -1198,6 +1199,8 @@ assetsfolder = '{AssetsFolderName}';
             innerbuffer.Append(Collapsible("Reads Table", CreateReadsTable()));
             innerbuffer.Append(Collapsible("Batch File", BatchFileHTML()));
 
+            var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
+
             var html = $@"<html>
 {CreateHeader("Report Protein Sequence Run", new List<string>())}
 <body onload=""Setup()"">
@@ -1211,6 +1214,7 @@ assetsfolder = '{AssetsFolderName}';
 <div class=""footer"">
     <p>Code written in 2019-2021</p>
     <p>Made by the Hecklab</p>
+    <p>Version: {version}</p>
 </div>
 
 </div>

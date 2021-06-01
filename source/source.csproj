@@ -7,6 +7,17 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
+    <Version>0.1.0</Version>
   </PropertyGroup>
+  
+  <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
+    <Exec 
+      Command="git describe --long --always --dirty --exclude=* --abbrev=8"
+      ConsoleToMSBuild="True"
+      IgnoreExitCode="False"
+      >
+      <Output PropertyName="SourceRevisionId" TaskParameter="ConsoleOutput"/>
+    </Exec>
+  </Target>
 
 </Project>
