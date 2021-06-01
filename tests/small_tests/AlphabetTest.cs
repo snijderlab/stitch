@@ -81,7 +81,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void TestExamples()
         {
-            var path = Globals.Root + "examples/alphabets";
+            var path = Globals.Root + "alphabets";
             var files = Directory.GetFiles(path);
             foreach (var file in files)
             {

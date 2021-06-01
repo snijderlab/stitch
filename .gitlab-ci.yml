@@ -2,7 +2,8 @@ image: microsoft/dotnet:latest
 
 stages:
   - build
-  - test
+  - unit tests
+  - integration tests
   - deploy
 
 before_script:
@@ -16,9 +17,14 @@ build:
     - "dotnet build source"
 
 test:
-  stage: test
+  stage: unit tests
   script:
-    - "dotnet test tests"
+    - "dotnet test tests/small_tests"
+
+test:
+  stage: integration tests
+  script:
+    - "dotnet test tests/batchfiles"
 
 deploy:
   stage: deploy

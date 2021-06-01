@@ -6,30 +6,33 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
+using System.Text.RegularExpressions;
 
 namespace AssemblyTestNameSpace
 {
     [TestClass]
-    public class BatchFile_Test
+    public class OpenReads_Test
     {
         /// <summary>
-        /// All batchfiles given as examples should be valid
+        /// All templates given as examples should be valid FASTA files
         /// </summary>
         [TestMethod]
         public void TestExamples()
         {
-            var path = Globals.Root + "examples/batchfiles";
+            var path = Globals.Root + @"templates";
             var files = Directory.GetFiles(path);
+            var namefilter = new NameFilter();
             foreach (var file in files)
             {
                 try
                 {
-                    AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file);
+                    Console.WriteLine(file);
+                    OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, ""), new Regex("(.*)"));
                 }
                 catch (Exception e)
                 {
                     Console.WriteLine($"At file {file}");
-                    throw e;
+                    Console.WriteLine($"{e.Message}");
                 }
             }
         }

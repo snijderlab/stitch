@@ -17,7 +17,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void EmptyTemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             Template template = new Template(
                 "test",
@@ -34,7 +34,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void SingleMatchTemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
             meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
@@ -58,7 +58,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void MultiMatchTemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
             meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
@@ -82,7 +82,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void SingleAATemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
             meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
@@ -106,7 +106,7 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void NoAATemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
             meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR

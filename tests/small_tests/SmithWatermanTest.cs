@@ -166,7 +166,7 @@ namespace AssemblyTestNameSpace
         public void LongerSequence()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVSPVYWNSLFLLKGNYKAQMRGRTVNARVLKIGQKTRCMLLLWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -180,7 +180,7 @@ namespace AssemblyTestNameSpace
         public void AlreadyAddedGap()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP*VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -194,7 +194,7 @@ namespace AssemblyTestNameSpace
         public void GFPAlignment()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             Console.WriteLine($"GapChar '{Alphabet.GapChar}'");
             //Uniprot - P42212
             var gfp = "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK";
@@ -215,7 +215,7 @@ namespace AssemblyTestNameSpace
         public void IgGAlignment()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //IgG4-K-002
             var igg4 = "QLQLQESGPGLLKPSETLSLTCTVSGGSISSPGYYGGWIRQPPGKGLEWIGSIYKSGSTYHNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCTRPVVRYFGWFDPWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTKTYTCNVDHKPSNTKVDKRVESKYGPPCPPCPAPEFEGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSQEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKGLPSSIEKTISKAKGQPREPQVYTLPPSQEEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSRLTVDKSRWQEGNVFSCSVMHEALHNHYTQKSLSLSLGKAIQLTQSPSSLSASVGDRVTITCRASQGISSALAWYQQKPGKAPKLLIYDASNLESGVPSRFSGSGSGTDFTLTISSLQPEDFATYYCQQFNSYPTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
             //IgG2-K-002
@@ -235,7 +235,7 @@ namespace AssemblyTestNameSpace
         public void RealWorldFullTemplate()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR*YYYYYGMDVWGQGTTVTVSSASTKGPSVFPLAPCSRSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYTCNVNHKPSNTKVDKRVELKTPLGDTTHTCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFKWYVDGVEVHNAKTKPREEQYNSTFRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESSGQPENNYNTTPPMLDSDGSFFLYSKLTVDKSRWQQGNIFSCSVMHEALHNRFTQKSLSLSPGKDILLTQTPLSLSITPGEPASISCRSSRSLLHSNGNTYLHWLQKPGQPPQCLICKVSNRFSGVPDRFSGSGSGIDFTLKISPVEAADVGVYITACKLHTGPCTFGQGTKLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSNTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var a = StringToSequence(template, alp);
@@ -251,7 +251,7 @@ namespace AssemblyTestNameSpace
         public void RealWorldIGHV()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "examples/alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
             var a = StringToSequence(template, alp);

@@ -5,15 +5,14 @@
 *.png
 *.svg
 *.cache
-*/bin
+**/bin
+**/obj
 *.dtp
 *.DotSettings
 *.dmw
 source_linux_x64
 release
 generate_tests/*
-source/obj/*
-tests/obj/*
 .vscode
 .vscode/*
 score_templates.txt
