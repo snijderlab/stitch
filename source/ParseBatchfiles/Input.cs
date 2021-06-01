@@ -860,6 +860,7 @@ namespace AssemblyNameSpace
                             break;
                     }
                 }
+                output.Folder = Directory.GetCurrentDirectory();
                 outEither.Value = output;
                 return outEither;
             }
