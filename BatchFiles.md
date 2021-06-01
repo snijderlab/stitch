@@ -418,6 +418,24 @@ Determines of the paths/reads of these segments will be forced to the best templ
 
 #### Report
 
+##### Folder (s)
+
+You can specify a base folder where all report files will be saved. If this folder is not specified it defaults to the folder of the batchfile.
+
+_Example_
+```
+Report ->
+    Folder: ../results/{datetime} {name}/
+    HTML ->
+        Path: report.html
+    <-
+    CSV ->
+        Path         : aligned-reads.csv
+        OutputType   : Recombine
+    <-
+<-
+```
+
 ##### HTML (m) *
 
 To generate an HTML report. This report displays all information about this run, including all original metadata of the input. The report is designed to be used interactively to aid in understanding how well the software performed and how trustworthy the results are. The report will be generated as an overview file (with the name specified) with a folder with all additional details (with the same name as the HTML file). 
@@ -428,7 +446,7 @@ To generate an HTML report. This report displays all information about this run,
 
 _Example_
 ```
-HTML ->
+Report ->
     Path: Report.html
 <-
 ```

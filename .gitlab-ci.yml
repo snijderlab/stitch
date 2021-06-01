@@ -40,6 +40,9 @@ deploy:
       - manual.pdf
       - License.md
       - README.md
+      - alphabets/
       - assets/
-      - examples/
+      - batchfiles/
+      - datasets/
+      - templates/
     expire_in: 2 weeks

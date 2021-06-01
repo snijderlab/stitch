@@ -43,7 +43,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The reports to be generated.
             /// </summary>
-            public List<Report.Parameter> Report;
+            public ReportParameter Report;
             readonly ProgressBar progressBar;
             public readonly ParsedFile BatchFile;
 
@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
                 Input = input;
                 TemplateMatching = templateMatching;
                 Recombine = recombine;
-                Report = report.Files;
+                Report = report;
                 BatchFile = batchfile;
                 progressBar = bar;
             }
@@ -107,22 +107,24 @@ namespace AssemblyNameSpace
 
                 var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.Runname);
 
+                // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
+                var folder = Report.Folder != null ? ReportParameter.CreateName(this, Report.Folder) : null;
                 // Generate the report(s)
-                foreach (var report in Report)
+                foreach (var report in Report.Files)
                 {
                     switch (report)
                     {
                         case Report.HTML h:
                             var htmlreport = new HTMLReport(parameters, max_threads);
-                            htmlreport.Save(h.CreateName(this));
+                            htmlreport.Save(h.CreateName(folder, this));
                             break;
                         case Report.FASTA f:
                             var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
-                            fastareport.Save(f.CreateName(this));
+                            fastareport.Save(f.CreateName(folder, this));
                             break;
                         case Report.CSV c:
                             var csvreport = new CSVReport(parameters, c.OutputType, max_threads);
-                            csvreport.Save(c.CreateName(this));
+                            csvreport.Save(c.CreateName(folder, this));
                             break;
                     }
                 }

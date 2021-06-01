@@ -67,6 +67,6 @@ TemplateMatching ->
 
 Report ->
     HTML ->
-        Path    : ../../report-polyclonal.html
+        Path    : ../results/{datetime} {name}/report-polyclonal.html
     <-
 <-

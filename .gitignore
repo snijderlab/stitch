@@ -2,9 +2,6 @@
 *.log
 *.zip
 *.dot
-*.fasta
-*.html
-*.csv
 *.png
 *.svg
 *.cache
@@ -23,6 +20,6 @@ score_templates.txt
 _site
 .vs/*
 .vs
-report*/**
+results/*
 all_addmatch_cseq.txt
 textual.md

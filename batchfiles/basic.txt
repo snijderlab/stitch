@@ -30,6 +30,6 @@ TemplateMatching ->
 
 Report ->
     HTML ->
-        Path    : ../../report-basic.html
+        Path    : ../results/{datetime} {name}/report-basic.html
     <-
 <-

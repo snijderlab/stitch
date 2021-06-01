@@ -763,6 +763,10 @@ namespace AssemblyNameSpace
                 {
                     switch (pair.Name)
                     {
+                        case "folder":
+                            if (output.Folder != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                            output.Folder = Path.GetFullPath(pair.GetValue());
+                            break;
                         case "html":
                             var hsettings = new RunParameters.Report.HTML();
 
@@ -772,7 +776,7 @@ namespace AssemblyNameSpace
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        hsettings.Path = Path.GetFullPath(setting.GetValue());
+                                        hsettings.Path = setting.GetValue();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
@@ -791,7 +795,7 @@ namespace AssemblyNameSpace
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fsettings.Path = Path.GetFullPath(setting.GetValue());
+                                        fsettings.Path = setting.GetValue();
                                         break;
                                     case "minimalscore":
                                         fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
@@ -827,7 +831,7 @@ namespace AssemblyNameSpace
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        csettings.Path = Path.GetFullPath(setting.GetValue());
+                                        csettings.Path = setting.GetValue();
                                         break;
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())

@@ -352,6 +352,30 @@ namespace AssemblyNameSpace
             /// The report(s) to be generated for this run.
             /// </summary>
             public List<Report.Parameter> Files = new List<Report.Parameter>();
+            /// <summary>
+            /// The base folder where all generated reports will be stored (or at least relative to) 
+            /// if undefined it is interpreted as the folder the batchfile is saved in.
+            /// </summary>
+            public String Folder = null;
+
+            /// <summary>
+            /// Generates a (unique) name based on the given template.
+            /// </summary>
+            /// <param name="r">The values for the parameters.</param>
+            /// <param name="input">The path template.</param>
+            /// <returns>A name.</returns>
+            public static string CreateName(SingleRun r, String input)
+            {
+                var output = new StringBuilder(input);
+
+                output.Replace("{alph}", r.Alphabet != null ? r.Alphabet.Name : "NoAlphabet");
+                output.Replace("{name}", r.Runname);
+                output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
+                output.Replace("{time}", DateTime.Now.ToString("HH-mm-ss"));
+                output.Replace("{datetime}", DateTime.Now.ToString("yyyy-MM-dd@HH-mm-ss"));
+
+                return output.ToString();
+            }
         }
 
         /// <summary>
@@ -374,17 +398,12 @@ namespace AssemblyNameSpace
                 /// </summary>
                 /// <param name="r">The values for the parameters.</param>
                 /// <returns>A name.</returns>
-                public string CreateName(SingleRun r)
+                public string CreateName(String folder, SingleRun r)
                 {
-                    var output = new StringBuilder(Path);
-
-                    output.Replace("{alph}", r.Alphabet != null ? r.Alphabet.Name : "NoAlphabet");
-                    output.Replace("{name}", r.Runname);
-                    output.Replace("{date}", DateTime.Now.ToString("yyyy-MM-dd"));
-                    output.Replace("{time}", DateTime.Now.ToString("hh-mm-ss"));
-                    output.Replace("{datetime}", DateTime.Now.ToString("yyyy-MM-dd@hh-mm-ss"));
-
-                    return output.ToString();
+                    if (folder != null)
+                        return System.IO.Path.GetFullPath(ReportParameter.CreateName(r, Path), folder);
+                    else
+                        return ReportParameter.CreateName(r, Path);
                 }
             }
 

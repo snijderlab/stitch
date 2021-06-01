@@ -27,73 +27,73 @@ TemplateMatching ->
         - Homo Sapiens segments
         Heavy Chain->
             Segment->
-                Path      : ../templates/IGHV.fasta
+                Path      : ../templates/Homo_sapiens_IGHV.fasta
                 Name      : IGHV
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Segment->
-                Path      : ../templates/IGHJ.fasta
+                Path      : ../templates/Homo_sapiens_IGHJ.fasta
                 Name      : IGHJ
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Segment->
-                Path      : ../templates/IGHC_uniprot.fasta
+                Path      : ../templates/Homo_sapiens_IGHC_uniprot.fasta
                 Name      : IGHC
                 Identifier: ^sp\|[\w]*\|([\w]+)_
             <-
         <-
         Light Chain->
             Segment->
-                Path      : ../templates/IGK+LV.fasta
+                Path      : ../templates/Homo_sapiens_IGK+LV.fasta
                 Name      : IGLV
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Segment->
-                Path      : ../templates/IGK+LJ.fasta
+                Path      : ../templates/Homo_sapiens_IGK+LJ.fasta
                 Name      : IGLJ
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
             Segment->
-                Path      : ../templates/IGK+LC.fasta
+                Path      : ../templates/Homo_sapiens_IGK+LC.fasta
                 Name      : IGLC
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-
         <-
-        - Mus Musculus segments
-        - Mus Heavy Chain->
-        -     Segment->
-        -         Path      : ../templates/Mus_IGHV.fasta
-        -         Name      : IGHV
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_IGHJ.fasta
-        -         Name      : IGHJ
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_IGHC_uniprot.fasta
-        -         Name      : IGHC
-        -         Identifier: ^sp\|[\w]*\|([\w]+)_
-        -     <-
-        - <-
-        - Mus Light Chain->
-        -     Segment->
-        -         Path      : ../templates/Mus_IGK+LV.fasta
-        -         Name      : IGLV
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_IGK+LJ.fasta
-        -         Name      : IGLJ
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_IGK+LC.fasta
-        -         Name      : IGLC
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
-        -     <-
-        - <-
+        - Mus musculus segments
+        Mus Heavy Chain->
+            Segment->
+                Path      : ../templates/Mus_musculus_IGHV.fasta
+                Name      : IGHV
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+            <-
+            Segment->
+                Path      : ../templates/Mus_musculus_IGHJ.fasta
+                Name      : IGHJ
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+            <-
+            Segment->
+                Path      : ../templates/Mus_musculus_IGHC_uniprot.fasta
+                Name      : IGHC
+                Identifier: ^sp\|[\w]*\|([\w]+)_
+            <-
+        <-
+        Mus Light Chain->
+            Segment->
+                Path      : ../templates/Mus_musculus_IGK+LV.fasta
+                Name      : IGLV
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+            <-
+            Segment->
+                Path      : ../templates/Mus_musculus_IGK+LJ.fasta
+                Name      : IGLJ
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+            <-
+            Segment->
+                Path      : ../templates/Mus_musculus_IGK+LC.fasta
+                Name      : IGLC
+                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+            <-
+        <-
     <-
 <-
 
@@ -108,29 +108,30 @@ Recombine->
     Order->
         Heavy Chain: IGHV * IGHJ IGHC
         Light Chain: IGLV IGLJ IGLC
-        - Mus Heavy Chain: IGHV * IGHJ IGHC
-        - Mus Light Chain: IGLV IGLJ IGLC
+        Mus Heavy Chain: IGHV * IGHJ IGHC
+        Mus Light Chain: IGLV IGLJ IGLC
     <-
 <-
 
 Report ->
+    Folder: ../results/{datetime} {name}/
     HTML ->
-        Path    : ../../report-monoclonal.html
+        Path: report-monoclonal.html
     <-
     FASTA ->
-        Path: ../../report-monoclonal-tm.fasta
+        Path: report-monoclonal-tm.fasta
         OutputType: TemplateMatching
     <-
     CSV ->
-        Path: ../../report-monoclonal-tm.csv
+        Path: report-monoclonal-tm.csv
         OutputType: TemplateMatching
     <-
     FASTA ->
-        Path: ../../report-monoclonal-rec.fasta
+        Path: report-monoclonal-rec.fasta
         OutputType: Recombine
     <-
     CSV ->
-        Path: ../../report-monoclonal-rec.csv
+        Path: report-monoclonal-rec.csv
         OutputType: Recombine
     <-
 <-
