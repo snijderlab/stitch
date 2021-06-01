@@ -18,12 +18,12 @@ build:
   script:
     - "dotnet build source"
 
-test:
+unit tests:
   stage: unit tests
   script:
     - "dotnet test tests/small_tests"
 
-test:
+integration tests:
   stage: integration tests
   script:
     - "dotnet test tests/batchfiles"
