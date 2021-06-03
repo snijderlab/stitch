@@ -81,7 +81,6 @@ namespace AssemblyNameSpace
             /// </summary>
             public void Calculate(int max_threads = 1)
             {
-
                 // Template Matching
                 Stopwatch stopWatch = new Stopwatch();
                 stopWatch.Start();
@@ -91,8 +90,6 @@ namespace AssemblyNameSpace
                 stopWatch.Stop();
 
                 List<Segment> recombined_segment = new List<Segment>();
-                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
-                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                 // Recombine
                 if (Recombine != null)
@@ -100,7 +97,7 @@ namespace AssemblyNameSpace
                     Stopwatch recombine_sw = new Stopwatch();
                     recombine_sw.Start();
 
-                    RunRecombine(segments, matches, recombined_segment);
+                    RunRecombine(segments, recombined_segment);
 
                     recombine_sw.Stop();
                 }
@@ -180,14 +177,18 @@ namespace AssemblyNameSpace
                 return segments;
             }
 
-            void RunRecombine(List<(string, List<Segment>)> segments, List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>> matches, List<Segment> recombined_segment)
+            void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment)
             {
+                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
+                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
                 var namefilter = new NameFilter();
 
                 for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
                 {
                     var segment_group = segments[segment_group_index];
+                    if (segment_group.Item1.ToLower() == "decoy") continue;
                     // Create a list for every segment with the top n highest scoring templates.
                     // By having the lowest of these always at the first position at shuffling in
                     // a new high scoring template to its right position this snippet is still
@@ -198,6 +199,7 @@ namespace AssemblyNameSpace
                     {
                         db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
                         top.Add(db.Templates.Take(Recombine.N).ToList());
+                        // Add all missed templates (score too low) to the decoy set if the Decoy option is turned on
                         if (Recombine.Decoy)
                             foreach (var template in db.Templates.Skip(Recombine.N))
                                 decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, new TemplateLocation(-1, decoy.Count())));
@@ -229,23 +231,47 @@ namespace AssemblyNameSpace
                     if (progressBar != null) progressBar.Update();
                 }
 
+                // Aggregate all decoy sets from template matching
+                var general_decoy = new List<Template>();
+                foreach (var seg_group in segments)
+                {
+                    // Groups called "Decoy" will be added in full
+                    if (seg_group.Item1.ToLower() == "decoy")
+                        foreach (var segment in seg_group.Item2)
+                            foreach (var template in segment.Templates)
+                                general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, new TemplateLocation(-1, general_decoy.Count())));
+                    // If a segment is added in the outer scope called "Decoy" it is added as well
+                    if (seg_group.Item1 == "")
+                        foreach (var segment in seg_group.Item2)
+                            if (segment.Name.ToLower() == "decoy")
+                                foreach (var template in segment.Templates)
+                                    general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, new TemplateLocation(-1, general_decoy.Count())));
+                }
+                if (general_decoy.Count() > 0)
+                {
+                    var segment = new Segment(general_decoy, alph, "General Decoy Segment", Recombine.CutoffScore);
+                    var local_matches = segment.Match(Input);
+
+                    for (int read = 0; read < Input.Count(); read++)
+                        matches[read].AddRange(local_matches[read].Select(a => (recombined_segment.Count(), 0, a.Item1, a.Item2)));
+
+                    recombined_segment.Add(segment);
+                }
+
                 // Filter matches if Forced
                 if (HelperFunctionality.EvaluateTrilean(Recombine.EnforceUnique, TemplateMatching.EnforceUnique))
                     EnforceUnique(matches);
-
 
                 // Add all matches to the right templates
                 foreach (var row in matches)
                 {
                     var unique = row.Count() == 1;
                     foreach (var match in row)
-                    {
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
-                    }
                 }
 
                 // Finalise Identifiers
-                foreach (var segment in recombined_segment) foreach (var template in segment.Templates) template.MetaData.FinaliseIdentifier();
+                foreach (var template in recombined_segment.SelectMany(s => s.Templates)) template.MetaData.FinaliseIdentifier();
             }
 
             void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent, NameFilter namefilter)

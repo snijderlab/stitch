@@ -116,7 +116,9 @@ namespace AssemblyNameSpace
             {
                 foreach (var group in output.TemplateMatching.Segments)
                 {
-                    if (!order_groups.Exists(o => o.OriginalName == group.Name))
+                    if (group.Name.ToLower() == "decoy")
+                        continue;
+                    else if (!order_groups.Exists(o => o.OriginalName == group.Name))
                         outEither.AddMessage(new ErrorMessage(batchfile, "Missing order definition for template group", $"For group \"{group.Name}\" there is no corresponding order definition.", "If there is a definition make sure it is written exactly the same and with the same casing."));
                     else
                     {
@@ -167,8 +169,10 @@ namespace AssemblyNameSpace
 
             if (output.Recombine != null && output.Recombine.Order.Count() != 0)
             {
-
-                if (output.TemplateMatching.Segments.Count != output.Recombine.Order.Count)
+                if (output.TemplateMatching.Segments.Count
+                    - (output.TemplateMatching.Segments.Exists(group => group.Name == "") ? 1 : 0)
+                    - (output.TemplateMatching.Segments.Exists(group => group.Name.ToLower() == "decoy") ? 1 : 0)
+                    != output.Recombine.Order.Count)
                 {
                     outEither.AddMessage(new ErrorMessage(def_range, "Invalid segment groups definition", $"The number of order definitions ({output.Recombine.Order.Count}) should equal the number of segment groups ({output.TemplateMatching.Segments.Count})."));
                 }
@@ -176,6 +180,7 @@ namespace AssemblyNameSpace
                 {
                     for (int i = 0; i < output.TemplateMatching.Segments.Count(); i++)
                     {
+                        if (output.TemplateMatching.Segments[i].Name.ToLower() == "decoy") continue;
                         var order = order_groups[i];
                         int last = -2;
                         foreach (var piece in output.Recombine.Order[i])

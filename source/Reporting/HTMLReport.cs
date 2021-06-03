@@ -1136,8 +1136,9 @@ assetsfolder = '{AssetsFolderName}';
             var buffer = new StringBuilder();
             if (Parameters.RecombinedSegment.Count() != 0)
             {
-                for (int group = 0; group < Parameters.Segments.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count() && group < Parameters.RecombinedSegment.Count(); group++)
                 {
+                    if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var (seq, doc) = Parameters.RecombinedSegment[group].Templates[0].ConsensusSequence();
                     buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3><p>");
 
@@ -1145,9 +1146,7 @@ assetsfolder = '{AssetsFolderName}';
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
                         if (seg.Templates.Count() > 0)
-                        {
                             buffer.Append(GetAsideLink(seg.Templates[0].MetaData, AsideType.Template));
-                        }
                     }
                     buffer.Append("</p>");
                 }
@@ -1181,6 +1180,7 @@ assetsfolder = '{AssetsFolderName}';
 
                     if (Parameters.RecombinedSegment.Count() != 0)
                     {
+                        if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count() > Parameters.RecombinedSegment.Count()) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
                         groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(recombined, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
