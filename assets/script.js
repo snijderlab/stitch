@@ -2,8 +2,7 @@ function sortTable(id, column_number, type) {
     var table, rows, switching, i, x, y, shouldSwitch, dir = 0;
     table = document.getElementById(id);
     switching = true;
-    // Set the sorting direction to ascending:
-    dir = "asc";
+    dir = "desc";
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
 
     sorted = false
@@ -11,7 +10,10 @@ function sortTable(id, column_number, type) {
         dir = "desc";
         sorted = true
     }
-    if (headers[column_number].getAttribute('data-sortorder') == "desc") { sorted = true }
+    if (headers[column_number].getAttribute('data-sortorder') == "desc") {
+        dir = "asc";
+        sorted = true
+    }
 
     for (var j = 0; j < headers.length; j++) {
         headers[j].setAttribute('data-sortorder', "");
@@ -53,11 +55,11 @@ function sortTable(id, column_number, type) {
         for (i = 1; i < (rows.length - 1); i++) {
             shouldSwitch = false;
             if (typeof values[i] == "string") {
-                if (values[i].localeCompare(values[i + 1], undefined, { numeric: true, sensitivity: "base" }) == -1) {
+                if (values[i].localeCompare(values[i + 1], undefined, { numeric: true, sensitivity: "base" }) == 1) {
                     shouldSwitch = true;
                     break;
                 }
-            } else if (values[i] > values[i + 1]) {
+            } else if (values[i] < values[i + 1]) {
                 shouldSwitch = true;
                 break;
             }

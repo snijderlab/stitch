@@ -137,24 +137,31 @@ th {
     text-overflow: ellipsis;
     user-select: none;
     font-weight: 500;
+    position: relative;
 }
 
-th::after {
-    margin-left: .25em;
+th[onclick]::after,
+th[onclick]::before {
     color: var(--color-light);
     display: inline-block;
+    position: absolute;
+    right: .25rem;
+    font-size: .6em;
 }
 
 th[onclick]::after {
-    content: "\21f3";
+    content: "\25B2";
+    top: 0;
 }
 
-th[data-sortorder="asc"]::after {
-    content: "\21e7";
+th[onclick]::before {
+    content: "\25BC";
+    bottom: 0;
 }
 
-th[data-sortorder="desc"]::after {
-    content: "\21e9";
+th[data-sortorder="asc"]::after,
+th[data-sortorder="desc"]::before {
+    color: var(--color-primary);
 }
 
 td.seq {

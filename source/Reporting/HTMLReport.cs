@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
 <tr>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 0, 'id')"" class=""smallcell"">Identifier</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"">Score</th>
+    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"" data-sortorder=""desc"">Score</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 3, 'number')"" class=""smallcell"">Matches</th>
     <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 4, 'number')"" class=""smallcell"">Total Area</th>
     {unique}
