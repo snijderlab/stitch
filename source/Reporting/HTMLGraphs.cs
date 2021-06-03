@@ -85,7 +85,7 @@ namespace AssemblyNameSpace
         {
             if (data.Count == 0) return "<em>No data.</em>";
             var buffer = new StringBuilder();
-            var dataBuffer = new StringBuilder("Label,Value");
+            var dataBuffer = new StringBuilder("Label\tValue");
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
@@ -103,10 +103,10 @@ namespace AssemblyNameSpace
             {
                 string height = ((set.Value - min) / max * 100).ToString();
                 buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
-                dataBuffer.Append($"\n\"{set.Label}\",{set.Value}");
+                dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
             }
 
-            buffer.Append($"<input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
 
@@ -169,7 +169,7 @@ namespace AssemblyNameSpace
             for (int i = 0; i < dimensions; i++)
             {
                 buffer.Append($"<span>{header[i].Label}</span>");
-                dataBuffer.Append($",\"{header[i].Label}\"");
+                dataBuffer.Append($"\t\"{header[i].Label}\"");
             }
 
             // Create Graph
@@ -185,7 +185,7 @@ namespace AssemblyNameSpace
                     var dimensionIndex = header[i].Dimension;
                     string height = ((set.Dimensions[i] - dimensionMin[dimensionIndex]) / (dimensionMax[dimensionIndex] - dimensionMin[dimensionIndex]) * 100).ToString();
                     buffer.Append($"<span class='bar' style='height:{height}%'></span>");
-                    dataBuffer.Append($",{set.Dimensions[i]}");
+                    dataBuffer.Append($"\t{set.Dimensions[i]}");
                 }
 
                 // Create Tooltip
@@ -197,7 +197,7 @@ namespace AssemblyNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append($"<input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
 
@@ -235,7 +235,7 @@ namespace AssemblyNameSpace
 
             // Create Legend
             var buffer = new StringBuilder();
-            var dataBuffer = new StringBuilder("Group");
+            var dataBuffer = new StringBuilder("Group\tPoint");
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
@@ -245,7 +245,7 @@ namespace AssemblyNameSpace
                 var check = i < 3 ? " checked " : "";
                 buffer.Append($"<input type='checkbox' class='showdata-{i}' id='{identifier}-showdata-{i}'{check}/>");
                 buffer.Append($"<label for='{identifier}-showdata-{i}'>{header[i]}</label>");
-                //dataBuffer.Append($",\"{header[i]}\"");
+                dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
             buffer.Append("<div class='graph'>");
@@ -253,16 +253,16 @@ namespace AssemblyNameSpace
             foreach (var group in data)
             {
                 buffer.Append($"<div class='group' style='flex-grow:{group.Points.Count()}'>");
-                //dataBuffer.Append($"\n\"{group.GroupLabel}\"");
 
                 foreach (var point in group.Points)
                 {
+                    dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label}");
                     buffer.Append($"<a href='#{identifier}-{point.Label}' class='values'>");
                     // Create Points
                     for (int i = 0; i < dimensions; i++)
                     {
                         buffer.Append($"<span class='point' style='--x:{(point.Values[i] - minvalues[i]) / (maxvalues[i] - minvalues[1])}'></span>");
-                        //dataBuffer.Append($",{group.Dimensions[i]}");
+                        dataBuffer.Append($"\t{point.Values[i]}");
                     }
                     buffer.Append($"</a><span class='label'><a href='#{identifier}-{point.Label}'>{point.Label}</a></span>");
                 }
@@ -276,7 +276,7 @@ namespace AssemblyNameSpace
                 buffer.Append("</div>");
             }
 
-            buffer.Append($"</div><input type='text' class='graph-data' aria-hidden='true' value='{dataBuffer.ToString()}'></div>");
+            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
 
