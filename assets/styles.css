@@ -688,6 +688,9 @@ input:checked+.slider:before {
     height: 100%;
     flex-direction: column;
     justify-content: space-between;
+    border-right: 2px solid var(--color-light);
+    padding-right: 2px;
+    align-items: flex-end;
 }
 
 .histogram .bar {
