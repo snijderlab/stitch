@@ -171,6 +171,7 @@ namespace AssemblyNameSpace
             }
 
             string based = "";
+            string annotated = "";
             string title = "Segment";
             switch (type)
             {
@@ -184,6 +185,24 @@ namespace AssemblyNameSpace
                         based = $"<h2>Order</h2><p>{order}</p>";
                     }
                     title = "Recombined Template";
+                    try
+                    {
+                        var regions = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(consensus_sequence));
+                        annotated = $@"<h2>Annotated consensus sequence</h2>
+                    <div class='annotated'>
+                        <span class='fr1'><p>FR1</p><p class='aside-seq'>{regions[0]}</p>
+                        <span class='cdr1'><p>CDR1</p><p class='aside-seq'>{regions[1]}</p>
+                        <span class='fr2'><p>FR2</p><p class='aside-seq'>{regions[2]}</p>
+                        <span class='cdr2'><p>CDR2</p><p class='aside-seq'>{regions[3]}</p>
+                        <span class='fr3'><p>FR3</p><p class='aside-seq'>{regions[4]}</p>
+                        <span class='cdr3'><p>CDR3</p><p class='aside-seq'>{regions[5]}</p>
+                        <span class='constant'><p>Constant region</p><p class='aside-seq'>{regions[6]}</p>
+                    </div>";
+                    }
+                    catch (Exception e)
+                    {
+                        Console.WriteLine($"Could not find regions in consensus sequence for {GetAsideIdentifier(superindex, index, i, type, true)}\n{e.Message}");
+                    }
                     break;
                 default:
                     break;
@@ -194,6 +213,7 @@ namespace AssemblyNameSpace
     <h1>{title} {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
     <h2>Consensus Sequence</h2>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
+    {annotated}
     <h2>Sequence Consensus Overview</h2>
     {SequenceConsensusOverview(template)}
     <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
