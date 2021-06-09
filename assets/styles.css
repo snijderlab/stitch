@@ -228,7 +228,9 @@ td.bar::before {
 .annotated {
     display: flex;
     flex-wrap: wrap;
-    row-gap: .5em;
+    row-gap: 1em;
+    font-family: Roboto Mono, monospace;
+    align-items: baseline;
 }
 
 .annotated>* {
@@ -236,14 +238,31 @@ td.bar::before {
     flex-direction: column;
 }
 
-.annotated>*>*:nth-child(3) {
+.annotated .dif {
     font-weight: bold;
+}
+
+.annotated .title,
+.annotated .names {
+    font-style: italic;
+    color: var(--color-light);
+    font-family: "Roboto", sans-serif;
+    padding-right: .25em;
+}
+
+.annotated .title {
+    position: absolute;
+    transform: translateY(-1em);
 }
 
 .annotated .CDR1,
 .annotated .CDR2,
 .annotated .CDR3 {
     color: var(--color-secondary);
+}
+
+.annotated .conserved {
+    color: var(--color-tertiary);
 }
 
 

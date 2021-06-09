@@ -223,23 +223,17 @@ namespace AssemblyNameSpace
                 // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
                 //             CONSENSUS          (differences)
                 var match = template.AlignConsensusWithTemplate();
-                var regions = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(template.ConsensusSequence().Item1));
-                string[] names = { "FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "CONSTANT" };
-                var end = new List<int>();
-                var pos = 0;
-                for (int i = 0; i < regions.Length; i++)
-                {
-                    pos += regions[i].Length;
-                    end.Add(pos);
-                }
+                var (end, conserved) = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(template.ConsensusSequence().Item1));
+                string[] names = { "FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "Constant" };
 
-                string GetRegion(int position)
+                string GetClasses(int position)
                 {
                     var index = end.FindIndex(a => a >= position);
+                    if (conserved.Exists(a => a == position)) return $"{names[index]} conserved";
                     return names[index];
                 }
 
-                var columns = new List<(char Template, char Query, char Difference, string Region)>();
+                var columns = new List<(char Template, char Query, char Difference, string Classes)>();
                 int template_pos = match.StartTemplatePosition;
                 int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
                 foreach (var piece in match.Alignment)
@@ -251,7 +245,7 @@ namespace AssemblyNameSpace
                             {
                                 var t = match.TemplateSequence[template_pos].Char;
                                 var q = match.QuerySequence[query_pos].Char;
-                                columns.Add((t, q, t == q ? ' ' : q, GetRegion(query_pos)));
+                                columns.Add((t, q, t == q ? ' ' : q, GetClasses(query_pos)));
                                 template_pos++;
                                 query_pos++;
                             }
@@ -260,7 +254,7 @@ namespace AssemblyNameSpace
                             for (int i = 0; i < q.Length; i++)
                             {
                                 var t = match.TemplateSequence[template_pos].Char;
-                                columns.Add((t, '.', ' ', GetRegion(query_pos)));
+                                columns.Add((t, '.', ' ', GetClasses(query_pos)));
                                 template_pos++;
                             }
                             break;
@@ -268,18 +262,26 @@ namespace AssemblyNameSpace
                             for (int i = 0; i < t.Length; i++)
                             {
                                 var q = match.QuerySequence[query_pos].Char;
-                                columns.Add(('.', q, q, GetRegion(query_pos)));
+                                columns.Add(('.', q, q, GetClasses(query_pos)));
                                 query_pos++;
                             }
                             break;
                     }
                 }
 
-                var buffer = new StringBuilder("<h2>Annotated consensus sequence</h2><div class='annotated'>");
+                var buffer = new StringBuilder("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Germline</span><span>Consensus</span></div>");
 
+                var last = "";
                 foreach (var column in columns)
                 {
-                    buffer.Append($"<div class='{column.Region}'><span>{column.Template}</span><span>{column.Query}</span><span>{column.Difference}</span></div>");
+                    if (column.Template == 'X' && column.Query == '.') continue;
+                    var title = "";
+                    if (column.Classes.Split(' ').First() != last)
+                    {
+                        last = column.Classes.Split(' ').First();
+                        title = $"<span class='title'>{last}</span>";
+                    }
+                    buffer.Append($"<div class='{column.Classes}'>{title}<span>{column.Template}</span><span>{column.Query}</span><span class='dif'>{column.Difference}</span></div>");
                 }
                 buffer.Append("</div>");
 
