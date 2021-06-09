@@ -223,6 +223,30 @@ td.bar::before {
 }
 
 
+/* Annotated Consensus Sequences */
+
+.annotated {
+    display: flex;
+    flex-wrap: wrap;
+    row-gap: .5em;
+}
+
+.annotated>* {
+    display: flex;
+    flex-direction: column;
+}
+
+.annotated>*>*:nth-child(3) {
+    font-weight: bold;
+}
+
+.annotated .CDR1,
+.annotated .CDR2,
+.annotated .CDR3 {
+    color: var(--color-secondary);
+}
+
+
 /* Tables on template detail pages */
 
 .details table[id^="template-table"] th:first-child {

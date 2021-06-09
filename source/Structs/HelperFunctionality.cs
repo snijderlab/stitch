@@ -357,28 +357,30 @@ namespace AssemblyNameSpace
         public static string[] AnnotateDomains(string sequence)
         {
             // Assumption: always max length framework regions
+            // The FR lengths (25/37) should be determined at 
+            // runtime instead of being hard coded.
             string GetRegion(int start, int length)
             {
                 if (length > 0) return sequence.Substring(start, length);
                 else return "";
             }
             var output = new string[7];
-            output[0] = GetRegion(0, 26); // FR1
-            int try41 = sequence.IndexOf('W', 26); // TRY41
+            output[0] = GetRegion(0, 25); // FR1
+            int try41 = sequence.IndexOf('W', 25); // TRY41
             if (try41 < 0) throw new Exception("Could not find TRY41");
-            output[1] = GetRegion(26, try41 - 2 - 26); // CDR1
+            output[1] = GetRegion(25, try41 - 2 - 25); // CDR1
             output[2] = GetRegion(try41 - 2, 17); // FR2
             int cys2 = sequence.IndexOf('C', try41); // 2ND CYS 104
             if (cys2 < 0) throw new Exception("Could not find 2nd Cys (104)");
             int start_cdr2 = try41 - 2 + 17;
-            output[3] = GetRegion(start_cdr2, cys2 - 39 - start_cdr2); // CDR2
-            output[4] = GetRegion(cys2 - 39, 39); // FR3
+            output[3] = GetRegion(start_cdr2, cys2 - 37 - start_cdr2); // CDR2
+            output[4] = GetRegion(cys2 - 37, 38); // FR3
             int f118 = sequence.IndexOf('F', cys2);
             int w118 = sequence.IndexOf('W', cys2);
             int h118 = f118;
-            if (Math.Abs(w118 - cys2 - 16) < Math.Abs(f118 - cys2 - 16)) h118 = w118; // Determine which (F or W) is closer to the expected position of 118
+            if (Math.Abs(w118 - cys2 - 16) <= Math.Abs(f118 - cys2 - 16)) h118 = w118; // Determine which (F or W) is closer to the expected position of 118
             if (h118 < 0) throw new Exception("Could not find F or W 118");
-            output[5] = GetRegion(cys2, h118 - cys2); // CDR3
+            output[5] = GetRegion(cys2 + 1, h118 - cys2 - 1); // CDR3
             output[6] = sequence.Substring(h118); // Constant region
             return output;
         }

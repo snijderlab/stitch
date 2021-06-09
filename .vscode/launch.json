@@ -13,7 +13,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/source/bin/Debug/netcoreapp3.1/win-x64/source.dll",
             "args": [
-                "examples/batchfiles/monoclonal.txt"
+                "batchfiles/monoclonal.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

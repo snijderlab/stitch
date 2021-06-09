@@ -509,6 +509,18 @@ namespace AssemblyNameSpace
             ConsensusSequenceCache = (consensus, doc);
             return ConsensusSequenceCache;
         }
+
+        /// <summary>
+        /// Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates.
+        /// </summary>
+        /// <returns>The sequencematch containing the result</returns>
+        public SequenceMatch AlignConsensusWithTemplate()
+        {
+            if (Recombination != null)
+                return HelperFunctionality.SmithWaterman(this.Recombination.SelectMany(a => a.Sequence).ToArray(), this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+            else
+                return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+        }
     }
 
     /// <summary>

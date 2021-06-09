@@ -160,6 +160,7 @@ namespace AssemblyNameSpace
         string CreateTemplateAside(AsideType type, Template template, int superindex, int index, int i)
         {
             string id = GetAsideIdentifier(superindex, index, i, type);
+            string human_id = GetAsideIdentifier(superindex, index, i, type, true);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
             var alignment = CreateTemplateAlignment(template, id, location);
             var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
@@ -185,24 +186,7 @@ namespace AssemblyNameSpace
                         based = $"<h2>Order</h2><p>{order}</p>";
                     }
                     title = "Recombined Template";
-                    try
-                    {
-                        var regions = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(consensus_sequence));
-                        annotated = $@"<h2>Annotated consensus sequence</h2>
-                    <div class='annotated'>
-                        <span class='fr1'><p>FR1</p><p class='aside-seq'>{regions[0]}</p>
-                        <span class='cdr1'><p>CDR1</p><p class='aside-seq'>{regions[1]}</p>
-                        <span class='fr2'><p>FR2</p><p class='aside-seq'>{regions[2]}</p>
-                        <span class='cdr2'><p>CDR2</p><p class='aside-seq'>{regions[3]}</p>
-                        <span class='fr3'><p>FR3</p><p class='aside-seq'>{regions[4]}</p>
-                        <span class='cdr3'><p>CDR3</p><p class='aside-seq'>{regions[5]}</p>
-                        <span class='constant'><p>Constant region</p><p class='aside-seq'>{regions[6]}</p>
-                    </div>";
-                    }
-                    catch (Exception e)
-                    {
-                        Console.WriteLine($"Could not find regions in consensus sequence for {GetAsideIdentifier(superindex, index, i, type, true)}\n{e.Message}");
-                    }
+                    annotated = CreateAnnotatedSequence(human_id, template);
                     break;
                 default:
                     break;
@@ -210,7 +194,7 @@ namespace AssemblyNameSpace
 
 
             return $@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>{title} {GetAsideIdentifier(superindex, index, i, type, true)}</h1>
+    <h1>{title} {human_id}</h1>
     <h2>Consensus Sequence</h2>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
     {annotated}
@@ -226,6 +210,86 @@ namespace AssemblyNameSpace
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>";
+        }
+
+        string CreateAnnotatedSequence(string id, Template template)
+        {
+            try
+            {
+                // Create an overview of the alignment from consensus with germline.
+                // Also highlight differences and IMGT regions
+
+                // HERECOMESTHEGERMLINE.SEQUENCE
+                // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
+                //             CONSENSUS          (differences)
+                var match = template.AlignConsensusWithTemplate();
+                var regions = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(template.ConsensusSequence().Item1));
+                string[] names = { "FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "CONSTANT" };
+                var end = new List<int>();
+                var pos = 0;
+                for (int i = 0; i < regions.Length; i++)
+                {
+                    pos += regions[i].Length;
+                    end.Add(pos);
+                }
+
+                string GetRegion(int position)
+                {
+                    var index = end.FindIndex(a => a >= position);
+                    return names[index];
+                }
+
+                var columns = new List<(char Template, char Query, char Difference, string Region)>();
+                int template_pos = match.StartTemplatePosition;
+                int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
+                foreach (var piece in match.Alignment)
+                {
+                    switch (piece)
+                    {
+                        case SequenceMatch.Match m:
+                            for (int i = 0; i < m.Length; i++)
+                            {
+                                var t = match.TemplateSequence[template_pos].Char;
+                                var q = match.QuerySequence[query_pos].Char;
+                                columns.Add((t, q, t == q ? ' ' : q, GetRegion(query_pos)));
+                                template_pos++;
+                                query_pos++;
+                            }
+                            break;
+                        case SequenceMatch.GapInTemplate q:
+                            for (int i = 0; i < q.Length; i++)
+                            {
+                                var t = match.TemplateSequence[template_pos].Char;
+                                columns.Add((t, '.', ' ', GetRegion(query_pos)));
+                                template_pos++;
+                            }
+                            break;
+                        case SequenceMatch.GapInQuery t:
+                            for (int i = 0; i < t.Length; i++)
+                            {
+                                var q = match.QuerySequence[query_pos].Char;
+                                columns.Add(('.', q, q, GetRegion(query_pos)));
+                                query_pos++;
+                            }
+                            break;
+                    }
+                }
+
+                var buffer = new StringBuilder("<h2>Annotated consensus sequence</h2><div class='annotated'>");
+
+                foreach (var column in columns)
+                {
+                    buffer.Append($"<div class='{column.Region}'><span>{column.Template}</span><span>{column.Query}</span><span>{column.Difference}</span></div>");
+                }
+                buffer.Append("</div>");
+
+                return buffer.ToString();
+            }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Could not find regions in consensus sequence for {id}\n{e.Message}");
+                return "";
+            }
         }
 
         string CreateTemplateGraphs(Template template, List<double> DepthOfCoverage)
