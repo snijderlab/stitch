@@ -383,7 +383,7 @@ namespace AssemblyNameSpace
             if (l89 != -1) conserved.Add(l89);
             int start_cdr2 = try41 - 3 + 18;
             positions.Add(cys2 - 37); // CDR2
-            positions.Add(cys2); // FR3 (still constant)
+            positions.Add(cys2 - 1); // FR3 (still constant)
 
             // Determine which (F or W) is closer to the expected position of 118
             // Loop over all F and W from cys2 to the max range of CDR3

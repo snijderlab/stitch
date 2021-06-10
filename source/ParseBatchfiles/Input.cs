@@ -84,7 +84,7 @@ namespace AssemblyNameSpace
                         output.Report = ParseHelper.ParseReport(pair).GetValue(outEither);
                         break;
                     default:
-                        outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "", ""));
+                        outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "batchfile", "'Runname', 'Version', 'MaxCores', 'Input', 'TemplateMatching', 'Recombine' or 'Report'"));
                         break;
                 }
             }
@@ -1530,7 +1530,7 @@ namespace AssemblyNameSpace
                         }
                         catch (IOException)
                         {
-                            return ("Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program.");
+                            return ("Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program, like Excel.");
                         }
                         catch (UnauthorizedAccessException)
                         {

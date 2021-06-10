@@ -94,9 +94,7 @@ namespace AssemblyNameSpace
                     new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
                 }
 
-                StreamWriter sw = File.CreateText(filename);
-                sw.Write(buffer);
-                sw.Close();
+                File.AppendAllText(filename, buffer);
             }
             else
             {

@@ -80,23 +80,31 @@ namespace AssemblyNameSpace
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
+            string SortOn(int column, string type)
+            {
+                if (templates.Count() > 1)
+                    return $"onclick=\"sortTable('template-table-{type}-{templateIndex}-{templateGroup}', {column}, '{type}')\" ";
+                else
+                    return "";
+            }
+
             if (header)
                 buffer.Append(TableHeader(templates, groupIdentifier));
 
             string unique = "";
             if (displayUnique) unique = $@"
-<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 5, 'number')"" class=""smallcell"">Unique Score</th>
-<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 6, 'number')"" class=""smallcell"">Unique Matches</th>
-<th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 7, 'number')"" class=""smallcell"">Unique Area</th>
+<th {SortOn(5, "number")}class=""smallcell"">Unique Score</th>
+<th {SortOn(6, "number")}class=""smallcell"">Unique Matches</th>
+<th {SortOn(7, "number")}class=""smallcell"">Unique Area</th>
 ";
 
             buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}-{templateGroup}"" class=""widetable"">
 <tr>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 0, 'id')"" class=""smallcell"">Identifier</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 1, 'number')"" class=""smallcell"">Length</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 2, 'number')"" class=""smallcell"" data-sortorder=""desc"">Score</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 3, 'number')"" class=""smallcell"">Matches</th>
-    <th onclick=""sortTable('template-table-{type}-{templateIndex}-{templateGroup}', 4, 'number')"" class=""smallcell"">Total Area</th>
+    <th {SortOn(0, "id")}class=""smallcell"">Identifier</th>
+    <th {SortOn(1, "number")}class=""smallcell"">Length</th>
+    <th {SortOn(2, "number")}class=""smallcell"" data-sortorder=""desc"">Score</th>
+    <th {SortOn(3, "number")}class=""smallcell"">Matches</th>
+    <th {SortOn(4, "number")}class=""smallcell"">Total Area</th>
     {unique}
 </tr>");
 
@@ -269,7 +277,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                var buffer = new StringBuilder("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Germline</span><span>Consensus</span></div>");
+                var buffer = new StringBuilder("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
                 var last = "";
                 foreach (var column in columns)
@@ -281,7 +289,7 @@ namespace AssemblyNameSpace
                         last = column.Classes.Split(' ').First();
                         title = $"<span class='title'>{last}</span>";
                     }
-                    buffer.Append($"<div class='{column.Classes}'>{title}<span>{column.Template}</span><span>{column.Query}</span><span class='dif'>{column.Difference}</span></div>");
+                    buffer.Append($"<div class='{column.Classes}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
                 }
                 buffer.Append("</div>");
 
