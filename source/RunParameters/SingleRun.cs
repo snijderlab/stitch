@@ -144,22 +144,34 @@ namespace AssemblyNameSpace
                     {
                         var segment = TemplateMatching.Segments[i].Segments[j];
                         var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
-
-                        var segment1 = new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, segment.Scoring);
-
-                        // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
-                        var local_matches = segment1.Match(Input);
-
-                        for (int read = 0; read < Input.Count(); read++)
-                            matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
-
-                        current_group.Add(segment1);
+                        current_group.Add(new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, segment.Scoring));
                     }
                     segments.Add((TemplateMatching.Segments[i].Name, current_group));
-
-                    // Save the progress, finished a group
-                    if (progressBar != null) progressBar.Update();
                 }
+
+                var jobs = new List<(int segmentID, int innerSegmentID)>();
+
+                for (int i = 0; i < TemplateMatching.Segments.Count(); i++)
+                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count(); j++)
+                        jobs.Add((i, j));
+
+                void ExecuteJob((int, int) job)
+                {
+                    var (i, j) = job;
+                    var segment1 = segments[i].Item2[j];
+
+                    // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
+                    var local_matches = segment1.Match(Input);
+
+                    for (int read = 0; read < Input.Count(); read++)
+                        matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
+                }
+
+                Parallel.ForEach(jobs, job => ExecuteJob(job));
+
+                // Save the progress, finished TemplateMatching
+                if (progressBar != null) progressBar.Update();
+
                 // Filter matches if Forced
                 if (TemplateMatching.EnforceUnique)
                     EnforceUnique(matches);

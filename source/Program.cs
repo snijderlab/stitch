@@ -74,7 +74,7 @@ namespace AssemblyNameSpace
             var inputparams = ParseCommandFile.Batch(filename, false);
 
             var bar = new ProgressBar();
-            var bars = 1 + inputparams.TemplateMatching.Segments.Count();
+            var bars = 2; // Parse + TemplateMatching
             if (inputparams.Recombine != null)
                 bars += inputparams.TemplateMatching.Segments.Count();
             bar.Start(bars);
