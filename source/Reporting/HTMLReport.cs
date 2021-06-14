@@ -64,23 +64,23 @@ namespace AssemblyNameSpace
             for (var i = 0; i < segments.Count(); i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true), $"{templateGroup}-"));
+                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, templateGroup, i, AsideType.Template, true)));
             }
 
             return output.ToString();
         }
 
 
-        static int counter = 0;
+        static int table_counter = 0;
         string CreateTemplateTable(List<Template> templates, int templateGroup, int templateIndex, AsideType type, bool header = false)
         {
-            counter++;
+            table_counter++;
             var buffer = new StringBuilder();
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             var groupIdentifier = $"{templateGroup}-{templateIndex}";
-            var table_id = $"table-{counter}";
+            var table_id = $"table-{table_counter}";
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
@@ -1027,14 +1027,16 @@ namespace AssemblyNameSpace
             return string.Join("/", pieces.ToArray()) + "/";
         }
 
+        static int collapsible_counter = 0;
         /// <summary>
         /// Create a collapsible region to be used as a main tab in the report.
         /// </summary>
         /// <param name="name">The name to display.</param>
         /// <param name="content">The content.</param>
-        string Collapsible(string name, string content, string extra_id = "")
+        string Collapsible(string name, string content)
         {
-            string id = (name + extra_id).ToLower().Replace(" ", "-") + "-collapsible";
+            collapsible_counter++;
+            string id = $"collapsible-{collapsible_counter}";
             return $@"<input type=""checkbox"" id=""{id}""/>
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
@@ -1281,9 +1283,9 @@ assetsfolder = '{AssetsFolderName}';
                         if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count() > Parameters.RecombinedSegment.Count()) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(recombined, -1, group, AsideType.RecombinedTemplate, true), group.ToString());
+                        groupbuffer += Collapsible("Recombination Table", CreateTemplateTable(recombined, -1, group, AsideType.RecombinedTemplate, true));
                         if (decoy.Count() > 0)
-                            groupbuffer += Collapsible("Recombination Decoy", CreateTemplateTable(decoy, -1, group, AsideType.RecombinedTemplate, true), group.ToString() + "_decoy");
+                            groupbuffer += Collapsible("Recombination Decoy", CreateTemplateTable(decoy, -1, group, AsideType.RecombinedTemplate, true));
                     }
 
                     groupbuffer += CreateTemplateTables(Parameters.Segments[group].Item2, group);
