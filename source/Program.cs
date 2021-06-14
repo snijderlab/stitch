@@ -79,7 +79,7 @@ namespace AssemblyNameSpace
                 bars += inputparams.TemplateMatching.Segments.Count();
             bar.Start(bars);
 
-            inputparams.CreateRun(bar).Calculate(inputparams.MaxNumberOfCPUCores);
+            inputparams.CreateRun(bar).Calculate();
         }
 
         /// <summary>

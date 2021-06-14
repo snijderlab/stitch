@@ -59,7 +59,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public SingleRun CreateRun(ProgressBar bar = null)
             {
-                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, bar);
+                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, bar);
             }
         }
     }

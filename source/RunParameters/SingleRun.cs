@@ -23,6 +23,7 @@ namespace AssemblyNameSpace
             /// THe name of this run.
             /// </summary>
             public string Runname;
+            public readonly int MaxNumberOfCPUCores;
 
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
@@ -56,7 +57,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, MetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, ProgressBar bar = null)
+            public SingleRun(string runname, List<(string, MetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -64,6 +65,7 @@ namespace AssemblyNameSpace
                 Recombine = recombine;
                 Report = report;
                 BatchFile = batchfile;
+                MaxNumberOfCPUCores = maxNumberOfCPUCores;
                 progressBar = bar;
             }
 
@@ -79,7 +81,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Runs this run. Runs the assembly, and generates the reports.
             /// </summary>
-            public void Calculate(int max_threads = 1)
+            public void Calculate()
             {
                 // Template Matching
                 Stopwatch stopWatch = new Stopwatch();
@@ -112,15 +114,15 @@ namespace AssemblyNameSpace
                     switch (report)
                     {
                         case Report.HTML h:
-                            var htmlreport = new HTMLReport(parameters, max_threads);
+                            var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores);
                             htmlreport.Save(h.CreateName(folder, this));
                             break;
                         case Report.FASTA f:
-                            var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, max_threads);
+                            var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, MaxNumberOfCPUCores);
                             fastareport.Save(f.CreateName(folder, this));
                             break;
                         case Report.CSV c:
-                            var csvreport = new CSVReport(parameters, c.OutputType, max_threads);
+                            var csvreport = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
                             csvreport.Save(c.CreateName(folder, this));
                             break;
                     }
@@ -167,7 +169,7 @@ namespace AssemblyNameSpace
                         matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
                 }
 
-                Parallel.ForEach(jobs, job => ExecuteJob(job));
+                Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
 
                 // Save the progress, finished TemplateMatching
                 if (progressBar != null) progressBar.Update();
