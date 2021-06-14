@@ -70,20 +70,24 @@ namespace AssemblyNameSpace
             return output.ToString();
         }
 
+
+        static int counter = 0;
         string CreateTemplateTable(List<Template> templates, int templateGroup, int templateIndex, AsideType type, bool header = false)
         {
+            counter++;
             var buffer = new StringBuilder();
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             var groupIdentifier = $"{templateGroup}-{templateIndex}";
+            var table_id = $"table-{counter}";
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
             string SortOn(int column, string type)
             {
                 if (templates.Count() > 1)
-                    return $"onclick=\"sortTable('template-table-{type}-{templateIndex}-{templateGroup}', {column}, '{type}')\" ";
+                    return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\" ";
                 else
                     return "";
             }
@@ -98,7 +102,7 @@ namespace AssemblyNameSpace
 <th {SortOn(7, "number")}class=""smallcell"">Unique Area</th>
 ";
 
-            buffer.AppendLine($@"<table id=""template-table-{type}-{templateIndex}-{templateGroup}"" class=""widetable"">
+            buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
 <tr>
     <th {SortOn(0, "id")}class=""smallcell"">Identifier</th>
     <th {SortOn(1, "number")}class=""smallcell"">Length</th>
