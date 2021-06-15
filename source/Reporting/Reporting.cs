@@ -16,7 +16,7 @@ namespace AssemblyNameSpace
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public struct ReportInputParameters
     {
-        public readonly List<(string, MetaData.IMetaData)> Input;
+        public readonly List<(string Sequence, MetaData.IMetaData MetaData)> Input;
         public readonly List<(string, List<Segment>)> Segments;
         public readonly List<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
@@ -35,14 +35,6 @@ namespace AssemblyNameSpace
     /// </summary>
     public abstract class Report
     {
-        /// <summary>
-        /// The reads used as input in the run.
-        /// </summary>
-        protected List<string> reads;
-        /// <summary>
-        /// Possibly the reads from PEAKS used in the run.
-        /// </summary>
-        protected List<MetaData.IMetaData> reads_metadata;
         protected readonly int MaxThreads;
         public readonly ParsedFile BatchFile;
         public readonly ReportInputParameters Parameters;
@@ -52,10 +44,7 @@ namespace AssemblyNameSpace
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int max_threads)
         {
-            reads = new List<string>(parameters.Input.Select(a => a.Item1));
-            reads_metadata = new List<MetaData.IMetaData>(parameters.Input.Select(a => a.Item2));
             MaxThreads = max_threads;
-
             BatchFile = parameters.BatchFile;
             Parameters = parameters;
         }

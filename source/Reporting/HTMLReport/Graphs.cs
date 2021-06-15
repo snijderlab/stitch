@@ -2,8 +2,9 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using AssemblyNameSpace;
 
-namespace AssemblyNameSpace
+namespace HTMLNameSpace
 {
     static class HTMLGraph
     {
@@ -204,14 +205,17 @@ namespace AssemblyNameSpace
             return buffer.ToString();
         }
 
+        static int graph_counter = 0;
         /// <summary>
         /// Generates a grouped point graph, with a multiple values per point which will be linearly normalised to fit the same range.
         /// </summary>
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static string GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string identifier)
+        public static string GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header)
         {
+            graph_counter++;
+            string identifier = $"graph-{graph_counter}";
             if (data.Count == 0 || data.Any(a => a.Points.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
             int dimensions = header.Count();
             double[] maxvalues = new double[dimensions];
