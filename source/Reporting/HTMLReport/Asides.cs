@@ -16,96 +16,26 @@ namespace HTMLNameSpace
 {
     public static class HTMLAsides
     {
-        /// <summary> Returns a list of asides for details viewing. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        public static List<(string, AsideType, MetaData.IMetaData)> CreateAsides(ReportInputParameters Parameters, string AssetsFolderName, int MaxThreads)
-        {
-            var jobbuffer = new List<(AsideType, int, int, int)>();
-            var output = new List<(string, AsideType, MetaData.IMetaData)>();
-
-            void ExecuteJob(AsideType aside, int index3, int index2, int index1)
-            {
-                switch (aside)
-                {
-                    case AsideType.Read:
-                        output.Add(
-                            (CreateReadAside(Parameters.Input[index1]), AsideType.Read, Parameters.Input[index1].MetaData)
-                            ); break;
-                    case AsideType.Template:
-                        var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                        output.Add(
-                            (CreateTemplateAside(template, AsideType.Template, AssetsFolderName), AsideType.Template, template.MetaData)
-                            ); break;
-                    case AsideType.RecombinedTemplate:
-                        var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                        output.Add(
-                            (CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName), AsideType.RecombinedTemplate, rTemplate.MetaData)
-                            ); break;
-                };
-            }
-
-            // Read Asides
-            for (int i = 0; i < Parameters.Input.Count(); i++)
-            {
-                jobbuffer.Add((AsideType.Read, -1, -1, i));
-            }
-            // Template Tables Asides
-            if (Parameters.Segments != null)
-            {
-                for (int i = 0; i < Parameters.Segments.Count(); i++)
-                    for (int j = 0; j < Parameters.Segments[i].Item2.Count(); j++)
-                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count(); k++)
-                            jobbuffer.Add((AsideType.Template, i, j, k));
-            }
-            // Recombination Table Asides
-            if (Parameters.RecombinedSegment != null)
-            {
-                for (int i = 0; i < Parameters.RecombinedSegment.Count(); i++)
-                    for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count(); j++)
-                        jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
-            }
-            if (MaxThreads > 1)
-            {
-                Parallel.ForEach(
-                    jobbuffer,
-                    new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                    (a, _) => ExecuteJob(a.Item1, a.Item2, a.Item3, a.Item4)
-                );
-            }
-            else
-            {
-                foreach (var (t, i3, i2, i1) in jobbuffer)
-                {
-                    ExecuteJob(t, i3, i2, i1);
-                }
-            }
-
-            return output;
-        }
-
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        static string CreateReadAside((string Sequence, MetaData.IMetaData MetaData) read)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, MetaData.IMetaData MetaData) read)
         {
-            string id = GetAsideIdentifier(read.MetaData);
-            return $@"<div id=""{id}"" class=""info-block read-info"">
+            buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
     <h2>Sequence</h2>
     <p class=""aside-seq"">{read.Sequence}</p>
     <h2>Sequence Length</h2>
     <p>{read.Sequence.Length}</p>
     {read.MetaData.ToHTML()}
-</div>";
+</div>");
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        /// <returns> A string containing valid HTML ready to paste into an HTML file. </returns>
-        static string CreateTemplateAside(Template template, AsideType type, string AssetsFolderName)
+        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName)
         {
             string id = GetAsideIdentifier(template.MetaData);
             string human_id = GetAsideIdentifier(template.MetaData, true);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
-            var alignment = CreateTemplateAlignment(template, id, location, AssetsFolderName);
+
             var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
 
             string meta = "";
@@ -115,7 +45,6 @@ namespace HTMLNameSpace
             }
 
             string based = "";
-            string annotated = "";
             string title = "Segment";
             switch (type)
             {
@@ -129,33 +58,35 @@ namespace HTMLNameSpace
                         based = $"<h2>Order</h2><p>{order}</p>";
                     }
                     title = "Recombined Template";
-                    annotated = CreateAnnotatedSequence(human_id, template);
                     break;
                 default:
                     break;
             }
 
 
-            return $@"<div id=""{id}"" class=""info-block template-info"">
+            buffer.Append($@"<div id=""{id}"" class=""info-block template-info"">
     <h1>{title} {human_id}</h1>
     <h2>Consensus Sequence</h2>
-    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
-    {annotated}
-    <h2>Sequence Consensus Overview</h2>
-    {SequenceConsensusOverview(template)}
-    <div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc))}</div>
+    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
+            if (type == AsideType.RecombinedTemplate) CreateAnnotatedSequence(buffer, human_id, template);
+            buffer.Append("<h2>Sequence Consensus Overview</h2>");
+
+            SequenceConsensusOverview(buffer, template);
+            buffer.Append("<div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc));
+            buffer.Append($@"</div>
     <h2>Scores</h2>
     {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName)}
-    {based}
-    {alignment.Alignment}
-    {CreateTemplateGraphs(template, alignment.DepthOfCoverage)}
-    <h2>Template Sequence</h2>
+    {based}");
+            var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
+            CreateTemplateGraphs(buffer, template, DepthOfCoverage);
+            buffer.Append($@"<h2>Template Sequence</h2>
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
-</div>";
+</div>");
         }
 
-        static string CreateAnnotatedSequence(string id, Template template)
+        static void CreateAnnotatedSequence(StringBuilder buffer, string id, Template template)
         {
             try
             {
@@ -212,7 +143,7 @@ namespace HTMLNameSpace
                     }
                 }
 
-                var buffer = new StringBuilder("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+                buffer.Append("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
                 var last = "";
                 foreach (var column in columns)
@@ -227,59 +158,56 @@ namespace HTMLNameSpace
                     buffer.Append($"<div class='{column.Classes}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
                 }
                 buffer.Append("</div>");
-
-                return buffer.ToString();
             }
             catch (Exception e)
             {
                 Console.WriteLine($"Could not find regions in consensus sequence for {id}\n{e.Message}");
-                return "";
             }
         }
 
-        static string CreateTemplateGraphs(Template template, List<double> DepthOfCoverage)
+        static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
         {
-            if (template.Matches.Count == 0) return "";
-            var buffer = new StringBuilder();
-            buffer.Append("<h3>Graphs</h3><div class='template-graphs'>");
-
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage))}</div>");
-
-            buffer.Append($"<div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()))}</div>");
+            if (template.Matches.Count == 0) return;
+            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='docplot'><h3>Depth Of Coverage over the template</h3>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage));
+            buffer.Append("</div><div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()));
+            buffer.Append("</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
-                var scores = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
-                buffer.Append($"<div><h3>Histogram of Score</h3>{scores}</div>");
+                buffer.Append("<div><h3>Histogram of Score</h3>");
+                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
 
                 // Histogram of Length On Template
-                var lengths = HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") });
-                buffer.Append($"<div><h3>Histogram of Length on Template</h3>{lengths}</div>");
+                buffer.Append("</div><div><h3>Histogram of Length on Template</h3>");
+                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") });
             }
             else
             {
                 // Histogram of Scores
-                buffer.Append($"<div><h3>Histogram of Score</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList())}</div>");
+                buffer.Append("<div><h3>Histogram of Score</h3>");
+                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.Score).ToList());
 
                 // Histogram of Length On Template
-                buffer.Append($"<div><h3>Histogram of Length on Template</h3>{HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList())}</div>");
+                buffer.Append("</div><div><h3>Histogram of Length on Template</h3>");
+                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.LengthOnTemplate).ToList());
             }
 
             // Histogram of coverage, coverage per position excluding gaps
-            buffer.Append($"<div><h3>Histogram of Coverage</h3>{HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList())}<i>Excludes gaps in reference to the template sequence</i></div>");
+            buffer.Append("</div><div><h3>Histogram of Coverage</h3>");
+            HTMLGraph.Histogram(buffer, template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList());
 
-            buffer.Append("</div>");
-            return buffer.ToString();
+            buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
         }
 
-        static public (string Alignment, List<double> DepthOfCoverage) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName)
+        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName)
         {
-            var buffer = new StringBuilder();
             var alignedSequences = template.AlignedSequences();
 
             if (alignedSequences.Count() == 0)
-                return ("", new List<double>());
+                return new List<double>();
 
             buffer.Append("<h2>Alignment</h2>");
 
@@ -573,28 +501,19 @@ namespace HTMLNameSpace
             buffer.Append("<div id='index-menus'>");
             foreach (var match in template.Matches)
             {
-                buffer.Append(AlignmentDetails(match, template));
+                AlignmentDetails(buffer, match, template);
             }
 
             buffer.AppendLine("</div></div>");
-            return (buffer.ToString(), depthOfCoverage);
+            return depthOfCoverage;
         }
 
-        static string AlignmentDetails(SequenceMatch match, Template template)
+        static void AlignmentDetails(StringBuilder buffer, SequenceMatch match, Template template)
         {
             var doctitle = "Positional Score";
             var type = "Read";
 
-            var unique = "";
-            if (template.ForcedOnSingleTemplate) unique = "<tr><td>Unique</td><td>" + (match.Unique ? "Yes" : "No") + "</td></tr>";
-
-            var peaks = "";
-            if (match.MetaData is MetaData.Peaks p) peaks = $"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>";
-
-            var docplot = "";
-            if (match.MetaData.PositionalScore.Count() != 0) docplot = $"<tr><td>{doctitle}</td><td class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition))}</td></tr>";
-
-            return $@"
+            buffer.Append($@"
     <div class='alignment-details' id='alignment-details-{match.Index}'>
         <h4>{match.MetaData.Identifier}</h4>
         <table>
@@ -625,21 +544,32 @@ namespace HTMLNameSpace
             <tr>
                 <td>Length of {type}</td>
                 <td>{match.QuerySequence.Length}</td>
-            </tr>
-            {unique}
-            {peaks}
-            {docplot}
-            <tr>
-                <td>Alignment graphic</td>
-                <td>{SequenceMatchGraphic(match)}</td>
-            </tr>
-        </table>
-    </div>";
+            </tr>");
+            if (template.ForcedOnSingleTemplate)
+            {
+                buffer.Append("<tr><td>Unique</td><td>");
+                if (match.Unique) buffer.Append("Yes");
+                else buffer.Append("No");
+                buffer.Append("</td></tr>");
+            }
+            if (match.MetaData is MetaData.Peaks p)
+            {
+                buffer.Append($"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>");
+            }
+            if (match.MetaData.PositionalScore.Count() != 0)
+            {
+                buffer.Append($"<tr><td>{doctitle}</td><td class='docplot'>");
+                HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition));
+                buffer.Append("</td></tr>");
+            }
+
+            buffer.Append($@"<tr><td>Alignment graphic</td><td>");
+            SequenceMatchGraphic(buffer, match);
+            buffer.Append("</td></tr></table></div>");
         }
 
-        static string SequenceMatchGraphic(SequenceMatch match)
+        static void SequenceMatchGraphic(StringBuilder buffer, SequenceMatch match)
         {
-            var buffer = new StringBuilder("<div class='sequence-match-graphic'>");
             var id = "none";
             foreach (var piece in match.Alignment)
             {
@@ -653,22 +583,19 @@ namespace HTMLNameSpace
                 buffer.Append($"<span class='{id}' style='flex-grow:{piece.Length}'></span>");
             }
             buffer.Append("</div>");
-            return buffer.ToString();
         }
 
-        static string SequenceConsensusOverview(Template template)
+        static void SequenceConsensusOverview(StringBuilder buffer, Template template)
         {
             const double threshold = 0.3;
             const int height = 25;
             const int fontsize = 10;
             var consensus_sequence = template.CombinedSequence();
 
-            var sequence_logo_buffer = new StringBuilder();
-
-            sequence_logo_buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
-                sequence_logo_buffer.Append("<div class='sequence-logo-position'>");
+                buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
                 double sum = 0;
                 foreach (var item in consensus_sequence[i].AminoAcids)
@@ -682,14 +609,14 @@ namespace HTMLNameSpace
                     if ((double)item.Value / sum > threshold)
                     {
                         var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
                         placed = true;
                     }
                 }
                 if (!placed)
-                    sequence_logo_buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
+                    buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
 
-                sequence_logo_buffer.Append("</div><div class='sequence-logo-position sequence-logo-gap'>");
+                buffer.Append("</div><div class='sequence-logo-position sequence-logo-gap'>");
                 // Get the highest chars
                 int gap_sum = 0;
                 foreach (var item in consensus_sequence[i].Gaps)
@@ -705,18 +632,17 @@ namespace HTMLNameSpace
 
                         if (item.Key == (Template.IGap)new Template.None())
                         {
-                            sequence_logo_buffer.Append($"<span style='font-size:{size}em'>*</span>");
+                            buffer.Append($"<span style='font-size:{size}em'>*</span>");
                         }
                         else
                         {
-                            sequence_logo_buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                            buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
                         }
                     }
                 }
-                sequence_logo_buffer.Append("</div>");
+                buffer.Append("</div>");
             }
-            sequence_logo_buffer.Append("</div>");
-            return sequence_logo_buffer.ToString();
+            buffer.Append("</div>");
         }
     }
 }

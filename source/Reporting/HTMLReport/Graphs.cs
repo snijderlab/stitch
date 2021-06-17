@@ -18,9 +18,14 @@ namespace HTMLNameSpace
 
             return annotated;
         }
-        public static string GroupedHistogram(List<(List<double> Data, string Label)> data, int bins = 10)
+        public static void GroupedHistogram(StringBuilder buffer, List<(List<double> Data, string Label)> data, int bins = 10)
         {
-            if (data.Count == 0 || data.Any(a => a.Item1.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
+            if (data.Count == 0 || data.Any(a => a.Item1.Count == 0))
+            {
+                buffer.Append("<em>No data, or a dataset contains no data.</em>");
+                return;
+            }
+
             double min = data.Select(a => a.Data.Min()).Min();
             double max = data.Select(a => a.Data.Max()).Max();
 
@@ -49,12 +54,16 @@ namespace HTMLNameSpace
                 }
             }
 
-            return GroupedBargraph(labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList());
+            GroupedBargraph(buffer, labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList());
         }
 
-        public static string Histogram(List<double> data, int bins = 10)
+        public static void Histogram(StringBuilder buffer, List<double> data, int bins = 10)
         {
-            if (data.Count == 0) return "<em>No data.</em>";
+            if (data.Count == 0)
+            {
+                buffer.Append("<em>No data.</em>");
+                return;
+            }
             double min = data.Min();
             double max = data.Max();
             if (max == min) bins = 1;
@@ -79,13 +88,16 @@ namespace HTMLNameSpace
                 labeled[bin].Item2++;
             }
 
-            return Bargraph(labeled.ToList());
+            Bargraph(buffer, labeled.ToList());
         }
 
-        public static string Bargraph(List<(string Label, double Value)> data, int factor = 2, bool baseYMinOnData = false)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, int factor = 2, bool baseYMinOnData = false)
         {
-            if (data.Count == 0) return "<em>No data.</em>";
-            var buffer = new StringBuilder();
+            if (data.Count == 0)
+            {
+                buffer.Append("<em>No data.</em>");
+                return;
+            }
             var dataBuffer = new StringBuilder("Label\tValue");
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
@@ -110,8 +122,6 @@ namespace HTMLNameSpace
             buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
-
-            return buffer.ToString();
         }
 
         /// <summary>
@@ -123,9 +133,14 @@ namespace HTMLNameSpace
         /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
         /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
         /// <returns></returns>
-        public static string GroupedBargraph(List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, int factor = 2, bool baseYMinOnData = false)
+        public static void GroupedBargraph(StringBuilder buffer, List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, int factor = 2, bool baseYMinOnData = false)
         {
-            if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
+            if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0))
+            {
+                buffer.Append("<em>No data, or a dataset contains no data.</em>");
+                return;
+            }
+
             int dimensions = header.Count();
             double[] maxvalues = new double[dimensions];
             double[] minvalues = new double[dimensions];
@@ -161,7 +176,6 @@ namespace HTMLNameSpace
             if (!baseYMinOnData) Array.Fill(dimensionMin, 0);
 
             // Create Legend
-            var buffer = new StringBuilder();
             var dataBuffer = new StringBuilder("Group");
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
@@ -201,8 +215,6 @@ namespace HTMLNameSpace
             buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
-
-            return buffer.ToString();
         }
 
         static int graph_counter = 0;
@@ -212,11 +224,15 @@ namespace HTMLNameSpace
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static string GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header)
+        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header)
         {
+            if (data.Count == 0 || data.Any(a => a.Points.Count == 0))
+            {
+                buffer.Append("<em>No data, or a dataset contains no data.</em>");
+                return;
+            }
             graph_counter++;
             string identifier = $"graph-{graph_counter}";
-            if (data.Count == 0 || data.Any(a => a.Points.Count == 0)) return "<em>No data, or a dataset contains no data.</em>";
             int dimensions = header.Count();
             double[] maxvalues = new double[dimensions];
             double[] minvalues = new double[dimensions];
@@ -238,7 +254,6 @@ namespace HTMLNameSpace
             }
 
             // Create Legend
-            var buffer = new StringBuilder();
             var dataBuffer = new StringBuilder("Group\tPoint");
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
@@ -283,8 +298,6 @@ namespace HTMLNameSpace
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
-
-            return buffer.ToString();
         }
     }
 }

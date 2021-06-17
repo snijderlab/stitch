@@ -25,9 +25,10 @@ namespace AssemblyTestNameSpace
                 new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter()),
                 null
                 );
-            var res = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(template, "id", new List<string>(), "");
+            var buffer = new StringBuilder();
+            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, template, "id", new List<string>(), "");
             var doc_expected = Enumerable.Repeat(0.0, 20).ToList();
-            CompareDOC(res.Item2, doc_expected);
+            CompareDOC(doc, doc_expected);
         }
 
         [TestMethod]
@@ -47,9 +48,10 @@ namespace AssemblyTestNameSpace
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            var res = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var buffer = new StringBuilder();
+            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, segment.Templates[0], "id", new List<string>(), "");
             var doc_expected = Enumerable.Repeat(1.0, 20).ToList();
-            CompareDOC(res.Item2, doc_expected);
+            CompareDOC(doc, doc_expected);
         }
 
         [TestMethod]
@@ -69,9 +71,10 @@ namespace AssemblyTestNameSpace
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            var res = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var buffer = new StringBuilder();
+            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, segment.Templates[0], "id", new List<string>(), "");
             var doc_expected = Enumerable.Repeat(2.0, 10).ToList();
-            CompareDOC(res.Item2, doc_expected);
+            CompareDOC(doc, doc_expected);
         }
 
         [TestMethod]
@@ -91,9 +94,10 @@ namespace AssemblyTestNameSpace
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("E", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            var res = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var buffer = new StringBuilder();
+            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, segment.Templates[0], "id", new List<string>(), "");
             var doc_expected = Enumerable.Repeat(1.0, 1).ToList();
-            CompareDOC(res.Item2, doc_expected);
+            CompareDOC(doc, doc_expected);
         }
 
         [TestMethod]
@@ -110,9 +114,10 @@ namespace AssemblyTestNameSpace
                 1.0, // CutoffScore
                 0 // Index
                 );
-            var res = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var buffer = new StringBuilder();
+            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, segment.Templates[0], "id", new List<string>(), "");
             var doc_expected = Enumerable.Repeat(0.0, 0).ToList();
-            CompareDOC(res.Item2, doc_expected);
+            CompareDOC(doc, doc_expected);
         }
 
         void CompareDOC(List<double> actual, List<double> expected)

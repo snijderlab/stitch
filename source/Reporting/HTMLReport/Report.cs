@@ -32,21 +32,82 @@ namespace AssemblyNameSpace
             throw new Exception("HTML reports should be generated using the 'Save' function.");
         }
 
-        void SaveAside((string content, AsideType type, MetaData.IMetaData metaData) set)
+        /// <summary> Generates a list of asides for details viewing. </summary>
+        public void CreateAsides()
         {
-            (var content, var type, var metaData) = set;
-            var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
+            var jobbuffer = new List<(AsideType, int, int, int)>();
+
+            // Read Asides
+            for (int i = 0; i < Parameters.Input.Count(); i++)
+            {
+                jobbuffer.Add((AsideType.Read, -1, -1, i));
+            }
+            // Template Tables Asides
+            if (Parameters.Segments != null)
+            {
+                for (int i = 0; i < Parameters.Segments.Count(); i++)
+                    for (int j = 0; j < Parameters.Segments[i].Item2.Count(); j++)
+                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count(); k++)
+                            jobbuffer.Add((AsideType.Template, i, j, k));
+            }
+            // Recombination Table Asides
+            if (Parameters.RecombinedSegment != null)
+            {
+                for (int i = 0; i < Parameters.RecombinedSegment.Count(); i++)
+                    for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count(); j++)
+                        jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
+            }
+            if (MaxThreads > 1)
+            {
+                Parallel.ForEach(
+                    jobbuffer,
+                    new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
+                    (a, _) => CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4)
+                );
+            }
+            else
+            {
+                foreach (var (t, i3, i2, i1) in jobbuffer)
+                {
+                    CreateAndSaveAside(t, i3, i2, i1);
+                }
+            }
+        }
+
+        void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
+        {
+            var buffer = new StringBuilder();
+            var innerbuffer = new StringBuilder();
+
+            MetaData.IMetaData metadata = new MetaData.Simple(null, null);
+            switch (aside)
+            {
+                case AsideType.Read:
+                    HTMLAsides.CreateReadAside(innerbuffer, Parameters.Input[index1]);
+                    metadata = Parameters.Input[index1].MetaData;
+                    break;
+                case AsideType.Template:
+                    var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
+                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName);
+                    metadata = template.MetaData;
+                    break;
+                case AsideType.RecombinedTemplate:
+                    var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
+                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName);
+                    metadata = rTemplate.MetaData;
+                    break;
+            };
+            var location = new List<string>() { AssetsFolderName, GetAsideName(aside) + "s" };
             var homelocation = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
-            var id = GetAsideIdentifier(metaData);
+            var id = GetAsideIdentifier(metadata);
             var link = GetLinkToFolder(location, new List<string>());
             var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
-            StringBuilder buffer = new StringBuilder();
             buffer.Append("<html>");
             buffer.Append(CreateHeader("Details " + id, location));
             buffer.Append("<body class='details' onload='Setup()'>");
             buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
-            buffer.Append(content);
+            buffer.Append(innerbuffer.ToString());
             buffer.Append("</body></html>");
 
             SaveAndCreateDirectories(fullpath, buffer.ToString());
@@ -115,7 +176,9 @@ assetsfolder = '{AssetsFolderName}';
                 {
                     if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var (seq, doc) = Parameters.RecombinedSegment[group].Templates[0].ConsensusSequence();
-                    buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>{HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc))}</div><h3>Best scoring segments</h3><p>");
+                    buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>");
+                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc));
+                    buffer.Append("</div><h3>Best scoring segments</h3><p>");
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
@@ -135,7 +198,8 @@ assetsfolder = '{AssetsFolderName}';
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
-                        buffer.Append($"<h3>{seg.Name}</h3>{HTMLTables.TableHeader(seg.Templates)}");
+                        buffer.Append($"<h3>{seg.Name}</h3>");
+                        HTMLTables.TableHeader(buffer, seg.Templates);
                     }
                 }
             }
@@ -244,11 +308,9 @@ assetsfolder = '{AssetsFolderName}';
             try
             {
                 // TODO: Make these async or something, create the job and only execute it when scattered over a thread pool
+                // TODO: move CreateAsides to this class again and pass a single StringBuilder for each resulting HTML page
                 var html = CreateMain();
-                foreach (var set in HTMLAsides.CreateAsides(Parameters, AssetsFolderName, MaxThreads))
-                {
-                    SaveAside(set);
-                }
+                CreateAsides();
 
                 stopwatch.Stop();
                 html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
