@@ -24,10 +24,20 @@ namespace AssemblyNameSpace
             Console.CancelKeyPress += HandleUserAbort;
             var args = Environment.CommandLine.Split(" ".ToCharArray());
 
+            string CleanFileName(string filename)
+            {
+                if (filename.StartsWith('\'') && filename.EndsWith('\''))
+                    return filename.Substring(1, filename.Length - 2);
+                if (filename.StartsWith('\"') && filename.EndsWith('\"'))
+                    return filename.Substring(1, filename.Length - 2);
+                return filename;
+            }
+
             // Retrieve the name of the batch file to run or file to clean
             string filename = "";
             string output_filename = "";
             bool clean = false;
+            bool annotate = false;
             try
             {
                 filename = args[1].Trim();
@@ -40,9 +50,14 @@ namespace AssemblyNameSpace
                     else
                         output_filename = filename;
                 }
+                else if (filename == "annotate")
+                {
+                    annotate = true;
+                    filename = CleanFileName(string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim());
+                }
                 else
                 {
-                    filename = string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(1)).Trim();
+                    filename = CleanFileName(string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(1)).Trim());
                 }
             }
             catch
@@ -55,6 +70,8 @@ namespace AssemblyNameSpace
             {
                 if (clean)
                     CleanFasta(filename, output_filename);
+                else if (annotate)
+                    GenerateAnnotatedTemplate(filename, output_filename);
                 else
                     RunBatchFile(filename);
             }
@@ -131,6 +148,141 @@ namespace AssemblyNameSpace
             }
 
             File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
+        }
+
+        /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
+        static void GenerateAnnotatedTemplate(string filename, string output)
+        {
+            string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
+            var namefilter = new NameFilter();
+
+            content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
+            content = content.Substring(content.IndexOf("</pre></td>\n") + 12);
+            while (content.StartsWith("</tr>\n<tr>\n"))
+            {
+                content = content.Substring(content.IndexOf("</tr>\n<tr>\n") + 11);
+                int newline = content.IndexOf('\n');
+                var line = content.Substring(0, newline);
+                content = content.Substring(newline + 1);
+
+                var pieces = line.Split("</td><td>").ToArray();
+                // 0 - nothing
+                // 1 - Species
+                // 2 - ID
+                // 3 - Link Allele
+                // 4 - Link AccNum
+                // 5 - Segment
+                // 6 - Functionality
+                // 7 - Sequence
+                var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
+                Console.WriteLine(">" + pieces[2]);
+
+                List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result)
+                {
+                    if (input.Length == 0)
+                    {
+                        if (current_seq != "")
+                            result.Add((new List<string>(current_classes), current_seq));
+                        return result;
+                    }
+                    else if (input.StartsWith("<span"))
+                    {
+                        if (current_seq != "")
+                            result.Add((new List<string>(current_classes), current_seq));
+                        int i = 13; // Skip to classname
+                        for (int j = 0; i + j < input.Length; j++)
+                        {
+                            if (input[i + j] == '"')
+                            {
+                                current_classes.Add(input.Substring(i, j));
+                                i += j + 2;
+                                break;
+                            }
+                        }
+                        return ParseSequence(input.Substring(i), current_classes, "", result);
+                    }
+                    else if (input.StartsWith("</span>"))
+                    {
+                        if (current_seq != "")
+                            result.Add((new List<string>(current_classes), current_seq));
+                        current_classes.RemoveAt(current_classes.Count() - 1);
+                        return ParseSequence(input.Substring(7), current_classes, "", result);
+                    }
+                    else if (input.StartsWith(' ') || input.StartsWith('.'))
+                    {
+                        return ParseSequence(input.Substring(1), current_classes, current_seq, result);
+                    }
+                    else
+                    {
+                        return ParseSequence(input.Substring(1), current_classes, current_seq + input[0], result);
+                    }
+                }
+
+                var final_sequence = ParseSequence(sequence, new List<string>(), "", new List<(List<string> classes, string seq)>());
+                var typed = new List<(string, string)>();
+                bool J = false;
+                foreach (var piece in final_sequence)
+                {
+                    var type = "";
+                    foreach (var classname in piece.Item1)
+                    {
+                        switch (classname)
+                        {
+                            case "loop":
+                                type = "CDR";
+                                break;
+                            case "J-motif":
+                                J = true;
+                                type = "Conserved";
+                                break;
+                            case "1st-CYS": // Used for any CYS
+                            case "CONSERVED-TRP": // Used for any conserved amino acid
+                                type = "Conserved";
+                                break;
+                            case "N-glycosylation":
+                                type = "Glycosylationsite";
+                                break;
+                            case "mutation":
+                                break;
+                            default:
+                                type = "UNKOWN: " + classname;
+                                break;
+                        };
+                    }
+                    typed.Add((type, piece.Item2));
+                }
+                var compressed = new List<(string, string)>();
+                var last = ("", "");
+                foreach (var piece in typed)
+                {
+                    if (piece.Item1 == last.Item1)
+                    {
+                        last = (last.Item1, last.Item2 + piece.Item2);
+                    }
+                    else
+                    {
+                        compressed.Add(last);
+                        last = piece;
+                    }
+                }
+                compressed.Add(last);
+                // J segments always start with the last pieces of CDR3 but this is not properly annotated in the HTML files
+                if (J)
+                    compressed[0] = ("CDR", compressed[0].Item2);
+
+                foreach (var piece in compressed)
+                {
+                    if (piece.Item1 == "")
+                        Console.Write(piece.Item2);
+                    else
+                        Console.Write($"({piece.Item1} {piece.Item2})");
+                }
+
+                Console.Write("\n");
+
+            }
+
+            //File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
         }
     }
 }
