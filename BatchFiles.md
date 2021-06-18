@@ -302,13 +302,17 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for TemplateMatching overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+
+##### ForceGermlineIsoleucine (s)
+
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Setting this options for TemplateMatching overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### Segments (m)
 
 Defines a list of segments to match against. A single segment is defined by the parameter `Segment` which can be defined multiple times within `Segments`. Segments will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in the enclosing TemplateMatching scope.
+`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in TemplateMatching.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
@@ -379,7 +383,12 @@ The scoring strategy used when determining the score of this segment. `Absolute`
 
 ###### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of Recombine overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+
+##### ForceGermlineIsoleucine (s)
+
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+
 
 ###### GapHead (s)
 

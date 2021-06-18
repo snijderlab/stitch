@@ -146,7 +146,7 @@ namespace AssemblyNameSpace
                     {
                         var segment = TemplateMatching.Segments[i].Segments[j];
                         var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
-                        current_group.Add(new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, segment.Scoring));
+                        current_group.Add(new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, TemplateMatching.ForceGermlineIsoleucine, segment.Scoring));
                     }
                     segments.Add((TemplateMatching.Segments[i].Name, current_group));
                 }
@@ -198,6 +198,7 @@ namespace AssemblyNameSpace
 
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
                 var namefilter = new NameFilter();
+                bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
                 for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
                 {
@@ -216,7 +217,7 @@ namespace AssemblyNameSpace
                         // Add all missed templates (score too low) to the decoy set if the Decoy option is turned on
                         if (Recombine.Decoy)
                             foreach (var template in db.Templates.Skip(Recombine.N))
-                                decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, new TemplateLocation(-1, decoy.Count())));
+                                decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, forceGermlineIsoleucine, new TemplateLocation(-1, decoy.Count())));
                     }
 
                     // Recombine high scoring templates
@@ -253,13 +254,13 @@ namespace AssemblyNameSpace
                     if (seg_group.Item1.ToLower() == "decoy")
                         foreach (var segment in seg_group.Item2)
                             foreach (var template in segment.Templates)
-                                general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, new TemplateLocation(-1, general_decoy.Count())));
+                                general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count())));
                     // If a segment is added in the outer scope called "Decoy" it is added as well
                     if (seg_group.Item1 == "")
                         foreach (var segment in seg_group.Item2)
                             if (segment.Name.ToLower() == "decoy")
                                 foreach (var template in segment.Templates)
-                                    general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, new TemplateLocation(-1, general_decoy.Count())));
+                                    general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count())));
                 }
                 if (general_decoy.Count() > 0)
                 {
@@ -335,7 +336,14 @@ namespace AssemblyNameSpace
                             t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                         }
                     }
-                    recombined_templates.Add(new Template("recombined", s.ToArray(), new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{segment_group_index + 1}-{i + 1}"), parent, new RecombinedTemplateLocation(i), t));
+                    recombined_templates.Add(
+                        new Template(
+                            "recombined",
+                            s.ToArray(),
+                            new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{segment_group_index + 1}-{i + 1}"),
+                            parent,
+                            HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
+                            new RecombinedTemplateLocation(i), t));
                 }
                 parent.Templates = recombined_templates;
             }

@@ -250,6 +250,11 @@ namespace AssemblyNameSpace
             public bool EnforceUnique = true;
 
             /// <summary>
+            /// To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position.
+            /// </summary>
+            public bool ForceGermlineIsoleucine = true;
+
+            /// <summary>
             /// The templates themselves. Grouped by their template group.
             /// </summary>
             public List<(String Name, List<SegmentValue> Segments)> Segments = new List<(String, List<SegmentValue>)>();
@@ -274,6 +279,11 @@ namespace AssemblyNameSpace
             /// Whether or not reads/paths will be forced to a single template.
             /// </summary>
             public Trilean EnforceUnique = Trilean.Unspecified;
+
+            /// <summary>
+            /// To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position.
+            /// </summary>
+            public Trilean ForceGermlineIsoleucine = Trilean.Unspecified;
 
             /// <summary>
             /// The amount of templates to recombine from the highest scoring Segments.

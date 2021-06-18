@@ -59,6 +59,10 @@ namespace AssemblyNameSpace
         /// To signify if this template was used in a match run which used EnforceUnique.
         /// </summary>
         public bool ForcedOnSingleTemplate;
+        /// <summary>
+        /// To signify if the germline Isoleucines should be copied to the consensus sequence.
+        /// </summary>
+        public bool ForceGermlineIsoleucine;
 
         /// <summary>
         /// The unique score for this template
@@ -106,7 +110,7 @@ namespace AssemblyNameSpace
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Segment parent, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;
@@ -116,6 +120,7 @@ namespace AssemblyNameSpace
             Recombination = recombination;
             Location = location;
             Parent = parent;
+            ForceGermlineIsoleucine = forceGermlineIsoleucine;
         }
 
         /// <summary>
@@ -127,8 +132,6 @@ namespace AssemblyNameSpace
         {
             lock (Matches)
             {
-                //if (match != null)
-                //{
                 if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length) && !match.AllGap())
                 {
                     score += match.Score;
@@ -144,7 +147,6 @@ namespace AssemblyNameSpace
                         UniqueMatches++;
                     }
                 }
-                //}
             }
         }
         /// <summary>
@@ -464,6 +466,11 @@ namespace AssemblyNameSpace
                     // Do not add gaps, as those are not part of the final sequence
                 }
                 else if (options.Count() > 1 && options.Contains(combinedSequence[i].Template))
+                {
+                    consensus.Add(combinedSequence[i].Template);
+                    doc.Add(coverage);
+                }
+                else if (ForceGermlineIsoleucine && options.Count() > 0 && options[0].Char == 'L' && combinedSequence[i].Template.Char == 'I')
                 {
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);

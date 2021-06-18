@@ -23,7 +23,8 @@ namespace AssemblyTestNameSpace
                 "test",
                 StringToSequence("EVQLVESGGGLVQPGGSLRL", alp),
                 new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter()),
-                null
+                null,
+                true
                 );
             var buffer = new StringBuilder();
             var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, template, "id", new List<string>(), "");
@@ -43,7 +44,8 @@ namespace AssemblyTestNameSpace
                 alp,
                 "segment",
                 1.0, // CutoffScore
-                0 // Index
+                0, // Index
+                true
                 );
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
@@ -66,7 +68,8 @@ namespace AssemblyTestNameSpace
                 alp,
                 "segment",
                 1.0, // CutoffScore
-                0 // Index
+                0, // Index
+                true
                 );
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
@@ -89,7 +92,8 @@ namespace AssemblyTestNameSpace
                 alp,
                 "segment",
                 1.0, // CutoffScore
-                0 // Index
+                0, // Index
+                true
                 );
             var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("E", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
@@ -112,7 +116,8 @@ namespace AssemblyTestNameSpace
                 alp,
                 "segment",
                 1.0, // CutoffScore
-                0 // Index
+                0, // Index
+                true
                 );
             var buffer = new StringBuilder();
             var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, segment.Templates[0], "id", new List<string>(), "");

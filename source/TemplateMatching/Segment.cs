@@ -31,7 +31,7 @@ namespace AssemblyNameSpace
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public Segment(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -44,7 +44,7 @@ namespace AssemblyNameSpace
             {
                 var pair = sequences[i];
                 var parsed = StringToSequence(pair.Item1);
-                Templates.Add(new Template(name, parsed, pair.Item2, this, new TemplateLocation(index, i)));
+                Templates.Add(new Template(name, parsed, pair.Item2, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
         }
         /// <summary>

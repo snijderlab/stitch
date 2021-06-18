@@ -699,8 +699,11 @@ namespace AssemblyNameSpace
                         case "enforceunique":
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither);
                             break;
+                        case "forcegermlineisoleucine":
+                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").GetValue(outEither);
+                            break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', and 'EnforceUnique'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', and 'ForceGermlineIsoleucine'"));
                             break;
                     }
                 }
@@ -751,11 +754,14 @@ namespace AssemblyNameSpace
                         case "enforceunique":
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither) ? Trilean.True : Trilean.False;
                             break;
+                        case "forcegermlineisoleucine":
+                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").GetValue(outEither) ? Trilean.True : Trilean.False;
+                            break;
                         case "decoy":
                             output.Decoy = ParseBool(setting, "Decoy").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', and 'EnforceUnique'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', 'EnforceUnique', and 'ForceGermlineIsoleucine'"));
                             break;
                     }
                 }

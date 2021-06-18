@@ -68,7 +68,7 @@ namespace HTMLNameSpace
     <h1>{title} {human_id}</h1>
     <h2>Consensus Sequence</h2>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
-            if (type == AsideType.RecombinedTemplate) CreateAnnotatedSequence(buffer, human_id, template);
+            CreateAnnotatedSequence(buffer, human_id, template);
             buffer.Append("<h2>Sequence Consensus Overview</h2>");
 
             SequenceConsensusOverview(buffer, template);
@@ -97,16 +97,27 @@ namespace HTMLNameSpace
                 // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
                 //             CONSENSUS          (differences)
                 var match = template.AlignConsensusWithTemplate();
-                var annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
+                List<(string, string)> annotated = null;
+                if (template.Recombination != null)
+                {
+                    annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
                 {
                     if (item.MetaData is MetaData.Fasta meta)
                         if (meta.AnnotatedSequence != null)
                             acc.AddRange(meta.AnnotatedSequence);
                     return acc;
                 });
+                }
+                else
+                {
+                    if (template.MetaData is MetaData.Fasta meta)
+                        if (meta.AnnotatedSequence != null)
+                            annotated = meta.AnnotatedSequence;
+                }
 
                 string GetClasses(int position)
                 {
+                    if (annotated == null) return "";
                     int pos = -1;
                     for (int i = 0; i < annotated.Count();)
                     {
