@@ -22,42 +22,77 @@ namespace AssemblyNameSpace
         static void Main()
         {
             Console.CancelKeyPress += HandleUserAbort;
-            var args = Environment.CommandLine.Split(" ".ToCharArray());
 
-            string CleanFileName(string filename)
+            List<string> ParseArgs()
             {
-                if (filename.StartsWith('\'') && filename.EndsWith('\''))
-                    return filename.Substring(1, filename.Length - 2);
-                if (filename.StartsWith('\"') && filename.EndsWith('\"'))
-                    return filename.Substring(1, filename.Length - 2);
-                return filename;
+                string args = Environment.CommandLine.Trim();
+                string current_arg = "";
+                var output = new List<string>();
+                for (int i = 0; i < args.Length; i++)
+                {
+                    switch (args[i])
+                    {
+                        case ' ':
+                            output.Add(current_arg.Trim());
+                            current_arg = "";
+                            break;
+                        case '\'':
+                            if (current_arg != "")
+                                output.Add(current_arg.Trim());
+                            current_arg = "";
+                            int next = args.IndexOf('\'', i + 1);
+                            output.Add(args.Substring(i + 1, next - i - 1).Trim());
+                            i = next + 1;
+                            break;
+                        case '\"':
+                            if (current_arg != "")
+                                output.Add(current_arg.Trim());
+                            current_arg = "";
+                            int nextd = args.IndexOf('\"', i + 1);
+                            output.Add(args.Substring(i + 1, nextd - i - 1).Trim());
+                            i = nextd + 1;
+                            break;
+                        default:
+                            current_arg += args[i];
+                            break;
+                    }
+                }
+                if (current_arg != "")
+                    output.Add(current_arg.Trim());
+
+                return output;
             }
 
             // Retrieve the name of the batch file to run or file to clean
+            var args = ParseArgs();
             string filename = "";
             string output_filename = "";
             bool clean = false;
             bool annotate = false;
             try
             {
-                filename = args[1].Trim();
+                filename = args[1];
                 if (filename == "clean")
                 {
                     clean = true;
-                    filename = string.Join(' ', args[2]).Trim();
+                    filename = args[2];
                     if (args.Count() > 3)
-                        output_filename = string.Join(' ', args[3]).Trim();
+                        output_filename = args[3];
                     else
                         output_filename = filename;
                 }
                 else if (filename == "annotate")
                 {
                     annotate = true;
-                    filename = CleanFileName(string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(2)).Trim());
+                    filename = args[2];
+                    if (args.Count() > 3)
+                        output_filename = args[3];
+                    else
+                        output_filename = filename;
                 }
                 else
                 {
-                    filename = CleanFileName(string.Join(' ', Environment.CommandLine.Split(" ".ToCharArray()).Skip(1)).Trim());
+                    filename = args[1];
                 }
             }
             catch
@@ -155,6 +190,7 @@ namespace AssemblyNameSpace
         {
             string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
             var namefilter = new NameFilter();
+            var writer = new StreamWriter(output);
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
             content = content.Substring(content.IndexOf("</pre></td>\n") + 12);
@@ -175,7 +211,6 @@ namespace AssemblyNameSpace
                 // 6 - Functionality
                 // 7 - Sequence
                 var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
-                Console.WriteLine(">" + pieces[2]);
 
                 List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result)
                 {
@@ -212,6 +247,10 @@ namespace AssemblyNameSpace
                     {
                         return ParseSequence(input.Substring(1), current_classes, current_seq, result);
                     }
+                    else if (input.StartsWith('*'))
+                    {
+                        return null; // Contains a stop codon so is not a valid sequence
+                    }
                     else
                     {
                         return ParseSequence(input.Substring(1), current_classes, current_seq + input[0], result);
@@ -219,6 +258,8 @@ namespace AssemblyNameSpace
                 }
 
                 var final_sequence = ParseSequence(sequence, new List<string>(), "", new List<(List<string> classes, string seq)>());
+                if (final_sequence == null)
+                    continue;
                 var typed = new List<(string, string)>();
                 bool J = false;
                 foreach (var piece in final_sequence)
@@ -270,19 +311,18 @@ namespace AssemblyNameSpace
                 if (J)
                     compressed[0] = ("CDR", compressed[0].Item2);
 
+                writer.WriteLine(">" + pieces[2]);
                 foreach (var piece in compressed)
                 {
                     if (piece.Item1 == "")
-                        Console.Write(piece.Item2);
+                        writer.Write(piece.Item2);
                     else
-                        Console.Write($"({piece.Item1} {piece.Item2})");
+                        writer.Write($"({piece.Item1} {piece.Item2})");
                 }
-
-                Console.Write("\n");
-
+                writer.Write("\n");
             }
-
-            //File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
+            writer.Flush();
+            writer.Close();
         }
     }
 }

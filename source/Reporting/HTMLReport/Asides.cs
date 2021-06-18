@@ -97,17 +97,31 @@ namespace HTMLNameSpace
                 // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
                 //             CONSENSUS          (differences)
                 var match = template.AlignConsensusWithTemplate();
-                var (end, conserved) = HelperFunctionality.AnnotateDomains(AminoAcid.ArrayToString(template.ConsensusSequence().Item1));
-                string[] names = { "FR1", "CDR1", "FR2", "CDR2", "FR3", "CDR3", "Constant" };
+                var annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
+                {
+                    if (item.MetaData is MetaData.Fasta meta)
+                        if (meta.AnnotatedSequence != null)
+                            acc.AddRange(meta.AnnotatedSequence);
+                    return acc;
+                });
 
                 string GetClasses(int position)
                 {
-                    var index = end.FindIndex(a => a >= position);
-                    if (conserved.Exists(a => a == position)) return $"{names[index]} conserved";
-                    return names[index];
+                    int pos = -1;
+                    for (int i = 0; i < annotated.Count();)
+                    {
+                        if (pos + annotated[i].Item2.Length >= position)
+                            return annotated[i].Item1;
+                        else
+                        {
+                            pos += annotated[i].Item2.Length;
+                            i++;
+                        }
+                    }
+                    return "";
                 }
 
-                var columns = new List<(char Template, char Query, char Difference, string Classes)>();
+                var columns = new List<(char Template, char Query, char Difference, string Class)>();
                 int template_pos = match.StartTemplatePosition;
                 int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
                 foreach (var piece in match.Alignment)
@@ -119,7 +133,7 @@ namespace HTMLNameSpace
                             {
                                 var t = match.TemplateSequence[template_pos].Char;
                                 var q = match.QuerySequence[query_pos].Char;
-                                columns.Add((t, q, t == q ? ' ' : q, GetClasses(query_pos)));
+                                columns.Add((t, q, t == q ? ' ' : q, GetClasses(template_pos)));
                                 template_pos++;
                                 query_pos++;
                             }
@@ -128,7 +142,7 @@ namespace HTMLNameSpace
                             for (int i = 0; i < q.Length; i++)
                             {
                                 var t = match.TemplateSequence[template_pos].Char;
-                                columns.Add((t, '.', ' ', GetClasses(query_pos)));
+                                columns.Add((t, '.', ' ', GetClasses(template_pos)));
                                 template_pos++;
                             }
                             break;
@@ -136,26 +150,27 @@ namespace HTMLNameSpace
                             for (int i = 0; i < t.Length; i++)
                             {
                                 var q = match.QuerySequence[query_pos].Char;
-                                columns.Add(('.', q, q, GetClasses(query_pos)));
+                                columns.Add(('.', q, q, GetClasses(template_pos)));
                                 query_pos++;
                             }
                             break;
                     }
                 }
 
-                buffer.Append("<h2>Annotated consensus sequence (WIP)</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+                buffer.Append("<h2>Annotated consensus sequence</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
                 var last = "";
                 foreach (var column in columns)
                 {
                     if (column.Template == 'X' && column.Query == '.') continue;
                     var title = "";
-                    if (column.Classes.Split(' ').First() != last)
+                    if (column.Class != last)
                     {
-                        last = column.Classes.Split(' ').First();
-                        title = $"<span class='title'>{last}</span>";
+                        last = column.Class;
+                        if (last != "Conserved")
+                            title = $"<span class='title'>{last}</span>";
                     }
-                    buffer.Append($"<div class='{column.Classes}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
+                    buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
                 }
                 buffer.Append("</div>");
             }

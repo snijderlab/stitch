@@ -237,9 +237,17 @@ namespace AssemblyNameSpace
                         var read = db.Templates[i];
                         read.Item2.FinaliseIdentifier();
                         if (db.GapTail)
+                        {
                             read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
+                            if (read.Item2 is MetaData.Fasta meta)
+                                meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1] = (meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item1, meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item2 + "XXXXXXXXXXXXXXXXXXXX");
+                        }
                         if (db.GapHead)
+                        {
                             read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
+                            if (read.Item2 is MetaData.Fasta meta)
+                                meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Item1, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Item2);
+                        }
                         db.Templates[i] = read;
                     }
                 }

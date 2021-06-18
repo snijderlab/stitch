@@ -60,7 +60,7 @@ namespace AssemblyNameSpace
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseResult<List<(string, MetaData.IMetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
+        public static ParseResult<List<(string Sequence, MetaData.IMetaData MetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
@@ -90,17 +90,16 @@ namespace AssemblyNameSpace
                 {
                     if (identifierLine != "")
                     {
-                        // Flush last sequence to list
                         var match = parseIdentifier.Match(identifierLine);
                         if (match.Success)
                         {
                             if (match.Groups.Count == 3)
                             {
-                                reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
                             }
                             else if (match.Groups.Count == 2)
                             {
-                                reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
                             }
                             else
                             {
@@ -129,7 +128,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    sequence.Append(line.Trim().Where(x => Char.IsLetter(x)).ToArray());
+                    sequence.Append(line.Trim().ToArray());
                 }
                 linenumber++;
             }
@@ -142,11 +141,11 @@ namespace AssemblyNameSpace
                 {
                     if (match.Groups.Count == 3)
                     {
-                        reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
                     }
                     else if (match.Groups.Count == 2)
                     {
-                        reads.Add((sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
                     }
                     else
                     {
@@ -171,6 +170,41 @@ namespace AssemblyNameSpace
             }
 
             return outeither;
+        }
+
+        static (string, MetaData.IMetaData) ParseAnnotatedFasta(string line, MetaData.IMetaData metaData)
+        {
+            var plain_sequence = new StringBuilder();
+            var annotated = new List<(string, string)>();
+            string current_seq = "";
+            for (int i = 0; i < line.Length; i++)
+            {
+                if (line[i] == '(')
+                {
+                    if (current_seq != "")
+                    {
+                        annotated.Add(("", current_seq));
+                        current_seq = "";
+                    }
+                    i += 1;
+                    int space = line.IndexOf(' ', i);
+                    int close = line.IndexOf(')', i);
+                    var seq = line.Substring(space + 1, close - space - 1);
+                    annotated.Add((line.Substring(i, space - i), seq));
+                    plain_sequence.Append(seq);
+                    i = close;
+                }
+                else
+                {
+                    current_seq += line[i];
+                    plain_sequence.Append(line[i]);
+                }
+            }
+            if (current_seq != "")
+                annotated.Add(("", current_seq));
+
+            ((MetaData.Fasta)metaData).AnnotatedSequence = annotated;
+            return (plain_sequence.ToString(), metaData);
         }
 
         /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>

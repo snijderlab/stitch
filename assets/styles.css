@@ -255,14 +255,16 @@ td.bar::before {
     transform: translateY(-1em);
 }
 
-.annotated .CDR1,
-.annotated .CDR2,
-.annotated .CDR3 {
+.annotated .CDR {
     color: var(--color-secondary);
 }
 
 .annotated .conserved {
     color: var(--color-tertiary);
+}
+
+.annotated .glycolysationsite {
+    color: var(--color-primary);
 }
 
 
