@@ -172,7 +172,7 @@ namespace HTMLNameSpace
                     }
                     buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
                 }
-                buffer.Append("</div>");
+                buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
             }
             catch (Exception e)
             {

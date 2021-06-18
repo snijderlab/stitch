@@ -263,8 +263,12 @@ td.bar::before {
     color: var(--color-tertiary);
 }
 
-.annotated .glycolysationsite {
+.annotated .glycosylationsite {
     color: var(--color-primary);
+}
+
+.annotated.legend {
+    gap: 1em;
 }
 
 
