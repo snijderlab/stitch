@@ -241,9 +241,6 @@ namespace AssemblyNameSpace
                         matches[read].AddRange(local_matches[read].Select(a => (segment_group_index, 0, a.Item1, a.Item2)));
 
                     recombined_segment.Add(recombined_segment_group);
-
-                    // Did recombination + segments
-                    if (progressBar != null) progressBar.Update();
                 }
 
                 // Aggregate all decoy sets from template matching
@@ -287,6 +284,9 @@ namespace AssemblyNameSpace
 
                 // Finalise Identifiers
                 foreach (var template in recombined_segment.SelectMany(s => s.Templates)) template.MetaData.FinaliseIdentifier();
+
+                // Did recombination
+                if (progressBar != null) progressBar.Update();
             }
 
             void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent, NameFilter namefilter)

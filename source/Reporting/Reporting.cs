@@ -83,11 +83,37 @@ namespace AssemblyNameSpace
                     new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
                 }
 
-                File.AppendAllText(filename, buffer);
+                File.WriteAllText(filename, buffer);
             }
             else
             {
                 new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
+            }
+        }
+
+        protected Task SaveAndCreateDirectoriesAsync(string filename, string buffer)
+        {
+            var pieces = filename.Split(new char[] { '\\', '/' });
+            var drive = pieces[0].Split(':')[0];
+
+            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+            {
+                try
+                {
+                    Directory.CreateDirectory(Directory.GetParent(filename).FullName);
+                }
+                catch
+                {
+                    new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
+                    throw new Exception("Could not save file, see error message above");
+                }
+
+                return File.WriteAllTextAsync(filename, buffer);
+            }
+            else
+            {
+                new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
+                throw new Exception("Could not save file, see error message above");
             }
         }
     }

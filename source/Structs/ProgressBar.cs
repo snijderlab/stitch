@@ -17,6 +17,7 @@ namespace AssemblyNameSpace
         long estimate = 0;
         long lasttask = 0;
         bool terminalContact = true;
+        bool started = false;
 
         public ProgressBar()
         {
@@ -26,9 +27,13 @@ namespace AssemblyNameSpace
         public void Start(int max)
         {
             max_value = max;
-            stopwatch.Start();
-            Draw(false);
-            timer = new Timer(Tick, null, interval, Timeout.Infinite);
+            if (!started)
+            {
+                stopwatch.Start();
+                Draw(false);
+                timer = new Timer(Tick, null, interval, Timeout.Infinite);
+            }
+            started = true;
         }
 
         public void Update(int add = 1)

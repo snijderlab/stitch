@@ -123,12 +123,14 @@ namespace AssemblyNameSpace
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename)
         {
-            var inputparams = ParseCommandFile.Batch(filename, false);
-
             var bar = new ProgressBar();
-            var bars = 2; // Parse + TemplateMatching
+            bar.Start(4); // Max steps, can be turned down if no Recombination is done
+            var inputparams = ParseCommandFile.Batch(filename, false);
+            bar.Update();
+
+            var bars = 3; // Parse + TemplateMatching + Report
             if (inputparams.Recombine != null)
-                bars += inputparams.TemplateMatching.Segments.Count();
+                bars += 1;
             bar.Start(bars);
 
             inputparams.CreateRun(bar).Calculate();

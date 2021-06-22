@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Generates a list of asides for details viewing. </summary>
-        public void CreateAsides()
+        public async void CreateAsides()
         {
             var jobbuffer = new List<(AsideType, int, int, int)>();
 
@@ -57,24 +57,26 @@ namespace AssemblyNameSpace
                     for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count(); j++)
                         jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
+            var taskList = new List<Task>();
             if (MaxThreads > 1)
             {
                 Parallel.ForEach(
                     jobbuffer,
                     new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                    (a, _) => CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4)
+                    (a, _) => taskList.Add(CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4))
                 );
             }
             else
             {
                 foreach (var (t, i3, i2, i1) in jobbuffer)
                 {
-                    CreateAndSaveAside(t, i3, i2, i1);
+                    taskList.Add(CreateAndSaveAside(t, i3, i2, i1));
                 }
             }
+            await Task.WhenAll(taskList);
         }
 
-        void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
+        Task CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
         {
             var buffer = new StringBuilder();
             var innerbuffer = new StringBuilder();
@@ -110,7 +112,7 @@ namespace AssemblyNameSpace
             buffer.Append(innerbuffer.ToString());
             buffer.Append("</body></html>");
 
-            SaveAndCreateDirectories(fullpath, buffer.ToString());
+            return SaveAndCreateDirectoriesAsync(fullpath, buffer.ToString());
         }
 
         private string CreateHeader(string title, List<string> location)
