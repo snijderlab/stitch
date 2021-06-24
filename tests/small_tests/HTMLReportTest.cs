@@ -37,7 +37,6 @@ namespace AssemblyTestNameSpace
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
-            meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
@@ -61,7 +60,6 @@ namespace AssemblyTestNameSpace
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
-            meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("EVQLVESGGG", meta) },
@@ -85,7 +83,6 @@ namespace AssemblyTestNameSpace
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
-            meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("E", meta) },
@@ -109,7 +106,6 @@ namespace AssemblyTestNameSpace
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
-            meta.FinaliseIdentifier();
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("", meta) },
