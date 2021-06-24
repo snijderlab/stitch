@@ -108,6 +108,12 @@ namespace AssemblyNameSpace
                     throw new Exception("Could not save file, see error message above");
                 }
 
+                if (File.Exists(filename))
+                {
+                    new InputNameSpace.ErrorMessage(filename, "File already exists", "All filenames are supposed to be unique to prevent data races.").Print();
+                    throw new Exception("Could not save file, see error message above");
+                }
+
                 return File.WriteAllTextAsync(filename, buffer);
             }
             else

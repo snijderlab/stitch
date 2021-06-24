@@ -282,9 +282,6 @@ namespace AssemblyNameSpace
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                 }
 
-                // Finalise Identifiers
-                foreach (var template in recombined_segment.SelectMany(s => s.Templates)) template.MetaData.FinaliseIdentifier();
-
                 // Did recombination
                 if (progressBar != null) progressBar.Update();
             }

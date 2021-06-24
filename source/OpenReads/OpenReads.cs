@@ -297,7 +297,7 @@ namespace AssemblyNameSpace
                                     chunk[j - startpos] = meta.Cleaned_sequence[j];
                                 }
 
-                                reads.Add((new string(chunk), meta));
+                                reads.Add((new string(chunk), meta.Clone()));
                             }
                         }
                     }
@@ -330,6 +330,7 @@ namespace AssemblyNameSpace
                     if (filtered.ContainsKey(read.Sequence))
                     {
                         filtered[read.Sequence].Intensity += read.MetaData.Intensity;
+                        // TODO: Trace the dual origins
                     }
                     else
                     {

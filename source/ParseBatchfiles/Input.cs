@@ -235,7 +235,6 @@ namespace AssemblyNameSpace
                     for (var i = 0; i < db.Templates.Count; i++)
                     {
                         var read = db.Templates[i];
-                        read.Item2.FinaliseIdentifier();
                         if (db.GapTail)
                         {
                             read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
@@ -250,15 +249,6 @@ namespace AssemblyNameSpace
                         }
                         db.Templates[i] = read;
                     }
-                }
-            }
-
-            // Finalise all metadata names
-            foreach (var set in output.Input.Data.Raw)
-            {
-                foreach (var read in set)
-                {
-                    read.MetaData.FinaliseIdentifier();
                 }
             }
 

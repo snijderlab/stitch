@@ -46,9 +46,6 @@ namespace AssemblyNameSpace
             /// </summary>
             public string EscapedIdentifier { get { return escapedIdentifier; } }
 
-            /// <summary> To save the output of the namefilter. </summary>
-            (string, BST, int) EscapedIdentifierBuffer;
-
             /// <summary>
             /// Returns the positional score for this read, so for every position the confidence.
             /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations.
@@ -88,23 +85,19 @@ namespace AssemblyNameSpace
                 File = file;
                 identifier = identifier_;
                 classIdentifier = classIdentifier_ ?? identifier_;
+
                 if (filter != null)
-                    EscapedIdentifierBuffer = filter.EscapeIdentifier(identifier);
-            }
-
-            /// <summary> Sets the Identifier and EscapedIdentifier based on the results of the namefilter. </summary>
-            public virtual void FinaliseIdentifier()
-            {
-                var (name, bst, count) = EscapedIdentifierBuffer;
-
-                if (bst.Count <= 1)
                 {
-                    escapedIdentifier = name;
-                }
-                else
-                {
-                    identifier = $"{identifier}_{count:D3}";
-                    escapedIdentifier = $"{name}_{count:D3}";
+                    var (escaped_id, bst, count) = filter.EscapeIdentifier(identifier);
+                    if (count <= 1)
+                    {
+                        escapedIdentifier = escaped_id;
+                    }
+                    else
+                    {
+                        identifier = $"{identifier}_{count:D3}";
+                        escapedIdentifier = $"{escaped_id}_{count:D3}";
+                    }
                 }
             }
         }
@@ -402,6 +395,31 @@ namespace AssemblyNameSpace
                 peaks.TotalArea = peaks.Area;
 
                 return result;
+            }
+
+            public MetaData.Peaks Clone()
+            {
+                var meta = new MetaData.Peaks(this.File, this.identifier, this.nameFilter);
+                meta.Area = this.Area;
+                meta.Charge = this.Charge;
+                meta.Cleaned_sequence = new string(this.Cleaned_sequence);
+                meta.Confidence = this.Confidence;
+                meta.DeNovoScore = this.DeNovoScore;
+                meta.Feature = new string(this.Feature);
+                meta.Fraction = new string(this.Fraction);
+                meta.Fragmentation_mode = new string(this.Fragmentation_mode);
+                meta.intensity = this.intensity;
+                meta.Local_confidence = (int[])this.Local_confidence.Clone();
+                meta.Mass = this.Mass;
+                meta.Mass_over_charge = this.Mass_over_charge;
+                meta.Original_tag = new string(this.Original_tag);
+                meta.Other_scans = new List<string>(this.Other_scans);
+                meta.Parts_per_million = this.Parts_per_million;
+                meta.PredictedRetentionTime = new string(this.PredictedRetentionTime);
+                meta.Retention_time = this.Retention_time;
+                meta.ScanID = new string(this.ScanID);
+                meta.Source_File = new string(this.Source_File);
+                return meta;
             }
 
             /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
