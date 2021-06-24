@@ -11,7 +11,7 @@ Input ->
         Separator       : ,
         DecimalSeparator: .
         CutoffALC       : 90
-        LocalCutoffALC  : 75
+        LocalCutoffALC  : 95
         MinLengthPatch  : 5
     <-
 <-
