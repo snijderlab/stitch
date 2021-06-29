@@ -232,22 +232,25 @@ namespace AssemblyNameSpace
             {
                 foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Item2))
                 {
-                    for (var i = 0; i < db.Templates.Count; i++)
+                    if (db.Templates != null)
                     {
-                        var read = db.Templates[i];
-                        if (db.GapTail)
+                        for (var i = 0; i < db.Templates.Count; i++)
                         {
-                            read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
-                            if (read.Item2 is MetaData.Fasta meta)
-                                meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1] = (meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item1, meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item2 + "XXXXXXXXXXXXXXXXXXXX");
+                            var read = db.Templates[i];
+                            if (db.GapTail)
+                            {
+                                read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
+                                if (read.Item2 is MetaData.Fasta meta)
+                                    meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1] = (meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item1, meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item2 + "XXXXXXXXXXXXXXXXXXXX");
+                            }
+                            if (db.GapHead)
+                            {
+                                read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
+                                if (read.Item2 is MetaData.Fasta meta)
+                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Item1, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Item2);
+                            }
+                            db.Templates[i] = read;
                         }
-                        if (db.GapHead)
-                        {
-                            read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
-                            if (read.Item2 is MetaData.Fasta meta)
-                                meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Item1, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Item2);
-                        }
-                        db.Templates[i] = read;
                     }
                 }
             }
@@ -909,8 +912,6 @@ namespace AssemblyNameSpace
 
                             break;
                         case "data":
-                            //if (data != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            //data = setting.GetValue();
                             if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var data_content = setting.GetValue().Split("\n");
                             var data_counter = new Tokenizer.Counter(setting.ValueRange.Start);
@@ -1062,7 +1063,7 @@ namespace AssemblyNameSpace
             {
                 // Parse files one by one
                 var file_path = "";
-                FileRange file_pos = node.ValueRange;
+                KeyValue file_pos = node;
 
                 var peaks_settings = new Input.Peaks();
 
@@ -1076,7 +1077,7 @@ namespace AssemblyNameSpace
                         case "path":
                             if (file_path != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             file_path = GetFullPath(setting).GetValue(outEither);
-                            file_pos = setting.ValueRange;
+                            file_pos = setting;
                             break;
                         case "name":
                             if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -1140,7 +1141,7 @@ namespace AssemblyNameSpace
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new MetaData.FileIdentifier() { Name = tsettings.Name, Path = ParseHelper.GetFullPath(file_path).GetValue(outEither) };
+                var fileId = new MetaData.FileIdentifier(tsettings.Name, ParseHelper.GetFullPath(file_path).GetValue(outEither), file_pos);
 
                 ParseResult<List<(string, MetaData.IMetaData)>> folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
@@ -1151,7 +1152,7 @@ namespace AssemblyNameSpace
                 else if (file_path.EndsWith(".csv"))
                     folder_reads = OpenReads.Peaks(namefilter, peaks_settings);
                 else
-                    outEither.AddMessage(new ErrorMessage(file_pos, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
+                    outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
 
                 outEither.Messages.AddRange(folder_reads.Messages);
                 if (!folder_reads.HasFailed()) tsettings.Templates = folder_reads.ReturnOrFail();
@@ -1433,6 +1434,11 @@ namespace AssemblyNameSpace
                 else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
 
                 return outEither;
+            }
+            public static ParseResult<string> GetAllText(MetaData.FileIdentifier file)
+            {
+                if (file.Origin != null) return GetAllText(file.Origin);
+                else return GetAllText(file.Path);
             }
             public static ParseResult<string> GetAllText(string path)
             {

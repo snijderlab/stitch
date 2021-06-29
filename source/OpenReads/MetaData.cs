@@ -530,16 +530,20 @@ namespace AssemblyNameSpace
             /// <summary> To signify if this FileIdentifier points to a file or to nothing. </summary>
             bool RefersToFile;
 
+            public InputNameSpace.KeyValue Origin;
+
             /// <summary>
             /// Creating a new FileIdentifier.
             /// </summary>
             /// <param name="path_input">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
-            public FileIdentifier(string path_input, string name)
+            /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
+            public FileIdentifier(string path_input, string name, InputNameSpace.KeyValue origin)
             {
                 path = System.IO.Path.GetFullPath(path_input);
                 Name = name;
                 RefersToFile = true;
+                Origin = origin;
             }
 
             /// <summary>

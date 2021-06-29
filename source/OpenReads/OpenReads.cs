@@ -29,7 +29,7 @@ namespace AssemblyNameSpace
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
             if (possiblecontent.HasFailed())
             {
@@ -64,7 +64,7 @@ namespace AssemblyNameSpace
         {
             var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile.Path);
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
             if (possiblecontent.HasFailed())
             {
@@ -220,7 +220,7 @@ namespace AssemblyNameSpace
             if (peaksparameters.LocalCutoffALC == -1) peaksparameters.LocalCutoffALC = peaks.Parameter.LocalCutoffALC;
             if (peaksparameters.MinLengthPatch == -1) peaksparameters.MinLengthPatch = peaks.Parameter.MinLengthPatch;
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(peaks.File.Path);
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(peaks.File);
 
             if (possiblecontent.HasFailed())
             {

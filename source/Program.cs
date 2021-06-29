@@ -110,6 +110,7 @@ namespace AssemblyNameSpace
                 else
                     RunBatchFile(filename);
             }
+            catch (ParseException) { }
             catch (Exception e)
             {
                 var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}";
@@ -156,7 +157,7 @@ namespace AssemblyNameSpace
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name"), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
+            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
             var dict = new Dictionary<string, (string, string)>();
 
             // Condens all isoforms

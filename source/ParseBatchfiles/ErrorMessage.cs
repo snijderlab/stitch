@@ -14,8 +14,9 @@ namespace AssemblyNameSpace
             readonly string longDescription = "";
             readonly string helpDescription = "";
             readonly string subject = "";
+            readonly uint contextLines = 0;
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false)
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
             {
                 subject = sub;
                 shortDescription = shortD;
@@ -23,16 +24,18 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = new ParsedFile();
+                contextLines = context_lines;
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false)
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
             {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
                 Warning = warning;
                 File = file;
+                contextLines = context_lines;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false)
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
             {
                 startposition = pos;
                 shortDescription = shortD;
@@ -40,8 +43,9 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = pos.File;
+                contextLines = context_lines;
             }
-            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false)
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
             {
                 startposition = range.Start;
                 endposition = range.End;
@@ -50,19 +54,20 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = range.File;
+                contextLines = context_lines;
             }
             public static ErrorMessage DuplicateValue(FileRange range)
             {
-                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
+                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true, 2);
                 return output;
             }
             public static ErrorMessage MissingParameter(FileRange range, string parameter)
             {
-                return new ErrorMessage(range, $"Missing parameter: {parameter}");
+                return new ErrorMessage(range, $"Missing parameter: {parameter}", "", "", false, 0);
             }
             public static ErrorMessage UnknownKey(FileRange range, string context, string options)
             {
-                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.");
+                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", false, 0);
             }
             public override string ToString()
             {
@@ -159,7 +164,7 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"{File.Filename}\n");
                 }
-                else
+                else // A location in a file
                 {
                     var endline = endposition == null ? startposition.Line : endposition.Line;
                     var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (startposition.Line + 1).ToString().Length;
@@ -192,7 +197,8 @@ namespace AssemblyNameSpace
                     Console.Write($"{File.Filename}:{startposition.Line + 1}:{startposition.Column + 1}\n");
                     print_empty(true);
 
-                    if (startposition.Line > 1) print_line(startposition.Line - 1);
+                    for (int i = (int)contextLines; i > 0; i--)
+                        if (startposition.Line - i > 0) print_line(startposition.Line - i);
 
                     if (endposition == null || startposition.Line > endposition.Line) // Single position
                     {
@@ -221,7 +227,8 @@ namespace AssemblyNameSpace
                             Console.Write($"{number}| {line}\n");
                         }
                     }
-                    if (endline < File.Lines.Length - 1) print_line(endline + 1);
+                    for (int i = 1; i <= contextLines; i++)
+                        if (endline + i < File.Lines.Length) print_line(endline + i);
                     print_empty(true);
                 }
 
@@ -229,10 +236,17 @@ namespace AssemblyNameSpace
                 if (longDescription != "")
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
-                    Console.WriteLine(longDescription);
+                    Console.Write("note");
                     Console.ForegroundColor = defaultColour;
+                    Console.WriteLine(": " + longDescription);
                 }
-                if (helpDescription != "") Console.WriteLine(helpDescription);
+                if (helpDescription != "")
+                {
+                    Console.ForegroundColor = ConsoleColor.Green;
+                    Console.Write("help");
+                    Console.ForegroundColor = defaultColour;
+                    Console.WriteLine(": " + helpDescription);
+                }
                 Console.WriteLine("");
             }
 
