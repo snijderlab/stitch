@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
-                        new ErrorMessage(range, "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                        new ErrorMessage(range, "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line.").Print();
                         throw new ParseException("");
                     }
                 }
@@ -223,7 +223,7 @@ namespace AssemblyNameSpace
                             }
                             else
                             {
-                                new ErrorMessage(counter.GetPosition(), "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'.").Print();
+                                new ErrorMessage(innerrange, "Name not followed by delimeter", "", "A name was read, but thereafter a value should be provided starting with a delimeter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line.").Print();
                                 throw new ParseException("");
                             }
                             endvalue = counter.GetPosition();
