@@ -27,7 +27,7 @@ namespace AssemblyTestNameSpace
                 try
                 {
                     Console.WriteLine(file);
-                    OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, ""), new Regex("(.*)"));
+                    OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, "", null), new Regex("(.*)"));
                 }
                 catch (Exception e)
                 {

@@ -22,7 +22,7 @@ namespace AssemblyTestNameSpace
             Template template = new Template(
                 "test",
                 StringToSequence("EVQLVESGGGLVQPGGSLRL", alp),
-                new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter()),
+                new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter()),
                 null,
                 true
                 );
@@ -36,7 +36,7 @@ namespace AssemblyTestNameSpace
         public void SingleMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
+            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
@@ -59,7 +59,7 @@ namespace AssemblyTestNameSpace
         public void MultiMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
+            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("EVQLVESGGG", meta) },
@@ -82,7 +82,7 @@ namespace AssemblyTestNameSpace
         public void SingleAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
+            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("E", meta) },
@@ -105,7 +105,7 @@ namespace AssemblyTestNameSpace
         public void NoAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty"), new NameFilter());
+            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty", null), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, MetaData.IMetaData)> { ("", meta) },
