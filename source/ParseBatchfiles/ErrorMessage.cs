@@ -91,7 +91,9 @@ namespace AssemblyNameSpace
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
                     var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    location = $"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
+                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
+                    var context2 = startposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[startposition.Line + 1]}\n" : "";
+                    location = $"File: {File.Filename}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
                 else if (startposition.Line == endposition.Line)
                 {
@@ -100,14 +102,18 @@ namespace AssemblyNameSpace
                     var start = $"{spacing}| ";
                     var line = File.Lines[startposition.Line];
                     var pos = new string(' ', Math.Max(0, startposition.Column - 1)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
-                    location = $"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}{pos}\n{start}\n";
+                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
+                    var context2 = endposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Line + 1]}\n" : "";
+                    location = $"File: {File.Filename}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
                 else
                 {
                     var line_number = (endposition.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    location = $"File: {File.Filename}\n{start}\n";
+                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
+                    var context2 = endposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Line + 1]}\n" : "";
+                    location = $"File: {File.Filename}\n\n{context1}";
 
                     for (int i = startposition.Line; i <= endposition.Line; i++)
                     {
@@ -115,7 +121,7 @@ namespace AssemblyNameSpace
                         var number = (i + 1).ToString().PadRight(line_number.Length + 1);
                         location += $"{number}| {line}\n";
                     }
-                    location += $"{start}\n";
+                    location += $"{context2}\n";
                 }
 
                 // Body
@@ -128,10 +134,9 @@ namespace AssemblyNameSpace
             public void Print()
             {
                 var defaultColour = Console.ForegroundColor;
-                var primary_colour = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
 
                 // Header
-                Console.ForegroundColor = primary_colour;
+                Console.ForegroundColor = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
                 var name = Warning ? "Warning" : "Error";
                 Console.WriteLine($">> {name}: {shortDescription}");
                 Console.ForegroundColor = defaultColour;
@@ -139,55 +144,85 @@ namespace AssemblyNameSpace
                 // Location
                 if (subject != "") // Pregiven location
                 {
-                    Console.Write($"\n   | {subject}\n");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("\n   | ");
+                    Console.ForegroundColor = defaultColour;
+                    Console.Write(subject + "\n");
                 }
                 else if (File.Filename == "") // No location
                 {
                 }
                 else if (startposition == null) // Only a file
                 {
-                    Console.Write($"File: {File.Filename}\n");
-                }
-                else if (endposition == null || startposition.Line > endposition.Line) // Single position
-                {
-                    var line_number = (startposition.Line + 1).ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    Console.Write($"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = primary_colour;
-                    Console.Write(pos);
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("  --> ");
                     Console.ForegroundColor = defaultColour;
-                    Console.Write($"\n{start}\n");
+                    Console.Write($"{File.Filename}\n");
                 }
-                else if (startposition.Line == endposition.Line) // Single line
+                else
                 {
-                    var line_number = (startposition.Line + 1).ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
+                    var endline = endposition == null ? startposition.Line : endposition.Line;
+                    var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (startposition.Line + 1).ToString().Length;
+                    var line_number = (startposition.Line + 1).ToString().PadRight(number_width + 1, ' ');
+                    var spacing = new string(' ', number_width + 3);
                     var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', Math.Max(0, startposition.Column - 1)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
-                    Console.Write($"File: {File.Filename}\n{start}\n{line_number} | {line}\n{start}");
-                    Console.ForegroundColor = primary_colour;
-                    Console.Write(pos);
-                    Console.ForegroundColor = defaultColour;
-                    Console.Write($"\n{start}\n");
-                }
-                else // Multiline
-                {
-                    var line_number = (endposition.Line + 1).ToString();
-                    var spacing = new string(' ', line_number.Length + 1);
-                    var start = $"{spacing}| ";
-                    Console.Write($"File: {File.Filename}\n{start}\n");
 
-                    for (int i = startposition.Line; i <= endposition.Line; i++)
+                    void print_line(int lineindex)
                     {
-                        var line = File.Lines[i];
-                        var number = (i + 1).ToString().PadRight(line_number.Length + 1);
-                        Console.Write($"{number}| {line}\n");
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write((lineindex + 1).ToString().PadRight(number_width + 1, ' '));
+                        Console.Write("| ");
+                        Console.ForegroundColor = defaultColour;
+                        Console.Write(File.Lines[lineindex]);
+                        Console.Write("\n");
                     }
-                    Console.Write($"{start}\n");
+
+                    void print_empty(bool newline)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write(new string(' ', number_width + 1));
+                        Console.Write("|");
+                        Console.ForegroundColor = defaultColour;
+                        if (newline) Console.Write('\n');
+                    }
+
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("  --> ");
+                    Console.ForegroundColor = defaultColour;
+                    Console.Write($"{File.Filename}:{startposition.Line + 1}:{startposition.Column + 1}\n");
+                    print_empty(true);
+
+                    if (startposition.Line > 1) print_line(startposition.Line - 1);
+
+                    if (endposition == null || startposition.Line > endposition.Line) // Single position
+                    {
+                        var pos = new string(' ', startposition.Column) + "^^^";
+                        print_line(startposition.Line);
+                        print_empty(false);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write(pos + "\n");
+                        Console.ForegroundColor = defaultColour;
+                    }
+                    else if (startposition.Line == endposition.Line) // Single line
+                    {
+                        var pos = new string(' ', Math.Max(0, startposition.Column)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
+                        print_line(startposition.Line);
+                        print_empty(false);
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.Write(pos + "\n");
+                        Console.ForegroundColor = defaultColour;
+                    }
+                    else // Multiline
+                    {
+                        for (int i = startposition.Line; i <= endposition.Line; i++)
+                        {
+                            line = File.Lines[i];
+                            var number = (i + 1).ToString().PadRight(number_width + 1, ' ');
+                            Console.Write($"{number}| {line}\n");
+                        }
+                    }
+                    if (endline < File.Lines.Length - 1) print_line(endline + 1);
+                    print_empty(true);
                 }
 
                 // Body
