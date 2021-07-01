@@ -263,7 +263,7 @@ namespace AssemblyNameSpace
                 var final_sequence = ParseSequence(sequence, new List<string>(), "", new List<(List<string> classes, string seq)>());
                 if (final_sequence == null)
                     continue;
-                var typed = new List<(string, string)>();
+                var typed = new List<(string Type, string Sequence)>();
                 bool J = false;
                 foreach (var piece in final_sequence)
                 {
@@ -295,13 +295,13 @@ namespace AssemblyNameSpace
                     }
                     typed.Add((type, piece.Item2));
                 }
-                var compressed = new List<(string, string)>();
-                var last = ("", "");
+                var compressed = new List<(string Type, string Sequence)>();
+                (string Type, string Sequence) last = ("", "");
                 foreach (var piece in typed)
                 {
-                    if (piece.Item1 == last.Item1)
+                    if (piece.Type == last.Type)
                     {
-                        last = (last.Item1, last.Item2 + piece.Item2);
+                        last = (last.Type, last.Sequence + piece.Sequence);
                     }
                     else
                     {
@@ -310,9 +310,26 @@ namespace AssemblyNameSpace
                     }
                 }
                 compressed.Add(last);
+
+                int cdr = 1;
+                bool cdr_found = false;
+                for (int i = 0; i < compressed.Count; i++)
+                {
+                    if (compressed[i].Type == "CDR")
+                    {
+                        compressed[i] = ("CDR" + cdr.ToString(), compressed[i].Sequence);
+                        cdr_found = true;
+                    }
+                    else if (compressed[i].Type == "" && cdr_found)
+                    {
+                        cdr++;
+                        cdr_found = false;
+                    }
+                }
+
                 // J segments always start with the last pieces of CDR3 but this is not properly annotated in the HTML files
                 if (J)
-                    compressed[0] = ("CDR", compressed[0].Item2);
+                    compressed[0] = ("CDR3", compressed[0].Item2);
 
                 writer.WriteLine(">" + pieces[2]);
                 foreach (var piece in compressed)

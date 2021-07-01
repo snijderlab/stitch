@@ -170,17 +170,17 @@ namespace HTMLNameSpace
 
                 buffer.Append("<h2>Annotated consensus sequence</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
-                var last = "";
+                var present = new HashSet<string>();
                 foreach (var column in columns)
                 {
-                    if (column.Template == 'X' && column.Query == '.') continue;
+                    if (column.Template == 'X' && (column.Query == '.' || column.Query == 'X')) continue;
                     var title = "";
-                    if (column.Class != last)
-                    {
-                        last = column.Class;
-                        if (last != "Conserved")
-                            title = $"<span class='title'>{last}</span>";
-                    }
+                    if (column.Class.StartsWith("CDR"))
+                        if (!present.Contains(column.Class))
+                        {
+                            present.Add(column.Class);
+                            title = $"<span class='title'>{column.Class}</span>";
+                        }
                     buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
                 }
                 buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");

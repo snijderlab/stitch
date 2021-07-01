@@ -255,7 +255,9 @@ td.bar::before {
     transform: translateY(-1em);
 }
 
-.annotated .CDR {
+.annotated .CDR1,
+.annotated .CDR2,
+.annotated .CDR3 {
     color: var(--color-secondary);
 }
 
