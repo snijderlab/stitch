@@ -39,7 +39,12 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The char that represents a gap
         /// </summary>
-        public const char GapChar = '*';
+        public const char GapChar = '.';
+
+        /// <summary>
+        /// The char that represents a stopcodon, where translation will stop.
+        /// </summary>
+        public const char StopCodon = '*';
 
         /// <summary> Find the index of the given character in the alphabet. </summary>
         /// <param name="c"> The character to look up. </param>

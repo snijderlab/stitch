@@ -322,7 +322,7 @@ namespace AssemblyNameSpace
                                     s.AddRange(seq.Skip(aligned_template.Position));
                                 else
                                 {
-                                    s.Add(new AminoAcid(alphabet, '*'));
+                                    s.Add(new AminoAcid(alphabet, AssemblyNameSpace.Alphabet.GapChar));
                                     s.AddRange(seq);
                                 }
                             }

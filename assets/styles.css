@@ -112,6 +112,15 @@ table {
     width: 15%;
 }
 
+.cdr-tables {
+    display: flex;
+    gap: 1rem;
+}
+
+.cdr-tables>table {
+    flex-grow: 1;
+}
+
 @media (min-width: 800px) {
     .smallcell {
         width: 10%;

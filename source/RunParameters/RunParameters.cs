@@ -321,7 +321,7 @@ namespace AssemblyNameSpace
 
                 public override string Display()
                 {
-                    return "*";
+                    return Alphabet.GapChar.ToString();
                 }
 
                 public override bool IsGap()

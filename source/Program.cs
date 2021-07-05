@@ -250,7 +250,7 @@ namespace AssemblyNameSpace
                     {
                         return ParseSequence(input.Substring(1), current_classes, current_seq, result);
                     }
-                    else if (input.StartsWith('*'))
+                    else if (input.StartsWith(Alphabet.StopCodon))
                     {
                         return null; // Contains a stop codon so is not a valid sequence
                     }

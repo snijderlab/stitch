@@ -16,6 +16,8 @@ namespace HTMLNameSpace
 {
     static class HTMLTables
     {
+        static int table_counter = 0;
+
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
         public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName)
@@ -61,8 +63,6 @@ namespace HTMLNameSpace
             return output.ToString();
         }
 
-
-        static int table_counter = 0;
         public static string CreateTemplateTable(List<Template> templates, AsideType type, string AssetsFolderName, bool header = false)
         {
             table_counter++;
@@ -139,6 +139,38 @@ namespace HTMLNameSpace
             CultureInfo.CurrentCulture = culture;
 
             return buffer.ToString();
+        }
+
+        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)> cdrs, string AssetsFolderName)
+        {
+            table_counter++;
+            var table_id = $"table-{table_counter}";
+
+            string SortOn(int column, string type)
+            {
+                return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
+            }
+
+            buffer.AppendLine($@"<table id=""{table_id}"">
+<tr>
+    <th {SortOn(0, "id")} class=""smallcell"">Identifier</th>
+    <th {SortOn(1, "id")} class=""smallcell"">Template</th>
+    <th {SortOn(2, "string")} class=""smallcell"">Sequence</th>
+</tr>");
+
+            foreach (var row in cdrs)
+            {
+                var id = GetAsideIdentifier(row.MetaData);
+                var link = GetAsideLink(row.MetaData, AsideType.Read, AssetsFolderName);
+                var link_template = GetAsideLink(row.Template, AsideType.Template, AssetsFolderName);
+                buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
+    <td class=""center"">{link}</td>
+    <td class=""center"">{link_template}</td>
+    <td class=""seq"">{row.Sequence}</td>
+</tr>");
+            }
+
+            buffer.AppendLine("</table>");
         }
         static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
         {

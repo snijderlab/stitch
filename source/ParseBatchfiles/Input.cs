@@ -1007,9 +1007,9 @@ namespace AssemblyNameSpace
                 }
                 var alphabet = alphabetBuilder.ToString().ToCharArray();
 
-                if (!alphabet.Contains('*')) // TODO: use the right variables
+                if (!alphabet.Contains(Alphabet.GapChar))
                 {
-                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", "The Gap '*' is missing in the alpabet definition.", "", true));
+                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{Alphabet.GapChar}' is missing in the alpabet definition.", "", true));
                 }
 
                 var scoring_matrix = new int[columns - 1, columns - 1];

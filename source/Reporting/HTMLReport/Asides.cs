@@ -658,7 +658,7 @@ namespace HTMLNameSpace
 
                         if (item.Key == (Template.IGap)new Template.None())
                         {
-                            buffer.Append($"<span style='font-size:{size}em'>*</span>");
+                            buffer.Append($"<span style='font-size:{size}em'>{Alphabet.GapChar}</span>");
                         }
                         else
                         {

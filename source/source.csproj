@@ -6,6 +6,7 @@
     <CodeAnalysisRuleSet>StandardRuleset.ruleset</CodeAnalysisRuleSet>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
+    <Optimize>true</Optimize>
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Version>0.1.0</Version>
   </PropertyGroup>

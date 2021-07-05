@@ -208,6 +208,61 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
+        /// Get a part of the query sequence as indicated by positions on the template sequence.
+        /// </summary>
+        /// <param name="startTemplatePosition">The start position on the template.</param>
+        /// <param name="lengthOnTemplate">The length on the template of the part of the query sequence needed.</param>
+        /// <returns></returns>
+        public string GetQuerySubMatch(int startTemplatePosition, int lengthOnTemplate)
+        {
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+            var buf = new StringBuilder();
+
+            if (pos > startTemplatePosition) buf.Append(new string(Alphabet.GapChar, pos - startTemplatePosition));
+
+            foreach (var piece in this.Alignment)
+            {
+                if (pos > startTemplatePosition + lengthOnTemplate) break;
+                if (piece is SequenceMatch.Match ma)
+                {
+                    if (pos < startTemplatePosition + lengthOnTemplate && pos + piece.Length > startTemplatePosition)
+                    {
+                        int dif = pos < startTemplatePosition ? startTemplatePosition - pos : 0; // Skip all AA before the interesting sequence
+                        int length = Math.Min(Math.Min(Math.Min(startTemplatePosition + lengthOnTemplate - pos, lengthOnTemplate), this.QuerySequence.Length - q_pos - dif), piece.Length - dif);
+                        buf.Append(AminoAcid.ArrayToString(this.QuerySequence.SubArray(q_pos + dif, length)));
+                    }
+
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInTemplate gt)
+                {
+                    if (pos < startTemplatePosition + lengthOnTemplate && pos + piece.Length > startTemplatePosition)
+                    {
+                        int length = Math.Min(pos + piece.Length - startTemplatePosition, lengthOnTemplate);
+                        buf.Append(new string(Alphabet.GapChar, length));
+                    }
+
+                    pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInQuery gc)
+                {
+                    if (pos < startTemplatePosition + lengthOnTemplate && pos > startTemplatePosition)
+                    {
+                        buf.Append(AminoAcid.ArrayToString(this.QuerySequence.SubArray(q_pos, piece.Length)));
+                    }
+
+                    q_pos += piece.Length;
+                }
+            }
+
+            if (pos < startTemplatePosition + lengthOnTemplate) buf.Append(new string(Alphabet.GapChar, startTemplatePosition + lengthOnTemplate - pos));
+
+            return buf.ToString();
+        }
+
+        /// <summary>
         /// Represents a piece of a match between two sequences
         /// </summary>
         public abstract class MatchPiece
@@ -250,7 +305,10 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// A gap in the template
+        /// A gap in respect to the Template. 
+        /// Can be seen as a deletion in respect to the template sequence.
+        /// `TEMPLATETEMPLATE`
+        /// `QUERY......QUERY`
         /// </summary>
         public class GapInTemplate : MatchPiece
         {
@@ -259,7 +317,10 @@ namespace AssemblyNameSpace
         }
 
         /// <summary>
-        /// A gap in the query
+        /// A gap in respect to the Query.
+        /// Can be seen as an insertion in respect to the template sequence.
+        /// `TEM....TEMPLATE`
+        /// `QUERYQUERYQUERY`
         /// </summary>
         public class GapInQuery : MatchPiece
         {
