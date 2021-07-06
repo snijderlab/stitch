@@ -19,12 +19,12 @@ OSX (x64, minimum version macOS 10.12 Sierra):
 ./assembler_mac batchfiles/monoclonal.txt
 ```
 
-For help creating batch files see `BatchFiles.md`, this is included with the package.
+For help creating batch files see `manual.pdf`, this is included with the package.
 
 
 ## Running with dotnet
 
-To run the program with the dotnet runtime, first install the dotnet runtime (at least version 3.1) from [here](https://dotnet.microsoft.com/download).
+To run the program with the dotnet runtime, first install the dotnet runtime (version 5.0) from [here](https://dotnet.microsoft.com/download).
 Then run the following command to run the program:
 
 ```
@@ -33,13 +33,13 @@ dotnet path/to/source.dll <arguments>
 
 # Building
 
-The project is built with dotnet (SDK 3.1) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (SDK 5.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
 dotnet run -p source <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\netcoreapp3.1\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\netcoreapp5.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
 
 
 To generate a single executable run:
@@ -56,17 +56,18 @@ The target name should then be a valid 'RID' for the platform you choose. But if
 There are some unit tests provided. These can be found in the 'tests' file. To run the unit tests run (from the root folder):
 
 ```
-dotnet test tests
+dotnet test tests\small_tests
+dotnet test tests\batchfiles
 ```
 
 
 # Examples
 
-The 'examples' folder contains some examples which can be run to see what the program is up to.
+The 'batchfiles' folder contains some examples which can be run to see what the program is up to.
 
-Examples 001 through 007 are simple generated reads and sequences.
-Example 008 is an example of real world data gotten with PEAKS.
-Example 009 is an example of a FASTA input file.
+- `Basic.txt` 
+- `Monoclonal.txt`
+- `Polyclonal.txt`
 
 
 # Credits
