@@ -141,8 +141,10 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)> cdrs, string AssetsFolderName)
+        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)> cdrs, string AssetsFolderName, string title)
         {
+            if (cdrs.Count() == 0) return;
+
             table_counter++;
             var table_id = $"table-{table_counter}";
 
@@ -151,7 +153,28 @@ namespace HTMLNameSpace
                 return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
             }
 
-            buffer.AppendLine($@"<table id=""{table_id}"">
+            buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'><p>Total reads: <span>{cdrs.Count()}</span></p><p>Consensus: ");
+
+            var diversity = new List<Dictionary<char, int>>();
+            for (int i = 0; i < cdrs[0].Sequence.Length; i++) diversity.Add(new Dictionary<char, int>());
+
+            foreach (var row in cdrs)
+            {
+                for (int i = 0; i < row.Sequence.Length; i++)
+                {
+                    if (row.Sequence[i] != Alphabet.GapChar)
+                    {
+                        if (diversity[i].ContainsKey(row.Sequence[i]))
+                            diversity[i][row.Sequence[i]] += 1;
+                        else
+                            diversity[i].Add(row.Sequence[i], 1);
+                    }
+                }
+            }
+
+            SequenceConsensusOverview(buffer, diversity);
+
+            buffer.AppendLine($@"</p></div><table id=""{table_id}"">
 <tr>
     <th {SortOn(0, "id")} class=""smallcell"">Identifier</th>
     <th {SortOn(1, "id")} class=""smallcell"">Template</th>
@@ -170,8 +193,40 @@ namespace HTMLNameSpace
 </tr>");
             }
 
-            buffer.AppendLine("</table>");
+            buffer.AppendLine("</table></div>");
         }
+
+        static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<char, int>> diversity)
+        {
+            const double threshold = 0.3;
+            const int height = 25;
+            const int fontsize = 10;
+
+            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            for (int i = 0; i < diversity.Count(); i++)
+            {
+                buffer.Append("<div class='sequence-logo-position'>");
+                // Get the highest chars
+                double sum = diversity[i].Values.Sum();
+
+                bool placed = false;
+                foreach (var item in diversity[i])
+                {
+                    if ((double)item.Value / sum > threshold)
+                    {
+                        var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        placed = true;
+                    }
+                }
+                if (!placed)
+                    buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
+
+                buffer.Append("</div>");
+            }
+            buffer.Append("</div>");
+        }
+
         static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
         {
             buffer.Append($"<div class='table-header-{identifier}'><div><h3>Length</h3>");

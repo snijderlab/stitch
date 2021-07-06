@@ -193,15 +193,47 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
-
-                // Align CDRs? (or do that in the inner loop?)
             }
+
+            string extend(string sequence, int size)
+            {
+                if (sequence.Length < size)
+                {
+                    int pos = (int)Math.Ceiling((double)sequence.Length / 2);
+                    return sequence.Substring(0, pos) + new string(Alphabet.GapChar, size - sequence.Length) + sequence.Substring(pos);
+                }
+                else if (sequence.Length > size)
+                {
+                    if (sequence.StartsWith('.'))
+                        return sequence.Substring(sequence.Length - size);
+                    else if (sequence.EndsWith('.'))
+                        return sequence.Substring(0, size);
+                }
+                return sequence;
+            }
+
+            int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
+            for (int i = 0; i < cdr1_reads.Count(); i++)
+            {
+                cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length));
+            }
+            int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
+            for (int i = 0; i < cdr2_reads.Count(); i++)
+            {
+                cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length));
+            }
+            int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
+            for (int i = 0; i < cdr3_reads.Count(); i++)
+            {
+                cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length));
+            }
+
             var innerbuffer = new StringBuilder();
             innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
             innerbuffer.AppendLine("<div class='cdr-tables'>");
-            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName);
-            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName);
-            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName);
+            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1");
+            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2");
+            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3");
             innerbuffer.AppendLine("</div>");
 
             buffer.Append(Common.Collapsible("CDR regions", innerbuffer.ToString()));

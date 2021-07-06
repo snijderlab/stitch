@@ -117,8 +117,18 @@ table {
     gap: 1rem;
 }
 
-.cdr-tables>table {
+.cdr-tables>* {
     flex-grow: 1;
+}
+
+.table-header-columns {
+    display: flex;
+    gap: 0.5em;
+}
+
+.table-header-columns .sequence-logo {
+    margin: none;
+    margin-top: 0.6em;
 }
 
 @media (min-width: 800px) {
