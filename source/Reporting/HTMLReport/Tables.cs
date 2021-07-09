@@ -176,9 +176,9 @@ namespace HTMLNameSpace
 
             buffer.AppendLine($@"</p></div><table id=""{table_id}"">
 <tr>
-    <th {SortOn(0, "id")} class=""smallcell"">Identifier</th>
     <th {SortOn(1, "id")} class=""smallcell"">Template</th>
     <th {SortOn(2, "string")} class=""smallcell"">Sequence</th>
+    <th {SortOn(0, "id")} class=""smallcell"">Identifier</th>
 </tr>");
 
             foreach (var row in cdrs)
@@ -187,9 +187,9 @@ namespace HTMLNameSpace
                 var link = GetAsideLink(row.MetaData, AsideType.Read, AssetsFolderName);
                 var link_template = GetAsideLink(row.Template, AsideType.Template, AssetsFolderName);
                 buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
-    <td class=""center"">{link}</td>
     <td class=""center"">{link_template}</td>
-    <td class=""seq"">{row.Sequence}</td>
+    <td class=""seq"">{row.Sequence.Replace('~', Alphabet.GapChar)}</td>
+    <td class=""center"">{link}</td>
 </tr>");
             }
 
@@ -212,7 +212,7 @@ namespace HTMLNameSpace
                 bool placed = false;
                 foreach (var item in diversity[i])
                 {
-                    if ((double)item.Value / sum > threshold)
+                    if (item.Key != '~' && (double)item.Value / sum > threshold)
                     {
                         var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");

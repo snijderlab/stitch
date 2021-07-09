@@ -200,7 +200,7 @@ namespace AssemblyNameSpace
                 if (sequence.Length < size)
                 {
                     int pos = (int)Math.Ceiling((double)sequence.Length / 2);
-                    return sequence.Substring(0, pos) + new string(Alphabet.GapChar, size - sequence.Length) + sequence.Substring(pos);
+                    return sequence.Substring(0, pos) + new string('~', size - sequence.Length) + sequence.Substring(pos);
                 }
                 else if (sequence.Length > size)
                 {
