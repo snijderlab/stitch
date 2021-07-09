@@ -242,7 +242,7 @@ namespace HTMLNameSpace
         public static void TableHeader(StringBuilder buffer, List<Template> templates)
         {
             if (templates.Count() > 15) PointsTableHeader(buffer, templates);
-            if (templates.Count() > 5) BarTableHeader(buffer, templates);
+            else if (templates.Count() > 5) BarTableHeader(buffer, templates);
         }
 
         static void PointsTableHeader(StringBuilder buffer, List<Template> templates)
@@ -274,7 +274,7 @@ namespace HTMLNameSpace
                 header = new List<string> { "Score", "Matches", "Area" };
 
             buffer.Append("<div class='table-header'><div>");
-            HTMLGraph.GroupedPointGraph(buffer, data, header);
+            HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores");
             buffer.Append("</div></div>");
         }
 

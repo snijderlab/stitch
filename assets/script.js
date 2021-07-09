@@ -152,6 +152,8 @@ function AlignmentDetailsClear() {
 // Copy the graph data for the clicked on graph
 function CopyGraphData() {
     var children = event.currentTarget.getElementsByClassName("graph-data");
+    if (event.currentTarget.className == "copy-data")
+        children = event.currentTarget.parentElement.getElementsByClassName("graph-data");
     if (children.length > 0) {
         children[0].select();
         children[0].setSelectionRange(0, 99999);

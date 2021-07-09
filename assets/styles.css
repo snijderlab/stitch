@@ -314,7 +314,8 @@ td.bar::before {
 
 /* Collapsible regions */
 
-.report label {
+.report label,
+.point-graph .copy-data {
     display: block;
     font-size: 2em;
     color: var(--color-background);
@@ -750,7 +751,6 @@ input:checked+.slider:before {
     grid-template-rows: 150px 1fr;
     grid-auto-flow: column;
     grid-template-columns: 3ch;
-    gap: 5px;
 }
 
 .histogram .yaxis {
@@ -758,7 +758,7 @@ input:checked+.slider:before {
     height: 100%;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 2px solid var(--color-light);
+    border-right: 2px solid var(--color-dark);
     padding-right: 2px;
     align-items: flex-end;
 }
@@ -768,6 +768,7 @@ input:checked+.slider:before {
     align-self: end;
     display: flex;
     flex-direction: column;
+    border-bottom: 2px solid var(--color-dark);
 }
 
 .histogram .bar span {
@@ -790,18 +791,24 @@ input:checked+.slider:before {
 
 .grouped.histogram {
     grid-template-columns: none;
-    gap: 8px;
 }
 
 .group {
     display: flex;
     flex-direction: row;
+    padding-right: 8px;
+    border-bottom: 2px solid var(--color-dark);
+}
+
+.group:last-of-type {
+    padding-right: none;
 }
 
 .group .bar {
     flex: 1 1 1px;
     align-self: flex-end;
     margin: 0 2px;
+    border-bottom: none;
 }
 
 .grouped .tooltip {
@@ -877,14 +884,45 @@ input:checked+.slider:before {
 
 /* Point graph */
 
-.point-graph label {
+.point-graph {
+    --graph-height: 500px;
+    --graph-height-inc: calc(var(--graph-height) + 10px);
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    align-items: baseline;
+    gap: 8px;
+}
+
+.point-graph .title {
+    font-size: 1.25em;
+    margin: 0px;
+    margin-right: auto;
+}
+
+.point-graph label,
+.point-graph .copy-data {
     font-size: 1em;
     border: 2px solid var(--color-light);
     background: none;
     font-weight: normal;
     color: var(--color-dark);
     display: inline-block;
-    margin-right: .5em;
+}
+
+.point-graph .copy-data {
+    margin-left: auto;
+    color: var(--color-light);
+}
+
+.point-graph .copy-data:hover {
+    border-color: var(--color-primary);
+    color: var(--color-primary);
+}
+
+.point-graph .copy-data:active {
+    border-color: var(--color-secondary);
+    color: var(--color-secondary);
 }
 
 .point-graph .values:hover+.label a {
@@ -915,18 +953,19 @@ input:checked+.slider:before {
 }
 
 .point-graph .graph {
-    margin-top: .5em;
     display: flex;
     gap: 8px;
+    flex-basis: 100%;
 }
 
 .point-graph .group {
     display: grid;
-    grid-template-rows: 500px 100px;
+    grid-template-rows: var(--graph-height) 100px;
     grid-auto-flow: column;
     position: relative;
     padding-left: 5px;
     padding-top: 5px;
+    border-bottom: none;
 }
 
 .point-graph .group::before {
@@ -954,7 +993,7 @@ input:checked+.slider:before {
     border: 2px solid var(--color);
     position: absolute;
     left: 0;
-    top: calc((1 - var(--x)) * 500px);
+    top: calc((1 - var(--x)) * var(--graph-height));
 }
 
 .point-graph .point:nth-child(3n+1),
@@ -1032,6 +1071,40 @@ input:checked+.slider:before {
     font-size: 1.5em;
     overflow: hidden;
     transform: rotate( 90deg);
+}
+
+.point-graph .yaxis {
+    display: flex;
+    flex-direction: column;
+    height: var(--graph-height-inc);
+    justify-content: space-between;
+    align-items: flex-end;
+    border-right: 2px solid var(--color-dark);
+    padding-right: 2px;
+    position: relative;
+}
+
+.point-graph .yaxis::after {
+    content: "";
+    display: block;
+    position: absolute;
+    height: 2px;
+    width: 100vw;
+    left: 100%;
+    background-color: var(--color-dark);
+    top: var(--graph-height-inc);
+    z-index: -10;
+}
+
+.point-graph .yaxis .title {
+    writing-mode: vertical-lr;
+    align-self: center;
+    transform: rotate(180deg);
+}
+
+.point-graph .yaxis .max,
+.point-graph .yaxis .min {
+    font-size: 10px;
 }
 
 

@@ -224,7 +224,7 @@ namespace HTMLNameSpace
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header)
+        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title)
         {
             if (data.Count == 0 || data.Any(a => a.Points.Count == 0))
             {
@@ -258,7 +258,7 @@ namespace HTMLNameSpace
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            buffer.Append("<div class='point-graph' oncontextmenu='CopyGraphData()'>");
+            buffer.Append($"<div class='point-graph' oncontextmenu='CopyGraphData()'><h2 class='title'>{title}</h2>");
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
@@ -267,7 +267,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append("<div class='graph'>");
+            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='graph'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
             // Create Graph
             foreach (var group in data)
             {
