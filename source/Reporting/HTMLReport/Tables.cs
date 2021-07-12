@@ -227,18 +227,6 @@ namespace HTMLNameSpace
             buffer.Append("</div>");
         }
 
-        static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
-        {
-            buffer.Append($"<div class='table-header-{identifier}'><div><h3>Length</h3>");
-            HTMLGraph.Histogram(buffer, lengths.ToList());
-            if (area != null)
-            {
-                buffer.Append($"</div><div><h3>Area</h3>");
-                HTMLGraph.Histogram(buffer, area.ToList());
-            }
-            buffer.Append("</div></div>");
-        }
-
         public static void TableHeader(StringBuilder buffer, List<Template> templates)
         {
             if (templates.Count() > 15) PointsTableHeader(buffer, templates);
@@ -275,6 +263,18 @@ namespace HTMLNameSpace
 
             buffer.Append("<div class='table-header'><div>");
             HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores");
+            buffer.Append("</div></div>");
+        }
+
+        static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
+        {
+            buffer.Append($"<div class='table-header-{identifier}'><div>");
+            HTMLGraph.Histogram(buffer, lengths.ToList(), "Length distribution");
+            if (area != null)
+            {
+                buffer.Append($"</div><div>");
+                HTMLGraph.Histogram(buffer, area.ToList(), "Area distribution");
+            }
             buffer.Append("</div></div>");
         }
 
@@ -335,10 +335,10 @@ namespace HTMLNameSpace
                 areaLabels.Add(("Unique Total Area", 1));
             }
 
-            buffer.Append("<div class='table-header full'><div><h3>Scores per type</h3>");
-            HTMLGraph.GroupedBargraph(buffer, scoreData, scoreLabels);
-            buffer.Append("</div><div><h3>Area per type</h3>");
-            HTMLGraph.GroupedBargraph(buffer, areaData, areaLabels);
+            buffer.Append("<div class='table-header full'><div>");
+            HTMLGraph.GroupedBargraph(buffer, scoreData, scoreLabels, "Scores per group");
+            buffer.Append("</div><div>");
+            HTMLGraph.GroupedBargraph(buffer, areaData, areaLabels, "Area per group");
             buffer.Append("</div></div>");
         }
     }

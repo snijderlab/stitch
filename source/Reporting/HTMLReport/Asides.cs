@@ -72,8 +72,8 @@ namespace HTMLNameSpace
             buffer.Append("<h2>Sequence Consensus Overview</h2>");
 
             SequenceConsensusOverview(buffer, template);
-            buffer.Append("<div class='docplot'><h2>Depth Of Coverage of the Consensus Sequence</h2>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc));
+            buffer.Append("<div class='docplot'>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
             buffer.Append($@"</div>
     <h2>Scores</h2>
     {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName)}
@@ -194,36 +194,36 @@ namespace HTMLNameSpace
         static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
         {
             if (template.Matches.Count == 0) return;
-            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='docplot'><h3>Depth Of Coverage over the template</h3>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage));
-            buffer.Append("</div><div class='docplot'><h3>Depth Of Coverage over the template (Log10)</h3>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()));
+            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='docplot'>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage), "Depth of Coverage (including gaps)");
+            buffer.Append("</div><div class='docplot'>");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), "Log10 Depth of Coverage (including gaps)");
             buffer.Append("</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
-                buffer.Append("<div><h3>Histogram of Score</h3>");
-                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") });
+                buffer.Append("<div>");
+                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution");
 
                 // Histogram of Length On Template
-                buffer.Append("</div><div><h3>Histogram of Length on Template</h3>");
-                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") });
+                buffer.Append("</div><div>");
+                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution");
             }
             else
             {
                 // Histogram of Scores
-                buffer.Append("<div><h3>Histogram of Score</h3>");
-                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.Score).ToList());
+                buffer.Append("<div>");
+                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.Score).ToList(), "Score Distribution");
 
                 // Histogram of Length On Template
-                buffer.Append("</div><div><h3>Histogram of Length on Template</h3>");
-                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.LengthOnTemplate).ToList());
+                buffer.Append("</div><div>");
+                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Length on Template Distribution");
             }
 
             // Histogram of coverage, coverage per position excluding gaps
-            buffer.Append("</div><div><h3>Histogram of Coverage</h3>");
-            HTMLGraph.Histogram(buffer, template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList());
+            buffer.Append("</div><div>");
+            HTMLGraph.Histogram(buffer, template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), "Coverage Distribution");
 
             buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
         }

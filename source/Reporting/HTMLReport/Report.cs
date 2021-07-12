@@ -303,7 +303,7 @@ assetsfolder = '{AssetsFolderName}';
                     if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var (seq, doc) = Parameters.RecombinedSegment[group].Templates[0].ConsensusSequence();
                     buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>");
-                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc));
+                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage");
                     buffer.Append("</div><h3>Best scoring segments</h3><p>");
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)

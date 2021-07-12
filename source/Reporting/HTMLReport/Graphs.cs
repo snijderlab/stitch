@@ -18,7 +18,7 @@ namespace HTMLNameSpace
 
             return annotated;
         }
-        public static void GroupedHistogram(StringBuilder buffer, List<(List<double> Data, string Label)> data, int bins = 10)
+        public static void GroupedHistogram(StringBuilder buffer, List<(List<double> Data, string Label)> data, string title, int bins = 10)
         {
             if (data.Count == 0 || data.Any(a => a.Item1.Count == 0))
             {
@@ -54,10 +54,10 @@ namespace HTMLNameSpace
                 }
             }
 
-            GroupedBargraph(buffer, labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList());
+            GroupedBargraph(buffer, labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title);
         }
 
-        public static void Histogram(StringBuilder buffer, List<double> data, int bins = 10)
+        public static void Histogram(StringBuilder buffer, List<double> data, string title, int bins = 10)
         {
             if (data.Count == 0)
             {
@@ -88,10 +88,10 @@ namespace HTMLNameSpace
                 labeled[bin].Item2++;
             }
 
-            Bargraph(buffer, labeled.ToList());
+            Bargraph(buffer, labeled.ToList(), title);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, int factor = 2, bool baseYMinOnData = false)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, int factor = 2, bool baseYMinOnData = false)
         {
             if (data.Count == 0)
             {
@@ -102,6 +102,9 @@ namespace HTMLNameSpace
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
+            buffer.Append("<div class='graph'>");
+            if (title != null)
+                buffer.Append($"<h2 class='title'>{title}</h2><div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
             buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
@@ -119,7 +122,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
             }
 
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
         }
@@ -133,7 +136,7 @@ namespace HTMLNameSpace
         /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
         /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
         /// <returns></returns>
-        public static void GroupedBargraph(StringBuilder buffer, List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, int factor = 2, bool baseYMinOnData = false)
+        public static void GroupedBargraph(StringBuilder buffer, List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, string title, int factor = 2, bool baseYMinOnData = false)
         {
             if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0))
             {
@@ -180,7 +183,7 @@ namespace HTMLNameSpace
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            buffer.Append("<div class='histogram-header'>");
+            buffer.Append($"<div class='graph'><h2 class='title'>{title}</h2><div class='histogram-header'>");
             for (int i = 0; i < dimensions; i++)
             {
                 buffer.Append($"<span>{header[i].Label}</span>");
@@ -188,7 +191,7 @@ namespace HTMLNameSpace
             }
 
             // Create Graph
-            buffer.Append("</div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
+            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div></div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
@@ -212,7 +215,7 @@ namespace HTMLNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
         }
@@ -258,7 +261,7 @@ namespace HTMLNameSpace
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            buffer.Append($"<div class='point-graph' oncontextmenu='CopyGraphData()'><h2 class='title'>{title}</h2>");
+            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()'><h2 class='title'>{title}</h2>");
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
