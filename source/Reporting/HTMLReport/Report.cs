@@ -212,20 +212,29 @@ namespace AssemblyNameSpace
                 return sequence;
             }
 
-            int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
-            for (int i = 0; i < cdr1_reads.Count(); i++)
+            if (cdr1_reads.Count > 0)
             {
-                cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length));
+                int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
+                for (int i = 0; i < cdr1_reads.Count(); i++)
+                {
+                    cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length));
+                }
             }
-            int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
-            for (int i = 0; i < cdr2_reads.Count(); i++)
+            if (cdr2_reads.Count > 0)
             {
-                cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length));
+                int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
+                for (int i = 0; i < cdr2_reads.Count(); i++)
+                {
+                    cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length));
+                }
             }
-            int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
-            for (int i = 0; i < cdr3_reads.Count(); i++)
+            if (cdr3_reads.Count > 0)
             {
-                cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length));
+                int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
+                for (int i = 0; i < cdr3_reads.Count(); i++)
+                {
+                    cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length));
+                }
             }
 
             var innerbuffer = new StringBuilder();

@@ -143,8 +143,6 @@ namespace HTMLNameSpace
 
         public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)> cdrs, string AssetsFolderName, string title)
         {
-            if (cdrs.Count() == 0) return;
-
             table_counter++;
             var table_id = $"table-{table_counter}";
 
