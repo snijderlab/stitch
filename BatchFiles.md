@@ -487,6 +487,12 @@ Report ->
 
 To share the HTML report with someone else the html file with its accompanying folder (with the same name) can be zipped and sent to anyone having a modern browser. This is quite easy to do in windows as you can select the file (eg `report-monoclonal.txt`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder`. The recipient can then unzip the folder and make full use of all interactivity as provided by the report.
 
+###### Exporting
+
+If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this use the built in print commands (often control+p) and save the generated file. These files can be imported to most vector graphics editors (like Inkscape). It is best to turn on the background graphics, besides this setting the margins smaller and using landscape or portrait  could enhance the results. See the below picture for the options.
+
+![The settings to change for the best pdf output (shown in Chrome).](assets/export_pdf_example.png)
+
 ##### FASTA (m) *
 
 To generate a FASTA file with all paths, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
