@@ -5,7 +5,7 @@
     --color-tertiary: #F48771;
     --color-dark: #1E1E1E;
     --color-light: #7E7E7E;
-    --color-background: #eee;
+    --color-background: #fff;
 }
 
 @media (prefers-color-scheme: dark) {
@@ -1207,4 +1207,44 @@ input:checked+.slider:before {
     position: absolute;
     z-index: -9999;
     pointer-events: none;
+}
+
+@media print {
+    body {
+        font-size: 0.8em;
+    }
+    .graph {
+        page-break-inside: avoid;
+    }
+    .report label,
+    .report .collapsable>label {
+        background: none;
+        color: var(--color-dark);
+        border: none;
+    }
+    .collapsable {
+        border: none;
+        padding: 0;
+        display: block;
+        overflow: visible;
+    }
+    .info-link {
+        color: var(--color-dark);
+        border: none;
+        font-size: 1em;
+    }
+    .table-header {
+        display: block;
+    }
+    .histogram-header span {
+        font-size: .6em;
+        font-weight: normal;
+    }
+    .copy-data,
+    .source-code,
+    .point-graph label,
+    table,
+    .report label::after {
+        display: none !important;
+    }
 }
