@@ -122,7 +122,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
             }
 
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div></div>");
+            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
         }
@@ -191,7 +191,7 @@ namespace HTMLNameSpace
             }
 
             // Create Graph
-            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div></div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
+            buffer.Append("</div><div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
@@ -215,7 +215,7 @@ namespace HTMLNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div></div>");
+            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
 
             System.Globalization.CultureInfo.CurrentCulture = culture;
         }
