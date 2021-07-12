@@ -156,12 +156,12 @@ namespace HTMLNameSpace
             buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'><p>Total reads: <span>{cdrs.Count()}</span></p><p>Consensus: ");
 
             var diversity = new List<Dictionary<char, int>>();
-            for (int i = 0; i < cdrs[0].Sequence.Length; i++) diversity.Add(new Dictionary<char, int>());
 
             foreach (var row in cdrs)
             {
                 for (int i = 0; i < row.Sequence.Length; i++)
                 {
+                    if (i >= diversity.Count()) diversity.Add(new Dictionary<char, int>());
                     if (row.Sequence[i] != Alphabet.GapChar)
                     {
                         if (diversity[i].ContainsKey(row.Sequence[i]))
