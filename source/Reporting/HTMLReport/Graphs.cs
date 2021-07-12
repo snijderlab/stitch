@@ -270,7 +270,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='graph'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
+            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
             // Create Graph
             foreach (var group in data)
             {
