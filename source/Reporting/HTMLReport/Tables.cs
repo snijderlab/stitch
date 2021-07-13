@@ -20,7 +20,7 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName)
+        public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName, int total_reads)
         {
             var buffer = new StringBuilder();
 
@@ -50,20 +50,20 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static string CreateTemplateTables(List<Segment> segments, string AssetsFolderName)
+        public static string CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads)
         {
             var output = new StringBuilder();
 
             for (var i = 0; i < segments.Count(); i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, AsideType.Template, AssetsFolderName, true)));
+                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, AsideType.Template, AssetsFolderName, total_reads, true)));
             }
 
             return output.ToString();
         }
 
-        public static string CreateTemplateTable(List<Template> templates, AsideType type, string AssetsFolderName, bool header = false)
+        public static string CreateTemplateTable(List<Template> templates, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
         {
             table_counter++;
             var buffer = new StringBuilder();
@@ -83,7 +83,7 @@ namespace HTMLNameSpace
             }
 
             if (header)
-                TableHeader(buffer, templates);
+                TableHeader(buffer, templates, total_reads);
 
             string unique = "";
             if (displayUnique) unique = $@"
@@ -141,17 +141,17 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)> cdrs, string AssetsFolderName, string title)
+        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
 
-            string SortOn(int column, string type)
-            {
-                return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
-            }
+            buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'>");
 
-            buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'><p>Total reads: <span>{cdrs.Count()}</span></p><p>Consensus: ");
+            var matched = cdrs.Select(a => a.MetaData.EscapedIdentifier).Count();
+            var unique = cdrs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Count();
+
+            buffer.Append($"<p class='text-header'>Reads matched {matched} ({(double)matched / total_reads:P2} of all input reads) of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely.</p><p>Consensus: ");
 
             var diversity = new List<Dictionary<char, int>>();
 
@@ -171,6 +171,11 @@ namespace HTMLNameSpace
             }
 
             SequenceConsensusOverview(buffer, diversity);
+
+            string SortOn(int column, string type)
+            {
+                return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
+            }
 
             buffer.AppendLine($@"</p></div><table id=""{table_id}"">
 <tr>
@@ -225,13 +230,28 @@ namespace HTMLNameSpace
             buffer.Append("</div>");
         }
 
-        public static void TableHeader(StringBuilder buffer, List<Template> templates)
+        public static void TableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
         {
-            if (templates.Count() > 15) PointsTableHeader(buffer, templates);
-            else if (templates.Count() > 5) BarTableHeader(buffer, templates);
+            buffer.Append("<div class='table-header'>");
+            if (templates.Count() > 15) PointsTableHeader(buffer, templates, total_reads);
+            else if (templates.Count() > 5) BarTableHeader(buffer, templates, total_reads);
+            TextTableHeader(buffer, templates, total_reads);
+            buffer.Append("</div>");
         }
 
-        static void PointsTableHeader(StringBuilder buffer, List<Template> templates)
+        static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
+        {
+            buffer.Append($"<div class='table-header-{identifier}'>");
+            HTMLGraph.Histogram(buffer, lengths.ToList(), "Length distribution");
+            if (area != null)
+            {
+                buffer.Append($"</div><div>");
+                HTMLGraph.Histogram(buffer, area.ToList(), "Area distribution");
+            }
+            buffer.Append("</div>");
+        }
+
+        static void PointsTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return;
@@ -259,24 +279,10 @@ namespace HTMLNameSpace
             else
                 header = new List<string> { "Score", "Matches", "Area" };
 
-            buffer.Append("<div class='table-header'><div>");
             HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores");
-            buffer.Append("</div></div>");
         }
 
-        static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
-        {
-            buffer.Append($"<div class='table-header-{identifier}'><div>");
-            HTMLGraph.Histogram(buffer, lengths.ToList(), "Length distribution");
-            if (area != null)
-            {
-                buffer.Append($"</div><div>");
-                HTMLGraph.Histogram(buffer, area.ToList(), "Area distribution");
-            }
-            buffer.Append("</div></div>");
-        }
-
-        static void BarTableHeader(StringBuilder buffer, List<Template> templates)
+        static void BarTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return;
@@ -333,11 +339,23 @@ namespace HTMLNameSpace
                 areaLabels.Add(("Unique Total Area", 1));
             }
 
-            buffer.Append("<div class='table-header full'><div>");
+            buffer.Append("<div>");
             HTMLGraph.GroupedBargraph(buffer, scoreData, scoreLabels, "Scores per group");
             buffer.Append("</div><div>");
             HTMLGraph.GroupedBargraph(buffer, areaData, areaLabels, "Area per group");
-            buffer.Append("</div></div>");
+            buffer.Append("</div>");
+        }
+
+        static void TextTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
+        {
+            var set = new HashSet<string>();
+            var unique_set = new HashSet<string>();
+            foreach (var template in templates)
+            {
+                set.UnionWith(template.Matches.Select(a => a.MetaData.EscapedIdentifier));
+                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier));
+            }
+            buffer.Append($"<p class='text-header'>Reads matched {set.Count()} ({(double)set.Count() / total_reads:P2} of all input reads) of these {unique_set.Count()} ({(double)unique_set.Count() / set.Count():P2} of all matched reads) were matched uniquely.</p>");
         }
     }
 }

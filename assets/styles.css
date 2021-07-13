@@ -8,7 +8,7 @@
     --color-background: #fff;
 }
 
-@media (prefers-color-scheme: dark) {
+@media screen and (prefers-color-scheme: dark) {
     * {
         --color-primary: #569CD6;
         --color-primary-shade: #9CDCFE;
@@ -95,7 +95,7 @@ img {
 }
 
 
-/* Table*/
+/* Table */
 
 table {
     border-collapse: collapse;
@@ -124,6 +124,7 @@ table {
 .table-header-columns {
     display: flex;
     gap: 0.5em;
+    flex-wrap: wrap;
 }
 
 .table-header-columns .sequence-logo {
@@ -726,6 +727,10 @@ input:checked+.slider:before {
 
 /* Graph - title and button */
 
+.table-header .graph {
+    height: 100%;
+}
+
 .graph {
     display: flex;
     flex-wrap: wrap;
@@ -773,6 +778,7 @@ input:checked+.slider:before {
     display: flex;
     gap: 10px;
     padding: 1em 0;
+    flex-wrap: wrap;
 }
 
 .table-header>div {
@@ -790,12 +796,18 @@ input:checked+.slider:before {
     color: var(--color-primary);
 }
 
+.text-header {
+    flex-basis: 100%;
+    margin: 0;
+}
+
 .histogram {
     display: grid;
     grid-template-rows: 150px 1fr;
     grid-auto-flow: column;
     grid-template-columns: 3ch;
     flex-basis: 100%;
+    align-self: flex-end;
 }
 
 .histogram .yaxis {

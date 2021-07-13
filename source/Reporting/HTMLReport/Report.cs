@@ -90,12 +90,12 @@ namespace AssemblyNameSpace
                     break;
                 case AsideType.Template:
                     var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName);
+                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count());
                     metadata = template.MetaData;
                     break;
                 case AsideType.RecombinedTemplate:
                     var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName);
+                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count());
                     metadata = rTemplate.MetaData;
                     break;
             };
@@ -117,9 +117,9 @@ namespace AssemblyNameSpace
 
         void CreateCDROverview(StringBuilder buffer, List<Segment> segments)
         {
-            var cdr1_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)>();
-            var cdr2_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)>();
-            var cdr3_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence)>();
+            var cdr1_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
 
             foreach (var template in segments.SelectMany(a => a.Templates))
             {
@@ -153,9 +153,6 @@ namespace AssemblyNameSpace
 
                 if (positions.ContainsKey("CDR1"))
                 { // V-segment
-                    //cdr1_reads.Add((template.MetaData, AminoAcid.ArrayToString(template.Sequence.SubArray(positions["CDR1"].Start, positions["CDR1"].Length))));
-                    //cdr2_reads.Add((template.MetaData, AminoAcid.ArrayToString(template.Sequence.SubArray(positions["CDR2"].Start, positions["CDR2"].Length))));
-                    //cdr3_reads.Add((template.MetaData, AminoAcid.ArrayToString(template.Sequence.SubArray(positions["CDR3"].Start, positions["CDR3"].Length))));
 
                     foreach (var read in template.Matches)
                     {
@@ -163,7 +160,7 @@ namespace AssemblyNameSpace
                         {
                             if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
                             {
-                                var piece = (read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length));
+                                var piece = (read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
                                 switch (group)
                                 {
                                     case "CDR1":
@@ -183,13 +180,12 @@ namespace AssemblyNameSpace
                 else if (positions.ContainsKey("CDR3"))
                 { // J-segment
                     var cdr = positions["CDR3"];
-                    //cdr3_reads.Add((template.MetaData, AminoAcid.ArrayToString(template.Sequence.SubArray(cdr.Start, cdr.Length))));
 
                     foreach (var read in template.Matches)
                     {
                         if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
                         {
-                            cdr3_reads.Add((read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length)));
+                            cdr3_reads.Add((read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
                         }
                     }
                 }
@@ -217,7 +213,7 @@ namespace AssemblyNameSpace
                 int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
                 for (int i = 0; i < cdr1_reads.Count(); i++)
                 {
-                    cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length));
+                    cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length), cdr1_reads[i].Unique);
                 }
             }
             if (cdr2_reads.Count > 0)
@@ -225,7 +221,7 @@ namespace AssemblyNameSpace
                 int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
                 for (int i = 0; i < cdr2_reads.Count(); i++)
                 {
-                    cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length));
+                    cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length), cdr2_reads[i].Unique);
                 }
             }
             if (cdr3_reads.Count > 0)
@@ -233,16 +229,16 @@ namespace AssemblyNameSpace
                 int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
                 for (int i = 0; i < cdr3_reads.Count(); i++)
                 {
-                    cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length));
+                    cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length), cdr3_reads[i].Unique);
                 }
             }
 
             var innerbuffer = new StringBuilder();
             innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
             innerbuffer.AppendLine("<div class='cdr-tables'>");
-            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1");
-            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2");
-            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3");
+            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count());
+            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count());
+            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count());
             innerbuffer.AppendLine("</div>");
 
             buffer.Append(Common.Collapsible("CDR regions", innerbuffer.ToString()));
@@ -334,7 +330,7 @@ assetsfolder = '{AssetsFolderName}';
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
                         buffer.Append($"<h3>{seg.Name}</h3>");
-                        HTMLTables.TableHeader(buffer, seg.Templates);
+                        HTMLTables.TableHeader(buffer, seg.Templates, Parameters.Input.Count());
                     }
                 }
             }
@@ -357,12 +353,12 @@ assetsfolder = '{AssetsFolderName}';
                         if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count() > Parameters.RecombinedSegment.Count()) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateTemplateTable(recombined, AsideType.RecombinedTemplate, AssetFolderName, true)));
+                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateTemplateTable(recombined, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count(), true)));
                         if (decoy.Count() > 0)
-                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateTemplateTable(decoy, AsideType.RecombinedTemplate, AssetFolderName, true)));
+                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateTemplateTable(decoy, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count(), true)));
                     }
 
-                    groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName));
+                    groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count()));
 
                     CreateCDROverview(groupbuffer, Parameters.Segments[group].Item2);
 
@@ -372,7 +368,7 @@ assetsfolder = '{AssetsFolderName}';
                         innerbuffer.Append(Collapsible(Parameters.Segments[group].Item1, groupbuffer.ToString()));
                 }
 
-            innerbuffer.Append(Collapsible("Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
+            innerbuffer.Append(Collapsible("Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName, Parameters.Input.Count())));
             innerbuffer.Append(Collapsible("Batch File", BatchFileHTML()));
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;

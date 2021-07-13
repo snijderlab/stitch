@@ -30,7 +30,7 @@ namespace HTMLNameSpace
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName)
+        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName, int total_reads)
         {
             string id = GetAsideIdentifier(template.MetaData);
             string human_id = GetAsideIdentifier(template.MetaData, true);
@@ -76,7 +76,7 @@ namespace HTMLNameSpace
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
             buffer.Append($@"</div>
     <h2>Scores</h2>
-    {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName)}
+    {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName, total_reads)}
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
