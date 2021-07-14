@@ -332,7 +332,8 @@ namespace AssemblyNameSpace
                         var contigid = match.Index;
 
                         seq_pos += len;
-                        output[Math.Max(0, template_pos - 1)].Gaps[level] = (matchindex, sub_seq, cov, contigid, inseq);
+                        int pos = Math.Max(Math.Min(template_pos - 1, output.Count - 1), 0);
+                        output[pos].Gaps[level] = (matchindex, sub_seq, cov, contigid, inseq);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {

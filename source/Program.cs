@@ -19,7 +19,7 @@ namespace AssemblyNameSpace
         static readonly Stopwatch stopwatch = new Stopwatch();
 
         /// <summary> The entry point. </summary>
-        static void Main()
+        static int Main()
         {
             Console.CancelKeyPress += HandleUserAbort;
 
@@ -98,7 +98,7 @@ namespace AssemblyNameSpace
             catch
             {
                 Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.\nOr give the command 'clean' followed by the fasta file to clean.");
-                return;
+                return 2;
             }
 
             try
@@ -110,12 +110,16 @@ namespace AssemblyNameSpace
                 else
                     RunBatchFile(filename);
             }
-            catch (ParseException) { }
+            catch (ParseException)
+            {
+                return 3;
+            }
             catch (Exception e)
             {
-                var msg = $"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}";
-                throw new Exception(msg, e);
+                Console.WriteLine($"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}\nSOURCE: {e.Source}\nTARGET: {e.TargetSite}");
+                return 1;
             }
+            return 0;
         }
 
         /// <summary>

@@ -200,10 +200,11 @@ namespace AssemblyNameSpace
                 var namefilter = new NameFilter();
                 bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
+                int offset = 0;
                 for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
                 {
                     var segment_group = segments[segment_group_index];
-                    if (segment_group.Item1.ToLower() == "decoy") continue;
+                    if (segment_group.Item1.ToLower() == "decoy") { offset += 1; continue; };
                     // Create a list for every segment with the top n highest scoring templates.
                     // By having the lowest of these always at the first position at shuffling in
                     // a new high scoring template to its right position this snippet is still
@@ -232,7 +233,7 @@ namespace AssemblyNameSpace
                         select acc.Concat(new[] { item }));
 
                     var recombined_segment_group = new Segment(new List<Template>(), alph, "Recombined Segment", Recombine.CutoffScore);
-                    CreateRecombinationTemplates(combinations, segment_group_index, alph, recombined_segment_group, namefilter);
+                    CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, namefilter);
                     if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
                     var local_matches = recombined_segment_group.Match(Input);
@@ -286,7 +287,7 @@ namespace AssemblyNameSpace
                 if (progressBar != null) progressBar.Update();
             }
 
-            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, int segment_group_index, Alphabet alphabet, Segment parent, NameFilter namefilter)
+            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
             {
                 var recombined_templates = new List<Template>();
 
@@ -296,7 +297,7 @@ namespace AssemblyNameSpace
                     var s = new List<AminoAcid>();
                     var t = new List<Template>();
                     var join = false;
-                    foreach (var element in Recombine.Order[segment_group_index])
+                    foreach (var element in order)
                     {
                         if (element.GetType() == typeof(RecombineOrder.Gap))
                         {
@@ -337,7 +338,7 @@ namespace AssemblyNameSpace
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{segment_group_index + 1}-{i + 1}"),
+                            new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

@@ -178,12 +178,14 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
+                    int offset = 0;
                     for (int i = 0; i < output.TemplateMatching.Segments.Count(); i++)
                     {
-                        if (output.TemplateMatching.Segments[i].Name.ToLower() == "decoy") continue;
-                        var order = order_groups[i];
+                        if (output.TemplateMatching.Segments[i].Name.ToLower() == "decoy") { offset += 1; continue; };
+                        int index = i - offset;
+                        var order = order_groups[index];
                         int last = -2;
-                        foreach (var piece in output.Recombine.Order[i])
+                        foreach (var piece in output.Recombine.Order[index])
                         {
                             if (piece.IsGap())
                             {
@@ -1150,7 +1152,10 @@ namespace AssemblyNameSpace
                 else if (file_path.EndsWith(".txt"))
                     folder_reads = OpenReads.Simple(namefilter, fileId);
                 else if (file_path.EndsWith(".csv"))
+                {
+                    peaks_settings.File = fileId;
                     folder_reads = OpenReads.Peaks(namefilter, peaks_settings);
+                }
                 else
                     outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
 
@@ -1333,95 +1338,86 @@ namespace AssemblyNameSpace
             static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive)
             {
                 var trypath = GetFullPathPrivate(path);
+                Console.WriteLine("FullPath: " + path + " / " + trypath);
 
-                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
+                try
+                {
+                    var option = SearchOption.TopDirectoryOnly;
+                    if (recursive) option = SearchOption.AllDirectories;
+                    return (Directory.GetFiles(trypath.Item1, "*", option), "", "", "");
+                }
+                catch (ArgumentException)
                 {
                     return (new string[0], "Invalid path", "The path contains invalid characters.", "");
                 }
-                else if (string.IsNullOrWhiteSpace(path))
+                catch (UnauthorizedAccessException)
                 {
-                    return (new string[0], "Invalid path", "The path is empty.", "");
+                    return (new string[0], "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
                 }
+                catch (PathTooLongException)
+                {
+                    return (new string[0], "Invalid path", "The path length exceeds the system defined width.", "");
+                }
+                catch (DirectoryNotFoundException)
                 {
                     try
                     {
-                        var option = SearchOption.TopDirectoryOnly;
-                        if (recursive) option = SearchOption.AllDirectories;
-                        return (Directory.GetFiles(trypath.Item1, "*", option), "", "", "");
-                    }
-                    catch (ArgumentException)
-                    {
-                        return (new string[0], "Invalid path", "The path contains invalid characters.", "");
-                    }
-                    catch (UnauthorizedAccessException)
-                    {
-                        return (new string[0], "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
-                    }
-                    catch (PathTooLongException)
-                    {
-                        return (new string[0], "Invalid path", "The path length exceeds the system defined width.", "");
-                    }
-                    catch (DirectoryNotFoundException)
-                    {
-                        try
+                        var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
+                        var drive = pieces[0].Split(':')[0];
+                        if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
                         {
-                            var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
-                            var drive = pieces[0].Split(':')[0];
-                            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+                            string currentpath = $"{drive}:\\";
+                            for (int i = 1; i < pieces.Length - 1; i++)
                             {
-                                string currentpath = $"{drive}:\\";
-                                for (int i = 1; i < pieces.Length - 1; i++)
+                                string nextpath = currentpath + pieces[i] + "\\";
+
+                                if (!Directory.Exists(nextpath))
                                 {
-                                    string nextpath = currentpath + pieces[i] + "\\";
+                                    var directories = Directory.GetDirectories(currentpath);
+                                    var extra = "";
 
-                                    if (!Directory.Exists(nextpath))
+                                    if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
+                                    else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                    else
                                     {
-                                        var directories = Directory.GetDirectories(currentpath);
-                                        var extra = "";
-
-                                        if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
-                                        else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
-                                        else
+                                        int maxvalue = 0;
+                                        string maxname = "";
+                                        foreach (var dir in directories)
                                         {
-                                            int maxvalue = 0;
-                                            string maxname = "";
-                                            foreach (var dir in directories)
+                                            int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
+                                            if (score > maxvalue)
                                             {
-                                                int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                                if (score > maxvalue)
-                                                {
-                                                    maxname = Path.GetFileName(dir);
-                                                    maxvalue = score;
-                                                }
+                                                maxname = Path.GetFileName(dir);
+                                                maxvalue = score;
                                             }
-                                            extra = $"\nDid you mean '{maxname}'?";
                                         }
-
-                                        return (new string[0], "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
+                                        extra = $"\nDid you mean '{maxname}'?";
                                     }
-                                    currentpath = nextpath;
+
+                                    return (new string[0], "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
                                 }
-                                // Will likely be never used because that would raise a FileNotFoundException
-                                return (new string[0], "Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
+                                currentpath = nextpath;
                             }
-                            else
-                            {
-                                return (new string[0], "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
-                            }
+                            // Will likely be never used because that would raise a FileNotFoundException
+                            return (new string[0], "Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
                         }
-                        catch
+                        else
                         {
-                            return (new string[0], "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
+                            return (new string[0], "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
                         }
                     }
-                    catch (IOException)
+                    catch
                     {
-                        return (new string[0], "Invalid path", "The path is a file name or a network error has occurred.", "");
+                        return (new string[0], "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
                     }
-                    catch (Exception e)
-                    {
-                        return (new string[0], "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
-                    }
+                }
+                catch (IOException)
+                {
+                    return (new string[0], "Invalid path", "The path is a file name or a network error has occurred.", "");
+                }
+                catch (Exception e)
+                {
+                    return (new string[0], "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
                 }
             }
             public static ParseResult<string> GetAllText(KeyValue setting)
