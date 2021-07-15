@@ -2,7 +2,7 @@
 
 # Getting started
 
-There are distributed executable files for windows (x64), linux (x64) and mac (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64), linux (x64) and mac (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://bms-developer.science.uu.nl/D.Schulte/amino-acid-assembler/-/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
 
 Windows (x64):
 ```
@@ -74,7 +74,7 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 
 * Douwe Schulte - Software engineer
 * Joost Snijder - Principal investigator
-* Bastiaan de Graaf - Thanks for the code reviews
+* Bastiaan de Graaf - Code reviews
 
 
 # Acknowledgements
