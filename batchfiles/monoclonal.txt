@@ -94,6 +94,12 @@ TemplateMatching ->
         -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
         -     <-
         - <-
+        - Decoy ->
+        -     Segment->
+        -         Path      : ../templates/common.contaminants.fasta
+        -         Name      : Common contaminants
+        -     <-
+        - <-
     <-
 <-
 
