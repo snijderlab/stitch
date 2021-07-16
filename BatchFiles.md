@@ -629,3 +629,12 @@ If in the order definition a gap is added (`*`) the program will try to fill in 
 ### Example Batch Files
 
 See the files in the folder `examples\batchfiles\`.
+
+### Creating templates for a new species
+
+To create templates for a new species use the download command (see example below). The species name is the latin name as used by IMGT (http://www.imgt.org/IMGTrepertoire/Proteins/). The protein displays are downloaded from IMGT in the process so make sure to have a working internet connection. If different segments are needed besides or in place of the default segments ("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC") that can be given as the second argument. Note that Heavy constant chain is not included, as this is given in all different constituent parts by IMGT and as such cannot easily be generated automatically. Download the sequences of the subclasses from uniprot for the best results.
+
+```
+assembler.exe download "Homo sapiens"
+assembler.exe download "Cricetinae gen. sp." "IGHV IGKV,IGLV IGHJ IGLC"
+```

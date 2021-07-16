@@ -31,34 +31,34 @@ TemplateMatching ->
         - Homo Sapiens segments
         Heavy Chain->
             Segment->
-                Path      : ../templates/Homo_sapiens_IGHV_annotated.fasta
+                Path      : ../templates/Homo_sapiens_IGHV.fasta
                 Name      : IGHV
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGHJ_annotated.fasta
+                Path      : ../templates/Homo_sapiens_IGHJ.fasta
                 Name      : IGHJ
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGHC_uniprot.fasta
+                Path      : ../templates/Homo_sapiens_IGHC.fasta
                 Name      : IGHC
                 Identifier: ^sp\|[\w]*\|([\w]+)_
             <-
         <-
         Light Chain->
             Segment->
-                Path      : ../templates/Homo_sapiens_IGK+LV_annotated.fasta
+                Path      : ../templates/Homo_sapiens_IGKV,IGLV.fasta
                 Name      : IGLV
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGK+LJ_annotated.fasta
+                Path      : ../templates/Homo_sapiens_IGKJ,IGLJ.fasta
                 Name      : IGLJ
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGK+LC.fasta
+                Path      : ../templates/Homo_sapiens_IGKC,IGLC.fasta
                 Name      : IGLC
                 Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
             <-

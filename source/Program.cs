@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Net;
 
 namespace AssemblyNameSpace
 {
@@ -67,48 +68,64 @@ namespace AssemblyNameSpace
             var args = ParseArgs();
             string filename = "";
             string output_filename = "";
-            bool clean = false;
-            bool annotate = false;
-            try
+
+            if (args.Count() <= 1 || args[1] == "help" || args[1] == "?")
             {
-                filename = args[1];
-                if (filename == "clean")
-                {
-                    clean = true;
-                    filename = args[2];
-                    if (args.Count() > 3)
-                        output_filename = args[3];
-                    else
-                        output_filename = filename;
-                }
-                else if (filename == "annotate")
-                {
-                    annotate = true;
-                    filename = args[2];
-                    if (args.Count() > 3)
-                        output_filename = args[3];
-                    else
-                        output_filename = filename;
-                }
-                else
-                {
-                    filename = args[1];
-                }
-            }
-            catch
-            {
-                Console.WriteLine("Please provide as the first and only argument the path to the batch file to be run.\nOr give the command 'clean' followed by the fasta file to clean.");
+                Console.WriteLine(@"Please provide as the first and only argument the path to the batch file to be run.
+
+Or use any of the following commands:
+* clean - removes duplicates and incomplete sequences from fasta
+    1   [path] the fasta file to clean 
+    2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file)
+eg: assembler.exe clean Homo_sapiens_IGHV.fasta
+
+* annotate - parses the sequences from an IMGT html file and creates annotated fasta files
+    1   [path] the html file to parse the annotated sequences from 
+    2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file).
+eg: assembler.exe annotate Homo_sapiens_IGHV.html Homo_sapiens_IGHV.fasta
+note: for an example IMGT html file see: http://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species=human&latin=Homo%20sapiens&group=IGHV
+
+* download - creates annotated fasta files for the given species
+    1   [string] the latin name of the species to download (as used by IMGT: http://www.imgt.org/IMGTrepertoire/Proteins/)
+    2?  [string] the segments to download, multiple can be downloaded in one file by combining with a comma ','
+        default: ""IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC""
+eg: assembler.exe download ""Homo sapiens""
+note: IGHC is not included as this is not present in a usefull form in the IMGT database, get from uniprot for the best results");
                 return 2;
             }
 
             try
             {
-                if (clean)
+                filename = args[1];
+                if (filename == "clean")
+                {
+                    filename = args[2];
+                    if (args.Count() > 3)
+                        output_filename = args[3];
+                    else
+                        output_filename = filename;
                     CleanFasta(filename, output_filename);
-                else if (annotate)
+                }
+                else if (filename == "annotate")
+                {
+                    filename = args[2];
+                    if (args.Count() > 3)
+                        output_filename = args[3];
+                    else
+                        output_filename = filename;
                     GenerateAnnotatedTemplate(filename, output_filename);
+                }
+                else if (filename == "download")
+                {
+                    if (args.Count() > 3)
+                        DownloadSpecies(args[2], args[3]);
+                    DownloadSpecies(args[2]);
+                }
                 else
+                {
+                    filename = args[1];
                     RunBatchFile(filename);
+                }
             }
             catch (ParseException)
             {
@@ -192,6 +209,30 @@ namespace AssemblyNameSpace
             File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
         }
 
+        /// <summary>
+        /// Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens.
+        /// </summary>
+        /// <param name="name"></param>
+        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC")
+        {
+            var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={name.Replace(" ", "%20")}&groups=";
+            WebClient client = new WebClient();
+            foreach (var segment in segments.Split(' '))
+            {
+                try
+                {
+                    Console.WriteLine(segment);
+                    client.DownloadFile(basename + segment, "temp.html");
+                    GenerateAnnotatedTemplate("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                }
+                catch
+                {
+                    Console.WriteLine("   Not available");
+                }
+            }
+            File.Delete("temp.html");
+        }
+
         /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
         static void GenerateAnnotatedTemplate(string filename, string output)
         {
@@ -200,6 +241,7 @@ namespace AssemblyNameSpace
             var writer = new StreamWriter(output);
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
+            content = content.Substring(0, content.IndexOf("</table>"));
             content = content.Substring(content.IndexOf("</pre></td>\n") + 12);
             while (content.StartsWith("</tr>\n<tr>\n"))
             {
@@ -207,6 +249,8 @@ namespace AssemblyNameSpace
                 int newline = content.IndexOf('\n');
                 var line = content.Substring(0, newline);
                 content = content.Substring(newline + 1);
+
+                if (line == "<td class=\"separegroup\"></td>") continue;
 
                 var pieces = line.Split("</td><td>").ToArray();
                 // 0 - nothing
@@ -226,6 +270,13 @@ namespace AssemblyNameSpace
                         if (current_seq != "")
                             result.Add((new List<string>(current_classes), current_seq));
                         return result;
+                    }
+                    else if (input.StartsWith("<b>"))
+                    {
+                        var close = input.IndexOf("</b>");
+                        var piece = input.Substring(3, close - 3);
+                        if (piece == ".") return ParseSequence(input.Substring(8), current_classes, current_seq, result);
+                        return ParseSequence(input.Substring(close + 4), current_classes, current_seq + piece, result);
                     }
                     else if (input.StartsWith("<span"))
                     {
