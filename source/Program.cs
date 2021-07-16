@@ -234,7 +234,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         }
 
         /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
-        static void GenerateAnnotatedTemplate(string filename, string output)
+        static void GenerateAnnotatedTemplate(string filename, string output, bool remove_gaps = true)
         {
             string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
             var namefilter = new NameFilter();
@@ -275,7 +275,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     {
                         var close = input.IndexOf("</b>");
                         var piece = input.Substring(3, close - 3);
-                        if (piece == ".") return ParseSequence(input.Substring(8), current_classes, current_seq, result);
+                        if (piece == "." && remove_gaps) return ParseSequence(input.Substring(8), current_classes, current_seq, result);
                         return ParseSequence(input.Substring(close + 4), current_classes, current_seq + piece, result);
                     }
                     else if (input.StartsWith("<span"))
@@ -301,7 +301,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                         current_classes.RemoveAt(current_classes.Count() - 1);
                         return ParseSequence(input.Substring(7), current_classes, "", result);
                     }
-                    else if (input.StartsWith(' ') || input.StartsWith('.'))
+                    else if (input.StartsWith(' ') || (remove_gaps && input.StartsWith('.')))
                     {
                         return ParseSequence(input.Substring(1), current_classes, current_seq, result);
                     }
