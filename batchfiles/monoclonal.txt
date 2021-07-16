@@ -56,7 +56,7 @@ TemplateMatching ->
             Segment->
                 Path      : ../templates/Homo_sapiens_IGKC,IGLC.fasta
                 Name      : IGLC
-                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
         <-
         - Mus musculus segments
@@ -64,12 +64,12 @@ TemplateMatching ->
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGHV.fasta
         -         Name      : IGHV
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
         -     <-
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGHJ.fasta
         -         Name      : IGHJ
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
         -     <-
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGHC_uniprot.fasta
@@ -81,17 +81,17 @@ TemplateMatching ->
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGKV,IGLV.fasta
         -         Name      : IGLV
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
         -     <-
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGKJ,IGLJ.fasta
         -         Name      : IGLJ
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
         -     <-
         -     Segment->
         -         Path      : ../templates/Mus_musculus_IGKC,IGLC.fasta
         -         Name      : IGLC
-        -         Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
         -     <-
         - <-
         - Decoy ->

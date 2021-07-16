@@ -271,13 +271,6 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                             result.Add((new List<string>(current_classes), current_seq));
                         return result;
                     }
-                    else if (input.StartsWith("<b>"))
-                    {
-                        var close = input.IndexOf("</b>");
-                        var piece = input.Substring(3, close - 3);
-                        if (piece == "." && remove_gaps) return ParseSequence(input.Substring(8), current_classes, current_seq, result);
-                        return ParseSequence(input.Substring(close + 4), current_classes, current_seq + piece, result);
-                    }
                     else if (input.StartsWith("<span"))
                     {
                         if (current_seq != "")
@@ -315,7 +308,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     }
                 }
 
-                var final_sequence = ParseSequence(sequence, new List<string>(), "", new List<(List<string> classes, string seq)>());
+                var final_sequence = ParseSequence(sequence.Replace("<b>", "").Replace("</b>", ""), new List<string>(), "", new List<(List<string> classes, string seq)>());
                 if (final_sequence == null)
                     continue;
                 var typed = new List<(string Type, string Sequence)>();

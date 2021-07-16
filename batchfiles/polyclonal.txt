@@ -41,7 +41,7 @@ TemplateMatching ->
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGHC.fasta
+                Path      : ../templates/Homo_sapiens_IGHC_uniprot.fasta
                 Name      : IGHC
                 Identifier: ^sp\|[\w]*\|([\w]+)_
             <-
@@ -60,7 +60,7 @@ TemplateMatching ->
             Segment->
                 Path      : ../templates/Homo_sapiens_IGKC,IGLC.fasta
                 Name      : IGLC
-                Identifier: ^\w+\|(([a-zA-Z]+\d*)[\w-]*)\*\d+\|
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
         <-
     <-

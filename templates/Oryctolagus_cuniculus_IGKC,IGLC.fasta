@@ -1,5 +1,5 @@
 >IGKC1
-<span class="mutation"><span class="mutation"><span class="mutation">X</span></span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">D</span></span></span></span></span><span class="mutation"><span class="mutation">P</span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">V</span></span></span></span></span>APTVLIFPPAADQVATGTVTIV(Conserved C)VAN(CDR1 KYFPDVT)VT(Conserved W)EVDG<span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">T</span></span></span></span></span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">T</span></span></span></span><span class="mutation">Q</span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">T</span></span></span></span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">T</span></span></span></span></span>GIENSKTPQ<span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">N</span></span></span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">S</span></span></span></span><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation"><span class="mutation">A</span></span></span></span></span></span><span class="mutation">D</span>CTY(Glycosylationsite N)LSST(Conserved L)TLTSTQYNSHKEYT(Conserved C)(CDR2 KVTQGTTSV)VQS(Conserved F)NRGDC
+XDPVAPTVLIFPPAADQVATGTVTIV(Conserved C)VAN(CDR1 KYFPDVT)VT(Conserved W)EVDGTTQTTGIENSKTPQNSADCTY(Glycosylationsite N)LSST(Conserved L)TLTSTQYNSHKEYT(Conserved C)(CDR2 KVTQGTTSV)VQS(Conserved F)NRGDC
 >IGKC2
 RDPVAPSVLLFPPSKEELTTGTATIV(Conserved C)VAN(CDR1 KFYPSDIT)VT(Conserved W)KVDGTTQQSGIENSKTPQSPEDNTYSLSST(Conserved L)SLTSAQYNSHSVYT(Conserved C)(CDR2 EVVQGSASPI)VQS(Conserved F)NRGDC
 >IGLC1
@@ -9,7 +9,7 @@ GQPVVAPLVILFPPSSEELKANKATLV(Conserved C)LIS(CDR1 DFYPGTLT)VA(Conserved W)KADGATI
 >IGLC3
 GQPVVAPLVILFPPSSEELKATLV(Conserved C)LIS(CDR1 DFYPGTLT)VA(Conserved W)KADGVTITQGVDTTQPSKQSNKYMARTF(Conserved L)SLSHGQWTSHSRFT(Conserved C)(CDR2 QVTHEGKTT)EKS(Conserved V)APAHCP
 >IGLC4
-GQPVVTPSLTLFPPSSEELKDNKATLV(Conserved C)LIN(CDR1 DFYPGTLT)VN(Conserved W)KADGTSITQGMDTTQPSK<span class="mutation">Q</span>SNNKYAASSF(Conserved L)SLSANQWKSYQRAT(Conserved C)(CDR2 QVTHEGQAM)ERS(Conserved L)VPAECS
+GQPVVTPSLTLFPPSSEELKDNKATLV(Conserved C)LIN(CDR1 DFYPGTLT)VN(Conserved W)KADGTSITQGMDTTQPSKQSNNKYAASSF(Conserved L)SLSANQWKSYQRAT(Conserved C)(CDR2 QVTHEGQAM)ERS(Conserved L)VPAECS
 >IGLC5
 GQPAVTPSVILFPPSSEELKDNKATLV(Conserved C)LIN(CDR1 DFYPRTVK)VN(Conserved W)KADGNSVTQGVDTTQPSKQSNNKYAASSF(Conserved L)SLSANQWKSYQSVT(Conserved C)(CDR2 QVTHEGHTV)EKS(Conserved L)APAECS
 >IGLC6
