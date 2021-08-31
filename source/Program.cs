@@ -233,7 +233,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             File.Delete("temp.html");
         }
 
-        /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
+        /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
         static void GenerateAnnotatedTemplate(string filename, string output, bool remove_gaps = true)
         {
             string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
@@ -261,6 +261,9 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 // 5 - Segment
                 // 6 - Functionality
                 // 7 - Sequence
+                bool J = pieces[5] == "J-REGION";
+                bool V = new List<String> { "VH", "VL", "V-KAPPA", "V-LAMBDA", "V-ALPHA", "V-BETA", "V-GAMMA", "V-DELTA" }.Contains(pieces[5]);
+                bool C = new List<String> { "CL", "C-KAPPA", "C-LAMBDA", "C-IOTA", "C-ALPHA", "C-BETA", "C-BETA-1", "C-BETA-2", "C-GAMMA", "C-GAMMA-1", "C-GAMMA-2", "C-DELTA" }.Contains(pieces[5]);
                 var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
 
                 List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result)
@@ -312,7 +315,6 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 if (final_sequence == null)
                     continue;
                 var typed = new List<(string Type, string Sequence)>();
-                bool J = false;
                 foreach (var piece in final_sequence)
                 {
                     var type = "";
@@ -321,12 +323,10 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                         switch (classname)
                         {
                             case "loop":
-                                type = "CDR";
+                                if (V) // Only in the V region are loops designated as CDRs
+                                    type = "CDR";
                                 break;
                             case "J-motif":
-                                J = true;
-                                type = "Conserved";
-                                break;
                             case "1st-CYS": // Used for any CYS
                             case "CONSERVED-TRP": // Used for any conserved amino acid
                                 type = "Conserved";
@@ -361,12 +361,14 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
 
                 int cdr = 1;
                 bool cdr_found = false;
+                bool any_cdr_found = false;
                 for (int i = 0; i < compressed.Count; i++)
                 {
                     if (compressed[i].Type == "CDR")
                     {
                         compressed[i] = ("CDR" + cdr.ToString(), compressed[i].Sequence);
                         cdr_found = true;
+                        any_cdr_found = true;
                     }
                     else if (compressed[i].Type == "" && cdr_found)
                     {
@@ -374,6 +376,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                         cdr_found = false;
                     }
                 }
+                if (cdr > 1 && !cdr_found || cdr >= 1 && cdr < 3 && any_cdr_found)
+                    continue; // It misses the last CDR from the V segment so it is 'partial' and should be removed
 
                 // J segments always start with the last pieces of CDR3 but this is not properly annotated in the HTML files
                 if (J)
