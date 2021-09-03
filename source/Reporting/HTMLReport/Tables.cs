@@ -141,17 +141,18 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads)
+        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads, int total_templates)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
 
             buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'>");
 
-            var matched = cdrs.Select(a => a.MetaData.EscapedIdentifier).Count();
-            var unique = cdrs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Count();
+            var matched = cdrs.Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
+            var templates = cdrs.Select(a => a.Template.EscapedIdentifier).Distinct().Count();
+            var unique = cdrs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
 
-            buffer.Append($"<p class='text-header'>Reads matched {matched} ({(double)matched / total_reads:P2} of all input reads) of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely.</p><p>Consensus: ");
+            buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template).</p><p>Consensus: ");
 
             var diversity = new List<Dictionary<char, int>>();
 

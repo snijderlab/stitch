@@ -120,6 +120,7 @@ namespace AssemblyNameSpace
             var cdr1_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
             var cdr2_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
             var cdr3_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
+            int total_templates = 0;
 
             foreach (var template in segments.SelectMany(a => a.Templates))
             {
@@ -142,6 +143,7 @@ namespace AssemblyNameSpace
                                 positions.Add(piece.Type, (position, piece.Sequence.Length));
                             }
                             cumulative = 0;
+                            total_templates++;
                         }
                         else
                         {
@@ -236,9 +238,9 @@ namespace AssemblyNameSpace
             var innerbuffer = new StringBuilder();
             innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
             innerbuffer.AppendLine("<div class='cdr-tables'>");
-            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count());
-            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count());
-            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count());
+            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count(), total_templates);
+            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count(), total_templates);
+            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count(), total_templates);
             innerbuffer.AppendLine("</div>");
 
             buffer.Append(Common.Collapsible("CDR regions", innerbuffer.ToString()));
