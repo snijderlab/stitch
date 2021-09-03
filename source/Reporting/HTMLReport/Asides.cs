@@ -613,62 +613,31 @@ namespace HTMLNameSpace
 
         static void SequenceConsensusOverview(StringBuilder buffer, Template template)
         {
-            const double threshold = 0.3;
-            const int height = 25;
-            const int fontsize = 10;
             var consensus_sequence = template.CombinedSequence();
+            var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count() * 2);
 
-            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < consensus_sequence.Count(); i++)
             {
-                buffer.Append("<div class='sequence-logo-position'>");
-                // Get the highest chars
-                double sum = 0;
+                var items = new Dictionary<string, double>();
                 foreach (var item in consensus_sequence[i].AminoAcids)
                 {
-                    sum += item.Value;
+                    items.Add(item.Key.Char.ToString(), item.Value);
                 }
-
-                bool placed = false;
-                foreach (var item in consensus_sequence[i].AminoAcids)
-                {
-                    if ((double)item.Value / sum > threshold)
-                    {
-                        var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
-                        placed = true;
-                    }
-                }
-                if (!placed)
-                    buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
-
-                buffer.Append("</div><div class='sequence-logo-position sequence-logo-gap'>");
-                // Get the highest chars
-                int gap_sum = 0;
+                diversity.Add(items);
+                var gaps = new Dictionary<string, double>();
                 foreach (var item in consensus_sequence[i].Gaps)
                 {
-                    gap_sum += item.Value.Count;
-                }
-
-                foreach (var item in consensus_sequence[i].Gaps)
-                {
-                    if ((double)item.Value.Count / gap_sum > threshold)
+                    if (item.Key == (Template.IGap)new Template.None())
                     {
-                        var size = ((double)item.Value.Count / gap_sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-
-                        if (item.Key == (Template.IGap)new Template.None())
-                        {
-                            buffer.Append($"<span style='font-size:{size}em'>{Alphabet.GapChar}</span>");
-                        }
-                        else
-                        {
-                            buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
-                        }
+                        gaps.Add("~", item.Value.Count);
+                    }
+                    else
+                    {
+                        gaps.Add(item.Key.ToString(), item.Value.Count);
                     }
                 }
-                buffer.Append("</div>");
             }
-            buffer.Append("</div>");
+            HTMLTables.SequenceConsensusOverview(buffer, diversity);
         }
     }
 }

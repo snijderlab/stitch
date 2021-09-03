@@ -128,8 +128,9 @@ table {
 }
 
 .table-header-columns .sequence-logo {
-    margin: none;
-    margin-top: 0.6em;
+    margin: 0;
+    margin-bottom: 1rem;
+    align-self: end;
 }
 
 @media (min-width: 800px) {
@@ -709,6 +710,7 @@ input:checked+.slider:before {
     margin-top: -1em;
     margin-bottom: 1.5em;
     color: var(--color-primary);
+    align-items: end;
 }
 
 .sequence-logo-position {
@@ -716,7 +718,7 @@ input:checked+.slider:before {
     display: flex;
     align-items: center;
     flex-direction: column;
-    justify-content: flex-end;
+    justify-content: end;
 }
 
 .sequence-logo-position span {

@@ -154,19 +154,19 @@ namespace HTMLNameSpace
 
             buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template).</p><p>Consensus: ");
 
-            var diversity = new List<Dictionary<char, int>>();
+            var diversity = new List<Dictionary<string, double>>();
 
             foreach (var row in cdrs)
             {
                 for (int i = 0; i < row.Sequence.Length; i++)
                 {
-                    if (i >= diversity.Count()) diversity.Add(new Dictionary<char, int>());
+                    if (i >= diversity.Count()) diversity.Add(new Dictionary<string, double>());
                     if (row.Sequence[i] != Alphabet.GapChar)
                     {
-                        if (diversity[i].ContainsKey(row.Sequence[i]))
-                            diversity[i][row.Sequence[i]] += 1;
+                        if (diversity[i].ContainsKey(row.Sequence[i].ToString()))
+                            diversity[i][row.Sequence[i].ToString()] += 1;
                         else
-                            diversity[i].Add(row.Sequence[i], 1);
+                            diversity[i].Add(row.Sequence[i].ToString(), 1);
                     }
                 }
             }
@@ -200,11 +200,11 @@ namespace HTMLNameSpace
             buffer.AppendLine("</table></div>");
         }
 
-        static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<char, int>> diversity)
+        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity)
         {
             const double threshold = 0.3;
-            const int height = 25;
-            const int fontsize = 10;
+            const int height = 35;
+            const int fontsize = 16;
 
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count(); i++)
@@ -212,19 +212,21 @@ namespace HTMLNameSpace
                 buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
                 double sum = diversity[i].Values.Sum();
+                var sorted = diversity[i].ToList();
+                sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
 
                 bool placed = false;
-                foreach (var item in diversity[i])
+                foreach (var item in sorted)
                 {
-                    if (item.Key != '~' && (double)item.Value / sum > threshold)
+                    if (item.Key != "~" && (double)item.Value / sum > threshold)
                     {
-                        var size = (item.Value / sum * height / fontsize * 0.75).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size}em'>{item.Key}</span>");
+                        var size = (item.Value / sum * height).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        buffer.Append($"<span style='font-size:{size}px'>{item.Key}</span>");
                         placed = true;
                     }
                 }
                 if (!placed)
-                    buffer.Append($"<span style='font-size:{fontsize / 10}em'>_</span>");
+                    buffer.Append($"<span style='font-size:{height}px'>.</span>");
 
                 buffer.Append("</div>");
             }
