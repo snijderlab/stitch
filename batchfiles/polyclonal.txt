@@ -41,9 +41,9 @@ TemplateMatching ->
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
             Segment->
-                Path      : ../templates/Homo_sapiens_IGHC_uniprot.fasta
+                Path      : ../templates/Homo_sapiens_IGHC.fasta
                 Name      : IGHC
-                Identifier: ^sp\|[\w]*\|([\w]+)_
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
         <-
         Light Chain->
