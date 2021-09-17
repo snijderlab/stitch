@@ -119,7 +119,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 {
                     if (args.Count() > 3)
                         DownloadSpecies(args[2], args[3]);
-                    DownloadSpecies(args[2]);
+                    else
+                        DownloadSpecies(args[2]);
                 }
                 else
                 {
@@ -209,21 +210,76 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
         }
 
+        static List<(String CommonName, String ShortName, String ShortHand, String ScientificName)> names = new List<(String, String, String, String)> {
+            ("Mammalia",                   "Mammalia",    "Ma",         ""),
+            ("human",                      "human",       "Hu",         "Homo sapiens"),
+            ("house mouse",                "mouse",       "Mu",         "Mus musculus"),
+            ("sheep",                      "sheep",       "Sh",         "Ovis aries"),
+            ("bovine",                     "Btaurus",     "Bt",         "Bos taurus"),
+            ("pig",                        "pig",         "Sc",         "Sus scrofa"),
+            ("gray short-tailed opossum",  "opossum",     "Md",         "Monodelphis domestica"),
+            ("common brush-tailed possum", "possum",      "Tv",         "Trichosurus vulpecula"),
+            ("Arabian camel",              "camel",       "Cd",         "Camelus dromedarius"),
+            ("domestic horse",             "horse",       "Ec",         "Equus caballus"),
+            ("dog",                        "dog",         "Cf",         "Canis lupus familiaris"),
+            ("Norway rat",                 "rat",         "Rn",         "Rattus norvegicus"),
+            ("Chimpanzee",                 "chimpanzee",  "Pt",         "Pan troglodytes"),
+            ("Common gibbon",              "gibbon",      "Hl",         "Hylobates lar"),
+            ("Gorilla",                    "gorilla",     "Gg",         "Gorilla gorilla"),
+            ("Bornean orangutan",          "orangutan",   "Pp",         "Pongo pygmaeus"),
+            ("Macaques",                   "macaque",     "Macaca",     ""),
+            ("rabbit",                     "rabbit",      "Rb",         "Oryctolagus cuniculus"),
+            ("platypus",                   "platypus",    "Pl",         "Ornithorhynchus anatinus"),
+            ("Teleostei",                  "teleostei",   "Teleostei",  ""),
+            ("horn shark",                 "Hshark",      "Hs",         "Heterodontus francisci"),
+            ("Spotted ratfish",            "Sratfish",    "Sr",         "Hydrolagus colliei"),
+            ("Spotted wobbegong shark",    "Wshark",      "Ws",         "Orectolobus maculatus"),
+            ("clearnose skate",            "Cskate",      "Cs",         "Raja eglanteria"),
+            ("Little skate",               "Lskate",      "Ls",         "Leucoraja erinacea"),
+            ("African lungfish",           "Lungfish",    "Pa",         "Protopterus aethiopicus")
+        };
+
         /// <summary>
         /// Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens.
         /// </summary>
         /// <param name="name"></param>
-        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC")
+        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
         {
             var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={name.Replace(" ", "%20")}&groups=";
             WebClient client = new WebClient();
+            Console.WriteLine(name);
             foreach (var segment in segments.Split(' '))
             {
                 try
                 {
                     Console.WriteLine(segment);
-                    client.DownloadFile(basename + segment, "temp.html");
-                    GenerateAnnotatedTemplate("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                    if (segment == "IGHC")
+                    {
+                        var found = false;
+                        foreach (var species in names)
+                        {
+                            if (species.ScientificName.ToLower() == name.ToLower().Trim())
+                            {
+                                found = true;
+                                try
+                                {
+                                    client.DownloadFile($"http://www.imgt.org/IMGTrepertoire/Proteins/protein/{species.ShortName}/IGH/IGHC/{species.ShortHand}_IGHCallgenes.html", "temp.html");
+                                    CreateAnnotatedTemplatePre("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                                }
+                                catch
+                                {
+                                    Console.WriteLine($"    Could not download IGHC file");
+                                }
+                            }
+
+                        }
+                        if (!found) Console.WriteLine("   No IGHC available for this species");
+                    }
+                    else
+                    {
+                        client.DownloadFile(basename + segment, "temp.html");
+                        GenerateAnnotatedTemplate("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                    }
                 }
                 catch
                 {
@@ -231,6 +287,90 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 }
             }
             File.Delete("temp.html");
+        }
+
+        /// <summary>
+        /// Create an annotated fasta file from a HTML page from IMGT in the old format, based on &lt;pre&gt; or preredered text.
+        /// </summary>
+        /// <param name="filename">The HTML file</param>
+        /// <param name="output">The file name for the Fasta file</param>
+        static void CreateAnnotatedTemplatePre(string filename, string output)
+        {
+            string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
+            var namefilter = new NameFilter();
+            var writer = new StreamWriter(output);
+
+            // Extract the main block of content
+            content = content.Substring(content.IndexOf("<pre>") + 5);
+            content = content.Substring(0, Regex.Match(content, "</pre>", RegexOptions.IgnoreCase).Index);
+            var title_re = new Regex(@"<B><FONT size=\+1>\s*(\w+)\n?</FONT></B>", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+            var matches = title_re.Matches(content);
+            var pieces = new List<(string, Dictionary<string, string>)>();
+
+            // Go over all regions (CH1, CH2...)
+            foreach (Match match in matches)
+            {
+                var name = match.Groups[1].Value.Trim();
+                var subcontent = content.Substring(match.Groups[0].Index + match.Groups[0].Value.Length); // skip above pattern
+                var dict = new Dictionary<string, string>();
+                subcontent = subcontent.TrimStart();
+
+                // Go over all lines, which all contain a single isotype plus its sequence
+                while (!subcontent.StartsWith("<B") && !subcontent.StartsWith("<b") && subcontent.Length > 0)
+                {
+                    var index = subcontent.IndexOf("\n");
+                    string line;
+                    if (index > 0)
+                    {
+                        line = subcontent.Substring(0, index).Trim();
+                        subcontent = subcontent.Substring(index).TrimStart();
+                    }
+                    else
+                    {
+                        line = subcontent;
+                    }
+                    // Parse the line to retrieve the isotype name and sequence and remove all other stuff
+                    var line_re = new Regex(@"^.+(IG\w+)[^<]*</font>.+?(\(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
+                    var line_match = line_re.Match(line);
+                    var isotype = line_match.Groups[1].Value.Trim();
+                    if (isotype == "") continue;
+                    var sequence = line_match.Groups[2].Value;
+                    // Remove all mark up of the sequence and leave only the sequence itself
+                    sequence = Regex.Replace(sequence, @"(</?[^>]+>)|(\(\d+\))|(\[\w+\])|\.| |\(|\)", "");
+                    dict.Add(isotype, sequence);
+                }
+                pieces.Add((name, dict));
+            }
+
+            // If there is a hinge region position it at the right place (after CH1), otherwise expect the regions in the right order
+            var pos = pieces.FindIndex(a => a.Item1.ToLower() == "hinge");
+            if (pos > 0)
+            {
+                var region = (pieces[pos].Item1.Clone() as string, new Dictionary<string, string>(pieces[pos].Item2));
+                for (int i = pieces.Count() - 1; i >= 1; i--)
+                    pieces[i] = pieces[i - 1]; // Shift all regions one to the side starting at the back to make place for the Hinge region
+                pieces[1] = region;
+            }
+
+            // Join all pieces from all regions in order
+            var results = new Dictionary<string, string>();
+            foreach (var region in pieces)
+            {
+                foreach (var (isotype, sequence) in region.Item2)
+                {
+                    if (results.ContainsKey(isotype))
+                        results[isotype] = results[isotype] + sequence;
+                    else
+                        results.Add(isotype, sequence);
+                }
+            }
+
+            // Create the final fasta file
+            foreach (var (isotype, sequence) in results)
+                writer.WriteLine($">{isotype}\n{sequence}");
+
+            writer.Flush();
+            writer.Close();
         }
 
         /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
@@ -265,6 +405,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 bool V = new List<String> { "VH", "VL", "V-KAPPA", "V-LAMBDA", "V-ALPHA", "V-BETA", "V-GAMMA", "V-DELTA" }.Contains(pieces[5]);
                 bool C = new List<String> { "CL", "C-KAPPA", "C-LAMBDA", "C-IOTA", "C-ALPHA", "C-BETA", "C-BETA-1", "C-BETA-2", "C-GAMMA", "C-GAMMA-1", "C-GAMMA-2", "C-DELTA" }.Contains(pieces[5]);
                 var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
+
+                if (pieces[6] == "ORF" || pieces[6] == "P") continue; // Remove Pseudogenes and Open Reading Frames 
 
                 List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result)
                 {
