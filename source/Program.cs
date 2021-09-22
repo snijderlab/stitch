@@ -336,7 +336,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     if (isotype == "") continue;
                     var sequence = line_match.Groups[2].Value;
                     // Remove all mark up of the sequence and leave only the sequence itself
-                    sequence = Regex.Replace(sequence, @"(</?[^>]+>)|(\(\d+\))|(\[\w+\])|\.| |\(|\)", "");
+                    sequence = Regex.Replace(sequence, @"(</?[^>]+>)|(\(\d+\))|(\[\w+\])|\.| |\(|\)|\d+", "");
                     dict.Add(isotype, sequence);
                 }
                 pieces.Add((name, dict));
