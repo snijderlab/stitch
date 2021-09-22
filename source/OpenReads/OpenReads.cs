@@ -95,11 +95,11 @@ namespace AssemblyNameSpace
                         {
                             if (match.Groups.Count == 3)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
                             }
                             else if (match.Groups.Count == 2)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
                             }
                             else
                             {
@@ -141,11 +141,11 @@ namespace AssemblyNameSpace
                 {
                     if (match.Groups.Count == 3)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value)));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
                     }
                     else if (match.Groups.Count == 2)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter)));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
                     }
                     else
                     {
@@ -172,8 +172,9 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
-        static (string, MetaData.IMetaData) ParseAnnotatedFasta(string line, MetaData.IMetaData metaData)
+        static ParseResult<(string, MetaData.IMetaData)> ParseAnnotatedFasta(string line, MetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
         {
+            var outeither = new ParseResult<(string, MetaData.IMetaData)>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(string, string)>();
             string current_seq = "";
@@ -202,9 +203,20 @@ namespace AssemblyNameSpace
             }
             if (current_seq != "")
                 annotated.Add(("", current_seq));
+            var invalid_chars = Regex.Matches(plain_sequence.ToString(), "[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
+            if (invalid_chars.Count > 0)
+            {
+                outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                    new Position(identifier_line_number, 1, file),
+                    "Sequence contains invalid characters",
+                    $"This sequence contains the following invalid characters: \"{invalid_chars.Aggregate("", (acc, m) => acc + m.Value)}\"."
+                    )
+                );
+            }
 
-            ((MetaData.Fasta)metaData).AnnotatedSequence = annotated;
-            return (plain_sequence.ToString(), metaData);
+                ((MetaData.Fasta)metaData).AnnotatedSequence = annotated;
+            outeither.Value = (plain_sequence.ToString(), metaData);
+            return outeither;
         }
 
         /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>
