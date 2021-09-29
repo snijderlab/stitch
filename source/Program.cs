@@ -367,7 +367,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
 
             // Create the final fasta file
             foreach (var (isotype, sequence) in results)
-                writer.WriteLine($">{isotype}\n{sequence}");
+                if (isotype != "IGHGP") // This is a known pseudogene which is present on some pages
+                    writer.WriteLine($">{isotype}\n{sequence}");
 
             writer.Flush();
             writer.Close();
