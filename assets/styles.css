@@ -723,7 +723,7 @@ input:checked+.slider:before {
 
 .sequence-logo-position span {
     line-height: 75%;
-    font-size: calc(var(--scale) * .75em);
+    transform-origin: bottom;
 }
 
 
@@ -1093,7 +1093,7 @@ input:checked+.slider:before {
     font-weight: 500;
     font-size: 1.5em;
     overflow: hidden;
-    transform: rotate( 90deg);
+    transform: rotate(90deg);
 }
 
 .point-graph .yaxis {
@@ -1227,33 +1227,40 @@ input:checked+.slider:before {
     body {
         font-size: 0.8em;
     }
+
     .graph {
         page-break-inside: avoid;
     }
+
     .report label,
     .report .collapsable>label {
         background: none;
         color: var(--color-dark);
         border: none;
     }
+
     .collapsable {
         border: none;
         padding: 0;
         display: block;
         overflow: visible;
     }
+
     .info-link {
         color: var(--color-dark);
         border: none;
         font-size: 1em;
     }
+
     .table-header {
         display: block;
     }
+
     .histogram-header span {
         font-size: .6em;
         font-weight: normal;
     }
+
     .copy-data,
     .source-code,
     .point-graph label,

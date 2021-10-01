@@ -14,8 +14,6 @@ namespace AssemblyNameSpace
         bool free = true;
         Timer timer;
         int interval = 1000;
-        long estimate = 0;
-        long lasttask = 0;
         bool terminalContact = true;
         bool started = false;
 
@@ -41,7 +39,6 @@ namespace AssemblyNameSpace
             lock (ValueKey)
             {
                 current_value += add;
-                lasttask = stopwatch.ElapsedMilliseconds;
 
                 if (current_value == max_value)
                 {
@@ -101,7 +98,7 @@ namespace AssemblyNameSpace
                     value = current_value;
                 }
 
-                var tail = $"| {Math.Round((double)value / max_value * 100),3}% {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)} Left ~{HelperFunctionality.DisplayTime(GetEstimate())}";
+                var tail = $"| {Math.Round((double)value / max_value * 100),3}% {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}";
                 var barlength = width - tail.Length - 1;
                 var position = (int)Math.Round((double)value / max_value * barlength);
                 var stem = new String('-', position);
@@ -110,32 +107,6 @@ namespace AssemblyNameSpace
 
                 free = true;
             }
-        }
-
-        long GetEstimate()
-        {
-            int value;
-            lock (ValueKey)
-            {
-                value = current_value;
-            }
-
-            long current_estimate;
-            try
-            {
-                current_estimate = (long)Math.Round((double)lasttask / value * (max_value - value) - (stopwatch.ElapsedMilliseconds - lasttask) * 0.6);
-                current_estimate = Math.Max(0, current_estimate);
-            }
-            catch
-            {
-                current_estimate = 0;
-            }
-
-            estimate = estimate == 0 ? current_estimate : (long)(estimate * 0.7 + current_estimate * 0.3);
-
-            if (value == max_value) estimate = 0;
-
-            return estimate;
         }
     }
 }

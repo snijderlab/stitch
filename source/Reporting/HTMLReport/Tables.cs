@@ -202,9 +202,10 @@ namespace HTMLNameSpace
 
         public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity)
         {
-            const double threshold = 0.3;
+            const double threshold = 0.15;
             const int height = 35;
-            const int fontsize = 16;
+            const int fontsize = 30;
+            const int fontheight = 22; // This should grow with the font-size and font selected, for Roboto at the current fontsize it is correct
 
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count(); i++)
@@ -213,20 +214,29 @@ namespace HTMLNameSpace
                 // Get the highest chars
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();
-                sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
+                sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
+                var buffered = new List<string>();
 
                 bool placed = false;
+                double factor = 0.0;
                 foreach (var item in sorted)
                 {
                     if (item.Key != "~" && (double)item.Value / sum > threshold)
                     {
-                        var size = (item.Value / sum * height).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size}px'>{item.Key}</span>");
+                        var size = (item.Value / sum).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var shift = (sum / item.Value + factor).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        buffered.Add($"<span style='transform:scaleY({size}) translate(0, {shift}px)'>{item.Key}</span>");
                         placed = true;
+                        // Add both this items shift and the shift for its height (factor times the height of a character)
+                        factor +=  sum / item.Value + item.Value / sum * fontheight * 1.5;
                     }
                 }
                 if (!placed)
-                    buffer.Append($"<span style='font-size:{height}px'>.</span>");
+                    buffered.Add($"<span>.</span>");
+
+                buffered.Reverse();
+                foreach (var line in buffered) 
+                    buffer.Append(line);
 
                 buffer.Append("</div>");
             }
