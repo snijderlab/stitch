@@ -21,6 +21,7 @@ namespace AssemblyNameSpace
         public readonly Alphabet Alphabet;
         public List<Template> Templates;
         public readonly double CutoffScore;
+        public readonly PhylogeneticTree.Branch Hierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
         /// Create a new Segment based on the reads found in the given file.
@@ -46,6 +47,17 @@ namespace AssemblyNameSpace
                 var parsed = StringToSequence(pair.Item1);
                 Templates.Add(new Template(name, parsed, pair.Item2, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
+
+            Console.WriteLine(name);
+            try
+            {
+                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
+                Console.WriteLine(Hierarchy);
+            }
+            catch
+            {
+                Console.WriteLine("No tree");
+            }
         }
         /// <summary>
         /// Create a new Segment based on the templates provided.
@@ -60,7 +72,19 @@ namespace AssemblyNameSpace
             CutoffScore = cutoffScore;
             Alphabet = alphabet;
             Templates = templates.ToList();
+
+            Console.WriteLine(name);
+            try
+            {
+                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
+                Console.WriteLine(Hierarchy);
+            }
+            catch
+            {
+                Console.WriteLine("No tree");
+            }
         }
+
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
         /// </summary>
