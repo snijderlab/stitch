@@ -126,14 +126,6 @@ namespace AssemblyNameSpace
                 Right = right;
             }
 
-            public void MidPointRoot()
-            {
-                // Find all the distances
-                // Find the longest path
-                // Place root
-                // Resave tree in this new orientation
-            }
-
             /// <summary> Render this tree. </summary>
             /// <param name="own">Any branches already present on the main stem of the tree (on this line).</param>
             /// <param name="other">Any branches already present on the side branch(es) of the tree (on secondary lines).</param>
