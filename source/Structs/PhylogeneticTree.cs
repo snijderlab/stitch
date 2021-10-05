@@ -5,16 +5,15 @@ using System;
 
 namespace AssemblyNameSpace
 {
-    /// <summary> Stuff to handle phylogenetic trees. </summary>
+    /// <summary> Functions to handle and create phylogenetic trees. </summary>
     public class PhylogeneticTree
     {
         /// <summary>
         /// Use the Neighbour Joining algorithm to construct a phylogenetic tree from the given sequences.
-        /// The runtime is O(n**3).
+        /// The runtime is O(n^3).
         /// </summary>
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
-        /// <returns> A tree </returns>
         public static Branch CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet)
         {
             var length = Sequences.Count();
