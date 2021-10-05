@@ -5,18 +5,16 @@ using System;
 
 namespace AssemblyNameSpace
 {
-    /// <summary>
-    /// Stuff to handle phylogenetic trees.
-    /// </summary>
+    /// <summary> Stuff to handle phylogenetic trees. </summary>
     public class PhylogeneticTree
     {
         /// <summary>
         /// Use the Neighbour Joining algorithm to construct a phylogenetic tree from the given sequences.
         /// The runtime is O(n**3).
         /// </summary>
-        /// <param name="Sequences">The sequences to join in a tree</param>
-        /// <param name="alphabet">The alphabet to use</param>
-        /// <returns>A tree</returns>
+        /// <param name="Sequences"> The sequences to join in a tree. </param>
+        /// <param name="alphabet"> The alphabet to use. </param>
+        /// <returns> A tree </returns>
         public static Branch CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet)
         {
             var length = Sequences.Count();
@@ -101,16 +99,16 @@ namespace AssemblyNameSpace
         {
             /// <summary> The index of this leaf in the list as presented to the CreateTree function.</summary>
             public readonly int Index = 0;
-            /// <summary>The name of this leaf. </summary>
+            /// <summary> The name of this leaf. </summary>
             public readonly string Name = "";
-            /// <summary>The left branch. Including the distance to this node.</summary>
+            /// <summary> The left branch. Including the distance to this node. </summary>
             public readonly (double, Branch)? Left = null;
-            /// <summary> The right branch. Including the distance to this node.</summary>
+            /// <summary> The right branch. Including the distance to this node. </summary>
             public readonly (double, Branch)? Right = null;
 
             /// <summary> Create a leaf node.</summary>
-            /// <param name="index">The index of this leaf in the list as presented to the CreateTree function.</param>
-            /// <param name="name">The name of this leaf.</param>
+            /// <param name="index"> The index of this leaf in the list as presented to the CreateTree function. </param>
+            /// <param name="name"> The name of this leaf. </param>
             public Branch(int index, string name)
             {
                 Index = index;
@@ -118,8 +116,8 @@ namespace AssemblyNameSpace
             }
 
             /// <summary> Create a branching node. </summary>
-            /// <param name="left">The left branch.</param>
-            /// <param name="right">The right branch.</param>
+            /// <param name="left"> The left branch. </param>
+            /// <param name="right"> The right branch. </param>
             public Branch((double, Branch) left, (double, Branch) right)
             {
                 Left = left;
@@ -127,9 +125,9 @@ namespace AssemblyNameSpace
             }
 
             /// <summary> Render this tree. </summary>
-            /// <param name="own">Any branches already present on the main stem of the tree (on this line).</param>
-            /// <param name="other">Any branches already present on the side branch(es) of the tree (on secondary lines).</param>
-            /// <returns>A fully rendered tree, using UTF-8 and characters from the Box drawing set.</returns>
+            /// <param name="own"> Any branches already present on the main stem of the tree (on this line). </param>
+            /// <param name="other"> Any branches already present on the side branch(es) of the tree (on secondary lines). </param>
+            /// <returns> A fully rendered tree, using UTF-8 and characters from the Box drawing set. </returns>
             string Render(string own, string other)
             {
                 if (Left == null && Right == null)
