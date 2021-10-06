@@ -33,13 +33,13 @@ dotnet path/to/source.dll <arguments>
 
 # Building
 
-The project is built with dotnet (SDK 5.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (.NET 5.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
 dotnet run -p source <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\netcoreapp5.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\net5.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
 
 ```
 mklink /J source\bin\debug\net5.0\win-x64\assets\ assets\
