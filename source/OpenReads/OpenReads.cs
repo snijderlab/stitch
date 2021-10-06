@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
                 if (line.Length == 0) continue;
                 if (line[0] == '>')
                 {
-                    if (identifierLine != "")
+                    if (!string.IsNullOrEmpty(identifierLine))
                     {
                         var match = parseIdentifier.Match(identifierLine);
                         if (match.Success)
@@ -132,7 +132,7 @@ namespace AssemblyNameSpace
                 }
                 linenumber++;
             }
-            if (identifierLine != "")
+            if (!string.IsNullOrEmpty(identifierLine))
             {
                 // Flush last sequence to list
                 var match = parseIdentifier.Match(identifierLine);
@@ -182,7 +182,7 @@ namespace AssemblyNameSpace
             {
                 if (line[i] == '(')
                 {
-                    if (current_seq != "")
+                    if (string.IsNullOrEmpty(current_seq))
                     {
                         annotated.Add(("", current_seq));
                         current_seq = "";
@@ -201,7 +201,7 @@ namespace AssemblyNameSpace
                     plain_sequence.Append(line[i]);
                 }
             }
-            if (current_seq != "")
+            if (string.IsNullOrEmpty(current_seq))
                 annotated.Add(("", current_seq));
             var invalid_chars = Regex.Matches(plain_sequence.ToString(), "[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
             if (invalid_chars.Count > 0)
@@ -272,7 +272,7 @@ namespace AssemblyNameSpace
 
                 if (meta.Confidence >= peaksparameters.CutoffALC)
                 {
-                    if (reads.Where(x => x.Item1 == meta.Cleaned_sequence).Count() == 0)
+                    if (!reads.Where(x => x.Item1 == meta.Cleaned_sequence).Any())
                     {
                         reads.Add((meta.Cleaned_sequence, meta));
                     }

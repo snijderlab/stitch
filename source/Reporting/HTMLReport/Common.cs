@@ -52,12 +52,12 @@ namespace HTMLNameSpace
         public static string GetLinkToFolder(List<string> target, List<string> location)
         {
             int i = 0;
-            for (; i < target.Count() && i < location.Count(); i++)
+            for (; i < target.Count && i < location.Count; i++)
             {
                 if (target[i] != location[i]) break;
             }
-            var pieces = new List<string>(location.Count() + target.Count() - 2 * i);
-            pieces.AddRange(Enumerable.Repeat("..", location.Count() - i));
+            var pieces = new List<string>(location.Count + target.Count - 2 * i);
+            pieces.AddRange(Enumerable.Repeat("..", location.Count - i));
             pieces.AddRange(target.Skip(i));
             return string.Join("/", pieces.ToArray()) + "/";
         }

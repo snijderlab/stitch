@@ -42,9 +42,9 @@ namespace AssemblyNameSpace
         /// To create a report, gets all metadata.
         /// </summary>
         /// /// <param name="parameters">The parameters for this report.</param>
-        public Report(ReportInputParameters parameters, int max_threads)
+        public Report(ReportInputParameters parameters, int maxThreads)
         {
-            MaxThreads = max_threads;
+            MaxThreads = maxThreads;
             BatchFile = parameters.BatchFile;
             Parameters = parameters;
         }

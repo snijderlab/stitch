@@ -51,9 +51,11 @@ namespace AssemblyNameSpace
         public readonly int LengthOnTemplate;
 
         public readonly int Index;
+        /// <summary> The index of the Template sequence if available. </summary>
+        public readonly int TemplateIndex;
         public bool Unique;
 
-        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, MetaData.IMetaData metadata, int index)
+        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, MetaData.IMetaData metadata, int index, int templateIndex = -1)
         {
             StartTemplatePosition = startTemplatePosition;
             StartQueryPosition = startQueryPosition;
@@ -63,6 +65,7 @@ namespace AssemblyNameSpace
             QuerySequence = querySequence;
             MetaData = metadata;
             Index = index;
+            TemplateIndex = templateIndex;
             Simplify();
 
             int sum1 = 0;
@@ -142,13 +145,13 @@ namespace AssemblyNameSpace
             {
                 buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
                 //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
-                buffer.Append("\n");
+                buffer.Append('\n');
                 buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
                 //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
-                buffer.Append("\n");
+                buffer.Append('\n');
                 if (i != blocks)
                 {
-                    buffer.Append("\n");
+                    buffer.Append('\n');
                 }
             }
 
@@ -169,7 +172,7 @@ namespace AssemblyNameSpace
                 switch (element)
                 {
                     case Match match:
-                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Char == 'X')) return false;
+                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Character == 'X')) return false;
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
@@ -191,7 +194,7 @@ namespace AssemblyNameSpace
         void Simplify()
         {
             MatchPiece lastElement = null;
-            int count = Alignment.Count();
+            int count = Alignment.Count;
             int i = 0;
             while (i < count)
             {

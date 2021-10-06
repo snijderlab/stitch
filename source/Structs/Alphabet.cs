@@ -82,12 +82,12 @@ namespace AssemblyNameSpace
         /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>
         /// <param name="type"> To indicate if the data is data or a path to data </param>
-        /// <param name="gap_start_penalty">The penalty for opening a gap in an alignment</param>
-        /// <param name="gap_extend_penalty">The penalty for extending a gap in an alignment</param>
-        public Alphabet(string data, AlphabetParamType type, int gap_start_penalty, int gap_extend_penalty)
+        /// <param name="gapStartPenalty">The penalty for opening a gap in an alignment</param>
+        /// <param name="gapExtendPenalty">The penalty for extending a gap in an alignment</param>
+        public Alphabet(string data, AlphabetParamType type, int gapStartPenalty, int gapExtendPenalty)
         {
-            GapStartPenalty = gap_start_penalty;
-            GapExtendPenalty = gap_extend_penalty;
+            GapStartPenalty = gapStartPenalty;
+            GapExtendPenalty = gapExtendPenalty;
 
             var result = InputNameSpace.ParseHelper.ParseAlphabetData(data, type);
             var alphabet = result.Item1;
@@ -100,10 +100,10 @@ namespace AssemblyNameSpace
             }
         }
 
-        public Alphabet(char[] alphabet, int[,] data, int gap_start_penalty, int gap_extend_penalty)
+        public Alphabet(char[] alphabet, int[,] data, int gapStartPenalty, int gapExtendPenalty)
         {
-            GapStartPenalty = gap_start_penalty;
-            GapExtendPenalty = gap_extend_penalty;
+            GapStartPenalty = gapStartPenalty;
+            GapExtendPenalty = gapExtendPenalty;
             ScoringMatrix = data;
 
             PositionInScoringMatrix = new Dictionary<char, int>();
@@ -128,9 +128,9 @@ namespace AssemblyNameSpace
                 {
                     buffer.Append($"{ScoringMatrix[x, y],4}");
                 }
-                buffer.Append("\n");
+                buffer.Append('\n');
             }
-            buffer.Append("\n");
+            buffer.Append('\n');
             return buffer.ToString();
         }
     }

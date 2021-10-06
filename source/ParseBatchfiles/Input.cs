@@ -95,7 +95,7 @@ namespace AssemblyNameSpace
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
             if (output.Recombine != null && output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
-            if (output.Report == null || output.Report.Files.Count() == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
+            if (output.Report == null || output.Report.Files.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
             else
             {
                 // Test validity of FASTA output type
@@ -134,7 +134,7 @@ namespace AssemblyNameSpace
 
                             var match = false;
 
-                            for (int j = 0; j < group.Segments.Count(); j++)
+                            for (int j = 0; j < group.Segments.Count; j++)
                             {
                                 var template = group.Segments[j];
                                 if (order_string.StartsWith(template.Name))
@@ -167,7 +167,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            if (output.Recombine != null && output.Recombine.Order.Count() != 0)
+            if (output.Recombine != null && output.Recombine.Order.Count != 0)
             {
                 if (output.TemplateMatching.Segments.Count
                     - (output.TemplateMatching.Segments.Exists(group => group.Name == "") ? 1 : 0)
@@ -179,7 +179,7 @@ namespace AssemblyNameSpace
                 else
                 {
                     int offset = 0;
-                    for (int i = 0; i < output.TemplateMatching.Segments.Count(); i++)
+                    for (int i = 0; i < output.TemplateMatching.Segments.Count; i++)
                     {
                         if (output.TemplateMatching.Segments[i].Name.ToLower() == "decoy") { offset += 1; continue; };
                         int index = i - offset;
@@ -308,7 +308,7 @@ namespace AssemblyNameSpace
         }
         public bool HasOnlyWarnings()
         {
-            if (Messages.Count() == 0) return false;
+            if (Messages.Count == 0) return false;
             foreach (var msg in Messages)
             {
                 if (!msg.Warning) return false;
@@ -354,7 +354,7 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"There were {Messages.Count()} error(s) while parsing.\n");
+                Console.WriteLine($"There were {Messages.Count} error(s) while parsing.\n");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)
@@ -653,7 +653,7 @@ namespace AssemblyNameSpace
                             output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         case "segments":
-                            if (output.Segments.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var outer_children = new List<SegmentValue>();
                             foreach (var segment in setting.GetValues())
                             {
@@ -703,7 +703,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (output.Segments.Count() > 1)
+                if (output.Segments.Count > 1)
                     foreach (var db in output.Segments)
                         if (db.Item1 == "")
                             outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single segments in grouped segment list", "You cannot define a single segment when there are also segment groups defined."));
@@ -711,7 +711,7 @@ namespace AssemblyNameSpace
                 if (output.Alphabet == null)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Alphabet"));
 
-                if (output.Segments.Count() == 0)
+                if (output.Segments.Count == 0)
                     outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any segment"));
 
                 outEither.Value = output;
@@ -733,7 +733,7 @@ namespace AssemblyNameSpace
                             output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                             break;
                         case "order":
-                            if (order.Count() != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (setting.IsSingle()) order.Add(setting);
                             else
                                 foreach (var group in setting.GetValues())
@@ -884,7 +884,7 @@ namespace AssemblyNameSpace
                 var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<AlphabetParameter>(asettings);
 
-                if (key.GetValues().Count() == 0)
+                if (key.GetValues().Count == 0)
                 {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
                     return outEither;
@@ -988,17 +988,17 @@ namespace AssemblyNameSpace
                     counter.NextLine();
                 }
 
-                int columns = cells[0].Item2.Count();
+                int columns = cells[0].Item2.Count;
 
                 for (int line = 0; line < rows; line++)
                 {
-                    if (rows > cells[line].Item2.Count())
+                    if (rows > cells[line].Item2.Count)
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {rows - cells[line].Item2.Count()} column(s) missing on this row."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {rows - cells[line].Item2.Count} column(s) missing on this row."));
                     }
-                    else if (rows < cells[line].Item2.Count())
+                    else if (rows < cells[line].Item2.Count)
                     {
-                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {cells[line].Item2.Count() - rows} additional column(s) on this row."));
+                        outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {cells[line].Item2.Count - rows} additional column(s) on this row."));
                     }
                 }
 
@@ -1376,8 +1376,8 @@ namespace AssemblyNameSpace
                                     var directories = Directory.GetDirectories(currentpath);
                                     var extra = "";
 
-                                    if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
-                                    else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                    if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
+                                    else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
                                     else
                                     {
                                         int maxvalue = 0;
@@ -1481,8 +1481,8 @@ namespace AssemblyNameSpace
                                             var directories = Directory.GetDirectories(currentpath);
                                             var extra = "";
 
-                                            if (directories.Count() == 0) extra = "\nThere are no subfolders in this folder.";
-                                            else if (directories.Count() == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                            if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
+                                            else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
                                             else
                                             {
                                                 int maxvalue = 0;

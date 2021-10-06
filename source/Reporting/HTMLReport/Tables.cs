@@ -20,7 +20,7 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName, int total_reads)
+        public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName)
         {
             var buffer = new StringBuilder();
 
@@ -34,7 +34,7 @@ namespace HTMLNameSpace
 </tr>");
             string id, link;
 
-            for (int i = 0; i < reads.Count(); i++)
+            for (int i = 0; i < reads.Count; i++)
             {
                 id = GetAsideIdentifier(reads[i].Item2);
                 link = GetAsideLink(reads[i].Item2, AsideType.Read, AssetsFolderName);
@@ -54,7 +54,7 @@ namespace HTMLNameSpace
         {
             var output = new StringBuilder();
 
-            for (var i = 0; i < segments.Count(); i++)
+            for (var i = 0; i < segments.Count; i++)
             {
                 var item = segments[i];
                 output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, AsideType.Template, AssetsFolderName, total_reads, true)));
@@ -76,7 +76,7 @@ namespace HTMLNameSpace
 
             string SortOn(int column, string type)
             {
-                if (templates.Count() > 1)
+                if (templates.Count > 1)
                     return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\" ";
                 else
                     return "";
@@ -107,7 +107,7 @@ namespace HTMLNameSpace
             {
                 max_values = (
                     Math.Max(max_values.Item1, template.Score),
-                    Math.Max(max_values.Item2, template.Matches.Count()),
+                    Math.Max(max_values.Item2, template.Matches.Count),
                     Math.Max(max_values.Item3, template.TotalArea),
                     Math.Max(max_values.Item4, template.UniqueScore),
                     Math.Max(max_values.Item5, template.UniqueMatches),
@@ -116,21 +116,21 @@ namespace HTMLNameSpace
             }
 
             string id, link;
-            for (int i = 0; i < templates.Count(); i++)
+            for (int i = 0; i < templates.Count; i++)
             {
                 id = GetAsideIdentifier(templates[i].MetaData);
                 link = GetAsideLink(templates[i].MetaData, type, AssetsFolderName);
                 if (displayUnique) unique = $@"
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueScore / max_values.Item4}"">{templates[i].UniqueScore}</td>
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
-<td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea.ToString("G3")}</td>
+<td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea:G3}</td>
 ";
                 buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
     <td class=""center"">{link}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center bar"" style=""--relative-value:{templates[i].Score / max_values.Item1}"">{templates[i].Score}</td>
-    <td class=""center bar"" style=""--relative-value:{templates[i].Matches.Count() / max_values.Item2}"">{templates[i].Matches.Count()}</td>
-    <td class=""center bar"" style=""--relative-value:{templates[i].TotalArea / max_values.Item3}"">{templates[i].TotalArea.ToString("G3")}</td>
+    <td class=""center bar"" style=""--relative-value:{templates[i].Matches.Count / max_values.Item2}"">{templates[i].Matches.Count}</td>
+    <td class=""center bar"" style=""--relative-value:{templates[i].TotalArea / max_values.Item3}"">{templates[i].TotalArea:G3)}</td>
     {unique}
 </tr>");
             }
@@ -160,7 +160,7 @@ namespace HTMLNameSpace
             {
                 for (int i = 0; i < row.Sequence.Length; i++)
                 {
-                    if (i >= diversity.Count()) diversity.Add(new Dictionary<string, double>());
+                    if (i >= diversity.Count) diversity.Add(new Dictionary<string, double>());
                     if (row.Sequence[i] != Alphabet.GapChar)
                     {
                         if (diversity[i].ContainsKey(row.Sequence[i].ToString()))
@@ -208,7 +208,7 @@ namespace HTMLNameSpace
             const int fontheight = 22; // This should grow with the font-size and font selected, for Roboto at the current fontsize it is correct
 
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
-            for (int i = 0; i < diversity.Count(); i++)
+            for (int i = 0; i < diversity.Count; i++)
             {
                 buffer.Append("<div class='sequence-logo-position'>");
                 // Get the highest chars
@@ -228,14 +228,14 @@ namespace HTMLNameSpace
                         buffered.Add($"<span style='transform:scaleY({size}) translate(0, {shift}px)'>{item.Key}</span>");
                         placed = true;
                         // Add both this items shift and the shift for its height (factor times the height of a character)
-                        factor +=  sum / item.Value + item.Value / sum * fontheight * 1.5;
+                        factor += sum / item.Value + item.Value / sum * fontheight * 1.5;
                     }
                 }
                 if (!placed)
                     buffered.Add($"<span>.</span>");
 
                 buffered.Reverse();
-                foreach (var line in buffered) 
+                foreach (var line in buffered)
                     buffer.Append(line);
 
                 buffer.Append("</div>");
@@ -243,12 +243,12 @@ namespace HTMLNameSpace
             buffer.Append("</div>");
         }
 
-        public static void TableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
+        public static void TableHeader(StringBuilder buffer, List<Template> templates, int totalReads)
         {
             buffer.Append("<div class='table-header'>");
-            if (templates.Count() > 15) PointsTableHeader(buffer, templates, total_reads);
-            else if (templates.Count() > 5) BarTableHeader(buffer, templates, total_reads);
-            TextTableHeader(buffer, templates, total_reads);
+            if (templates.Count > 15) PointsTableHeader(buffer, templates);
+            else if (templates.Count > 5) BarTableHeader(buffer, templates);
+            TextTableHeader(buffer, templates, totalReads);
             buffer.Append("</div>");
         }
 
@@ -264,7 +264,7 @@ namespace HTMLNameSpace
             buffer.Append("</div>");
         }
 
-        static void PointsTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
+        static void PointsTableHeader(StringBuilder buffer, List<Template> templates)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return;
@@ -278,12 +278,12 @@ namespace HTMLNameSpace
                 if (group == -1)
                 {
                     data.Add((template.MetaData.ClassIdentifier, new List<(string, List<double>)>()));
-                    group = data.Count() - 1;
+                    group = data.Count - 1;
                 }
                 if (displayUnique)
-                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count(), template.TotalArea, template.UniqueScore, template.UniqueMatches, template.TotalUniqueArea }));
+                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count, template.TotalArea, template.UniqueScore, template.UniqueMatches, template.TotalUniqueArea }));
                 else
-                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count(), template.TotalArea }));
+                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count, template.TotalArea }));
             }
 
             List<string> header;
@@ -295,7 +295,7 @@ namespace HTMLNameSpace
             HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores");
         }
 
-        static void BarTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
+        static void BarTableHeader(StringBuilder buffer, List<Template> templates)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return;
@@ -313,7 +313,7 @@ namespace HTMLNameSpace
                     if (data.UniqueMaxScore < item.Score) data.UniqueMaxScore = item.UniqueScore;
                     data.UniqueTotalScore += item.UniqueScore;
                     data.Num += 1;
-                    data.Matches += item.Matches.Count();
+                    data.Matches += item.Matches.Count;
                     data.UniqueMatches += item.UniqueMatches;
                     data.Area += item.TotalArea;
                     data.UniqueArea += item.TotalUniqueArea;
@@ -321,7 +321,7 @@ namespace HTMLNameSpace
                 }
                 else
                 {
-                    typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count(), item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
+                    typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count, item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
                 }
             }
 
@@ -368,7 +368,7 @@ namespace HTMLNameSpace
                 set.UnionWith(template.Matches.Select(a => a.MetaData.EscapedIdentifier));
                 unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier));
             }
-            buffer.Append($"<p class='text-header'>Reads matched {set.Count()} ({(double)set.Count() / total_reads:P2} of all input reads) of these {unique_set.Count()} ({(double)unique_set.Count() / set.Count():P2} of all matched reads) were matched uniquely.</p>");
+            buffer.Append($"<p class='text-header'>Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.</p>");
         }
     }
 }

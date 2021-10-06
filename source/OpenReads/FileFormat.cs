@@ -139,28 +139,28 @@ namespace AssemblyNameSpace
             /// A custom version of a PEAKS fileformat.
             /// </summary>
             /// <returns>The fileformat.</returns>
-            public static FileFormat.Peaks CustomFormat(int fraction, int source_file, int feature, int scan, int peptide, int tag_length, int de_novo_score, int alc, int length, int mz, int z, int rt, int predicted_rt, int area, int mass, int ppm, int ptm, int local_confidence, int tag, int mode)
+            public static FileFormat.Peaks CustomFormat(int fraction, int sourceFile, int feature, int scan, int peptide, int tagLength, int deNovoScore, int alc, int length, int mz, int z, int rt, int predictedRT, int area, int mass, int ppm, int ptm, int localConfidence, int tag, int mode)
             {
                 return new FileFormat.Peaks
                 {
                     fraction = fraction,
-                    source_file = source_file,
+                    source_file = sourceFile,
                     feature = feature,
                     peptide = peptide,
                     scan = scan,
-                    tag_length = tag_length,
-                    de_novo_score = de_novo_score,
+                    tag_length = tagLength,
+                    de_novo_score = deNovoScore,
                     alc = alc,
                     length = length,
                     mz = mz,
                     z = z,
                     rt = rt,
-                    predicted_rt = predicted_rt,
+                    predicted_rt = predictedRT,
                     area = area,
                     mass = mass,
                     ppm = ppm,
                     ptm = ptm,
-                    local_confidence = local_confidence,
+                    local_confidence = localConfidence,
                     tag = tag,
                     mode = mode,
                     name = "Custom"

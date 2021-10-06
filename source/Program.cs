@@ -17,14 +17,14 @@ namespace AssemblyNameSpace
     public class ToRunWithCommandLine
     {
         public const string VersionString = "0.0.0";
-        static readonly Stopwatch stopwatch = new Stopwatch();
+        static readonly Stopwatch stopwatch = new();
 
         /// <summary> The entry point. </summary>
         static int Main()
         {
             Console.CancelKeyPress += HandleUserAbort;
 
-            List<string> ParseArgs()
+            static List<string> ParseArgs()
             {
                 string args = Environment.CommandLine.Trim();
                 string current_arg = "";
@@ -38,7 +38,7 @@ namespace AssemblyNameSpace
                             current_arg = "";
                             break;
                         case '\'':
-                            if (current_arg != "")
+                            if (!string.IsNullOrEmpty(current_arg))
                                 output.Add(current_arg.Trim());
                             current_arg = "";
                             int next = args.IndexOf('\'', i + 1);
@@ -46,19 +46,19 @@ namespace AssemblyNameSpace
                             i = next + 1;
                             break;
                         case '\"':
-                            if (current_arg != "")
+                            if (!string.IsNullOrEmpty(current_arg))
                                 output.Add(current_arg.Trim());
                             current_arg = "";
-                            int nextd = args.IndexOf('\"', i + 1);
-                            output.Add(args.Substring(i + 1, nextd - i - 1).Trim());
-                            i = nextd + 1;
+                            int n = args.IndexOf('\"', i + 1);
+                            output.Add(args.Substring(i + 1, n - i - 1).Trim());
+                            i = n + 1;
                             break;
                         default:
                             current_arg += args[i];
                             break;
                     }
                 }
-                if (current_arg != "")
+                if (!string.IsNullOrEmpty(current_arg))
                     output.Add(current_arg.Trim());
 
                 return output;
@@ -69,7 +69,7 @@ namespace AssemblyNameSpace
             string filename = "";
             string output_filename = "";
 
-            if (args.Count() <= 1 || args[1] == "help" || args[1] == "?")
+            if (args.Count <= 1 || args[1] == "help" || args[1] == "?")
             {
                 Console.WriteLine(@"Please provide as the first and only argument the path to the batch file to be run.
 
@@ -100,7 +100,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 if (filename == "clean")
                 {
                     filename = args[2];
-                    if (args.Count() > 3)
+                    if (args.Count > 3)
                         output_filename = args[3];
                     else
                         output_filename = filename;
@@ -109,7 +109,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 else if (filename == "annotate")
                 {
                     filename = args[2];
-                    if (args.Count() > 3)
+                    if (args.Count > 3)
                         output_filename = args[3];
                     else
                         output_filename = filename;
@@ -117,7 +117,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 }
                 else if (filename == "download")
                 {
-                    if (args.Count() > 3)
+                    if (args.Count > 3)
                         DownloadSpecies(args[2], args[3]);
                     else
                         DownloadSpecies(args[2]);
@@ -185,17 +185,17 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             // Condens all isoforms
             foreach (var read in reads)
             {
-                var id = ((MetaData.Fasta)read.Item2).FastaHeader;
+                var id = ((MetaData.Fasta)read.MetaData).FastaHeader;
                 if (!id.Contains("partial") && !id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
                     // Join all isoforms
-                    if (dict.ContainsKey(read.Item2.Identifier))
+                    if (dict.ContainsKey(read.MetaData.Identifier))
                     {
-                        dict[read.Item2.Identifier] = (dict[read.Item2.Identifier].Item1 + " " + id, read.Item1);
+                        dict[read.MetaData.Identifier] = (dict[read.MetaData.Identifier].Item1 + " " + id, read.Sequence);
                     }
                     else
                     {
-                        dict[read.Item2.Identifier] = (id, read.Item1);
+                        dict[read.MetaData.Identifier] = (id, read.Sequence);
                     }
                 }
             }
@@ -246,7 +246,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
         {
             var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={name.Replace(" ", "%20")}&groups=";
-            WebClient client = new WebClient();
+            WebClient client = new();
             Console.WriteLine(name);
             foreach (var segment in segments.Split(' '))
             {
@@ -333,7 +333,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     var line_re = new Regex(@"^.+(IG\w+)[^<]*</font>.+?(\(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
                     var line_match = line_re.Match(line);
                     var isotype = line_match.Groups[1].Value.Trim();
-                    if (isotype == "") continue;
+                    if (string.IsNullOrEmpty(isotype)) continue;
                     var sequence = line_match.Groups[2].Value;
                     // Remove all mark up of the sequence and leave only the sequence itself
                     sequence = Regex.Replace(sequence, @"(</?[^>]+>)|(\(\d+\))|(\[\w+\])|\.| |\(|\)|\d+", "");
@@ -347,7 +347,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             if (pos > 0)
             {
                 var region = (pieces[pos].Item1.Clone() as string, new Dictionary<string, string>(pieces[pos].Item2));
-                for (int i = pieces.Count() - 1; i >= 1; i--)
+                for (int i = pieces.Count - 1; i >= 1; i--)
                     pieces[i] = pieces[i - 1]; // Shift all regions one to the side starting at the back to make place for the Hinge region
                 pieces[1] = region;
             }
@@ -413,13 +413,13 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 {
                     if (input.Length == 0)
                     {
-                        if (current_seq != "")
+                        if (!string.IsNullOrEmpty(current_seq))
                             result.Add((new List<string>(current_classes), current_seq));
                         return result;
                     }
                     else if (input.StartsWith("<span"))
                     {
-                        if (current_seq != "")
+                        if (!string.IsNullOrEmpty(current_seq))
                             result.Add((new List<string>(current_classes), current_seq));
                         int i = 13; // Skip to classname
                         for (int j = 0; i + j < input.Length; j++)
@@ -435,9 +435,9 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     }
                     else if (input.StartsWith("</span>"))
                     {
-                        if (current_seq != "")
+                        if (!string.IsNullOrEmpty(current_seq))
                             result.Add((new List<string>(current_classes), current_seq));
-                        current_classes.RemoveAt(current_classes.Count() - 1);
+                        current_classes.RemoveAt(current_classes.Count - 1);
                         return ParseSequence(input.Substring(7), current_classes, "", result);
                     }
                     else if (input.StartsWith(' ') || (remove_gaps && input.StartsWith('.')))
@@ -458,10 +458,10 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 if (final_sequence == null)
                     continue;
                 var typed = new List<(string Type, string Sequence)>();
-                foreach (var piece in final_sequence)
+                foreach (var (classes, seq) in final_sequence)
                 {
                     var type = "";
-                    foreach (var classname in piece.Item1)
+                    foreach (var classname in classes)
                     {
                         switch (classname)
                         {
@@ -484,7 +484,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                                 break;
                         };
                     }
-                    typed.Add((type, piece.Item2));
+                    typed.Add((type, seq));
                 }
                 var compressed = new List<(string Type, string Sequence)>();
                 (string Type, string Sequence) last = ("", "");
@@ -513,7 +513,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                         cdr_found = true;
                         any_cdr_found = true;
                     }
-                    else if (compressed[i].Type == "" && cdr_found)
+                    else if (string.IsNullOrEmpty(compressed[i].Type) && cdr_found)
                     {
                         cdr++;
                         cdr_found = false;
@@ -524,15 +524,15 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
 
                 // J segments always start with the last pieces of CDR3 but this is not properly annotated in the HTML files
                 if (J)
-                    compressed[0] = ("CDR3", compressed[0].Item2);
+                    compressed[0] = ("CDR3", compressed[0].Sequence);
 
                 writer.WriteLine(">" + pieces[2]);
                 foreach (var piece in compressed)
                 {
-                    if (piece.Item1 == "")
-                        writer.Write(piece.Item2);
+                    if (string.IsNullOrEmpty(piece.Type))
+                        writer.Write(piece.Sequence);
                     else
-                        writer.Write($"({piece.Item1} {piece.Item2})");
+                        writer.Write($"({piece.Type} {piece.Sequence})");
                 }
                 writer.Write("\n");
             }

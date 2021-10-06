@@ -8,7 +8,7 @@ namespace HTMLNameSpace
 {
     static class HTMLGraph
     {
-        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, int factor = 10)
+        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0)
         {
             int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
             if (label == 0) label = 1;
@@ -144,7 +144,7 @@ namespace HTMLNameSpace
                 return;
             }
 
-            int dimensions = header.Count();
+            int dimensions = header.Count;
             double[] maxvalues = new double[dimensions];
             double[] minvalues = new double[dimensions];
 
@@ -153,7 +153,7 @@ namespace HTMLNameSpace
 
             foreach ((_, var dims) in data)
             {
-                if (dims.Count() != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dims.Count()}) as the rest ({dimensions}).");
+                if (dims.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dims.Count}) as the rest ({dimensions}).");
                 for (int i = 0; i < dimensions; i++)
                 {
                     if (dims[i] > maxvalues[i]) maxvalues[i] = dims[i];
@@ -236,7 +236,7 @@ namespace HTMLNameSpace
             }
             graph_counter++;
             string identifier = $"graph-{graph_counter}";
-            int dimensions = header.Count();
+            int dimensions = header.Count;
             double[] maxvalues = new double[dimensions];
             double[] minvalues = new double[dimensions];
 
@@ -247,7 +247,7 @@ namespace HTMLNameSpace
             {
                 foreach ((_, var values) in group)
                 {
-                    if (values.Count() != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({values.Count()}) as the rest ({dimensions}).");
+                    if (values.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({values.Count}) as the rest ({dimensions}).");
                     for (int i = 0; i < dimensions; i++)
                     {
                         if (values[i] > maxvalues[i]) maxvalues[i] = values[i];
@@ -274,7 +274,7 @@ namespace HTMLNameSpace
             // Create Graph
             foreach (var group in data)
             {
-                buffer.Append($"<div class='group' style='flex-grow:{group.Points.Count()}'>");
+                buffer.Append($"<div class='group' style='flex-grow:{group.Points.Count}'>");
 
                 foreach (var point in group.Points)
                 {
@@ -293,7 +293,7 @@ namespace HTMLNameSpace
                 //buffer.Append($"<span class='tooltip'>{group.Label}");
                 //for (int i = 0; i < dimensions; i++)
                 //    buffer.Append($"<span class='dim'>{group.Dimensions[i]:G3}</span>");
-                if (group.Points.Count() > 2)
+                if (group.Points.Count > 2)
                     buffer.Append($"<span class='group-label'>{group.GroupLabel}</span>");
                 buffer.Append("</div>");
             }

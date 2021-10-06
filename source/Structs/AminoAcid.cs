@@ -19,7 +19,7 @@ namespace AssemblyNameSpace
         /// <summary> The code (index of the char in the alpabet array of the parent).
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
-        public readonly char Char;
+        public readonly char Character;
 
         /// <summary>
         /// The alphabet used.
@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
         public AminoAcid(Alphabet alphabetInput, char input)
         {
             alphabet = alphabetInput;
-            Char = input;
+            Character = input;
         }
 
         /// <summary> Will create a string of this AminoAcid. Consiting of the character used to
@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
         public override string ToString()
         {
-            return Char.ToString();
+            return Character.ToString();
         }
 
         /// <summary> Will create a string of a collection of AminoAcids. </summary>
@@ -61,8 +61,11 @@ namespace AssemblyNameSpace
         /// <returns> Returns true when the Amino Acids are equal. </returns>
         public override bool Equals(object obj)
         {
-            return obj is AminoAcid aa && this.Char == aa.Char;
+            return obj is AminoAcid aa && this.Character == aa.Character;
         }
+
+        public static bool operator ==(AminoAcid a, object obj) { return a.Equals(obj); }
+        public static bool operator !=(AminoAcid a, object obj) { return !a.Equals(obj); }
 
         /// <summary> To check for equality of arrays of AminoAcids. </summary>
         /// <remarks> Implemented as a short circuiting loop with the equals operator (==). </remarks>
@@ -85,9 +88,9 @@ namespace AssemblyNameSpace
 
         public static bool ArrayEquals(ICollection<AminoAcid> left, ICollection<AminoAcid> right)
         {
-            if (left.Count() != right.Count())
+            if (left.Count != right.Count)
                 return false;
-            for (int i = 0; i < left.Count(); i++)
+            for (int i = 0; i < left.Count; i++)
             {
                 if (!left.ElementAt(i).Equals(right.ElementAt(i)))
                 {
@@ -101,7 +104,7 @@ namespace AssemblyNameSpace
         /// <returns> Returns the hashcode of the AminoAcid. </returns>
         public override int GetHashCode()
         {
-            return 7559 ^ (Char.GetHashCode() * 13);
+            return 7559 ^ (Character.GetHashCode() * 13);
         }
 
         /// <summary> Calculates homology between this and another AminoAcid, using the given alphabet.
@@ -111,15 +114,15 @@ namespace AssemblyNameSpace
         /// <c>b.Homology(a)</c>. </remarks>
         /// <param name="right"> The other AminoAcid to use. </param>
         /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-        public int Homology(AminoAcid right, Alphabet other_alphabet = null)
+        public int Homology(AminoAcid right, Alphabet otherAlphabet = null)
         {
             try
             {
-                return (other_alphabet ?? alphabet).ScoringMatrix[alphabet.PositionInScoringMatrix[this.Char], alphabet.PositionInScoringMatrix[right.Char]];
+                return (otherAlphabet ?? alphabet).ScoringMatrix[alphabet.PositionInScoringMatrix[this.Character], alphabet.PositionInScoringMatrix[right.Character]];
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Got an error while looking up the homology for this code {this.Char} and that code {right.Char}, probably there is one (or more) character that is not valid");
+                Console.WriteLine($"Got an error while looking up the homology for this code {this.Character} and that code {right.Character}, probably there is one (or more) character that is not valid");
                 throw e;
             }
         }

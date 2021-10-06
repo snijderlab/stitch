@@ -125,14 +125,14 @@ namespace AssemblyTestNameSpace
         {
             Assert.IsNotNull(actual);
             Assert.IsNotNull(expected);
-            Assert.AreEqual(actual.Count(), expected.Count());
+            Assert.AreEqual(actual.Count, expected.Count);
 
             Console.Write("\n");
             foreach (var doc in actual) Console.Write($" {doc}");
             Console.Write("\n");
             foreach (var doc in expected) Console.Write($" {doc}");
 
-            for (int index = 0; index < actual.Count(); index++)
+            for (int index = 0; index < actual.Count; index++)
                 Assert.AreEqual(actual[index], expected[index]);
         }
 

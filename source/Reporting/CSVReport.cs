@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
-        public CSVReport(ReportInputParameters parameters, RunParameters.Report.OutputType outputType, int max_threads) : base(parameters, max_threads)
+        public CSVReport(ReportInputParameters parameters, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
         {
             OutputType = outputType;
         }

@@ -77,14 +77,14 @@ namespace AssemblyNameSpace
             /// To create the base metadata for a read.
             /// </summary>
             /// <param name="file">The identifier of the originating file.</param>
-            /// <param name="identifier_">The identifier of the read.</param>
+            /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(FileIdentifier file, string identifier_, NameFilter filter, string classIdentifier_ = null)
+            public IMetaData(FileIdentifier file, string id, NameFilter filter, string classId = null)
             {
                 nameFilter = filter;
                 File = file;
-                identifier = identifier_;
-                classIdentifier = classIdentifier_ ?? identifier_;
+                identifier = id;
+                classIdentifier = classId ?? identifier;
 
                 if (filter != null)
                 {
@@ -216,7 +216,7 @@ namespace AssemblyNameSpace
                     }
                     return 1;
                 }
-                set { if (value != double.NaN) intensity = value; }
+                set { if (double.IsNaN(value)) intensity = value; }
             }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
@@ -255,8 +255,8 @@ namespace AssemblyNameSpace
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
-                List<string> fields = new List<string>();
-                List<FileRange> positions = new List<FileRange>();
+                var fields = new List<string>();
+                var positions = new List<FileRange>();
                 int lastpos = 0;
                 string line = parsefile.Lines[linenumber];
 
@@ -299,7 +299,7 @@ namespace AssemblyNameSpace
 
                 bool CheckFieldExists(int pos)
                 {
-                    if (pos > fields.Count() - 1)
+                    if (pos > fields.Count - 1)
                     {
                         result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
@@ -506,7 +506,7 @@ namespace AssemblyNameSpace
                 if (Fragmentation_mode != null)
                     output.Append($"<h3>Fragmentation Mode</h3>\n<p>{Fragmentation_mode}</p>");
 
-                if (Other_scans.Count() > 0)
+                if (Other_scans.Count > 0)
                     output.Append($"<h3>Also found in scans</h3>\n<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>");
 
                 output.Append(File.ToHTML());
@@ -535,12 +535,12 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Creating a new FileIdentifier.
             /// </summary>
-            /// <param name="path_input">The path to the file, can be a relative path.</param>
+            /// <param name="pathInput">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
             /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
-            public FileIdentifier(string path_input, string name, InputNameSpace.KeyValue origin)
+            public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin)
             {
-                path = System.IO.Path.GetFullPath(path_input);
+                path = System.IO.Path.GetFullPath(pathInput);
                 Name = name;
                 RefersToFile = true;
                 Origin = origin;

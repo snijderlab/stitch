@@ -55,7 +55,7 @@ namespace AssemblyNameSpace
         }
         public static string TrimEnd(this string input, string suffixToRemove)
         {
-            if (input == null || suffixToRemove == null || input == "" || input.Length < suffixToRemove.Length) return input;
+            if (input == null || suffixToRemove == null || string.IsNullOrEmpty(input) || input.Length < suffixToRemove.Length) return input;
             if (input == suffixToRemove) return "";
             int location = input.Length - 1 - suffixToRemove.Length;
             while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0)
@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
         }
         public static string TrimStart(this string input, string prefixToRemove)
         {
-            if (input == null || prefixToRemove == null || input == "" || input.Length < prefixToRemove.Length) return input;
+            if (input == null || prefixToRemove == null || string.IsNullOrEmpty(input) || input.Length < prefixToRemove.Length) return input;
             if (input == prefixToRemove) return "";
             int location = 0;
             while (location < input.Length - 1 - prefixToRemove.Length && string.CompareOrdinal(input, location, prefixToRemove, 0, prefixToRemove.Length) == 0)
@@ -76,10 +76,33 @@ namespace AssemblyNameSpace
             return input.Remove(location);
         }
 
+        /// <summary> Apply a function to a 2D array modifying it in place. </summary>
+        /// <param name="data"> The 2D array. </param>
+        /// <param name="f"> The function to determine the new values, based on the index (x, y) given to the function. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns nothing, but the array is modified. </returns>
+        public static void IndexMap<T>(this T[,] data, Func<int, int, T> f)
+        {
+            for (int i = 0; i < data.GetLength(0); i++)
+                for (int j = 0; j < data.GetLength(1); j++)
+                    data[i, j] = f(i, j);
+        }
+
+        /// <summary> Apply a function to an array modifying it in place. </summary>
+        /// <param name="data"> The array. </param>
+        /// <param name="f"> The function to determine the new values, based on the index given to the function. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns nothing, but the array is modified. </returns>
+        public static void IndexMap<T>(this T[] data, Func<int, T> f)
+        {
+            for (int i = 0; i < data.Length; i++)
+                data[i] = f(i);
+        }
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, MetaData.IMetaData metadata = null, int index = 0)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, MetaData.IMetaData metadata = null, int index = 0, int templateIndex = -1)
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
             int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
@@ -91,11 +114,11 @@ namespace AssemblyNameSpace
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
             {
-                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Char];
+                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Character];
             }
             for (int i = 0; i < query.Length; i++)
             {
-                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Char];
+                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Character];
             }
 
             int max_value = 0;
@@ -112,7 +135,7 @@ namespace AssemblyNameSpace
             {
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    gap = template[tem_pos - 1].Char == gap_char || query[query_pos - 1].Char == gap_char;
+                    gap = template[tem_pos - 1].Character == gap_char || query[query_pos - 1].Character == gap_char;
 
                     // Calculate the score for the current position
                     if (gap)
@@ -209,7 +232,7 @@ namespace AssemblyNameSpace
         END_OF_CRAWL:
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index, templateIndex);
             return match;
         }
 
@@ -268,17 +291,17 @@ namespace AssemblyNameSpace
         /// <param name="template">The front sequence</param>
         /// <param name="query">The tail sequence</param>
         /// <param name="alphabet">The alphabet to use</param>
-        /// <param name="max_overlap">The maximal length of the overlap</param>
+        /// <param name="maxOverlap">The maximal length of the overlap</param>
         /// <returns>A tuple with the best position and its score</returns>
-        public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
+        public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int maxOverlap)
         {
             var scores = new List<(int, int)>();
-            for (int i = 1; i < max_overlap && i < query.Length && i < template.Length; i++)
+            for (int i = 1; i < maxOverlap && i < query.Length && i < template.Length; i++)
             {
                 var score = AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
                 scores.Add((i, score));
             }
-            if (scores.Count() == 0) return (0, 0);
+            if (scores.Count == 0) return (0, 0);
 
             var best = scores[0];
             foreach (var item in scores)

@@ -42,7 +42,7 @@ dotnet run -p source <path to batchfile>
 It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\netcoreapp5.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
 
 ```
-mklink /J source\bin\debug\netcoreapp3.1\win-x64\assets\ assets\
+mklink /J source\bin\debug\net5.0\win-x64\assets\ assets\
 ```
 
 To generate a single executable run:
