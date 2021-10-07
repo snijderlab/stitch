@@ -20,14 +20,18 @@ namespace AssemblyNameSpace
             var distance = new double[length, length];
 
             // Get all the scores in the matrix
-            distance.IndexMap((i, j) => HelperFunctionality.SmithWaterman(Sequences[i].Sequence, Sequences[j].Sequence, alphabet).Score);
+            distance.IndexMap((i, j) =>
+            {
+                var scores = HelperFunctionality.SmithWaterman(Sequences[i].Sequence, Sequences[j].Sequence, alphabet).GetDetailedScores();
+                return scores.MisMatches + (scores.GapInQuery + scores.GapInTemplate) * 12;
+            });
 
             // Find the max value
-            var max = double.MinValue;
-            foreach (var item in distance) if (item > max) max = item;
+            //var max = double.MinValue;
+            //foreach (var item in distance) if (item > max) max = item;
 
             // Invert all score to be valid as distances between the sequences
-            distance.IndexMap((i, j) => i == j ? 0 : max - distance[i, j]);
+            //distance.IndexMap((i, j) => i == j ? 0 : max - distance[i, j]);
 
             // Set up the tree list, start off with only leaf nodes, one for each sequence
             var leaves = new Tree<string>[length];
@@ -49,7 +53,7 @@ namespace AssemblyNameSpace
                 var min = (double.MaxValue, 0, 0);
                 for (int i = 0; i < length; i++)
                     for (int j = 0; j < length; j++)
-                        if (i != j && q[i, j] < min.Item1) min = (q[i, j], i, j);
+                        if (i != j && q[i, j] < min.Item1) min = (q[i, j], Math.Min(i, j), Math.Max(i, j));
 
                 // Create the new tree
                 var d = distance[min.Item2, min.Item3] / 2 + (rows[min.Item2] - rows[min.Item3]) / (2 * (length - 2));
@@ -193,7 +197,7 @@ namespace AssemblyNameSpace
             /// <param name="own"> Any trees already present on the main stem of the tree (on this line). </param>
             /// <param name="other"> Any trees already present on the side tree(es) of the tree (on secondary lines). </param>
             /// <returns> A fully rendered tree, using UTF-8 and characters from the Box drawing set. </returns>
-            string Render(string own, string other, bool showValue)
+            string Render(string own, string other, bool showValue, bool showLength)
             {
                 if (Left == null && Right == null)
                 {
@@ -205,20 +209,28 @@ namespace AssemblyNameSpace
                     // A split at the current depth
                     var value = showValue ? Value.ToString() : "";
                     var spacing = new string(' ', value.Length);
-                    return Left.Value.Item2.Render(own + value + '┬', other + spacing + '│', showValue) + '\n' +
-                           Right.Value.Item2.Render(other + spacing + '└', other + spacing + ' ', showValue);
+
+                    var lengthLeft = showLength ? Left.Value.Item1.ToString("G3") + '─' : "";
+                    var lengthRight = showLength ? Right.Value.Item1.ToString("G3") + '─' : "";
+                    var length = Math.Max(lengthLeft.Length, lengthRight.Length);
+                    lengthLeft = lengthLeft.PadRight(length, '─');
+                    lengthRight = lengthRight.PadRight(length, '─');
+                    var lengthSpacing = new string(' ', length);
+
+                    return Left.Value.Item2.Render(own + value + '┬' + lengthLeft, other + spacing + '│' + lengthSpacing, showValue, showLength) + '\n' +
+                           Right.Value.Item2.Render(other + spacing + '└' + lengthRight, other + spacing + ' ' + lengthSpacing, showValue, showLength);
                 }
             }
 
             /// <summary> Create a string representation of the tree. </summary>
             public override string ToString()
             {
-                return Render("", "", false);
+                return Render("", "", false, false);
             }
 
-            public string ToString(bool showValue)
+            public string ToString(bool showValue, bool showLength)
             {
-                return Render("", "", showValue);
+                return Render("", "", showValue, showLength);
             }
 
             /// <summary> Fold a function over the tree by applying it to every tree in a depth first way. </summary>

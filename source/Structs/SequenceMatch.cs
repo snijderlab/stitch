@@ -265,6 +265,50 @@ namespace AssemblyNameSpace
             return buf.ToString();
         }
 
+        (int Matches, int MisMatches, int GapInQuery, int GapInTemplate)? scores = null;
+        /// <summary> Get a detailed breakdown of the scores of this match. </summary>
+        /// <returns> A tuple with 4 counts, the first is the number of exact matches, the second 
+        /// is the number of not exact matches (or mismatches), the third is the number of 
+        /// GapInQuery, and the fourth is the number of GapInTemplate.</returns>
+        public (int Matches, int MisMatches, int GapInQuery, int GapInTemplate) GetDetailedScores()
+        {
+            if (scores != null) return scores.Value;
+            (int Matches, int MisMatches, int GapInQuery, int GapInTemplate) output = (0, 0, 0, 0);
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+
+            foreach (var piece in this.Alignment)
+            {
+                if (piece is SequenceMatch.Match ma)
+                {
+                    for (int i = 0; i < ma.Length; i++)
+                    {
+                        if (TemplateSequence[pos + i] == QuerySequence[q_pos + i])
+                            output.Matches += 1;
+                        else
+                            output.MisMatches += 1;
+                    }
+
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInTemplate)
+                {
+                    output.GapInTemplate += piece.Length;
+                    pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInQuery)
+                {
+                    output.GapInQuery += piece.Length;
+                    q_pos += piece.Length;
+                }
+            }
+
+            scores = output;
+            return output;
+        }
+
+
         /// <summary>
         /// Represents a piece of a match between two sequences
         /// </summary>

@@ -48,7 +48,6 @@ namespace AssemblyNameSpace
                 Templates.Add(new Template(name, parsed, pair.Item2, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
 
-            Console.WriteLine(name);
             try
             {
                 Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
@@ -71,17 +70,6 @@ namespace AssemblyNameSpace
             CutoffScore = cutoffScore;
             Alphabet = alphabet;
             Templates = templates.ToList();
-
-            Console.WriteLine(name);
-            try
-            {
-                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
-                Console.WriteLine(Hierarchy);
-            }
-            catch
-            {
-                Console.WriteLine("No tree");
-            }
         }
 
         /// <summary>
