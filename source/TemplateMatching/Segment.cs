@@ -52,7 +52,6 @@ namespace AssemblyNameSpace
             try
             {
                 Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
-                Console.WriteLine(Hierarchy);
             }
             catch
             {
@@ -117,7 +116,7 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
+        List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
         {
             var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++)

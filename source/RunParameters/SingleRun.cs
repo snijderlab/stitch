@@ -188,6 +188,15 @@ namespace AssemblyNameSpace
                     }
                 }
 
+                foreach (var group in segments)
+                {
+                    foreach (var segment in group.Item2)
+                    {
+                        var DataTree = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
+                        Console.WriteLine(DataTree.DataTree.ToString(true));
+                    }
+                }
+
                 return segments;
             }
 

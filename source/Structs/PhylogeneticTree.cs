@@ -89,8 +89,8 @@ namespace AssemblyNameSpace
 
         public class ProteinHierarchyTree
         {
-            public readonly Tree<string> Tree;
-            public readonly List<List<int>> Sets;
+            public readonly Tree<string> OriginalTree;
+            public readonly Tree<int> DataTree;
 
             public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches)
             {
@@ -109,18 +109,45 @@ namespace AssemblyNameSpace
                 //    },
                 //    (index, value) => new List<List<int>> { new List<int> { index } });
 
-
+                OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(
                         (left, right) => left.Union(right).ToList(),
                         (index, _) => new List<int> { index }));
 
-                var MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet()));
+                //Console.WriteLine($"There are {matches.Count} reads.");
+                var MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet())).ToList();
+                //Console.WriteLine($"There are {MatchSets.Count} read sets.");
+                //foreach (var read in MatchSets)
+                //{
+                //    Console.WriteLine($"{read.Key}:{read.Item2.Aggregate("", (acc, a) => acc + " " + a.ToString())}");
+                //}
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all 
                 // elements in the tree set are in the MatchSet) remove the matched indices. Now add whatever 
                 // data is required to the node. 
+
+                DataTree = SetTree.Remodel(branch =>
+                {
+                    var sum = 0;
+                    for (int i = 0; i < MatchSets.Count; i++)
+                    {
+                        var set = MatchSets[i].Item2;
+                        if (set.IsSupersetOf(branch.Value))
+                        {
+                            branch.Value.ForEach(i => set.Remove(i));
+                            if (set.Count() == 0)
+                            {
+                                MatchSets.RemoveAt(i);
+                                i--;
+                            }
+                            sum++;
+                        }
+                    }
+                    return sum;
+                }
+                );
             }
 
         }
@@ -166,7 +193,7 @@ namespace AssemblyNameSpace
             /// <param name="own"> Any trees already present on the main stem of the tree (on this line). </param>
             /// <param name="other"> Any trees already present on the side tree(es) of the tree (on secondary lines). </param>
             /// <returns> A fully rendered tree, using UTF-8 and characters from the Box drawing set. </returns>
-            string Render(string own, string other)
+            string Render(string own, string other, bool showValue)
             {
                 if (Left == null && Right == null)
                 {
@@ -176,18 +203,22 @@ namespace AssemblyNameSpace
                 else
                 {
                     // A split at the current depth
-                    var output = "";
-                    output += Left.Value.Item2.Render(own + '┬', other + '│');
-                    output += '\n';
-                    output += Right.Value.Item2.Render(other + '└', other + ' ');
-                    return output;
+                    var value = showValue ? Value.ToString() : "";
+                    var spacing = new string(' ', value.Length);
+                    return Left.Value.Item2.Render(own + value + '┬', other + spacing + '│', showValue) + '\n' +
+                           Right.Value.Item2.Render(other + spacing + '└', other + spacing + ' ', showValue);
                 }
             }
 
             /// <summary> Create a string representation of the tree. </summary>
             public override string ToString()
             {
-                return Render("", "");
+                return Render("", "", false);
+            }
+
+            public string ToString(bool showValue)
+            {
+                return Render("", "", showValue);
             }
 
             /// <summary> Fold a function over the tree by applying it to every tree in a depth first way. </summary>
