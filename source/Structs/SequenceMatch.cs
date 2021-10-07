@@ -22,7 +22,7 @@ namespace AssemblyNameSpace
         public readonly int Score;
 
         /// <summary>
-        /// The alignment of the match, consisting of <see cref="MatchPiece">s.
+        /// The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>.
         /// </summary>
         public readonly List<MatchPiece> Alignment;
 
