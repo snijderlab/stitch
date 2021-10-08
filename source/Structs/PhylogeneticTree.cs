@@ -88,7 +88,9 @@ namespace AssemblyNameSpace
             }
 
             // Join the last two trees
-            return new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
+            var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
+            output.RemoveNegativeDistances();
+            return output;
         }
 
         public class ProteinHierarchyTree
@@ -141,7 +143,7 @@ namespace AssemblyNameSpace
                         if (set.IsSupersetOf(branch.Value))
                         {
                             branch.Value.ForEach(i => set.Remove(i));
-                            if (set.Count() == 0)
+                            if (set.Count == 0)
                             {
                                 MatchSets.RemoveAt(i);
                                 i--;
@@ -163,9 +165,9 @@ namespace AssemblyNameSpace
             /// <summary> The name of this leaf. </summary>
             public readonly TValue Value;
             /// <summary> The left tree. Including the distance to this node. </summary>
-            public readonly (double, Tree<TValue>)? Left = null;
+            public (double, Tree<TValue>)? Left { get; private set; }
             /// <summary> The right tree. Including the distance to this node. </summary>
-            public readonly (double, Tree<TValue>)? Right = null;
+            public (double, Tree<TValue>)? Right { get; private set; }
 
             /// <summary> Create a leaf node.</summary>
             /// <param name="index"> The index of this leaf in the list as presented to the CreateTree function. </param>
@@ -247,7 +249,6 @@ namespace AssemblyNameSpace
             }
 
             /// <summary> Fold two functions over the tree by applying them to every tree and leaf in a depth first way. </summary>
-            /// <param name="seed"> The initial value for the accumulator structure. </param>
             /// <param name="tree"> The function to apply to every branch (a node which has a Left and/or Right node). </param>
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
@@ -260,6 +261,15 @@ namespace AssemblyNameSpace
                     return tree(Left.Value.Item2.Fold(tree, leaf), Right.Value.Item2.Fold(tree, leaf));
             }
 
+            /// <summary> Apply a function to every branch in the tree. </summary>
+            /// <param name="f"> The function to apply. </param>
+            public void Apply(Action<Tree<TValue>> f)
+            {
+                f(this);
+                if (Left != null) Left.Value.Item2.Apply(f);
+                if (Right != null) Right.Value.Item2.Apply(f);
+            }
+
             public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, TOut> f)
             {
                 return new Tree<TOut>(
@@ -267,6 +277,40 @@ namespace AssemblyNameSpace
                     f(this),
                     Left == null ? null : (Left.Value.Item1, Left.Value.Item2.Remodel(f)),
                     Right == null ? null : (Right.Value.Item1, Right.Value.Item2.Remodel(f)));
+            }
+
+            public void RemoveNegativeDistances()
+            {
+                static (double, Tree<TValue>) CheckSide((double, Tree<TValue>) node)
+                {
+                    var node_branch = node.Item2;
+                    if (node_branch.Left != null && node_branch.Right != null)
+                    {
+                        if (node_branch.Left.Value.Item1 < 0)
+                        {
+                            node_branch.Right = (node_branch.Right.Value.Item1 - node_branch.Left.Value.Item1, node_branch.Right.Value.Item2);
+                            node_branch.Left = (0, node_branch.Left.Value.Item2);
+                            return (node.Item1 - node_branch.Left.Value.Item1, node_branch);
+                        }
+                        if (node_branch.Right.Value.Item1 < 0)
+                        {
+                            node_branch.Left = (node_branch.Left.Value.Item1 - node_branch.Right.Value.Item1, node_branch.Left.Value.Item2);
+                            node_branch.Right = (0, node_branch.Right.Value.Item2);
+                            return (node.Item1 - node_branch.Right.Value.Item1, node_branch);
+                        }
+                    }
+                    return node;
+                }
+                if (Left != null)
+                {
+                    Left = CheckSide(Left.Value);
+                    Left.Value.Item2.RemoveNegativeDistances();
+                }
+                if (Right != null)
+                {
+                    Right = CheckSide(Right.Value);
+                    Right.Value.Item2.RemoveNegativeDistances();
+                }
             }
         }
     }

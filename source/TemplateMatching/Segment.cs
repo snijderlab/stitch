@@ -51,6 +51,7 @@ namespace AssemblyNameSpace
             try
             {
                 Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
+                Console.WriteLine(Hierarchy.ToString(false, true));
             }
             catch
             {
