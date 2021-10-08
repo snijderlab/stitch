@@ -69,7 +69,7 @@ namespace AssemblyNameSpace
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Input.Parameters = ParseHelper.ParseInputParameters(namefilter, pair).GetValue(outEither);
+                        output.Input.Parameters = ParseHelper.ParseInputParameters(pair).GetValue(outEither);
                         break;
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -77,7 +77,7 @@ namespace AssemblyNameSpace
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(namefilter, pair).GetValue(outEither);
+                        (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(pair).GetValue(outEither);
                         break;
                     case "report":
                         if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -89,8 +89,8 @@ namespace AssemblyNameSpace
                 }
             }
 
-            Position def_position = new Position(0, 1, batchfile);
-            FileRange def_range = new FileRange(def_position, def_position);
+            var def_position = new Position(0, 1, batchfile);
+            var def_range = new FileRange(def_position, def_position);
 
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
@@ -128,7 +128,7 @@ namespace AssemblyNameSpace
                         var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
                         var order_output = new List<RunParameters.RecombineOrder.OrderPiece>();
 
-                        while (order_string != "")
+                        while (!string.IsNullOrEmpty(order_string))
                         {
                             InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
 
@@ -170,7 +170,7 @@ namespace AssemblyNameSpace
             if (output.Recombine != null && output.Recombine.Order.Count != 0)
             {
                 if (output.TemplateMatching.Segments.Count
-                    - (output.TemplateMatching.Segments.Exists(group => group.Name == "") ? 1 : 0)
+                    - (output.TemplateMatching.Segments.Exists(group => string.IsNullOrEmpty(group.Name)) ? 1 : 0)
                     - (output.TemplateMatching.Segments.Exists(group => group.Name.ToLower() == "decoy") ? 1 : 0)
                     != output.Recombine.Order.Count)
                 {
@@ -232,7 +232,7 @@ namespace AssemblyNameSpace
 
             if (output.TemplateMatching != null)
             {
-                foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Item2))
+                foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Segments))
                 {
                     if (db.Templates != null)
                     {
@@ -243,13 +243,13 @@ namespace AssemblyNameSpace
                             {
                                 read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
                                 if (read.Item2 is MetaData.Fasta meta)
-                                    meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1] = (meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item1, meta.AnnotatedSequence[meta.AnnotatedSequence.Count - 1].Item2 + "XXXXXXXXXXXXXXXXXXXX");
+                                    meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXXXXXXXXXXXX");
                             }
                             if (db.GapHead)
                             {
                                 read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
                                 if (read.Item2 is MetaData.Fasta meta)
-                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Item1, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Item2);
+                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
                             }
                             db.Templates[i] = read;
                         }
@@ -284,7 +284,7 @@ namespace AssemblyNameSpace
     public class ParseResult<T>
     {
         public T Value;
-        public List<ErrorMessage> Messages = new List<ErrorMessage>();
+        public List<ErrorMessage> Messages = new();
         public ParseResult(T t)
         {
             Value = t;
@@ -338,7 +338,7 @@ namespace AssemblyNameSpace
             if (this.HasFailed()) return def;
             else return this.Value;
         }
-        public T GetValue<Tout>(ParseResult<Tout> fail)
+        public T GetValue<TOut>(ParseResult<TOut> fail)
         {
             fail.Messages.AddRange(Messages);
             return Value;
@@ -426,7 +426,7 @@ namespace AssemblyNameSpace
                     return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
-            public static ParseResult<Input.InputParameters> ParseInputParameters(NameFilter namefilter, KeyValue key)
+            public static ParseResult<Input.InputParameters> ParseInputParameters(KeyValue key)
             {
                 var outEither = new ParseResult<Input.InputParameters>();
                 var output = new Input.InputParameters();
@@ -705,7 +705,7 @@ namespace AssemblyNameSpace
 
                 if (output.Segments.Count > 1)
                     foreach (var db in output.Segments)
-                        if (db.Item1 == "")
+                        if (string.IsNullOrEmpty(db.Name))
                             outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single segments in grouped segment list", "You cannot define a single segment when there are also segment groups defined."));
 
                 if (output.Alphabet == null)
@@ -717,12 +717,12 @@ namespace AssemblyNameSpace
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(NameFilter namefilter, KeyValue key)
+            public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(KeyValue key)
             {
                 var outEither = new ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)>();
                 var output = new RecombineParameter();
 
-                List<KeyValue> order = new List<KeyValue>();
+                var order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
                 foreach (var setting in key.GetValues())
@@ -922,7 +922,7 @@ namespace AssemblyNameSpace
                             asettings.ScoringMatrix = result.Item2;
                             break;
                         case "name":
-                            if (asettings.Name != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (!string.IsNullOrEmpty(asettings.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             asettings.Name = setting.GetValue();
                             break;
                         case "gapstartpenalty":
@@ -968,7 +968,7 @@ namespace AssemblyNameSpace
                     var line = lines[i];
                     Tokenizer.ParseHelper.Trim(ref line, counter);
 
-                    while (line != "")
+                    while (!string.IsNullOrEmpty(line))
                     {
                         if (line[0] == ';' || line[0] == ',')
                         {
@@ -1077,7 +1077,7 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "path":
-                            if (file_path != "") outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (!string.IsNullOrEmpty(file_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             file_path = GetFullPath(setting).GetValue(outEither);
                             file_pos = setting;
                             break;
@@ -1145,7 +1145,7 @@ namespace AssemblyNameSpace
                 // Open the file
                 var fileId = new MetaData.FileIdentifier(tsettings.Name, ParseHelper.GetFullPath(file_path).GetValue(outEither), file_pos);
 
-                ParseResult<List<(string, MetaData.IMetaData)>> folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
+                var folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
                     folder_reads = OpenReads.Fasta(namefilter, fileId, tsettings.Identifier);
@@ -1273,7 +1273,7 @@ namespace AssemblyNameSpace
                 var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(setting.GetValue());
 
-                if (res.Item2 == "")
+                if (string.IsNullOrEmpty(res.Item2))
                 {
                     outEither.Value = Path.GetFullPath(res.Item1);
                 }
@@ -1288,7 +1288,7 @@ namespace AssemblyNameSpace
                 var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(path);
 
-                if (res.Item2 == "")
+                if (string.IsNullOrEmpty(res.Item2))
                 {
                     outEither.Value = Path.GetFullPath(res.Item1);
                 }
@@ -1348,15 +1348,15 @@ namespace AssemblyNameSpace
                 }
                 catch (ArgumentException)
                 {
-                    return (new string[0], "Invalid path", "The path contains invalid characters.", "");
+                    return (Array.Empty<string>(), "Invalid path", "The path contains invalid characters.", "");
                 }
                 catch (UnauthorizedAccessException)
                 {
-                    return (new string[0], "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
+                    return (Array.Empty<string>(), "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
                 }
                 catch (PathTooLongException)
                 {
-                    return (new string[0], "Invalid path", "The path length exceeds the system defined width.", "");
+                    return (Array.Empty<string>(), "Invalid path", "The path length exceeds the system defined width.", "");
                 }
                 catch (DirectoryNotFoundException)
                 {
@@ -1394,30 +1394,30 @@ namespace AssemblyNameSpace
                                         extra = $"\nDid you mean '{maxname}'?";
                                     }
 
-                                    return (new string[0], "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
+                                    return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
                                 }
                                 currentpath = nextpath;
                             }
                             // Will likely be never used because that would raise a FileNotFoundException
-                            return (new string[0], "Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
+                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{currentpath}'.");
                         }
                         else
                         {
-                            return (new string[0], "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
+                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
                         }
                     }
                     catch
                     {
-                        return (new string[0], "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
+                        return (Array.Empty<string>(), "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
                     }
                 }
                 catch (IOException)
                 {
-                    return (new string[0], "Invalid path", "The path is a file name or a network error has occurred.", "");
+                    return (Array.Empty<string>(), "Invalid path", "The path is a file name or a network error has occurred.", "");
                 }
                 catch (Exception e)
                 {
-                    return (new string[0], "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
+                    return (Array.Empty<string>(), "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
                 }
             }
             public static ParseResult<string> GetAllText(KeyValue setting)
@@ -1426,7 +1426,7 @@ namespace AssemblyNameSpace
 
                 var res = GetAllTextPrivate(setting.GetValue());
 
-                if (res.Item2 == "") outEither.Value = res.Item1;
+                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
                 else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
 
                 return outEither;
@@ -1442,7 +1442,7 @@ namespace AssemblyNameSpace
 
                 var res = GetAllTextPrivate(path);
 
-                if (res.Item2 == "") outEither.Value = res.Item1;
+                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
                 else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
 
                 return outEither;
@@ -1451,7 +1451,7 @@ namespace AssemblyNameSpace
             {
                 var trypath = GetFullPathPrivate(path);
 
-                if (trypath.Item2 == "")
+                if (string.IsNullOrEmpty(trypath.Item2))
                 {
                     if (Directory.Exists(trypath.Item1))
                     {
@@ -1504,7 +1504,7 @@ namespace AssemblyNameSpace
                                         currentpath = nextpath;
                                     }
                                     // Will likely be never used because that would raise a FileNotFoundException
-                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[pieces.Length - 1]}' does not exist in '{currentpath}'.");
+                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{currentpath}'.");
                                 }
                                 else
                                 {

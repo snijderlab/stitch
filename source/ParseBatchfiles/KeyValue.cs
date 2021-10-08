@@ -31,13 +31,13 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="value">The value of the key.</param>
-            public KeyValue(string name, string value, KeyRange key_r, FileRange value_r)
+            public KeyValue(string name, string value, KeyRange keyRange, FileRange valueRange)
             {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new Single(value);
-                KeyRange = key_r;
-                ValueRange = value_r;
+                KeyRange = keyRange;
+                ValueRange = valueRange;
             }
 
             /// <summary>
@@ -45,13 +45,13 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
-            public KeyValue(string name, List<KeyValue> values, KeyRange key_r, FileRange value_r)
+            public KeyValue(string name, List<KeyValue> values, KeyRange keyRange, FileRange valueRange)
             {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
-                KeyRange = key_r;
-                ValueRange = value_r;
+                KeyRange = keyRange;
+                ValueRange = valueRange;
             }
 
             /// <summary>

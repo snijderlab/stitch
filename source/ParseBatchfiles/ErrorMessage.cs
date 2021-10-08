@@ -16,7 +16,7 @@ namespace AssemblyNameSpace
             readonly string subject = "";
             readonly uint contextLines = 0;
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 subject = sub;
                 shortDescription = shortD;
@@ -24,18 +24,18 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = new ParsedFile();
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
                 Warning = warning;
                 File = file;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 startposition = pos;
                 shortDescription = shortD;
@@ -43,9 +43,9 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = pos.File;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 startposition = range.Start;
                 endposition = range.End;
@@ -54,7 +54,7 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = range.File;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
             public static ErrorMessage DuplicateValue(FileRange range)
             {
@@ -77,11 +77,11 @@ namespace AssemblyNameSpace
 
                 // Location
                 string location;
-                if (subject != "")
+                if (!string.IsNullOrEmpty(subject))
                 {
                     location = $"\n   | {subject}\n\n";
                 }
-                else if (File.Filename == "")
+                else if (string.IsNullOrEmpty(File.Filename))
                 {
                     location = "";
                 }
@@ -131,8 +131,8 @@ namespace AssemblyNameSpace
 
                 // Body
                 var body = "";
-                if (longDescription != "") body += longDescription + "\n";
-                if (helpDescription != "") body += helpDescription + "\n";
+                if (!string.IsNullOrEmpty(longDescription)) body += longDescription + "\n";
+                if (!string.IsNullOrEmpty(helpDescription)) body += helpDescription + "\n";
 
                 return header + location + body;
             }
@@ -147,14 +147,14 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = defaultColour;
 
                 // Location
-                if (subject != "") // Pregiven location
+                if (!string.IsNullOrEmpty(subject)) // Pregiven location
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("\n   | ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
                 }
-                else if (File.Filename == "") // No location
+                else if (string.IsNullOrEmpty(File.Filename)) // No location
                 {
                 }
                 else if (startposition == null) // Only a file
@@ -233,14 +233,14 @@ namespace AssemblyNameSpace
                 }
 
                 // Body
-                if (longDescription != "")
+                if (!string.IsNullOrEmpty(longDescription))
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write("note");
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(": " + longDescription);
                 }
-                if (helpDescription != "")
+                if (!string.IsNullOrEmpty(helpDescription))
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("help");
@@ -257,7 +257,7 @@ namespace AssemblyNameSpace
                 buffer.Append($"{name}");
 
                 // Location
-                if (subject != "" || File.Filename == "" || startposition == null) // Only a file
+                if (!string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(File.Filename) || startposition == null) // Only a file
                 {
                     buffer.Append($"\t1 1");
                 }
