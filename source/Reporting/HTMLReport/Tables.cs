@@ -205,39 +205,29 @@ namespace HTMLNameSpace
             const double threshold = 0.05;
             const int height = 35;
             const int fontsize = 30;
-            const int fontheight = 22; // This should grow with the font-size and font selected, for Roboto at the current fontsize it is correct
 
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count(); i++)
             {
                 buffer.Append("<div class='sequence-logo-position'>");
-                // Get the highest chars
+
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();
-                sorted.Sort((a, b) => b.Value.CompareTo(a.Value));
-                var buffered = new List<string>();
+                sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
 
                 bool placed = false;
-                double factor = 0.0;
                 foreach (var item in sorted)
                 {
                     if (item.Key != "~" && (double)item.Value / sum > threshold)
                     {
                         var size = (item.Value / sum * fontsize).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        var shift = (sum / item.Value + factor).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffered.Add($"<span style='font-size:{size}px;transform:scaleX({inverse_size})'>{item.Key}</span>");
+                        buffer.Append($"<span style='font-size:{size}px;transform:scaleX({inverse_size})'>{item.Key}</span>");
                         placed = true;
-                        // Add both this items shift and the shift for its height (factor times the height of a character)
-                        factor += sum / item.Value + item.Value / sum * fontheight * 1.5;
                     }
                 }
                 if (!placed)
-                    buffered.Add($"<span>.</span>");
-
-                buffered.Reverse();
-                foreach (var line in buffered)
-                    buffer.Append(line);
+                    buffer.Append($"<span>.</span>");
 
                 buffer.Append("</div>");
             }
