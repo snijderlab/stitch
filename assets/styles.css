@@ -719,6 +719,7 @@ input:checked+.slider:before {
     align-items: center;
     flex-direction: column;
     justify-content: end;
+    width: 16px;
 }
 
 .sequence-logo-position span {

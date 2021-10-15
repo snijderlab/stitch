@@ -202,7 +202,7 @@ namespace HTMLNameSpace
 
         public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity)
         {
-            const double threshold = 0.15;
+            const double threshold = 0.05;
             const int height = 35;
             const int fontsize = 30;
             const int fontheight = 22; // This should grow with the font-size and font selected, for Roboto at the current fontsize it is correct
@@ -223,19 +223,20 @@ namespace HTMLNameSpace
                 {
                     if (item.Key != "~" && (double)item.Value / sum > threshold)
                     {
-                        var size = (item.Value / sum).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var size = (item.Value / sum * fontsize).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var shift = (sum / item.Value + factor).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffered.Add($"<span style='transform:scaleY({size}) translate(0, {shift}px)'>{item.Key}</span>");
+                        buffered.Add($"<span style='font-size:{size}px;transform:scaleX({inverse_size})'>{item.Key}</span>");
                         placed = true;
                         // Add both this items shift and the shift for its height (factor times the height of a character)
-                        factor +=  sum / item.Value + item.Value / sum * fontheight * 1.5;
+                        factor += sum / item.Value + item.Value / sum * fontheight * 1.5;
                     }
                 }
                 if (!placed)
                     buffered.Add($"<span>.</span>");
 
                 buffered.Reverse();
-                foreach (var line in buffered) 
+                foreach (var line in buffered)
                     buffer.Append(line);
 
                 buffer.Append("</div>");
