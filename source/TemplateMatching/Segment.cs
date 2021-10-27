@@ -22,6 +22,7 @@ namespace AssemblyNameSpace
         public List<Template> Templates;
         public readonly double CutoffScore;
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
+        public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
         /// Create a new Segment based on the reads found in the given file.

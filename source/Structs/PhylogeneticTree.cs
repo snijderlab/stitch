@@ -270,6 +270,23 @@ namespace AssemblyNameSpace
                 if (Right != null) Right.Value.Item2.Apply(f);
             }
 
+            /// <summary> Apply a function to every branch in the tree. </summary>
+            /// <param name="f"> The function to apply. </param>
+            public void Apply(Action<Tree<TValue>> tree, Action<TValue> leaf)
+            {
+                if (Left == null && Right == null)
+                {
+                    leaf(this.Value);
+                }
+                else
+                {
+                    tree(this);
+                    if (Left != null) Left.Value.Item2.Apply(tree, leaf);
+                    if (Right != null) Right.Value.Item2.Apply(tree, leaf);
+                }
+            }
+
+
             public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, TOut> f)
             {
                 return new Tree<TOut>(

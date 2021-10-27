@@ -57,13 +57,13 @@ namespace HTMLNameSpace
             for (var i = 0; i < segments.Count; i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Segment {item.Name}", CreateTemplateTable(item.Templates, AsideType.Template, AssetsFolderName, total_reads, true)));
+                output.Append(Collapsible($"Segment {item.Name}", CreateSegmentTable(item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
             }
 
             return output.ToString();
         }
 
-        public static string CreateTemplateTable(List<Template> templates, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
+        public static string CreateSegmentTable(List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
         {
             table_counter++;
             var buffer = new StringBuilder();
@@ -85,14 +85,28 @@ namespace HTMLNameSpace
             if (header)
                 TableHeader(buffer, templates, total_reads);
 
+            if (tree != null)
+            {
+                var max = tree.DataTree.Fold(0, (acc, value) => Math.Max(value, acc));
+                string RenderTree(PhylogeneticTree.Tree<int> data, PhylogeneticTree.Tree<string> names)
+                {
+                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='leaf-branch' style='--score:{(double)data.Value / max}'></div><div class='leaf-name'>{names.Value}</div></div>";
+                    return $"<div class='container'><div class='branch' style='--score:{(double)data.Value / max}'></div>{RenderTree(data.Left.Value.Item2, names.Left.Value.Item2)}{RenderTree(data.Right.Value.Item2, names.Right.Value.Item2)}</div>";
+                }
+
+                buffer.AppendLine(Collapsible("Tree", $"<div class='phylogenetictree'>{RenderTree(tree.DataTree, tree.OriginalTree)}</div>"));
+            }
+
+
             string unique = "";
+            var table_buffer = new StringBuilder();
             if (displayUnique) unique = $@"
 <th {SortOn(5, "number")}class=""smallcell"">Unique Score</th>
 <th {SortOn(6, "number")}class=""smallcell"">Unique Matches</th>
 <th {SortOn(7, "number")}class=""smallcell"">Unique Area</th>
 ";
 
-            buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
+            table_buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
 <tr>
     <th {SortOn(0, "id")}class=""smallcell"">Identifier</th>
     <th {SortOn(1, "number")}class=""smallcell"">Length</th>
@@ -125,7 +139,7 @@ namespace HTMLNameSpace
 <td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
 <td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea:G3}</td>
 ";
-                buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
+                table_buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
     <td class=""center"">{link}</td>
     <td class=""center"">{templates[i].Sequence.Length}</td>
     <td class=""center bar"" style=""--relative-value:{templates[i].Score / max_values.Item1}"">{templates[i].Score}</td>
@@ -135,7 +149,8 @@ namespace HTMLNameSpace
 </tr>");
             }
 
-            buffer.AppendLine("</table>");
+            table_buffer.AppendLine("</table>");
+            buffer.AppendLine(Collapsible("Table", table_buffer.ToString()));
             CultureInfo.CurrentCulture = culture;
 
             return buffer.ToString();

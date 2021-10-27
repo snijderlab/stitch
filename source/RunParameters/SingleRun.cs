@@ -193,8 +193,8 @@ namespace AssemblyNameSpace
                     foreach (var segment in group.Item2)
                     {
                         if (segment.Hierarchy == null) continue;
-                        var DataTree = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
-                        Console.WriteLine(DataTree.DataTree.ToString(true, true));
+                        segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
+                        Console.WriteLine(segment.ScoreHierarchy.DataTree.ToString(true, true));
                     }
                 }
 

@@ -370,6 +370,7 @@ input:checked+label {
     border-left: 2px solid var(--color-primary);
     padding-left: .5rem;
     overflow: auto;
+    overflow-x: hidden;
 }
 
 .source-code {
@@ -625,6 +626,64 @@ input:checked+label .overhang-block .text {
 
 .footer p {
     color: var(--color-light);
+}
+
+/* ScoreTree */
+
+.phylogenetictree {
+    overflow-y: hidden;
+    --branch-width: 10px;
+}
+
+.container {
+    display: grid;
+    grid-template-columns: var(--branch-width) 1fr;
+    grid-template-areas: "lines branch1"". branch2";
+}
+
+.container>:nth-child(2) {
+    grid-area: branch1;
+}
+
+.container>:nth-child(3) {
+    grid-area: branch2;
+}
+
+.branch {
+    border: 1px solid var(--color-primary);
+    border-left: none;
+    border-bottom: none;
+    width: 100%;
+    height: auto;
+    grid-area: lines;
+    margin-top: 9px;
+    margin-bottom: -9px;
+    position: relative;
+}
+
+.leaf-branch {
+    border-top: 1px solid var(--color-primary);
+    width: var(--branch-width);
+    height: 1px;
+    margin-bottom: 4px;
+    position: relative;
+    display: inline-block;
+}
+
+.branch::before,
+.leaf-branch::before {
+    content: "";
+    display: block;
+    position: absolute;
+    width: var(--branch-width);
+    height: calc(var(--score) * 10px);
+    background-color: var(--color-secondary);
+}
+
+.leaf-name {
+    max-width: 150px;
+    height: 1em;
+    display: inline-block;
 }
 
 

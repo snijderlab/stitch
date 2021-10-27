@@ -355,9 +355,9 @@ assetsfolder = '{AssetsFolderName}';
                         if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateTemplateTable(recombined, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateSegmentTable(recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                         if (decoy.Count > 0)
-                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateTemplateTable(decoy, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateSegmentTable(decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                     }
 
                     groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));

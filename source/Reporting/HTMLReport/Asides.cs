@@ -76,7 +76,7 @@ namespace HTMLNameSpace
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
             buffer.Append($@"</div>
     <h2>Scores</h2>
-    {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName, totalReads)}
+    {HTMLTables.CreateSegmentTable(new List<Template> { template }, null, type, AssetsFolderName, totalReads)}
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
