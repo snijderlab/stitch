@@ -632,7 +632,7 @@ input:checked+label .overhang-block .text {
 
 .phylogenetictree {
     overflow-y: hidden;
-    --branch-width: 10px;
+    --branch-width: 30px;
 }
 
 .container {
@@ -650,7 +650,7 @@ input:checked+label .overhang-block .text {
 }
 
 .branch {
-    border: 1px solid var(--color-primary);
+    border: 1px solid var(--color-dark);
     border-left: none;
     border-bottom: none;
     width: 100%;
@@ -661,8 +661,17 @@ input:checked+label .overhang-block .text {
     position: relative;
 }
 
+.phylogenetictree>.container {
+    grid-template-columns: 0px 1fr;
+}
+
+.phylogenetictree>.container>.branch {
+    border-top: none;
+    width: 0px;
+}
+
 .leaf-branch {
-    border-top: 1px solid var(--color-primary);
+    border-top: 1px solid var(--color-dark);
     width: var(--branch-width);
     height: 1px;
     margin-bottom: 4px;
@@ -671,19 +680,34 @@ input:checked+label .overhang-block .text {
 }
 
 .branch::before,
-.leaf-branch::before {
+.branch::after,
+.leaf-branch::before,
+.leaf-branch::after {
     content: "";
     display: block;
     position: absolute;
-    width: var(--branch-width);
+    width: calc(var(--branch-width) - 1px);
+    left: 1px;
+}
+
+.branch::before,
+.leaf-branch::before {
     height: calc(var(--score) * 10px);
+    top: calc(var(--score) * -10px - 1px);
     background-color: var(--color-secondary);
+}
+
+.branch::after,
+.leaf-branch::after {
+    height: calc(var(--unique-score) * 10px);
+    background-color: var(--color-tertiary);
 }
 
 .leaf-name {
     max-width: 150px;
     height: 1em;
     display: inline-block;
+    margin-left: 4px;
 }
 
 

@@ -96,7 +96,7 @@ namespace AssemblyNameSpace
         public class ProteinHierarchyTree
         {
             public readonly Tree<string> OriginalTree;
-            public readonly Tree<int> DataTree;
+            public readonly Tree<(int Score, int UniqueScore)> DataTree;
 
             public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches)
             {
@@ -122,7 +122,7 @@ namespace AssemblyNameSpace
                         (index, _) => new List<int> { index }));
 
                 //Console.WriteLine($"There are {matches.Count} reads.");
-                var MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet())).ToList();
+                List<(string Key, HashSet<int> Set, int Score, int UniqueScore)> MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Score, group.First().Unique ? group.First().Score : 0)).ToList();
                 //Console.WriteLine($"There are {MatchSets.Count} read sets.");
                 //foreach (var read in MatchSets)
                 //{
@@ -136,22 +136,25 @@ namespace AssemblyNameSpace
 
                 DataTree = SetTree.Remodel(branch =>
                 {
-                    var sum = 0;
+                    var score = 0;
+                    var unique_score = 0;
                     for (int i = 0; i < MatchSets.Count; i++)
                     {
-                        var set = MatchSets[i].Item2;
+                        var set = MatchSets[i].Set;
                         if (set.IsSupersetOf(branch.Value))
                         {
+                            score += MatchSets[i].Score;
+                            unique_score += MatchSets[i].UniqueScore;
+
                             branch.Value.ForEach(i => set.Remove(i));
                             if (set.Count == 0)
                             {
                                 MatchSets.RemoveAt(i);
                                 i--;
                             }
-                            sum++;
                         }
                     }
-                    return sum;
+                    return (score, unique_score);
                 }
                 );
             }

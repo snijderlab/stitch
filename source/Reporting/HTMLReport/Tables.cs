@@ -87,11 +87,12 @@ namespace HTMLNameSpace
 
             if (tree != null)
             {
-                var max = tree.DataTree.Fold(0, (acc, value) => Math.Max(value, acc));
-                string RenderTree(PhylogeneticTree.Tree<int> data, PhylogeneticTree.Tree<string> names)
+                var max = tree.DataTree.Fold((0, 0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2)));
+                string RenderTree(PhylogeneticTree.Tree<(int Score, int UniqueScore)> data, PhylogeneticTree.Tree<string> names)
                 {
-                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='leaf-branch' style='--score:{(double)data.Value / max}'></div><div class='leaf-name'>{names.Value}</div></div>";
-                    return $"<div class='container'><div class='branch' style='--score:{(double)data.Value / max}'></div>{RenderTree(data.Left.Value.Item2, names.Left.Value.Item2)}{RenderTree(data.Right.Value.Item2, names.Right.Value.Item2)}</div>";
+                    var scores = $" style='--score:{(double)data.Value.Score / max.Item1};--unique-score:{(double)data.Value.UniqueScore / max.Item2};'";
+                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='leaf-branch'{scores}></div><div class='leaf-name'>{names.Value}</div></div>";
+                    return $"<div class='container'><div class='branch'{scores}></div>{RenderTree(data.Left.Value.Item2, names.Left.Value.Item2)}{RenderTree(data.Right.Value.Item2, names.Right.Value.Item2)}</div>";
                 }
 
                 buffer.AppendLine(Collapsible("Tree", $"<div class='phylogenetictree'>{RenderTree(tree.DataTree, tree.OriginalTree)}</div>"));
