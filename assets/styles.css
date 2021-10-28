@@ -385,6 +385,10 @@ input[type="checkbox"] {
     display: none;
 }
 
+input[type="radio"] {
+    display: none;
+}
+
 input:checked+label+.collapsable {
     display: block;
 }
@@ -628,11 +632,25 @@ input:checked+label .overhang-block .text {
     color: var(--color-light);
 }
 
+
 /* ScoreTree */
 
 .phylogenetictree {
     overflow-y: hidden;
-    --branch-width: 30px;
+    --branch-width: 2vw;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.phylogenetictree .legend {
+    --color: var(--color-secondary);
+    margin: 0;
+    margin-top: .8em;
+}
+
+.phylogenetictree .legend.unique {
+    --color: var(--color-tertiary);
 }
 
 .container {
@@ -663,6 +681,7 @@ input:checked+label .overhang-block .text {
 
 .phylogenetictree>.container {
     grid-template-columns: 0px 1fr;
+    flex-basis: 100%;
 }
 
 .phylogenetictree>.container>.branch {
@@ -670,19 +689,16 @@ input:checked+label .overhang-block .text {
     width: 0px;
 }
 
-.leaf-branch {
-    border-top: 1px solid var(--color-dark);
+.leaf .branch {
+    border-right: none;
     width: var(--branch-width);
     height: 1px;
     margin-bottom: 4px;
-    position: relative;
     display: inline-block;
 }
 
 .branch::before,
-.branch::after,
-.leaf-branch::before,
-.leaf-branch::after {
+.branch::after {
     content: "";
     display: block;
     position: absolute;
@@ -690,17 +706,14 @@ input:checked+label .overhang-block .text {
     left: 1px;
 }
 
-.branch::before,
-.leaf-branch::before {
-    height: calc(var(--score) * 10px);
-    top: calc(var(--score) * -10px - 1px);
+.branch::before {
     background-color: var(--color-secondary);
+    height: 0px;
 }
 
-.branch::after,
-.leaf-branch::after {
-    height: calc(var(--unique-score) * 10px);
+.branch::after {
     background-color: var(--color-tertiary);
+    height: 0px;
 }
 
 .leaf-name {
@@ -708,6 +721,33 @@ input:checked+label .overhang-block .text {
     height: 1em;
     display: inline-block;
     margin-left: 4px;
+}
+
+.phylogenetictree .showdata-0:checked~* .branch::before {
+    height: calc(var(--score) * 8px);
+    top: calc(var(--score) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-0:checked~* .branch::after {
+    height: calc(var(--unique-score) * 8px);
+}
+
+.phylogenetictree .showdata-1:checked~* .branch::before {
+    height: calc(var(--matches) * 8px);
+    top: calc(var(--matches) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-1:checked~* .branch::after {
+    height: calc(var(--unique-matches) * 8px);
+}
+
+.phylogenetictree .showdata-2:checked~* .branch::before {
+    height: calc(var(--area) * 8px);
+    top: calc(var(--area) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-2:checked~* .branch::after {
+    height: calc(var(--unique-area) * 8px);
 }
 
 
@@ -831,7 +871,8 @@ input:checked+.slider:before {
 }
 
 .point-graph label,
-.graph .copy-data {
+.graph .copy-data,
+.phylogenetictree label {
     font-size: 1em;
     border: 2px solid var(--color-light);
     background: none;
@@ -1035,12 +1076,14 @@ input:checked+.slider:before {
     color: var(--color-tertiary);
 }
 
-.point-graph input:checked+label {
+.point-graph input:checked+label,
+.phylogenetictree input:checked+label {
     border-color: var(--color-primary);
     border-radius: .2rem;
 }
 
-.point-graph label::before {
+.point-graph label::before,
+.phylogenetictree .legend::before {
     content: "";
     top: 0;
     left: 0;
@@ -1054,7 +1097,8 @@ input:checked+.slider:before {
     margin-left: .5em;
 }
 
-.point-graph label::after {
+.point-graph label::after,
+.phylogenetictree label::after {
     content: unset;
 }
 
@@ -1310,40 +1354,33 @@ input:checked+.slider:before {
     body {
         font-size: 0.8em;
     }
-
     .graph {
         page-break-inside: avoid;
     }
-
     .report label,
     .report .collapsable>label {
         background: none;
         color: var(--color-dark);
         border: none;
     }
-
     .collapsable {
         border: none;
         padding: 0;
         display: block;
         overflow: visible;
     }
-
     .info-link {
         color: var(--color-dark);
         border: none;
         font-size: 1em;
     }
-
     .table-header {
         display: block;
     }
-
     .histogram-header span {
         font-size: .6em;
         font-weight: normal;
     }
-
     .copy-data,
     .source-code,
     .point-graph label,

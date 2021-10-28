@@ -52,12 +52,8 @@ namespace AssemblyNameSpace
             try
             {
                 Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
-                Console.WriteLine(Hierarchy.ToString(false, true));
             }
-            catch
-            {
-                Console.WriteLine("No tree");
-            }
+            catch { }
         }
         /// <summary>
         /// Create a new Segment based on the templates provided.

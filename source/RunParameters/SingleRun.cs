@@ -194,7 +194,6 @@ namespace AssemblyNameSpace
                     {
                         if (segment.Hierarchy == null) continue;
                         segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
-                        Console.WriteLine(segment.ScoreHierarchy.DataTree.ToString(true, true));
                     }
                 }
 

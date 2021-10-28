@@ -96,38 +96,17 @@ namespace AssemblyNameSpace
         public class ProteinHierarchyTree
         {
             public readonly Tree<string> OriginalTree;
-            public readonly Tree<(int Score, int UniqueScore)> DataTree;
+            public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea)> DataTree;
 
             public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches)
             {
-                //Tree = tree;
-                //Sets = Tree.Fold(
-                //    (left, right) =>
-                //    {
-                //        var output = new List<List<int>>(left.Count + right.Count + 1);
-                //        output = output.Union( // Add all unique indices from both sides into a single set
-                //            new List<List<int>>{
-                //            left.Aggregate((acc, list) => acc.Union(list).ToList()).Union(
-                //                right.Aggregate((acc, list) => acc.Union(list).ToList())).ToList()}).ToList();
-                //        output = output.Union(left).ToList();
-                //        output = output.Union(right).ToList();
-                //        return output;
-                //    },
-                //    (index, value) => new List<List<int>> { new List<int> { index } });
-
                 OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(
                         (left, right) => left.Union(right).ToList(),
                         (index, _) => new List<int> { index }));
 
-                //Console.WriteLine($"There are {matches.Count} reads.");
-                List<(string Key, HashSet<int> Set, int Score, int UniqueScore)> MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Score, group.First().Unique ? group.First().Score : 0)).ToList();
-                //Console.WriteLine($"There are {MatchSets.Count} read sets.");
-                //foreach (var read in MatchSets)
-                //{
-                //    Console.WriteLine($"{read.Key}:{read.Item2.Aggregate("", (acc, a) => acc + " " + a.ToString())}");
-                //}
+                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().MetaData.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all 
@@ -138,13 +117,27 @@ namespace AssemblyNameSpace
                 {
                     var score = 0;
                     var unique_score = 0;
+                    var matches = 0;
+                    var unique_matches = 0;
+                    var area = 0.0;
+                    var unique_area = 0.0;
                     for (int i = 0; i < MatchSets.Count; i++)
                     {
                         var set = MatchSets[i].Set;
                         if (set.IsSupersetOf(branch.Value))
                         {
-                            score += MatchSets[i].Score;
-                            unique_score += MatchSets[i].UniqueScore;
+                            if (MatchSets[i].Unique)
+                            {
+                                unique_score += MatchSets[i].Score;
+                                unique_matches += MatchSets[i].Matches;
+                                unique_area += MatchSets[i].Area;
+                            }
+                            else
+                            {
+                                score += MatchSets[i].Score;
+                                matches += MatchSets[i].Matches;
+                                area += MatchSets[i].Area;
+                            }
 
                             branch.Value.ForEach(i => set.Remove(i));
                             if (set.Count == 0)
@@ -154,7 +147,7 @@ namespace AssemblyNameSpace
                             }
                         }
                     }
-                    return (score, unique_score);
+                    return (score, unique_score, matches, unique_matches, area, unique_area);
                 }
                 );
             }

@@ -62,17 +62,21 @@ namespace HTMLNameSpace
             return string.Join("/", pieces.ToArray()) + "/";
         }
 
+        public enum CollapsibleState { Closed, Open };
+
         static int collapsible_counter = 0;
         /// <summary>
         /// Create a collapsible region to be used as a main tab in the report.
         /// </summary>
         /// <param name="name">The name to display.</param>
         /// <param name="content">The content.</param>
-        public static string Collapsible(string name, string content)
+        /// <param name="state">The state of the collapsible, default closed</param>
+        public static string Collapsible(string name, string content, CollapsibleState state = CollapsibleState.Closed)
         {
             collapsible_counter++;
             string id = $"collapsible-{collapsible_counter}";
-            return $@"<input type=""checkbox"" id=""{id}""/>
+            string check = state == CollapsibleState.Open ? " checked" : "";
+            return $@"<input type=""checkbox"" id=""{id}""{check}/>
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
         }
