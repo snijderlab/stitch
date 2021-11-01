@@ -2,21 +2,24 @@
 
 # Getting started
 
-There are distributed executable files for windows (x64), linux (x64) and mac (x64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://bms-developer.science.uu.nl/D.Schulte/amino-acid-assembler/-/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://bms-developer.science.uu.nl/D.Schulte/amino-acid-assembler/-/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
 
-Windows (x64):
+Windows:
 ```
-.\assembler.exe batchfiles\monoclonal.txt
-```
-
-Linux (x64, most versions):
-```
-./assembler_linux batchfiles/monoclonal.txt
+.\assembler.exe batchfiles\monoclonal.txt           (x64)
+.\assembler_arm.exe batchfiles\monoclonal.txt       (arm64)
 ```
 
-OSX (x64, minimum version macOS 10.12 Sierra):
+Linux:
 ```
-./assembler_mac batchfiles/monoclonal.txt
+./assembler_linux batchfiles/monoclonal.txt         (x64, most versions)
+./assembler_linux_arm batchfiles/monoclonal.txt     (arm64)
+```
+
+OSX:
+```
+./assembler_mac batchfiles/monoclonal.txt           (x64, minimum version macOS 10.12 Sierra)
+./assembler_mac_arm batchfiles/monoclonal.txt       (arm64, minimum version macOS 11.0 Big Sur)
 ```
 
 For help creating batch files see `manual.pdf`, this is included with the package.
@@ -24,7 +27,7 @@ For help creating batch files see `manual.pdf`, this is included with the packag
 
 ## Running with dotnet
 
-To run the program with the dotnet runtime, first install the dotnet runtime (version 5.0) from [here](https://dotnet.microsoft.com/download).
+To run the program with the dotnet runtime, first install the dotnet runtime (version 6.0) from [here](https://dotnet.microsoft.com/download).
 Then run the following command to run the program:
 
 ```
@@ -33,16 +36,16 @@ dotnet path/to/source.dll <arguments>
 
 # Building
 
-The project is built with dotnet (.NET 5.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (.NET 6.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
 dotnet run -p source <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\net5.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
 
 ```
-mklink /J source\bin\debug\net5.0\win-x64\assets\ assets\
+mklink /J source\bin\debug\net6.0\win-x64\assets\ assets\
 ```
 
 To generate a single executable run:
@@ -68,9 +71,9 @@ dotnet test tests\batchfiles
 
 The 'batchfiles' folder contains some examples which can be run to see what the program is up to.
 
-- `Basic.txt` 
-- `Monoclonal.txt`
-- `Polyclonal.txt`
+- `basic.txt` 
+- `monoclonal.txt`
+- `polyclonal.txt`
 
 
 # Credits
@@ -78,6 +81,7 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 * Douwe Schulte - Software engineer
 * Joost Snijder - Principal investigator
 * Bastiaan de Graaf - Code reviews
+* Wei Wei Peng - Testing and analysis
 
 
 # Acknowledgements

@@ -32,18 +32,27 @@ deploy:
   stage: deploy
   script:
     - "dotnet publish source -c release /p:PublishReadyToRun=true"
+    - "dotnet publish source -c release -r win-arm64"
     - "dotnet publish source -c release -r linux-x64"
+    - "dotnet publish source -c release -r linux-arm64"
     - "dotnet publish source -c release -r osx-x64"
-    - Copy-Item "source\bin\release\net5.0\win-x64\publish\source.exe" -Destination "assembler.exe" -Force
-    - Copy-Item "source\bin\release\net5.0\linux-x64\publish\source" -Destination "assembler_linux" -Force
-    - Copy-Item "source\bin\release\net5.0\osx-x64\publish\source" -Destination "assembler_mac" -Force
-    - Copy-Item "source\obj\release\net5.0\win-x64\source.dll" -Destination "assembler.dll" -Force
+    - "dotnet publish source -c release -r osx.11.0-arm64"
+    - Copy-Item "source\bin\release\net6.0\win-x64\publish\source.exe" -Destination "assembler.exe" -Force
+    - Copy-Item "source\bin\release\net6.0\win-arm64\publish\source.exe" -Destination "assembler_arm.exe" -Force
+    - Copy-Item "source\bin\release\net6.0\linux-x64\publish\source" -Destination "assembler_linux" -Force
+    - Copy-Item "source\bin\release\net6.0\linux-arm64\publish\source" -Destination "assembler_linux_arm" -Force
+    - Copy-Item "source\bin\release\net6.0\osx-x64\publish\source" -Destination "assembler_mac" -Force
+    - Copy-Item "source\bin\release\net6.0\osx.11.0-arm64\publish\source" -Destination "assembler_mac_arm" -Force
+    - Copy-Item "source\obj\release\net6.0\win-x64\source.dll" -Destination "assembler.dll" -Force
     - "pandoc -o manual.pdf BatchFiles.md"
   artifacts: 
     paths:
       - assembler.exe
+      - assembler_arm.exe
       - assembler_linux
+      - assembler_linux_arm
       - assembler_mac
+      - assembler_mac_arm
       - assembler.dll
       - manual.pdf
       - License.md
