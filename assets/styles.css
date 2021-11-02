@@ -227,6 +227,11 @@ td.seq {
     border-color: var(--color-secondary);
 }
 
+.info-link:active {
+    color: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+}
+
 td.bar {
     position: relative;
 }
@@ -361,7 +366,7 @@ input:checked+label {
     border-radius: .2rem .2rem 0 0;
 }
 
-.report input:checked+.collapsable>label::after {
+.report input:checked+label::after {
     content: "-";
 }
 

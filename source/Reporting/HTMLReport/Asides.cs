@@ -76,7 +76,23 @@ namespace HTMLNameSpace
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
             buffer.Append($@"</div>
     <h2>Scores</h2>
-    {HTMLTables.CreateSegmentTable(new List<Template> { template }, null, type, AssetsFolderName, totalReads)}
+    <table class='widetable'><tr>
+    <th class='smallcell'>Length</th>
+    <th class='smallcell'>Score</th>
+    <th class='smallcell'>Matches</th>
+    <th class='smallcell'>Total Area</th>
+    <th class='smallcell'>Unique Score</th>
+    <th class='smallcell'>Unique Matches</th>
+    <th class='smallcell'>Unique Area</th>
+    </tr><tr>
+    <td class='center'>{template.ToString().Length}</td>
+    <td class='center'>{template.Score}</td>
+    <td class='center'>{template.Matches.Count()}</td>
+    <td class='center'>{template.TotalArea}</td>
+    <td class='center'>{template.UniqueScore}</td>
+    <td class='center'>{template.UniqueMatches}</td>
+    <td class='center'>{template.TotalUniqueArea}</td>
+    </tr></table>
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
@@ -93,8 +109,8 @@ namespace HTMLNameSpace
                 // Create an overview of the alignment from consensus with germline.
                 // Also highlight differences and IMGT regions
 
-                // HERECOMESTHEGERMLINE.SEQUENCE
                 // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
+                // HERECOMESTHEGERMLINE.SEQUENCE
                 //             CONSENSUS          (differences)
                 var match = template.AlignConsensusWithTemplate();
                 List<(string, string)> annotated = null;
