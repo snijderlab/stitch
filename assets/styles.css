@@ -64,11 +64,6 @@ h1 {
     font-family: Roboto Mono, monospace;
 }
 
-.prefix,
-.suffix {
-    color: grey;
-}
-
 .overview-link {
     background: var(--color-primary);
     color: var(--color-background);
@@ -77,10 +72,6 @@ h1 {
     margin-top: 1em;
     padding: .25em;
     margin-right: 1em;
-}
-
-img {
-    max-width: 100%;
 }
 
 .template-graphs {
@@ -302,25 +293,6 @@ td.bar::before {
 }
 
 
-/* Tables on template detail pages */
-
-.details table[id^="template-table"] th:first-child {
-    display: none;
-}
-
-.details table[id^="template-table"] th::after {
-    display: none;
-}
-
-.details table[id^="template-table"] td:first-child {
-    display: none;
-}
-
-.details table[id^="template-table"] td.bar:before {
-    display: none;
-}
-
-
 /* Collapsible regions */
 
 .report label,
@@ -400,83 +372,6 @@ input:checked+label+.collapsable {
 }
 
 
-/* Meta data */
-
-.meta-collapsable {
-    padding-left: .25em;
-}
-
-.meta-collapsable h3:first-child {
-    margin-top: 0;
-    padding-top: .15em;
-}
-
-
-/* Runtime */
-
-.runtime {
-    display: flex;
-    flex-direction: row;
-    padding-bottom: 1em;
-}
-
-.runtime>div {
-    background-color: var(--color-primary);
-    margin-left: 5px;
-    min-width: 2em;
-    position: relative;
-}
-
-.runtime p {
-    color: var(--color-background);
-    margin: .1em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.runtime>div:nth-child(odd) {
-    background-color: var(--color-primary-shade);
-}
-
-.runtime>div:first-child {
-    margin-left: 0;
-}
-
-.runtime-hover {
-    display: none;
-    position: absolute;
-    width: 150px;
-    border: 1px solid var(--color-primary);
-    padding: .2em;
-    background-color: var(--color-background);
-    transform: translate(10px, -10px);
-    z-index: 100;
-}
-
-.runtime-hover span {
-    display: block;
-}
-
-.runtime-title {
-    font-weight: 500;
-}
-
-.runtime-time {
-    color: var(--color-light);
-}
-
-.runtime-desc {
-    margin-top: .5em;
-    font-size: .75em;
-    font-style: italic;
-}
-
-.runtime>div:hover .runtime-hover {
-    display: block;
-}
-
-
 /* reads alignment */
 
 .reads-alignment {
@@ -519,6 +414,10 @@ input:checked+label+.collapsable {
     font-weight: 500;
 }
 
+.align-link:hover {
+    color: var(--color-secondary);
+}
+
 .coverage-depth-wrapper {
     height: 50px;
     order: 1;
@@ -533,16 +432,6 @@ input:checked+label+.collapsable {
     width: calc(1ch - 2px);
     display: inline-block;
     margin: 0 1px;
-}
-
-.align-link.hover {
-    color: var(--color-secondary);
-    font-weight: 500;
-}
-
-.read-link.hover {
-    color: var(--color-secondary);
-    border-color: var(--color-secondary);
 }
 
 .front-overhang {
@@ -757,78 +646,6 @@ input:checked+label .overhang-block .text {
 }
 
 
-/* JS-settings */
-
-.js-settings {
-    display: flex;
-    flex-direction: row;
-    align-items: center;
-}
-
-.js-settings p {
-    margin: 0;
-    margin-right: .5em;
-}
-
-
-/* Toggle switch */
-
-
-/* based on an example by w3schools */
-
-.js-toggle {
-    position: relative;
-    display: inline-block;
-    width: 2.5em;
-    height: 1.5em;
-}
-
-.js-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.js-toggle .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--color-background);
-    -webkit-transition: .4s;
-    transition: .4s;
-    border-radius: 2em;
-}
-
-.js-toggle .slider:before {
-    position: absolute;
-    content: "";
-    height: 1.1em;
-    width: 1.1em;
-    left: .2em;
-    bottom: .2em;
-    background-color: var(--color-background);
-    -webkit-transition: .4s;
-    transition: .4s;
-    border-radius: 50%;
-}
-
-input:checked+.slider {
-    background-color: var(--color-primary);
-}
-
-input:focus+.slider {
-    box-shadow: 0 0 1px var(--color-primary);
-    ;
-}
-
-input:checked+.slider:before {
-    transform: translateX(1em);
-}
-
-
 /* Sequence Logo */
 
 .sequence-logo {
@@ -916,16 +733,6 @@ input:checked+.slider:before {
 .table-header>div {
     flex: 1 1 1px;
     padding: 0 .5em;
-}
-
-.table-header>div:last-child {
-    box-shadow: none;
-}
-
-.table-header h3 {
-    margin: 0;
-    padding: 1.5em 0;
-    color: var(--color-primary);
 }
 
 .text-header {

@@ -605,7 +605,7 @@ namespace HTMLNameSpace
                 buffer.Append("</td></tr>");
             }
 
-            buffer.Append($@"<tr><td>Alignment graphic</td><td>");
+            buffer.Append($@"<tr><td>Alignment graphic</td><td class='sequence-match-graphic'>");
             SequenceMatchGraphic(buffer, match);
             buffer.Append("</td></tr></table></div>");
         }
