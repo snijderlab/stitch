@@ -1143,7 +1143,7 @@ namespace AssemblyNameSpace
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new MetaData.FileIdentifier(tsettings.Name, ParseHelper.GetFullPath(file_path).GetValue(outEither), file_pos);
+                var fileId = new MetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).GetValue(outEither), tsettings.Name, file_pos);
 
                 var folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
 

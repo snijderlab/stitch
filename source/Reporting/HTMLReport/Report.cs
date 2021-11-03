@@ -442,14 +442,15 @@ assetsfolder = '{AssetsFolderName}';
 
             try
             {
-                // TODO: Make these async or something, create the job and only execute it when scattered over a thread pool
-                // TODO: move CreateAsides to this class again and pass a single StringBuilder for each resulting HTML page
+                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
                 var html = CreateMain();
                 CreateAsides();
 
                 stopwatch.Stop();
                 html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
                 SaveAndCreateDirectories(filename, html);
+                System.Globalization.CultureInfo.CurrentCulture = culture;
             }
             catch (Exception e)
             {

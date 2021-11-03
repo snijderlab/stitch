@@ -99,8 +99,6 @@ namespace HTMLNameSpace
                 return;
             }
             var dataBuffer = new StringBuilder("Label\tValue");
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
             buffer.Append("<div class='graph'>");
             if (title != null)
@@ -123,8 +121,6 @@ namespace HTMLNameSpace
             }
 
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
-
-            System.Globalization.CultureInfo.CurrentCulture = culture;
         }
 
         /// <summary>
@@ -180,8 +176,6 @@ namespace HTMLNameSpace
 
             // Create Legend
             var dataBuffer = new StringBuilder("Group");
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
             buffer.Append($"<div class='graph'><h2 class='title'>{title}</h2><div class='histogram-header'>");
             for (int i = 0; i < dimensions; i++)
@@ -216,8 +210,6 @@ namespace HTMLNameSpace
             }
 
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
-
-            System.Globalization.CultureInfo.CurrentCulture = culture;
         }
 
         static int graph_counter = 0;
@@ -258,8 +250,6 @@ namespace HTMLNameSpace
 
             // Create Legend
             var dataBuffer = new StringBuilder("Group\tPoint");
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
             buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()'><h2 class='title'>{title}</h2>");
             for (int i = 0; i < dimensions; i++)
@@ -299,8 +289,6 @@ namespace HTMLNameSpace
             }
 
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
-
-            System.Globalization.CultureInfo.CurrentCulture = culture;
         }
     }
 }
