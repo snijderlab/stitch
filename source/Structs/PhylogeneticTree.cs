@@ -26,6 +26,14 @@ namespace AssemblyNameSpace
                 return scores.MisMatches + (scores.GapInQuery + scores.GapInTemplate) * 12;
             });
 
+            var max_distance = (double.MinValue, 0, 0);
+            for (int r = 0; r < length; r++) {
+                for (int c = 0; c < length; c++) {
+                    if (distance[r, c] > max_distance.Item1)
+                        max_distance = (distance[r, c], r, c);
+                }
+            }
+
             // Find the max value
             //var max = double.MinValue;
             //foreach (var item in distance) if (item > max) max = item;
@@ -89,7 +97,26 @@ namespace AssemblyNameSpace
 
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
-            output.RemoveNegativeDistances();
+
+            // Rebase the tree based on the longest distance (calculated before)
+            Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {output.Get(max_distance.Item2)} and {output.Get(max_distance.Item3)}");
+            // Find the middle node
+            // Find the paths from the current root to both nodes
+            var path_A = new List<double>();
+            var path_B = new List<double>();
+            output.Apply(t => {
+                if (t.Left == null && t.Right == null)
+                    if 
+            })
+
+            // See until where these paths overlap
+            // This gives the path from one to the other
+            // Now determine the middle node (half distance)
+
+            // Rebuild the branches leading to the middle node
+            // Join this with the branches leading from the middle node to form the new tree
+
+            //output.RemoveNegativeDistances();
             return output;
         }
 
@@ -164,6 +191,20 @@ namespace AssemblyNameSpace
             public (double, Tree<TValue>)? Left { get; private set; }
             /// <summary> The right tree. Including the distance to this node. </summary>
             public (double, Tree<TValue>)? Right { get; private set; }
+            public int Leaves
+            {
+                get
+                {
+                    return this.Fold((a, b) => a + b, (i, v) => 1);
+            }
+            }
+
+            public TValue Get(int index) {
+                if (Left == null && Right == null)
+                    return Index == index ? Value : default(TValue);
+                else
+                    return Left.Value.Item2.Get(index) ?? Right.Value.Item2.Get(index);
+            }
 
             /// <summary> Create a leaf node.</summary>
             /// <param name="index"> The index of this leaf in the list as presented to the CreateTree function. </param>
@@ -244,6 +285,18 @@ namespace AssemblyNameSpace
                 return output;
             }
 
+            /// <summary> Fold a function over the tree by applying it to every tree in a depth first way. </summary>
+            /// <param name="seed"> The initial value for the accumulator structure. </param>
+            /// <param name="f"> The function to apply to every node. </param>
+            /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
+            /// <returns> The accumulator. </returns>
+            public List<TAcc> Fold<TAcc>(List<TAcc> seed, Func<List<TAcc>, TValue, List<TAcc>> f)
+            {
+                var output = f(seed, this.Value);
+                if (Left == null && Right == null) return new List<TAcc>();
+                return Left.Value.Item2.Fold(output, f).join(Right.Value.Item2.Fold(output, f));
+            }
+
             /// <summary> Fold two functions over the tree by applying them to every tree and leaf in a depth first way. </summary>
             /// <param name="tree"> The function to apply to every branch (a node which has a Left and/or Right node). </param>
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
@@ -253,6 +306,19 @@ namespace AssemblyNameSpace
             {
                 if (Left == null && Right == null)
                     return leaf(this.Index, this.Value);
+                else
+                    return tree(Left.Value.Item2.Fold(tree, leaf), Right.Value.Item2.Fold(tree, leaf));
+            }
+
+            /// <summary> Fold two functions over the tree by applying them to every tree and leaf in a depth first way. </summary>
+            /// <param name="tree"> The function to apply to every branch (a node which has a Left and/or Right node). </param>
+            /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
+            /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
+            /// <returns> The accumulator. </returns>
+            public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<Tree<TValue>, TAcc> leaf)
+            {
+                if (Left == null && Right == null)
+                    return leaf(this);
                 else
                     return tree(Left.Value.Item2.Fold(tree, leaf), Right.Value.Item2.Fold(tree, leaf));
             }
@@ -325,6 +391,20 @@ namespace AssemblyNameSpace
                     Right.Value.Item2.RemoveNegativeDistances();
                 }
             }
-        }
+
+            //public static Tree<TOut> Rebase(Tree<TOut> tree)
+            //{
+            //    var leaves = tree.Leaves;
+            //    var distances = new double[leaves, leaves];
+            //    var nodes = tree.Fold((a, b) => a.join(b), (index, value) => new List<int>{index})
+//
+            //    tree.Apply(
+            //        (left, right) => {
+//
+            //        }
+            //        (leaf) => {}
+            //    )
+            //}
+        }//
     }
 }

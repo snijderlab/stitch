@@ -912,7 +912,7 @@ input:checked+label .overhang-block .text {
 
 .point-graph label::after,
 .phylogenetictree label::after {
-    content: unset;
+    content: unset !important;
 }
 
 .point-graph .plot {
@@ -1167,33 +1167,40 @@ input:checked+label .overhang-block .text {
     body {
         font-size: 0.8em;
     }
+
     .graph {
         page-break-inside: avoid;
     }
+
     .report label,
     .report .collapsable>label {
         background: none;
         color: var(--color-dark);
         border: none;
     }
+
     .collapsable {
         border: none;
         padding: 0;
         display: block;
         overflow: visible;
     }
+
     .info-link {
         color: var(--color-dark);
         border: none;
         font-size: 1em;
     }
+
     .table-header {
         display: block;
     }
+
     .histogram-header span {
         font-size: .6em;
         font-weight: normal;
     }
+
     .copy-data,
     .source-code,
     .point-graph label,
