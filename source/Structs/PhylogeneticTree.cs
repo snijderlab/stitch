@@ -27,8 +27,10 @@ namespace AssemblyNameSpace
             });
 
             var max_distance = (double.MinValue, 0, 0);
-            for (int r = 0; r < length; r++) {
-                for (int c = 0; c < length; c++) {
+            for (int r = 0; r < length; r++)
+            {
+                for (int c = 0; c < length; c++)
+                {
                     if (distance[r, c] > max_distance.Item1)
                         max_distance = (distance[r, c], r, c);
                 }
@@ -98,23 +100,103 @@ namespace AssemblyNameSpace
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
 
+            Console.WriteLine("==============================");
+            Console.WriteLine(output.ToString(false, true, true));
+
             // Rebase the tree based on the longest distance (calculated before)
-            Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {output.Get(max_distance.Item2)} and {output.Get(max_distance.Item3)}");
+            var A = output.Get(max_distance.Item2);
+            var B = output.Get(max_distance.Item3);
+            Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {A} and {B}");
             // Find the middle node
             // Find the paths from the current root to both nodes
-            var path_A = new List<double>();
-            var path_B = new List<double>();
-            output.Apply(t => {
-                if (t.Left == null && t.Right == null)
-                    if 
-            })
+            var path_A = new List<(Tree<string>, double)>();
+            var path_B = new List<(Tree<string>, double)>();
+            output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
+            {
+                acc.Add((item, dis));
+                if (item.id == A.Item1)
+                    path_A = new List<(Tree<string>, double)>(acc);
+                if (item.id == B.Item1)
+                    path_B = new List<(Tree<string>, double)>(acc);
+                return acc;
+            },
+            double.MinValue);
+            string print_path(List<(Tree<string>, double)> tree)
+            {
+                return tree.Aggregate("", (acc, i) => acc + " " + i.Item1.id);
+            }
+
+            Console.WriteLine($"Paths leading to max leaves\nA: {print_path(path_A)}\nB: {print_path(path_B)}");
 
             // See until where these paths overlap
+            int overlap = 0;
+            while (true)
+            {
+                if (overlap >= path_A.Count - 1 || overlap >= path_B.Count - 1) // -1 because both paths cannot ever end in the same node
+                    break;
+                if (path_A[overlap] == path_B[overlap])
+                    overlap++;
+                else
+                    break;
+            }
+            Console.WriteLine($"There are {overlap} nodes overlapping in the paths.");
+
             // This gives the path from one to the other
+            List<(Tree<string>, double)> path = path_A.Skip(overlap).Reverse().ToList();
+            path.AddRange(path_B.Skip(overlap));
+            Console.WriteLine($"Combined path: {print_path(path)}");
+
             // Now determine the middle node (half distance)
+            var sum = path.Aggregate(0.0, (acc, item) => acc + item.Item2);
+            var partial = 0.0;
+            var index = 0;
+            while (true)
+            {
+                partial += path[index].Item2;
+                if (partial > sum / 2)
+                    break;
+                index += 1;
+            }
+
+            Console.WriteLine($"Length of path {sum}, half is at node {path[index].Item1.id} with {partial} distance");
 
             // Rebuild the branches leading to the middle node
+            (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
+            index = 1;
+            while (true)
+            {
+                if (index == overlap + 2) break;
+                if (index == path_A.Count)
+                {
+                    Console.WriteLine("DID NOT FIND NEW ROOT NODE BUT CAME TO END OF PATH");
+                    break;
+                }
+                if (output.Left.Value.Item2.id == path_A[index].Item1.id)
+                {
+                    if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
+                    else
+                    {
+                        new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
+                    }
+                    output = output.Left.Value.Item2;
+                }
+                else if (output.Right.Value.Item2.id == path_A[index].Item1.id)
+                {
+                    if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
+                    else
+                    {
+                        new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
+                    }
+                    output = output.Right.Value.Item2;
+                }
+                index += 1;
+            }
+
             // Join this with the branches leading from the middle node to form the new tree
+            var new_dis = new_branch.Item1 / 2;
+            output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
+            Console.WriteLine(output.ToString(false, true, true));
+            if (output == null) Console.WriteLine("!!!!!!!!!!NO TREE LEFT!!!!!!!!!!");
 
             //output.RemoveNegativeDistances();
             return output;
@@ -185,6 +267,8 @@ namespace AssemblyNameSpace
         {
             /// <summary> The index of this leaf in the list as presented to the CreateTree function.</summary>
             public readonly int Index = 0;
+            public readonly int id;
+            static int counter = 0;
             /// <summary> The name of this leaf. </summary>
             public readonly TValue Value;
             /// <summary> The left tree. Including the distance to this node. </summary>
@@ -196,14 +280,18 @@ namespace AssemblyNameSpace
                 get
                 {
                     return this.Fold((a, b) => a + b, (i, v) => 1);
-            }
+                }
             }
 
-            public TValue Get(int index) {
+            public (int, TValue) Get(int index)
+            {
                 if (Left == null && Right == null)
-                    return Index == index ? Value : default(TValue);
-                else
-                    return Left.Value.Item2.Get(index) ?? Right.Value.Item2.Get(index);
+                    return Index == index ? (id, Value) : (-1, default(TValue));
+
+                var left = Left.Value.Item2.Get(index);
+                if (left.Item2 == null)
+                    return Right.Value.Item2.Get(index);
+                return left;
             }
 
             /// <summary> Create a leaf node.</summary>
@@ -211,6 +299,8 @@ namespace AssemblyNameSpace
             /// <param name="value"> The value of this leaf. </param>
             public Tree(int index, TValue value)
             {
+                id = counter;
+                counter++;
                 Index = index;
                 Value = value;
             }
@@ -220,12 +310,16 @@ namespace AssemblyNameSpace
             /// <param name="right"> The right tree. Consisting of the distance and node for this tree. </param>
             public Tree((double, Tree<TValue>) left, (double, Tree<TValue>) right)
             {
+                id = counter;
+                counter++;
                 Left = left;
                 Right = right;
             }
 
             private Tree(int index, TValue value, (double, Tree<TValue>)? left, (double, Tree<TValue>)? right)
             {
+                id = counter;
+                counter++;
                 Index = index;
                 Value = value;
                 Left = left;
@@ -236,18 +330,20 @@ namespace AssemblyNameSpace
             /// <param name="own"> Any trees already present on the main stem of the tree (on this line). </param>
             /// <param name="other"> Any trees already present on the side tree(es) of the tree (on secondary lines). </param>
             /// <returns> A fully rendered tree, using UTF-8 and characters from the Box drawing set. </returns>
-            string Render(string own, string other, bool showValue, bool showLength)
+            string Render(string own, string other, bool showValue, bool showLength, bool showID)
             {
                 if (Left == null && Right == null)
                 {
                     // Leaf just print the info
-                    return $"{own}> {Value} ({Index})";
+                    return $"{own}> {Value} ({Index}) " + (showID ? id : "");
                 }
                 else
                 {
                     // A split at the current depth
                     var value = showValue ? Value.ToString() : "";
                     var spacing = new string(' ', value.Length);
+                    var id_text = showID ? id.ToString() : "";
+                    var id_spacing = new string(' ', id_text.Length);
 
                     var lengthLeft = showLength ? Left.Value.Item1.ToString("G3") + '─' : "";
                     var lengthRight = showLength ? Right.Value.Item1.ToString("G3") + '─' : "";
@@ -256,20 +352,20 @@ namespace AssemblyNameSpace
                     lengthRight = lengthRight.PadRight(length, '─');
                     var lengthSpacing = new string(' ', length);
 
-                    return Left.Value.Item2.Render(own + value + '┬' + lengthLeft, other + spacing + '│' + lengthSpacing, showValue, showLength) + '\n' +
-                           Right.Value.Item2.Render(other + spacing + '└' + lengthRight, other + spacing + ' ' + lengthSpacing, showValue, showLength);
+                    return Left.Value.Item2.Render(own + value + id_text + '┬' + lengthLeft, other + spacing + id_spacing + '│' + lengthSpacing, showValue, showLength, showID) + '\n' +
+                           Right.Value.Item2.Render(other + spacing + id_spacing + '└' + lengthRight, other + spacing + id_spacing + ' ' + lengthSpacing, showValue, showLength, showID);
                 }
             }
 
             /// <summary> Create a string representation of the tree. </summary>
             public override string ToString()
             {
-                return Render("", "", false, false);
+                return Render("", "", false, false, false);
             }
 
-            public string ToString(bool showValue, bool showLength)
+            public string ToString(bool showValue, bool showLength, bool showID)
             {
-                return Render("", "", showValue, showLength);
+                return Render("", "", showValue, showLength, showID);
             }
 
             /// <summary> Fold a function over the tree by applying it to every tree in a depth first way. </summary>
@@ -290,11 +386,13 @@ namespace AssemblyNameSpace
             /// <param name="f"> The function to apply to every node. </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public List<TAcc> Fold<TAcc>(List<TAcc> seed, Func<List<TAcc>, TValue, List<TAcc>> f)
+            public List<TAcc> Fold<TAcc>(List<TAcc> seed, Func<List<TAcc>, Tree<TValue>, double, List<TAcc>> f, double distance)
             {
-                var output = f(seed, this.Value);
+                var output = f(seed, this, distance);
                 if (Left == null && Right == null) return new List<TAcc>();
-                return Left.Value.Item2.Fold(output, f).join(Right.Value.Item2.Fold(output, f));
+                var left = Left.Value.Item2.Fold(new List<TAcc>(output), f, Left.Value.Item1);
+                left.AddRange(Right.Value.Item2.Fold(output, f, Right.Value.Item1));
+                return left;
             }
 
             /// <summary> Fold two functions over the tree by applying them to every tree and leaf in a depth first way. </summary>
@@ -397,10 +495,10 @@ namespace AssemblyNameSpace
             //    var leaves = tree.Leaves;
             //    var distances = new double[leaves, leaves];
             //    var nodes = tree.Fold((a, b) => a.join(b), (index, value) => new List<int>{index})
-//
+            //
             //    tree.Apply(
             //        (left, right) => {
-//
+            //
             //        }
             //        (leaf) => {}
             //    )
