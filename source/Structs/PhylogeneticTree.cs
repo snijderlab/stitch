@@ -99,104 +99,157 @@ namespace AssemblyNameSpace
 
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
-
-            Console.WriteLine("==============================");
-            Console.WriteLine(output.ToString(false, true, true));
-
-            // Rebase the tree based on the longest distance (calculated before)
-            var A = output.Get(max_distance.Item2);
-            var B = output.Get(max_distance.Item3);
-            Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {A} and {B}");
-            // Find the middle node
-            // Find the paths from the current root to both nodes
-            var path_A = new List<(Tree<string>, double)>();
-            var path_B = new List<(Tree<string>, double)>();
-            output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
-            {
-                acc.Add((item, dis));
-                if (item.id == A.Item1)
-                    path_A = new List<(Tree<string>, double)>(acc);
-                if (item.id == B.Item1)
-                    path_B = new List<(Tree<string>, double)>(acc);
-                return acc;
-            },
-            double.MinValue);
+            const bool middle_root = false;
             string print_path(List<(Tree<string>, double)> tree)
             {
                 return tree.Aggregate("", (acc, i) => acc + " " + i.Item1.id);
             }
 
-            Console.WriteLine($"Paths leading to max leaves\nA: {print_path(path_A)}\nB: {print_path(path_B)}");
-
-            // See until where these paths overlap
-            int overlap = 0;
-            while (true)
+            if (middle_root)
             {
-                if (overlap >= path_A.Count - 1 || overlap >= path_B.Count - 1) // -1 because both paths cannot ever end in the same node
-                    break;
-                if (path_A[overlap] == path_B[overlap])
-                    overlap++;
-                else
-                    break;
-            }
-            Console.WriteLine($"There are {overlap} nodes overlapping in the paths.");
 
-            // This gives the path from one to the other
-            List<(Tree<string>, double)> path = path_A.Skip(overlap).Reverse().ToList();
-            path.AddRange(path_B.Skip(overlap));
-            Console.WriteLine($"Combined path: {print_path(path)}");
+                Console.WriteLine("==============================");
+                Console.WriteLine(output.ToString(false, true, true));
 
-            // Now determine the middle node (half distance)
-            var sum = path.Aggregate(0.0, (acc, item) => acc + item.Item2);
-            var partial = 0.0;
-            var index = 0;
-            while (true)
-            {
-                partial += path[index].Item2;
-                if (partial > sum / 2)
-                    break;
-                index += 1;
-            }
-
-            Console.WriteLine($"Length of path {sum}, half is at node {path[index].Item1.id} with {partial} distance");
-
-            // Rebuild the branches leading to the middle node
-            (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
-            index = 1;
-            while (true)
-            {
-                if (index == overlap + 2) break;
-                if (index == path_A.Count)
+                // Rebase the tree based on the longest distance (calculated before)
+                var A = output.Get(max_distance.Item2);
+                var B = output.Get(max_distance.Item3);
+                Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {A} and {B}");
+                // Find the middle node
+                // Find the paths from the current root to both nodes
+                var path_A = new List<(Tree<string>, double)>();
+                var path_B = new List<(Tree<string>, double)>();
+                output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
                 {
-                    Console.WriteLine("DID NOT FIND NEW ROOT NODE BUT CAME TO END OF PATH");
-                    break;
-                }
-                if (output.Left.Value.Item2.id == path_A[index].Item1.id)
+                    acc.Add((item, dis));
+                    if (item.id == A.Item1)
+                        path_A = new List<(Tree<string>, double)>(acc);
+                    if (item.id == B.Item1)
+                        path_B = new List<(Tree<string>, double)>(acc);
+                    return acc;
+                },
+                double.MinValue);
+
+                Console.WriteLine($"Paths leading to max leaves\nA: {print_path(path_A)}\nB: {print_path(path_B)}");
+
+                // See until where these paths overlap
+                int overlap = 0;
+                while (true)
                 {
-                    if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
+                    if (overlap >= path_A.Count - 1 || overlap >= path_B.Count - 1) // -1 because both paths cannot ever end in the same node
+                        break;
+                    if (path_A[overlap] == path_B[overlap])
+                        overlap++;
                     else
-                    {
-                        new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
-                    }
-                    output = output.Left.Value.Item2;
+                        break;
                 }
-                else if (output.Right.Value.Item2.id == path_A[index].Item1.id)
-                {
-                    if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
-                    else
-                    {
-                        new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
-                    }
-                    output = output.Right.Value.Item2;
-                }
-                index += 1;
-            }
+                Console.WriteLine($"There are {overlap} nodes overlapping in the paths.");
 
-            // Join this with the branches leading from the middle node to form the new tree
-            var new_dis = new_branch.Item1 / 2;
-            output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
-            Console.WriteLine(output.ToString(false, true, true));
-            if (output == null) Console.WriteLine("!!!!!!!!!!NO TREE LEFT!!!!!!!!!!");
+                // This gives the path from one to the other
+                List<(Tree<string>, double)> path = path_A.Skip(overlap).Reverse().ToList();
+                path.AddRange(path_B.Skip(overlap));
+                Console.WriteLine($"Combined path: {print_path(path)}");
+
+                // Now determine the middle node (half distance)
+                var sum = path.Aggregate(0.0, (acc, item) => acc + item.Item2);
+                var partial = 0.0;
+                var index = 0;
+                while (true)
+                {
+                    partial += path[index].Item2;
+                    if (partial > sum / 2)
+                        break;
+                    index += 1;
+                }
+
+                Console.WriteLine($"Length of path {sum}, half is at node {path[index].Item1.id} with {partial} distance");
+
+                // Rebuild the branches leading to the middle node
+                (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
+                index = 1;
+                while (true)
+                {
+                    if (index == overlap + 2) break;
+                    if (index == path_A.Count)
+                    {
+                        Console.WriteLine("DID NOT FIND NEW ROOT NODE BUT CAME TO END OF PATH");
+                        break;
+                    }
+                    if (output.Left.Value.Item2.id == path_A[index].Item1.id)
+                    {
+                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
+                        else
+                        {
+                            new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
+                        }
+                        output = output.Left.Value.Item2;
+                    }
+                    else if (output.Right.Value.Item2.id == path_A[index].Item1.id)
+                    {
+                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
+                        else
+                        {
+                            new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
+                        }
+                        output = output.Right.Value.Item2;
+                    }
+                    index += 1;
+                }
+
+                // Join this with the branches leading from the middle node to form the new tree
+                var new_dis = new_branch.Item1 / 2;
+                output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
+                Console.WriteLine(output.ToString(false, true, true));
+                if (output == null) Console.WriteLine("!!!!!!!!!!NO TREE LEFT!!!!!!!!!!");
+            }
+            else if (output.Fold(false, (acc, value) => value == "Outgroup-1-1" ? true : acc))
+            {
+                Console.WriteLine("==============================");
+                Console.WriteLine(output.ToString(false, true, true));
+                var path = new List<(Tree<string>, double)>();
+                output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
+                {
+                    acc.Add((item, dis));
+                    if (item.Value == "Outgroup-1-1")
+                        path = new List<(Tree<string>, double)>(acc);
+                    return acc;
+                },
+                double.MinValue);
+                Console.WriteLine($"Paths leading to outgroup: {print_path(path)}");
+
+                // Rebuild the branches leading to the middle node
+                (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
+                var index = 1;
+                while (true)
+                {
+                    if (index == path.Count)
+                    {
+                        break;
+                    }
+                    if (output.Left.Value.Item2.id == path[index].Item1.id)
+                    {
+                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
+                        else
+                        {
+                            new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
+                        }
+                        output = output.Left.Value.Item2;
+                    }
+                    else if (output.Right.Value.Item2.id == path[index].Item1.id)
+                    {
+                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
+                        else
+                        {
+                            new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
+                        }
+                        output = output.Right.Value.Item2;
+                    }
+                    index += 1;
+                }
+                var new_dis = new_branch.Item1 / 2;
+                output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
+                Console.WriteLine(output.ToString(false, true, true));
+            }
 
             //output.RemoveNegativeDistances();
             return output;
@@ -291,6 +344,17 @@ namespace AssemblyNameSpace
                 var left = Left.Value.Item2.Get(index);
                 if (left.Item2 == null)
                     return Right.Value.Item2.Get(index);
+                return left;
+            }
+
+            public (int, TValue) Get(TValue value)
+            {
+                if (Left == null && Right == null)
+                    return EqualityComparer<TValue>.Default.Equals(Value, value) ? (id, Value) : (-1, default(TValue));
+
+                var left = Left.Value.Item2.Get(value);
+                if (left.Item2 == null)
+                    return Right.Value.Item2.Get(value);
                 return left;
             }
 
