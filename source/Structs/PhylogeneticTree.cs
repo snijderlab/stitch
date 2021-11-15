@@ -14,8 +14,14 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
-        public static Tree<string> CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet)
+        /// <param name="addOutgroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
+        public static Tree<string> CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet, bool addOutgroup = true)
         {
+            if (addOutgroup)
+            {
+                var avg = Sequences.Select(e => e.Sequence.Length).Average();
+                Sequences.Add(("Outgroup", HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg))));
+            }
             var length = Sequences.Count;
             var distance = new double[length, length];
 
@@ -99,123 +105,18 @@ namespace AssemblyNameSpace
 
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
-            const bool middle_root = false;
-            string print_path(List<(Tree<string>, double)> tree)
+
+            if (addOutgroup)
             {
-                return tree.Aggregate("", (acc, i) => acc + " " + i.Item1.id);
-            }
-
-            if (middle_root)
-            {
-
-                Console.WriteLine("==============================");
-                Console.WriteLine(output.ToString(false, true, true));
-
-                // Rebase the tree based on the longest distance (calculated before)
-                var A = output.Get(max_distance.Item2);
-                var B = output.Get(max_distance.Item3);
-                Console.WriteLine($"Longest distance in tree: {max_distance.Item1} between {A} and {B}");
-                // Find the middle node
-                // Find the paths from the current root to both nodes
-                var path_A = new List<(Tree<string>, double)>();
-                var path_B = new List<(Tree<string>, double)>();
-                output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
-                {
-                    acc.Add((item, dis));
-                    if (item.id == A.Item1)
-                        path_A = new List<(Tree<string>, double)>(acc);
-                    if (item.id == B.Item1)
-                        path_B = new List<(Tree<string>, double)>(acc);
-                    return acc;
-                },
-                double.MinValue);
-
-                Console.WriteLine($"Paths leading to max leaves\nA: {print_path(path_A)}\nB: {print_path(path_B)}");
-
-                // See until where these paths overlap
-                int overlap = 0;
-                while (true)
-                {
-                    if (overlap >= path_A.Count - 1 || overlap >= path_B.Count - 1) // -1 because both paths cannot ever end in the same node
-                        break;
-                    if (path_A[overlap] == path_B[overlap])
-                        overlap++;
-                    else
-                        break;
-                }
-                Console.WriteLine($"There are {overlap} nodes overlapping in the paths.");
-
-                // This gives the path from one to the other
-                List<(Tree<string>, double)> path = path_A.Skip(overlap).Reverse().ToList();
-                path.AddRange(path_B.Skip(overlap));
-                Console.WriteLine($"Combined path: {print_path(path)}");
-
-                // Now determine the middle node (half distance)
-                var sum = path.Aggregate(0.0, (acc, item) => acc + item.Item2);
-                var partial = 0.0;
-                var index = 0;
-                while (true)
-                {
-                    partial += path[index].Item2;
-                    if (partial > sum / 2)
-                        break;
-                    index += 1;
-                }
-
-                Console.WriteLine($"Length of path {sum}, half is at node {path[index].Item1.id} with {partial} distance");
-
-                // Rebuild the branches leading to the middle node
-                (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
-                index = 1;
-                while (true)
-                {
-                    if (index == overlap + 2) break;
-                    if (index == path_A.Count)
-                    {
-                        Console.WriteLine("DID NOT FIND NEW ROOT NODE BUT CAME TO END OF PATH");
-                        break;
-                    }
-                    if (output.Left.Value.Item2.id == path_A[index].Item1.id)
-                    {
-                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
-                        else
-                        {
-                            new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
-                        }
-                        output = output.Left.Value.Item2;
-                    }
-                    else if (output.Right.Value.Item2.id == path_A[index].Item1.id)
-                    {
-                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
-                        else
-                        {
-                            new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
-                        }
-                        output = output.Right.Value.Item2;
-                    }
-                    index += 1;
-                }
-
-                // Join this with the branches leading from the middle node to form the new tree
-                var new_dis = new_branch.Item1 / 2;
-                output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
-                Console.WriteLine(output.ToString(false, true, true));
-                if (output == null) Console.WriteLine("!!!!!!!!!!NO TREE LEFT!!!!!!!!!!");
-            }
-            else if (output.Fold(false, (acc, value) => value == "Outgroup-1-1" ? true : acc))
-            {
-                Console.WriteLine("==============================");
-                Console.WriteLine(output.ToString(false, true, true));
                 var path = new List<(Tree<string>, double)>();
                 output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
                 {
                     acc.Add((item, dis));
-                    if (item.Value == "Outgroup-1-1")
+                    if (item.Value == "Outgroup")
                         path = new List<(Tree<string>, double)>(acc);
                     return acc;
                 },
                 double.MinValue);
-                Console.WriteLine($"Paths leading to outgroup: {print_path(path)}");
 
                 // Rebuild the branches leading to the middle node
                 (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
@@ -228,27 +129,25 @@ namespace AssemblyNameSpace
                     }
                     if (output.Left.Value.Item2.id == path[index].Item1.id)
                     {
-                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
+                        if (index == 1)
+                            new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
                         else
-                        {
                             new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
-                        }
                         output = output.Left.Value.Item2;
                     }
                     else if (output.Right.Value.Item2.id == path[index].Item1.id)
                     {
-                        if (index == 1) new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
+                        if (index == 1)
+                            new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
                         else
-                        {
                             new_branch = (output.Right.Value.Item1, new Tree<string>(new_branch, output.Left.Value));
-                        }
                         output = output.Right.Value.Item2;
                     }
                     index += 1;
                 }
                 var new_dis = new_branch.Item1 / 2;
-                output = new Tree<string>((new_dis, new_branch.Item2), (new_dis, output));
-                Console.WriteLine(output.ToString(false, true, true));
+                // Only take the newly build tree, as the only thing remaining in the tree is the Outgroup
+                output = new_branch.Item2;
             }
 
             //output.RemoveNegativeDistances();

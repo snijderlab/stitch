@@ -441,5 +441,19 @@ namespace AssemblyNameSpace
             positions.Add(sequence.Length); // Constant region
             return (positions, conserved);
         }
+
+        public static AminoAcid[] GenerateRandomSequence(Alphabet alphabet, int length)
+        {
+            var output = new AminoAcid[length];
+            Random random = new Random();
+            var count = alphabet.PositionInScoringMatrix.Count;
+            var values = alphabet.PositionInScoringMatrix.Keys;
+            for (int i = 0; i < length; i++)
+            {
+                var element = values.ElementAt(random.Next(count));
+                output[i] = new AminoAcid(alphabet, element);
+            }
+            return output;
+        }
     }
 }
