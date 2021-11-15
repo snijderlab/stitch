@@ -445,7 +445,7 @@ namespace AssemblyNameSpace
         public static AminoAcid[] GenerateRandomSequence(Alphabet alphabet, int length)
         {
             var output = new AminoAcid[length];
-            Random random = new Random();
+            Random random = new Random(42);
             var count = alphabet.PositionInScoringMatrix.Count;
             var values = alphabet.PositionInScoringMatrix.Keys;
             for (int i = 0; i < length; i++)

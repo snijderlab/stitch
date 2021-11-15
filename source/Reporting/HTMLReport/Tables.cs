@@ -91,7 +91,7 @@ namespace HTMLNameSpace
                 string RenderTree(PhylogeneticTree.Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea)> data, PhylogeneticTree.Tree<string> names)
                 {
                     var scores = $" style='--score:{(double)data.Value.Score / max.Item1};--unique-score:{(double)data.Value.UniqueScore / max.Item2};--matches:{(double)data.Value.Matches / max.Item3};--unique-matches:{(double)data.Value.UniqueMatches / max.Item4};--area:{(double)data.Value.Area / max.Item5};--unique-area:{(double)data.Value.UniqueArea / max.Item6};'";
-                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='branch'{scores}></div><div class='leaf-name'>{names.Value}</div></div>";
+                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='branch'{scores}></div>{ GetAsideLink(templates[names.Index].MetaData, type, AssetsFolderName)}</div>";
                     return $"<div class='container'><div class='branch'{scores}></div>{RenderTree(data.Left.Value.Item2, names.Left.Value.Item2)}{RenderTree(data.Right.Value.Item2, names.Right.Value.Item2)}</div>";
                 }
 
