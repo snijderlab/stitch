@@ -80,5 +80,35 @@ namespace HTMLNameSpace
 <label for=""{id}"">{name}</label>
 <div class=""collapsable"">{content}</div>";
         }
+
+        /// <summary> Create a warning to use in the HTML report to show users that they need to look into someting. </summary>
+        /// <param name="title"> The title to of the warning. </param>
+        /// <param name="content"> The content as raw HTML (so enclosed in &lt;p&gt; for normal text). </param>
+        public static string Warning(string title, string content)
+        {
+            return $"<div class=\"warning\"><h3>{title}</h3>{content}</div>";
+        }
+
+        public static string TemplateHighDecoyWarning()
+        {
+            return Common.Warning("High decoy scores",
+@"<p>The highest scoring decoy template scores at least 50% of the actual templates in template matching. Look into the Decoy segment for more details. </p>
+<p> Maybe the origin of this issue is one of the following:</p>
+<ul>
+<li><p>A sample with very high background noise, in that case the result should be thoroughly checked by hand. </p></li>
+<li><p>Incorrect segments chosen, the chosen segments should match the expected segments and species of the dataset.</p></li>
+</ul>");
+        }
+
+        public static string RecombineHighDecoyWarning(string name)
+        {
+            return Common.Warning("High decoy scores",
+@$"<p>The highest scoring recombination decoy template scores at least 50% of the actual templates in recombination in ""{name}"". </p>
+<p> Maybe the origin of this issue is one of the following: </p>
+<ul>
+<li><p>A sample with very high background noise, in that case the result should be thoroughly checked by hand. </p></li>
+<li><p>Incorrect segments chosen, the chosen segments should match the expected segments and species of the dataset.</p></li>
+</ul>");
+        }
     }
 }

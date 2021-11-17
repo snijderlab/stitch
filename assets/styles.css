@@ -6,6 +6,7 @@
     --color-dark: #1E1E1E;
     --color-light: #7E7E7E;
     --color-background: #fff;
+    --color-yellow: #DCD08F;
 }
 
 @media screen and (prefers-color-scheme: dark) {
@@ -238,6 +239,33 @@ td.bar::before {
     opacity: 0.35;
     z-index: -1;
     background: var(--color-primary);
+}
+
+
+/* Warning */
+
+.warning {
+    border: 5px solid var(--color-yellow);
+    padding: 1em;
+    margin: 1em;
+    color: var(--color-yellow);
+}
+
+.warning::after {
+    content: "⚠";
+    display: block;
+    position: absolute;
+    top: calc(.5em - 10px);
+    right: .5em;
+    font-size: 2em;
+}
+
+.warning h3 {
+    margin: 0;
+}
+
+.warning>*:last-child {
+    margin-bottom: 0;
 }
 
 

@@ -382,6 +382,7 @@ assetsfolder = '{AssetsFolderName}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
+ {GetWarnings()}
  <div class='overview'>{CreateOverview()}</div>
  {innerbuffer}
 
@@ -395,6 +396,43 @@ assetsfolder = '{AssetsFolderName}';
 </div>
 </body>";
             return html;
+        }
+
+        string GetWarnings()
+        {
+            var buffer = new StringBuilder();
+            // High decoy scores
+            if (Parameters.Segments != null)
+            {
+                int max_decoy_score = 0;
+                int max_normal_score = 0;
+                for (int group = 0; group < Parameters.Segments.Count; group++)
+                {
+                    if (Parameters.Segments[group].Item1.ToLower() == "decoy")
+                    {
+                        max_decoy_score = Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
+                    }
+                    else if (Parameters.RecombinedSegment.Count != 0)
+                    {
+                        var decoy_scores = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).Select(t => t.Score);
+                        if (decoy_scores.Count() > 0)
+                        {
+                            var decoy = decoy_scores.Max();
+                            var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
+
+                            if (decoy > normal * 0.5)
+                                buffer.AppendLine(Common.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                        }
+                    }
+                    else
+                    {
+                        max_normal_score = Math.Max(max_normal_score, Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
+                    }
+                }
+                if (max_decoy_score > max_normal_score * 0.5)
+                    buffer.AppendLine(Common.TemplateHighDecoyWarning());
+            }
+            return buffer.ToString();
         }
 
         void CopyAssets()

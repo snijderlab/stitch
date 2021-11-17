@@ -297,6 +297,7 @@ namespace AssemblyNameSpace
                 if (progressBar != null) progressBar.Update();
             }
 
+            // Also known as the CDR joining step
             void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
             {
                 var recombined_templates = new List<Template>();
@@ -317,7 +318,8 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
-                            var seq = sequence.ElementAt(((RecombineOrder.Template)element).Index).ConsensusSequence().Item1;
+                            var index = ((RecombineOrder.Template)element).Index;
+                            var seq = sequence.ElementAt(index).ConsensusSequence().Item1;
                             if (join)
                             {
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
