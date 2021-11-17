@@ -39,7 +39,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// If provided the path that is aligned.
         /// </summary>
-        public MetaData.IMetaData MetaData;
+        public ReadMetaData.IMetaData MetaData;
 
         /// <summary>
         /// The total amount of (mis)matching aminoacids in the alignment
@@ -55,7 +55,7 @@ namespace AssemblyNameSpace
         public readonly int TemplateIndex;
         public bool Unique;
 
-        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, MetaData.IMetaData metadata, int index, int templateIndex = -1)
+        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, ReadMetaData.IMetaData metadata, int index, int templateIndex = -1)
         {
             StartTemplatePosition = startTemplatePosition;
             StartQueryPosition = startQueryPosition;

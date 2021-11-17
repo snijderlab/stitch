@@ -28,7 +28,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
             /// </summary>
-            public List<(string, MetaData.IMetaData)> Input;
+            public List<(string, ReadMetaData.IMetaData)> Input;
 
             /// <summary>
             /// The alphabet used in this run.
@@ -57,7 +57,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, MetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
+            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -350,7 +350,7 @@ namespace AssemblyNameSpace
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

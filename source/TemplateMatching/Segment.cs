@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public Segment(List<(string, ReadMetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, MetaData.IMetaData)> sequences)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, ReadMetaData.IMetaData)> sequences)
         {
             var paths = new List<GraphPath>(sequences.Count);
             for (int i = 0; i < sequences.Count; i++)

@@ -20,12 +20,12 @@ namespace AssemblyNameSpace
         public readonly int[] ContigID;
         public readonly double Score;
         public int Index;
-        public readonly MetaData.IMetaData MetaData;
+        public readonly ReadMetaData.IMetaData MetaData;
         /// <summary>
         /// Creates a basic graphpath
         /// </summary>
         /// <param name="Sequence"></param>
-        public GraphPath(List<AminoAcid> sequence, MetaData.IMetaData metaData, int index = -1)
+        public GraphPath(List<AminoAcid> sequence, ReadMetaData.IMetaData metaData, int index = -1)
         {
             Index = index;
             Sequence = sequence.ToArray();

@@ -48,10 +48,10 @@ namespace AssemblyNameSpace
                     read.LengthOnTemplate.ToString(),
                     HelperFunctionality.CIGAR(read.Alignment)
                     };
-                if (read.MetaData is MetaData.Peaks)
+                if (read.MetaData is ReadMetaData.Peaks)
                 {
                     peaks = true;
-                    var meta = (MetaData.Peaks)read.MetaData;
+                    var meta = (ReadMetaData.Peaks)read.MetaData;
                     row.AddRange(new List<string>
                         {
                             meta.Fraction,

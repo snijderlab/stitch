@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Metadata for this template
         /// </summary>
-        public readonly MetaData.IMetaData MetaData;
+        public readonly ReadMetaData.IMetaData MetaData;
 
         /// <summary>
         /// The score for this template
@@ -110,7 +110,7 @@ namespace AssemblyNameSpace
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, ReadMetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;

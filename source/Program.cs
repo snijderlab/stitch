@@ -9,7 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
-using System.Net;
+using System.Net.Http;
 
 namespace AssemblyNameSpace
 {
@@ -113,7 +113,9 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                         output_filename = args[3];
                     else
                         output_filename = filename;
-                    GenerateAnnotatedTemplate(filename, output_filename);
+
+                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
+                    GenerateAnnotatedTemplate(content, output_filename);
                 }
                 else if (filename == "download")
                 {
@@ -179,13 +181,13 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
+            var reads = OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
             var dict = new Dictionary<string, (string, string)>();
 
             // Condens all isoforms
             foreach (var read in reads)
             {
-                var id = ((MetaData.Fasta)read.MetaData).FastaHeader;
+                var id = ((ReadMetaData.Fasta)read.MetaData).FastaHeader;
                 if (!id.Contains("partial") && !id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
                     // Join all isoforms
@@ -246,7 +248,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
         {
             var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={name.Replace(" ", "%20")}&groups=";
-            WebClient client = new();
+            HttpClient client = new();
             Console.WriteLine(name);
             foreach (var segment in segments.Split(' '))
             {
@@ -263,8 +265,9 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                                 found = true;
                                 try
                                 {
-                                    client.DownloadFile($"http://www.imgt.org/IMGTrepertoire/Proteins/protein/{species.ShortName}/IGH/IGHC/{species.ShortHand}_IGHCallgenes.html", "temp.html");
-                                    CreateAnnotatedTemplatePre("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                                    var download = client.GetStringAsync($"http://www.imgt.org/IMGTrepertoire/Proteins/protein/{species.ShortName}/IGH/IGHC/{species.ShortHand}_IGHCallgenes.html");
+                                    download.Wait();
+                                    CreateAnnotatedTemplatePre(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
                                 }
                                 catch
                                 {
@@ -277,8 +280,9 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     }
                     else
                     {
-                        client.DownloadFile(basename + segment, "temp.html");
-                        GenerateAnnotatedTemplate("temp.html", name.Replace(' ', '_') + "_" + segment + ".fasta");
+                        var download = client.GetStringAsync(basename + segment);
+                        download.Wait();
+                        GenerateAnnotatedTemplate(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
                     }
                 }
                 catch
@@ -294,9 +298,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         /// </summary>
         /// <param name="filename">The HTML file</param>
         /// <param name="output">The file name for the Fasta file</param>
-        static void CreateAnnotatedTemplatePre(string filename, string output)
+        static void CreateAnnotatedTemplatePre(string content, string output)
         {
-            string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
             var namefilter = new NameFilter();
             var writer = new StreamWriter(output);
 
@@ -375,9 +378,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
         }
 
         /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
-        static void GenerateAnnotatedTemplate(string filename, string output, bool remove_gaps = true)
+        static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true)
         {
-            string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
             var namefilter = new NameFilter();
             var writer = new StreamWriter(output);
 

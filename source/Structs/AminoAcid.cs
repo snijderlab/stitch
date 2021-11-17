@@ -130,10 +130,10 @@ namespace AssemblyNameSpace
             {
                 return (otherAlphabet ?? alphabet).ScoringMatrix[alphabet.PositionInScoringMatrix[this.Character], alphabet.PositionInScoringMatrix[right.Character]];
             }
-            catch (Exception e)
+            catch
             {
                 Console.WriteLine($"Got an error while looking up the homology for this code {this.Character} and that code {right.Character}, probably there is one (or more) character that is not valid");
-                throw e;
+                throw;
             }
         }
 

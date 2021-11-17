@@ -242,13 +242,13 @@ namespace AssemblyNameSpace
                             if (db.GapTail)
                             {
                                 read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
-                                if (read.Item2 is MetaData.Fasta meta)
+                                if (read.Item2 is ReadMetaData.Fasta meta)
                                     meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXXXXXXXXXXXX");
                             }
                             if (db.GapHead)
                             {
                                 read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
-                                if (read.Item2 is MetaData.Fasta meta)
+                                if (read.Item2 is ReadMetaData.Fasta meta)
                                     meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
                             }
                             db.Templates[i] = read;
@@ -426,17 +426,17 @@ namespace AssemblyNameSpace
                     return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
                 }
             }
-            public static ParseResult<Input.InputParameters> ParseInputParameters(KeyValue key)
+            public static ParseResult<InputData.InputParameters> ParseInputParameters(KeyValue key)
             {
-                var outEither = new ParseResult<Input.InputParameters>();
-                var output = new Input.InputParameters();
+                var outEither = new ParseResult<InputData.InputParameters>();
+                var output = new InputData.InputParameters();
 
                 foreach (var pair in key.GetValues())
                 {
                     switch (pair.Name)
                     {
                         case "peaks":
-                            var settings = new Input.Peaks();
+                            var settings = new InputData.Peaks();
 
                             foreach (var setting in pair.GetValues())
                             {
@@ -468,7 +468,7 @@ namespace AssemblyNameSpace
                             break;
 
                         case "reads":
-                            var rsettings = new Input.Reads();
+                            var rsettings = new InputData.Reads();
 
                             foreach (var setting in pair.GetValues())
                             {
@@ -495,7 +495,7 @@ namespace AssemblyNameSpace
                             break;
 
                         case "fasta":
-                            var fastasettings = new Input.FASTA();
+                            var fastasettings = new InputData.FASTA();
 
                             foreach (var setting in pair.GetValues())
                             {
@@ -531,7 +531,7 @@ namespace AssemblyNameSpace
                             var identifier = new Regex(".*");
                             bool recursive = false;
 
-                            var peaks_settings = new Input.Peaks();
+                            var peaks_settings = new InputData.Peaks();
 
                             foreach (var setting in pair.GetValues())
                             {
@@ -577,14 +577,14 @@ namespace AssemblyNameSpace
                                 {
                                     if (!Path.GetFileName(file).StartsWith(startswith)) continue;
 
-                                    var fileId = new MetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
+                                    var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
 
                                     if (file.EndsWith(".fasta"))
-                                        output.Files.Add(new Input.FASTA() { File = fileId, Identifier = identifier });
+                                        output.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
                                     else if (file.EndsWith(".txt"))
-                                        output.Files.Add(new Input.Reads() { File = fileId });
+                                        output.Files.Add(new InputData.Reads() { File = fileId });
                                     else if (file.EndsWith(".csv"))
-                                        output.Files.Add(new Input.Peaks() { File = fileId, FileFormat = peaks_settings.FileFormat, Parameter = peaks_settings.Parameter });
+                                        output.Files.Add(new InputData.Peaks() { File = fileId, FileFormat = peaks_settings.FileFormat, Parameter = peaks_settings.Parameter });
                                     else
                                         continue;
                                 }
@@ -605,7 +605,7 @@ namespace AssemblyNameSpace
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter namefilter, KeyValue key, Input Input, Input.InputParameters GlobalInput)
+            public static ParseResult<bool> PrepareInput(NameFilter namefilter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput)
             {
                 var result = new ParseResult<bool>();
                 result.Value = true;
@@ -627,9 +627,9 @@ namespace AssemblyNameSpace
                 {
                     var reads = file switch
                     {
-                        Input.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
-                        Input.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
-                        Input.Reads simple => OpenReads.Simple(namefilter, simple.File),
+                        InputData.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
+                        InputData.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
+                        InputData.Reads simple => OpenReads.Simple(namefilter, simple.File),
                         _ => throw new ArgumentException("An unkown inputformat was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
@@ -1067,7 +1067,7 @@ namespace AssemblyNameSpace
                 var file_path = "";
                 KeyValue file_pos = node;
 
-                var peaks_settings = new Input.Peaks();
+                var peaks_settings = new InputData.Peaks();
 
                 var tsettings = new SegmentValue();
                 var outEither = new ParseResult<SegmentValue>(tsettings);
@@ -1143,9 +1143,9 @@ namespace AssemblyNameSpace
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new MetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).GetValue(outEither), tsettings.Name, file_pos);
+                var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).GetValue(outEither), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<(string, MetaData.IMetaData)>>();
+                var folder_reads = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
                     folder_reads = OpenReads.Fasta(namefilter, fileId, tsettings.Identifier);
@@ -1164,7 +1164,7 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool withprefix, Input.Peaks peaks_settings)
+            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool withprefix, InputData.Peaks peaks_settings)
             {
                 var outEither = new ParseResult<bool>(true);
                 var name = setting.Name;
@@ -1219,9 +1219,9 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseResult<(Input.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool withprefix, Input.PeaksParameters parameters)
+            public static ParseResult<(InputData.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool withprefix, InputData.PeaksParameters parameters)
             {
-                var outEither = new ParseResult<(Input.PeaksParameters, bool)>();
+                var outEither = new ParseResult<(InputData.PeaksParameters, bool)>();
                 outEither.Value = (parameters, true);
                 var name = setting.Name;
 
@@ -1435,7 +1435,7 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseResult<string> GetAllText(MetaData.FileIdentifier file)
+            public static ParseResult<string> GetAllText(ReadMetaData.FileIdentifier file)
             {
                 if (file.Origin != null) return GetAllText(file.Origin);
                 else return GetAllText(file.Path);

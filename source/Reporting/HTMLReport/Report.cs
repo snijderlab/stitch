@@ -10,7 +10,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Reflection;
 using HTMLNameSpace;
-using static HTMLNameSpace.Common;
+using static HTMLNameSpace.CommonPieces;
 
 namespace AssemblyNameSpace
 {
@@ -81,7 +81,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             var innerbuffer = new StringBuilder();
 
-            MetaData.IMetaData metadata = new MetaData.Simple(null, null);
+            ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
             switch (aside)
             {
                 case AsideType.Read:
@@ -117,9 +117,9 @@ namespace AssemblyNameSpace
 
         void CreateCDROverview(StringBuilder buffer, List<Segment> segments)
         {
-            var cdr1_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             int total_templates = 0;
 
             foreach (var template in segments.SelectMany(a => a.Templates))
@@ -127,7 +127,7 @@ namespace AssemblyNameSpace
                 var positions = new Dictionary<string, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
-                if (template.MetaData is MetaData.Fasta fasta && fasta != null)
+                if (template.MetaData is ReadMetaData.Fasta fasta && fasta != null)
                 {
                     foreach (var piece in fasta.AnnotatedSequence)
                     {
@@ -243,7 +243,7 @@ namespace AssemblyNameSpace
             HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
             innerbuffer.AppendLine("</div>");
 
-            buffer.Append(Common.Collapsible("CDR regions", innerbuffer.ToString()));
+            buffer.Append(CommonPieces.Collapsible("CDR regions", innerbuffer.ToString()));
         }
 
         private string CreateHeader(string title, List<string> location)
@@ -421,7 +421,7 @@ assetsfolder = '{AssetsFolderName}';
                             var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
 
                             if (decoy > normal * 0.5)
-                                buffer.AppendLine(Common.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                                buffer.AppendLine(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
                         }
                     }
                     else
@@ -430,7 +430,7 @@ assetsfolder = '{AssetsFolderName}';
                     }
                 }
                 if (max_decoy_score > max_normal_score * 0.5)
-                    buffer.AppendLine(Common.TemplateHighDecoyWarning());
+                    buffer.AppendLine(CommonPieces.TemplateHighDecoyWarning());
             }
             return buffer.ToString();
         }

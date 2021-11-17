@@ -6,7 +6,7 @@ using AssemblyNameSpace;
 
 namespace HTMLNameSpace
 {
-    public static class Common
+    public static class CommonPieces
     {
         /// <summary>An enum to save what type of detail aside it is.</summary>
         public enum AsideType { Read, Template, RecombinedTemplate }
@@ -29,7 +29,7 @@ namespace HTMLNameSpace
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
-        public static string GetAsideIdentifier(MetaData.IMetaData metadata, bool humanvisible = false)
+        public static string GetAsideIdentifier(ReadMetaData.IMetaData metadata, bool humanvisible = false)
         {
             if (humanvisible) return metadata.Identifier;
             else return metadata.EscapedIdentifier;
@@ -39,7 +39,7 @@ namespace HTMLNameSpace
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
-        public static string GetAsideLink(MetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
+        public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(metadata);
@@ -91,7 +91,7 @@ namespace HTMLNameSpace
 
         public static string TemplateHighDecoyWarning()
         {
-            return Common.Warning("High decoy scores",
+            return CommonPieces.Warning("High decoy scores",
 @"<p>The highest scoring decoy template scores at least 50% of the actual templates in template matching. Look into the Decoy segment for more details. </p>
 <p> Maybe the origin of this issue is one of the following:</p>
 <ul>
@@ -102,7 +102,7 @@ namespace HTMLNameSpace
 
         public static string RecombineHighDecoyWarning(string name)
         {
-            return Common.Warning("High decoy scores",
+            return CommonPieces.Warning("High decoy scores",
 @$"<p>The highest scoring recombination decoy template scores at least 50% of the actual templates in recombination in ""{name}"". </p>
 <p> Maybe the origin of this issue is one of the following: </p>
 <ul>

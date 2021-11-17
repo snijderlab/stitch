@@ -5,7 +5,7 @@ using System.Threading;
 
 namespace AssemblyNameSpace
 {
-    public class ProgressBar
+    public class ProgressBar : IDisposable
     {
         readonly object ValueKey = new object();
         int max_value;
@@ -20,6 +20,17 @@ namespace AssemblyNameSpace
         public ProgressBar()
         {
             stopwatch = new Stopwatch();
+        }
+
+        protected virtual void Dispose(bool dispose)
+        {
+            if (dispose)
+                timer.Dispose();
+        }
+
+        public void Dispose()
+        {
+            this.Dispose(true);
         }
 
         public void Start(int max)

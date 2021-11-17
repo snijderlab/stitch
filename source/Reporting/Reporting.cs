@@ -16,12 +16,12 @@ namespace AssemblyNameSpace
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public struct ReportInputParameters
     {
-        public readonly List<(string Sequence, MetaData.IMetaData MetaData)> Input;
+        public readonly List<(string Sequence, ReadMetaData.IMetaData MetaData)> Input;
         public readonly List<(string, List<Segment>)> Segments;
         public readonly List<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, MetaData.IMetaData)> input, List<(string, List<Segment>)> segments = null, List<Segment> recombinedsegment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments = null, List<Segment> recombinedsegment = null, ParsedFile batchFile = null, string runname = "Runname")
         {
             Input = input;
             Segments = segments;

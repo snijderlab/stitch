@@ -102,7 +102,7 @@ namespace AssemblyNameSpace
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, MetaData.IMetaData metadata = null, int index = 0, int templateIndex = -1)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, ReadMetaData.IMetaData metadata = null, int index = 0, int templateIndex = -1)
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
             int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];

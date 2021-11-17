@@ -25,9 +25,9 @@ namespace AssemblyNameSpace
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<(string, MetaData.IMetaData)>> Simple(NameFilter filter, MetaData.FileIdentifier inputFile, char commentChar = '#')
+        public static ParseResult<List<(string, ReadMetaData.IMetaData)>> Simple(NameFilter filter, ReadMetaData.FileIdentifier inputFile, char commentChar = '#')
         {
-            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
             var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
@@ -37,7 +37,7 @@ namespace AssemblyNameSpace
                 return outeither;
             }
 
-            var reads = new List<(string, MetaData.IMetaData)>();
+            var reads = new List<(string, ReadMetaData.IMetaData)>();
             outeither.Value = reads;
 
             var lines = possiblecontent.ReturnOrFail().Split('\n');
@@ -46,7 +46,7 @@ namespace AssemblyNameSpace
             {
                 if (line.Length == 0) continue;
                 if (line[0] != commentChar)
-                    reads.Add((line.Trim(), new MetaData.Simple(inputFile, filter)));
+                    reads.Add((line.Trim(), new ReadMetaData.Simple(inputFile, filter)));
             }
 
             return outeither;
@@ -60,9 +60,9 @@ namespace AssemblyNameSpace
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseResult<List<(string Sequence, MetaData.IMetaData MetaData)>> Fasta(NameFilter filter, MetaData.FileIdentifier inputFile, Regex parseIdentifier)
+        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> Fasta(NameFilter filter, ReadMetaData.FileIdentifier inputFile, Regex parseIdentifier)
         {
-            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
             var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
@@ -72,7 +72,7 @@ namespace AssemblyNameSpace
                 return outeither;
             }
 
-            var reads = new List<(string, MetaData.IMetaData)>();
+            var reads = new List<(string, ReadMetaData.IMetaData)>();
             outeither.Value = reads;
 
             var lines = possiblecontent.ReturnOrFail().Split('\n').ToArray();
@@ -95,11 +95,11 @@ namespace AssemblyNameSpace
                         {
                             if (match.Groups.Count == 3)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
                             }
                             else if (match.Groups.Count == 2)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
                             }
                             else
                             {
@@ -141,11 +141,11 @@ namespace AssemblyNameSpace
                 {
                     if (match.Groups.Count == 3)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parsefile).GetValue(outeither));
                     }
                     else if (match.Groups.Count == 2)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new MetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parsefile).GetValue(outeither));
                     }
                     else
                     {
@@ -172,9 +172,9 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
-        static ParseResult<(string, MetaData.IMetaData)> ParseAnnotatedFasta(string line, MetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
+        static ParseResult<(string, ReadMetaData.IMetaData)> ParseAnnotatedFasta(string line, ReadMetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
         {
-            var outeither = new ParseResult<(string, MetaData.IMetaData)>();
+            var outeither = new ParseResult<(string, ReadMetaData.IMetaData)>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(string, string)>();
             string current_seq = "";
@@ -214,7 +214,7 @@ namespace AssemblyNameSpace
                 );
             }
 
-                ((MetaData.Fasta)metaData).AnnotatedSequence = annotated;
+                ((ReadMetaData.Fasta)metaData).AnnotatedSequence = annotated;
             outeither.Value = (plain_sequence.ToString(), metaData);
             return outeither;
         }
@@ -223,11 +223,11 @@ namespace AssemblyNameSpace
         /// <param name="filter">The namefilter to use to filter the name of the reads.</param>
         /// <param name="peaks">The peaks settings to use</param>
         /// <param name="local">If defined the local peaks parameters to use</param>
-        public static ParseResult<List<(string, MetaData.IMetaData)>> Peaks(NameFilter filter, RunParameters.Input.Peaks peaks, RunParameters.Input.InputLocalParameters local = null)
+        public static ParseResult<List<(string, ReadMetaData.IMetaData)>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, RunParameters.InputData.InputLocalParameters local = null)
         {
-            var outeither = new ParseResult<List<(string, MetaData.IMetaData)>>();
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
-            var peaksparameters = local == null ? new RunParameters.Input.PeaksParameters(false) : local.Peaks;
+            var peaksparameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
             if (peaksparameters.CutoffALC == -1) peaksparameters.CutoffALC = peaks.Parameter.CutoffALC;
             if (peaksparameters.LocalCutoffALC == -1) peaksparameters.LocalCutoffALC = peaks.Parameter.LocalCutoffALC;
             if (peaksparameters.MinLengthPatch == -1) peaksparameters.MinLengthPatch = peaks.Parameter.MinLengthPatch;
@@ -241,7 +241,7 @@ namespace AssemblyNameSpace
             }
 
             List<string> lines = possiblecontent.ReturnOrFail().Split('\n').ToList();
-            var reads = new List<(string, MetaData.IMetaData)>();
+            var reads = new List<(string, ReadMetaData.IMetaData)>();
             var parsefile = new ParsedFile(peaks.File.Name, lines.ToArray());
 
             outeither.Value = reads;
@@ -249,7 +249,7 @@ namespace AssemblyNameSpace
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parsefile.Lines.Length; linenumber++)
             {
-                var parsed = MetaData.Peaks.ParseLine(parsefile, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, peaks.File, filter);
+                var parsed = ReadMetaData.Peaks.ParseLine(parsefile, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, peaks.File, filter);
 
                 if (parsed.HasOnlyWarnings()) continue;
 
@@ -279,7 +279,7 @@ namespace AssemblyNameSpace
                     else
                     {
                         int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
-                        ((MetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
+                        ((ReadMetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
                     }
                 }
                 // Find local patches of high enough confidence
@@ -322,18 +322,18 @@ namespace AssemblyNameSpace
         /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
         /// </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<(string Sequence, MetaData.IMetaData MetaData)> reads)
+        public static List<(string Sequence, ReadMetaData.IMetaData MetaData)> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads)
         {
-            return CleanUpInput(new List<List<(string Sequence, MetaData.IMetaData MetaData)>> { reads });
+            return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads });
         }
 
         /// <summary>
         /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
         /// </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static List<(string Sequence, MetaData.IMetaData MetaData)> CleanUpInput(List<List<(string Sequence, MetaData.IMetaData MetaData)>> reads)
+        public static List<(string Sequence, ReadMetaData.IMetaData MetaData)> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads)
         {
-            var filtered = new Dictionary<string, MetaData.IMetaData>();
+            var filtered = new Dictionary<string, ReadMetaData.IMetaData>();
 
             foreach (var set in reads)
             {

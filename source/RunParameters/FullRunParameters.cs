@@ -32,7 +32,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input for this run
             /// </summary>
-            public RunParameters.Input Input = new Input();
+            public RunParameters.InputData Input = new InputData();
 
             /// <summary>
             /// The parameters for the template matching

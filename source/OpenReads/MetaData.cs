@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// A class to hold all metadata handling in one place.
     /// </summary>
-    public static class MetaData
+    public static class ReadMetaData
     {
         /// <summary>
         /// To save metadata of a read/path of which could be used in calculations to determine the likelyhood
@@ -28,23 +28,20 @@ namespace AssemblyNameSpace
             /// </summary>
             public readonly FileIdentifier File;
 
-            protected string identifier;
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
-            public string Identifier { get { return identifier; } }
+            public string Identifier { get; protected set; }
 
-            protected string classIdentifier;
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
-            public string ClassIdentifier { get { return classIdentifier; } }
+            public string ClassIdentifier { get; protected set; }
 
-            protected string escapedIdentifier;
             /// <summary>
             /// The Identifier of the read escaped for use in filenames.
             /// </summary>
-            public string EscapedIdentifier { get { return escapedIdentifier; } }
+            public string EscapedIdentifier { get; protected set; }
 
             /// <summary>
             /// Returns the positional score for this read, so for every position the confidence.
@@ -83,20 +80,20 @@ namespace AssemblyNameSpace
             {
                 nameFilter = filter;
                 File = file;
-                identifier = id;
-                classIdentifier = classId ?? identifier;
+                Identifier = id;
+                ClassIdentifier = classId ?? Identifier;
 
                 if (filter != null)
                 {
-                    var (escaped_id, bst, count) = filter.EscapeIdentifier(identifier);
+                    var (escaped_id, bst, count) = filter.EscapeIdentifier(Identifier);
                     if (count <= 1)
                     {
-                        escapedIdentifier = escaped_id;
+                        EscapedIdentifier = escaped_id;
                     }
                     else
                     {
-                        identifier = $"{identifier}_{count:D3}";
-                        escapedIdentifier = $"{escaped_id}_{count:D3}";
+                        Identifier = $"{Identifier}_{count:D3}";
+                        EscapedIdentifier = $"{escaped_id}_{count:D3}";
                     }
                 }
             }
@@ -397,9 +394,9 @@ namespace AssemblyNameSpace
                 return result;
             }
 
-            public MetaData.Peaks Clone()
+            public ReadMetaData.Peaks Clone()
             {
-                var meta = new MetaData.Peaks(this.File, this.identifier, this.nameFilter);
+                var meta = new ReadMetaData.Peaks(this.File, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Cleaned_sequence = new string(this.Cleaned_sequence);

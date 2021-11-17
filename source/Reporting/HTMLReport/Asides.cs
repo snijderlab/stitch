@@ -10,14 +10,14 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Reflection;
 using AssemblyNameSpace;
-using static HTMLNameSpace.Common;
+using static HTMLNameSpace.CommonPieces;
 
 namespace HTMLNameSpace
 {
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, MetaData.IMetaData MetaData) read)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -118,7 +118,7 @@ namespace HTMLNameSpace
                 {
                     annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
                 {
-                    if (item.MetaData is MetaData.Fasta meta)
+                    if (item.MetaData is ReadMetaData.Fasta meta)
                         if (meta.AnnotatedSequence != null)
                             acc.AddRange(meta.AnnotatedSequence);
                     return acc;
@@ -126,7 +126,7 @@ namespace HTMLNameSpace
                 }
                 else
                 {
-                    if (template.MetaData is MetaData.Fasta meta)
+                    if (template.MetaData is ReadMetaData.Fasta meta)
                         if (meta.AnnotatedSequence != null)
                             annotated = meta.AnnotatedSequence;
                 }
@@ -594,7 +594,7 @@ namespace HTMLNameSpace
                 else buffer.Append("No");
                 buffer.Append("</td></tr>");
             }
-            if (match.MetaData is MetaData.Peaks p)
+            if (match.MetaData is ReadMetaData.Peaks p)
             {
                 buffer.Append($"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>");
             }

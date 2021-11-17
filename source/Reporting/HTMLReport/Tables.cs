@@ -10,7 +10,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Reflection;
 using AssemblyNameSpace;
-using static HTMLNameSpace.Common;
+using static HTMLNameSpace.CommonPieces;
 
 namespace HTMLNameSpace
 {
@@ -20,7 +20,7 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static string CreateReadsTable(List<(string, MetaData.IMetaData)> reads, string AssetsFolderName)
+        public static string CreateReadsTable(List<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
         {
             var buffer = new StringBuilder();
 
@@ -168,7 +168,7 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads, int total_templates)
+        public static void CDRTable(StringBuilder buffer, List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads, int total_templates)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
