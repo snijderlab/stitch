@@ -56,6 +56,16 @@ namespace AssemblyNameSpace
             return builder.ToString();
         }
 
+        public static AminoAcid[] FromString(string input, Alphabet alp)
+        {
+            AminoAcid[] output = new AminoAcid[input.Length];
+            for (int i = 0; i < input.Length; i++)
+            {
+                output[i] = new AminoAcid(alp, input[i]);
+            }
+            return output;
+        }
+
         /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
         /// <param name="obj"> The object to check equality with. </param>
         /// <returns> Returns true when the Amino Acids are equal. </returns>

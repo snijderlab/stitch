@@ -331,6 +331,13 @@ namespace AssemblyNameSpace
                 return Render("", "", showValue, showLength, showID);
             }
 
+            public string BracketsNotation() {
+                if (Left == null && Right == null)
+                    return Value.ToString();
+                else
+                    return $"({Left.Value.Item2.BracketsNotation()}, {Right.Value.Item2.BracketsNotation()})";
+            }
+
             /// <summary> Fold a function over the tree by applying it to every tree in a depth first way. </summary>
             /// <param name="seed"> The initial value for the accumulator structure. </param>
             /// <param name="f"> The function to apply to every node. </param>
