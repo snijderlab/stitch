@@ -182,7 +182,7 @@ namespace AssemblyNameSpace
             {
                 if (line[i] == '(')
                 {
-                    if (string.IsNullOrEmpty(current_seq))
+                    if (!string.IsNullOrEmpty(current_seq))
                     {
                         annotated.Add(("", current_seq));
                         current_seq = "";
@@ -201,7 +201,7 @@ namespace AssemblyNameSpace
                     plain_sequence.Append(line[i]);
                 }
             }
-            if (string.IsNullOrEmpty(current_seq))
+            if (!string.IsNullOrEmpty(current_seq))
                 annotated.Add(("", current_seq));
             var invalid_chars = Regex.Matches(plain_sequence.ToString(), "[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
             if (invalid_chars.Count > 0)

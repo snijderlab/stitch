@@ -36,5 +36,23 @@ namespace AssemblyTestNameSpace
                 }
             }
         }
+
+        /// <summary>
+        /// Test the reading of annotated fasta files
+        /// </summary>
+        [TestMethod]
+        public void TestAnnotation()
+        {
+            var file = Globals.Root + @"templates/Homo_sapiens_IGHV.fasta";
+            var namefilter = new NameFilter();
+            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, "", null), new Regex("(.*)")).ReturnOrFail();
+            var meta = (MetaData.Fasta)reads[0].MetaData;
+            Assert.AreEqual("IGHV1-2", meta.Identifier);
+            foreach (var part in meta.AnnotatedSequence)
+            {
+                Console.WriteLine($"{part.Type}: {part.Sequence}");
+            }
+            Assert.AreEqual(13, meta.AnnotatedSequence.Count);
+        }
     }
 }
