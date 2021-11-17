@@ -1311,6 +1311,10 @@ namespace AssemblyNameSpace
                 {
                     try
                     {
+                        if (path.StartsWith("\"") && path.EndsWith("\""))
+                        {
+                            path = path.Substring(1, path.Length - 2);
+                        }
                         return (Path.GetFullPath(path), "");
                     }
                     catch (ArgumentException)
