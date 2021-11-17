@@ -27,7 +27,7 @@ namespace AssemblyTestNameSpace
                 try
                 {
                     Console.WriteLine(file);
-                    OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, "", null), new Regex("(.*)"));
+                    OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(file, "", null), new Regex("(.*)"));
                 }
                 catch (Exception e)
                 {
@@ -45,8 +45,8 @@ namespace AssemblyTestNameSpace
         {
             var file = Globals.Root + @"templates/Homo_sapiens_IGHV.fasta";
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new MetaData.FileIdentifier(file, "", null), new Regex("(.*)")).ReturnOrFail();
-            var meta = (MetaData.Fasta)reads[0].MetaData;
+            var reads = OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(file, "", null), new Regex("(.*)")).ReturnOrFail();
+            var meta = (ReadMetaData.Fasta)reads[0].MetaData;
             Assert.AreEqual("IGHV1-2", meta.Identifier);
             foreach (var part in meta.AnnotatedSequence)
             {

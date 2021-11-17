@@ -26,10 +26,10 @@ namespace BatchFilesTestNameSpace
                 {
                     AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file);
                 }
-                catch (Exception e)
+                catch
                 {
                     Console.WriteLine($"At file {file}");
-                    throw e;
+                    throw;
                 }
             }
             Directory.SetCurrentDirectory(cwd);
