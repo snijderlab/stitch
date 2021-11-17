@@ -15,7 +15,7 @@ namespace AssemblyNameSpace
     /// <summary>
     /// A class to hold all metadata handling in one place.
     /// </summary>
-    public static class MetaData
+    public static class ReadMetaData
     {
         /// <summary>
         /// To save metadata of a read/path of which could be used in calculations to determine the likelyhood
@@ -28,23 +28,20 @@ namespace AssemblyNameSpace
             /// </summary>
             public readonly FileIdentifier File;
 
-            protected string identifier;
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
-            public string Identifier { get { return identifier; } }
+            public string Identifier { get; protected set; }
 
-            protected string classIdentifier;
             /// <summary>
             /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
             /// </summary>
-            public string ClassIdentifier { get { return classIdentifier; } }
+            public string ClassIdentifier { get; protected set; }
 
-            protected string escapedIdentifier;
             /// <summary>
             /// The Identifier of the read escaped for use in filenames.
             /// </summary>
-            public string EscapedIdentifier { get { return escapedIdentifier; } }
+            public string EscapedIdentifier { get; protected set; }
 
             /// <summary>
             /// Returns the positional score for this read, so for every position the confidence.
@@ -77,26 +74,26 @@ namespace AssemblyNameSpace
             /// To create the base metadata for a read.
             /// </summary>
             /// <param name="file">The identifier of the originating file.</param>
-            /// <param name="identifier_">The identifier of the read.</param>
+            /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(FileIdentifier file, string identifier_, NameFilter filter, string classIdentifier_ = null)
+            public IMetaData(FileIdentifier file, string id, NameFilter filter, string classId = null)
             {
                 nameFilter = filter;
                 File = file;
-                identifier = identifier_;
-                classIdentifier = classIdentifier_ ?? identifier_;
+                Identifier = id;
+                ClassIdentifier = classId ?? Identifier;
 
                 if (filter != null)
                 {
-                    var (escaped_id, bst, count) = filter.EscapeIdentifier(identifier);
+                    var (escaped_id, bst, count) = filter.EscapeIdentifier(Identifier);
                     if (count <= 1)
                     {
-                        escapedIdentifier = escaped_id;
+                        EscapedIdentifier = escaped_id;
                     }
                     else
                     {
-                        identifier = $"{identifier}_{count:D3}";
-                        escapedIdentifier = $"{escaped_id}_{count:D3}";
+                        Identifier = $"{Identifier}_{count:D3}";
+                        EscapedIdentifier = $"{escaped_id}_{count:D3}";
                     }
                 }
             }
@@ -216,7 +213,7 @@ namespace AssemblyNameSpace
                     }
                     return 1;
                 }
-                set { if (value != double.NaN) intensity = value; }
+                set { if (double.IsNaN(value)) intensity = value; }
             }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
@@ -255,8 +252,8 @@ namespace AssemblyNameSpace
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
-                List<string> fields = new List<string>();
-                List<FileRange> positions = new List<FileRange>();
+                var fields = new List<string>();
+                var positions = new List<FileRange>();
                 int lastpos = 0;
                 string line = parsefile.Lines[linenumber];
 
@@ -299,7 +296,7 @@ namespace AssemblyNameSpace
 
                 bool CheckFieldExists(int pos)
                 {
-                    if (pos > fields.Count() - 1)
+                    if (pos > fields.Count - 1)
                     {
                         result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
@@ -397,9 +394,9 @@ namespace AssemblyNameSpace
                 return result;
             }
 
-            public MetaData.Peaks Clone()
+            public ReadMetaData.Peaks Clone()
             {
-                var meta = new MetaData.Peaks(this.File, this.identifier, this.nameFilter);
+                var meta = new ReadMetaData.Peaks(this.File, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Cleaned_sequence = new string(this.Cleaned_sequence);
@@ -506,7 +503,7 @@ namespace AssemblyNameSpace
                 if (Fragmentation_mode != null)
                     output.Append($"<h3>Fragmentation Mode</h3>\n<p>{Fragmentation_mode}</p>");
 
-                if (Other_scans.Count() > 0)
+                if (Other_scans.Count > 0)
                     output.Append($"<h3>Also found in scans</h3>\n<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>");
 
                 output.Append(File.ToHTML());
@@ -535,12 +532,12 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Creating a new FileIdentifier.
             /// </summary>
-            /// <param name="path_input">The path to the file, can be a relative path.</param>
+            /// <param name="pathInput">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
             /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
-            public FileIdentifier(string path_input, string name, InputNameSpace.KeyValue origin)
+            public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin)
             {
-                path = System.IO.Path.GetFullPath(path_input);
+                path = System.IO.Path.GetFullPath(pathInput);
                 Name = name;
                 RefersToFile = true;
                 Origin = origin;

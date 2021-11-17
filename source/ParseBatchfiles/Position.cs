@@ -51,10 +51,10 @@ namespace AssemblyNameSpace
         {
             return !p1.Equals(p2);
         }
-        public override bool Equals(object p2)
+        public override bool Equals(object obj)
         {
-            if (p2.GetType() != this.GetType()) return false;
-            Position pos = (Position)p2;
+            if (obj.GetType() != this.GetType()) return false;
+            Position pos = (Position)obj;
             return this.Line == pos.Line && this.Column == pos.Column;
         }
         public override int GetHashCode()

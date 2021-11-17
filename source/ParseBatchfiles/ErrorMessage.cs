@@ -7,8 +7,8 @@ namespace AssemblyNameSpace
     {
         public class ErrorMessage
         {
-            readonly Position startposition;
-            readonly Position endposition;
+            readonly Position? startposition;
+            readonly Position? endposition;
             readonly ParsedFile File;
             readonly string shortDescription = "";
             readonly string longDescription = "";
@@ -16,7 +16,7 @@ namespace AssemblyNameSpace
             readonly string subject = "";
             readonly uint contextLines = 0;
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 subject = sub;
                 shortDescription = shortD;
@@ -24,18 +24,18 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = new ParsedFile();
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
                 Warning = warning;
                 File = file;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 startposition = pos;
                 shortDescription = shortD;
@@ -43,9 +43,9 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = pos.File;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
-            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint context_lines = 1)
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
             {
                 startposition = range.Start;
                 endposition = range.End;
@@ -54,7 +54,7 @@ namespace AssemblyNameSpace
                 helpDescription = help;
                 Warning = warning;
                 File = range.File;
-                contextLines = context_lines;
+                this.contextLines = contextLines;
             }
             public static ErrorMessage DuplicateValue(FileRange range)
             {
@@ -77,50 +77,50 @@ namespace AssemblyNameSpace
 
                 // Location
                 string location;
-                if (subject != "")
+                if (!string.IsNullOrEmpty(subject))
                 {
                     location = $"\n   | {subject}\n\n";
                 }
-                else if (File.Filename == "")
+                else if (string.IsNullOrEmpty(File.Filename))
                 {
                     location = "";
                 }
-                else if (startposition == null)
+                else if (!startposition.HasValue)
                 {
                     location = $"File: {File.Filename}\n";
                 }
-                else if (endposition == null)
+                else if (!endposition.HasValue)
                 {
-                    var line_number = (startposition.Line + 1).ToString();
+                    var line_number = (startposition.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', startposition.Column - 1) + "^^^";
-                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
-                    var context2 = startposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[startposition.Line + 1]}\n" : "";
+                    var line = File.Lines[startposition.Value.Line];
+                    var pos = new string(' ', startposition.Value.Column - 1) + "^^^";
+                    var context1 = startposition.Value.Line > 1 ? $"{start}{File.Lines[startposition.Value.Line - 1]}\n" : "";
+                    var context2 = startposition.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[startposition.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Filename}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
-                else if (startposition.Line == endposition.Line)
+                else if (startposition.Value.Line == endposition.Value.Line)
                 {
-                    var line_number = (startposition.Line + 1).ToString();
+                    var line_number = (startposition.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var line = File.Lines[startposition.Line];
-                    var pos = new string(' ', Math.Max(0, startposition.Column - 1)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
-                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
-                    var context2 = endposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Line + 1]}\n" : "";
+                    var line = File.Lines[startposition.Value.Line];
+                    var pos = new string(' ', Math.Max(0, startposition.Value.Column - 1)) + new string('^', Math.Max(1, endposition.Value.Column - startposition.Value.Column));
+                    var context1 = startposition.Value.Line > 1 ? $"{start}{File.Lines[startposition.Value.Line - 1]}\n" : "";
+                    var context2 = endposition.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Filename}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
                 else
                 {
-                    var line_number = (endposition.Line + 1).ToString();
+                    var line_number = (endposition.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
-                    var context1 = startposition.Line > 1 ? $"{start}{File.Lines[startposition.Line - 1]}\n" : "";
-                    var context2 = endposition.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Line + 1]}\n" : "";
+                    var context1 = startposition.Value.Line > 1 ? $"{start}{File.Lines[startposition.Value.Line - 1]}\n" : "";
+                    var context2 = endposition.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[endposition.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Filename}\n\n{context1}";
 
-                    for (int i = startposition.Line; i <= endposition.Line; i++)
+                    for (int i = startposition.Value.Line; i <= endposition.Value.Line; i++)
                     {
                         var line = File.Lines[i];
                         var number = (i + 1).ToString().PadRight(line_number.Length + 1);
@@ -131,8 +131,8 @@ namespace AssemblyNameSpace
 
                 // Body
                 var body = "";
-                if (longDescription != "") body += longDescription + "\n";
-                if (helpDescription != "") body += helpDescription + "\n";
+                if (!string.IsNullOrEmpty(longDescription)) body += longDescription + "\n";
+                if (!string.IsNullOrEmpty(helpDescription)) body += helpDescription + "\n";
 
                 return header + location + body;
             }
@@ -147,17 +147,17 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = defaultColour;
 
                 // Location
-                if (subject != "") // Pregiven location
+                if (!string.IsNullOrEmpty(subject)) // Pregiven location
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("\n   | ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
                 }
-                else if (File.Filename == "") // No location
+                else if (string.IsNullOrEmpty(File.Filename)) // No location
                 {
                 }
-                else if (startposition == null) // Only a file
+                else if (!startposition.HasValue) // Only a file
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  --> ");
@@ -166,11 +166,11 @@ namespace AssemblyNameSpace
                 }
                 else // A location in a file
                 {
-                    var endline = endposition == null ? startposition.Line : endposition.Line;
-                    var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (startposition.Line + 1).ToString().Length;
-                    var line_number = (startposition.Line + 1).ToString().PadRight(number_width + 1, ' ');
+                    var endline = !endposition.HasValue ? startposition.Value.Line : endposition.Value.Line;
+                    var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (startposition.Value.Line + 1).ToString().Length;
+                    var line_number = (startposition.Value.Line + 1).ToString().PadRight(number_width + 1, ' ');
                     var spacing = new string(' ', number_width + 3);
-                    var line = File.Lines[startposition.Line];
+                    var line = File.Lines[startposition.Value.Line];
 
                     void print_line(int lineindex)
                     {
@@ -194,25 +194,25 @@ namespace AssemblyNameSpace
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  --> ");
                     Console.ForegroundColor = defaultColour;
-                    Console.Write($"{File.Filename}:{startposition.Line + 1}:{startposition.Column + 1}\n");
+                    Console.Write($"{File.Filename}:{startposition.Value.Line + 1}:{startposition.Value.Column + 1}\n");
                     print_empty(true);
 
                     for (int i = (int)contextLines; i > 0; i--)
-                        if (startposition.Line - i > 0) print_line(startposition.Line - i);
+                        if (startposition.Value.Line - i > 0) print_line(startposition.Value.Line - i);
 
-                    if (endposition == null || startposition.Line > endposition.Line) // Single position
+                    if (!endposition.HasValue || startposition.Value.Line > endposition.Value.Line) // Single position
                     {
-                        var pos = new string(' ', startposition.Column) + "^^^";
-                        print_line(startposition.Line);
+                        var pos = new string(' ', startposition.Value.Column) + "^^^";
+                        print_line(startposition.Value.Line);
                         print_empty(false);
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
                     }
-                    else if (startposition.Line == endposition.Line) // Single line
+                    else if (startposition.Value.Line == endposition.Value.Line) // Single line
                     {
-                        var pos = new string(' ', Math.Max(0, startposition.Column)) + new string('^', Math.Max(1, endposition.Column - startposition.Column));
-                        print_line(startposition.Line);
+                        var pos = new string(' ', Math.Max(0, startposition.Value.Column)) + new string('^', Math.Max(1, endposition.Value.Column - startposition.Value.Column));
+                        print_line(startposition.Value.Line);
                         print_empty(false);
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
@@ -220,7 +220,7 @@ namespace AssemblyNameSpace
                     }
                     else // Multiline
                     {
-                        for (int i = startposition.Line; i <= endposition.Line; i++)
+                        for (int i = startposition.Value.Line; i <= endposition.Value.Line; i++)
                         {
                             line = File.Lines[i];
                             var number = (i + 1).ToString().PadRight(number_width + 1, ' ');
@@ -233,14 +233,14 @@ namespace AssemblyNameSpace
                 }
 
                 // Body
-                if (longDescription != "")
+                if (!string.IsNullOrEmpty(longDescription))
                 {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write("note");
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(": " + longDescription);
                 }
-                if (helpDescription != "")
+                if (!string.IsNullOrEmpty(helpDescription))
                 {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("help");
@@ -257,21 +257,21 @@ namespace AssemblyNameSpace
                 buffer.Append($"{name}");
 
                 // Location
-                if (subject != "" || File.Filename == "" || startposition == null) // Only a file
+                if (!string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(File.Filename) || !startposition.HasValue) // Only a file
                 {
                     buffer.Append($"\t1 1");
                 }
-                else if (endposition == null || startposition.Line > endposition.Line) // Single position
+                else if (!endposition.HasValue || startposition.Value.Line > endposition.Value.Line) // Single position
                 {
-                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column}");
+                    buffer.Append($"\t{startposition.Value.Line + 1} {startposition.Value.Column}");
                 }
-                else if (startposition.Line == endposition.Line) // Single line
+                else if (startposition.Value.Line == endposition.Value.Line) // Single line
                 {
-                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column} {endposition.Column}");
+                    buffer.Append($"\t{startposition.Value.Line + 1} {startposition.Value.Column} {endposition.Value.Column}");
                 }
                 else // Multiline
                 {
-                    buffer.Append($"\t{startposition.Line + 1} {startposition.Column} {endposition.Line + 1} {endposition.Column}");
+                    buffer.Append($"\t{startposition.Value.Line + 1} {startposition.Value.Column} {endposition.Value.Line + 1} {endposition.Value.Column}");
                 }
 
                 buffer.Append($"\t{shortDescription}\t{longDescription.Replace('\n', ' ')}\t{helpDescription.Replace('\n', ' ')}");

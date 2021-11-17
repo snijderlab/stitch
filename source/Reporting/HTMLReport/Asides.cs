@@ -10,14 +10,14 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Reflection;
 using AssemblyNameSpace;
-using static HTMLNameSpace.Common;
+using static HTMLNameSpace.CommonPieces;
 
 namespace HTMLNameSpace
 {
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, MetaData.IMetaData MetaData) read)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -30,7 +30,7 @@ namespace HTMLNameSpace
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName, int total_reads)
+        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName, int totalReads)
         {
             string id = GetAsideIdentifier(template.MetaData);
             string human_id = GetAsideIdentifier(template.MetaData, true);
@@ -76,7 +76,23 @@ namespace HTMLNameSpace
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
             buffer.Append($@"</div>
     <h2>Scores</h2>
-    {HTMLTables.CreateTemplateTable(new List<Template> { template }, type, AssetsFolderName, total_reads)}
+    <table class='widetable'><tr>
+    <th class='smallcell'>Length</th>
+    <th class='smallcell'>Score</th>
+    <th class='smallcell'>Matches</th>
+    <th class='smallcell'>Total Area</th>
+    <th class='smallcell'>Unique Score</th>
+    <th class='smallcell'>Unique Matches</th>
+    <th class='smallcell'>Unique Area</th>
+    </tr><tr>
+    <td class='center'>{template.ToString().Length}</td>
+    <td class='center'>{template.Score}</td>
+    <td class='center'>{template.Matches.Count()}</td>
+    <td class='center'>{template.TotalArea}</td>
+    <td class='center'>{template.UniqueScore}</td>
+    <td class='center'>{template.UniqueMatches}</td>
+    <td class='center'>{template.TotalUniqueArea}</td>
+    </tr></table>
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
@@ -93,8 +109,8 @@ namespace HTMLNameSpace
                 // Create an overview of the alignment from consensus with germline.
                 // Also highlight differences and IMGT regions
 
-                // HERECOMESTHEGERMLINE.SEQUENCE
                 // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
+                // HERECOMESTHEGERMLINE.SEQUENCE
                 //             CONSENSUS          (differences)
                 var match = template.AlignConsensusWithTemplate();
                 List<(string, string)> annotated = null;
@@ -102,7 +118,7 @@ namespace HTMLNameSpace
                 {
                     annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
                 {
-                    if (item.MetaData is MetaData.Fasta meta)
+                    if (item.MetaData is ReadMetaData.Fasta meta)
                         if (meta.AnnotatedSequence != null)
                             acc.AddRange(meta.AnnotatedSequence);
                     return acc;
@@ -110,7 +126,7 @@ namespace HTMLNameSpace
                 }
                 else
                 {
-                    if (template.MetaData is MetaData.Fasta meta)
+                    if (template.MetaData is ReadMetaData.Fasta meta)
                         if (meta.AnnotatedSequence != null)
                             annotated = meta.AnnotatedSequence;
                 }
@@ -119,7 +135,7 @@ namespace HTMLNameSpace
                 {
                     if (annotated == null) return "";
                     int pos = -1;
-                    for (int i = 0; i < annotated.Count();)
+                    for (int i = 0; i < annotated.Count;)
                     {
                         if (pos + annotated[i].Item2.Length >= position)
                             return annotated[i].Item1;
@@ -142,8 +158,8 @@ namespace HTMLNameSpace
                         case SequenceMatch.Match m:
                             for (int i = 0; i < m.Length; i++)
                             {
-                                var t = match.TemplateSequence[template_pos].Char;
-                                var q = match.QuerySequence[query_pos].Char;
+                                var t = match.TemplateSequence[template_pos].Character;
+                                var q = match.QuerySequence[query_pos].Character;
                                 columns.Add((t, q, t == q ? ' ' : q, GetClasses(template_pos)));
                                 template_pos++;
                                 query_pos++;
@@ -152,7 +168,7 @@ namespace HTMLNameSpace
                         case SequenceMatch.GapInTemplate q:
                             for (int i = 0; i < q.Length; i++)
                             {
-                                var t = match.TemplateSequence[template_pos].Char;
+                                var t = match.TemplateSequence[template_pos].Character;
                                 columns.Add((t, '.', ' ', GetClasses(template_pos)));
                                 template_pos++;
                             }
@@ -160,7 +176,7 @@ namespace HTMLNameSpace
                         case SequenceMatch.GapInQuery t:
                             for (int i = 0; i < t.Length; i++)
                             {
-                                var q = match.QuerySequence[query_pos].Char;
+                                var q = match.QuerySequence[query_pos].Character;
                                 columns.Add(('.', q, q, GetClasses(template_pos)));
                                 query_pos++;
                             }
@@ -232,7 +248,7 @@ namespace HTMLNameSpace
         {
             var alignedSequences = template.AlignedSequences();
 
-            if (alignedSequences.Count() == 0)
+            if (alignedSequences.Count == 0)
                 return new List<double>();
 
             buffer.Append("<h2>Alignment</h2>");
@@ -244,7 +260,7 @@ namespace HTMLNameSpace
 
             // Convert to lines: (creates List<string>)
             // Combine horizontally
-            var totalsequences = alignedSequences[0].Sequences.Count();
+            var totalsequences = alignedSequences[0].Sequences.Length;
             var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[totalsequences + 1];
             const char gapchar = '-';
             const char nonbreakingspace = '\u00A0';
@@ -255,7 +271,7 @@ namespace HTMLNameSpace
                 lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>();
             }
 
-            for (int template_pos = 0; template_pos < alignedSequences.Count(); template_pos++)
+            for (int template_pos = 0; template_pos < alignedSequences.Count; template_pos++)
             {
                 var (Sequences, Gaps) = alignedSequences[template_pos];
                 lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1, AsideType.Read));
@@ -336,12 +352,12 @@ namespace HTMLNameSpace
                 depthOfCoverage.AddRange(depthGapCombined.Select(a => (double)a));
             }
 
-            var aligned = new string[alignedSequences[0].Sequences.Count() + 1];
-            var types = new List<AsideType>[alignedSequences[0].Sequences.Count() + 1];
+            var aligned = new string[alignedSequences[0].Sequences.Length + 1];
+            var types = new List<AsideType>[alignedSequences[0].Sequences.Length + 1];
 
-            for (int i = 0; i < alignedSequences[0].Sequences.Count() + 1; i++)
+            for (int i = 0; i < alignedSequences[0].Sequences.Length + 1; i++)
             {
-                StringBuilder sb = new StringBuilder();
+                StringBuilder sb = new();
                 var typ = new List<AsideType>();
 
                 foreach ((var text, _, _, var type) in lines[i])
@@ -362,7 +378,7 @@ namespace HTMLNameSpace
             frontoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
             frontoverhangbuffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
 
-            for (int i = 1; i < aligned.Count(); i++)
+            for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
@@ -392,7 +408,7 @@ namespace HTMLNameSpace
                 for (int block = 0; block * blocklength < aligned[0].Length; block++)
                 {
                     // Get the right id's to generate the right links
-                    while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count())
+                    while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count)
                     {
                         alignedlength += lines[0][alignedindex].Sequence.Length;
                         alignedindex++;
@@ -408,7 +424,7 @@ namespace HTMLNameSpace
                         int additionalindex = 1;
                         positions[i] = new List<(int index, int position, int length)>();
 
-                        while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count())
+                        while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count)
                         {
                             int thisindex = lines[i][alignedindex + additionalindex].Index;
                             int thisposition = lines[i][alignedindex + additionalindex].SequencePosition;
@@ -444,11 +460,11 @@ namespace HTMLNameSpace
                     }
                     buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
 
-                    StringBuilder alignblock = new StringBuilder();
+                    StringBuilder alignblock = new();
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         string result = "";
-                        if (positions[i].Count() > 0)
+                        if (positions[i].Count > 0)
                         {
                             alignblock.Append("<span class=\"align-link\">");
                             int offset = 0;
@@ -491,7 +507,7 @@ namespace HTMLNameSpace
                     buffer.Append(alignblock.ToString().TrimEnd("<br>"));
                     buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
 
-                    for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count() - block * blocklength); i++)
+                    for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count - block * blocklength); i++)
                     {
                         buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
                     }
@@ -504,7 +520,7 @@ namespace HTMLNameSpace
             bool endoverhang = false;
             endoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
             endoverhangbuffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
-            for (int i = 1; i < aligned.Count(); i++)
+            for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
@@ -578,18 +594,18 @@ namespace HTMLNameSpace
                 else buffer.Append("No");
                 buffer.Append("</td></tr>");
             }
-            if (match.MetaData is MetaData.Peaks p)
+            if (match.MetaData is ReadMetaData.Peaks p)
             {
                 buffer.Append($"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>");
             }
-            if (match.MetaData.PositionalScore.Count() != 0)
+            if (match.MetaData.PositionalScore.Length != 0)
             {
                 buffer.Append($"<tr><td>{doctitle}</td><td class='docplot'>");
                 HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition));
                 buffer.Append("</td></tr>");
             }
 
-            buffer.Append($@"<tr><td>Alignment graphic</td><td>");
+            buffer.Append($@"<tr><td>Alignment graphic</td><td class='sequence-match-graphic'>");
             SequenceMatchGraphic(buffer, match);
             buffer.Append("</td></tr></table></div>");
         }
@@ -614,14 +630,14 @@ namespace HTMLNameSpace
         static void SequenceConsensusOverview(StringBuilder buffer, Template template)
         {
             var consensus_sequence = template.CombinedSequence();
-            var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count() * 2);
+            var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
 
-            for (int i = 0; i < consensus_sequence.Count(); i++)
+            for (int i = 0; i < consensus_sequence.Count; i++)
             {
                 var items = new Dictionary<string, double>();
                 foreach (var item in consensus_sequence[i].AminoAcids)
                 {
-                    items.Add(item.Key.Char.ToString(), item.Value);
+                    items.Add(item.Key.Character.ToString(), item.Value);
                 }
                 diversity.Add(items);
                 var gaps = new Dictionary<string, double>();

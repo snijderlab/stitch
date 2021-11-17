@@ -55,7 +55,7 @@ namespace AssemblyNameSpace
         }
         public static string TrimEnd(this string input, string suffixToRemove)
         {
-            if (input == null || suffixToRemove == null || input == "" || input.Length < suffixToRemove.Length) return input;
+            if (input == null || suffixToRemove == null || string.IsNullOrEmpty(input) || input.Length < suffixToRemove.Length) return input;
             if (input == suffixToRemove) return "";
             int location = input.Length - 1 - suffixToRemove.Length;
             while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0)
@@ -66,7 +66,7 @@ namespace AssemblyNameSpace
         }
         public static string TrimStart(this string input, string prefixToRemove)
         {
-            if (input == null || prefixToRemove == null || input == "" || input.Length < prefixToRemove.Length) return input;
+            if (input == null || prefixToRemove == null || string.IsNullOrEmpty(input) || input.Length < prefixToRemove.Length) return input;
             if (input == prefixToRemove) return "";
             int location = 0;
             while (location < input.Length - 1 - prefixToRemove.Length && string.CompareOrdinal(input, location, prefixToRemove, 0, prefixToRemove.Length) == 0)
@@ -76,10 +76,33 @@ namespace AssemblyNameSpace
             return input.Remove(location);
         }
 
+        /// <summary> Apply a function to a 2D array modifying it in place. </summary>
+        /// <param name="data"> The 2D array. </param>
+        /// <param name="f"> The function to determine the new values, based on the index (x, y) given to the function. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns nothing, but the array is modified. </returns>
+        public static void IndexMap<T>(this T[,] data, Func<int, int, T> f)
+        {
+            for (int i = 0; i < data.GetLength(0); i++)
+                for (int j = 0; j < data.GetLength(1); j++)
+                    data[i, j] = f(i, j);
+        }
+
+        /// <summary> Apply a function to an array modifying it in place. </summary>
+        /// <param name="data"> The array. </param>
+        /// <param name="f"> The function to determine the new values, based on the index given to the function. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns nothing, but the array is modified. </returns>
+        public static void IndexMap<T>(this T[] data, Func<int, T> f)
+        {
+            for (int i = 0; i < data.Length; i++)
+                data[i] = f(i);
+        }
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, MetaData.IMetaData metadata = null, int index = 0)
+        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, ReadMetaData.IMetaData metadata = null, int index = 0, int templateIndex = -1)
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
             int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
@@ -91,11 +114,11 @@ namespace AssemblyNameSpace
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
             {
-                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Char];
+                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Character];
             }
             for (int i = 0; i < query.Length; i++)
             {
-                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Char];
+                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Character];
             }
 
             int max_value = 0;
@@ -112,7 +135,7 @@ namespace AssemblyNameSpace
             {
                 for (query_pos = 1; query_pos <= query.Length; query_pos++)
                 {
-                    gap = template[tem_pos - 1].Char == gap_char || query[query_pos - 1].Char == gap_char;
+                    gap = template[tem_pos - 1].Character == gap_char || query[query_pos - 1].Character == gap_char;
 
                     // Calculate the score for the current position
                     if (gap)
@@ -209,7 +232,7 @@ namespace AssemblyNameSpace
         END_OF_CRAWL:
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index, templateIndex);
             return match;
         }
 
@@ -268,17 +291,17 @@ namespace AssemblyNameSpace
         /// <param name="template">The front sequence</param>
         /// <param name="query">The tail sequence</param>
         /// <param name="alphabet">The alphabet to use</param>
-        /// <param name="max_overlap">The maximal length of the overlap</param>
+        /// <param name="maxOverlap">The maximal length of the overlap</param>
         /// <returns>A tuple with the best position and its score</returns>
-        public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int max_overlap)
+        public static (int Position, int Score) EndAlignment(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, int maxOverlap)
         {
             var scores = new List<(int, int)>();
-            for (int i = 1; i < max_overlap && i < query.Length && i < template.Length; i++)
+            for (int i = 1; i < maxOverlap && i < query.Length && i < template.Length; i++)
             {
                 var score = AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
                 scores.Add((i, score));
             }
-            if (scores.Count() == 0) return (0, 0);
+            if (scores.Count == 0) return (0, 0);
 
             var best = scores[0];
             foreach (var item in scores)
@@ -354,69 +377,18 @@ namespace AssemblyNameSpace
             };
         }
 
-        public static (List<int> EndPositions, List<int> Conserved) AnnotateDomains(string sequence)
+        public static AminoAcid[] GenerateRandomSequence(Alphabet alphabet, int length)
         {
-            // Assumption: always max length framework regions
-            // The FR lengths (2 abd 3) should be determined at 
-            // runtime instead of being hard coded.
-
-            // Source:
-            // IMGT unique numbering for immunoglobulin and T cell receptorvariable domains and Ig superfamily V-like domains
-            // M.-P. Lefranc et al. / Developmental and Comparative Immunology 27 (2003)
-
-            var positions = new List<int>();
-            var conserved = new List<int>();
-            int cys1 = sequence.IndexOf('C'); // 1ST Cys 23
-            if (cys1 < 0) throw new Exception("Could not find 1st Cys (23)");
-            conserved.Add(cys1);
-            int end_fr1 = cys1 + 3;
-            positions.Add(end_fr1); // FR1
-            int try41 = sequence.IndexOf('W', end_fr1); // TRY41
-            if (try41 < 0) throw new Exception("Could not find TRY41");
-            conserved.Add(try41);
-            positions.Add(try41 - 3); // CDR1
-            positions.Add(try41 - 3 + 18); // FR2 (still constant)
-            int cys2 = sequence.IndexOf('C', try41); // 2ND Cys 104
-            if (cys2 < 0) throw new Exception("Could not find 2nd Cys (104)");
-            conserved.Add(cys2);
-            int l89 = sequence.IndexOf('L', cys2 - 15, 2);
-            if (l89 != -1) conserved.Add(l89);
-            int start_cdr2 = try41 - 3 + 18;
-            positions.Add(cys2 - 37); // CDR2
-            positions.Add(cys2 - 1); // FR3 (still constant)
-
-            // Determine which (F or W) is closer to the expected position of 118
-            // Loop over all F and W from cys2 to the max range of CDR3
-            int h118 = sequence.IndexOf('F', cys2);
-            int max_pos = cys2 + 16;
-            int dif = max_pos - h118;
-            for (int pos = cys2; pos < max_pos;)
+            var output = new AminoAcid[length];
+            Random random = new Random(42);
+            var count = alphabet.PositionInScoringMatrix.Count;
+            var values = alphabet.PositionInScoringMatrix.Keys;
+            for (int i = 0; i < length; i++)
             {
-                int w = sequence.IndexOf('W', pos, max_pos - pos);
-                int f = sequence.IndexOf('F', pos, max_pos - pos);
-                if (max_pos - w < dif)
-                {
-                    h118 = w;
-                    dif = max_pos - w;
-                }
-                if (max_pos - f < dif)
-                {
-                    h118 = f;
-                    dif = max_pos - f;
-                }
-                if (f == -1 && w == -1) break;
-
-                if (f == -1) pos = w;
-                else if (w == -1) pos = f;
-                else pos = Math.Min(w, f);
-                pos += 1;
+                var element = values.ElementAt(random.Next(count));
+                output[i] = new AminoAcid(alphabet, element);
             }
-            if (h118 < 0) throw new Exception("Could not find F or W 118");
-            conserved.Add(h118);
-
-            positions.Add(h118 - 1); // CDR3
-            positions.Add(sequence.Length); // Constant region
-            return (positions, conserved);
+            return output;
         }
     }
 }

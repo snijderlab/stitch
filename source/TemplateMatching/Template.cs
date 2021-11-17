@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Metadata for this template
         /// </summary>
-        public readonly MetaData.IMetaData MetaData;
+        public readonly ReadMetaData.IMetaData MetaData;
 
         /// <summary>
         /// The score for this template
@@ -110,7 +110,7 @@ namespace AssemblyNameSpace
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, MetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, ReadMetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;
@@ -162,6 +162,8 @@ namespace AssemblyNameSpace
             public override string ToString() { return ""; }
             public override int GetHashCode() { return 397; }
             public override bool Equals(object obj) { return obj is None; }
+            public static bool operator ==(None a, object obj) { return a.Equals(obj); }
+            public static bool operator !=(None a, object obj) { return !a.Equals(obj); }
         }
 
         /// <summary>
@@ -218,6 +220,8 @@ namespace AssemblyNameSpace
                     return false;
                 }
             }
+            public static bool operator ==(Gap a, object obj) { return a.Equals(obj); }
+            public static bool operator !=(Gap a, object obj) { return !a.Equals(obj); }
         }
 
         /// <summary>
@@ -234,18 +238,18 @@ namespace AssemblyNameSpace
             var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
 
             // Get levels (compress into somewhat lower amount of lines)
-            var levels = new List<List<(int Start, int Length)>>(Matches.Count());
-            var level_lookup = new int[Matches.Count()];
+            var levels = new List<List<(int Start, int Length)>>(Matches.Count);
+            var level_lookup = new int[Matches.Count];
             int start, length;
             bool placed, could_be_placed;
 
-            for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
+            for (int matchindex = 0; matchindex < Matches.Count; matchindex++)
             {
                 start = Matches[matchindex].StartTemplatePosition;
                 length = Matches[matchindex].LengthOnTemplate;
                 placed = false;
 
-                for (int l = 0; l < levels.Count(); l++)
+                for (int l = 0; l < levels.Count; l++)
                 {
                     could_be_placed = true;
                     // Try to determine if it clashes
@@ -270,15 +274,15 @@ namespace AssemblyNameSpace
                 if (!placed)
                 {
                     levels.Add(new List<(int Start, int Length)> { (start, length) });
-                    level_lookup[matchindex] = levels.Count() - 1;
+                    level_lookup[matchindex] = levels.Count - 1;
                 }
             }
 
             // Add all the positions
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[levels.Count()], new (int, IGap, double[], int, bool)[levels.Count()]));
-                for (int j = 0; j < levels.Count(); j++)
+                output.Add((new (int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[levels.Count], new (int, IGap, double[], int, bool)[levels.Count]));
+                for (int j = 0; j < levels.Count; j++)
                 {
                     output[i].Sequences[j] = (-2, 0, 0, -1);
                     output[i].Gaps[j] = (-2, new None(), new double[0], -1, false);
@@ -288,7 +292,7 @@ namespace AssemblyNameSpace
             SequenceMatch match;
             SequenceMatch.MatchPiece piece;
 
-            for (int matchindex = 0; matchindex < Matches.Count(); matchindex++)
+            for (int matchindex = 0; matchindex < Matches.Count; matchindex++)
             {
                 match = Matches[matchindex];
                 // Start at StartTemplatePosition and StartQueryPosition
@@ -297,10 +301,10 @@ namespace AssemblyNameSpace
                 bool gap = false;
                 int level = level_lookup[matchindex];
 
-                for (int pieceindex = 0; pieceindex < match.Alignment.Count(); pieceindex++)
+                for (int pieceindex = 0; pieceindex < match.Alignment.Count; pieceindex++)
                 {
                     piece = match.Alignment[pieceindex];
-                    var inseq = pieceindex < match.Alignment.Count() - 1 && pieceindex > 0 ? true : false;
+                    var inseq = pieceindex < match.Alignment.Count - 1 && pieceindex > 0;
 
                     if (piece is SequenceMatch.Match m)
                     {
@@ -310,9 +314,9 @@ namespace AssemblyNameSpace
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
-                                           || (pieceindex < match.Alignment.Count() - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
+                                           || (pieceindex < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore.Count() > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
+                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
@@ -338,7 +342,7 @@ namespace AssemblyNameSpace
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {
                         // Skip to the next section
-                        for (int i = 0; i < gt.Length && template_pos < output.Count(); i++)
+                        for (int i = 0; i < gt.Length && template_pos < output.Count; i++)
                         {
                             output[template_pos].Sequences[level] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
                             output[template_pos].Gaps[level] = (matchindex, new None(), new double[0], -1, true);
@@ -462,21 +466,21 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (options.Count() == 1 && options[0].Char == Alphabet.GapChar)
+                if (options.Count == 1 && options[0].Character == Alphabet.GapChar)
                 {
                     // Do not add gaps, as those are not part of the final sequence
                 }
-                else if (options.Count() > 1 && options.Contains(combinedSequence[i].Template))
+                else if (options.Count > 1 && options.Contains(combinedSequence[i].Template))
                 {
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);
                 }
-                else if (ForceGermlineIsoleucine && options.Count() > 0 && options[0].Char == 'L' && combinedSequence[i].Template.Char == 'I')
+                else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Character == 'L' && combinedSequence[i].Template.Character == 'I')
                 {
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);
                 }
-                else if (options.Count() > 0)
+                else if (options.Count > 0)
                 {
                     consensus.Add(options[0]);
                     doc.Add(coverage);

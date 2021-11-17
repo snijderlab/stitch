@@ -17,7 +17,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To contain parameters for the input of data.
         /// </summary>
-        public class Input
+        public class InputData
         {
             /// <summary>
             /// To contain overrules of the global input parameters
@@ -32,20 +32,20 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To contain the input data itself
             /// </summary>
-            public InputData Data = new InputData();
+            public ActualData Data = new ActualData();
 
-            public class InputData
+            public class ActualData
             {
                 /// <summary>
                 /// The inputs for this run.
                 /// </summary>
-                public List<List<(string Sequence, MetaData.IMetaData MetaData)>> Raw = new List<List<(string, MetaData.IMetaData)>>();
-                public List<(string Sequence, MetaData.IMetaData MetaData)> Cleaned = new List<(string, MetaData.IMetaData)>();
+                public List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> Raw = new List<List<(string, ReadMetaData.IMetaData)>>();
+                public List<(string Sequence, ReadMetaData.IMetaData MetaData)> Cleaned = new List<(string, ReadMetaData.IMetaData)>();
             }
 
             public class InputParameters
             {
-                public List<Input.Parameter> Files = new List<Input.Parameter>();
+                public List<RunParameters.InputData.Parameter> Files = new List<Parameter>();
 
                 public string Display()
                 {
@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The identifier of the file.
                 /// </summary>
-                public MetaData.FileIdentifier File = new MetaData.FileIdentifier();
+                public ReadMetaData.FileIdentifier File = new ReadMetaData.FileIdentifier();
 
                 public abstract string Display();
             }
@@ -220,7 +220,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The templates of this segment
             /// </summary>
-            public List<(string, MetaData.IMetaData)> Templates = new List<(string, MetaData.IMetaData)>();
+            public List<(string, ReadMetaData.IMetaData)> Templates = new List<(string, ReadMetaData.IMetaData)>();
             /// <summary>
             /// The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template).
             /// </summary>

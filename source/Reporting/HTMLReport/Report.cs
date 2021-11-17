@@ -10,7 +10,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Reflection;
 using HTMLNameSpace;
-using static HTMLNameSpace.Common;
+using static HTMLNameSpace.CommonPieces;
 
 namespace AssemblyNameSpace
 {
@@ -25,7 +25,7 @@ namespace AssemblyNameSpace
         public string AssetsFolderName;
         string FullAssetsFolderName;
 
-        public HTMLReport(ReportInputParameters Parameters, int max_threads) : base(Parameters, max_threads) { }
+        public HTMLReport(ReportInputParameters Parameters, int maxThreads) : base(Parameters, maxThreads) { }
 
         public override string Create()
         {
@@ -38,23 +38,23 @@ namespace AssemblyNameSpace
             var jobbuffer = new List<(AsideType, int, int, int)>();
 
             // Read Asides
-            for (int i = 0; i < Parameters.Input.Count(); i++)
+            for (int i = 0; i < Parameters.Input.Count; i++)
             {
                 jobbuffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
             if (Parameters.Segments != null)
             {
-                for (int i = 0; i < Parameters.Segments.Count(); i++)
-                    for (int j = 0; j < Parameters.Segments[i].Item2.Count(); j++)
-                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count(); k++)
+                for (int i = 0; i < Parameters.Segments.Count; i++)
+                    for (int j = 0; j < Parameters.Segments[i].Item2.Count; j++)
+                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count; k++)
                             jobbuffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
             if (Parameters.RecombinedSegment != null)
             {
-                for (int i = 0; i < Parameters.RecombinedSegment.Count(); i++)
-                    for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count(); j++)
+                for (int i = 0; i < Parameters.RecombinedSegment.Count; i++)
+                    for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count; j++)
                         jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
             var taskList = new List<Task>();
@@ -81,7 +81,7 @@ namespace AssemblyNameSpace
             var buffer = new StringBuilder();
             var innerbuffer = new StringBuilder();
 
-            MetaData.IMetaData metadata = new MetaData.Simple(null, null);
+            ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
             switch (aside)
             {
                 case AsideType.Read:
@@ -90,12 +90,12 @@ namespace AssemblyNameSpace
                     break;
                 case AsideType.Template:
                     var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count());
+                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
                     metadata = template.MetaData;
                     break;
                 case AsideType.RecombinedTemplate:
                     var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count());
+                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
                     metadata = rTemplate.MetaData;
                     break;
             };
@@ -117,9 +117,9 @@ namespace AssemblyNameSpace
 
         void CreateCDROverview(StringBuilder buffer, List<Segment> segments)
         {
-            var cdr1_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(MetaData.IMetaData MetaData, MetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             int total_templates = 0;
 
             foreach (var template in segments.SelectMany(a => a.Templates))
@@ -127,7 +127,7 @@ namespace AssemblyNameSpace
                 var positions = new Dictionary<string, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
-                if (template.MetaData is MetaData.Fasta fasta && fasta != null)
+                if (template.MetaData is ReadMetaData.Fasta fasta && fasta != null)
                 {
                     foreach (var piece in fasta.AnnotatedSequence)
                     {
@@ -213,7 +213,7 @@ namespace AssemblyNameSpace
             if (cdr1_reads.Count > 0)
             {
                 int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr1_reads.Count(); i++)
+                for (int i = 0; i < cdr1_reads.Count; i++)
                 {
                     cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length), cdr1_reads[i].Unique);
                 }
@@ -221,7 +221,7 @@ namespace AssemblyNameSpace
             if (cdr2_reads.Count > 0)
             {
                 int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr2_reads.Count(); i++)
+                for (int i = 0; i < cdr2_reads.Count; i++)
                 {
                     cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length), cdr2_reads[i].Unique);
                 }
@@ -229,7 +229,7 @@ namespace AssemblyNameSpace
             if (cdr3_reads.Count > 0)
             {
                 int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr3_reads.Count(); i++)
+                for (int i = 0; i < cdr3_reads.Count; i++)
                 {
                     cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length), cdr3_reads[i].Unique);
                 }
@@ -238,12 +238,12 @@ namespace AssemblyNameSpace
             var innerbuffer = new StringBuilder();
             innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
             innerbuffer.AppendLine("<div class='cdr-tables'>");
-            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count(), total_templates);
-            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count(), total_templates);
-            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count(), total_templates);
+            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
+            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
+            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
             innerbuffer.AppendLine("</div>");
 
-            buffer.Append(Common.Collapsible("CDR regions", innerbuffer.ToString()));
+            buffer.Append(CommonPieces.Collapsible("CDR regions", innerbuffer.ToString()));
         }
 
         private string CreateHeader(string title, List<string> location)
@@ -303,9 +303,9 @@ assetsfolder = '{AssetsFolderName}';
         private string CreateOverview()
         {
             var buffer = new StringBuilder();
-            if (Parameters.RecombinedSegment.Count() != 0)
+            if (Parameters.RecombinedSegment.Count != 0)
             {
-                for (int group = 0; group < Parameters.Segments.Count() && group < Parameters.RecombinedSegment.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count && group < Parameters.RecombinedSegment.Count; group++)
                 {
                     if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var (seq, doc) = Parameters.RecombinedSegment[group].Templates[0].ConsensusSequence();
@@ -313,10 +313,10 @@ assetsfolder = '{AssetsFolderName}';
                     HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage");
                     buffer.Append("</div><h3>Best scoring segments</h3><p>");
 
-                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
+                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
-                        if (seg.Templates.Count() > 0)
+                        if (seg.Templates.Count > 0)
                             buffer.Append(GetAsideLink(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
                     }
                     buffer.Append("</p>");
@@ -324,15 +324,15 @@ assetsfolder = '{AssetsFolderName}';
             }
             else
             {
-                for (int group = 0; group < Parameters.Segments.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
                     buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2>");
 
-                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count(); segment++)
+                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
                         buffer.Append($"<h3>{seg.Name}</h3>");
-                        HTMLTables.TableHeader(buffer, seg.Templates, Parameters.Input.Count());
+                        HTMLTables.TableHeader(buffer, seg.Templates, Parameters.Input.Count);
                     }
                 }
             }
@@ -346,31 +346,31 @@ assetsfolder = '{AssetsFolderName}';
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
             if (Parameters.Segments != null)
-                for (int group = 0; group < Parameters.Segments.Count(); group++)
+                for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
                     var groupbuffer = new StringBuilder();
 
-                    if (Parameters.RecombinedSegment.Count() != 0)
+                    if (Parameters.RecombinedSegment.Count != 0)
                     {
-                        if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count() > Parameters.RecombinedSegment.Count()) continue;
+                        if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateTemplateTable(recombined, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count(), true)));
-                        if (decoy.Count() > 0)
-                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateTemplateTable(decoy, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count(), true)));
+                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateSegmentTable(recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                        if (decoy.Count > 0)
+                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateSegmentTable(decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                     }
 
-                    groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count()));
+                    groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
 
                     CreateCDROverview(groupbuffer, Parameters.Segments[group].Item2);
 
-                    if (Parameters.Segments.Count() == 1)
+                    if (Parameters.Segments.Count == 1)
                         innerbuffer.Append(groupbuffer);
                     else
                         innerbuffer.Append(Collapsible(Parameters.Segments[group].Item1, groupbuffer.ToString()));
                 }
 
-            innerbuffer.Append(Collapsible("Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName, Parameters.Input.Count())));
+            innerbuffer.Append(Collapsible("Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
             innerbuffer.Append(Collapsible("Batch File", BatchFileHTML()));
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
@@ -382,6 +382,7 @@ assetsfolder = '{AssetsFolderName}';
 <h1>Report Protein Sequence Run</h1>
 <p>Generated at {timestamp}</p>
 
+ {GetWarnings()}
  <div class='overview'>{CreateOverview()}</div>
  {innerbuffer}
 
@@ -395,6 +396,43 @@ assetsfolder = '{AssetsFolderName}';
 </div>
 </body>";
             return html;
+        }
+
+        string GetWarnings()
+        {
+            var buffer = new StringBuilder();
+            // High decoy scores
+            if (Parameters.Segments != null)
+            {
+                int max_decoy_score = 0;
+                int max_normal_score = 0;
+                for (int group = 0; group < Parameters.Segments.Count; group++)
+                {
+                    if (Parameters.Segments[group].Item1.ToLower() == "decoy")
+                    {
+                        max_decoy_score = Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
+                    }
+                    else if (Parameters.RecombinedSegment.Count != 0)
+                    {
+                        var decoy_scores = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).Select(t => t.Score);
+                        if (decoy_scores.Count() > 0)
+                        {
+                            var decoy = decoy_scores.Max();
+                            var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
+
+                            if (decoy > normal * 0.5)
+                                buffer.AppendLine(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                        }
+                    }
+                    else
+                    {
+                        max_normal_score = Math.Max(max_normal_score, Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
+                    }
+                }
+                if (max_decoy_score > max_normal_score * 0.5)
+                    buffer.AppendLine(CommonPieces.TemplateHighDecoyWarning());
+            }
+            return buffer.ToString();
         }
 
         void CopyAssets()
@@ -442,14 +480,15 @@ assetsfolder = '{AssetsFolderName}';
 
             try
             {
-                // TODO: Make these async or something, create the job and only execute it when scattered over a thread pool
-                // TODO: move CreateAsides to this class again and pass a single StringBuilder for each resulting HTML page
+                var culture = System.Globalization.CultureInfo.CurrentCulture;
+                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
                 var html = CreateMain();
                 CreateAsides();
 
                 stopwatch.Stop();
                 html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
                 SaveAndCreateDirectories(filename, html);
+                System.Globalization.CultureInfo.CurrentCulture = culture;
             }
             catch (Exception e)
             {

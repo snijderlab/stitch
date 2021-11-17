@@ -21,6 +21,8 @@ namespace AssemblyNameSpace
         public readonly Alphabet Alphabet;
         public List<Template> Templates;
         public readonly double CutoffScore;
+        public readonly PhylogeneticTree.Tree<string> Hierarchy;
+        public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
         /// Create a new Segment based on the reads found in the given file.
@@ -31,7 +33,7 @@ namespace AssemblyNameSpace
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<(string, MetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public Segment(List<(string, ReadMetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -40,12 +42,18 @@ namespace AssemblyNameSpace
             Templates = new List<Template>();
             Scoring = scoring;
 
-            for (int i = 0; i < sequences.Count(); i++)
+            for (int i = 0; i < sequences.Count; i++)
             {
                 var pair = sequences[i];
                 var parsed = StringToSequence(pair.Item1);
                 Templates.Add(new Template(name, parsed, pair.Item2, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
+
+            try
+            {
+                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
+            }
+            catch { }
         }
         /// <summary>
         /// Create a new Segment based on the templates provided.
@@ -61,6 +69,7 @@ namespace AssemblyNameSpace
             Alphabet = alphabet;
             Templates = templates.ToList();
         }
+
         /// <summary>
         /// Gets the sequence in AminoAcids from a string
         /// </summary>
@@ -79,10 +88,10 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, MetaData.IMetaData)> sequences)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, ReadMetaData.IMetaData)> sequences)
         {
-            var paths = new List<GraphPath>(sequences.Count());
-            for (int i = 0; i < sequences.Count(); i++)
+            var paths = new List<GraphPath>(sequences.Count);
+            for (int i = 0; i < sequences.Count; i++)
             {
                 paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), sequences[i].Item2, i));
             }
@@ -93,15 +102,15 @@ namespace AssemblyNameSpace
         /// Match the given sequences to the segment. Saves the results in this instance of the segment.
         /// </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
+        List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
         {
-            var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count());
-            for (int j = 0; j < sequences.Count(); j++)
+            var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
+            for (int j = 0; j < sequences.Count; j++)
             {
-                var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count());
-                for (int i = 0; i < Templates.Count(); i++)
+                var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count);
+                for (int i = 0; i < Templates.Count; i++)
                 {
-                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j].MetaData, sequences[j].Index)));
+                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j].MetaData, sequences[j].Index, i)));
                 }
                 output.Add(row);
             }
@@ -113,7 +122,7 @@ namespace AssemblyNameSpace
         /// </summary>
         public override string ToString()
         {
-            return $"Segment {Name} with {Templates.Count()} templates in total";
+            return $"Segment {Name} with {Templates.Count} templates in total";
         }
     }
 }

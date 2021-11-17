@@ -304,7 +304,7 @@ namespace AssemblyNameSpace
 
                     var name_range = new FileRange(start, end);
 
-                    if (name_str == "")
+                    if (string.IsNullOrEmpty(name_str))
                     {
                         new ErrorMessage(name_range, "Empty name", "").Print();
                         //    throw new ParseException("");

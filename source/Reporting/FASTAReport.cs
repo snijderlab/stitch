@@ -17,7 +17,7 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="parameters">The parameters.</param>
         /// <param name="minscore">The minimal score needed to be included in the file.</param>
-        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.OutputType outputType, int max_threads) : base(parameters, max_threads)
+        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
         {
             MinScore = minscore;
             OutputType = outputType;

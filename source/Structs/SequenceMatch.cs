@@ -22,7 +22,7 @@ namespace AssemblyNameSpace
         public readonly int Score;
 
         /// <summary>
-        /// The alignment of the match, consisting of <see cref="MatchPiece">s.
+        /// The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>.
         /// </summary>
         public readonly List<MatchPiece> Alignment;
 
@@ -39,7 +39,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// If provided the path that is aligned.
         /// </summary>
-        public MetaData.IMetaData MetaData;
+        public ReadMetaData.IMetaData MetaData;
 
         /// <summary>
         /// The total amount of (mis)matching aminoacids in the alignment
@@ -51,9 +51,11 @@ namespace AssemblyNameSpace
         public readonly int LengthOnTemplate;
 
         public readonly int Index;
+        /// <summary> The index of the Template sequence if available. </summary>
+        public readonly int TemplateIndex;
         public bool Unique;
 
-        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, MetaData.IMetaData metadata, int index)
+        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, ReadMetaData.IMetaData metadata, int index, int templateIndex = -1)
         {
             StartTemplatePosition = startTemplatePosition;
             StartQueryPosition = startQueryPosition;
@@ -63,6 +65,7 @@ namespace AssemblyNameSpace
             QuerySequence = querySequence;
             MetaData = metadata;
             Index = index;
+            TemplateIndex = templateIndex;
             Simplify();
 
             int sum1 = 0;
@@ -142,13 +145,13 @@ namespace AssemblyNameSpace
             {
                 buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
                 //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
-                buffer.Append("\n");
+                buffer.Append('\n');
                 buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
                 //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
-                buffer.Append("\n");
+                buffer.Append('\n');
                 if (i != blocks)
                 {
-                    buffer.Append("\n");
+                    buffer.Append('\n');
                 }
             }
 
@@ -169,7 +172,7 @@ namespace AssemblyNameSpace
                 switch (element)
                 {
                     case Match match:
-                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Char == 'X')) return false;
+                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Character == 'X')) return false;
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
@@ -191,7 +194,7 @@ namespace AssemblyNameSpace
         void Simplify()
         {
             MatchPiece lastElement = null;
-            int count = Alignment.Count();
+            int count = Alignment.Count;
             int i = 0;
             while (i < count)
             {
@@ -261,6 +264,50 @@ namespace AssemblyNameSpace
 
             return buf.ToString();
         }
+
+        (int Matches, int MisMatches, int GapInQuery, int GapInTemplate)? scores = null;
+        /// <summary> Get a detailed breakdown of the scores of this match. </summary>
+        /// <returns> A tuple with 4 counts, the first is the number of exact matches, the second 
+        /// is the number of not exact matches (or mismatches), the third is the number of 
+        /// GapInQuery, and the fourth is the number of GapInTemplate.</returns>
+        public (int Matches, int MisMatches, int GapInQuery, int GapInTemplate) GetDetailedScores()
+        {
+            if (scores != null) return scores.Value;
+            (int Matches, int MisMatches, int GapInQuery, int GapInTemplate) output = (0, 0, 0, 0);
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+
+            foreach (var piece in this.Alignment)
+            {
+                if (piece is SequenceMatch.Match ma)
+                {
+                    for (int i = 0; i < ma.Length; i++)
+                    {
+                        if (TemplateSequence[pos + i] == QuerySequence[q_pos + i])
+                            output.Matches += 1;
+                        else
+                            output.MisMatches += 1;
+                    }
+
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInTemplate)
+                {
+                    output.GapInTemplate += piece.Length;
+                    pos += piece.Length;
+                }
+                else if (piece is SequenceMatch.GapInQuery)
+                {
+                    output.GapInQuery += piece.Length;
+                    q_pos += piece.Length;
+                }
+            }
+
+            scores = output;
+            return output;
+        }
+
 
         /// <summary>
         /// Represents a piece of a match between two sequences

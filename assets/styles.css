@@ -6,6 +6,7 @@
     --color-dark: #1E1E1E;
     --color-light: #7E7E7E;
     --color-background: #fff;
+    --color-yellow: #DCD08F;
 }
 
 @media screen and (prefers-color-scheme: dark) {
@@ -64,11 +65,6 @@ h1 {
     font-family: Roboto Mono, monospace;
 }
 
-.prefix,
-.suffix {
-    color: grey;
-}
-
 .overview-link {
     background: var(--color-primary);
     color: var(--color-background);
@@ -79,13 +75,10 @@ h1 {
     margin-right: 1em;
 }
 
-img {
-    max-width: 100%;
-}
-
 .template-graphs {
     display: flex;
     flex-wrap: wrap;
+    align-items: flex-end;
 }
 
 .template-graphs>* {
@@ -227,6 +220,11 @@ td.seq {
     border-color: var(--color-secondary);
 }
 
+.info-link:active {
+    color: var(--color-tertiary);
+    border-color: var(--color-tertiary);
+}
+
 td.bar {
     position: relative;
 }
@@ -241,6 +239,33 @@ td.bar::before {
     opacity: 0.35;
     z-index: -1;
     background: var(--color-primary);
+}
+
+
+/* Warning */
+
+.warning {
+    border: 5px solid var(--color-yellow);
+    padding: 1em;
+    margin: 1em;
+    color: var(--color-yellow);
+}
+
+.warning::after {
+    content: "⚠";
+    display: block;
+    position: absolute;
+    top: calc(.5em - 10px);
+    right: .5em;
+    font-size: 2em;
+}
+
+.warning h3 {
+    margin: 0;
+}
+
+.warning>*:last-child {
+    margin-bottom: 0;
 }
 
 
@@ -296,25 +321,6 @@ td.bar::before {
 }
 
 
-/* Tables on template detail pages */
-
-.details table[id^="template-table"] th:first-child {
-    display: none;
-}
-
-.details table[id^="template-table"] th::after {
-    display: none;
-}
-
-.details table[id^="template-table"] td:first-child {
-    display: none;
-}
-
-.details table[id^="template-table"] td.bar:before {
-    display: none;
-}
-
-
 /* Collapsible regions */
 
 .report label,
@@ -361,7 +367,7 @@ input:checked+label {
     border-radius: .2rem .2rem 0 0;
 }
 
-.report input:checked+.collapsable>label::after {
+.report input:checked+label::after {
     content: "-";
 }
 
@@ -370,6 +376,7 @@ input:checked+label {
     border-left: 2px solid var(--color-primary);
     padding-left: .5rem;
     overflow: auto;
+    overflow-x: hidden;
 }
 
 .source-code {
@@ -384,84 +391,11 @@ input[type="checkbox"] {
     display: none;
 }
 
-input:checked+label+.collapsable {
-    display: block;
-}
-
-
-/* Meta data */
-
-.meta-collapsable {
-    padding-left: .25em;
-}
-
-.meta-collapsable h3:first-child {
-    margin-top: 0;
-    padding-top: .15em;
-}
-
-
-/* Runtime */
-
-.runtime {
-    display: flex;
-    flex-direction: row;
-    padding-bottom: 1em;
-}
-
-.runtime>div {
-    background-color: var(--color-primary);
-    margin-left: 5px;
-    min-width: 2em;
-    position: relative;
-}
-
-.runtime p {
-    color: var(--color-background);
-    margin: .1em;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-.runtime>div:nth-child(odd) {
-    background-color: var(--color-primary-shade);
-}
-
-.runtime>div:first-child {
-    margin-left: 0;
-}
-
-.runtime-hover {
+input[type="radio"] {
     display: none;
-    position: absolute;
-    width: 150px;
-    border: 1px solid var(--color-primary);
-    padding: .2em;
-    background-color: var(--color-background);
-    transform: translate(10px, -10px);
-    z-index: 100;
 }
 
-.runtime-hover span {
-    display: block;
-}
-
-.runtime-title {
-    font-weight: 500;
-}
-
-.runtime-time {
-    color: var(--color-light);
-}
-
-.runtime-desc {
-    margin-top: .5em;
-    font-size: .75em;
-    font-style: italic;
-}
-
-.runtime>div:hover .runtime-hover {
+input:checked+label+.collapsable {
     display: block;
 }
 
@@ -508,6 +442,10 @@ input:checked+label+.collapsable {
     font-weight: 500;
 }
 
+.align-link:hover {
+    color: var(--color-secondary);
+}
+
 .coverage-depth-wrapper {
     height: 50px;
     order: 1;
@@ -522,16 +460,6 @@ input:checked+label+.collapsable {
     width: calc(1ch - 2px);
     display: inline-block;
     margin: 0 1px;
-}
-
-.align-link.hover {
-    color: var(--color-secondary);
-    font-weight: 500;
-}
-
-.read-link.hover {
-    color: var(--color-secondary);
-    border-color: var(--color-secondary);
 }
 
 .front-overhang {
@@ -628,75 +556,118 @@ input:checked+label .overhang-block .text {
 }
 
 
-/* JS-settings */
+/* ScoreTree */
 
-.js-settings {
+.phylogenetictree {
+    overflow-y: hidden;
+    --branch-width: 2vw;
     display: flex;
-    flex-direction: row;
-    align-items: center;
+    flex-wrap: wrap;
+    gap: 8px;
 }
 
-.js-settings p {
+.phylogenetictree .legend {
+    --color: var(--color-secondary);
     margin: 0;
-    margin-right: .5em;
+    margin-top: .8em;
 }
 
+.phylogenetictree .legend.unique {
+    --color: var(--color-tertiary);
+}
 
-/* Toggle switch */
+.container {
+    display: grid;
+    grid-template-columns: var(--branch-width) 1fr;
+    grid-template-areas: "lines branch1"". branch2";
+}
 
+.container>:nth-child(2) {
+    grid-area: branch1;
+}
 
-/* based on an example by w3schools */
+.container>:nth-child(3) {
+    grid-area: branch2;
+}
 
-.js-toggle {
+.branch {
+    border: 1px solid var(--color-dark);
+    border-left: none;
+    border-bottom: none;
+    width: 100%;
+    height: auto;
+    grid-area: lines;
+    margin-top: 9px;
+    margin-bottom: -9px;
     position: relative;
+}
+
+.phylogenetictree>.container {
+    grid-template-columns: 0px 1fr;
+    flex-basis: 100%;
+}
+
+.phylogenetictree>.container>.branch {
+    border-top: none;
+    width: 0px;
+}
+
+.leaf .branch {
+    border-right: none;
+    width: var(--branch-width);
+    height: 1px;
+    margin-bottom: 4px;
     display: inline-block;
-    width: 2.5em;
-    height: 1.5em;
 }
 
-.js-toggle input {
-    opacity: 0;
-    width: 0;
-    height: 0;
-}
-
-.js-toggle .slider {
-    position: absolute;
-    cursor: pointer;
-    top: 0;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    background-color: var(--color-background);
-    -webkit-transition: .4s;
-    transition: .4s;
-    border-radius: 2em;
-}
-
-.js-toggle .slider:before {
-    position: absolute;
+.branch::before,
+.branch::after {
     content: "";
-    height: 1.1em;
-    width: 1.1em;
-    left: .2em;
-    bottom: .2em;
-    background-color: var(--color-background);
-    -webkit-transition: .4s;
-    transition: .4s;
-    border-radius: 50%;
+    display: block;
+    position: absolute;
+    width: calc(var(--branch-width) - 1px);
+    left: 1px;
 }
 
-input:checked+.slider {
-    background-color: var(--color-primary);
+.branch::before {
+    background-color: var(--color-secondary);
+    height: 0px;
 }
 
-input:focus+.slider {
-    box-shadow: 0 0 1px var(--color-primary);
-    ;
+.branch::after {
+    background-color: var(--color-tertiary);
+    height: 0px;
 }
 
-input:checked+.slider:before {
-    transform: translateX(1em);
+.leaf .info-link {
+    margin-left: 4px;
+}
+
+.phylogenetictree .showdata-0:checked~* .branch::before {
+    height: calc(var(--score) * 8px);
+    top: calc(var(--score) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-0:checked~* .branch::after {
+    height: calc(var(--unique-score) * 8px);
+}
+
+.phylogenetictree .showdata-1:checked~* .branch::before {
+    height: calc(var(--matches) * 8px);
+    top: calc(var(--matches) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-1:checked~* .branch::after {
+    height: calc(var(--unique-matches) * 8px);
+}
+
+.phylogenetictree .showdata-2:checked~* .branch::before {
+    height: calc(var(--area) * 8px);
+    top: calc(var(--area) * -8px - 1px);
+}
+
+.phylogenetictree .showdata-2:checked~* .branch::after {
+    height: calc(var(--unique-area) * 8px);
 }
 
 
@@ -749,7 +720,8 @@ input:checked+.slider:before {
 }
 
 .point-graph label,
-.graph .copy-data {
+.graph .copy-data,
+.phylogenetictree label {
     font-size: 1em;
     border: 2px solid var(--color-light);
     background: none;
@@ -787,16 +759,6 @@ input:checked+.slider:before {
 .table-header>div {
     flex: 1 1 1px;
     padding: 0 .5em;
-}
-
-.table-header>div:last-child {
-    box-shadow: none;
-}
-
-.table-header h3 {
-    margin: 0;
-    padding: 1.5em 0;
-    color: var(--color-primary);
 }
 
 .text-header {
@@ -953,12 +915,14 @@ input:checked+.slider:before {
     color: var(--color-tertiary);
 }
 
-.point-graph input:checked+label {
+.point-graph input:checked+label,
+.phylogenetictree input:checked+label {
     border-color: var(--color-primary);
     border-radius: .2rem;
 }
 
-.point-graph label::before {
+.point-graph label::before,
+.phylogenetictree .legend::before {
     content: "";
     top: 0;
     left: 0;
@@ -972,8 +936,9 @@ input:checked+.slider:before {
     margin-left: .5em;
 }
 
-.point-graph label::after {
-    content: unset;
+.point-graph label::after,
+.phylogenetictree label::after {
+    content: unset !important;
 }
 
 .point-graph .plot {
@@ -1228,40 +1193,33 @@ input:checked+.slider:before {
     body {
         font-size: 0.8em;
     }
-
     .graph {
         page-break-inside: avoid;
     }
-
     .report label,
     .report .collapsable>label {
         background: none;
         color: var(--color-dark);
         border: none;
     }
-
     .collapsable {
         border: none;
         padding: 0;
         display: block;
         overflow: visible;
     }
-
     .info-link {
         color: var(--color-dark);
         border: none;
         font-size: 1em;
     }
-
     .table-header {
         display: block;
     }
-
     .histogram-header span {
         font-size: .6em;
         font-weight: normal;
     }
-
     .copy-data,
     .source-code,
     .point-graph label,

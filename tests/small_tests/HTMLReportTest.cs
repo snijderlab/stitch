@@ -22,7 +22,7 @@ namespace AssemblyTestNameSpace
             Template template = new Template(
                 "test",
                 StringToSequence("EVQLVESGGGLVQPGGSLRL", alp),
-                new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter()),
+                new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter()),
                 null,
                 true
                 );
@@ -36,17 +36,17 @@ namespace AssemblyTestNameSpace
         public void SingleMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
+                new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
+            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var buffer = new StringBuilder();
@@ -59,17 +59,17 @@ namespace AssemblyTestNameSpace
         public void MultiMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, MetaData.IMetaData)> { ("EVQLVESGGG", meta) },
+                new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGG", meta) },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
+            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var buffer = new StringBuilder();
@@ -82,17 +82,17 @@ namespace AssemblyTestNameSpace
         public void SingleAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, MetaData.IMetaData)> { ("E", meta) },
+                new List<(string, ReadMetaData.IMetaData)> { ("E", meta) },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, MetaData.IMetaData)> { ("E", meta) });
+            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("E", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var buffer = new StringBuilder();
@@ -105,10 +105,10 @@ namespace AssemblyTestNameSpace
         public void NoAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (MetaData.IMetaData)new MetaData.Simple(new MetaData.FileIdentifier("empty", "empty", null), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier("empty", "empty", null), new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, MetaData.IMetaData)> { ("", meta) },
+                new List<(string, ReadMetaData.IMetaData)> { ("", meta) },
                 alp,
                 "segment",
                 1.0, // CutoffScore
@@ -125,14 +125,14 @@ namespace AssemblyTestNameSpace
         {
             Assert.IsNotNull(actual);
             Assert.IsNotNull(expected);
-            Assert.AreEqual(actual.Count(), expected.Count());
+            Assert.AreEqual(actual.Count, expected.Count);
 
             Console.Write("\n");
             foreach (var doc in actual) Console.Write($" {doc}");
             Console.Write("\n");
             foreach (var doc in expected) Console.Write($" {doc}");
 
-            for (int index = 0; index < actual.Count(); index++)
+            for (int index = 0; index < actual.Count; index++)
                 Assert.AreEqual(actual[index], expected[index]);
         }
 

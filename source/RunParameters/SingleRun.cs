@@ -28,7 +28,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
             /// </summary>
-            public List<(string, MetaData.IMetaData)> Input;
+            public List<(string, ReadMetaData.IMetaData)> Input;
 
             /// <summary>
             /// The alphabet used in this run.
@@ -57,7 +57,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, MetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
+            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -84,19 +84,19 @@ namespace AssemblyNameSpace
             public void Calculate()
             {
                 // Template Matching
-                Stopwatch stopWatch = new Stopwatch();
+                var stopWatch = new Stopwatch();
                 stopWatch.Start();
 
                 var segments = RunTemplateMatching();
 
                 stopWatch.Stop();
 
-                List<Segment> recombined_segment = new List<Segment>();
+                var recombined_segment = new List<Segment>();
 
                 // Recombine
                 if (Recombine != null)
                 {
-                    Stopwatch recombine_sw = new Stopwatch();
+                    var recombine_sw = new Stopwatch();
                     recombine_sw.Start();
 
                     RunRecombine(segments, recombined_segment);
@@ -135,14 +135,14 @@ namespace AssemblyNameSpace
             List<(string, List<Segment>)> RunTemplateMatching()
             {
                 // Initialise the matches list with empty lists for every input read
-                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
-                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count);
+                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                 var segments = new List<(string, List<Segment>)>();
-                for (int i = 0; i < TemplateMatching.Segments.Count(); i++)
+                for (int i = 0; i < TemplateMatching.Segments.Count; i++)
                 {
                     var current_group = new List<Segment>();
-                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count(); j++)
+                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++)
                     {
                         var segment = TemplateMatching.Segments[i].Segments[j];
                         var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
@@ -153,8 +153,8 @@ namespace AssemblyNameSpace
 
                 var jobs = new List<(int segmentID, int innerSegmentID)>();
 
-                for (int i = 0; i < TemplateMatching.Segments.Count(); i++)
-                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count(); j++)
+                for (int i = 0; i < TemplateMatching.Segments.Count; i++)
+                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++)
                         jobs.Add((i, j));
 
                 void ExecuteJob((int, int) job)
@@ -165,8 +165,8 @@ namespace AssemblyNameSpace
                     // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
                     var local_matches = segment1.Match(Input);
 
-                    for (int read = 0; read < Input.Count(); read++)
-                        matches[read].AddRange(local_matches[read].Select(a => (i, j, a.Item1, a.Item2)));
+                    for (int read = 0; read < Input.Count; read++)
+                        matches[read].AddRange(local_matches[read].Select(a => (i, j, a.TemplateIndex, a.Match)));
                 }
 
                 Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
@@ -181,10 +181,19 @@ namespace AssemblyNameSpace
                 // Add all matches to the right templates
                 foreach (var row in matches)
                 {
-                    var unique = row.Count() == 1;
+                    var unique = row.Count == 1;
                     foreach (var match in row)
                     {
                         segments[match.GroupIndex].Item2[match.SegmentIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
+                    }
+                }
+
+                foreach (var group in segments)
+                {
+                    foreach (var segment in group.Item2)
+                    {
+                        if (segment.Hierarchy == null) continue;
+                        segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
                     }
                 }
 
@@ -193,15 +202,15 @@ namespace AssemblyNameSpace
 
             void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment)
             {
-                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count());
-                for (int i = 0; i < Input.Count(); i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
+                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count);
+                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
                 var namefilter = new NameFilter();
                 bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
                 int offset = 0;
-                for (int segment_group_index = 0; segment_group_index < segments.Count(); segment_group_index++)
+                for (int segment_group_index = 0; segment_group_index < segments.Count; segment_group_index++)
                 {
                     var segment_group = segments[segment_group_index];
                     if (segment_group.Item1.ToLower() == "decoy") { offset += 1; continue; };
@@ -218,7 +227,7 @@ namespace AssemblyNameSpace
                         // Add all missed templates (score too low) to the decoy set if the Decoy option is turned on
                         if (Recombine.Decoy)
                             foreach (var template in db.Templates.Skip(Recombine.N))
-                                decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, forceGermlineIsoleucine, new TemplateLocation(-1, decoy.Count())));
+                                decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, db, forceGermlineIsoleucine, new TemplateLocation(-1, decoy.Count)));
                     }
 
                     // Recombine high scoring templates
@@ -238,8 +247,8 @@ namespace AssemblyNameSpace
 
                     var local_matches = recombined_segment_group.Match(Input);
 
-                    for (int read = 0; read < Input.Count(); read++)
-                        matches[read].AddRange(local_matches[read].Select(a => (segment_group_index, 0, a.Item1, a.Item2)));
+                    for (int read = 0; read < Input.Count; read++)
+                        matches[read].AddRange(local_matches[read].Select(a => (segment_group_index, 0, a.TemplateIndex, a.Match)));
 
                     recombined_segment.Add(recombined_segment_group);
                 }
@@ -252,21 +261,22 @@ namespace AssemblyNameSpace
                     if (seg_group.Item1.ToLower() == "decoy")
                         foreach (var segment in seg_group.Item2)
                             foreach (var template in segment.Templates)
-                                general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count())));
+                                general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count)));
+
                     // If a segment is added in the outer scope called "Decoy" it is added as well
-                    if (seg_group.Item1 == "")
+                    if (string.IsNullOrEmpty(seg_group.Item1))
                         foreach (var segment in seg_group.Item2)
                             if (segment.Name.ToLower() == "decoy")
                                 foreach (var template in segment.Templates)
-                                    general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count())));
+                                    general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count)));
                 }
-                if (general_decoy.Count() > 0)
+                if (general_decoy.Count > 0)
                 {
                     var segment = new Segment(general_decoy, alph, "General Decoy Segment", Recombine.CutoffScore);
                     var local_matches = segment.Match(Input);
 
-                    for (int read = 0; read < Input.Count(); read++)
-                        matches[read].AddRange(local_matches[read].Select(a => (recombined_segment.Count(), 0, a.Item1, a.Item2)));
+                    for (int read = 0; read < Input.Count; read++)
+                        matches[read].AddRange(local_matches[read].Select(a => (recombined_segment.Count, 0, a.TemplateIndex, a.Match)));
 
                     recombined_segment.Add(segment);
                 }
@@ -278,7 +288,7 @@ namespace AssemblyNameSpace
                 // Add all matches to the right templates
                 foreach (var row in matches)
                 {
-                    var unique = row.Count() == 1;
+                    var unique = row.Count == 1;
                     foreach (var match in row)
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                 }
@@ -287,6 +297,7 @@ namespace AssemblyNameSpace
                 if (progressBar != null) progressBar.Update();
             }
 
+            // Also known as the CDR joining step
             void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
             {
                 var recombined_templates = new List<Template>();
@@ -307,16 +318,17 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
-                            var seq = sequence.ElementAt(((RecombineOrder.Template)element).Index).ConsensusSequence().Item1;
+                            var index = ((RecombineOrder.Template)element).Index;
+                            var seq = sequence.ElementAt(index).ConsensusSequence().Item1;
                             if (join)
                             {
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
-                                var deleted_gaps = s.Count() + seq.Count();
-                                s = s.TakeWhile(a => a.Char != 'X').ToList();
-                                seq = seq.SkipWhile(a => a.Char == 'X').ToList();
-                                deleted_gaps -= s.Count() + seq.Count();
+                                var deleted_gaps = s.Count + seq.Count;
+                                s = s.TakeWhile(a => a.Character != 'X').ToList();
+                                seq = seq.SkipWhile(a => a.Character == 'X').ToList();
+                                deleted_gaps -= s.Count + seq.Count;
                                 var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 // When no good overlap is found just paste them one after the other
                                 if (aligned_template.Score > 0)
@@ -338,7 +350,7 @@ namespace AssemblyNameSpace
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new MetaData.Simple(new MetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));
@@ -346,13 +358,13 @@ namespace AssemblyNameSpace
                 parent.Templates = recombined_templates;
             }
 
-            void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)
+            static void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)
             {
-                for (int read_index = 0; read_index < matches.Count(); read_index++)
+                for (int read_index = 0; read_index < matches.Count; read_index++)
                 {
                     var best = new List<(int, int, int, SequenceMatch)>();
                     var best_score = 0;
-                    for (int template_index = 0; template_index < matches[read_index].Count(); template_index++)
+                    for (int template_index = 0; template_index < matches[read_index].Count; template_index++)
                     {
                         var match = matches[read_index][template_index];
                         if (match.Match.Score > best_score)
