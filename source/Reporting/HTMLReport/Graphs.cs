@@ -107,7 +107,7 @@ namespace HTMLNameSpace
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = 0;
-            if (baseYMinOnData) min = data.Select(a => a.Value).Min();
+            if (baseYMinOnData) min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
 
             // Y axis
             buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
@@ -115,7 +115,7 @@ namespace HTMLNameSpace
             // Data
             foreach (var set in data)
             {
-                string height = ((set.Value - min) / max * 100).ToString();
+                string height = ((set.Value - min) / (max - min) * 100).ToString();
                 buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                 dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
             }

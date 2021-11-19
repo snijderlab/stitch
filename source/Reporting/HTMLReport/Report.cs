@@ -339,6 +339,24 @@ assetsfolder = '{AssetsFolderName}';
             return buffer.ToString();
         }
 
+        private string CreateSegmentJoining(int group)
+        {
+            var innerbuffer = new StringBuilder();
+            foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
+            {
+                var A = Parameters.Segments[group].Item2[set.Index - 1];
+                var B = Parameters.Segments[group].Item2[set.Index];
+                innerbuffer.Append($"<h2>{A.Name} * {B.Name}</h2>");
+                var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3 + set.Score.Best.Position));
+                var seqB = AminoAcid.ArrayToString(set.SeqB.Take(3 + set.Score.Best.Position).ToArray());
+                innerbuffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                innerbuffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
+
+                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", 2, true);
+            }
+            return innerbuffer.ToString();
+        }
+
         private string CreateMain()
         {
             var innerbuffer = new StringBuilder();
@@ -358,6 +376,9 @@ assetsfolder = '{AssetsFolderName}';
                         groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateSegmentTable(recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                         if (decoy.Count > 0)
                             groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateSegmentTable(decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+
+                        if (Parameters.RecombinedSegment[group].SegmentJoiningScores.Count > 0)
+                            groupbuffer.Append(Collapsible("Segment joining", CreateSegmentJoining(group)));
                     }
 
                     groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
@@ -401,9 +422,9 @@ assetsfolder = '{AssetsFolderName}';
         string GetWarnings()
         {
             var buffer = new StringBuilder();
-            // High decoy scores
             if (Parameters.Segments != null)
             {
+                // High decoy scores
                 int max_decoy_score = 0;
                 int max_normal_score = 0;
                 for (int group = 0; group < Parameters.Segments.Count; group++)
@@ -431,6 +452,20 @@ assetsfolder = '{AssetsFolderName}';
                 }
                 if (max_decoy_score > max_normal_score * 0.5)
                     buffer.AppendLine(CommonPieces.TemplateHighDecoyWarning());
+
+                // Segment joining
+                for (int group = 0; group < Parameters.Segments.Count; group++)
+                {
+                    foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
+                    {
+                        if (set.Score.Best.Position == 0)
+                        {
+                            var A = Parameters.Segments[group].Item2[set.Index - 1];
+                            var B = Parameters.Segments[group].Item2[set.Index];
+                            buffer.AppendLine(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
+                        }
+                    }
+                }
             }
             return buffer.ToString();
         }

@@ -242,7 +242,7 @@ namespace AssemblyNameSpace
                         select acc.Concat(new[] { item }));
 
                     var recombined_segment_group = new Segment(new List<Template>(), alph, "Recombined Segment", Recombine.CutoffScore);
-                    CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, namefilter);
+                    recombined_segment_group.SegmentJoiningScores = CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, namefilter);
                     if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
                     var local_matches = recombined_segment_group.Match(Input);
@@ -298,9 +298,10 @@ namespace AssemblyNameSpace
             }
 
             // Also known as the CDR joining step
-            void CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
             {
                 var recombined_templates = new List<Template>();
+                var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
 
                 for (int i = 0; i < combinations.Count(); i++)
                 {
@@ -330,9 +331,10 @@ namespace AssemblyNameSpace
                                 seq = seq.SkipWhile(a => a.Character == 'X').ToList();
                                 deleted_gaps -= s.Count + seq.Count;
                                 var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
+                                scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
                                 // When no good overlap is found just paste them one after the other
-                                if (aligned_template.Score > 0)
-                                    s.AddRange(seq.Skip(aligned_template.Position));
+                                if (aligned_template.Best.Score > 0)
+                                    s.AddRange(seq.Skip(aligned_template.Best.Position));
                                 else
                                 {
                                     s.Add(new AminoAcid(alphabet, AssemblyNameSpace.Alphabet.GapChar));
@@ -356,6 +358,7 @@ namespace AssemblyNameSpace
                             new RecombinedTemplateLocation(i), t));
                 }
                 parent.Templates = recombined_templates;
+                return scores;
             }
 
             static void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)

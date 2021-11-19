@@ -7,6 +7,7 @@
     --color-light: #7E7E7E;
     --color-background: #fff;
     --color-yellow: #DCD08F;
+    --color-label: var(--color-primary);
 }
 
 @media screen and (prefers-color-scheme: dark) {
@@ -337,6 +338,10 @@ td.bar::before {
     user-select: none;
 }
 
+.report>.collapsable>* {
+    --color-label: var(--color-primary-shade);
+}
+
 .report label::after {
     content: "+";
     border: 2px solid var(--color-background);
@@ -352,15 +357,16 @@ td.bar::before {
 
 .report .collapsable>label {
     font-size: 1.5em;
-    border: 2px solid var(--color-primary);
+    border: 2px solid var(--color-label);
     background-color: var(--color-background);
-    color: var(--color-primary);
+    color: var(--color-label);
     font-weight: 500;
+    margin-top: 0.75em;
 }
 
 .report .collapsable>label::after {
-    border-color: var(--color-primary);
-    color: var(--color-primary);
+    border-color: var(--color-label);
+    color: var(--color-label);
 }
 
 input:checked+label {
@@ -373,10 +379,9 @@ input:checked+label {
 
 .collapsable {
     display: none;
-    border-left: 2px solid var(--color-primary);
+    border-left: 2px solid var(--color-label);
     padding-left: .5rem;
-    overflow: auto;
-    overflow-x: hidden;
+    overflow: hidden;
 }
 
 .source-code {

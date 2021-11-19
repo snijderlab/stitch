@@ -22,6 +22,7 @@ namespace AssemblyNameSpace
         public List<Template> Templates;
         public readonly double CutoffScore;
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
+        public List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores) Score, AminoAcid[] SeqA, AminoAcid[] SeqB)> SegmentJoiningScores = new();
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>
