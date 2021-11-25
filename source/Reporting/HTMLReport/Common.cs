@@ -71,14 +71,14 @@ namespace HTMLNameSpace
         /// <param name="name">The name to display.</param>
         /// <param name="content">The content.</param>
         /// <param name="state">The state of the collapsible, default closed</param>
-        public static string Collapsible(string name, string content, CollapsibleState state = CollapsibleState.Closed)
+        public static string Collapsible(string id, string name, string content, CollapsibleState state = CollapsibleState.Closed)
         {
             collapsible_counter++;
-            string id = $"collapsible-{collapsible_counter}";
+            string cid = $"collapsible-{collapsible_counter}";
             string check = state == CollapsibleState.Open ? " checked" : "";
-            return $@"<input type=""checkbox"" id=""{id}""{check}/>
-<label for=""{id}"">{name}</label>
-<div class=""collapsable"">{content}</div>";
+            return $@"<input type=""checkbox"" id=""{cid}""{check}/>
+<label for=""{cid}"">{name}</label>
+<div class=""collapsable"" id=""{id}"">{content}</div>";
         }
 
         /// <summary> Create a warning to use in the HTML report to show users that they need to look into someting. </summary>

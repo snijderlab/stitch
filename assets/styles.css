@@ -400,7 +400,8 @@ input[type="radio"] {
     display: none;
 }
 
-input:checked+label+.collapsable {
+input:checked+label+.collapsable,
+.collapsable:target {
     display: block;
 }
 

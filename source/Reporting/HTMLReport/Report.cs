@@ -115,7 +115,7 @@ namespace AssemblyNameSpace
             return SaveAndCreateDirectoriesAsync(fullpath, buffer.ToString());
         }
 
-        void CreateCDROverview(StringBuilder buffer, List<Segment> segments)
+        void CreateCDROverview(string id, StringBuilder buffer, List<Segment> segments)
         {
             var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
@@ -243,7 +243,7 @@ namespace AssemblyNameSpace
             HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
             innerbuffer.AppendLine("</div>");
 
-            buffer.Append(CommonPieces.Collapsible("CDR regions", innerbuffer.ToString()));
+            buffer.Append(CommonPieces.Collapsible(id, "CDR regions", innerbuffer.ToString()));
         }
 
         private string CreateHeader(string title, List<string> location)
@@ -367,32 +367,33 @@ assetsfolder = '{AssetsFolderName}';
                 for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
                     var groupbuffer = new StringBuilder();
+                    var id = Parameters.Segments[group].Item1.ToLower().Replace(' ', '-');
 
                     if (Parameters.RecombinedSegment.Count != 0)
                     {
-                        if (Parameters.Segments[group].Item1.ToLower() == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
+                        if (id == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer.Append(Collapsible("Recombination Table", HTMLTables.CreateSegmentTable(recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                        groupbuffer.Append(Collapsible(id + "-recombination", "Recombination Table", HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                         if (decoy.Count > 0)
-                            groupbuffer.Append(Collapsible("Recombination Decoy", HTMLTables.CreateSegmentTable(decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                            groupbuffer.Append(Collapsible(id + "-recombination-decoy", "Recombination Decoy", HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
 
                         if (Parameters.RecombinedSegment[group].SegmentJoiningScores.Count > 0)
-                            groupbuffer.Append(Collapsible("Segment joining", CreateSegmentJoining(group)));
+                            groupbuffer.Append(Collapsible(id + "-segment-joining", "Segment joining", CreateSegmentJoining(group)));
                     }
 
                     groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
 
-                    CreateCDROverview(groupbuffer, Parameters.Segments[group].Item2);
+                    CreateCDROverview(id + "-cdr", groupbuffer, Parameters.Segments[group].Item2);
 
                     if (Parameters.Segments.Count == 1)
                         innerbuffer.Append(groupbuffer);
                     else
-                        innerbuffer.Append(Collapsible(Parameters.Segments[group].Item1, groupbuffer.ToString()));
+                        innerbuffer.Append(Collapsible(id, Parameters.Segments[group].Item1, groupbuffer.ToString()));
                 }
 
-            innerbuffer.Append(Collapsible("Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
-            innerbuffer.Append(Collapsible("Batch File", BatchFileHTML()));
+            innerbuffer.Append(Collapsible("reads", "Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
+            innerbuffer.Append(Collapsible("batchfile", "Batch File", BatchFileHTML()));
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 

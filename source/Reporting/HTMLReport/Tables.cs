@@ -57,13 +57,13 @@ namespace HTMLNameSpace
             for (var i = 0; i < segments.Count; i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible($"Segment {item.Name}", CreateSegmentTable(item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
+                output.Append(Collapsible(item.Name, $"Segment {item.Name}", CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
             }
 
             return output.ToString();
         }
 
-        public static string CreateSegmentTable(List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
+        public static string CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
         {
             table_counter++;
             var buffer = new StringBuilder();
@@ -106,7 +106,7 @@ namespace HTMLNameSpace
                 button_buffer.Append("<p class='legend'>Cumulative value (excluding unique)</p>");
                 button_buffer.Append("<p class='legend unique'>Cumulative value for unique matches</p>");
 
-                buffer.AppendLine(Collapsible("Tree", $"<div class='phylogenetictree'>{button_buffer.ToString()}{RenderTree(tree.DataTree, tree.OriginalTree)}</div>", CollapsibleState.Open));
+                buffer.AppendLine(Collapsible(name + "-tree", "Tree", $"<div class='phylogenetictree'>{button_buffer.ToString()}{RenderTree(tree.DataTree, tree.OriginalTree)}</div>", CollapsibleState.Open));
             }
 
 
@@ -162,7 +162,7 @@ namespace HTMLNameSpace
             }
 
             table_buffer.AppendLine("</table>");
-            buffer.AppendLine(Collapsible("Table", table_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
+            buffer.AppendLine(Collapsible(name + "-table", "Table", table_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
             CultureInfo.CurrentCulture = culture;
 
             return buffer.ToString();
