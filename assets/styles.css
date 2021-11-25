@@ -817,6 +817,24 @@ input:checked+label .overhang-block .text {
     font-weight: 500;
 }
 
+
+/* Negative histogram */
+
+.histogram.negative .yaxis {
+    grid-row-start: 1;
+    grid-row-end: 3;
+}
+
+.histogram .bar.negative {
+    align-self: start;
+    margin-top: -2px;
+    border-top: 2px solid var(--color-dark);
+    border-bottom: none;
+}
+
+
+/* Grouped histogram */
+
 .grouped.histogram {
     grid-template-columns: none;
 }

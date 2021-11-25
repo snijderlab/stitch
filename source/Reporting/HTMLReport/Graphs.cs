@@ -91,7 +91,7 @@ namespace HTMLNameSpace
             Bargraph(buffer, labeled.ToList(), title);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, int factor = 2, bool baseYMinOnData = false)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, int factor = 2)
         {
             if (data.Count == 0)
             {
@@ -103,24 +103,50 @@ namespace HTMLNameSpace
             buffer.Append("<div class='graph'>");
             if (title != null)
                 buffer.Append($"<h2 class='title'>{title}</h2><div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
-            buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
+
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
-            double min = 0;
-            if (baseYMinOnData) min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
+            double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
 
-            // Y axis
-            buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
-
-            // Data
-            foreach (var set in data)
+            if (min < 0)
             {
-                string height = ((set.Value - min) / (max - min) * 100).ToString();
-                buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
-                dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
-            }
+                buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
+                // Y axis
+                buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
 
+                // Data
+                foreach (var set in data)
+                {
+                    if (set.Value >= 0)
+                        buffer.Append($"<span class='bar' style='height:{set.Value / max * 100}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
+                    else
+                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min * 100}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
+                }
+            }
+            else
+            {
+                min = 0; // always start graphs at 0 
+                buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
+
+                // Y axis
+                buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
+
+                // Data
+                foreach (var set in data)
+                {
+                    string height = (set.Value / max * 100).ToString();
+                    buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
+                }
+
+            }
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+        }
+
+        static void NegativeBargraph(StringBuilder buffer, List<(string Label, double Value)> data, double max, double min)
+        {
+
         }
 
         /// <summary>
