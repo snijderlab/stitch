@@ -86,28 +86,7 @@ namespace HTMLNameSpace
                 TableHeader(buffer, templates, total_reads);
 
             if (tree != null)
-            {
-                var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
-                string RenderTree(PhylogeneticTree.Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea)> data, PhylogeneticTree.Tree<string> names)
-                {
-                    var scores = $" style='--score:{(double)data.Value.Score / max.Item1};--unique-score:{(double)data.Value.UniqueScore / max.Item2};--matches:{(double)data.Value.Matches / max.Item3};--unique-matches:{(double)data.Value.UniqueMatches / max.Item4};--area:{(double)data.Value.Area / max.Item5};--unique-area:{(double)data.Value.UniqueArea / max.Item6};'";
-                    if (data.Left == null && data.Right == null) return $"<div class='leaf'><div class='branch'{scores}></div>{ GetAsideLink(templates.Find(t => t.MetaData.Identifier == names.Value).MetaData, type, AssetsFolderName)}</div>";
-                    return $"<div class='container'><div class='branch'{scores}></div>{RenderTree(data.Left.Value.Item2, names.Left.Value.Item2)}{RenderTree(data.Right.Value.Item2, names.Right.Value.Item2)}</div>";
-                }
-
-                var button_buffer = new StringBuilder();
-                var button_names = new string[] { "Score", "Matches", "Area" };
-                for (int i = 0; i < button_names.Length; i++)
-                {
-                    var check = i == 0 ? " checked " : "";
-                    button_buffer.Append($"<input type='radio' class='showdata-{i}' name='tree-{table_counter}' id='tree-{table_counter}-{i}'{check}/>");
-                    button_buffer.Append($"<label for='tree-{table_counter}-{i}'>{button_names[i]}</label>");
-                }
-                button_buffer.Append("<p class='legend'>Cumulative value (excluding unique)</p>");
-                button_buffer.Append("<p class='legend unique'>Cumulative value for unique matches</p>");
-
-                buffer.AppendLine(Collapsible(name + "-tree", "Tree", $"<div class='phylogenetictree'>{button_buffer.ToString()}{RenderTree(tree.DataTree, tree.OriginalTree)}</div>", CollapsibleState.Open));
-            }
+                buffer.AppendLine(Collapsible(name + "-tree", "Tree", HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), CollapsibleState.Open));
 
 
             string unique = "";

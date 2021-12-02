@@ -316,5 +316,89 @@ namespace HTMLNameSpace
 
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
+
+        public static string RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName)
+        {
+            var buffer = new StringBuilder();
+            const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
+            const double yf = 20.8;   // Height of the labels
+            const double radius = 8;  // Radius of the score circles
+            const double stroke = 2;  // Stroke of the circles and tree lines, do not forget to update the CSS when updating this value.
+
+            var pos = 0.0;
+            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores)>(
+                (t, value) => ((t.Left.Value.Item2.Value.Y + t.Right.Value.Item2.Value.Y) / 2, value),
+                leaf =>
+                {
+                    pos += 1.0;
+                    return (pos, leaf);
+                });
+
+            var columns = 0;
+            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores)>((t, depth) =>
+            {
+                if (depth > columns) columns = depth;
+                return ((double)depth, t.Value.Y, t.Value.Scores);
+            });
+
+            var max_x = xf * (columns + 1);
+            var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
+
+            buffer.Append($"<div class='phylogenetictree'>");
+
+            var button_names = new string[] { "Score", "Matches", "Area" };
+            for (int i = 0; i < button_names.Length; i++)
+            {
+                var check = i == 0 ? " checked " : "";
+                buffer.Append($"<input type='radio' class='showdata-{i}' name='{id}' id='{id}-{i}'{check}/>");
+                buffer.Append($"<label for='{id}-{i}'>{button_names[i]}</label>");
+            }
+            buffer.Append("<p class='legend'>Cumulative value of all children (excluding unique)</p><p class='legend unique'>Cumulative value for unique matches</p>");
+            buffer.Append($"<div class='container'><div class='tree' style='max-width:{max_x}px'><svg viewBox='0 0 {max_x} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'>");
+
+            pos_tree.Apply(t =>
+            {
+                var x = t.Value.X * xf + radius + stroke;
+                var x1 = (t.Value.X + 1) * xf + stroke / 2;
+                if (t.Value.X == columns - 1) x1 += radius + stroke;
+                var y = t.Value.Y * yf;
+                var ly = t.Left.Value.Item2.Value.Y * yf;
+                var ry = t.Right.Value.Item2.Value.Y * yf;
+                buffer.Append("<g>");
+                buffer.Append($"<line x1={x}px y1={ly}px x2={x}px y2={y - radius}px />");
+                buffer.Append($"<line x1={x}px y1={y + radius}px x2={x}px y2={ry}px />");
+                buffer.Append($"<line x1={x - stroke / 2}px y1={ly}px x2={x1}px y2={ly}px />");
+                buffer.Append($"<line x1={x - stroke / 2}px y1={ry}px x2={x1}px y2={ry}px />");
+                buffer.Append($"<circle cx={x}px cy={y}px r={radius}px class='value' style='--score:{(double)t.Value.Scores.Score / max.Item1};--matches:{(double)t.Value.Scores.Matches / max.Item3};--area:{(double)t.Value.Scores.Area / max.Item5};'/>");
+                buffer.Append($"<text x={x + radius + stroke * 2}px y={y}px class='info info-0'>Score: {t.Value.Scores.Score} ({(double)t.Value.Scores.Score / max.Item1:P})</text>");
+                buffer.Append($"<text x={x + radius + stroke * 2}px y={y}px class='info info-1'>Matches: {t.Value.Scores.Matches} ({(double)t.Value.Scores.Matches / max.Item3:P})</text>");
+                buffer.Append($"<text x={x + radius + stroke * 2}px y={y}px class='info info-2'>Area: {t.Value.Scores.Area:G3} ({(double)t.Value.Scores.Area / max.Item5:P})</text>");
+                buffer.Append("</g>");
+            }, leaf =>
+            {
+                var x = leaf.X * xf;
+                var y = leaf.Y * yf;
+                var end = max_x - radius - stroke;
+                buffer.Append("<g>");
+                if (leaf.X != columns) buffer.Append($"<line x1={x + stroke / 2}px y1={y}px x2={end - radius}px y2={y}px />");
+                buffer.Append($"<path d='M {end} {y + radius} A {radius} {radius} 0 0 1 {end} {y - radius}' class='value' style='--score:{(double)leaf.Scores.Score / max.Item1};--matches:{(double)leaf.Scores.Matches / max.Item3};--area:{(double)leaf.Scores.Area / max.Item5};'/>");
+                buffer.Append($"<path d='M {end} {y - radius} A {radius} {radius} 0 0 1 {end} {y + radius}' class='value unique' style='--score:{(double)leaf.Scores.UniqueScore / max.Item2};--matches:{(double)leaf.Scores.UniqueMatches / max.Item4};--area:{(double)leaf.Scores.UniqueArea / max.Item6};'/>");
+                buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'>Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})</text>");
+                buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'>Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})</text>");
+                buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'>Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})</text>");
+                buffer.Append("</g>");
+                //buffer.Append($"<circle cx={end}px cy={y}px r={radius}px class='value' style='--score:{(double)leaf.Scores.Score / max.Item1};--unique-score:{(double)leaf.Scores.UniqueScore / max.Item2};--matches:{(double)leaf.Scores.Matches / max.Item3};--unique-matches:{(double)leaf.Scores.UniqueMatches / max.Item4};--area:{(double)leaf.Scores.Area / max.Item5};--unique-area:{(double)leaf.Scores.UniqueArea / max.Item6};'/>");
+            });
+
+            buffer.Append("</svg></div><div class='names'>");
+            tree.OriginalTree.Apply(t => { }, name => buffer.Append(CommonPieces.GetAsideLink(templates.Find(t => t.MetaData.Identifier == name).MetaData, type, AssetsFolderName)));
+            buffer.Append("</div></div></div>");
+
+            //pos_tree.ReverseApply(async t => {t.Value = (t.Left.Value.Item2.Value + t.Right.Value.Item2.Value) / 2})
+
+            //Console.WriteLine(pos_tree.ToString(true, false, false));
+
+            return buffer.ToString();
+        }
     }
 }

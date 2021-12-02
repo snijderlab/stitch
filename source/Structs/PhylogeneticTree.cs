@@ -237,7 +237,7 @@ namespace AssemblyNameSpace
 
             public (int, TValue) Get(int index)
             {
-                if (Left == null && Right == null)
+                if (IsLeaf)
                     return Index == index ? (id, Value) : (-1, default(TValue));
 
                 var left = Left.Value.Item2.Get(index);
@@ -248,7 +248,7 @@ namespace AssemblyNameSpace
 
             public (int, TValue) Get(TValue value)
             {
-                if (Left == null && Right == null)
+                if (IsLeaf)
                     return EqualityComparer<TValue>.Default.Equals(Value, value) ? (id, Value) : (-1, default(TValue));
 
                 var left = Left.Value.Item2.Get(value);
@@ -256,6 +256,8 @@ namespace AssemblyNameSpace
                     return Right.Value.Item2.Get(value);
                 return left;
             }
+
+            public bool IsLeaf { get { return Left == null && Right == null; } }
 
             /// <summary> Create a leaf node.</summary>
             /// <param name="index"> The index of this leaf in the list as presented to the CreateTree function. </param>
@@ -331,7 +333,8 @@ namespace AssemblyNameSpace
                 return Render("", "", showValue, showLength, showID);
             }
 
-            public string BracketsNotation() {
+            public string BracketsNotation()
+            {
                 if (Left == null && Right == null)
                     return Value.ToString();
                 else
@@ -385,7 +388,7 @@ namespace AssemblyNameSpace
             /// <returns> The accumulator. </returns>
             public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<Tree<TValue>, TAcc> leaf)
             {
-                if (Left == null && Right == null)
+                if (IsLeaf)
                     return leaf(this);
                 else
                     return tree(Left.Value.Item2.Fold(tree, leaf), Right.Value.Item2.Fold(tree, leaf));
@@ -404,7 +407,7 @@ namespace AssemblyNameSpace
             /// <param name="f"> The function to apply. </param>
             public void Apply(Action<Tree<TValue>> tree, Action<TValue> leaf)
             {
-                if (Left == null && Right == null)
+                if (IsLeaf)
                 {
                     leaf(this.Value);
                 }
@@ -416,6 +419,22 @@ namespace AssemblyNameSpace
                 }
             }
 
+            /// <summary> Apply a function to every branch in the tree. First do all calculations on all leaves before calculating on the nodes from the bottom up.</summary>
+            /// <param name="f"> The function to apply. </param>
+            public void ReverseApply(Action<Tree<TValue>> tree, Action<TValue> leaf)
+            {
+                if (IsLeaf)
+                {
+                    leaf(this.Value);
+                }
+                else
+                {
+                    if (Left != null) Left.Value.Item2.ReverseApply(tree, leaf);
+                    if (Right != null) Right.Value.Item2.ReverseApply(tree, leaf);
+                    tree(this);
+                }
+            }
+
 
             public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, TOut> f)
             {
@@ -424,6 +443,33 @@ namespace AssemblyNameSpace
                     f(this),
                     Left == null ? null : (Left.Value.Item1, Left.Value.Item2.Remodel(f)),
                     Right == null ? null : (Right.Value.Item1, Right.Value.Item2.Remodel(f)));
+            }
+
+            public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, int, TOut> f, int depth = 0)
+            {
+                return new Tree<TOut>(
+                    this.Index,
+                    f(this, depth),
+                    Left == null ? null : (Left.Value.Item1, Left.Value.Item2.Remodel(f, depth + 1)),
+                    Right == null ? null : (Right.Value.Item1, Right.Value.Item2.Remodel(f, depth + 1)));
+            }
+
+            public Tree<TOut> ReverseRemodel<TOut>(Func<Tree<TOut>, TValue, TOut> tree, Func<TValue, TOut> leaf)
+            {
+                if (IsLeaf)
+                {
+                    return new Tree<TOut>(this.Index, leaf(this.Value));
+                }
+                else
+                {
+                    (double, Tree<TOut>)? left = Left == null ? null : (Left.Value.Item1, Left.Value.Item2.ReverseRemodel(tree, leaf));
+                    (double, Tree<TOut>)? right = Right == null ? null : (Right.Value.Item1, Right.Value.Item2.ReverseRemodel(tree, leaf));
+                    return new Tree<TOut>(
+                        this.Index,
+                        tree(new Tree<TOut>(this.Index, default(TOut), left, right), this.Value),
+                        left,
+                        right);
+                }
             }
 
             public void RemoveNegativeDistances()
