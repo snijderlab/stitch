@@ -11,9 +11,9 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/source/bin/Debug/netcoreapp3.1/win-x64/source.dll",
+            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
             "args": [
-                "batchfiles/monoclonal.txt"
+                "batchfiles/polyclonal.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

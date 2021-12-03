@@ -434,39 +434,37 @@ assetsfolder = '{AssetsFolderName}';
                     {
                         max_decoy_score = Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
                     }
-                    else if (Parameters.RecombinedSegment.Count != 0)
-                    {
-                        var decoy_scores = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).Select(t => t.Score);
-                        if (decoy_scores.Count() > 0)
-                        {
-                            var decoy = decoy_scores.Max();
-                            var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
-
-                            if (decoy > normal * 0.5)
-                                buffer.AppendLine(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
-                        }
-                    }
                     else
                     {
                         max_normal_score = Math.Max(max_normal_score, Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
+
+                        if (Parameters.RecombinedSegment.Count != 0)
+                        {
+                            var decoy_scores = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).Select(t => t.Score);
+                            if (decoy_scores.Count() > 0)
+                            {
+                                var decoy = decoy_scores.Max();
+                                var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
+
+                                if (decoy > normal * 0.5)
+                                    buffer.AppendLine(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                            }
+                        }
                     }
                 }
                 if (max_decoy_score > max_normal_score * 0.5)
                     buffer.AppendLine(CommonPieces.TemplateHighDecoyWarning());
 
                 // Segment joining
-                for (int group = 0; group < Parameters.Segments.Count; group++)
-                {
-                    foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
-                    {
-                        if (set.Score.Best.Position == 0)
-                        {
-                            var A = Parameters.Segments[group].Item2[set.Index - 1];
-                            var B = Parameters.Segments[group].Item2[set.Index];
-                            buffer.AppendLine(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
-                        }
-                    }
-                }
+                if (Parameters.RecombinedSegment.Count != 0)
+                    for (int group = 0; group < Parameters.Segments.Count; group++)
+                        foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
+                            if (set.Score.Best.Position == 0)
+                            {
+                                var A = Parameters.Segments[group].Item2[set.Index - 1];
+                                var B = Parameters.Segments[group].Item2[set.Index];
+                                buffer.AppendLine(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
+                            }
             }
             return buffer.ToString();
         }

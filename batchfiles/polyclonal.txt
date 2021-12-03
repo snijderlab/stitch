@@ -1,18 +1,13 @@
 -Run Info---------------
 Version	: 0
-Runname	: RSV Pre flowthrough
+Runname	: COVID 19 patient 14
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
-- C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\RSV fab_DENOVO_5\20210726_RSV_fab.csv
-- C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\RSV_fab_post_DENOVO_9\20210726_rsv_fab_post.csv
-- C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\RSV_post_depleted_DENOVO_7\20210726_rsv_fab_depleted.csv
-- C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\20210724_RSV_fab_pre_DENOVO_3\20210724_RSV_fab_pre.csv
-- C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\RSV_fab_pre_depleted_DENOVO_5\20210726_rsv_fab_pre_depleted.csv
 Input ->
     Peaks ->
-        Path            : C:\Users\douwe\OneDrive - Universiteit Utrecht\local-amino-acid-alignment\paper files\PEAKS\RSV\RSV_fab_pre_depleted_DENOVO_5\20210726_rsv_fab_pre_depleted.csv
+        Path            : ../datasets/COVID19_IgG_14_DENOVO_5.csv
         Format          : X+
-        Name            : Covid19 IgG sample 14
+        Name            : COVID 19 patient 14
         Separator       : ,
         DecimalSeparator: .
         CutoffALC       : 90
