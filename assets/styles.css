@@ -1098,7 +1098,7 @@ input:checked+label .overhang-block .text {
 .docplot .histogram {
     grid-template-rows: 50px 1fr;
     gap: 0;
-    grid-auto-columns: minmax(0, 1fr);
+    grid-template-columns: minmax(0px, max-content) repeat(auto-fit, minmax(0px, 1fr));
 }
 
 .docplot .histogram .bar span {
