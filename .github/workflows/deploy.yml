@@ -34,7 +34,7 @@ jobs:
     - name: Deploy
       run: |
        dotnet publish source -c release /p:PublishReadyToRun=true
-       dotnet publish source -c release -r win-arm64
+       dotnet publish source -c release -r win-arm64 --self-contained
        Copy-Item "source\bin\release\net6.0\win-x64\publish\source.exe" -Destination "assembler.exe" -Force
        Copy-Item "source\bin\release\net6.0\win-arm64\publish\source.exe" -Destination "assembler_arm.exe" -Force
     - name: Upload artifact
@@ -63,7 +63,7 @@ jobs:
         dotnet-version: 6.0.x
     - name: Deploy
       run: |
-       dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
+       dotnet publish source -c release -r linux-x64 --self-contained
        dotnet publish source -c release -r linux-arm64 --self-contained
        cp "source/bin/release/net6.0/linux-x64/publish/source" assembler -f
        cp "source/bin/release/net6.0/linux-arm64/publish/source" assembler_arm -f
@@ -93,7 +93,7 @@ jobs:
         dotnet-version: 6.0.x
     - name: Deploy
       run: |
-       dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
+       dotnet publish source -c release -r osx-x64 --self-contained
        dotnet publish source -c release -r osx.11.0-arm64 --self-contained
        cp "source/bin/release/net6.0/osx-x64/publish/source" assembler
        cp "source/bin/release/net6.0/osx.11.0-arm64/publish/source" assembler_arm
