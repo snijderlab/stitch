@@ -106,8 +106,8 @@ namespace AssemblyNameSpace
         {
             int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
             int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
-            Span<int> indices_template = stackalloc int[template.Length];
-            Span<int> indices_query = stackalloc int[query.Length];
+            Span<int> indices_template = template.Length <= 1024 ? stackalloc int[template.Length] : new int[template.Length];
+            Span<int> indices_query = query.Length <= 1024 ? stackalloc int[query.Length] : new int[query.Length];
 
             int rowsize = query.Length + 1;
 
