@@ -6,7 +6,7 @@ on:
 
 jobs:
   check:
-    uses: snijderlab/stitch/.github/workflows/check.yml@v1
+    uses: snijderlab/stitch/.github/workflows/check.yml@master
 
   deploy:
-    uses: snijderlab/stitch/.github/workflows/deploy.yml@v1
+    uses: snijderlab/stitch/.github/workflows/deploy.yml@master
