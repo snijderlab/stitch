@@ -38,6 +38,24 @@ jobs:
     - name: Test
       run: dotnet test tests/batchfiles
 
+  deploy-manual:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+      uses: docker://pandoc/core:2.9
+      with:
+        args: -o manual.pdf BatchFiles.md
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+       name: manual
+       path: manual.pdf
+       retention-days: 21
+
   deploy-windows:
     runs-on: windows-latest
     steps:
@@ -61,10 +79,6 @@ jobs:
        Copy-Item "source\bin\release\net6.0\osx-x64\publish\source" -Destination "assembler_mac" -Force
        Copy-Item "source\bin\release\net6.0\osx.11.0-arm64\publish\source" -Destination "assembler_mac_arm" -Force
        Copy-Item "source\obj\release\net6.0\win-x64\source.dll" -Destination "assembler.dll" -Force
-    - name: Build docs
-      uses: docker://pandoc/core:2.9
-      with:
-        args: -o manual.pdf BatchFiles.md
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -77,7 +91,6 @@ jobs:
         assembler_mac
         assembler_mac_arm
         assembler.dll
-        manual.pdf
         License.md
         README.md
         alphabets/
@@ -98,12 +111,8 @@ jobs:
       run: |
        dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
        dotnet publish source -c release -r linux-arm64 --self-contained
-       Copy-Item "source\bin\release\net6.0\linux-x64\publish\source" -Destination "assembler" -Force
-       Copy-Item "source\bin\release\net6.0\linux-arm64\publish\source" -Destination "assembler_arm" -Force
-    - name: Build docs
-      uses: docker://pandoc/core:2.9
-      with:
-        args: -o manual.pdf BatchFiles.md
+       cp "source\bin\release\net6.0\linux-x64\publish\source" assembler -f
+       cp "source\bin\release\net6.0\linux-arm64\publish\source" assembler_arm -f
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -111,7 +120,6 @@ jobs:
        path: |
         assembler
         assembler_arm
-        manual.pdf
         License.md
         README.md
         alphabets/
@@ -132,12 +140,8 @@ jobs:
       run: |
        dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
        dotnet publish source -c release -r osx.11.0-arm64 --self-contained
-       Copy-Item "source\bin\release\net6.0\osx-x64\publish\source" -Destination "assembler" -Force
-       Copy-Item "source\bin\release\net6.0\osx.11.0-arm64\publish\source" -Destination "assembler_arm" -Force
-    - name: Build docs
-      uses: docker://pandoc/core:2.9
-      with:
-        args: -o manual.pdf BatchFiles.md
+       cp "source\bin\release\net6.0\osx-x64\publish\source" assembler -f
+       cp "source\bin\release\net6.0\osx.11.0-arm64\publish\source" assembler_arm -f
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -145,7 +149,6 @@ jobs:
        path: |
         assembler
         assembler_arm
-        manual.pdf
         License.md
         README.md
         alphabets/
