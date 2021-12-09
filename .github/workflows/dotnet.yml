@@ -1,0 +1,155 @@
+name: .NET
+
+on:
+  push:
+    branches: [ master ]
+  pull_request:
+    branches: [ master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Build
+      run: dotnet build source
+  unit_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Test
+      run: dotnet test tests/small_tests
+  integration_tests:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Test
+      run: dotnet test tests/batchfiles
+  deploy-windows:
+    runs-on: windows-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Deploy
+      run: |
+       dotnet publish source -c release /p:PublishReadyToRun=true
+       dotnet publish source -c release -r win-arm64
+       dotnet publish source -c release -r linux-x64
+       dotnet publish source -c release -r linux-arm64
+       dotnet publish source -c release -r osx-x64
+       dotnet publish source -c release -r osx.11.0-arm64
+       Copy-Item "source\bin\release\net6.0\win-x64\publish\source.exe" -Destination "assembler.exe" -Force
+       Copy-Item "source\bin\release\net6.0\win-arm64\publish\source.exe" -Destination "assembler_arm.exe" -Force
+       Copy-Item "source\bin\release\net6.0\linux-x64\publish\source" -Destination "assembler_linux" -Force
+       Copy-Item "source\bin\release\net6.0\linux-arm64\publish\source" -Destination "assembler_linux_arm" -Force
+       Copy-Item "source\bin\release\net6.0\osx-x64\publish\source" -Destination "assembler_mac" -Force
+       Copy-Item "source\bin\release\net6.0\osx.11.0-arm64\publish\source" -Destination "assembler_mac_arm" -Force
+       Copy-Item "source\obj\release\net6.0\win-x64\source.dll" -Destination "assembler.dll" -Force
+    - name: Build docs
+      uses: docker://pandoc/core:2.9
+      with:
+        args: -o manual.pdf BatchFiles.md
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+       name: nightly-deploy-windows
+       path: |
+        assembler.exe
+        assembler_arm.exe
+        assembler_linux
+        assembler_linux_arm
+        assembler_mac
+        assembler_mac_arm
+        assembler.dll
+        manual.pdf
+        License.md
+        README.md
+        alphabets/
+        assets/
+        batchfiles/
+        datasets/
+        templates/
+       retention-days: 21
+  deploy-linux:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Deploy
+      run: |
+       dotnet publish source -c release /p:PublishReadyToRun=true
+       dotnet publish source -c release -r linux-arm64
+       Copy-Item "source\bin\release\net6.0\linux-x64\publish\source" -Destination "assembler" -Force
+       Copy-Item "source\bin\release\net6.0\linux-arm64\publish\source" -Destination "assembler_arm" -Force
+    - name: Build docs
+      uses: docker://pandoc/core:2.9
+      with:
+        args: -o manual.pdf BatchFiles.md
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+       name: nightly-deploy-linux
+       path: |
+        assembler
+        assembler_arm
+        manual.pdf
+        License.md
+        README.md
+        alphabets/
+        assets/
+        batchfiles/
+        datasets/
+        templates/
+       retention-days: 21
+  deploy-osx:
+    runs-on: macOS-latest
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 6.0.x
+    - name: Deploy
+      run: |
+       dotnet publish source -c release /p:PublishReadyToRun=true
+       dotnet publish source -c release -r osx.11.0-arm64
+       Copy-Item "source\bin\release\net6.0\osx-x64\publish\source" -Destination "assembler" -Force
+       Copy-Item "source\bin\release\net6.0\osx.11.0-arm64\publish\source" -Destination "assembler_arm" -Force
+    - name: Build docs
+      uses: docker://pandoc/core:2.9
+      with:
+        args: -o manual.pdf BatchFiles.md
+    - name: Upload artifact
+      uses: actions/upload-artifact@v2
+      with:
+       name: nightly-deploy-osx
+       path: |
+        assembler
+        assembler_arm
+        manual.pdf
+        License.md
+        README.md
+        alphabets/
+        assets/
+        batchfiles/
+        datasets/
+        templates/
+       retention-days: 21         
