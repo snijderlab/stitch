@@ -1,0 +1,12 @@
+name: push
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+  check:
+    uses: snijderlab/stitch/.github/workflows/check.yml@v1
+
+  deploy:
+    uses: snijderlab/stitch/.github/workflows/deploy.yml@v1
