@@ -5,7 +5,24 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": ".NET Core Launch (console)",
+            "name": "Launch monoclonal.txt",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "requireExactSource": false,
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
+            "args": [
+                "batchfiles/monoclonal.txt"
+            ],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Launch polyclonal.txt",
             "type": "coreclr",
             "request": "launch",
             "preLaunchTask": "build",
@@ -14,6 +31,23 @@
             "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
             "args": [
                 "batchfiles/polyclonal.txt"
+            ],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": false
+        },
+        {
+            "name": "Launch basic.txt",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "requireExactSource": false,
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
+            "args": [
+                "batchfiles/basic.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
