@@ -4,7 +4,7 @@ on:
   workflow_call:
 
 jobs:
-  deploy-manual:
+  manual:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -23,7 +23,7 @@ jobs:
        path: manual.pdf
        retention-days: 21
 
-  deploy-windows:
+  windows:
     runs-on: windows-latest
     steps:
     - uses: actions/checkout@v2
@@ -53,7 +53,7 @@ jobs:
         templates/
        retention-days: 21
 
-  deploy-linux:
+  linux:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
@@ -65,8 +65,8 @@ jobs:
       run: |
        dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
        dotnet publish source -c release -r linux-arm64 --self-contained
-       cp "source\bin\release\net6.0\linux-x64\publish\source" assembler -f
-       cp "source\bin\release\net6.0\linux-arm64\publish\source" assembler_arm -f
+       cp "source/bin/release/net6.0/linux-x64/publish/source" assembler -f
+       cp "source/bin/release/net6.0/linux-arm64/publish/source" assembler_arm -f
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -83,7 +83,7 @@ jobs:
         templates/
        retention-days: 21
 
-  deploy-osx:
+  osx:
     runs-on: macOS-latest
     steps:
     - uses: actions/checkout@v2
@@ -95,8 +95,8 @@ jobs:
       run: |
        dotnet publish source -c release /p:PublishReadyToRun=true --self-contained
        dotnet publish source -c release -r osx.11.0-arm64 --self-contained
-       cp "source\bin\release\net6.0\osx-x64\publish\source" assembler -f
-       cp "source\bin\release\net6.0\osx.11.0-arm64\publish\source" assembler_arm -f
+       cp "source/bin/release/net6.0/osx-x64/publish/source" assembler
+       cp "source/bin/release/net6.0/osx.11.0-arm64/publish/source" assembler_arm
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
