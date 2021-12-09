@@ -363,10 +363,12 @@ namespace AssemblyNameSpace
 
             static void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)
             {
+                if (matches == null) return;
                 for (int read_index = 0; read_index < matches.Count; read_index++)
                 {
                     var best = new List<(int, int, int, SequenceMatch)>();
                     var best_score = 0;
+                    if (matches[read_index] == null) continue;
                     for (int template_index = 0; template_index < matches[read_index].Count; template_index++)
                     {
                         var match = matches[read_index][template_index];
