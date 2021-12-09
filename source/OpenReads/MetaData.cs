@@ -221,7 +221,7 @@ namespace AssemblyNameSpace
 
             /// <summary> Local confidence scores of the peptide. Determined as a fraction based on the local confidence of the total intensity of this read. </summary>
             public int[] Local_confidence = null;
-            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100 * Intensity).ToArray(); } }
+            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100).ToArray(); } }
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
