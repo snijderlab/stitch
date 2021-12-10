@@ -1,42 +1,43 @@
-# Amino Acid Alignment using De Bruijn graphs
+# Stitch
+Amino Acid Alignment for De Novo Antibody Sequencing with Mass Spectrometry
 
-# Getting started
+## Getting started
 
-There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [pipeline page](https://bms-developer.science.uu.nl/D.Schulte/amino-acid-assembler/-/pipelines)). Unpack the archive and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [action page](https://github.com/snijderlab/stitch/actions?query=branch%3Amaster)). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
 
 Windows:
 ```
-.\assembler.exe batchfiles\monoclonal.txt           (x64)
-.\assembler_arm.exe batchfiles\monoclonal.txt       (arm64)
+.\stitch.exe batchfiles\monoclonal.txt           (x64)
+.\stitch_arm.exe batchfiles\monoclonal.txt       (arm64)
 ```
 
 Linux:
 ```
-./assembler_linux batchfiles/monoclonal.txt         (x64, most versions)
-./assembler_linux_arm batchfiles/monoclonal.txt     (arm64)
+(x64, should work on most distros)
+chmod +x ./stitch                          (give running permission to the binary)
+./stitch batchfiles/monoclonal.txt
+
+(arm64)
+chmod +x ./stitch_arm                      (give running permission to the binary)
+./stitch_arm batchfiles/monoclonal.txt
 ```
 
 OSX:
 ```
-./assembler_mac batchfiles/monoclonal.txt           (x64, minimum version macOS 10.12 Sierra)
-./assembler_mac_arm batchfiles/monoclonal.txt       (arm64, minimum version macOS 11.0 Big Sur)
+(x64, minimum version macOS 10.12 Sierra)
+chmod +x ./stitch                          (give running permission to the binary)
+./stitch batchfiles/monoclonal.txt
+
+(arm64, minimum version macOS 11.0 Big Sur)
+chmod +x ./stitch_arm                      (give running permission to the binary)
+./stitch_arm batchfiles/monoclonal.txt
 ```
 
-For help creating batch files see `manual.pdf`, this is included with the package.
+For help creating batch files see `manual.pdf`, this is can be found on the same actions page.
 
+## Building
 
-## Running with dotnet
-
-To run the program with the dotnet runtime, first install the dotnet runtime (version 6.0) from [here](https://dotnet.microsoft.com/download).
-Then run the following command to run the program:
-
-```
-dotnet path/to/source.dll <arguments>
-```
-
-# Building
-
-The project is built with dotnet (.NET 6.0) this is tested on windows and linux. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (.NET 6.0) development is done on windows, but it should work on all major platforms. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
 dotnet run -p source <path to batchfile>
@@ -51,13 +52,13 @@ mklink /J source\bin\debug\net6.0\win-x64\assets\ assets\
 To generate a single executable run:
 
 ```
-dotnet publish source -c release [-r target]
+dotnet publish source -c release -r [target] --self-contained
 ```
 
-The target name should then be a valid 'RID' for the platform you choose. But if this is omitted it will default to windows x64. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs. One point to make is that the ILCompiler does not (yet) support cross compiling with Ready to Run (R2R) enabled, so if there is a need to cross compile this option should be set to false (in `source.csproj`).
+The target name should then be a valid 'RID' for the platform you choose. But if this is omitted it will default to windows x64. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs.
 
 
-# Testing
+### Testing
 
 There are some unit tests provided. These can be found in the 'tests' file. To run the unit tests run (from the root folder):
 
@@ -67,7 +68,7 @@ dotnet test tests\batchfiles
 ```
 
 
-# Examples
+## Examples
 
 The 'batchfiles' folder contains some examples which can be run to see what the program is up to.
 
@@ -76,7 +77,7 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 - `polyclonal.txt`
 
 
-# Credits
+## Credits
 
 * Douwe Schulte - Software engineer
 * Joost Snijder - Principal investigator
@@ -84,31 +85,11 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 * Wei Wei Peng - Testing and analysis
 
 
-# Acknowledgements
+## Acknowledgements
 
 * Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
 
 
-# License
+## License
 
-MIT License
-
-Copyright (c) 2019-2020 Joost Snijder & Douwe Schulte
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-
-THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
-FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
-AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
-LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
-OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
-SOFTWARE.
+MIT License (see LICENSE.md)
