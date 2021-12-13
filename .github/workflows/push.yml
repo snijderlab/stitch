@@ -3,6 +3,8 @@ name: push
 on:
   push:
     branches: [ master ]
+  release:
+    types: [ published ]
 
 jobs:
   check:
