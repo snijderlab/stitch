@@ -40,19 +40,19 @@ For help creating batch files see `manual.pdf`, this is can be found on the same
 The project is built with dotnet (.NET 6.0) development is done on windows, but it should work on all major platforms. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
-dotnet run -p source <path to batchfile>
+dotnet run --project stitch <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`source\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
 
 ```
-mklink /J source\bin\debug\net6.0\win-x64\assets\ assets\
+mklink /J stitch\bin\debug\net6.0\win-x64\assets\ assets\
 ```
 
 To generate a single executable run:
 
 ```
-dotnet publish source -c release -r [target] --self-contained
+dotnet publish stitch -c release -r [target] --self-contained
 ```
 
 The target name should then be a valid 'RID' for the platform you choose. But if this is omitted it will default to windows x64. See [this site](https://docs.microsoft.com/en-us/dotnet/core/rid-catalog#rid-graph) for information about RIDs.
