@@ -37,16 +37,23 @@ namespace HTMLNameSpace
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
-        /// <param name="humanvisible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
         public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
+        {
+            string classname = GetAsideName(type);
+            return $"<a href=\"{GetAsideRawLink(metadata, type, AssetsFolderName, location)}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(metadata, true)}</a>";
+        }
+
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
+        /// <param name="metadata">The metadata for a Read or Template.</param>
+        /// <returns>The link that can be used as href attribute in a link.</returns>
+        public static string GetAsideRawLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(metadata);
             if (id == null) throw new Exception("ID is null");
             string classname = GetAsideName(type);
-            string path = GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
-            return $"<a href=\"{path}\" class=\"info-link {classname}-link\">{ GetAsideIdentifier(metadata, true)}</a>";
+            return GetLinkToFolder(new List<string>() { AssetsFolderName, classname + "s" }, location) + id.Replace(':', '-') + ".html";
         }
 
         public static string GetLinkToFolder(List<string> target, List<string> location)

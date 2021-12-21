@@ -330,24 +330,30 @@ namespace HTMLNameSpace
         {
             var buffer = new StringBuilder();
             const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
-            const double yf = 20.8;   // Height of the labels
-            const double radius = 8;  // Radius of the score circles
+            const double yf = 22;   // Height of the labels
+            const double radius = 10;  // Radius of the score circles
             const double stroke = 2;  // Stroke of the circles and tree lines, do not forget to update the CSS when updating this value.
+            const double text_width = 100; // The width of the border around the leaf text
+
+            (int, int, int, int, double, double) unpack((int, int, int, int, double, double, string) data)
+            {
+                return (data.Item1, data.Item2, data.Item3, data.Item4, data.Item5, data.Item6);
+            }
 
             var pos = 0.0;
-            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores)>(
-                (t, value) => ((t.Left.Value.Item2.Value.Y + t.Right.Value.Item2.Value.Y) / 2, value),
+            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadMetaData.IMetaData MetaData)>(
+                (t, value) => ((t.Left.Value.Item2.Value.Y + t.Right.Value.Item2.Value.Y) / 2, unpack(value), null),
                 leaf =>
                 {
                     pos += 1.0;
-                    return (pos, leaf);
+                    return (pos, unpack(leaf), templates.Find(t => t.MetaData.Identifier == leaf.Name).MetaData);
                 });
 
             var columns = 0;
-            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores)>((t, depth) =>
+            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadMetaData.IMetaData MetaData)>((t, depth) =>
             {
                 if (depth > columns) columns = depth;
-                return ((double)depth, t.Value.Y, t.Value.Scores);
+                return ((double)depth, t.Value.Y, t.Value.Scores, t.Value.MetaData);
             });
 
             var max_x = xf * (columns + 1);
@@ -363,7 +369,7 @@ namespace HTMLNameSpace
                 buffer.Append($"<label for='{id}-{i}'>{button_names[i]}</label>");
             }
             buffer.Append("<p class='legend'>Cumulative value of all children (excluding unique)</p><p class='legend unique'>Cumulative value for unique matches</p>");
-            buffer.Append($"<div class='container'><div class='tree' style='max-width:{max_x}px'><svg viewBox='0 0 {max_x} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'>");
+            buffer.Append($"<div class='container'><div class='tree' style='max-width:{max_x + radius + text_width}px'><svg viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'>");
 
             string GetScores((int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) value, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) max, bool unique)
             {
@@ -411,12 +417,15 @@ namespace HTMLNameSpace
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'>Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})</text>");
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'>Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})</text>");
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'>Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})</text>");
-                buffer.Append("</g>");
+                buffer.Append($"<a class='info-link' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}'>");
+                buffer.Append($"<rect x={max_x + radius}px y={y - yf / 2 + 1}px width={text_width}px height={yf - 2}px rx=3.2px></rect>");
+                buffer.Append($"<text x={max_x + radius + stroke * 2}px y={y}px>{CommonPieces.GetAsideIdentifier(leaf.MetaData, true)}</text>");
+                buffer.Append("</a></g>");
             });
 
-            buffer.Append("</svg></div><div class='names'>");
-            tree.OriginalTree.Apply(t => { }, name => buffer.Append(CommonPieces.GetAsideLink(templates.Find(t => t.MetaData.Identifier == name).MetaData, type, AssetsFolderName)));
-            buffer.Append("</div></div></div>");
+            buffer.Append("</svg></div>");//<div class='names'>");
+            //tree.OriginalTree.Apply(t => { }, name => buffer.Append(CommonPieces.GetAsideLink(templates.Find(t => t.MetaData.Identifier == name).MetaData, type, AssetsFolderName)));
+            buffer.Append("</div></div>");//</div>");
 
             return buffer.ToString();
         }

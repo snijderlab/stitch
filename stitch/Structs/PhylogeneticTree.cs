@@ -157,15 +157,15 @@ namespace AssemblyNameSpace
         public class ProteinHierarchyTree
         {
             public readonly Tree<string> OriginalTree;
-            public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea)> DataTree;
+            public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea, string Name)> DataTree;
 
             public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches)
             {
                 OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(
-                        (left, right) => left.Union(right).ToList(),
-                        (index, _) => new List<int> { index }));
+                        (left, right) => (left.Item1.Union(right.Item1).ToList(), ""),
+                        (index, _) => (new List<int> { index }, branch.Value)));
 
                 List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().MetaData.TotalArea)).ToList();
 
@@ -185,7 +185,7 @@ namespace AssemblyNameSpace
                     for (int i = 0; i < MatchSets.Count; i++)
                     {
                         var set = MatchSets[i].Set;
-                        if (set.IsSupersetOf(branch.Value))
+                        if (set.IsSupersetOf(branch.Value.Item1))
                         {
                             if (MatchSets[i].Unique)
                             {
@@ -200,7 +200,7 @@ namespace AssemblyNameSpace
                                 area += MatchSets[i].Area;
                             }
 
-                            branch.Value.ForEach(i => set.Remove(i));
+                            branch.Value.Item1.ForEach(i => set.Remove(i));
                             if (set.Count == 0)
                             {
                                 MatchSets.RemoveAt(i);
@@ -208,7 +208,7 @@ namespace AssemblyNameSpace
                             }
                         }
                     }
-                    return (score, unique_score, matches, unique_matches, area, unique_area);
+                    return (score, unique_score, matches, unique_matches, area, unique_area, branch.Value.Item2);
                 }
                 );
             }

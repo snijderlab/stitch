@@ -630,6 +630,26 @@ input:checked+label .overhang-block .text {
     stroke: var(--color-background);
 }
 
+.phylogenetictree .info-link,
+.phylogenetictree .info-link * {
+    pointer-events: all;
+    cursor: pointer;
+}
+
+.phylogenetictree .info-link text {
+    fill: var(--color-primary);
+    text-decoration: none;
+    font-size: 13.2px;
+    stroke: none;
+    dominant-baseline: middle;
+}
+
+.phylogenetictree .info-link rect {
+    stroke: var(--color-primary);
+    stroke-width: 1px;
+    fill: var(--color-background);
+}
+
 .phylogenetictree .showdata-0:checked~* .value:hover~.info.info-0,
 .phylogenetictree .showdata-1:checked~* .value:hover~.info.info-1,
 .phylogenetictree .showdata-2:checked~* .value:hover~.info.info-2 {
