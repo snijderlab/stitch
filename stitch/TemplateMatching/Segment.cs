@@ -54,7 +54,11 @@ namespace AssemblyNameSpace
             {
                 Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
             }
-            catch { }
+            catch (Exception e)
+            {
+                Console.WriteLine($"Internal error: the tree for {name} will not be available but the program will continue. Please report this including your batchfile and used templates.");
+                Console.WriteLine(e);
+            }
         }
         /// <summary>
         /// Create a new Segment based on the templates provided.

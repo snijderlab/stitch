@@ -1007,7 +1007,7 @@ namespace AssemblyNameSpace
                 {
                     alphabetBuilder.Append(element.Item1);
                 }
-                var alphabet = alphabetBuilder.ToString().ToCharArray();
+                var alphabet = alphabetBuilder.ToString().Trim().ToCharArray();
 
                 if (!alphabet.Contains(Alphabet.GapChar))
                 {

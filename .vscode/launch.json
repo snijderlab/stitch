@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
             "args": [
                 "batchfiles/monoclonal.txt"
             ],
@@ -28,7 +28,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
             "args": [
                 "batchfiles/polyclonal.txt"
             ],
@@ -45,7 +45,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/source/bin/Debug/net6.0/win-x64/source.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
             "args": [
                 "batchfiles/basic.txt"
             ],
