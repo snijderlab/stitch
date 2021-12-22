@@ -13,7 +13,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Build
-      run: dotnet build source
+      run: dotnet build stitch
 
   unit-tests:
     runs-on: windows-latest

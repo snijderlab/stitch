@@ -33,10 +33,10 @@ jobs:
         dotnet-version: 6.0.x
     - name: Deploy
       run: |
-       dotnet publish source -c release -r win-x64 --self-contained
-       dotnet publish source -c release -r win-arm64 --self-contained
-       Copy-Item "source\bin\release\net6.0\win-x64\publish\source.exe" -Destination "stitch.exe" -Force
-       Copy-Item "source\bin\release\net6.0\win-arm64\publish\source.exe" -Destination "stitch_arm.exe" -Force
+       dotnet publish stitch -c release -r win-x64 --self-contained
+       dotnet publish stitch -c release -r win-arm64 --self-contained
+       Copy-Item "stitch\bin\release\net6.0\win-x64\publish\stitch.exe" -Destination "stitch.exe" -Force
+       Copy-Item "stitch\bin\release\net6.0\win-arm64\publish\stitch.exe" -Destination "stitch_arm.exe" -Force
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -63,10 +63,10 @@ jobs:
         dotnet-version: 6.0.x
     - name: Deploy
       run: |
-       dotnet publish source -c release -r linux-x64 --self-contained
-       dotnet publish source -c release -r linux-arm64 --self-contained
-       cp "source/bin/release/net6.0/linux-x64/publish/source" stitch -f
-       cp "source/bin/release/net6.0/linux-arm64/publish/source" stitch_arm -f
+       dotnet publish stitch -c release -r linux-x64 --self-contained
+       dotnet publish stitch -c release -r linux-arm64 --self-contained
+       cp "stitch/bin/release/net6.0/linux-x64/publish/stitch" stitch -f
+       cp "stitch/bin/release/net6.0/linux-arm64/publish/stitch" stitch_arm -f
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -93,10 +93,10 @@ jobs:
         dotnet-version: 6.0.x
     - name: Deploy
       run: |
-       dotnet publish source -c release -r osx-x64 --self-contained
-       dotnet publish source -c release -r osx.11.0-arm64 --self-contained
-       cp "source/bin/release/net6.0/osx-x64/publish/source" stitch
-       cp "source/bin/release/net6.0/osx.11.0-arm64/publish/source" stitch_arm
+       dotnet publish stitch -c release -r osx-x64 --self-contained
+       dotnet publish stitch -c release -r osx.11.0-arm64 --self-contained
+       cp "stitch/bin/release/net6.0/osx-x64/publish/stitch" stitch
+       cp "stitch/bin/release/net6.0/osx.11.0-arm64/publish/stitch" stitch_arm
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
