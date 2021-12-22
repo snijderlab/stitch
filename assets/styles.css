@@ -403,7 +403,6 @@ input:checked+label {
 .source-code {
     margin: 0;
     padding-top: 1em;
-    line-height: 1.618;
     font-family: 'Roboto Mono';
     font-size: 12px;
 }

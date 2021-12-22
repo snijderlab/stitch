@@ -290,7 +290,7 @@ assetsfolder = '{AssetsFolderName}';
                 var buffer = new StringBuilder();
                 var bf = BatchFile;
                 buffer.Append($"<pre class='source-code'><i>{bf.Filename}</i>\n");
-                foreach (var line in bf.Lines) buffer.AppendLine(line);
+                foreach (var line in bf.Lines) buffer.AppendLine(line.TrimEnd());
                 buffer.Append("</pre>");
                 return buffer.ToString();
             }
@@ -397,13 +397,11 @@ assetsfolder = '{AssetsFolderName}';
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
-
-
             var html = $@"<html>
-{CreateHeader("Report Protein Sequence Run", new List<string>())}
+{CreateHeader($"Stitch: {Parameters.Runname}", new List<string>())}
 <body onload=""Setup()"">
 <div class=""report"">
-<h1>Report Protein Sequence Run</h1>
+<h1>Stitch Interactive Report Run: {Parameters.Runname}</h1>
 <p>Generated at {timestamp}</p>
 
  {GetWarnings()}
@@ -412,9 +410,8 @@ assetsfolder = '{AssetsFolderName}';
  {Docs()}
 
 <div class=""footer"">
-    <p>Code written in 2019-2021</p>
-    <p>Made by the Snijderlab, the project is open source at <a href='https://www.github.com/snijderlab/stitch'>github.com/snijderlab/stitch</a> with the MIT license.</p>
-    <p>Version: {version}</p>
+    <p>Made by the Snijderlab in 2019-2021, the project is open source at <a href='https://www.github.com/snijderlab/stitch'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/'>MIT license</a>.</p>
+    <p>Version: <span style='color:var(--color-dark);'>{version}</span> please mention this is any bug reports.</p>
 </div>
 
 </div>
@@ -483,13 +480,14 @@ assetsfolder = '{AssetsFolderName}';
              the page to a pdf file and save the generated file. These files can be imported in most vector graphics editors.
               It is best to turn on the background graphics and turn off any headers, besides this setting the margins smaller
               and using landscape or portrait could enhance the results. See the below picture for the options.</p>
+              <span onclick='window.print()' class='info-link' style='font-size:120%;margin-bottom:1em;'>Or click here to print</span>
               <img src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome
                with some extra options that could be beneficial.'/>"
             ));
             docs.Append(Collapsible("docs-share", "Sharing this report",
             @$"<p>To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
              be zipped and sent to anyone having a modern browser. This is quite easy to do in Windows as you can select the file
-             (eg `report-monoclonal.txt`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
+             (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
              making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder` in Windows 10
              or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all 
              interactivity as provided by the report.</p>"
