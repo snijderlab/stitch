@@ -397,6 +397,8 @@ assetsfolder = '{AssetsFolderName}';
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
+
+
             var html = $@"<html>
 {CreateHeader("Report Protein Sequence Run", new List<string>())}
 <body onload=""Setup()"">
@@ -407,10 +409,11 @@ assetsfolder = '{AssetsFolderName}';
  {GetWarnings()}
  <div class='overview'>{CreateOverview()}</div>
  {innerbuffer}
+ {Docs()}
 
 <div class=""footer"">
     <p>Code written in 2019-2021</p>
-    <p>Made by the Hecklab</p>
+    <p>Made by the Snijderlab, the project is open source at <a href='https://www.github.com/snijderlab/stitch'>github.com/snijderlab/stitch</a> with the MIT license.</p>
     <p>Version: {version}</p>
 </div>
 
@@ -469,6 +472,31 @@ assetsfolder = '{AssetsFolderName}';
             return buffer.ToString();
         }
 
+        string Docs()
+        {
+            var docs = new StringBuilder();
+            docs.Append(
+                @"<p>Answers to common questions can be found here. If anything is unclear, or you miss any features please reach
+                 out to the authors, all information can be found on the <a href='https://www.github.com/snijderlab/stitch'>repository</a>.</p>");
+            docs.Append(Collapsible("docs-export-svg", "Export Graphs to Vector Graphics",
+            @$"<p>If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this print
+             the page to a pdf file and save the generated file. These files can be imported in most vector graphics editors.
+              It is best to turn on the background graphics and turn off any headers, besides this setting the margins smaller
+              and using landscape or portrait could enhance the results. See the below picture for the options.</p>
+              <img src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome
+               with some extra options that could be beneficial.'/>"
+            ));
+            docs.Append(Collapsible("docs-share", "Sharing this report",
+            @$"<p>To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
+             be zipped and sent to anyone having a modern browser. This is quite easy to do in Windows as you can select the file
+             (eg `report-monoclonal.txt`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
+             making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder` in Windows 10
+             or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all 
+             interactivity as provided by the report.</p>"
+            ));
+            return Collapsible("docs", "Documentation", docs.ToString());
+        }
+
         void CopyAssets()
         {
             var executable_folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
@@ -497,6 +525,7 @@ assetsfolder = '{AssetsFolderName}';
             CopyAssetsFile("Roboto-Medium.ttf");
             CopyAssetsFile("RobotoMono-Regular.ttf");
             CopyAssetsFile("RobotoMono-Medium.ttf");
+            CopyAssetsFile("export_pdf_example.png");
         }
 
         /// <summary> Creates an HTML report to view the results and metadata. </summary>

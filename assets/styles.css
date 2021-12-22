@@ -42,6 +42,22 @@ h1 {
     padding-top: 1rem;
 }
 
+img {
+    max-width: 100%;
+}
+
+a {
+    color: var(--color-primary);
+}
+
+a:hover {
+    color: var(--color-secondary);
+}
+
+a:active {
+    color: var(--color-tertiary);
+}
+
 .report {
     padding: 0 1em;
 }
