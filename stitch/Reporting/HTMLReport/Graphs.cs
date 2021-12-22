@@ -391,7 +391,7 @@ namespace HTMLNameSpace
             {
                 var x = t.Value.X * xf + radius + stroke;
                 var x1 = (t.Value.X + 1) * xf + stroke / 2;
-                if (t.Value.X == columns - 1) x1 += radius + stroke;
+                if (t.Value.X == columns - 1) x1 += xf - radius * 2 - stroke;
                 var y = t.Value.Y * yf;
                 var ly = t.Left.Value.Item2.Value.Y * yf;
                 var ry = t.Right.Value.Item2.Value.Y * yf;
@@ -418,8 +418,8 @@ namespace HTMLNameSpace
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'>Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})</text>");
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'>Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})</text>");
                 buffer.Append($"<a class='info-link' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}'>");
-                buffer.Append($"<rect x={max_x + radius}px y={y - yf / 2 + 1}px width={text_width}px height={yf - 2}px rx=3.2px></rect>");
-                buffer.Append($"<text x={max_x + radius + stroke * 2}px y={y}px>{CommonPieces.GetAsideIdentifier(leaf.MetaData, true)}</text>");
+                buffer.Append($"<rect x={max_x + radius}px y={y - yf / 2 + stroke}px width={text_width}px height={yf - stroke * 2}px rx=3.2px></rect>");
+                buffer.Append($"<text x={max_x + radius + stroke * 2}px y={y + 1}px>{CommonPieces.GetAsideIdentifier(leaf.MetaData, true)}</text>");
                 buffer.Append("</a></g>");
             });
 
