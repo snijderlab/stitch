@@ -14,7 +14,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\..\source\source.csproj" />
+    <ProjectReference Include="..\..\stitch\stitch.csproj" />
   </ItemGroup>
 
 </Project>
