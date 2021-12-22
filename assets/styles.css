@@ -1237,6 +1237,29 @@ input:checked+label .overhang-block .text {
         border: none;
         font-size: 1em;
     }
+    .table-header .graph {
+        height: auto;
+    }
+    .phylogenetictree label,
+    .graph label {
+        display: none;
+    }
+    .phylogenetictree input:checked+label,
+    .graph input:checked+label {
+        display: inline-block;
+    }
+    .phylogenetictree input:checked+label::before {
+        display: inline-block;
+        content: "Displays:";
+        margin-right: .5em;
+    }
+    .phylogenetictree .info-link text {
+        fill: var(--color-dark);
+        font-size: 16px;
+    }
+    .phylogenetictree .info-link rect {
+        display: none;
+    }
     .table-header {
         display: block;
     }
@@ -1244,11 +1267,18 @@ input:checked+label .overhang-block .text {
         font-size: .6em;
         font-weight: normal;
     }
+    .text-header,
     .copy-data,
     .source-code,
-    .point-graph label,
     table,
-    .report label::after {
+    .report label::after,
+    .overview h3,
+    .overview p,
+    .collapsable>.collapsable>label:last-of-type,
+    [id$="cdr"] p,
+    [id$="segment-joining"] p,
+    [id$="segment-joining"] pre,
+    [id$="segment-joining"] .title {
         display: none !important;
     }
 }
