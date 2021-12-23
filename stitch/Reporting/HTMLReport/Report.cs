@@ -121,6 +121,7 @@ namespace AssemblyNameSpace
             var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             var cdr3_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             int total_templates = 0;
+            bool found_cdr_region = false;
 
             foreach (var template in segments.SelectMany(a => a.Templates))
             {
@@ -155,7 +156,7 @@ namespace AssemblyNameSpace
 
                 if (positions.ContainsKey("CDR1"))
                 { // V-segment
-
+                    found_cdr_region = true;
                     foreach (var read in template.Matches)
                     {
                         foreach (var (group, cdr) in positions)
@@ -181,6 +182,7 @@ namespace AssemblyNameSpace
                 }
                 else if (positions.ContainsKey("CDR3"))
                 { // J-segment
+                    found_cdr_region = true;
                     var cdr = positions["CDR3"];
 
                     foreach (var read in template.Matches)
@@ -192,6 +194,8 @@ namespace AssemblyNameSpace
                     }
                 }
             }
+
+            if (!found_cdr_region) return; // Do not create a collapsable segment if no CDR region could be found in the templates
 
             string extend(string sequence, int size)
             {
@@ -237,11 +241,16 @@ namespace AssemblyNameSpace
 
             var innerbuffer = new StringBuilder();
             innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
-            innerbuffer.AppendLine("<div class='cdr-tables'>");
-            HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
-            HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
-            HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
-            innerbuffer.AppendLine("</div>");
+            if (cdr1_reads.Count == 0 && cdr2_reads.Count == 0 && cdr3_reads.Count == 0)
+                innerbuffer.AppendLine("<p>No CDR reads could be placed.</p>");
+            else
+            {
+                innerbuffer.AppendLine("<div class='cdr-tables'>");
+                if (cdr1_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
+                if (cdr2_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
+                if (cdr3_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
+                innerbuffer.AppendLine("</div>");
+            }
 
             buffer.Append(CommonPieces.Collapsible(id, "CDR regions", innerbuffer.ToString()));
         }
