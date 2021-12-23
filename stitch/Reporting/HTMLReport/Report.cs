@@ -410,7 +410,7 @@ assetsfolder = '{AssetsFolderName}';
  {Docs()}
 
 <div class=""footer"">
-    <p>Made by the Snijderlab in 2019-2021, the project is open source at <a href='https://www.github.com/snijderlab/stitch'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/'>MIT license</a>.</p>
+    <p>Made by the Snijderlab in 2019-2021, the project is open source at <a href='https://www.github.com/snijderlab/stitch' target='_blank'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/' target='_blank'>MIT license</a>.</p>
     <p>Version: <span style='color:var(--color-dark);'>{version}</span> please mention this is any bug reports.</p>
 </div>
 
@@ -474,7 +474,7 @@ assetsfolder = '{AssetsFolderName}';
             var docs = new StringBuilder();
             docs.Append(
                 @"<p>Answers to common questions can be found here. If anything is unclear, or you miss any features please reach
-                 out to the authors, all information can be found on the <a href='https://www.github.com/snijderlab/stitch'>repository</a>.</p>");
+                 out to the authors, all information can be found on the <a href='https://www.github.com/snijderlab/stitch' target='_blank'>repository</a>.</p>");
             docs.Append(Collapsible("docs-export-svg", "Export Graphs to Vector Graphics",
             @$"<p>If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this print
              the page to a pdf file and save the generated file. These files can be imported in most vector graphics editors.

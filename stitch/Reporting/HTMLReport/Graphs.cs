@@ -417,7 +417,7 @@ namespace HTMLNameSpace
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'>Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})</text>");
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'>Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})</text>");
                 buffer.Append($"<text x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'>Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})</text>");
-                buffer.Append($"<a class='info-link' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}'>");
+                buffer.Append($"<a class='info-link' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}' target='_blank'>");
                 buffer.Append($"<rect x={max_x + radius}px y={y - yf / 2 + stroke}px width={text_width}px height={yf - stroke * 2}px rx=3.2px></rect>");
                 buffer.Append($"<text x={max_x + radius + stroke * 2}px y={y + 1}px>{CommonPieces.GetAsideIdentifier(leaf.MetaData, true)}</text>");
                 buffer.Append("</a></g>");
