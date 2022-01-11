@@ -16,7 +16,6 @@ namespace AssemblyNameSpace
     /// <summary> The main class which is the entry point from the command line. </summary>
     public class ToRunWithCommandLine
     {
-        public const string VersionString = "0.0.0";
         static readonly Stopwatch stopwatch = new();
 
         /// <summary> The entry point. </summary>

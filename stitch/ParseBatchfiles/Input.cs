@@ -58,9 +58,14 @@ namespace AssemblyNameSpace
                         output.Runname = pair.GetValue();
                         break;
                     case "version":
-                        if (pair.GetValue() != "0")
+                        var version = ParseHelper.ConvertToDouble(pair.GetValue(), pair.ValueRange).GetValue(outEither);
+                        if (version < 1.0)
                         {
-                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Specified Version does not exist"));
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (prerelease versions) are deprecated, please change to version '1.x'."));
+                        }
+                        if (version >= 2.0)
+                        {
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "This version of Stitch cannot handle batchfiles major version 2.0 or higher, please change to version '1.x'."));
                         }
                         versionspecified = true;
                         break;
