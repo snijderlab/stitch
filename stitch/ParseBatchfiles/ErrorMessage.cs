@@ -67,7 +67,7 @@ namespace AssemblyNameSpace
             }
             public static ErrorMessage UnknownKey(FileRange range, string context, string options)
             {
-                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", false, 0);
+                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", true, 0);
             }
             public override string ToString()
             {

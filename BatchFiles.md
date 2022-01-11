@@ -134,11 +134,11 @@ These parameters are placed in the outer scope. So not nested in any other param
 
 ##### Version (s)
 
-The version of the batch file. For now only version 0 is accepted, but is included to later add more versions with possible breaking changes in the structure. This parameter is required.
+The version of the batch file. For now only version 1.0 is specified, but is included to later add more versions with possible breaking changes in the structure. This parameter is required. Major versions will not be backwards compatible, 2.0 will not work with Stitch designed for 1.0. Minor versions will be backwards compatible, 1.2 will work with Stitch designed for 1.0.
 
 _Example_
 ```
-Version: 0
+Version: 1.0
 ```
 
 ##### Runname (s)
