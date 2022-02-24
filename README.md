@@ -1,9 +1,9 @@
 # Stitch
-Amino Acid Alignment for De Novo Antibody Sequencing with Mass Spectrometry
+Amino Acid Alignment for De Novo Antibody Sequencing with Mass Spectrometry.
 
 ## Getting started
 
-There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package (found in the [action page](https://github.com/snijderlab/stitch/actions?query=branch%3Amaster)). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package, found on the [releases page](https://github.com/snijderlab/stitch/releases). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
 
 Windows:
 ```
@@ -33,7 +33,12 @@ chmod +x ./stitch_arm                      (give running permission to the binar
 ./stitch_arm batchfiles/monoclonal.txt
 ```
 
-For help creating batch files see `manual.pdf`, this is can be found on the same actions page.
+For help creating batch files see `manual.pdf`, this is can be found on the same page.
+
+### Different versions
+
+Releases can be found on the [releases page](https://github.com/snijderlab/stitch/releases).
+Nightly versions, which contain all new features but are less stable, can be found on the [action page](https://github.com/snijderlab/stitch/actions?query=branch%3Amaster).
 
 ## Building
 
