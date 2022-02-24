@@ -1,5 +1,5 @@
 # Stitch
-Amino Acid Alignment for De Novo Antibody Sequencing with Mass Spectrometry.
+Template-based assembly of proteomics short reads for de novo antibody sequencing and repertoire profiling.
 
 ## Getting started
 
