@@ -33,7 +33,7 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Generates a list of asides for details viewing. </summary>
-        public async void CreateAsides()
+        public void CreateAsides()
         {
             var jobbuffer = new List<(AsideType, int, int, int)>();
 
@@ -57,26 +57,25 @@ namespace AssemblyNameSpace
                     for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count; j++)
                         jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
-            var taskList = new List<Task>();
+
             if (MaxThreads > 1)
             {
                 Parallel.ForEach(
                     jobbuffer,
                     new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
-                    (a, _) => taskList.Add(CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4))
+                    (a, _) => CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4)
                 );
             }
             else
             {
                 foreach (var (t, i3, i2, i1) in jobbuffer)
                 {
-                    taskList.Add(CreateAndSaveAside(t, i3, i2, i1));
+                    CreateAndSaveAside(t, i3, i2, i1);
                 }
             }
-            await Task.WhenAll(taskList);
         }
 
-        Task CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
+        void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
         {
             var buffer = new StringBuilder();
             var innerbuffer = new StringBuilder();
@@ -112,7 +111,7 @@ namespace AssemblyNameSpace
             buffer.Append(innerbuffer.ToString());
             buffer.Append("</body></html>");
 
-            return SaveAndCreateDirectoriesAsync(fullpath, buffer.ToString());
+            SaveAndCreateDirectories(fullpath, buffer.ToString());
         }
 
         void CreateCDROverview(string id, StringBuilder buffer, List<Segment> segments)
@@ -419,8 +418,8 @@ assetsfolder = '{AssetsFolderName}';
  {Docs()}
 
 <div class=""footer"">
-    <p>Made by the Snijderlab in 2019-2021, the project is open source at <a href='https://www.github.com/snijderlab/stitch' target='_blank'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/' target='_blank'>MIT license</a>.</p>
-    <p>Version: <span style='color:var(--color-dark);'>{version}</span> please mention this in any bug reports.</p>
+    <p>Made by the Snijderlab in 2019-2022, the project is open source at <a href='https://www.github.com/snijderlab/stitch' target='_blank'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/' target='_blank'>MIT license</a>.</p>
+    <p>Version: <span style='color:var(--color-dark);user-select:all'>{version}</span> please mention this in any bug reports.</p>
 </div>
 
 </div>

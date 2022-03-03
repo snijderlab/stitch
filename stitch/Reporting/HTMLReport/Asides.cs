@@ -77,21 +77,21 @@ namespace HTMLNameSpace
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='widetable'><tr>
-    <th class='smallcell'>Length</th>
-    <th class='smallcell'>Score</th>
-    <th class='smallcell'>Matches</th>
-    <th class='smallcell'>Total Area</th>
-    <th class='smallcell'>Unique Score</th>
-    <th class='smallcell'>Unique Matches</th>
-    <th class='smallcell'>Unique Area</th>
+        <th class='smallcell'>Length</th>
+        <th class='smallcell'>Score</th>
+        <th class='smallcell'>Matches</th>
+        <th class='smallcell'>Total Area</th>
+        <th class='smallcell'>Unique Score</th>
+        <th class='smallcell'>Unique Matches</th>
+        <th class='smallcell'>Unique Area</th>
     </tr><tr>
-    <td class='center'>{template.ToString().Length}</td>
-    <td class='center'>{template.Score}</td>
-    <td class='center'>{template.Matches.Count()}</td>
-    <td class='center'>{template.TotalArea}</td>
-    <td class='center'>{template.UniqueScore}</td>
-    <td class='center'>{template.UniqueMatches}</td>
-    <td class='center'>{template.TotalUniqueArea}</td>
+        <td class='center'>{template.ToString().Length}</td>
+        <td class='center'>{template.Score}</td>
+        <td class='center'>{template.Matches.Count()}</td>
+        <td class='center'>{template.TotalArea}</td>
+        <td class='center'>{template.UniqueScore}</td>
+        <td class='center'>{template.UniqueMatches}</td>
+        <td class='center'>{template.TotalUniqueArea}</td>
     </tr></table>
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
