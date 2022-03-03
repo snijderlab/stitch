@@ -420,7 +420,7 @@ assetsfolder = '{AssetsFolderName}';
 
 <div class=""footer"">
     <p>Made by the Snijderlab in 2019-2021, the project is open source at <a href='https://www.github.com/snijderlab/stitch' target='_blank'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/' target='_blank'>MIT license</a>.</p>
-    <p>Version: <span style='color:var(--color-dark);'>{version}</span> please mention this is any bug reports.</p>
+    <p>Version: <span style='color:var(--color-dark);'>{version}</span> please mention this in any bug reports.</p>
 </div>
 
 </div>
