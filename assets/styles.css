@@ -699,7 +699,7 @@ input:checked+label .overhang-block .text {
     flex-wrap: wrap;
     font-size: var(--sequence-logo-fontsize);
     font-family: Roboto Mono, monospace;
-    margin-top: -1em;
+    margin-top: -0.4em;
     margin-bottom: 1.5em;
     color: var(--color-primary);
     align-items: end;
