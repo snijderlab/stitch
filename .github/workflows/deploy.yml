@@ -15,12 +15,12 @@ jobs:
     - name: Use Pandoc
       uses: docker://pandoc/latex:2.9
       with:
-        args: -o manual.pdf BatchFiles.md
+        args: -o stitch-manual.pdf BatchFiles.md
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
        name: manual
-       path: manual.pdf
+       path: stitch-manual.pdf
        retention-days: 21
 
   windows:

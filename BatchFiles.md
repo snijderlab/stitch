@@ -392,11 +392,11 @@ With this option on the program will force an Isoleucine (I) if the consensus se
 
 ###### GapHead (s)
 
-Adds 20 gaps (`X`) at the front of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed before this segment in the Recombination order. Default: `False`.
+Adds 20 gaps (`X`) at the front of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This property can also be used on a single template. This will automatically be set to `True` when a gap is placed before this segment in the Recombination order. Default: `False`.
 
 ###### GapTail (s)
 
-Adds 20 gaps (`X`) at the end of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This will automatically be set to `True` when a gap is placed after this segment in the Recombination order. Default: `False`.
+Adds 20 gaps (`X`) at the end of all templates in this segment. This can be used to extend the segments for example to recover the sequence of CDRs. This property can also be used on a single template. This will automatically be set to `True` when a gap is placed after this segment in the Recombination order. Default: `False`.
 
 #### Recombine
 
