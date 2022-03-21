@@ -1,0 +1,32 @@
+title: Stitch
+version: 1.0.0
+abstract: Template-based assembly of proteomics short reads for de novo antibody sequencing and repertoire profiling
+authors:
+  - affiliation: Utrecht University
+    family-names: Schulte
+    given-names: Douwe
+    orcid: https://orcid.org/0000-0003-0594-0993
+  - affiliation: Utrecht University
+    family-names: Peng
+    given-names: Wei Wei
+    orcid: https://orcid.org/0000-0003-0195-2786
+  - affiliation: Utrecht University
+    family-names: Snijder
+    given-names: Joost
+    orcid: https://orcid.org/0000-0002-9310-8226
+cff-version: 1.2.0
+identifiers:
+  - description: Preprint
+    type: doi
+    value: https://doi.org/10.1101/2022.03.07.483237
+  - description: Repository
+    type: url
+    value: https://github.com/snijderlab/stitch
+keywords:
+  - sequencing
+  - antibody
+  - mass-spectrometry
+  - de novo
+license: MIT
+message: If you use this software, please cite it using these metadata.
+repository-code: https://github.com/snijderlab/stitch
