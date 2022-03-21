@@ -618,13 +618,39 @@ The score of a match (read or path against a template) is calculated by the smit
 matchScore >= cutoffScore * sqrt(templateLength)
 ```
 
-#### Consensus Sequence
-
-The consensus sequence for each position is based on the positional score of each amino acid.
-
 #### Gap detection (* in Order definition)
 
 If in the order definition a gap is added (`*`) the program will try to fill in the sequence between the two segments. For this it adds 20 Xs to the end of the templates that would precede this gap, and to the start of the templates that would follow this gap. After Template Matching the overlap is detected between the consensus sequences from the segments. This is done by scoring the sequences with increasing overlap, so for every overlap starting with 1 and including the total number of positions filled in (40 - the number of Xs left after Template Matching). These scores are then corrected for the length by subtracting 2 times the overlap. This factor of 2 is the average score for a piece of sequence with 50% matches and 50% mismatches with the Blosum matrix. It then selects the highest scoring overlap. If its score is positive the sequences are joined with this number of amino acids removed from the second sequence. If its score is zero or negative it joins the two sequences with a gap (`*`) in between them.
+
+#### Consensus Sequence
+
+The consensus sequence for each position is the highest scoring amino acid for each position. Each found amino acid in the alignment gets the cumulative value of the positional score for all reads in the alignment. If there is no positional score `1.0` is used as a default. If there are no amino acids matched to this position the template is used instead.
+
+_Example data to show the underlying mathematics._
+```
+   45
+QAPGK (Template)
+QVPGK (F2:6942)
+QAPGK (F2:6517)
+ *
+
+Positional Score F2:6942: .98 [.95] .93 .97 .99
+Positional Score F2:6517: .93 [.97] .99 1.  1.
+
+Scores for position 42: [A: .97, V: .95] so in the consensus sequence A is chosen.
+```
+
+#### Sequence consensus overview (in HTML report)
+
+This figure is based on the consensus sequence, it takes all found possibilities for each position with their score as used in the consensus sequence. Each possibility is then drawn with text height dependent on the occurrence. If the relative occurrence is above the threshold of `0.05` (5%) the possibility is shown in the HTML page. Finally the possibilities are ordered to have the highest occurrence on bottom.
+
+```
+fontSize = baseFontSize * occurrence / totalOccurrenceThisPosition
+```
+
+#### Depth of coverage (in HTML report)
+
+The depth of coverage reported is the sum of all positional scores for that position. This is reported with the same position numbering as the consensus sequence.
 
 ### Example Batch Files
 
