@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using static System.Math;
 
 namespace AssemblyNameSpace
 {
@@ -33,7 +34,7 @@ namespace AssemblyNameSpace
 
             if (OutputType == RunParameters.Report.OutputType.Recombine)
             {
-                sequences.Capacity = Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum();
+                sequences.Capacity = Max(sequences.Capacity, Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum());
                 foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
@@ -42,7 +43,7 @@ namespace AssemblyNameSpace
             }
             else // TemplateMatching
             {
-                sequences.Capacity = Parameters.Segments.Select(a => a.Item2.Count).Sum();
+                sequences.Capacity = Max(sequences.Capacity, Parameters.Segments.Select(a => a.Item2.Count).Sum());
                 foreach (var (group, dbs) in Parameters.Segments)
                 {
                     foreach (var template in dbs.SelectMany(a => a.Templates))
