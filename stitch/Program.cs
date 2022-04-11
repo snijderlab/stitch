@@ -264,9 +264,26 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                                 found = true;
                                 try
                                 {
-                                    var download = client.GetStringAsync($"http://www.imgt.org/IMGTrepertoire/Proteins/protein/{species.ShortName}/IGH/IGHC/{species.ShortHand}_IGHCallgenes.html");
-                                    download.Wait();
-                                    CreateAnnotatedTemplatePre(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
+                                    var url_base = $"https://www.imgt.org/IMGTrepertoire/Proteins/protein/{species.ShortName}/IGH/IGHC/{species.ShortHand}_IGHCallgene";
+                                    Task<string> download;
+                                    try // Sometimes the url is different using `IGHCallgenes` instead of `IGHCallgene`
+                                    {
+                                        download = client.GetStringAsync(url_base + ".html");
+                                        download.Wait();
+                                    }
+                                    catch
+                                    {
+                                        download = client.GetStringAsync(url_base + "s.html");
+                                        download.Wait();
+                                    }
+                                    try
+                                    {
+                                        CreateAnnotatedTemplatePre(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
+                                    }
+                                    catch
+                                    {
+                                        Console.WriteLine($"    Could not process IGHC file");
+                                    }
                                 }
                                 catch
                                 {
