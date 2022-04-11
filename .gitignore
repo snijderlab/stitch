@@ -21,5 +21,6 @@ _site
 .vs
 .profiler
 results/*
+tests/batchfiles/results/*
 all_addmatch_cseq.txt
 textual.md

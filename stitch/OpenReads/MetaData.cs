@@ -213,7 +213,7 @@ namespace AssemblyNameSpace
                     }
                     return 1;
                 }
-                set { if (double.IsNaN(value)) intensity = value; }
+                set { if (!double.IsNaN(value)) intensity = value; }
             }
 
             /// <summary> Posttranslational Modifications of the peptide. </summary>
@@ -239,7 +239,7 @@ namespace AssemblyNameSpace
 
             /// <summary> Tries to create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
-            /// <param name="linenumber"> The index of the to be parsed. </param>
+            /// <param name="linenumber"> The index of the line to be parsed. </param>
             /// <param name="separator"> The separator used in CSV. </param>
             /// <param name="decimalseparator"> The separator used in decimals. </param>
             /// <param name="pf">FileFormat of the PEAKS file.</param>
@@ -252,30 +252,13 @@ namespace AssemblyNameSpace
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
-                var fields = new List<string>();
-                var positions = new List<FileRange>();
-                int lastpos = 0;
-                string line = parsefile.Lines[linenumber];
+                var fields = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parsefile);
 
-                if (String.IsNullOrWhiteSpace(line))
+                if (String.IsNullOrWhiteSpace(parsefile.Lines[linenumber]))
                 {
                     result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line is empty", "", "", true));
                     return result;
                 }
-
-                // Find the fields on this line
-                for (int pos = 0; pos < line.Length; pos++)
-                {
-                    if (line[pos] == separator)
-                    {
-                        fields.Add(line.Substring(lastpos, pos - lastpos));
-                        positions.Add(new FileRange(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile)));
-                        lastpos = pos + 1;
-                    }
-                }
-
-                fields.Add(line.Substring(lastpos, line.Length - lastpos));
-                positions.Add(new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, line.Length - 1, parsefile)));
 
                 if (fields.Count < 5)
                 {
@@ -286,12 +269,12 @@ namespace AssemblyNameSpace
                 // Some helper functions
                 int ConvertToInt(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).ReturnOrDefault(-1);
                 }
 
                 double ConvertToDouble(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Replace(decimalseparator, current_decimal_separator), positions[pos]).ReturnOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).ReturnOrDefault(-1);
                 }
 
                 bool CheckFieldExists(int pos)
@@ -309,25 +292,25 @@ namespace AssemblyNameSpace
                     result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return result;
                 }
-                var peaks = new Peaks(file, fields[pf.scan], filter);
+                var peaks = new Peaks(file, fields[pf.scan].Text, filter);
                 result.Value = peaks;
 
                 // Get all the properties of this peptide and save them in the MetaData 
                 if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))
-                    peaks.Fraction = fields[pf.fraction];
+                    peaks.Fraction = fields[pf.fraction].Text;
 
                 if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
-                    peaks.Source_File = fields[pf.source_file];
+                    peaks.Source_File = fields[pf.source_file].Text;
 
                 if (pf.feature >= 0 && CheckFieldExists(pf.feature))
-                    peaks.Feature = fields[pf.feature];
+                    peaks.Feature = fields[pf.feature].Text;
 
                 if (pf.scan >= 0 && CheckFieldExists(pf.scan))
-                    peaks.ScanID = fields[pf.scan];
+                    peaks.ScanID = fields[pf.scan].Text;
 
                 if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
                 {
-                    peaks.Original_tag = fields[pf.peptide];
+                    peaks.Original_tag = fields[pf.peptide].Text;
                     peaks.Cleaned_sequence = new string(peaks.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
                 }
 
@@ -347,7 +330,7 @@ namespace AssemblyNameSpace
                     peaks.Retention_time = ConvertToDouble(pf.rt);
 
                 if (pf.predicted_rt >= 0 && CheckFieldExists(pf.predicted_rt))
-                    peaks.PredictedRetentionTime = fields[pf.predicted_rt];
+                    peaks.PredictedRetentionTime = fields[pf.predicted_rt].Text;
 
                 if (pf.area >= 0 && CheckFieldExists(pf.area))
                     peaks.Area = ConvertToDouble(pf.area);
@@ -359,24 +342,24 @@ namespace AssemblyNameSpace
                     peaks.Parts_per_million = ConvertToDouble(pf.ppm);
 
                 if (pf.ptm >= 0 && CheckFieldExists(pf.ptm))
-                    peaks.Post_translational_modifications = fields[pf.ptm];
+                    peaks.Post_translational_modifications = fields[pf.ptm].Text;
 
                 if (pf.local_confidence >= 0 && CheckFieldExists(pf.local_confidence))
                 {
                     try
                     {
-                        peaks.Local_confidence = fields[pf.local_confidence].Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
+                        peaks.Local_confidence = fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
                         if (peaks.Local_confidence.Length != peaks.Cleaned_sequence.Length)
-                            result.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                            result.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
                     }
                     catch
                     {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(positions[pf.local_confidence], "Local confidence invalid", "One of the confidences is not a number"));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "One of the confidences is not a number"));
                     }
                 }
 
                 if (pf.mode >= 0 && CheckFieldExists(pf.mode))
-                    peaks.Fragmentation_mode = fields[pf.mode];
+                    peaks.Fragmentation_mode = fields[pf.mode].Text;
 
                 // Initialize other scans list
                 peaks.Other_scans = new List<string>();
@@ -508,6 +491,91 @@ namespace AssemblyNameSpace
 
                 output.Append(File.ToHTML());
 
+                return output.ToString();
+            }
+        }
+
+        /// <summary>
+        /// A metadata instance to contain no metadata so reads without metadata can also be handled.
+        /// </summary>
+        public class Novor : IMetaData
+        {
+            /// <summary>
+            /// The fraction where this peptide was found.
+            /// </summary>
+            public string Fraction;
+            /// <summary>
+            /// The scan number of this peptide.
+            /// </summary>
+            public int Scan;
+            /// <summary>
+            /// The M over Z value of this peptide.
+            /// </summary>
+            public double MZ;
+            /// <summary>
+            /// The Z (or charge) of this peptide.
+            /// </summary>
+            public int Z;
+            /// <summary>
+            /// The Novor score of this peptide (0-100)
+            /// </summary>
+            public double Score;
+            /// <summary>
+            /// The mass of this peptide.
+            /// </summary>
+            public double Mass;
+            /// <summary>
+            /// The error for this peptide in ppm.
+            /// </summary>
+            public double Error;
+            /// <summary>
+            /// The original sequence with possible modifications.
+            /// </summary>
+            public string Sequence;
+
+            /// <summary>
+            /// The intensity of this read
+            /// </summary>
+            double intensity = 1;
+            public override double Intensity
+            {
+                get { return 1 + Score / 100; }
+                set { if (!double.IsNaN(value)) intensity = value; }
+            }
+
+            /// <summary>
+            /// Create a new Novor MetaData.
+            /// </summary>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
+            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
+            {
+                this.Fraction = fraction;
+                this.Scan = scan;
+                this.MZ = mz;
+                this.Z = z;
+                this.Score = score;
+                this.Mass = mass;
+                this.Error = error;
+                this.Sequence = sequence;
+            }
+
+            /// <summary>
+            /// Returns Simple MetaData to HTML.
+            /// </summary>
+            public override string ToHTML()
+            {
+                var output = new StringBuilder();
+                output.Append("<h2>Meta Information from PEAKS</h2>");
+                output.Append($"<h3>Fraction</h3>\n<p>{Fraction}</p>");
+                output.Append($"<h3>Scan</h3>\n<p>{Scan}</p>");
+                output.Append($"<h3>MZ</h3>\n<p>{MZ}</p>");
+                output.Append($"<h3>Z</h3>\n<p>{Z}</p>");
+                output.Append($"<h3>Score</h3>\n<p>{Score}</p>");
+                output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
+                output.Append($"<h3>Error</h3>\n<p>{Error}</p>");
+                output.Append($"<h3>Original Sequence</h3>\n<p>{Sequence}</p>");
+                output.Append(File.ToHTML());
                 return output.ToString();
             }
         }

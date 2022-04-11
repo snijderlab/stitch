@@ -224,7 +224,7 @@ namespace AssemblyNameSpace
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(namefilter, null, output.Input, null).Messages);
+            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(namefilter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
 
             // Check if there is a version specified
             if (!versionspecified)
@@ -380,6 +380,37 @@ namespace AssemblyNameSpace
         static class ParseHelper
         {
             /// <summary>
+            /// Split a line by a separator and return the trimmed pieces and their position as a FileRange.
+            /// </summary>
+            /// <param name="separator">The separator to use.</param>
+            /// <param name="linenumber">The linenumber.</param>
+            /// <param name="parsefile">The file where the line should be taken from.</param>
+            public static List<(string Text, FileRange Pos)> SplitLine(char separator, int linenumber, ParsedFile parsefile)
+            {
+                var results = new List<(string, FileRange)>();
+                var lastpos = 0;
+                var line = parsefile.Lines[linenumber];
+
+                // Find the fields on this line
+                for (int pos = 0; pos < line.Length; pos++)
+                {
+                    if (line[pos] == separator)
+                    {
+                        results.Add((
+                            line.Substring(lastpos, pos - lastpos).Trim(),
+                            new FileRange(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile))
+                        ));
+                        lastpos = pos + 1;
+                    }
+                }
+
+                results.Add((
+                    line.Substring(lastpos, line.Length - lastpos).Trim(),
+                    new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, Math.Max(0, line.Length - 1), parsefile))
+                ));
+                return results;
+            }
+            /// <summary>
             /// Converts a string to an int, while it generates meaningfull error messages for the end user.
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
@@ -499,6 +530,39 @@ namespace AssemblyNameSpace
                             output.Files.Add(rsettings);
                             break;
 
+                        case "novor":
+                            var novor_settings = new InputData.Novor();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(novor_settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        novor_settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        break;
+                                    case "name":
+                                        if (!string.IsNullOrWhiteSpace(novor_settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        novor_settings.File.Name = setting.GetValue();
+                                        break;
+                                    case "separator":
+                                        if (setting.GetValue().Length != 1)
+                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                        else
+                                            novor_settings.Separator = setting.GetValue().First();
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
+                                        break;
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(novor_settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(novor_settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            output.Files.Add(novor_settings);
+                            break;
+
                         case "fasta":
                             var fastasettings = new InputData.FASTA();
 
@@ -601,7 +665,7 @@ namespace AssemblyNameSpace
 
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Input", "'Peaks', 'Reads', 'Fasta' or 'Folder'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Input", "'Peaks', 'Reads', 'Fasta', 'Novor' or 'Folder'"));
                             break;
                     }
                 }
@@ -610,7 +674,7 @@ namespace AssemblyNameSpace
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter namefilter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput)
+            public static ParseResult<bool> PrepareInput(NameFilter namefilter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp)
             {
                 var result = new ParseResult<bool>();
                 result.Value = true;
@@ -635,13 +699,14 @@ namespace AssemblyNameSpace
                         InputData.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
                         InputData.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
                         InputData.Reads simple => OpenReads.Simple(namefilter, simple.File),
+                        InputData.Novor novor => OpenReads.Novor(namefilter, novor.File, novor.Separator),
                         _ => throw new ArgumentException("An unkown inputformat was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
                     if (!reads.HasFailed()) Input.Data.Raw.Add(reads.ReturnOrFail());
                 }
 
-                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw);
+                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp).GetValue(result);
 
                 return result;
             }

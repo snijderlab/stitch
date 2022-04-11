@@ -262,6 +262,24 @@ Peaks           ->
 <-
 ```
 
+##### Novor (m) *
+
+A multiple valued parameter containing a Path, to a novor csv file with reads, and a Name, for this file to aid in recognizing where the data comes from.
+
+| Inner parameter | Explanation                                            | Default Value |
+| --------------- | ------------------------------------------------------ | ------------- |
+| Path            | The path to the file.                                  | (No Default)  |
+| Name            | Used to recognize the origin of reads from this file.  | (No Default)  |
+| Separator       | The separator used to separate fields.                 | ,             |
+
+_Example_
+```
+Novor ->
+    Path: Path/To/My/FileWithReads.csv
+    Name: NameForMyFile
+<-
+```
+
 ##### Folder (m) *
 
 Open a specified folder and open all reads files in it. Files with `.txt` as extension will be read as Reads. Files with `.fasta` as extension will be read as Fasta. Files with `.csv` as extension will be read as Peaks. It is possible to provide a filter for the files in the form of a constant text the files have to start with.

@@ -16,7 +16,7 @@ namespace BatchFilesTestNameSpace
         /// All batchfiles given as examples should be valid
         /// </summary>
         [TestMethod]
-        public void TestExamples()
+        public void TestPublicExamples()
         {
             var cwd = Directory.GetCurrentDirectory();
             Directory.SetCurrentDirectory(Globals.Root);
@@ -25,6 +25,30 @@ namespace BatchFilesTestNameSpace
                 try
                 {
                     AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file);
+                }
+                catch
+                {
+                    Console.WriteLine($"At file {file}");
+                    throw;
+                }
+            }
+            Directory.SetCurrentDirectory(cwd);
+        }
+
+        /// <summary>
+        /// All batchfiles given as examples should be valid
+        /// </summary>
+        [TestMethod]
+        public void TestSmallExamples()
+        {
+            var cwd = Directory.GetCurrentDirectory();
+            Directory.SetCurrentDirectory(Globals.Root);
+            foreach (var file in Directory.GetFiles("tests/batchfiles/test_files"))
+            {
+                try
+                {
+                    if (file.EndsWith(".txt"))
+                        AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file);
                 }
                 catch
                 {

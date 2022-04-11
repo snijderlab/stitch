@@ -138,6 +138,20 @@ namespace AssemblyNameSpace
                 }
             }
 
+            /// <summary>
+            /// A parameter for Novor reads files.
+            /// </summary>
+            public class Novor : Parameter
+            {
+                /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+                public char Separator = ',';
+
+                public override string Display()
+                {
+                    return $"Novor ->\n{File.Display()}\nSeparator: {Separator}\n<-";
+                }
+            }
+
             public class PeaksParameters
             {
                 public int CutoffALC;

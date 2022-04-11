@@ -318,22 +318,91 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
-        /// <summary>
-        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
-        /// </summary>
-        /// <param name="reads"> The input reads to clean up. </param>
-        public static List<(string Sequence, ReadMetaData.IMetaData MetaData)> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads)
+        /// <summary> To open a file with reads. It uses the Novor file format. Which is a 
+        /// charater separated file format with a defined column ordering.  </summary>
+        /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
+        /// <param name="inputFile"> The file to read from. </param>
+        /// <param name="separator"> The separator used to separate fields. </param>
+        /// <returns> A list of all reads found. </returns>
+        public static ParseResult<List<(string, ReadMetaData.IMetaData)>> Novor(NameFilter filter, ReadMetaData.FileIdentifier inputFile, char separator)
         {
-            return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads });
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
+
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
+
+            if (possiblecontent.HasFailed())
+            {
+                outeither.Messages.AddRange(possiblecontent.Messages);
+                return outeither;
+            }
+
+            var reads = new List<(string, ReadMetaData.IMetaData)>();
+            outeither.Value = reads;
+
+            var lines = possiblecontent.ReturnOrFail().Split('\n');
+            var parsefile = new ParsedFile(inputFile.Path, lines);
+            var linenumber = -1;
+
+            foreach (var line in lines)
+            {
+                linenumber += 1;
+                if (String.IsNullOrWhiteSpace(line)) continue;
+                var split = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parsefile);
+                if (split[0].Text.ToLower() == "fraction") continue; // Header line
+                if (split.Count != 9)
+                {
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Incorrect number of columns", $"Incorrect number of columns, expected 9 columns according to the Novor file format. Got {split.Count} fields."));
+                    continue;
+                }
+
+                var fraction = split[0].Text;
+                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).ReturnOrFail();
+                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).ReturnOrDefault(-1);
+                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).ReturnOrDefault(-1);
+                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).ReturnOrDefault(0);
+                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).ReturnOrDefault(0);
+                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).ReturnOrDefault(0);
+                var original_peptide = split[8].Text;
+                var peptide = (string)original_peptide.Clone();
+                var final_peptide = "";
+                while (peptide.Length > 0)
+                {
+                    var parts = peptide.Split('(', 2);
+                    if (parts.Length == 2)
+                    {
+                        final_peptide += parts[0];
+                        peptide = parts[1].Split(')', 2).Last();
+                    }
+                    else
+                    { // Length is 1 because no separator was found
+                        final_peptide += parts[0];
+                        peptide = "";
+                    }
+                }
+
+                reads.Add((final_peptide, new ReadMetaData.Novor(inputFile, filter, fraction, scan, mz, z, score, mass, error, peptide)));
+            }
+
+            return outeither;
         }
 
         /// <summary>
         /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
         /// </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static List<(string Sequence, ReadMetaData.IMetaData MetaData)> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads)
+        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads, Alphabet alp)
+        {
+            return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads }, alp);
+        }
+
+        /// <summary>
+        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
+        /// </summary>
+        /// <param name="reads"> The input reads to clean up. </param>
+        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads, Alphabet alp)
         {
             var filtered = new Dictionary<string, ReadMetaData.IMetaData>();
+            var outeither = new ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>>();
 
             foreach (var set in reads)
             {
@@ -346,12 +415,20 @@ namespace AssemblyNameSpace
                     }
                     else
                     {
+                        var parse = new ParsedFile(read.MetaData.File.Path, new string[1] { read.Sequence });
+                        for (int i = 0; i < read.Sequence.Length; i++)
+                        {
+                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i])) // TODO: Get the right linenumber, save it somewhere in the MetaData object 
+                                outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(0, i, parse), "Invalid sequence", "This sequence contains an invalid aminoacid."));
+                        }
+
                         filtered.Add(read.Sequence, read.MetaData);
                     }
                 }
             }
 
-            return filtered.Select(a => (a.Key, a.Value)).ToList();
+            outeither.Value = filtered.Select(a => (a.Key, a.Value)).ToList();
+            return outeither;
         }
     }
 }
