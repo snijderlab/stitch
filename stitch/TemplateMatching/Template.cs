@@ -331,7 +331,9 @@ namespace AssemblyNameSpace
                         int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
 
                         IGap sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos, len));
-                        double[] cov = match.MetaData.PositionalScore.SubArray(seq_pos, len);
+                        double[] cov = new double[len];
+                        if (match.MetaData.PositionalScore.Length >= seq_pos + len)
+                            cov = match.MetaData.PositionalScore.SubArray(seq_pos, len);
 
                         var contigid = match.Index;
 
