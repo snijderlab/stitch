@@ -532,6 +532,10 @@ namespace AssemblyNameSpace
             /// The original sequence with possible modifications.
             /// </summary>
             public string Sequence;
+            /// <summary>
+            /// The database sequence with possible modifications.
+            /// </summary>
+            public string DBSequence;
 
             /// <summary>
             /// The intensity of this read
@@ -548,7 +552,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
+            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence) : base(file, "N", filter)
             {
                 this.Fraction = fraction;
                 this.Scan = scan;
@@ -558,6 +562,7 @@ namespace AssemblyNameSpace
                 this.Mass = mass;
                 this.Error = error;
                 this.Sequence = sequence;
+                this.DBSequence = databaseSequence;
             }
 
             /// <summary>
@@ -575,6 +580,7 @@ namespace AssemblyNameSpace
                 output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
                 output.Append($"<h3>Error</h3>\n<p>{Error}</p>");
                 output.Append($"<h3>Original Sequence</h3>\n<p>{Sequence}</p>");
+                output.Append($"<h3>Database Sequence</h3>\n<p>{DBSequence}</p>");
                 output.Append(File.ToHTML());
                 return output.ToString();
             }

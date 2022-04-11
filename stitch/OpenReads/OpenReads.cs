@@ -349,9 +349,9 @@ namespace AssemblyNameSpace
                 if (String.IsNullOrWhiteSpace(line)) continue;
                 var split = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parsefile);
                 if (split[0].Text.ToLower() == "fraction") continue; // Header line
-                if (split.Count != 9)
+                if (split.Count != 10)
                 {
-                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Incorrect number of columns", $"Incorrect number of columns, expected 9 columns according to the Novor file format. Got {split.Count} fields."));
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Incorrect number of columns", $"Incorrect number of columns, expected 10 columns according to the Novor file format. Got {split.Count} fields."));
                     continue;
                 }
 
@@ -363,6 +363,7 @@ namespace AssemblyNameSpace
                 var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).ReturnOrDefault(0);
                 var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).ReturnOrDefault(0);
                 var original_peptide = split[8].Text;
+                var db_sequence = split[9].Text;
                 var peptide = (string)original_peptide.Clone();
                 var final_peptide = "";
                 while (peptide.Length > 0)
@@ -380,7 +381,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                reads.Add((final_peptide, new ReadMetaData.Novor(inputFile, filter, fraction, scan, mz, z, score, mass, error, peptide)));
+                reads.Add((final_peptide, new ReadMetaData.Novor(inputFile, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence)));
             }
 
             return outeither;
