@@ -626,7 +626,7 @@ Alphabet->
 
 #### Input/Reads
 
-All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `2 - 1 / (log10(Area))`, and the positional score is the local confidence (localALC) as reported by Peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score).
+All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `2 - 1 / (log10(Area))`, and the positional score is the local confidence (localALC) as reported by Peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score). For Novor reads the intensity is calculated as `1 + score / 100`.
 
 #### Template Matching
 
