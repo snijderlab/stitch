@@ -145,10 +145,29 @@ namespace AssemblyNameSpace
             {
                 /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
                 public char Separator = ',';
+                public ReadMetaData.FileIdentifier DeNovoFile = null;
+                public ReadMetaData.FileIdentifier PSMSFile = null;
+                public uint Cutoff = 0;
 
                 public override string Display()
                 {
-                    return $"Novor ->\n{File.Display()}\nSeparator: {Separator}\n<-";
+                    var db = new StringBuilder();
+                    db.AppendLine("Novor ->");
+                    var name = "";
+                    if (DeNovoFile != null)
+                    {
+                        db.AppendLine($"DeNovo Path:{DeNovoFile.Path}");
+                        name = DeNovoFile.Name;
+                    }
+                    if (PSMSFile != null)
+                    {
+                        db.AppendLine($"PSMS Path:{PSMSFile.Path}");
+                        name = PSMSFile.Name;
+                    }
+                    db.AppendLine($"Name:{name}");
+                    db.AppendLine($"Separator:{Separator}");
+                    db.AppendLine($"Cutoff:{Cutoff}\n<-");
+                    return db.ToString();
                 }
             }
 

@@ -264,18 +264,20 @@ Peaks           ->
 
 ##### Novor (m) *
 
-A multiple valued parameter containing a Path, to a novor csv file with reads, and a Name, for this file to aid in recognizing where the data comes from.
+A multiple valued parameter containing one or both different Novor output files and a Name, for this set to aid in recognizing where the data comes from. Either the DeNovo or PSMS files can be used on their own, but they can also be specified together to group the data together. A cutoff can be given to use all reads with a score equal or higher (`read.score >= cutoff`). As the score ranges from 0 to 100 inclusive the cutoff can only be specified within this range. THe default value is `0` which includes all reads.
 
-| Inner parameter | Explanation                                            | Default Value |
-| --------------- | ------------------------------------------------------ | ------------- |
-| Path            | The path to the file.                                  | (No Default)  |
-| Name            | Used to recognize the origin of reads from this file.  | (No Default)  |
-| Separator       | The separator used to separate fields.                 | ,             |
+| Inner parameter | Explanation                                               | Default Value |
+| --------------- | --------------------------------------------------------- | ------------- |
+| DeNovo Path     | The path to the Novor `denovo.csv` file                   | (No Default)  |
+| PSMS Path       | The path to the Novor `psms.csv` file                     | (No Default)  |
+| Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
+| Separator       | The separator used to separate fields.                    | ,             |
+| Cutoff          | The score cutoff for inclusion in the used reads. [0-100] | 0             |
 
 _Example_
 ```
 Novor ->
-    Path: Path/To/My/FileWithReads.csv
+    DeNovo Path: Path/To/My/FileWithReads.csv
     Name: NameForMyFile
 <-
 ```

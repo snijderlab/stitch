@@ -498,7 +498,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// A metadata instance to contain no metadata so reads without metadata can also be handled.
         /// </summary>
-        public class Novor : IMetaData
+        public abstract class Novor : IMetaData
         {
             /// <summary>
             /// The fraction where this peptide was found.
@@ -532,10 +532,6 @@ namespace AssemblyNameSpace
             /// The original sequence with possible modifications.
             /// </summary>
             public string Sequence;
-            /// <summary>
-            /// The database sequence with possible modifications.
-            /// </summary>
-            public string DBSequence;
 
             /// <summary>
             /// The intensity of this read
@@ -552,7 +548,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence) : base(file, "N", filter)
+            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
             {
                 this.Fraction = fraction;
                 this.Scan = scan;
@@ -562,7 +558,6 @@ namespace AssemblyNameSpace
                 this.Mass = mass;
                 this.Error = error;
                 this.Sequence = sequence;
-                this.DBSequence = databaseSequence;
             }
 
             /// <summary>
@@ -571,7 +566,7 @@ namespace AssemblyNameSpace
             public override string ToHTML()
             {
                 var output = new StringBuilder();
-                output.Append("<h2>Meta Information from PEAKS</h2>");
+                output.Append("<h2>Meta Information from Novor</h2>");
                 output.Append($"<h3>Fraction</h3>\n<p>{Fraction}</p>");
                 output.Append($"<h3>Scan</h3>\n<p>{Scan}</p>");
                 output.Append($"<h3>MZ</h3>\n<p>{MZ}</p>");
@@ -580,8 +575,53 @@ namespace AssemblyNameSpace
                 output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
                 output.Append($"<h3>Error</h3>\n<p>{Error}</p>");
                 output.Append($"<h3>Original Sequence</h3>\n<p>{Sequence}</p>");
-                output.Append($"<h3>Database Sequence</h3>\n<p>{DBSequence}</p>");
                 output.Append(File.ToHTML());
+                return output.ToString();
+            }
+        }
+
+        public class NovorDeNovo : Novor
+        {
+            /// <summary>
+            /// The database sequence with possible modifications.
+            /// </summary>
+            public string DBSequence;
+            public NovorDeNovo(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence)
+            : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
+            {
+                this.DBSequence = databaseSequence;
+            }
+
+            public override string ToHTML()
+            {
+                var output = new StringBuilder(base.ToHTML());
+                output.Append($"<h3>DBSequence</h3>\n<p>{DBSequence}</p>");
+                return output.ToString();
+            }
+        }
+
+        public class NovorPSMS : Novor
+        {
+            /// <summary>
+            /// The read ID.
+            /// </summary>
+            public string ID;
+            /// <summary>
+            /// The read ID.
+            /// </summary>
+            public int Proteins;
+            public NovorPSMS(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string id, int proteins)
+            : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
+            {
+                this.ID = id;
+                this.Proteins = proteins;
+            }
+
+            public override string ToHTML()
+            {
+                var output = new StringBuilder(base.ToHTML());
+                output.Append($"<h3>ID</h3>\n<p>{ID}</p>");
+                output.Append($"<h3>Proteins</h3>\n<p>{Proteins}</p>");
                 return output.ToString();
             }
         }

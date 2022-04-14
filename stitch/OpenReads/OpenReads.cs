@@ -321,14 +321,39 @@ namespace AssemblyNameSpace
         /// <summary> To open a file with reads. It uses the Novor file format. Which is a 
         /// charater separated file format with a defined column ordering.  </summary>
         /// <param name="filter"> The namefilter to use to filter the name of the reads. </param>
-        /// <param name="inputFile"> The file to read from. </param>
-        /// <param name="separator"> The separator used to separate fields. </param>
+        /// <param name="novor"> The novor input parameter. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<(string, ReadMetaData.IMetaData)>> Novor(NameFilter filter, ReadMetaData.FileIdentifier inputFile, char separator)
+        public static ParseResult<List<(string, ReadMetaData.IMetaData)>> Novor(NameFilter filter, RunParameters.InputData.Novor novor)
+        {
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
+            var output = new List<(string, ReadMetaData.IMetaData)>();
+            outeither.Value = output;
+
+            if (novor.DeNovoFile != null)
+            {
+                output.AddRange(ParseNovorDeNovo(filter, novor.DeNovoFile, novor.Separator, novor.Cutoff).GetValue(outeither));
+            }
+            if (novor.PSMSFile != null)
+            {
+                output.AddRange(ParseNovorPSMS(filter, novor.PSMSFile, novor.Separator, novor.Cutoff).GetValue(outeither));
+            }
+
+            return outeither;
+        }
+
+        /// <summary>
+        /// Read a Novor.cloud `denovo.csv` file.
+        /// </summary>
+        /// <param name="filter">The namefilter.</param>
+        /// <param name="file">The file to open.</param>
+        /// <param name="separator">The separator to use.</param>
+        /// <param name="cutoff">The score cutoff to use.</param>
+        /// <returns></returns>
+        static ParseResult<List<(string, ReadMetaData.IMetaData)>> ParseNovorDeNovo(NameFilter filter, ReadMetaData.FileIdentifier file, char separator, uint cutoff)
         {
             var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
-            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(inputFile);
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(file);
 
             if (possiblecontent.HasFailed())
             {
@@ -340,7 +365,7 @@ namespace AssemblyNameSpace
             outeither.Value = reads;
 
             var lines = possiblecontent.ReturnOrFail().Split('\n');
-            var parsefile = new ParsedFile(inputFile.Path, lines);
+            var parsefile = new ParsedFile(file.Path, lines);
             var linenumber = -1;
 
             foreach (var line in lines)
@@ -356,7 +381,7 @@ namespace AssemblyNameSpace
                 }
 
                 var fraction = split[0].Text;
-                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).ReturnOrFail();
+                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).GetValue(outeither);
                 var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).ReturnOrDefault(-1);
                 var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).ReturnOrDefault(-1);
                 var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).ReturnOrDefault(0);
@@ -380,8 +405,80 @@ namespace AssemblyNameSpace
                         peptide = "";
                     }
                 }
+                if (score >= cutoff)
+                    reads.Add((final_peptide, new ReadMetaData.NovorDeNovo(file, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence)));
+            }
 
-                reads.Add((final_peptide, new ReadMetaData.Novor(inputFile, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence)));
+            return outeither;
+        }
+
+        /// <summary>
+        /// Read a Novor.cloud `psms.csv` file.
+        /// </summary>
+        /// <param name="filter">The namefilter.</param>
+        /// <param name="file">The file to open.</param>
+        /// <param name="separator">The separator to use.</param>
+        /// <param name="cutoff">The score cutoff to use.</param>
+        /// <returns></returns>
+        static ParseResult<List<(string, ReadMetaData.IMetaData)>> ParseNovorPSMS(NameFilter filter, ReadMetaData.FileIdentifier file, char separator, uint cutoff)
+        {
+            var outeither = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
+
+            var possiblecontent = InputNameSpace.ParseHelper.GetAllText(file);
+
+            if (possiblecontent.HasFailed())
+            {
+                outeither.Messages.AddRange(possiblecontent.Messages);
+                return outeither;
+            }
+
+            var reads = new List<(string, ReadMetaData.IMetaData)>();
+            outeither.Value = reads;
+
+            var lines = possiblecontent.ReturnOrFail().Split('\n');
+            var parsefile = new ParsedFile(file.Path, lines);
+            var linenumber = -1;
+
+            foreach (var line in lines)
+            {
+                linenumber += 1;
+                if (String.IsNullOrWhiteSpace(line)) continue;
+                var split = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parsefile);
+                if (split[0].Text.ToLower() == "id") continue; // Header line
+                if (split.Count != 10)
+                {
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Incorrect number of columns", $"Incorrect number of columns, expected 10 columns according to the Novor file format. Got {split.Count} fields."));
+                    continue;
+                }
+
+                var id = split[0].Text;
+                var fraction = split[1].Text;
+                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[2].Text, split[2].Pos).GetValue(outeither);
+                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[3].Text, split[3].Pos).GetValue(outeither);
+                var z = InputNameSpace.ParseHelper.ConvertToInt(split[4].Text, split[4].Pos).GetValue(outeither);
+                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).GetValue(outeither);
+                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).GetValue(outeither);
+                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[7].Text, split[7].Pos).GetValue(outeither);
+                var proteins = InputNameSpace.ParseHelper.ConvertToInt(split[8].Text, split[8].Pos).GetValue(outeither);
+                var original_peptide = split[9].Text;
+                var peptide = (string)original_peptide.Clone();
+                var final_peptide = "";
+                while (peptide.Length > 0)
+                {
+                    var parts = peptide.Split('(', 2);
+                    if (parts.Length == 2)
+                    {
+                        final_peptide += parts[0];
+                        peptide = parts[1].Split(')', 2).Last();
+                    }
+                    else
+                    { // Length is 1 because no separator was found
+                        final_peptide += parts[0];
+                        peptide = "";
+                    }
+                }
+                if (score >= cutoff)
+                    reads.Add((final_peptide, new ReadMetaData.NovorPSMS(file, filter, fraction, scan, mz, z, score, mass, error, peptide, id, proteins)));
             }
 
             return outeither;
@@ -419,7 +516,7 @@ namespace AssemblyNameSpace
                         var parse = new ParsedFile(read.MetaData.File.Path, new string[1] { read.Sequence });
                         for (int i = 0; i < read.Sequence.Length; i++)
                         {
-                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i])) // TODO: Get the right linenumber, save it somewhere in the MetaData object 
+                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i])) // TODO: Get the right linenumber of the definition of the read, save it somewhere in the MetaData object 
                                 outeither.AddMessage(new InputNameSpace.ErrorMessage(new Position(0, i, parse), "Invalid sequence", "This sequence contains an invalid aminoacid."));
                         }
 

@@ -4,8 +4,10 @@ Runname	: Basic Novor run
 
 Input ->
     Novor ->
-        Path            : novor.csv
-        Name            : Sample
+        DeNovo Path : novor_denovo.csv
+        PSMS Path    : novor_psms.csv
+        Name         : Sample
+        Cutoff       : 70
     <-
 <-
 

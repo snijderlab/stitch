@@ -532,18 +532,22 @@ namespace AssemblyNameSpace
 
                         case "novor":
                             var novor_settings = new InputData.Novor();
-
+                            string name = null;
                             foreach (var setting in pair.GetValues())
                             {
                                 switch (setting.Name)
                                 {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(novor_settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                    case "denovo path":
+                                        if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        novor_settings.DeNovoFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).GetValue(outEither), "", setting);
+                                        break;
+                                    case "psms path":
+                                        if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        novor_settings.PSMSFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).GetValue(outEither), "", setting);
                                         break;
                                     case "name":
-                                        if (!string.IsNullOrWhiteSpace(novor_settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.File.Name = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        name = setting.GetValue();
                                         break;
                                     case "separator":
                                         if (setting.GetValue().Length != 1)
@@ -551,15 +555,25 @@ namespace AssemblyNameSpace
                                         else
                                             novor_settings.Separator = setting.GetValue().First();
                                         break;
+                                    case "cutoff":
+                                        var value = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                        if (value < 0)
+                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Cutoff range", "The minimal value for the Novor cutoff is 0."));
+                                        else if (value > 100)
+                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Cutoff range", "The maximal value for the Novor cutoff is 100."));
+                                        else
+                                            novor_settings.Cutoff = (uint)value;
+                                        break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
                                         break;
                                 }
                             }
 
-                            if (string.IsNullOrWhiteSpace(novor_settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            if (string.IsNullOrWhiteSpace(novor_settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
+                            if (novor_settings.DeNovoFile == null && novor_settings.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
+                            if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                            if (novor_settings.DeNovoFile != null) novor_settings.DeNovoFile.Name = name;
+                            if (novor_settings.PSMSFile != null) novor_settings.PSMSFile.Name = name;
                             output.Files.Add(novor_settings);
                             break;
 
@@ -699,7 +713,7 @@ namespace AssemblyNameSpace
                         InputData.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
                         InputData.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
                         InputData.Reads simple => OpenReads.Simple(namefilter, simple.File),
-                        InputData.Novor novor => OpenReads.Novor(namefilter, novor.File, novor.Separator),
+                        InputData.Novor novor => OpenReads.Novor(namefilter, novor),
                         _ => throw new ArgumentException("An unkown inputformat was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
