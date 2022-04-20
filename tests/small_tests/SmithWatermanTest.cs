@@ -149,22 +149,20 @@ namespace AssemblyTestNameSpace
         [TestMethod]
         public void GenomicTest01()
         {
-            // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
             var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
             var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
-            Assert.AreEqual(21, r.Score);
-            Assert.AreEqual(8, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("6M", r.Alignment.CIGAR());
+            Assert.AreEqual(5, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(10, r.StartQueryPosition);
+            Assert.AreEqual("10M", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void GenomicTest02()
         {
-            // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
             var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", alp);
@@ -272,10 +270,10 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
-            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(77, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("30M", r.Alignment.CIGAR());
+            Assert.AreEqual("30M33I", r.Alignment.CIGAR());
         }
         [TestMethod]
         public void FullyplacedRead()
@@ -288,7 +286,7 @@ namespace AssemblyTestNameSpace
             var b = StringToSequence(path, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
-            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(58, r.Score);
             Assert.AreEqual(29, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("11M", r.Alignment.CIGAR());

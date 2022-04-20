@@ -118,8 +118,8 @@ namespace AssemblyNameSpace
             }
             for (int i = 0; i < query.Length; i++)
             {
-                if (i > 0)
-                    score_matrix[i] = -alphabet.GapStartPenalty - (i - 1) * alphabet.GapExtendPenalty;
+                //if (i > 0)
+                //    score_matrix[i] = -alphabet.GapStartPenalty - (i - 1) * alphabet.GapExtendPenalty;
                 indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Character];
             }
 
@@ -132,7 +132,6 @@ namespace AssemblyNameSpace
             Direction direction;
             bool gap;
             char gap_char = Alphabet.GapChar;
-            var buf = new StringBuilder();
 
             for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
@@ -191,17 +190,14 @@ namespace AssemblyNameSpace
                     direction_matrix[rowsize * tem_pos + query_pos] = (int)direction;
 
                     // Keep track of the maximal value
-                    if (value > max_value)
+                    if (query_pos == query.Length && value > max_value)
                     {
                         max_value = value;
                         max_index_t = tem_pos;
                         max_index_q = query_pos;
                     }
-                    buf.Append($"{value} {direction}\t");
                 }
-                buf.AppendLine("");
             }
-            Console.WriteLine(buf);
 
             // Traceback
             // TODO: Adjust the score on each position based on the DOC, to create a fairer score
