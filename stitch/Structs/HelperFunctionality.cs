@@ -118,6 +118,8 @@ namespace AssemblyNameSpace
             }
             for (int i = 0; i < query.Length; i++)
             {
+                if (i > 0)
+                    score_matrix[i] = -alphabet.GapStartPenalty - (i - 1) * alphabet.GapExtendPenalty;
                 indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Character];
             }
 
@@ -130,6 +132,7 @@ namespace AssemblyNameSpace
             Direction direction;
             bool gap;
             char gap_char = Alphabet.GapChar;
+            var buf = new StringBuilder();
 
             for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
             {
@@ -155,7 +158,7 @@ namespace AssemblyNameSpace
 
                     c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.GapInTemplate || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
-                    if (a > b && a > c && a > 0)
+                    if (a > b && a > c)
                     {
                         if (gap)
                         {
@@ -168,12 +171,12 @@ namespace AssemblyNameSpace
                             direction = Direction.Match;
                         }
                     }
-                    else if (!gap && b > c && b > 0)
+                    else if (!gap && b > c)
                     {
                         value = b;
                         direction = Direction.GapInQuery;
                     }
-                    else if (!gap && c > 0)
+                    else if (!gap)
                     {
                         value = c;
                         direction = Direction.GapInTemplate;
@@ -194,8 +197,11 @@ namespace AssemblyNameSpace
                         max_index_t = tem_pos;
                         max_index_q = query_pos;
                     }
+                    buf.Append($"{value} {direction}\t");
                 }
+                buf.AppendLine("");
             }
+            Console.WriteLine(buf);
 
             // Traceback
             // TODO: Adjust the score on each position based on the DOC, to create a fairer score
@@ -224,7 +230,7 @@ namespace AssemblyNameSpace
                         max_index_q--;
                         break;
                     case (int)Direction.NoMatch:
-                        goto END_OF_CRAWL; // I am hopefull this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
+                        goto END_OF_CRAWL; // I am hopeful this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
                         break;
                 }
             }

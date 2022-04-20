@@ -88,6 +88,20 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("7M", r.Alignment.CIGAR());
         }
+        [DataRow("ACACACA", "ACACACB")]
+        [DataRow("ACACACA", "ACACACC")]
+        [DataTestMethod]
+        public void MismatchEnd(string x, string y)
+        {
+            var a = StringToSequence(x);
+            var b = StringToSequence(y);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(6, r.Score);
+            Assert.AreEqual(0, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("7M", r.Alignment.CIGAR());
+        }
         [DataRow("ABBA")]
         [DataRow("AAABBA")]
         [DataRow("AAAAAAAAA")]
@@ -262,6 +276,22 @@ namespace AssemblyTestNameSpace
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("30M", r.Alignment.CIGAR());
+        }
+        [TestMethod]
+        public void FullyplacedRead()
+        {
+            // Shuffled the sequence a bit
+            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
+            var path = "SSYWMSWVRQD"; // ends with D instead of A
+            var a = StringToSequence(template, alp);
+            var b = StringToSequence(path, alp);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            Console.WriteLine(r.ToString());
+            Assert.AreEqual(147, r.Score);
+            Assert.AreEqual(29, r.StartTemplatePosition);
+            Assert.AreEqual(0, r.StartQueryPosition);
+            Assert.AreEqual("11M", r.Alignment.CIGAR());
         }
         AminoAcid[] StringToSequence(string input)
         {
