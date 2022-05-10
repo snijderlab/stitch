@@ -1,0 +1,89 @@
+{
+    "Structure": {
+        "prefix": "Structure",
+        "body": [
+            "-Run Info---------------",
+            "Version: 1.1",
+            "Runname: $1",
+            "",
+            "Input ->",
+            "    $2",
+            "<-",
+            "",
+            "TemplateMatching ->",
+            "    CutoffScore: ${3:10}",
+            "",
+            "    Alphabet ->",
+            "        $4",
+            "    <-",
+            "",
+            "    Segments ->",
+            "        $5",
+            "    <-",
+            "<-",
+            "",
+            "Report ->",
+            "    HTML ->",
+            "        Path: $6",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Batch File structure"
+    },
+    "Input": {
+        "prefix": "Input",
+        "body": [
+            "Input ->",
+            "    $2",
+            "<-"
+        ],
+        "description": "Default Input structure"
+    },
+    "Peaks": {
+        "prefix": "Peaks",
+        "body": [
+            "Peaks ->",
+            "    Path     : $1",
+            "    Format   : ${2:X+}",
+            "    Name     : $3",
+            "    Separator: ${4:,}",
+            "    CutoffALC: ${5:90}",
+            "<-"
+        ]
+    },
+    "Segment": {
+        "prefix": "Segment",
+        "body": [
+            "Segment ->",
+            "    Name: $1",
+            "    Path: $2",
+            "<-"
+        ],
+        "description": "Default Segment structure"
+    },
+    "Recombine": {
+        "prefix": "Recombine",
+        "body": [
+            "Recombine ->",
+            "    N          : ${1:1}",
+            "    CutoffScore: ${2:10}",
+            "",
+            "    Order->",
+            "        $3: $4",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Recombine structure"
+    },
+    "Report": {
+        "prefix": "Report",
+        "body": [
+            "Report ->",
+            "    HTML ->",
+            "        Path: $1",
+            "    <-",
+            "<-"
+        ],
+        "description": "Default Report structure"
+    }
+}

@@ -17,7 +17,7 @@ The full code for the program can be found here: [https://github.com/snijderlab/
 
 ## VS Code plugin (unstable)
 
-In the [repository](https://github.com/snijderlab/stitch) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
+In the [repository](https://github.com/snijderlab/stitch) there is a folder called `stitch-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
 
 ## Structure
 

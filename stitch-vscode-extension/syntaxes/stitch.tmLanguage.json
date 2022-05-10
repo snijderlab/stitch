@@ -1,6 +1,6 @@
 {
     "$schema": "https://raw.githubusercontent.com/martinring/tmlanguage/master/tmlanguage.json",
-    "name": "protein assembler",
+    "name": "stitch",
     "patterns": [{
             "include": "#comment"
         },
@@ -27,7 +27,7 @@
         },
         "single-parameter": {
             "name": "entity",
-            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|segment|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|EnforceUnique)\\s*",
+            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|segment|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|enforceunique|folder|gaptail|gaphead|ForceGermlineIsoleucine)\\s*",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.tag"
@@ -35,10 +35,12 @@
             },
             "end": "\\s*$",
             "patterns": [{
-                "include": "#single-parameter-multiple-lines"
-            }, {
-                "include": "#single-parameter-single-line"
-            }]
+                    "include": "#single-parameter-multiple-lines"
+                },
+                {
+                    "include": "#single-parameter-single-line"
+                }
+            ]
         },
         "single-parameter-single-line": {
             "begin": "(:)\\s*",
@@ -49,14 +51,18 @@
                 }
             },
             "patterns": [{
-                "include": "#int"
-            }, {
-                "include": "#floating-point"
-            }, {
-                "include": "#character-constant"
-            }, {
-                "include": "#single-line"
-            }]
+                    "include": "#int"
+                },
+                {
+                    "include": "#floating-point"
+                },
+                {
+                    "include": "#character-constant"
+                },
+                {
+                    "include": "#single-line"
+                }
+            ]
         },
         "single-parameter-multiple-lines": {
             "begin": "(:>)\\s*",
@@ -72,16 +78,21 @@
                 }
             },
             "patterns": [{
-                "include": "#int"
-            }, {
-                "include": "#floating-point"
-            }, {
-                "include": "#character-constant"
-            }, {
-                "include": "#single-line"
-            }, {
-                "include": "#multi-line"
-            }]
+                    "include": "#int"
+                },
+                {
+                    "include": "#floating-point"
+                },
+                {
+                    "include": "#character-constant"
+                },
+                {
+                    "include": "#single-line"
+                },
+                {
+                    "include": "#multi-line"
+                }
+            ]
         },
         "multiple-parameter": {
             "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|alphabet|recombine|html|csv|fasta|segment|inputparameters|input|report|templatematching)\\s*(->)",
@@ -100,16 +111,21 @@
                 }
             },
             "patterns": [{
-                "include": "#multiple-parameter"
-            }, {
-                "include": "#segments"
-            }, {
-                "include": "#order"
-            }, {
-                "include": "#single-parameter"
-            }, {
-                "include": "#comment"
-            }]
+                    "include": "#multiple-parameter"
+                },
+                {
+                    "include": "#segments"
+                },
+                {
+                    "include": "#order"
+                },
+                {
+                    "include": "#single-parameter"
+                },
+                {
+                    "include": "#comment"
+                }
+            ]
         },
         "segments": {
             "begin": "(?i)^\\s*(segments)\\s*(->)",
@@ -128,12 +144,15 @@
                 }
             },
             "patterns": [{
-                "include": "#multiple-parameter"
-            }, {
-                "include": "#segment-group"
-            }, {
-                "include": "#comment"
-            }]
+                    "include": "#multiple-parameter"
+                },
+                {
+                    "include": "#segment-group"
+                },
+                {
+                    "include": "#comment"
+                }
+            ]
         },
         "segment-group": {
             "begin": "(?i)^\\s*([\\w\\s]+)\\s*(->)",
@@ -152,10 +171,12 @@
                 }
             },
             "patterns": [{
-                "include": "#multiple-parameter"
-            }, {
-                "include": "#comment"
-            }]
+                    "include": "#multiple-parameter"
+                },
+                {
+                    "include": "#comment"
+                }
+            ]
         },
         "order": {
             "begin": "(?i)^\\s*(order)\\s*",
@@ -171,10 +192,12 @@
                 }
             },
             "patterns": [{
-                "include": "#order-group"
-            }, {
-                "include": "#order-single"
-            }]
+                    "include": "#order-group"
+                },
+                {
+                    "include": "#order-single"
+                }
+            ]
         },
         "order-single": {
             "begin": "(:)\\s*",
@@ -185,10 +208,12 @@
                 }
             },
             "patterns": [{
-                "include": "#order-db"
-            }, {
-                "include": "#gap-constant"
-            }]
+                    "include": "#order-db"
+                },
+                {
+                    "include": "#gap-constant"
+                }
+            ]
         },
         "order-group": {
             "begin": "(->)",
@@ -204,10 +229,12 @@
                 }
             },
             "patterns": [{
-                "include": "#order-single-group"
-            }, {
-                "include": "#comment"
-            }]
+                    "include": "#order-single-group"
+                },
+                {
+                    "include": "#comment"
+                }
+            ]
         },
         "order-single-group": {
             "begin": "^\\s*([\\w\\s]+)\\s*(:)\\s*",
@@ -221,10 +248,12 @@
                 }
             },
             "patterns": [{
-                "include": "#order-db"
-            }, {
-                "include": "#gap-constant"
-            }]
+                    "include": "#order-db"
+                },
+                {
+                    "include": "#gap-constant"
+                }
+            ]
         },
         "int": {
             "match": "\\d+",
@@ -255,5 +284,5 @@
             "name": "variable.other"
         }
     },
-    "scopeName": "source.protseq"
+    "scopeName": "source.stitch"
 }

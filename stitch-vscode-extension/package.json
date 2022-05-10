@@ -1,0 +1,35 @@
+{
+    "name": "stitch",
+    "displayName": "Stitch",
+    "description": "VS Code support for Stitch batchfiles",
+    "version": "0.0.1",
+    "publisher": "Douwe Schulte",
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/snijderlab/stitch"
+    },
+    "engines": {
+        "vscode": "^1.30.0"
+    },
+    "categories": [
+        "Programming Languages"
+    ],
+    "contributes": {
+        "languages": [{
+            "id": "stitch",
+            "aliases": [
+                "Stitch"
+            ],
+            "configuration": "./language-configuration.json"
+        }],
+        "grammars": [{
+            "language": "stitch",
+            "scopeName": "source.stitch",
+            "path": "./syntaxes/stitch.tmLanguage.json"
+        }],
+        "snippets": [{
+            "language": "dtitch",
+            "path": "./snippets.json"
+        }]
+    }
+}
