@@ -13,9 +13,11 @@ documentclass: report
 
 Batch files are used to aggregate all information for one run of the program. These files can be edited with any plain text editor. There is no specific extension required by the program so `.txt` is recommended because these will automatically be opened by an editor in plain text.
 
+The full code for the program can be found here: [https://github.com/snijderlab/stitch](https://github.com/snijderlab/stitch).
+
 ## VS Code plugin (unstable)
 
-In the [repository](https://git.science.uu.nl/d.schulte/research-project-amino-acid-alignment) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
+In the [repository](https://github.com/snijderlab/stitch) there is a folder called `protseq-vscode-extension` by copying this to your VS Code extension folder (`user/.vscode/extensions`) the extension is installed. By then setting the format of an opened batch file to 'Protein Assembler', by clicking on the format name (normally 'Plain Text' for .txt files), colours will be shown to aid in the overview of the files. This extension is very simple so it does not do any error checking, but it should still be useful.
 
 ## Structure
 
@@ -64,21 +66,21 @@ All paths are specified from the directory of the batch file.
 All assets are loaded from the folder `assets` in the folder of the binary.
 
 #### The full list of all parameters
-A `*` indicates that the scope or parameter can be defined multiple times.
+`*` indicates that the scope or parameter can be defined multiple times.
 
 * Run Info
     * Version
     * Runname
     * MaxCores
 * Input
-    * Reads *
+    * Reads `*`
         * Path
         * Name
-    * FASTA *
+    * FASTA `*`
         * Path
         * Name
         * Identifier
-    * Peaks *
+    * Peaks `*`
         * Path
         * CutoffALC
         * LocalCutoffALC
@@ -87,7 +89,7 @@ A `*` indicates that the scope or parameter can be defined multiple times.
         * Name
         * Separator
         * DecimalSeparator
-    * Folder (m) *
+    * Folder (m) `*`
         * Path
         * StartsWith
         * Recursive
@@ -97,29 +99,34 @@ A `*` indicates that the scope or parameter can be defined multiple times.
     * CutoffScore
     * Alphabet
     * EnforceUnique
+    * ForceGermlineIsoleucine
     * Segments
-        * Segment *
+        * Segment `*`
             * Name
             * Path
             * CutoffScore
             * Alphabet
             * Identifier
             * ClassChars
+            * ForceGermlineIsoleucine
 * Recombine
     * N
     * Order
     * CutoffScore
     * Alphabet
     * EnforceUnique
+    * ForceGermlineIsoleucine
+    * Decoy
 * Report
-    * HTML *
+    * HTML `*`
         * Path
-    * FASTA *
+    * FASTA `*`
         * Path
         * MinimalScore
         * OutputType
 
 Recurring definitions:
+
 * Alphabet
     * Path
     * Data
@@ -134,11 +141,11 @@ These parameters are placed in the outer scope. So not nested in any other param
 
 ##### Version (s)
 
-The version of the batch file. For now only version 1.0 is specified, but is included to later add more versions with possible breaking changes in the structure. This parameter is required. Major versions will not be backwards compatible, 2.0 will not work with Stitch designed for 1.0. Minor versions will be backwards compatible, 1.2 will work with Stitch designed for 1.0.
+The version of the batch file. This parameter is required. Major versions will not be backwards compatible, so 2.0 will not work with Stitch designed for 1.0. Minor versions will be backwards compatible, so for example 1.2 will work with Stitch designed for 1.0.
 
 _Example_
 ```
-Version: 1.0
+Version: 1.1
 ```
 
 ##### Runname (s)
@@ -467,6 +474,14 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 ##### EnforceUnique (s)
 
 Determines of the paths/reads of these segments will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+
+##### ForceGermlineIsoleucine (s)
+
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+
+##### Decoy (s)
+
+Create a decoy set from all templates that were not used in the recombination. This decoy set will catch reads that do not match the recombined templates well, which would otherwise be placed there. This setting is especially useful if you have a dataset with lots of background. If `EnforceUnique` is turned on all reads will be matched to all templates, so this setting will be ineffective. Possible values: `True` and `False`. Default: `True`.
 
 #### Report
 
