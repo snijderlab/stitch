@@ -38,7 +38,7 @@ namespace AssemblyNameSpace
                 foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates))
                 {
                     if (template.Score >= MinScore)
-                        sequences.Add((template.Score, $">{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                        sequences.Add((template.Score, $">{template.MetaData.Identifier} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
                 }
             }
             else // TemplateMatching
@@ -49,7 +49,7 @@ namespace AssemblyNameSpace
                     foreach (var template in dbs.SelectMany(a => a.Templates))
                     {
                         if (template.Score >= MinScore)
-                            sequences.Add((template.Score, $">{group}-{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                            sequences.Add((template.Score, $">{template.MetaData.Identifier} id:{group}-{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
                     }
                 }
             }
