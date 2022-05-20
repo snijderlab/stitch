@@ -12,15 +12,11 @@
 (CDR3 MV)(Conserved FG)R(Conserved G)TQLTIL
 >IGLJ3
 (CDR3 SV)(Conserved FG)G(Conserved G)THLTVL
->IGLJ4
+>IGLJ4 IGLJ9
 (CDR3 YV)(Conserved FG)S(Conserved G)TQLTVL
 >IGLJ5
 (CDR3 IV)(Conserved FG)G(Conserved G)THLTVL
 >IGLJ6
 (CDR3 GV)(Conserved FG)G(Conserved G)THLTVL
->IGLJ7
+>IGLJ7 IGLJ8
 (CDR3 AV)(Conserved FG)G(Conserved G)THLTVL
->IGLJ8
-(CDR3 AV)(Conserved FG)G(Conserved G)THLTVL
->IGLJ9
-(CDR3 YV)(Conserved FG)S(Conserved G)TQLTVL

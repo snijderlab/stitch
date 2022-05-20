@@ -10,9 +10,7 @@
 (CDR3 IT)(Conserved FG)Q(Conserved G)TRLEIK
 >IGLJ1
 (CDR3 YV)(Conserved FG)T(Conserved G)TKVTVL
->IGLJ2
-(CDR3 VV)(Conserved FG)G(Conserved G)TKLTVL
->IGLJ3
+>IGLJ2 IGLJ3
 (CDR3 VV)(Conserved FG)G(Conserved G)TKLTVL
 >IGLJ6
 (CDR3 NV)(Conserved FG)S(Conserved G)TKVTVL
