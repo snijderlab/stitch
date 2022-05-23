@@ -1,5 +1,12 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.1.1
+_2022-05-23_
+
+* Removed all duplicate sequences from the templates
+* Updated FASTA output identifiers to align with the HTML output identifiers
+* Updated manual
+
 # v1.1.0
 _2022-04-20_
 
