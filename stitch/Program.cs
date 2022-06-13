@@ -89,7 +89,7 @@ note: for an example IMGT html file see: http://www.imgt.org/IMGTrepertoire/Prot
     2?  [string] the segments to download, multiple can be downloaded in one file by combining with a comma ','
         default: ""IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC""
 eg: assembler.exe download ""Homo sapiens""
-note: IGHC is not included as this is not present in a usefull form in the IMGT database, get from uniprot for the best results");
+note: IGHC is not included as this is not present in a useful form in the IMGT database, get from uniprot for the best results");
                 return 2;
             }
 
@@ -195,7 +195,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             var id_dict = new Dictionary<string, (string, string)>();
             var sequence_dict = new Dictionary<string, string>();
 
-            // Condens all isoforms
+            // Condense all isoforms
             foreach (var read in reads)
             {
                 var long_id = ((ReadMetaData.Fasta)read.MetaData).FastaHeader;
@@ -259,12 +259,20 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
             ("African lungfish",           "Lungfish",    "Pa",         "Protopterus aethiopicus")
         };
 
+        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
+        {
+            foreach (var single in name.Split(','))
+            {
+                DownloadSingleSpecies(single, segments);
+            }
+        }
+
         /// <summary>
         /// Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens.
         /// </summary>
         /// <param name="name"> The name of the species, it will be matched to all predefined names. It can 
         /// be scientific name, common name, shorthand or short name (matched in that order). </param>
-        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
+        static void DownloadSingleSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
         {
             (string CommonName, string ShortName, string ShortHand, string ScientificName) species = ("", "", "", "");
             var found = false;
@@ -313,7 +321,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                             }
                             try
                             {
-                                CreateAnnotatedTemplatePre(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
+                                CreateAnnotatedTemplatePre(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                             }
                             catch
                             {
@@ -329,7 +337,7 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                     {
                         var download = client.GetStringAsync(basename + segment);
                         download.Wait();
-                        GenerateAnnotatedTemplate(download.Result, name.Replace(' ', '_') + "_" + segment + ".fasta");
+                        GenerateAnnotatedTemplate(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                     }
                 }
                 catch
@@ -571,6 +579,8 @@ note: IGHC is not included as this is not present in a usefull form in the IMGT 
                 }
                 if (cdr > 1 && !cdr_found || cdr >= 1 && cdr < 3 && any_cdr_found)
                     continue; // It misses the last CDR from the V segment so it is 'partial' and should be removed
+                if (compressed.Any(a => Regex.Matches(a.Sequence, "[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase).Count > 0))
+                    continue; // It has non Amino Acids characters in the raw sequence
 
                 // J segments always start with the last pieces of CDR3 but this is not properly annotated in the HTML files
                 if (J)
