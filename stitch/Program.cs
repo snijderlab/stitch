@@ -225,7 +225,13 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
 
             var sb = new StringBuilder();
             foreach (var (_, (id, seq)) in id_dict)
-                sb.AppendLine($">{id}{Environment.NewLine}{seq}");
+            {
+                sb.AppendLine($">{id}");
+                foreach (var chunk in seq.Chunk(80)) // Chunk the sequence so the lines are always max 80 chars long
+                {
+                    sb.AppendLine(new String(chunk));
+                }
+            }
 
             File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
         }
