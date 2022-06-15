@@ -15,7 +15,7 @@ Linux:
 ```
 (x64, should work on most distros)
 chmod +x ./stitch                          (give running permission to the binary)
-./stitch batchfiles/monoclonal.txt
+./stitch.bin batchfiles/monoclonal.txt
 
 (arm64)
 chmod +x ./stitch_arm                      (give running permission to the binary)
