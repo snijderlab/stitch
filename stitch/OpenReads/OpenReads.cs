@@ -203,7 +203,7 @@ namespace AssemblyNameSpace
                     plain_sequence.Append(line[i]);
                 }
             }
-            if (!string.IsNullOrEmpty(current_seq))
+            if (!string.IsNullOrEmpty(current_seq.Trim()))
                 annotated.Add(("", current_seq));
             var sequence = remove_whitespace.Replace(plain_sequence.ToString(), String.Empty);
             var invalid_chars = check_amino_acids.Matches(sequence);
