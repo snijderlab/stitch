@@ -128,7 +128,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    sequence.Append(line.Trim().ToArray());
+                    sequence.Append(line.ToArray());
                 }
                 linenumber++;
             }
@@ -172,6 +172,8 @@ namespace AssemblyNameSpace
             return outeither;
         }
 
+        private static readonly Regex remove_whitespace = new Regex(@"\s+");
+        private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
         static ParseResult<(string, ReadMetaData.IMetaData)> ParseAnnotatedFasta(string line, ReadMetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
         {
             var outeither = new ParseResult<(string, ReadMetaData.IMetaData)>();
@@ -203,7 +205,8 @@ namespace AssemblyNameSpace
             }
             if (!string.IsNullOrEmpty(current_seq))
                 annotated.Add(("", current_seq));
-            var invalid_chars = Regex.Matches(plain_sequence.ToString(), "[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
+            var sequence = remove_whitespace.Replace(plain_sequence.ToString(), String.Empty);
+            var invalid_chars = check_amino_acids.Matches(sequence);
             if (invalid_chars.Count > 0)
             {
                 outeither.AddMessage(new InputNameSpace.ErrorMessage(
@@ -215,7 +218,7 @@ namespace AssemblyNameSpace
             }
 
                 ((ReadMetaData.Fasta)metaData).AnnotatedSequence = annotated;
-            outeither.Value = (plain_sequence.ToString(), metaData);
+            outeither.Value = (sequence, metaData);
             return outeither;
         }
 

@@ -18,9 +18,8 @@ namespace BatchFilesTestNameSpace
         [TestMethod]
         public void TestPublicExamples()
         {
-            var cwd = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(Globals.Root);
-            foreach (var file in Directory.GetFiles("batchfiles"))
+            Console.WriteLine($"Root folder: {Path.GetFullPath(Globals.Root)}");
+            foreach (var file in Directory.GetFiles(Globals.Root + "batchfiles"))
             {
                 try
                 {
@@ -32,7 +31,6 @@ namespace BatchFilesTestNameSpace
                     throw;
                 }
             }
-            Directory.SetCurrentDirectory(cwd);
         }
 
         /// <summary>
@@ -41,9 +39,8 @@ namespace BatchFilesTestNameSpace
         [TestMethod]
         public void TestSmallExamples()
         {
-            var cwd = Directory.GetCurrentDirectory();
-            Directory.SetCurrentDirectory(Globals.Root);
-            foreach (var file in Directory.GetFiles("tests/batchfiles/test_files"))
+            Console.WriteLine($"Root folder: {Path.GetFullPath(Globals.Root)}");
+            foreach (var file in Directory.GetFiles(Globals.Root + "tests/batchfiles/test_files"))
             {
                 try
                 {
@@ -56,7 +53,6 @@ namespace BatchFilesTestNameSpace
                     throw;
                 }
             }
-            Directory.SetCurrentDirectory(cwd);
         }
     }
 }
