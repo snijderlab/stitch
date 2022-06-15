@@ -69,58 +69,38 @@ namespace AssemblyNameSpace
 
         protected void SaveAndCreateDirectories(string filename, string buffer)
         {
-            var pieces = filename.Split(new char[] { '\\', '/' });
-            var drive = pieces[0].Split(':')[0];
-
-            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+            try
             {
-                try
-                {
-                    Directory.CreateDirectory(Directory.GetParent(filename).FullName);
-                }
-                catch
-                {
-                    new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
-                }
-
-                File.WriteAllText(filename, buffer);
+                Directory.CreateDirectory(Directory.GetParent(filename).FullName);
             }
-            else
+            catch
             {
-                new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
+                new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
+                throw new Exception("Could not save file, see error message above");
             }
+
+            File.WriteAllText(filename, buffer);
         }
 
         protected Task SaveAndCreateDirectoriesAsync(string filename, string buffer)
         {
-            var pieces = filename.Split(new char[] { '\\', '/' });
-            var drive = pieces[0].Split(':')[0];
-
-            if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
+            try
             {
-                try
-                {
-                    Directory.CreateDirectory(Directory.GetParent(filename).FullName);
-                }
-                catch
-                {
-                    new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
-                    throw new Exception("Could not save file, see error message above");
-                }
-
-                if (File.Exists(filename))
-                {
-                    new InputNameSpace.ErrorMessage(filename, "File already exists", "All filenames are supposed to be unique to prevent data races.").Print();
-                    throw new Exception("Could not save file, see error message above");
-                }
-
-                return File.WriteAllTextAsync(filename, buffer);
+                Directory.CreateDirectory(Directory.GetParent(filename).FullName);
             }
-            else
+            catch
             {
-                new InputNameSpace.ErrorMessage(filename, "File could not be saved", $"The drive '{drive}:\\' is not mounted.");
+                new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
                 throw new Exception("Could not save file, see error message above");
             }
+
+            if (File.Exists(filename))
+            {
+                new InputNameSpace.ErrorMessage(filename, "File already exists", "All filenames are supposed to be unique to prevent data races.").Print();
+                throw new Exception("Could not save file, see error message above");
+            }
+
+            return File.WriteAllTextAsync(filename, buffer);
         }
     }
 }
