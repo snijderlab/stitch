@@ -1,5 +1,11 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.1.2
+_2022-07-06_
+
+* Cleaned up templates and download function
+* Fixed a bug of Linux (#171)
+
 # v1.1.1
 _2022-05-23_
 

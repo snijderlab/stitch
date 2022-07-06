@@ -1,5 +1,5 @@
 title: Stitch
-version: 1.0.0
+version: 1.1.2
 abstract: Template-based assembly of proteomics short reads for de novo antibody sequencing and repertoire profiling
 authors:
   - affiliation: Utrecht University
