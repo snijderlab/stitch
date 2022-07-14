@@ -16,9 +16,12 @@ authors:
     orcid: https://orcid.org/0000-0002-9310-8226
 cff-version: 1.2.0
 identifiers:
+  - description: Release paper
+    type: doi
+    value: 10.1021/acs.analchem.2c01300
   - description: Preprint
     type: doi
-    value: https://doi.org/10.1101/2022.03.07.483237
+    value: 10.1101/2022.03.07.483237
   - description: Repository
     type: url
     value: https://github.com/snijderlab/stitch
