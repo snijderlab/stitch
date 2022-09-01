@@ -142,7 +142,7 @@ namespace AssemblyNameSpace
                             for (int j = 0; j < group.Segments.Count; j++)
                             {
                                 var template = group.Segments[j];
-                                if (order_string.StartsWith(template.Name))
+                                if (Regex.Matches(order_string, template.Name + @"[\s*]|$").Count != 0)
                                 {
                                     order_string = order_string.Remove(0, template.Name.Length);
                                     order_counter.NextColumn(template.Name.Length);

@@ -444,7 +444,7 @@ The amount of templates to recombine from each segment. From every segment it wi
 
 ##### Order (s)
 
-The order in which the segments will be recombined. Defined as a list of the names of the segment in order possibly with gaps (`*`) in between.
+The order in which the segments will be recombined. Defined as a list of the names of the segment in order possibly with gaps (`*`) in between. The names are separated by whitespace or the gap character (`*`).
 
 _Example_
 ```
