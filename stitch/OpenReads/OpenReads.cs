@@ -173,6 +173,10 @@ namespace AssemblyNameSpace
         }
 
         private static readonly Regex remove_whitespace = new Regex(@"\s+");
+        private static string RemoveWhitespace(string input)
+        {
+            return remove_whitespace.Replace(input, "");
+        }
         private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
         static ParseResult<(string, ReadMetaData.IMetaData)> ParseAnnotatedFasta(string line, ReadMetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
         {
@@ -192,12 +196,12 @@ namespace AssemblyNameSpace
                     i += 1;
                     int space = line.IndexOf(' ', i);
                     int close = line.IndexOf(')', i);
-                    var seq = line.Substring(space + 1, close - space - 1);
-                    annotated.Add((line.Substring(i, space - i), seq));
+                    var seq = RemoveWhitespace(line.Substring(space + 1, close - space - 1));
+                    annotated.Add((RemoveWhitespace(line.Substring(i, space - i)), seq));
                     plain_sequence.Append(seq);
                     i = close;
                 }
-                else
+                else if (!Char.IsWhiteSpace(line[i]))
                 {
                     current_seq += line[i];
                     plain_sequence.Append(line[i]);
@@ -205,7 +209,7 @@ namespace AssemblyNameSpace
             }
             if (!string.IsNullOrEmpty(current_seq.Trim()))
                 annotated.Add(("", current_seq));
-            var sequence = remove_whitespace.Replace(plain_sequence.ToString(), String.Empty);
+            var sequence = plain_sequence.ToString();
             var invalid_chars = check_amino_acids.Matches(sequence);
             if (invalid_chars.Count > 0)
             {
@@ -220,6 +224,43 @@ namespace AssemblyNameSpace
                 ((ReadMetaData.Fasta)metaData).AnnotatedSequence = annotated;
             outeither.Value = (sequence, metaData);
             return outeither;
+        }
+
+        /// <summary>
+        /// Escapes all characters in this string whose code is less than 32 using C/C#-compatible backslash escapes.
+        /// </summary>
+        private static string CLiteralEscape(this string value)
+        {
+            if (value == null)
+                throw new ArgumentNullException("value");
+
+            var result = new StringBuilder(value.Length + value.Length / 2);
+
+            for (int i = 0; i < value.Length; i++)
+            {
+                char c = value[i];
+                switch (c)
+                {
+                    case '\0': result.Append(@"\0"); break;
+                    case '\a': result.Append(@"\a"); break;
+                    case '\b': result.Append(@"\b"); break;
+                    case '\t': result.Append(@"\t"); break;
+                    case '\n': result.Append(@"\n"); break;
+                    case '\v': result.Append(@"\v"); break;
+                    case '\f': result.Append(@"\f"); break;
+                    case '\r': result.Append(@"\r"); break;
+                    case '\\': result.Append(@"\\"); break;
+                    case '"': result.Append(@"\"""); break;
+                    default:
+                        if (c >= ' ')
+                            result.Append(c);
+                        else // the character is in the 0..31 range
+                            result.AppendFormat(@"\x{0:X2}", (int)c);
+                        break;
+                }
+            }
+
+            return result.ToString();
         }
 
         /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>

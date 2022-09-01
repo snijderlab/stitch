@@ -135,15 +135,11 @@ namespace HTMLNameSpace
                 {
                     if (annotated == null) return "";
                     int pos = -1;
-                    for (int i = 0; i < annotated.Count;)
+                    for (int i = 0; i < annotated.Count; i++)
                     {
-                        if (pos + annotated[i].Item2.Length >= position)
+                        pos += annotated[i].Item2.Length;
+                        if (pos >= position)
                             return annotated[i].Item1;
-                        else
-                        {
-                            pos += annotated[i].Item2.Length;
-                            i++;
-                        }
                     }
                     return "";
                 }
@@ -184,7 +180,7 @@ namespace HTMLNameSpace
                     }
                 }
 
-                buffer.Append("<h2>Annotated consensus sequence</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+                buffer.Append($"<h2>Annotated consensus sequence {id}</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
                 var present = new HashSet<string>();
                 foreach (var column in columns)
