@@ -110,6 +110,7 @@ namespace HTMLNameSpace
 
             if (min < 0)
             {
+                max = Math.Max(max, 0); // Make sure to not start graphs below zero as this breaks the layout
                 buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
                 // Y axis
                 buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
