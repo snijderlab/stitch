@@ -34,7 +34,6 @@ h2,
 h3,
 h4 {
     font-weight: 500;
-    display: inline-block;
 }
 
 h1 {
@@ -431,6 +430,7 @@ input:checked+label+.collapsable,
     margin-left: 2rem;
     border-radius: .2rem;
     cursor: pointer;
+    vertical-align: super;
 }
 
 .user-help .mark {
@@ -457,6 +457,9 @@ input:checked+label+.collapsable,
     z-index: 100;
     font-weight: normal;
     cursor: auto;
+    top: 1rem;
+    left: -250px;
+    user-select: text;
 }
 
 .user-help:hover .content,
@@ -464,7 +467,6 @@ input:checked+label+.collapsable,
 .user-help:focus-visible .content {
     display: block;
 }
-
 
 /* reads alignment */
 
