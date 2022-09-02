@@ -98,7 +98,7 @@ namespace AssemblyNameSpace
             var def_range = new FileRange(def_position, def_position);
 
             // Detect missing parameters
-            if (string.IsNullOrWhiteSpace(output.Runname)) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Runname"));
+            if (string.IsNullOrWhiteSpace(output.Runname)) output.Runname = Path.GetFileNameWithoutExtension(path);
             if (output.Recombine != null && output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
             if (output.Report == null || output.Report.Files.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
             else

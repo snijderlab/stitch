@@ -150,7 +150,7 @@ Version: 1.1
 
 ##### Runname (s)
 
-The name of the run, to keep it organized. This name can consist of any characters except newlines.
+The name of the run, to keep it organized. This name can consist of any characters except newlines. If the name is not provided it will default to the name of the batchfile without the extension, eg `basic` if the filename is `basic.txt`.
 
 _Examples_
 ```
