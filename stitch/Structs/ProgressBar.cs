@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
                 var position = (int)Math.Round((double)value / max_value * barlength);
                 var stem = new String('-', position);
                 var empty = new String(' ', barlength - position);
-                Console.Write($"{stem}>{empty}{tail}");
+                Console.Write($"{stem}>{empty}{tail}\b");
 
                 free = true;
             }
