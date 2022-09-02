@@ -108,7 +108,7 @@ namespace AssemblyNameSpace
             var link = GetLinkToFolder(location, new List<string>());
             var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
-            buffer.Append("<html lang='en'>");
+            buffer.Append("<!DOCTYPE html>\n<html lang='en'>");
             buffer.Append(CreateHeader("Details " + id, location));
             buffer.Append("<body class='details' onload='Setup()'>");
             buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
@@ -364,7 +364,7 @@ assetsfolder = '{AssetsFolderName}';
                 innerbuffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 innerbuffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
 
-                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", 2);
+                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", "This are the scores for all tested overlaps. The X-axis displays the overlaps the Y-axis the scores. If there are multiple overlaps with a high score make sure to manually check if stitch did indeed pick the best one.", 2);
             }
             return innerbuffer.ToString();
         }
@@ -409,7 +409,8 @@ assetsfolder = '{AssetsFolderName}';
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
-            var html = $@"<html lang='en'>
+            var html = $@"<!DOCTYPE html>
+<html lang='en'>
 {CreateHeader($"Stitch: {Parameters.Runname}", new List<string>())}
 <body onload=""Setup()"">
 <div class=""report"">

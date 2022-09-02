@@ -71,7 +71,7 @@ function sortTable(id, column_number, type) {
             el = values[i + 1]
             values.splice(i + 1, 1)
             values.splice(i, 0, el)
-                //rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
+            //rows[i].parentNode.insertBefore(rows[i + 1], rows[i]);
             switching = true;
         }
     }
@@ -121,6 +121,11 @@ function Setup() {
         var pos = parseInt(get('pos'));
         var text = document.getElementsByClassName('aside-seq')[0].innerText;
         document.getElementsByClassName('aside-seq')[0].innerHTML = text.substring(0, pos) + "<span class='highlight'>" + text.substring(pos, pos + 1) + "</span>" + text.substring(pos + 1);
+    }
+
+    var elements = document.getElementsByClassName("user-help")
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("click", (event) => { event.stopPropagation() })
     }
 }
 

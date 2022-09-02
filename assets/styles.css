@@ -164,11 +164,15 @@ th {
     background: var(--color-background);
     border: 2px solid var(--color-primary);
     white-space: normal;
-    overflow: hidden;
+    overflow: visible;
     text-overflow: ellipsis;
     user-select: none;
     font-weight: 500;
     position: relative;
+}
+
+th[onclick] {
+    cursor: ns-resize;
 }
 
 th[onclick]::after,
@@ -427,10 +431,10 @@ input:checked+label+.collapsable,
     background-color: var(--color-background);
     position: relative;
     display: inline-block;
-    margin-left: 2rem;
+    margin-left: 1rem;
     border-radius: .2rem;
     cursor: pointer;
-    vertical-align: super;
+    vertical-align: middle;
 }
 
 .user-help .mark {

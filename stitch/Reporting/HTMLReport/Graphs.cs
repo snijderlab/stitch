@@ -91,7 +91,7 @@ namespace HTMLNameSpace
             Bargraph(buffer, labeled.ToList(), title);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, int factor = 2)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, int factor = 2)
         {
             if (data.Count == 0)
             {
@@ -102,8 +102,11 @@ namespace HTMLNameSpace
 
             buffer.Append("<div class='graph'>");
             if (title != null)
-                buffer.Append($"<h2 class='title'>{title}</h2><div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
-
+                if (help != null)
+                    buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
+                else
+                    buffer.Append($"<h2 class='title'>{title}</h2>");
+            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;

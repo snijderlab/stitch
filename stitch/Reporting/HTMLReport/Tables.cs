@@ -91,19 +91,18 @@ namespace HTMLNameSpace
 
             string unique = "";
             var table_buffer = new StringBuilder();
-            if (displayUnique) unique = $@"
-<th {SortOn(5, "number")}class=""smallcell"">Unique Score</th>
-<th {SortOn(6, "number")}class=""smallcell"">Unique Matches</th>
-<th {SortOn(7, "number")}class=""smallcell"">Unique Area</th>
-";
+            if (displayUnique) unique =
+                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell", SortOn(5, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell", SortOn(6, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell", SortOn(7, "number"));
 
             table_buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
 <tr>
-    <th {SortOn(0, "id")}class=""smallcell"">Identifier</th>
-    <th {SortOn(1, "number")}class=""smallcell"">Length</th>
-    <th {SortOn(2, "number")}class=""smallcell"" data-sortorder=""desc"">Score</th>
-    <th {SortOn(3, "number")}class=""smallcell"">Matches</th>
-    <th {SortOn(4, "number")}class=""smallcell"">Total Area</th>
+    {CommonPieces.TagWithHelp("th", "Identifier", HTMLHelp.TemplateIdentifier, "smallcell", SortOn(0, "id"))}
+    {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "smallcell", SortOn(1, "number"))}
+    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell", SortOn(2, "number") + " data-sortorder='desc'")}
+    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell", SortOn(3, "number"))}
+    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell", SortOn(4, "number"))}
     {unique}
 </tr>");
 

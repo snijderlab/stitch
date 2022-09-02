@@ -66,27 +66,26 @@ namespace HTMLNameSpace
 
             buffer.Append($@"<div id=""{id}"" class=""info-block template-info"">
     <h1>{title} {human_id}</h1>
-    <h2>Consensus Sequence</h2>
+    {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence)}
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
-            buffer.Append("<h2>Sequence Consensus Overview</h2>");
-            buffer.Append(CommonPieces.UserHelp("Sequence Consensus Overview", "This displays the found diversity of amino acids for each position. The amino acids are linearly scaled to the respective score. The score is calculated as the sum of all positional scores (if present otherwise the general scores) for this position in all aligned reads."));
+            buffer.Append(CommonPieces.TagWithHelp("h2", "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview));
 
             SequenceConsensusOverview(buffer, template);
             buffer.Append("<div class='docplot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence");
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph);
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='widetable'><tr>
-        <th class='smallcell'>Length</th>
-        <th class='smallcell'>Score</th>
-        <th class='smallcell'>Matches</th>
-        <th class='smallcell'>Total Area</th>
-        <th class='smallcell'>Unique Score</th>
-        <th class='smallcell'>Unique Matches</th>
-        <th class='smallcell'>Unique Area</th>
+        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell")}
+        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell")}
     </tr><tr>
-        <td class='center'>{template.ToString().Length}</td>
+        <td class='center'>{template.Sequence.Length}</td>
         <td class='center'>{template.Score}</td>
         <td class='center'>{template.Matches.Count()}</td>
         <td class='center'>{template.TotalArea}</td>
@@ -97,7 +96,7 @@ namespace HTMLNameSpace
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
-            buffer.Append($@"<h2>Template Sequence</h2>
+            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", HTMLHelp.TemplateSequence)}
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>");
@@ -367,7 +366,7 @@ namespace HTMLNameSpace
                 aligned[i] = sb.ToString();
             }
 
-            buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{depthOfCoverage.Max()}\">");
+            buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{Math.Max(depthOfCoverage.Max(), 1)}\">");
 
             // Create the front overhanging reads block
             var frontoverhangbuffer = new StringBuilder();

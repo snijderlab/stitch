@@ -122,11 +122,25 @@ namespace HTMLNameSpace
         /// Generate help for the user, to provide insight in the inner workings of the program. It generates a button
         /// which can be used (hovered/selected) by the user to show the accompanying help text.
         /// </summary>
+        /// <param name="title">The title for the help message.</param>
         /// <param name="content">The inner content to show, can be any valid HTML.</param>
         /// <returns>The HTMl needed for this help.</returns>
         public static string UserHelp(string title, string content)
         {
             return $"<button type='button' class='user-help'><span class='mark'>?</span><div class='content'><h3>{title}</h3><p>{content}</p></div></button>";
+        }
+
+        /// <summary>
+        /// Generate a tag, eg a title, with a built in help message.
+        /// </summary>
+        /// <param name="title">The title for the tag, and the help message.</param>
+        /// <param name="help">The help content, can be any valid HTML but will be placed in paragraph tags.</param>
+        /// <param name="tag">The tag level (`h1` for `<h1>` etc).</param>
+        /// <returns>The HTMl needed for this help.</returns>
+        public static string TagWithHelp(string tag, string title, string help, string classes = null, string extra = "")
+        {
+            classes = classes != null ? $" class='{classes}'" : "";
+            return $"<{tag}{classes}{extra}>{title}{UserHelp(title, help)}</{tag}>";
         }
     }
 }
