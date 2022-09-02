@@ -123,6 +123,7 @@ Report ->
     Folder: ../results/{datetime} {name}/
     HTML ->
         Path: report-monoclonal.html
+        Open: True
     <-
     FASTA ->
         Path: report-monoclonal-tm.fasta

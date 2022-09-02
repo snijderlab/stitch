@@ -24,8 +24,12 @@ namespace AssemblyNameSpace
         /// </summary>
         public string AssetsFolderName;
         string FullAssetsFolderName;
+        public RunParameters.Report.HTML ReportParameter;
 
-        public HTMLReport(ReportInputParameters Parameters, int maxThreads) : base(Parameters, maxThreads) { }
+        public HTMLReport(ReportInputParameters Parameters, int maxThreads, RunParameters.Report.HTML reportParameter) : base(Parameters, maxThreads)
+        {
+            ReportParameter = reportParameter;
+        }
 
         public override string Create()
         {
@@ -565,6 +569,16 @@ assetsfolder = '{AssetsFolderName}';
             }
 
             await t;
+
+            if (ReportParameter.AutomaticallyOpen)
+            {
+                var p = new Process();
+                p.StartInfo = new ProcessStartInfo(filename)
+                {
+                    UseShellExecute = true
+                };
+                p.Start();
+            }
         }
     }
 }

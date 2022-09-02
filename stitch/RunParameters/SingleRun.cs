@@ -114,7 +114,7 @@ namespace AssemblyNameSpace
                     switch (report)
                     {
                         case Report.HTML h:
-                            var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores);
+                            var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
                             htmlreport.Save(h.CreateName(folder, this));
                             break;
                         case Report.FASTA f:

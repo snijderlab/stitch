@@ -453,7 +453,10 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To indicate to return an HTML report.
             /// </summary>
-            public class HTML : Parameter { }
+            public class HTML : Parameter
+            {
+                public bool AutomaticallyOpen = false;
+            }
 
             /// <summary>
             /// The type sequences in the fasta to give as output
