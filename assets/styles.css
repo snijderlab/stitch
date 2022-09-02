@@ -34,6 +34,7 @@ h2,
 h3,
 h4 {
     font-weight: 500;
+    display: inline-block;
 }
 
 h1 {
@@ -417,6 +418,50 @@ input[type="radio"] {
 
 input:checked+label+.collapsable,
 .collapsable:target {
+    display: block;
+}
+
+/* user help */
+.user-help {
+    --color-used: var(--color-light);
+    border: 2px solid var(--color-used);
+    background-color: var(--color-background);
+    position: relative;
+    display: inline-block;
+    margin-left: 2rem;
+    border-radius: .2rem;
+    cursor: pointer;
+}
+
+.user-help .mark {
+    font-weight: bold;
+    color: var(--color-used);
+}
+
+.user-help:hover,
+.user-help:focus,
+.user-help:focus-visible {
+    --color-used: var(--color-primary);
+}
+
+.user-help .content {
+    display: none;
+    position: absolute;
+    border: 2px solid var(--color-primary);
+    padding: 1rem;
+    background-color: var(--color-background);
+    min-width: 500px;
+    width: min-content;
+    color: var(--color-dark);
+    text-align: justify;
+    z-index: 100;
+    font-weight: normal;
+    cursor: auto;
+}
+
+.user-help:hover .content,
+.user-help:focus .content,
+.user-help:focus-visible .content {
     display: block;
 }
 
@@ -1232,56 +1277,69 @@ input:checked+label .overhang-block .text {
     body {
         font-size: 0.8em;
     }
+
     .graph {
         page-break-inside: avoid;
     }
+
     .report label,
     .report .collapsable>label {
         background: none;
         color: var(--color-dark);
         border: none;
     }
+
     .collapsable {
         border: none;
         padding: 0;
         display: block;
         overflow: visible;
     }
+
     .info-link {
         color: var(--color-dark);
         border: none;
         font-size: 1em;
     }
+
     .table-header .graph {
         height: auto;
     }
+
     .phylogenetictree label,
     .graph label {
         display: none;
     }
+
     .phylogenetictree input:checked+label,
     .graph input:checked+label {
         display: inline-block;
     }
+
     .phylogenetictree input:checked+label::before {
         display: inline-block;
         content: "Displays:";
         margin-right: .5em;
     }
+
     .phylogenetictree .info-link text {
         fill: var(--color-dark);
         font-size: 16px;
     }
+
     .phylogenetictree .info-link rect {
         display: none;
     }
+
     .table-header {
         display: block;
     }
+
     .histogram-header span {
         font-size: .6em;
         font-weight: normal;
     }
+
     .text-header,
     .copy-data,
     .source-code,

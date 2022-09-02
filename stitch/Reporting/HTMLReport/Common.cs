@@ -41,7 +41,7 @@ namespace HTMLNameSpace
         public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
         {
             string classname = GetAsideName(type);
-            return $"<a href=\"{GetAsideRawLink(metadata, type, AssetsFolderName, location)}\" class=\"info-link {classname}-link\" target='_blank'>{ GetAsideIdentifier(metadata, true)}</a>";
+            return $"<a href=\"{GetAsideRawLink(metadata, type, AssetsFolderName, location)}\" class=\"info-link {classname}-link\" target='_blank'>{GetAsideIdentifier(metadata, true)}</a>";
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
@@ -116,6 +116,17 @@ namespace HTMLNameSpace
 <li><p>A sample with very high background noise, in that case the result should be thoroughly checked by hand. </p></li>
 <li><p>Incorrect segments chosen, the chosen segments should match the expected segments and species of the dataset.</p></li>
 </ul>");
+        }
+
+        /// <summary>
+        /// Generate help for the user, to provide insight in the inner workings of the program. It generates a button
+        /// which can be used (hovered/selected) by the user to show the accompanying help text.
+        /// </summary>
+        /// <param name="content">The inner content to show, can be any valid HTML.</param>
+        /// <returns>The HTMl needed for this help.</returns>
+        public static string UserHelp(string title, string content)
+        {
+            return $"<button type='button' class='user-help'><span class='mark'>?</span><div class='content'><h3>{title}</h3><p>{content}</p></div></button>";
         }
     }
 }

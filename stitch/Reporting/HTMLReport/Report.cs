@@ -104,7 +104,7 @@ namespace AssemblyNameSpace
             var link = GetLinkToFolder(location, new List<string>());
             var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
-            buffer.Append("<html>");
+            buffer.Append("<html lang='en'>");
             buffer.Append(CreateHeader("Details " + id, location));
             buffer.Append("<body class='details' onload='Setup()'>");
             buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
@@ -405,7 +405,7 @@ assetsfolder = '{AssetsFolderName}';
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
-            var html = $@"<html>
+            var html = $@"<html lang='en'>
 {CreateHeader($"Stitch: {Parameters.Runname}", new List<string>())}
 <body onload=""Setup()"">
 <div class=""report"">

@@ -70,6 +70,7 @@ namespace HTMLNameSpace
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
             buffer.Append("<h2>Sequence Consensus Overview</h2>");
+            buffer.Append(CommonPieces.UserHelp("Sequence Consensus Overview", "This displays the found diversity of amino acids for each position. The amino acids are linearly scaled to the respective score. The score is calculated as the sum of all positional scores (if present otherwise the general scores) for this position in all aligned reads."));
 
             SequenceConsensusOverview(buffer, template);
             buffer.Append("<div class='docplot'>");
