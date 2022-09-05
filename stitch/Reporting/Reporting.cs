@@ -10,23 +10,24 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
+using System.Collections.ObjectModel;
 
 namespace AssemblyNameSpace
 {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
-    public struct ReportInputParameters
+    public readonly struct ReportInputParameters
     {
-        public readonly List<(string Sequence, ReadMetaData.IMetaData MetaData)> Input;
-        public readonly List<(string, List<Segment>)> Segments;
-        public readonly List<Segment> RecombinedSegment;
+        public readonly ReadOnlyCollection<(string Sequence, ReadMetaData.IMetaData MetaData)> Input;
+        public readonly ReadOnlyCollection<(string, List<Segment>)> Segments;
+        public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
         public readonly RunVariables runVariables;
         public readonly string Runname;
         public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname = "Runname")
         {
-            Input = input;
-            Segments = segments;
-            RecombinedSegment = recombinedsegment;
+            Input = input.AsReadOnly();
+            Segments = segments.AsReadOnly();
+            RecombinedSegment = recombinedsegment.AsReadOnly();
             BatchFile = batchFile;
             runVariables = variables;
             Runname = runname;

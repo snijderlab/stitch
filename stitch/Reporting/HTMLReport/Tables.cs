@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 using AssemblyNameSpace;
 using static HTMLNameSpace.CommonPieces;
+using System.Collections.ObjectModel;
 
 namespace HTMLNameSpace
 {
@@ -20,7 +21,7 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static string CreateReadsTable(List<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
+        public static string CreateReadsTable(ReadOnlyCollection<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
         {
             var buffer = new StringBuilder();
 
