@@ -289,7 +289,7 @@ $@"<tr>
             buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
         }
 
-        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName, List<string> annotatedSequence)
+        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName, List<string> annotatedSequence = null)
         {
             var alignedSequences = template.AlignedSequences();
 
@@ -448,21 +448,24 @@ $@"<tr>
 
             if (aligned.Length > 0)
             {
-                // Create a lookup list where each position contains its annotated type
-                while (annotatedSequence.Count < aligned[0].Length + 1)
+                if (annotatedSequence != null)
                 {
-                    annotatedSequence.Add("");
-                }
-                for (int i = 0; i < aligned[0].Length; i++)
-                {
-                    if (aligned[0][i] == gapchar)
+                    // Create a lookup list where each position contains its annotated type
+                    while (annotatedSequence.Count < aligned[0].Length + 1)
                     {
-                        if (String.IsNullOrEmpty(annotatedSequence[i - 1]) || String.IsNullOrEmpty(annotatedSequence[i]))
-                            annotatedSequence.Insert(i, "");
-                        else if (annotatedSequence[i - 1] != annotatedSequence[i])
-                            annotatedSequence.Insert(i, "");
-                        else
-                            annotatedSequence.Insert(i, annotatedSequence[i]);
+                        annotatedSequence.Add("");
+                    }
+                    for (int i = 0; i < aligned[0].Length; i++)
+                    {
+                        if (aligned[0][i] == gapchar)
+                        {
+                            if (String.IsNullOrEmpty(annotatedSequence[i - 1]) || String.IsNullOrEmpty(annotatedSequence[i]))
+                                annotatedSequence.Insert(i, "");
+                            else if (annotatedSequence[i - 1] != annotatedSequence[i])
+                                annotatedSequence.Insert(i, "");
+                            else
+                                annotatedSequence.Insert(i, annotatedSequence[i]);
+                        }
                     }
                 }
 
@@ -638,6 +641,7 @@ $@"<tr>
             {
                 return Math.Round((double)point / blocklength * 100).ToString() + "%";
             }
+            if (annotated == null) return "";
             var annotatedSequence = annotated.ToArray();
             var localLength = Math.Min(blocklength, annotatedSequence.Length - block * blocklength);
             var annotation = annotatedSequence.SubArray(block * blocklength, localLength);
