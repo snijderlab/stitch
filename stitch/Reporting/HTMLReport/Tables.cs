@@ -70,6 +70,8 @@ namespace HTMLNameSpace
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
+            bool displayOrder = templates.Exists(a => a.Recombination != null);
+            int order_factor = displayOrder ? 1 : 0;
             var table_id = $"table-{table_counter}";
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
@@ -90,19 +92,23 @@ namespace HTMLNameSpace
 
 
             string unique = "";
-            var table_buffer = new StringBuilder();
             if (displayUnique) unique =
-                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell", SortOn(5, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell", SortOn(6, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell", SortOn(7, "number"));
+                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell", SortOn(5 + order_factor, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell", SortOn(6 + order_factor, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell", SortOn(7 + order_factor, "number"));
 
+            string order = "";
+            if (displayOrder) order = CommonPieces.TagWithHelp("th", "Order", HTMLHelp.Order, "smallcell", SortOn(2, "id"));
+
+            var table_buffer = new StringBuilder();
             table_buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
 <tr>
     {CommonPieces.TagWithHelp("th", "Identifier", HTMLHelp.TemplateIdentifier, "smallcell", SortOn(0, "id"))}
     {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "smallcell", SortOn(1, "number"))}
-    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell", SortOn(2, "number") + " data-sortorder='desc'")}
-    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell", SortOn(3, "number"))}
-    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell", SortOn(4, "number"))}
+    {order}
+    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell", SortOn(2 + order_factor, "number") + " data-sortorder='desc'")}
+    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell", SortOn(3 + order_factor, "number"))}
+    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell", SortOn(4 + order_factor, "number"))}
     {unique}
 </tr>");
 
@@ -125,16 +131,25 @@ namespace HTMLNameSpace
                 id = GetAsideIdentifier(templates[i].MetaData);
                 link = GetAsideLink(templates[i].MetaData, type, AssetsFolderName);
                 if (displayUnique) unique = $@"
-<td class=""center bar"" style=""--relative-value:{templates[i].UniqueScore / max_values.Item4}"">{templates[i].UniqueScore}</td>
-<td class=""center bar"" style=""--relative-value:{templates[i].UniqueMatches / max_values.Item5}"">{templates[i].UniqueMatches}</td>
-<td class=""center bar"" style=""--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}"">{templates[i].TotalUniqueArea:G3}</td>
+<td class='center bar' style='--relative-value:{templates[i].UniqueScore / max_values.Item4}'>{templates[i].UniqueScore}</td>
+<td class='center bar' style='--relative-value:{templates[i].UniqueMatches / max_values.Item5}'>{templates[i].UniqueMatches}</td>
+<td class='center bar' style='--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}'>{templates[i].TotalUniqueArea:G3}</td>
 ";
-                table_buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""center"">{templates[i].Sequence.Length}</td>
-    <td class=""center bar"" style=""--relative-value:{templates[i].Score / max_values.Item1}"">{templates[i].Score}</td>
-    <td class=""center bar"" style=""--relative-value:{templates[i].Matches.Count / max_values.Item2}"">{templates[i].Matches.Count}</td>
-    <td class=""center bar"" style=""--relative-value:{templates[i].TotalArea / max_values.Item3}"">{templates[i].TotalArea:G3}</td>
+                if (displayOrder)
+                {
+                    var order_html = templates[i].Recombination.Aggregate(
+                            "",
+                            (acc, seg) => acc + " → " + GetAsideLink(seg.MetaData, AsideType.Template, AssetsFolderName)
+                        ).Substring(3);
+                    order = $"<td>{order_html}</td>";
+                }
+                table_buffer.AppendLine($@"<tr id='{table_id}-{id}'>
+    <td class='center'>{link}</td>
+    <td class='center'>{templates[i].Sequence.Length}</td>
+    {order}
+    <td class='center bar' style='--relative-value:{templates[i].Score / max_values.Item1}'>{templates[i].Score}</td>
+    <td class='center bar' style='--relative-value:{templates[i].Matches.Count / max_values.Item2}'>{templates[i].Matches.Count}</td>
+    <td class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'>{templates[i].TotalArea:G3}</td>
     {unique}
 </tr>");
             }

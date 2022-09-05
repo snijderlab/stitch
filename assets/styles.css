@@ -401,7 +401,7 @@ input:checked+label {
     display: none;
     border-left: 2px solid var(--color-label);
     padding-left: .5rem;
-    overflow: visible;
+    overflow: auto;
 }
 
 .source-code {
