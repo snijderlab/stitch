@@ -113,6 +113,10 @@ table {
     table-layout: fixed;
 }
 
+table+table {
+    margin-top: 1em;
+}
+
 .widetable {
     width: 100%;
 }

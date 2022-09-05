@@ -27,7 +27,7 @@ namespace HTMLNameSpace
     <p>{read.Sequence.Length}</p>
     ");
             buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup));
-            buffer.Append("<table><tr><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+            buffer.Append("<table class='widetable'><tr><th>Group</th><th>Segment</th><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
             foreach (var group in segments)
             {
                 foreach (var segment in group.Item2)
@@ -39,11 +39,13 @@ namespace HTMLNameSpace
                             if (match.MetaData.Identifier == read.MetaData.Identifier)
                             {
                                 buffer.Append(
-    $@"<tr>
-    <td>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
-    <td>{match.StartTemplatePosition}</td>
-    <td>{match.Score}</td>
-    <td>{match.Unique}</td>
+$@"<tr>
+    <td class='center'>{group.Item1}</td>
+    <td class='center'>{segment.Name}</td>
+    <td class='center'>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td class='center'>{match.StartTemplatePosition}</td>
+    <td class='center'>{match.Score}</td>
+    <td class='center'>{match.Unique}</td>
 </tr>"
                                 );
                             }
@@ -51,23 +53,26 @@ namespace HTMLNameSpace
                     }
                 }
             }
-            buffer.Append("</table><table><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
-            foreach (var segment in recombined)
+            if (recombined != null)
             {
-                foreach (var template in segment.Templates)
+                buffer.Append("</table><table class='widetable'><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+                foreach (var segment in recombined)
                 {
-                    foreach (var match in template.Matches)
+                    foreach (var template in segment.Templates)
                     {
-                        if (match.MetaData.Identifier == read.MetaData.Identifier)
+                        foreach (var match in template.Matches)
                         {
-                            buffer.Append(
+                            if (match.MetaData.Identifier == read.MetaData.Identifier)
+                            {
+                                buffer.Append(
 $@"<tr>
-    <td>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
-    <td>{match.StartTemplatePosition}</td>
-    <td>{match.Score}</td>
-    <td>{match.Unique}</td>
+    <td class='center'>{GetAsideLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td class='center'>{match.StartTemplatePosition}</td>
+    <td class='center'>{match.Score}</td>
+    <td class='center'>{match.Unique}</td>
 </tr>"
-                            );
+                                );
+                            }
                         }
                     }
                 }

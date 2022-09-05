@@ -135,7 +135,6 @@ function Setup() {
 
 function openHelp(event) {
     var content = event.target.children[1]
-    console.log("open", content)
     content.classList.add("focus");
     var box = content.getBoundingClientRect()
     if (box.x < 0) {
@@ -151,7 +150,6 @@ function openHelp(event) {
 
 function closeHelp(event) {
     var content = event.target.children[1]
-    console.log("close", content)
     content.classList.remove("focus")
     content.style.marginLeft = null;
     content.style.marginTop = null;
