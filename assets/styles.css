@@ -3,6 +3,10 @@
     --color-primary-shade: #1d4f78;
     --color-secondary: #4EC9B0;
     --color-tertiary: #F48771;
+    --color-primary-o: rgba(86, 156, 214, 20%);
+    --color-primary-shade-o: rgb(29, 79, 120, 20%);
+    --color-secondary-o: rgba(78, 201, 176, 20%);
+    --color-tertiary-o: rgba(244, 135, 113, 20%);
     --color-dark: #1E1E1E;
     --color-light: #7E7E7E;
     --color-background: #fff;
@@ -16,6 +20,10 @@
         --color-primary-shade: #9CDCFE;
         --color-secondary: #F48771;
         --color-tertiary: #DCD08F;
+        --color-primary-o: rgba(86, 156, 214, 20%);
+        --color-primary-shade-o: rgba(156, 220, 254, 20%);
+        --color-secondary-o: rgba(244, 135, 113, 20%);
+        --color-tertiary-o: rgba(220, 208, 143, 20%);
         --color-dark: #D4D4D4;
         --color-light: #7E7E7E;
         --color-background: #1E1E1E;
@@ -310,7 +318,7 @@ td.bar::before {
 }
 
 .annotated .dif {
-    font-weight: bold;
+    font-weight: 500;
 }
 
 .annotated .title,
@@ -329,15 +337,18 @@ td.bar::before {
 .annotated .CDR1,
 .annotated .CDR2,
 .annotated .CDR3,
+.annotated .CDR,
 .annotated .cdr {
     color: var(--color-secondary);
 }
 
-.annotated .conserved {
+.annotated .conserved,
+.annotated .Conserved {
     color: var(--color-tertiary);
 }
 
-.annotated .glycosylationsite {
+.annotated .glycosylationsite,
+.annotated .Glycosylationsite {
     color: var(--color-primary);
 }
 

@@ -35,7 +35,7 @@ namespace HTMLNameSpace
                 {
                     foreach (var template in segment.Templates)
                     {
-                        foreach (var match in template.Matches)
+                        foreach (var match in template.Matches.ToList())
                         {
                             if (match.MetaData.Identifier == read.MetaData.Identifier)
                             {
@@ -121,7 +121,7 @@ $@"<tr>
     <h1>{title} {human_id}</h1>
     {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence)}
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
-            CreateAnnotatedSequence(buffer, human_id, template);
+            var annotated = CreateAnnotatedSequence(buffer, human_id, template);
             buffer.Append(CommonPieces.TagWithHelp("h2", "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview));
 
             SequenceConsensusOverview(buffer, template);
@@ -147,7 +147,7 @@ $@"<tr>
         <td class='center'>{template.TotalUniqueArea}</td>
     </tr></table>
     {based}");
-            var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
+            var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName, annotated);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
             buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", HTMLHelp.TemplateSequence)}
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
@@ -155,105 +155,101 @@ $@"<tr>
 </div>");
         }
 
-        static void CreateAnnotatedSequence(StringBuilder buffer, string id, Template template)
+        static List<string> CreateAnnotatedSequence(StringBuilder buffer, string id, Template template)
         {
-            try
+            // Create an overview of the alignment from consensus with germline.
+            // Also highlight differences and IMGT regions
+
+            // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
+            // HERECOMESTHEGERMLINE.SEQUENCE
+            //             CONSENSUS          (differences)
+            var match = template.AlignConsensusWithTemplate();
+            List<(string, string)> annotated = null;
+            if (template.Recombination != null)
             {
-                // Create an overview of the alignment from consensus with germline.
-                // Also highlight differences and IMGT regions
+                annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
+            {
+                if (item.MetaData is ReadMetaData.Fasta meta)
+                    if (meta.AnnotatedSequence != null)
+                        acc.AddRange(meta.AnnotatedSequence);
+                return acc;
+            });
+            }
+            else
+            {
+                if (template.MetaData is ReadMetaData.Fasta meta)
+                    if (meta.AnnotatedSequence != null)
+                        annotated = meta.AnnotatedSequence;
+            }
 
-                // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
-                // HERECOMESTHEGERMLINE.SEQUENCE
-                //             CONSENSUS          (differences)
-                var match = template.AlignConsensusWithTemplate();
-                List<(string, string)> annotated = null;
-                if (template.Recombination != null)
+            string GetClasses(int position)
+            {
+                if (annotated == null) return "";
+                int pos = -1;
+                for (int i = 0; i < annotated.Count; i++)
                 {
-                    annotated = template.Recombination.Aggregate(new List<(string, string)>(), (acc, item) =>
-                {
-                    if (item.MetaData is ReadMetaData.Fasta meta)
-                        if (meta.AnnotatedSequence != null)
-                            acc.AddRange(meta.AnnotatedSequence);
-                    return acc;
-                });
+                    pos += annotated[i].Item2.Length;
+                    if (pos >= position)
+                        return annotated[i].Item1;
                 }
-                else
-                {
-                    if (template.MetaData is ReadMetaData.Fasta meta)
-                        if (meta.AnnotatedSequence != null)
-                            annotated = meta.AnnotatedSequence;
-                }
+                return "";
+            }
 
-                string GetClasses(int position)
+            var columns = new List<(char Template, char Query, char Difference, string Class)>();
+            int template_pos = match.StartTemplatePosition;
+            int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
+            foreach (var piece in match.Alignment)
+            {
+                switch (piece)
                 {
-                    if (annotated == null) return "";
-                    int pos = -1;
-                    for (int i = 0; i < annotated.Count; i++)
-                    {
-                        pos += annotated[i].Item2.Length;
-                        if (pos >= position)
-                            return annotated[i].Item1;
-                    }
-                    return "";
-                }
-
-                var columns = new List<(char Template, char Query, char Difference, string Class)>();
-                int template_pos = match.StartTemplatePosition;
-                int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
-                foreach (var piece in match.Alignment)
-                {
-                    switch (piece)
-                    {
-                        case SequenceMatch.Match m:
-                            for (int i = 0; i < m.Length; i++)
-                            {
-                                var t = match.TemplateSequence[template_pos].Character;
-                                var q = match.QuerySequence[query_pos].Character;
-                                columns.Add((t, q, t == q ? ' ' : q, GetClasses(template_pos)));
-                                template_pos++;
-                                query_pos++;
-                            }
-                            break;
-                        case SequenceMatch.GapInTemplate q:
-                            for (int i = 0; i < q.Length; i++)
-                            {
-                                var t = match.TemplateSequence[template_pos].Character;
-                                columns.Add((t, '.', ' ', GetClasses(template_pos)));
-                                template_pos++;
-                            }
-                            break;
-                        case SequenceMatch.GapInQuery t:
-                            for (int i = 0; i < t.Length; i++)
-                            {
-                                var q = match.QuerySequence[query_pos].Character;
-                                columns.Add(('.', q, q, GetClasses(template_pos)));
-                                query_pos++;
-                            }
-                            break;
-                    }
-                }
-
-                buffer.Append($"<h2>Annotated consensus sequence {id}</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
-
-                var present = new HashSet<string>();
-                foreach (var column in columns)
-                {
-                    if (column.Template == 'X' && (column.Query == '.' || column.Query == 'X')) continue;
-                    var title = "";
-                    if (column.Class.StartsWith("CDR"))
-                        if (!present.Contains(column.Class))
+                    case SequenceMatch.Match m:
+                        for (int i = 0; i < m.Length; i++)
                         {
-                            present.Add(column.Class);
-                            title = $"<span class='title'>{column.Class}</span>";
+                            var t = match.TemplateSequence[template_pos].Character;
+                            var q = match.QuerySequence[query_pos].Character;
+                            columns.Add((t, q, t == q ? ' ' : q, GetClasses(template_pos)));
+                            template_pos++;
+                            query_pos++;
                         }
-                    buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
+                        break;
+                    case SequenceMatch.GapInTemplate q:
+                        for (int i = 0; i < q.Length; i++)
+                        {
+                            var t = match.TemplateSequence[template_pos].Character;
+                            columns.Add((t, '.', ' ', GetClasses(template_pos)));
+                            template_pos++;
+                        }
+                        break;
+                    case SequenceMatch.GapInQuery t:
+                        for (int i = 0; i < t.Length; i++)
+                        {
+                            var q = match.QuerySequence[query_pos].Character;
+                            columns.Add(('.', q, q, GetClasses(template_pos)));
+                            query_pos++;
+                        }
+                        break;
                 }
-                buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
             }
-            catch (Exception e)
+
+            buffer.Append($"<h2>Annotated consensus sequence {id}</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+
+            var present = new HashSet<string>();
+            var positionAnnotated = new List<string>(columns.Count);
+            foreach (var column in columns)
             {
-                Console.WriteLine($"Could not find regions in consensus sequence for {id}\n{e.Message}");
+                if (column.Template == 'X' && (column.Query == '.' || column.Query == 'X')) continue;
+                var title = "";
+                if (column.Class.StartsWith("CDR"))
+                    if (!present.Contains(column.Class))
+                    {
+                        present.Add(column.Class);
+                        title = $"<span class='title'>{column.Class}</span>";
+                    }
+                buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
+                if (column.Template != '.') positionAnnotated.Add(column.Class);
             }
+            buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
+            return positionAnnotated;
         }
 
         static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
@@ -293,7 +289,7 @@ $@"<tr>
             buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
         }
 
-        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName)
+        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName, List<string> annotatedSequence)
         {
             var alignedSequences = template.AlignedSequences();
 
@@ -452,6 +448,24 @@ $@"<tr>
 
             if (aligned.Length > 0)
             {
+                // Create a lookup list where each position contains its annotated type
+                while (annotatedSequence.Count < aligned[0].Length + 1)
+                {
+                    annotatedSequence.Add("");
+                }
+                for (int i = 0; i < aligned[0].Length; i++)
+                {
+                    if (aligned[0][i] == gapchar)
+                    {
+                        if (String.IsNullOrEmpty(annotatedSequence[i - 1]) || String.IsNullOrEmpty(annotatedSequence[i]))
+                            annotatedSequence.Insert(i, "");
+                        else if (annotatedSequence[i - 1] != annotatedSequence[i])
+                            annotatedSequence.Insert(i, "");
+                        else
+                            annotatedSequence.Insert(i, annotatedSequence[i]);
+                    }
+                }
+
                 int alignedindex = 0;
                 int alignedlength = 0;
                 for (int block = 0; block * blocklength < aligned[0].Length; block++)
@@ -507,7 +521,7 @@ $@"<tr>
                         number = ((block + 1) * blocklength).ToString();
                         number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
-                    buffer.Append($"<div class='align-block'><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
+                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, blocklength)}><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
 
                     StringBuilder alignblock = new();
                     for (int i = 1; i < aligned.Length; i++)
@@ -597,6 +611,68 @@ $@"<tr>
 
             buffer.AppendLine("</div></div>");
             return depthOfCoverage;
+        }
+
+        static string TemplateAlignmentAnnotation(List<String> annotated, int block, int blocklength)
+        {
+            string Color(string Type)
+            {
+                if (String.IsNullOrEmpty(Type))
+                {
+                    return "var(--color-background)";
+                }
+                else if (Type.StartsWith("CDR"))
+                {
+                    return "var(--color-secondary-o)";
+                }
+                else if (Type == "Conserved")
+                {
+                    return "var(--color-tertiary-o)";
+                }
+                else
+                {
+                    return "var(--color-primary-o)";
+                }
+            }
+            string Point(uint point)
+            {
+                return Math.Round((double)point / blocklength * 100).ToString() + "%";
+            }
+            var annotatedSequence = annotated.ToArray();
+            var localLength = Math.Min(blocklength, annotatedSequence.Length - block * blocklength);
+            var annotation = annotatedSequence.SubArray(block * blocklength, localLength);
+            var grouped = new List<(string, uint)>() { (annotation[0], 1) };
+            for (int i = 1; i < localLength; i++)
+            {
+                var last = grouped.Count - 1;
+                if (annotation[i] == grouped[last].Item1)
+                {
+                    grouped[last] = (grouped[last].Item1, grouped[last].Item2 + 1);
+                }
+                else
+                {
+                    grouped.Add((annotation[i], 1));
+                }
+            }
+            if (grouped[0] == ("", 5))
+            {
+                return "";
+            }
+            else if (grouped[0].Item2 == 5)
+            {
+                return " style='background-color:" + Color(grouped[0].Item1) + "'"; // Switch color based on type
+            }
+            else
+            {
+                var output = " style='background:linear-gradient(to right";
+                uint len = 0;
+                foreach (var piece in grouped)
+                {
+                    output += ", " + Color(piece.Item1) + " " + Point(len) + ", " + Color(piece.Item1) + " " + Point(len + piece.Item2);
+                    len += piece.Item2;
+                }
+                return output + ");'";
+            }
         }
 
         static void AlignmentDetails(StringBuilder buffer, SequenceMatch match, Template template)
