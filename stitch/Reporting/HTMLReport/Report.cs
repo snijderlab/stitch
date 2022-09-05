@@ -88,7 +88,7 @@ namespace AssemblyNameSpace
             switch (aside)
             {
                 case AsideType.Read:
-                    HTMLAsides.CreateReadAside(innerbuffer, Parameters.Input[index1]);
+                    HTMLAsides.CreateReadAside(innerbuffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName);
                     metadata = Parameters.Input[index1].MetaData;
                     break;
                 case AsideType.Template:

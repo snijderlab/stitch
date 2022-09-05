@@ -17,7 +17,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, List<(string, List<Segment>)> segments, List<Segment> recombined, string AssetsFolderName)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -25,8 +25,55 @@ namespace HTMLNameSpace
     <p class=""aside-seq"">{read.Sequence}</p>
     <h2>Sequence Length</h2>
     <p>{read.Sequence.Length}</p>
-    {read.MetaData.ToHTML()}
-</div>");
+    ");
+            buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup));
+            buffer.Append("<table><tr><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+            foreach (var group in segments)
+            {
+                foreach (var segment in group.Item2)
+                {
+                    foreach (var template in segment.Templates)
+                    {
+                        foreach (var match in template.Matches)
+                        {
+                            if (match.MetaData.Identifier == read.MetaData.Identifier)
+                            {
+                                buffer.Append(
+    $@"<tr>
+    <td>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td>{match.StartTemplatePosition}</td>
+    <td>{match.Score}</td>
+    <td>{match.Unique}</td>
+</tr>"
+                                );
+                            }
+                        }
+                    }
+                }
+            }
+            buffer.Append("</table><table><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+            foreach (var segment in recombined)
+            {
+                foreach (var template in segment.Templates)
+                {
+                    foreach (var match in template.Matches)
+                    {
+                        if (match.MetaData.Identifier == read.MetaData.Identifier)
+                        {
+                            buffer.Append(
+$@"<tr>
+    <td>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td>{match.StartTemplatePosition}</td>
+    <td>{match.Score}</td>
+    <td>{match.Unique}</td>
+</tr>"
+                            );
+                        }
+                    }
+                }
+            }
+
+            buffer.Append($"</table>{read.MetaData.ToHTML()}</div>");
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
@@ -488,7 +535,7 @@ namespace HTMLNameSpace
                                     length = seq.Length;
                                     seq = seq.TrimEnd(nonbreakingspace);
 
-                                    alignblock.Append($"<a href=\"{path}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+                                    alignblock.Append($"<a href=\"{path}\" id=\"{GetAsideIdentifier(template.Matches[piece.index].MetaData)}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
 
                                     if (length > seq.Length)
                                         alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", length - seq.Length)));

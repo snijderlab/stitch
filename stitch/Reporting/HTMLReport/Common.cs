@@ -38,10 +38,11 @@ namespace HTMLNameSpace
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <returns>A ready for use identifier.</returns>
-        public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
+        public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
         {
             string classname = GetAsideName(type);
-            return $"<a href=\"{GetAsideRawLink(metadata, type, AssetsFolderName, location)}\" class=\"info-link {classname}-link\" target='_blank'>{GetAsideIdentifier(metadata, true)}</a>";
+            target = String.IsNullOrEmpty(target) ? "" : "#" + target;
+            return $"<a href=\"{GetAsideRawLink(metadata, type, AssetsFolderName, location)}{target}\" class=\"info-link {classname}-link\" target='_blank'>{GetAsideIdentifier(metadata, true)}</a>";
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a supercontainer.</summary>

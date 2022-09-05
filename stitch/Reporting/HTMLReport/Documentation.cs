@@ -18,5 +18,6 @@ namespace HTMLNameSpace
         public const string TemplateUniqueArea = "The sum of the area of all amino acids uniquely placed on this templates.";
         public const string TemplateUniqueMatches = "The total number of reads uniquely placed on this template.";
         public const string TemplateUniqueScore = "The total score calculated by summing all sums for all reads uniquely placed on this template.";
+        public const string ReadLookup = "All places where this read could be placed.";
     }
 }
