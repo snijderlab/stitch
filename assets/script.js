@@ -126,7 +126,35 @@ function Setup() {
     var elements = document.getElementsByClassName("user-help")
     for (var i = 0; i < elements.length; i++) {
         elements[i].addEventListener("click", (event) => { event.stopPropagation() })
+        elements[i].addEventListener("focusin", openHelp)
+        elements[i].addEventListener("focusout", closeHelp)
+        elements[i].addEventListener("mouseenter", openHelp)
+        elements[i].addEventListener("mouseleave", closeHelp)
     }
+}
+
+function openHelp(event) {
+    var content = event.target.children[1]
+    console.log("open", content)
+    content.classList.add("focus");
+    var box = content.getBoundingClientRect()
+    if (box.x < 0) {
+        content.style.marginLeft = -box.x + "px";
+    }
+    if (box.right > window.innerWidth) {
+        content.style.marginLeft = (window.innerWidth - box.right - 20) + "px";
+    }
+    if (box.bottom > window.innerHeight) {
+        content.style.marginTop = (window.innerHeight - box.bottom) + "px";
+    }
+}
+
+function closeHelp(event) {
+    var content = event.target.children[1]
+    console.log("close", content)
+    content.classList.remove("focus")
+    content.style.marginLeft = null;
+    content.style.marginTop = null;
 }
 
 function pauseEvent(e) {

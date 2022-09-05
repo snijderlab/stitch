@@ -401,7 +401,7 @@ input:checked+label {
     display: none;
     border-left: 2px solid var(--color-label);
     padding-left: .5rem;
-    overflow: hidden;
+    overflow: visible;
 }
 
 .source-code {
@@ -1299,7 +1299,6 @@ input:checked+label .overhang-block .text {
         border: none;
         padding: 0;
         display: block;
-        overflow: visible;
     }
 
     .info-link {
