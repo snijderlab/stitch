@@ -877,9 +877,6 @@ namespace AssemblyNameSpace
                                         if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         hsettings.Path = setting.GetValue();
                                         break;
-                                    case "open":
-                                        hsettings.AutomaticallyOpen = ParseBool(setting, "Open").ReturnOrDefault(false);
-                                        break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
                                         break;

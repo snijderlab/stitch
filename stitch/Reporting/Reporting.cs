@@ -20,13 +20,15 @@ namespace AssemblyNameSpace
         public readonly List<(string, List<Segment>)> Segments;
         public readonly List<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
+        public readonly RunVariables runVariables;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments = null, List<Segment> recombinedsegment = null, ParsedFile batchFile = null, string runname = "Runname")
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname = "Runname")
         {
             Input = input;
             Segments = segments;
             RecombinedSegment = recombinedsegment;
             BatchFile = batchFile;
+            runVariables = variables;
             Runname = runname;
         }
     }

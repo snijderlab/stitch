@@ -455,7 +455,6 @@ namespace AssemblyNameSpace
             /// </summary>
             public class HTML : Parameter
             {
-                public bool AutomaticallyOpen = false;
             }
 
             /// <summary>

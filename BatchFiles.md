@@ -510,7 +510,6 @@ To generate an HTML report. This report displays all information about this run,
 | Inner parameter | Explanation                                                                                                     | Default Value |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------- |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)  |
-| Open            | Can be set to `True` or `False` to indicate if the HTML report should be opened automatically after finishing. | `False`  |
 
 _Example_
 ```

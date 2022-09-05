@@ -571,7 +571,7 @@ assetsfolder = '{AssetsFolderName}';
 
             await t;
 
-            if (ReportParameter.AutomaticallyOpen)
+            if (Parameters.runVariables.AutomaticallyOpen)
             {
                 var p = new Process();
                 p.StartInfo = new ProcessStartInfo(filename)

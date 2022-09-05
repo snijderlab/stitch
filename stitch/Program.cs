@@ -35,6 +35,12 @@ namespace AssemblyNameSpace
                         case ' ':
                             output.Add(current_arg.Trim());
                             current_arg = "";
+                            if (args[i + 1] == '-' && args[i + 2] == '-')
+                            {
+                                var end = args.IndexOf(' ', i + 1);
+                                end = end < 0 ? args.Length - 1 : end;
+                                output.Add(args.Substring(i + 1, end - i - 1));
+                            }
                             break;
                         case '\'':
                             if (!string.IsNullOrEmpty(current_arg))
@@ -126,7 +132,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 else
                 {
                     filename = args[1];
-                    RunBatchFile(filename);
+                    RunBatchFile(filename, new RunVariables(args.Contains("--open")));
                 }
             }
             catch (ParseException)
@@ -145,7 +151,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// Run the given batch file
         /// </summary>
         /// <param name="filename"></param>
-        public static void RunBatchFile(string filename)
+        public static void RunBatchFile(string filename, RunVariables runVariables)
         {
             var bar = new ProgressBar();
             bar.Start(4); // Max steps, can be turned down if no Recombination is done
@@ -157,7 +163,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bars += 1;
             bar.Start(bars);
 
-            inputparams.CreateRun(bar).Calculate();
+            inputparams.CreateRun(runVariables, bar).Calculate();
         }
 
         /// <summary>

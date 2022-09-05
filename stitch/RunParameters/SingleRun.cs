@@ -47,6 +47,7 @@ namespace AssemblyNameSpace
             public ReportParameter Report;
             readonly ProgressBar progressBar;
             public readonly ParsedFile BatchFile;
+            public readonly RunVariables runVariables;
 
             /// <summary>
             /// To create a single run with a single dataparameter as input. Without assembly
@@ -57,7 +58,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, ProgressBar bar = null)
+            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -66,6 +67,7 @@ namespace AssemblyNameSpace
                 Report = report;
                 BatchFile = batchfile;
                 MaxNumberOfCPUCores = maxNumberOfCPUCores;
+                runVariables = variables;
                 progressBar = bar;
             }
 
@@ -104,7 +106,7 @@ namespace AssemblyNameSpace
                     recombine_sw.Stop();
                 }
 
-                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.Runname);
+                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname);
 
                 // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
                 var folder = Report.Folder != null ? ReportParameter.CreateName(this, Report.Folder) : null;
