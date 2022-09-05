@@ -1,5 +1,13 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.1.3
+_2022-09-05_
+
+* Added a new flag (`--open`) which will automatically open the HTML report once generated, note it has to be passed after the normal command
+* Added help to some sections in the HTML report, which describes graphs and data points in more detail (#104)
+* The `Runname` property now defaults to the filename (#153)
+* Fixed bugs (#168, #170, #175, #177)
+
 # v1.1.2
 _2022-07-06_
 
