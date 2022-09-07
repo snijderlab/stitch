@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
+using static AssemblyNameSpace.HelperFunctionality;
 
 
 namespace AssemblyNameSpace
@@ -100,6 +101,12 @@ namespace AssemblyNameSpace
         /// The parent segment, needed to get the settings for scoring, alphabet etc
         /// </summary>
         public readonly Segment Parent;
+
+        /// <summary>
+        /// To keep track on how this template was segment joined, this number is the number of characters to remove from the front after all 'X's have been trimmed.
+        /// Only makes sense in recombined templates.
+        /// </summary>
+        public int Overlap = 0;
 
         /// <summary>
         /// Creates a new template
@@ -534,6 +541,72 @@ namespace AssemblyNameSpace
                 return HelperFunctionality.SmithWaterman(this.Recombination.SelectMany(a => a.Sequence).ToArray(), this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
             else
                 return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+        }
+
+        private Annotation[] ConsensusSequenceAnnotationCache = null;
+        public Annotation[] ConsensusSequenceAnnotation()
+        {
+            if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
+
+            var match = this.AlignConsensusWithTemplate();
+            var annotation = new List<Annotation>(match.LengthOnQuery);
+            List<(Annotation, string)> annotated = null;
+            if (this.Recombination != null)
+            {
+                annotated = this.Recombination.Aggregate(new List<(Annotation, string)>(), (acc, item) =>
+            {
+                if (item.MetaData is ReadMetaData.Fasta meta)
+                    if (meta.AnnotatedSequence != null)
+                        acc.AddRange(meta.AnnotatedSequence);
+                return acc;
+            });
+            }
+            else
+            {
+                if (this.MetaData is ReadMetaData.Fasta meta)
+                    if (meta.AnnotatedSequence != null)
+                        annotated = meta.AnnotatedSequence;
+            }
+
+            Annotation GetClasses(int position)
+            {
+                if (annotated == null) return Annotation.None;
+                int pos = -1;
+                for (int i = 0; i < annotated.Count; i++)
+                {
+                    pos += annotated[i].Item2.Length;
+                    if (pos >= position + match.StartTemplatePosition)
+                        return annotated[i].Item1;
+                }
+                return Annotation.None;
+            }
+
+            var columns = new List<(char Template, char Query, char Difference, string Class)>();
+            int template_pos = 0;
+            foreach (var piece in match.Alignment)
+            {
+                switch (piece)
+                {
+                    case SequenceMatch.Match m:
+                        for (int i = 0; i < m.Length; i++)
+                        {
+                            annotation.Add(GetClasses(template_pos));
+                            template_pos++;
+                        }
+                        break;
+                    case SequenceMatch.GapInTemplate q:
+                        for (int i = 0; i < q.Length; i++)
+                        {
+                            annotation.Add(GetClasses(template_pos));
+                            template_pos++;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            ConsensusSequenceAnnotationCache = annotation.ToArray();
+            return ConsensusSequenceAnnotationCache;
         }
     }
 

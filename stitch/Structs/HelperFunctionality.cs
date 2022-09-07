@@ -309,6 +309,37 @@ namespace AssemblyNameSpace
             return (best, scores);
         }
 
+        public enum Annotation { None, CDR, CDR1, CDR2, CDR3, Conserved, PossibleGlycan, Other }
+
+        public static bool IsAnyCDR(this Annotation annotation)
+        {
+            return annotation == Annotation.CDR || annotation == Annotation.CDR1 || annotation == Annotation.CDR2 || annotation == Annotation.CDR3;
+        }
+
+        public static Annotation ParseAnnotation(string Type)
+        {
+            Type = Type.ToLower().Trim();
+            switch (Type)
+            {
+                case "":
+                    return Annotation.None;
+                case "cdr":
+                    return Annotation.CDR;
+                case "cdr1":
+                    return Annotation.CDR1;
+                case "cdr2":
+                    return Annotation.CDR2;
+                case "cdr3":
+                    return Annotation.CDR3;
+                case "conserved":
+                    return Annotation.Conserved;
+                case "glycosylationsite":
+                    return Annotation.PossibleGlycan;
+                default:
+                    return Annotation.Other;
+            }
+        }
+
         enum Direction { NoMatch, GapInTemplate, GapInQuery, Match, MatchGap }
 
         public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)

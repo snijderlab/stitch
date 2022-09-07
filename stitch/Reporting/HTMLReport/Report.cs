@@ -11,6 +11,7 @@ using System.ComponentModel;
 using System.Reflection;
 using HTMLNameSpace;
 using static HTMLNameSpace.CommonPieces;
+using static AssemblyNameSpace.HelperFunctionality;
 
 namespace AssemblyNameSpace
 {
@@ -128,14 +129,14 @@ namespace AssemblyNameSpace
 
             foreach (var template in segments.SelectMany(a => a.Templates))
             {
-                var positions = new Dictionary<string, (int Start, int Length)>();
+                var positions = new Dictionary<Annotation, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
                 if (template.MetaData is ReadMetaData.Fasta fasta && fasta != null)
                 {
                     foreach (var piece in fasta.AnnotatedSequence)
                     {
-                        if (piece.Type.StartsWith("CDR"))
+                        if (piece.Type.IsAnyCDR())
                         {
                             if (positions.ContainsKey(piece.Type))
                             {
@@ -157,7 +158,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                if (positions.ContainsKey("CDR1"))
+                if (positions.ContainsKey(Annotation.CDR1))
                 { // V-segment
                     found_cdr_region = true;
                     foreach (var read in template.Matches)
@@ -169,13 +170,13 @@ namespace AssemblyNameSpace
                                 var piece = (read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
                                 switch (group)
                                 {
-                                    case "CDR1":
+                                    case Annotation.CDR1:
                                         cdr1_reads.Add(piece);
                                         break;
-                                    case "CDR2":
+                                    case Annotation.CDR2:
                                         cdr2_reads.Add(piece);
                                         break;
-                                    case "CDR3":
+                                    case Annotation.CDR3:
                                         cdr3_reads.Add(piece);
                                         break;
                                 }
@@ -183,10 +184,10 @@ namespace AssemblyNameSpace
                         }
                     }
                 }
-                else if (positions.ContainsKey("CDR3"))
+                else if (positions.ContainsKey(Annotation.CDR3))
                 { // J-segment
                     found_cdr_region = true;
-                    var cdr = positions["CDR3"];
+                    var cdr = positions[Annotation.CDR3];
 
                     foreach (var read in template.Matches)
                     {

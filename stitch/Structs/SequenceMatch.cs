@@ -49,6 +49,10 @@ namespace AssemblyNameSpace
         /// The total length on the template (matches + gaps in query)
         /// </summary>
         public readonly int LengthOnTemplate;
+        /// <summary>
+        /// The total length on the query (matches + gaps in template)
+        /// </summary>
+        public readonly int LengthOnQuery;
 
         public readonly int Index;
         /// <summary> The index of the Template sequence if available. </summary>
@@ -70,17 +74,19 @@ namespace AssemblyNameSpace
 
             int sum1 = 0;
             int sum2 = 0;
+            int sum3 = 0;
             foreach (var m in Alignment)
             {
                 if (m is SequenceMatch.Match match)
                 {
                     sum1 += match.Length;
-                    sum2 += match.Length;
                 }
                 if (m is SequenceMatch.GapInQuery gc) sum2 += gc.Length;
+                if (m is SequenceMatch.GapInTemplate gt) sum3 += gt.Length;
             }
             TotalMatches = sum1;
-            LengthOnTemplate = sum2;
+            LengthOnTemplate = sum1 + sum2;
+            LengthOnQuery = sum1 + sum3;
         }
 
         /// <summary>

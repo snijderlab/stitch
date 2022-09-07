@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using static AssemblyNameSpace.HelperFunctionality;
 
 namespace AssemblyNameSpace
 {
@@ -180,9 +181,10 @@ namespace AssemblyNameSpace
         private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
         static ParseResult<(string, ReadMetaData.IMetaData)> ParseAnnotatedFasta(string line, ReadMetaData.IMetaData metaData, int identifier_line_number, ParsedFile file)
         {
+
             var outeither = new ParseResult<(string, ReadMetaData.IMetaData)>();
             var plain_sequence = new StringBuilder();
-            var annotated = new List<(string, string)>();
+            var annotated = new List<(HelperFunctionality.Annotation, string)>();
             string current_seq = "";
             for (int i = 0; i < line.Length; i++)
             {
@@ -190,14 +192,14 @@ namespace AssemblyNameSpace
                 {
                     if (!string.IsNullOrEmpty(current_seq))
                     {
-                        annotated.Add(("", current_seq));
+                        annotated.Add((Annotation.None, current_seq));
                         current_seq = "";
                     }
                     i += 1;
                     int space = line.IndexOf(' ', i);
                     int close = line.IndexOf(')', i);
                     var seq = RemoveWhitespace(line.Substring(space + 1, close - space - 1));
-                    annotated.Add((RemoveWhitespace(line.Substring(i, space - i)), seq));
+                    annotated.Add((HelperFunctionality.ParseAnnotation(RemoveWhitespace(line.Substring(i, space - i))), seq));
                     plain_sequence.Append(seq);
                     i = close;
                 }
@@ -208,7 +210,7 @@ namespace AssemblyNameSpace
                 }
             }
             if (!string.IsNullOrEmpty(current_seq.Trim()))
-                annotated.Add(("", current_seq));
+                annotated.Add((Annotation.None, current_seq));
             var sequence = plain_sequence.ToString();
             var invalid_chars = check_amino_acids.Matches(sequence);
             if (invalid_chars.Count > 0)

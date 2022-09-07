@@ -128,7 +128,7 @@ namespace AssemblyNameSpace
             /// The identifier from the fasta file.
             /// </summary>
             public readonly string FastaHeader;
-            public List<(string Type, string Sequence)> AnnotatedSequence = null;
+            public List<(HelperFunctionality.Annotation Type, string Sequence)> AnnotatedSequence = null;
 
             /// <summary>
             /// To create a new metadata instance with this metadata.

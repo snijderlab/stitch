@@ -334,13 +334,18 @@ namespace AssemblyNameSpace
                                 deleted_gaps -= s.Count + seq.Count;
                                 var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
-                                // When no good overlap is found just paste them one after the other
+
                                 if (aligned_template.Best.Score > 0)
+                                {
                                     s.AddRange(seq.Skip(aligned_template.Best.Position));
+                                    sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
+                                }
                                 else
                                 {
+                                    // When no good overlap is found just paste them one after the other
                                     s.Add(new AminoAcid(alphabet, AssemblyNameSpace.Alphabet.GapChar));
                                     s.AddRange(seq);
+                                    sequence.ElementAt(index).Overlap = 0;
                                 }
                             }
                             else
