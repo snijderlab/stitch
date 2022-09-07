@@ -24,3 +24,4 @@ results/*
 tests/batchfiles/results/*
 all_addmatch_cseq.txt
 textual.md
+output.txt

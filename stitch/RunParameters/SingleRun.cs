@@ -111,47 +111,7 @@ namespace AssemblyNameSpace
                 // If there is an expected outcome present to answers here
                 if (runVariables.ExpectedResult.Count > 0)
                 {
-                    // Check if it needs to compare recombination or normal template matching
-                    if (parameters.RecombinedSegment != null)
-                    {
-                        // See if the number of results match up
-                        var number = parameters.RecombinedSegment.Aggregate(0, (acc, s) => acc + s.Templates.Count);
-                        if (number != runVariables.ExpectedResult.Count)
-                        {
-                            Console.Error.WriteLine($"Number of results ({number}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Id Score Alignment Match Mismatch GapInQuery GapInTemplate");
-                            // Give the scoring result for each result
-                            foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
-                            {
-                                var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
-                                var details = match.GetDetailedScores();
-                                Console.WriteLine($"{result.MetaData.Identifier} {match.Score} {match.Alignment.CIGAR()} {details.Item1} {details.Item2} {details.Item3} {details.Item4}");
-                            }
-                        }
-                    }
-                    else
-                    {
-                        var number = parameters.Segments.Aggregate(0, (acc, s) => acc + s.Item2.Aggregate(0, (acc, t) => acc + t.Templates.Count));
-                        if (number != runVariables.ExpectedResult.Count)
-                        {
-                            Console.Error.WriteLine($"Number of results ({number}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
-                            return;
-                        }
-                        else
-                        {
-                            Console.WriteLine("Id Score Alignment Match Mismatch GapInQuery GapInTemplate");
-                            foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.Segments.SelectMany(s => s.Item2).SelectMany(s => s.Templates)))
-                            {
-                                var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
-                                var details = match.GetDetailedScores();
-                                Console.WriteLine($"{result.MetaData.Identifier} {match.Score} {match.Alignment.CIGAR()} {details.Item1} {details.Item2} {details.Item3} {details.Item4}");
-                            }
-                        }
-                    }
+                    GenerateBenchmarkOutput(parameters);
                 }
                 else
                 {
@@ -180,6 +140,48 @@ namespace AssemblyNameSpace
 
                 // Did reports
                 if (progressBar != null) progressBar.Update();
+            }
+
+            void GenerateBenchmarkOutput(ReportInputParameters parameters)
+            {
+                string JSONBlock(string name, string unit, string value, string extra = null)
+                {
+                    if (extra != null)
+                        return $"{{'name':'{name}','unit':'{unit}','value':{value},'extra':'{extra}'}}";
+                    else
+                        return $"{{'name':'{name}','unit':'{unit}','value':{value}}}";
+                }
+                var buffer = new StringBuilder();
+                IEnumerable<Template> templates = null;
+                if (parameters.RecombinedSegment != null)
+                    templates = parameters.RecombinedSegment.SelectMany(s => s.Templates);
+                else
+                    templates = parameters.Segments.SelectMany(s => s.Item2).SelectMany(s => s.Templates);
+
+                // See if the number of results match up
+                if (templates.Count() != runVariables.ExpectedResult.Count)
+                {
+                    Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
+                    return;
+                }
+                else
+                {
+                    buffer.AppendLine("[");
+                    // Give the scoring result for each result
+                    foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
+                    {
+                        var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
+                        var details = match.GetDetailedScores();
+                        var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
+                        buffer.AppendLine(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
+                        buffer.AppendLine(JSONBlock($"{id} - Matches", "Number", details.Matches.ToString()));
+                        buffer.AppendLine(JSONBlock($"{id} - MisMatches", "Number", details.MisMatches.ToString()));
+                        buffer.AppendLine(JSONBlock($"{id} - GapInQuery", "Number", details.GapInQuery.ToString()));
+                        buffer.AppendLine(JSONBlock($"{id} - GapInTemplate", "Number", details.GapInTemplate.ToString()));
+                    }
+                    buffer.AppendLine("]");
+                    File.WriteAllText("output.txt", buffer.ToString());
+                }
             }
 
             List<(string, List<Segment>)> RunTemplateMatching()
