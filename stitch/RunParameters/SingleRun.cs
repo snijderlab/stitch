@@ -108,25 +108,69 @@ namespace AssemblyNameSpace
 
                 var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname);
 
-                // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
-                var folder = Report.Folder != null ? ReportParameter.CreateName(this, Report.Folder) : null;
-                // Generate the report(s)
-                foreach (var report in Report.Files)
+                // If there is an expected outcome present to answers here
+                if (runVariables.ExpectedResult.Count > 0)
                 {
-                    switch (report)
+                    // Check if it needs to compare recombination or normal template matching
+                    if (parameters.RecombinedSegment != null)
                     {
-                        case Report.HTML h:
-                            var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
-                            htmlreport.Save(h.CreateName(folder, this));
-                            break;
-                        case Report.FASTA f:
-                            var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, MaxNumberOfCPUCores);
-                            fastareport.Save(f.CreateName(folder, this));
-                            break;
-                        case Report.CSV c:
-                            var csvreport = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
-                            csvreport.Save(c.CreateName(folder, this));
-                            break;
+                        // See if the number of results match up
+                        var number = parameters.RecombinedSegment.Aggregate(0, (acc, s) => acc + s.Templates.Count);
+                        if (number != runVariables.ExpectedResult.Count)
+                        {
+                            Console.Error.WriteLine($"Number of results ({number}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
+                            return;
+                        }
+                        else
+                        {
+                            // Give the scoring result for each result
+                            foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
+                            {
+                                var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
+                                Console.WriteLine($"{result.MetaData.Identifier}: {match.Score} {match.Alignment.CIGAR()}");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        var number = parameters.Segments.Aggregate(0, (acc, s) => acc + s.Item2.Aggregate(0, (acc, t) => acc + t.Templates.Count));
+                        if (number != runVariables.ExpectedResult.Count)
+                        {
+                            Console.Error.WriteLine($"Number of results ({number}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
+                            return;
+                        }
+                        else
+                        {
+                            foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.Segments.SelectMany(s => s.Item2).SelectMany(s => s.Templates)))
+                            {
+                                var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
+                                Console.WriteLine($"{result.MetaData.Identifier}: {match.Score} {match.Alignment.CIGAR()}");
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
+                    var folder = Report.Folder != null ? ReportParameter.CreateName(this, Report.Folder) : null;
+                    // Generate the report(s)
+                    foreach (var report in Report.Files)
+                    {
+                        switch (report)
+                        {
+                            case Report.HTML h:
+                                var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
+                                htmlreport.Save(h.CreateName(folder, this));
+                                break;
+                            case Report.FASTA f:
+                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, MaxNumberOfCPUCores);
+                                fastareport.Save(f.CreateName(folder, this));
+                                break;
+                            case Report.CSV c:
+                                var csvreport = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
+                                csvreport.Save(c.CreateName(folder, this));
+                                break;
+                        }
                     }
                 }
 

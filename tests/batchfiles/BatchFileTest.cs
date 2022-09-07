@@ -23,7 +23,7 @@ namespace BatchFilesTestNameSpace
             {
                 try
                 {
-                    AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables(false));
+                    AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
                 }
                 catch
                 {
@@ -45,7 +45,7 @@ namespace BatchFilesTestNameSpace
                 try
                 {
                     if (file.EndsWith(".txt"))
-                        AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables(false));
+                        AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
                 }
                 catch
                 {

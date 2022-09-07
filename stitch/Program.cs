@@ -132,7 +132,9 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 else
                 {
                     filename = args[1];
-                    RunBatchFile(filename, new RunVariables(args.Contains("--open")));
+                    var location_expected = args.IndexOf("--expect");
+                    var expected = location_expected > 0 ? args[location_expected + 2].Split(',').ToList() : new List<string>();
+                    RunBatchFile(filename, new RunVariables(args.Contains("--open"), expected));
                 }
             }
             catch (ParseException)
@@ -153,15 +155,19 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename, RunVariables runVariables)
         {
-            var bar = new ProgressBar();
-            bar.Start(4); // Max steps, can be turned down if no Recombination is done
-            var inputparams = ParseCommandFile.Batch(filename, false);
-            bar.Update();
+            ProgressBar bar = null;
+            if (runVariables.ExpectedResult.Count == 0)
+            {
+                bar = new ProgressBar();
+                bar.Start(4); // Max steps, can be turned down if no Recombination is done
+            }
 
-            var bars = 3; // Parse + TemplateMatching + Report
-            if (inputparams.Recombine != null)
-                bars += 1;
-            bar.Start(bars);
+            var inputparams = ParseCommandFile.Batch(filename, false);
+            if (runVariables.ExpectedResult.Count == 0)
+            {
+                bar.Update();
+                bar.Start(inputparams.Recombine != null ? 4 : 3);
+            }
 
             inputparams.CreateRun(runVariables, bar).Calculate();
         }
