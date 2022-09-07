@@ -26,7 +26,7 @@ jobs:
       uses: benchmark-action/github-action-benchmark@v1
       with:
         name: Results Benchmark
-        tool: 'stitch'
+        tool: 'customBiggerIsBetter'
         output-file-path: output.txt
         github-token: ${{ secrets.BENCHMARK_ACTION_BOT_TOKEN }}
         auto-push: true
