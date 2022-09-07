@@ -15,24 +15,6 @@ namespace AssemblyTestNameSpace
     public class HTMLReport_Test
     {
         [TestMethod]
-        public void EmptyTemplateAlignment()
-        {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
-            Template template = new Template(
-                "test",
-                StringToSequence("EVQLVESGGGLVQPGGSLRL", alp),
-                new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter()),
-                null,
-                true
-                );
-            var buffer = new StringBuilder();
-            var doc = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(buffer, template, "id", new List<string>(), "");
-            var doc_expected = Enumerable.Repeat(0.0, 20).ToList();
-            CompareDOC(doc, doc_expected);
-        }
-
-        [TestMethod]
         public void SingleMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
