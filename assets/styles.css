@@ -509,6 +509,7 @@ input:checked+label+.collapsable,
     font-family: "Roboto Mono", monospace;
     order: 2;
     margin-top: 5px;
+    margin-bottom: 0;
 }
 
 .reads-alignment .seq {

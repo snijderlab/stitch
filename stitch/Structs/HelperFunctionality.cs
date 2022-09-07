@@ -57,7 +57,7 @@ namespace AssemblyNameSpace
         {
             if (input == null || suffixToRemove == null || string.IsNullOrEmpty(input) || input.Length < suffixToRemove.Length) return input;
             if (input == suffixToRemove) return "";
-            int location = input.Length - 1 - suffixToRemove.Length;
+            int location = input.Length - suffixToRemove.Length;
             while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0)
             {
                 location -= suffixToRemove.Length;

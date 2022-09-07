@@ -517,7 +517,6 @@ $@"<tr>
                     StringBuilder alignblock = new();
                     for (int i = 1; i < aligned.Length; i++)
                     {
-                        string result = "";
                         if (positions[i].Count > 0)
                         {
                             alignblock.Append("<span class=\"align-link\">");
@@ -555,7 +554,6 @@ $@"<tr>
                             }
                             alignblock.Append("</span>");
                         }
-                        alignblock.Append(result);
                         alignblock.Append("<br>");
                     }
                     buffer.Append(alignblock.ToString().TrimEnd("<br>"));
