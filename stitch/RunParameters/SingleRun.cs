@@ -123,11 +123,13 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
+                            Console.WriteLine("Id Score Alignment Match Mismatch GapInQuery GapInTemplate");
                             // Give the scoring result for each result
                             foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
                             {
                                 var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
-                                Console.WriteLine($"{result.MetaData.Identifier}: {match.Score} {match.Alignment.CIGAR()}");
+                                var details = match.GetDetailedScores();
+                                Console.WriteLine($"{result.MetaData.Identifier} {match.Score} {match.Alignment.CIGAR()} {details.Item1} {details.Item2} {details.Item3} {details.Item4}");
                             }
                         }
                     }
@@ -141,10 +143,12 @@ namespace AssemblyNameSpace
                         }
                         else
                         {
+                            Console.WriteLine("Id Score Alignment Match Mismatch GapInQuery GapInTemplate");
                             foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.Segments.SelectMany(s => s.Item2).SelectMany(s => s.Templates)))
                             {
                                 var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
-                                Console.WriteLine($"{result.MetaData.Identifier}: {match.Score} {match.Alignment.CIGAR()}");
+                                var details = match.GetDetailedScores();
+                                Console.WriteLine($"{result.MetaData.Identifier} {match.Score} {match.Alignment.CIGAR()} {details.Item1} {details.Item2} {details.Item3} {details.Item4}");
                             }
                         }
                     }
