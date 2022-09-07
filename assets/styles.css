@@ -1184,7 +1184,7 @@ input:checked+label .overhang-block .text {
     display: block;
     position: absolute;
     height: 2px;
-    width: 100vw;
+    width: calc(100vw - 200% - 55px);
     left: 100%;
     background-color: var(--color-dark);
     top: var(--graph-height-inc);

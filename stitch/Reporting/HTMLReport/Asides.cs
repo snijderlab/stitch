@@ -121,9 +121,7 @@ $@"<tr>
             buffer.Append($@"<div id=""{id}"" class=""info-block template-info"">
     <h1>{title} {human_id}</h1>
     {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence)}
-    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>
-    <h2>Overlap</h2>
-    <p>{template.Overlap}</p>");
+    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
             buffer.Append(CommonPieces.TagWithHelp("h2", "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview));
 
