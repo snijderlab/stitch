@@ -174,7 +174,7 @@ namespace AssemblyNameSpace
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString("G3")));
                     }
                     File.WriteAllText("benchmark-output.json", buffer.ToString().TrimEnd(',') + "]");
                 }
