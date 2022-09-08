@@ -38,4 +38,4 @@ jobs:
         comment-on-alert: true
         fail-on-alert: true
         alert-comment-cc-users: '@douweschulte'
-        gh-repository: 'https://github.com/snijderlab/stitch-ci-results'
+        gh-repository: 'github.com/snijderlab/stitch-ci-results'
