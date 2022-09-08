@@ -262,6 +262,8 @@ namespace AssemblyNameSpace
         private string CreateHeader(string title, List<string> location)
         {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
+            if (Parameters.runVariables.LiveServer)
+                link = "http://localhost:5500/assets/";
             return $@"<head>
 <meta charset=""utf-8"">
 <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
@@ -512,6 +514,7 @@ assetsfolder = '{AssetsFolderName}';
 
         void CopyAssets()
         {
+            if (Parameters.runVariables.LiveServer) return;
             var executable_folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
             void CopyAssetsFile(string name)
@@ -576,7 +579,7 @@ assetsfolder = '{AssetsFolderName}';
             if (Parameters.runVariables.AutomaticallyOpen)
             {
                 var p = new Process();
-                p.StartInfo = new ProcessStartInfo(filename)
+                p.StartInfo = new ProcessStartInfo(Parameters.runVariables.LiveServer ? "http://localhost:5500/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename)
                 {
                     UseShellExecute = true
                 };

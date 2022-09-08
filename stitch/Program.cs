@@ -134,7 +134,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     filename = args[1];
                     var location_expected = args.IndexOf("--expect");
                     var expected = location_expected > 0 ? args[location_expected + 2].Split(',').ToList() : new List<string>();
-                    RunBatchFile(filename, new RunVariables(args.Contains("--open"), expected));
+                    RunBatchFile(filename, new RunVariables(args.Contains("--open"), args.Contains("--live"), expected));
                 }
             }
             catch (ParseException)
