@@ -170,11 +170,11 @@ namespace AssemblyNameSpace
                         return $"{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value}}},";
                 }
                 var buffer = new StringBuilder();
-                IEnumerable<Template> templates = null;
+                IEnumerable<(string, Template)> templates = null;
                 if (parameters.RecombinedSegment != null)
-                    templates = parameters.RecombinedSegment.SelectMany(s => s.Templates);
+                    templates = parameters.Segments.Zip(parameters.RecombinedSegment).SelectMany(s => s.Second.Templates.Select(t => (s.First.Item1, t)));
                 else
-                    templates = parameters.Segments.SelectMany(s => s.Item2).SelectMany(s => s.Templates);
+                    templates = parameters.Segments.SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
 
                 // See if the number of results match up
                 if (templates.Count() != runVariables.ExpectedResult.Count)
@@ -186,13 +186,13 @@ namespace AssemblyNameSpace
                 {
                     buffer.Append("[");
                     // Give the scoring result for each result
-                    foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
+                    foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates))
                     {
                         var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
-                        buffer.Append(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.Append(JSONBlock($"{id} - Identity", "Percent", (details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString()));
                     }
                     File.WriteAllText("benchmark-output.json", buffer.ToString().TrimEnd(',') + "]");
                 }
