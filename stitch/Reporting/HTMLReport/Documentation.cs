@@ -14,6 +14,7 @@ namespace HTMLNameSpace
         public const string TemplateMatches = "The total number of placed reads on this template.";
         public const string TemplateScore = "The total score calculated by summing all sums for all placed reads on this template.";
         public const string TemplateSequence = "The template sequence as read from the original file (without any annotations).";
+        public const string RecombinedSequence = "The recombined sequence as generated from the Templates that can be seen under 'Order'.";
         public const string TemplateTotalArea = "The sum of the area of all amino acids placed on this template.";
         public const string TemplateUniqueArea = "The sum of the area of all amino acids uniquely placed on this templates.";
         public const string TemplateUniqueMatches = "The total number of reads uniquely placed on this template.";

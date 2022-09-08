@@ -150,7 +150,7 @@ $@"<tr>
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
-            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", HTMLHelp.TemplateSequence)}
+            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", template.Recombination != null ? HTMLHelp.RecombinedSequence : HTMLHelp.TemplateSequence)}
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>");
