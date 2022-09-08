@@ -13,6 +13,7 @@ permissions:
 jobs:
   benchmark:
     runs-on: windows-latest
+    environment: Actions
     steps:
     - uses: actions/checkout@v2
     - name: Setup .NET
