@@ -192,10 +192,7 @@ namespace AssemblyNameSpace
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.AppendLine(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.AppendLine(JSONBlock($"{id} - Matches", "Number", details.Matches.ToString()));
-                        buffer.AppendLine(JSONBlock($"{id} - MisMatches", "Number", details.MisMatches.ToString()));
-                        buffer.AppendLine(JSONBlock($"{id} - GapInQuery", "Number", details.GapInQuery.ToString()));
-                        buffer.AppendLine(JSONBlock($"{id} - GapInTemplate", "Number", details.GapInTemplate.ToString()));
+                        buffer.AppendLine(JSONBlock($"{id} - Identity", "Percent", (details.Matches / match.TotalMatches).ToString()));
                     }
                     buffer.AppendLine("]");
                     File.WriteAllText("output.txt", buffer.ToString());
