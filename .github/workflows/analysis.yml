@@ -30,7 +30,7 @@ jobs:
       with:
         name: Results Benchmark
         tool: 'customBiggerIsBetter'
-        output-file-path: output.txt
+        output-file-path: benchmark-output.json
         github-token: ${{ secrets.BENCHMARK_ACTION_BOT_TOKEN }}
         auto-push: true
         # Show alert with commit comment on detecting possible performance regression

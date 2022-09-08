@@ -26,7 +26,7 @@ namespace AssemblyNameSpace
             public readonly int MaxNumberOfCPUCores;
 
             /// <summary>
-            /// The input data for this run. A runtype of 'Separate' will result in only one input data in this list.
+            /// The input data for this run. A runtype of \"Separate\" will result in only one input data in this list.
             /// </summary>
             public List<(string, ReadMetaData.IMetaData)> Input;
 
@@ -147,9 +147,9 @@ namespace AssemblyNameSpace
                 string JSONBlock(string name, string unit, string value, string extra = null)
                 {
                     if (extra != null)
-                        return $"{{'name':'{name}','unit':'{unit}','value':{value},'extra':'{extra}'}}";
+                        return $"{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value},\"extra\":\"{extra}\"}},";
                     else
-                        return $"{{'name':'{name}','unit':'{unit}','value':{value}}}";
+                        return $"{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value}}},";
                 }
                 var buffer = new StringBuilder();
                 IEnumerable<Template> templates = null;
@@ -166,18 +166,17 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    buffer.AppendLine("[");
+                    buffer.Append("[");
                     // Give the scoring result for each result
                     foreach (var (expected, result) in runVariables.ExpectedResult.Zip(parameters.RecombinedSegment.SelectMany(s => s.Templates)))
                     {
                         var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
-                        buffer.AppendLine(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.AppendLine(JSONBlock($"{id} - Identity", "Percent", (details.Matches / match.TotalMatches).ToString()));
+                        buffer.Append(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
+                        buffer.Append(JSONBlock($"{id} - Identity", "Percent", (details.Matches / match.TotalMatches).ToString()));
                     }
-                    buffer.AppendLine("]");
-                    File.WriteAllText("output.txt", buffer.ToString());
+                    File.WriteAllText("benchmark-output.json", buffer.ToString().TrimEnd(',') + "]");
                 }
             }
 
