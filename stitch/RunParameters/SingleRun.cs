@@ -174,7 +174,7 @@ namespace AssemblyNameSpace
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.Append(JSONBlock($"{id} - Identity", "Percent", (details.Matches / match.TotalMatches).ToString()));
+                        buffer.Append(JSONBlock($"{id} - Identity", "Percent", (details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString()));
                     }
                     File.WriteAllText("benchmark-output.json", buffer.ToString().TrimEnd(',') + "]");
                 }
