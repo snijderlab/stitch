@@ -44,7 +44,7 @@ namespace HTMLNameSpace
 $@"<tr>
     <td class='center'>{group.Item1}</td>
     <td class='center'>{segment.Name}</td>
-    <td class='center'>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td class='center'>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData))}</td>
     <td class='center'>{match.StartTemplatePosition}</td>
     <td class='center'>{match.Score}</td>
     <td class='center'>{match.Unique}</td>
@@ -68,7 +68,7 @@ $@"<tr>
                             {
                                 buffer.Append(
 $@"<tr>
-    <td class='center'>{GetAsideLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, GetAsideIdentifier(read.MetaData))}</td>
+    <td class='center'>{GetAsideLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData))}</td>
     <td class='center'>{match.StartTemplatePosition}</td>
     <td class='center'>{match.Score}</td>
     <td class='center'>{match.Unique}</td>
@@ -261,6 +261,7 @@ $@"<tr>
         static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName)
         {
             var alignedSequences = template.AlignedSequences();
+            var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
 
             if (alignedSequences.Count == 0)
                 return new List<double>();
@@ -455,6 +456,7 @@ $@"<tr>
                     }
                 }
 
+
                 int alignedindex = 0;
                 int alignedlength = 0;
                 for (int block = 0; block * blocklength < aligned[0].Length; block++)
@@ -510,15 +512,19 @@ $@"<tr>
                         number = ((block + 1) * blocklength).ToString();
                         number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
                     }
-                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, blocklength)}><p><span class=\"number\">{number}</span><br><span class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</span><br>");
+                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, blocklength)}>");
+                    var alignblock = new StringBuilder($"<div class='wrapper'><div class=\"number\">{number}</div><div class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</div>");
 
-                    StringBuilder alignblock = new();
+                    const string empty_text = "<div class='empty'></div>";
+                    const string begin_block = "<div class='align-link'>";
+                    var empty = 0;
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         if (positions[i].Count > 0)
                         {
-                            alignblock.Append("<span class=\"align-link\">");
+                            alignblock.Append(begin_block);
                             int offset = 0;
+                            bool placed = false;
                             foreach (var piece in positions[i])
                             {
                                 var rid = "none";
@@ -538,29 +544,54 @@ $@"<tr>
                                     var seq = aligned[i].Substring(block * blocklength + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * blocklength - offset), blocklength - offset), 0));
                                     var length = seq.Length;
                                     seq = seq.TrimStart(nonbreakingspace);
-                                    if (length > seq.Length)
-                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", length - seq.Length)));
+                                    if (seq.Length == 0)
+                                        continue; // Sequence was only whitespace so ignore
+                                    var start_padding = length - seq.Length;
+                                    if (start_padding > 0)
+                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", start_padding)));
+
                                     length = seq.Length;
                                     seq = seq.TrimEnd(nonbreakingspace);
+                                    var end_padding = length - seq.Length;
 
-                                    alignblock.Append($"<a href=\"{path}\" id=\"{GetAsideIdentifier(template.Matches[piece.index].MetaData)}\" class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+                                    var element_id = GetAsideIdentifier(template.Matches[piece.index].MetaData);
+                                    var html_id = placed_ids.Contains(element_id) ? "" : " id='aligned-" + element_id + "'";
+                                    alignblock.Append($"<a href=\"{path}\"{html_id} class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+                                    placed = true;
 
-                                    if (length > seq.Length)
-                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", length - seq.Length)));
+                                    if (end_padding > 0)
+                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", end_padding)));
                                 }
                                 offset = piece.length;
                             }
-                            alignblock.Append("</span>");
+                            if (!placed) // There are cases where the placed block would be empty, so catch that to make the trim empty work
+                            {
+                                alignblock.Remove(alignblock.Length - begin_block.Length, begin_block.Length);
+                                alignblock.Append(empty_text);
+                                empty += 1;
+                            }
+                            else
+                            {
+                                alignblock.Append("</div>");
+                                empty = 0;
+                            }
                         }
-                        alignblock.Append("<br>");
+                        else
+                        {
+                            alignblock.Append(empty_text);
+                            empty += 1;
+                        }
                     }
-                    buffer.Append(alignblock.ToString().TrimEnd("<br>"));
-                    buffer.AppendLine("</p><div class='coverage-depth-wrapper'>");
+                    // First add the coverage depth wrapper then the align-block
+                    buffer.AppendLine("<div class='coverage-depth-wrapper'>");
 
                     for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count - block * blocklength); i++)
                     {
                         buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
                     }
+                    buffer.Append("</div>");
+                    var alignblock_string = alignblock.ToString();
+                    buffer.Append(alignblock_string.Substring(0, alignblock_string.Length - empty_text.Length * empty)); // trim the number of empty blocks that are known to be after the alignblock
                     buffer.Append("</div></div>");
                 }
             }
@@ -600,6 +631,13 @@ $@"<tr>
             return depthOfCoverage;
         }
 
+        /// <summary>
+        /// Create the background colour annotation for the reads alignment blocks.
+        /// </summary>
+        /// <param name="annotated">The annotation, a list of all Types for each position as finally aligned.</param>
+        /// <param name="block">The selected block.</param>
+        /// <param name="blocklength">The selected blocklength.</param>
+        /// <returns>The colour as a style element to directly put in a HTML element.</returns>
         static string TemplateAlignmentAnnotation(List<Annotation> annotated, int block, int blocklength)
         {
             string Color(Annotation Type)
