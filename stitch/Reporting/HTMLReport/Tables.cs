@@ -224,7 +224,7 @@ namespace HTMLNameSpace
             buffer.AppendLine("</table></div>");
         }
 
-        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity)
+        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity, HelperFunctionality.Annotation[] annotation = null)
         {
             const double threshold = 0.05;
             const int height = 35;
@@ -233,7 +233,8 @@ namespace HTMLNameSpace
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count; i++)
             {
-                buffer.Append("<div class='sequence-logo-position'>");
+                var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
+                buffer.Append($"<div class='sequence-logo-position{Class}'>");
 
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();

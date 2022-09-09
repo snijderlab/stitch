@@ -91,7 +91,7 @@ namespace HTMLNameSpace
             Bargraph(buffer, labeled.ToList(), title);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, int factor = 2)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
         {
             if (data.Count == 0)
             {
@@ -119,10 +119,12 @@ namespace HTMLNameSpace
                 buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
 
                 // Data
-                foreach (var set in data)
+                for (int i = 0; i < data.Count; i++)
                 {
+                    var set = data[i];
+                    var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
-                        buffer.Append($"<span class='bar' style='height:{set.Value / max * 100}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
+                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max * 100}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
                     else
                         buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min * 100}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
@@ -137,10 +139,12 @@ namespace HTMLNameSpace
                 buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
 
                 // Data
-                foreach (var set in data)
+                for (int i = 0; i < data.Count; i++)
                 {
+                    var set = data[i];
+                    var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     string height = (set.Value / max * 100).ToString();
-                    buffer.Append($"<span class='bar' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    buffer.Append($"<span class='bar{Class}' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
                 }
 

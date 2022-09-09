@@ -127,7 +127,7 @@ $@"<tr>
 
             SequenceConsensusOverview(buffer, template);
             buffer.Append("<div class='docplot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph);
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, 10, template.ConsensusSequenceAnnotation());
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='widetable'><tr>
@@ -804,7 +804,7 @@ $@"<tr>
                     }
                 }
             }
-            HTMLTables.SequenceConsensusOverview(buffer, diversity);
+            HTMLTables.SequenceConsensusOverview(buffer, diversity, template.ConsensusSequenceAnnotation());
         }
     }
 }

@@ -339,18 +339,36 @@ td.bar::before {
 .annotated .CDR2,
 .annotated .CDR3,
 .annotated .CDR,
-.annotated .cdr {
+.sequence-logo-position.CDR1,
+.sequence-logo-position.CDR2,
+.sequence-logo-position.CDR3,
+.sequence-logo-position.CDR {
     color: var(--color-secondary);
 }
 
-.annotated .conserved,
-.annotated .Conserved {
+.histogram .bar.CDR1,
+.histogram .bar.CDR2,
+.histogram .bar.CDR3,
+.histogram .bar.CDR {
+    background-color: var(--color-secondary);
+}
+
+.annotated .Conserved,
+.sequence-logo-position.Conserved {
     color: var(--color-tertiary);
 }
 
-.annotated .glycosylationsite,
-.annotated .Glycosylationsite {
+.histogram .bar.Conserved {
+    background-color: var(--color-tertiary);
+}
+
+.annotated .Glycosylationsite,
+.sequence-logo-position.Glycosylationsite {
     color: var(--color-primary);
+}
+
+.histogram .bar.Glycosylationsite {
+    background-color: var(--color-primary);
 }
 
 .annotated.legend {
