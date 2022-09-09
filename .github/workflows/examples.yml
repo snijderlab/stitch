@@ -19,11 +19,11 @@ jobs:
         dotnet run --project batchfiles/basic.txt
         dotnet run --project batchfiles/monoclonal.txt
         dotnet run --project batchfiles/polyclonal.txt
-    - name: Use Pandoc
+    - name: Render Manual
       uses: docker://pandoc/minimal:latest
       with:
         args: -o results/stitch-manual.html BatchFiles.md
-    - name: Deploy to GitHub Pages
+    - name: Deploy
       uses: JamesIves/github-pages-deploy-action@v4.4.0
       with:
         branch: gh-pages-examples
