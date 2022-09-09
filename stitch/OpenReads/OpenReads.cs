@@ -186,6 +186,9 @@ namespace AssemblyNameSpace
             var plain_sequence = new StringBuilder();
             var annotated = new List<(HelperFunctionality.Annotation, string)>();
             string current_seq = "";
+            int cdr1 = 0;
+            int cdr2 = 0;
+            int cdr3 = 0;
             for (int i = 0; i < line.Length; i++)
             {
                 if (line[i] == '(')
@@ -199,9 +202,29 @@ namespace AssemblyNameSpace
                     int space = line.IndexOf(' ', i);
                     int close = line.IndexOf(')', i);
                     var seq = RemoveWhitespace(line.Substring(space + 1, close - space - 1));
-                    annotated.Add((HelperFunctionality.ParseAnnotation(RemoveWhitespace(line.Substring(i, space - i))), seq));
+                    var annotation = HelperFunctionality.ParseAnnotation(RemoveWhitespace(line.Substring(i, space - i)));
+                    annotated.Add((annotation, seq));
                     plain_sequence.Append(seq);
                     i = close;
+                    var annotated_count = annotated.Count;
+                    if (annotation.IsAnyCDR())
+                    {
+                        if (!(annotated_count >= 3 && annotated[annotated_count - 3].Item1 == annotation && annotated[annotated_count - 2].Item1 == Annotation.PossibleGlycan))
+                        {
+                            if (annotation == Annotation.CDR1)
+                            {
+                                cdr1 += 1;
+                            }
+                            else if (annotation == Annotation.CDR2)
+                            {
+                                cdr2 += 1;
+                            }
+                            else if (annotation == Annotation.CDR3)
+                            {
+                                cdr3 += 1;
+                            }
+                        }
+                    }
                 }
                 else if (!Char.IsWhiteSpace(line[i]))
                 {
@@ -222,47 +245,24 @@ namespace AssemblyNameSpace
                     )
                 );
             }
-
-                ((ReadMetaData.Fasta)metaData).AnnotatedSequence = annotated;
-            outeither.Value = (sequence, metaData);
-            return outeither;
-        }
-
-        /// <summary>
-        /// Escapes all characters in this string whose code is less than 32 using C/C#-compatible backslash escapes.
-        /// </summary>
-        private static string CLiteralEscape(this string value)
-        {
-            if (value == null)
-                throw new ArgumentNullException("value");
-
-            var result = new StringBuilder(value.Length + value.Length / 2);
-
-            for (int i = 0; i < value.Length; i++)
+            foreach (var group in new List<(Annotation, int)> { (Annotation.CDR1, cdr1), (Annotation.CDR2, cdr2), (Annotation.CDR3, cdr3) })
             {
-                char c = value[i];
-                switch (c)
+                if (group.Item2 > 1)
                 {
-                    case '\0': result.Append(@"\0"); break;
-                    case '\a': result.Append(@"\a"); break;
-                    case '\b': result.Append(@"\b"); break;
-                    case '\t': result.Append(@"\t"); break;
-                    case '\n': result.Append(@"\n"); break;
-                    case '\v': result.Append(@"\v"); break;
-                    case '\f': result.Append(@"\f"); break;
-                    case '\r': result.Append(@"\r"); break;
-                    case '\\': result.Append(@"\\"); break;
-                    case '"': result.Append(@"\"""); break;
-                    default:
-                        if (c >= ' ')
-                            result.Append(c);
-                        else // the character is in the 0..31 range
-                            result.AppendFormat(@"\x{0:X2}", (int)c);
-                        break;
+                    outeither.AddMessage(new InputNameSpace.ErrorMessage(
+                    new Position(identifier_line_number, 1, file),
+                    "Sequence contains multiple copies of the same CDR",
+                    $"Any template can at max only contain one copy of each CDR, but this template contains {group.Item2} copies of {group.Item1}.",
+                    "Make sure there are no copy/paste errors.",
+                    true
+                    )
+                );
                 }
             }
 
-            return result.ToString();
+            ((ReadMetaData.Fasta)metaData).AnnotatedSequence = annotated;
+            outeither.Value = (sequence, metaData);
+            return outeither;
         }
 
         /// <summary> Open a PEAKS CSV file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>
