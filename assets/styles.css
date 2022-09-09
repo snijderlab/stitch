@@ -141,6 +141,7 @@ table+table {
 
 .cdr-tables>* {
     flex-grow: 1;
+    flex-basis: 50%;
 }
 
 .table-header-columns {

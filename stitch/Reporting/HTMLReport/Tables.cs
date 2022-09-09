@@ -201,20 +201,23 @@ namespace HTMLNameSpace
 
             buffer.AppendLine($@"</p></div><table id=""{table_id}"">
 <tr>
-    <th {SortOn(1, "id")} class=""smallcell"">Template</th>
+    <th {SortOn(1, "id")} class=""smallcell"">Identifier</th>
     <th {SortOn(2, "string")} class=""smallcell"">Sequence</th>
-    <th {SortOn(0, "id")} class=""smallcell"">Identifier</th>
+    <th {SortOn(0, "id")} class=""smallcell"">Template</th>
 </tr>");
 
-            foreach (var row in cdrs)
+            var cdrs_deduplicated = cdrs.GroupBy(cdr => cdr.Sequence).OrderBy(group => group.Key);
+
+            foreach (var group in cdrs_deduplicated)
             {
+                var row = group.First();
                 var id = GetAsideIdentifier(row.MetaData);
-                var link = GetAsideLink(row.MetaData, AsideType.Read, AssetsFolderName);
-                var link_template = GetAsideLink(row.Template, AsideType.Template, AssetsFolderName);
+                var link = group.Select(item => item.MetaData).Distinct().Aggregate("", (acc, item) => acc + GetAsideLink(item, AsideType.Template, AssetsFolderName));
+                var link_template = group.Select(item => item.Template).Distinct().Aggregate("", (acc, item) => acc + GetAsideLink(item, AsideType.Template, AssetsFolderName));
                 buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
-    <td class=""center"">{link_template}</td>
-    <td class=""seq"">{row.Sequence.Replace('~', Alphabet.GapChar)}</td>
     <td class=""center"">{link}</td>
+    <td class=""seq"">{row.Sequence.Replace('~', Alphabet.GapChar)}</td>
+    <td class=""center"">{link_template}</td>
 </tr>");
             }
 
