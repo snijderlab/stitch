@@ -123,9 +123,8 @@ $@"<tr>
     {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence)}
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
-            buffer.Append(CommonPieces.TagWithHelp("h2", "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview));
 
-            SequenceConsensusOverview(buffer, template);
+            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
             buffer.Append("<div class='docplot'>");
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, 10, template.ConsensusSequenceAnnotation());
             buffer.Append($@"</div>
@@ -778,7 +777,7 @@ $@"<tr>
             buffer.Append("</div>");
         }
 
-        static void SequenceConsensusOverview(StringBuilder buffer, Template template)
+        static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, string help = null)
         {
             var consensus_sequence = template.CombinedSequence();
             var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
@@ -804,7 +803,7 @@ $@"<tr>
                     }
                 }
             }
-            HTMLTables.SequenceConsensusOverview(buffer, diversity, template.ConsensusSequenceAnnotation());
+            HTMLTables.SequenceConsensusOverview(buffer, diversity, title, help, template.ConsensusSequenceAnnotation());
         }
     }
 }

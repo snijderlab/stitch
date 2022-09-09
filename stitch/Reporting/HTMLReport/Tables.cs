@@ -229,12 +229,21 @@ namespace HTMLNameSpace
             buffer.AppendLine("</table></div>");
         }
 
-        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity, HelperFunctionality.Annotation[] annotation = null)
+        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity, string title = null, string help = null, HelperFunctionality.Annotation[] annotation = null)
         {
             const double threshold = 0.05;
             const int height = 35;
             const int fontsize = 30;
 
+            var data_buffer = new StringBuilder();
+            buffer.Append("<div class='graph'>");
+            if (title != null)
+                if (help != null)
+                    buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
+                else
+                    buffer.Append($"<h2 class='title'>{title}</h2>");
+            if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
+                buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count; i++)
             {
@@ -244,6 +253,7 @@ namespace HTMLNameSpace
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();
                 sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
+                data_buffer.Append($"{i}");
 
                 bool placed = false;
                 foreach (var item in sorted)
@@ -255,13 +265,18 @@ namespace HTMLNameSpace
                         buffer.Append($"<span style='font-size:{size}px;transform:scaleX({inverse_size})'>{item.Key}</span>");
                         placed = true;
                     }
+                    data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"))}");
                 }
                 if (!placed)
                     buffer.Append($"<span>.</span>");
 
                 buffer.Append("</div>");
+                data_buffer.Append("\n");
             }
             buffer.Append("</div>");
+            if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
+                buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
         }
 
         public static void TableHeader(StringBuilder buffer, List<Template> templates, int totalReads)
