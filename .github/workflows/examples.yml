@@ -24,7 +24,7 @@ jobs:
       with:
         args: -o results/stitch-manual.html BatchFiles.md
     - name: Upload artifacts
-      uses: JamesIves/github-pages-deploy-action@4.1.1
+      uses: JamesIves/github-pages-deploy-action@v4
       with:
         branch: gh-pages-examples
         folder: results
