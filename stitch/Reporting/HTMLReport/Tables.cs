@@ -127,6 +127,7 @@ namespace HTMLNameSpace
             }
 
             string id, link;
+            var doc_buffer = new StringBuilder();
             for (int i = 0; i < templates.Count; i++)
             {
                 id = GetAsideIdentifier(templates[i].MetaData);
@@ -153,10 +154,14 @@ namespace HTMLNameSpace
     <td class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'>{templates[i].TotalArea:G3}</td>
     {unique}
 </tr>");
+                doc_buffer.Append($"<div class='docplot'>");
+                HTMLGraph.Bargraph(doc_buffer, HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLink(templates[i].MetaData, type, AssetsFolderName), null, 10, templates[i].ConsensusSequenceAnnotation());
+                doc_buffer.AppendLine("</div>");
             }
 
             table_buffer.AppendLine("</table>");
             buffer.AppendLine(Collapsible(name + "-table", "Table", table_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
+            buffer.AppendLine(Collapsible(name + "-docs", "Depth Of Coverage Overview", doc_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
             CultureInfo.CurrentCulture = culture;
 
             return buffer.ToString();
