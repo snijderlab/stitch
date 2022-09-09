@@ -15,7 +15,7 @@ jobs:
       with:
         dotnet-version: 6.0.x
     - name: Run examples
-      uses: |
+      run: |
         dotnet run --project batchfiles/basic.txt
         dotnet run --project batchfiles/monoclonal.txt
         dotnet run --project batchfiles/polyclonal.txt
