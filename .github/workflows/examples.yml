@@ -23,8 +23,8 @@ jobs:
       uses: docker://pandoc/minimal:latest
       with:
         args: -o results/stitch-manual.html BatchFiles.md
-    - name: Upload artifacts
-      uses: JamesIves/github-pages-deploy-action@v4
+    - name: Deploy to GitHub Pages
+      uses: JamesIves/github-pages-deploy-action@v4.4.0
       with:
         branch: gh-pages-examples
         folder: results
