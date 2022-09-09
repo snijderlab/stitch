@@ -1,5 +1,18 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.1.4
+_2022-09-09_
+
+* Added more information in recombination table (#169)
+* Added a reverse lookup of reads (#167)
+* Added sequence annotation in more places in the detail pages (#164, #179)
+* Added a new flag (`--live`) which uses VS Code LiveServer to make development easier, note it has to be passed after the normal command
+* Compressed the space taken by the CDR tables (#165)
+* Added a warning when a CDR regions is defined multiple times in the same template (#163)
+* Added a depth of coverage overview section on the main page
+* Added an option to export the sequence consensus data (#159)
+* Fixed various bugs and pieces of documentation
+
 # v1.1.3
 _2022-09-05_
 
