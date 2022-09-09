@@ -329,7 +329,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Setting this options for TemplateMatching overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. If your batchfiles contains multiple segments or segment groups the best placement for the read across all of these templates is forced. Setting this options for TemplateMatching sets the default value for use in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### ForceGermlineIsoleucine (s)
 
