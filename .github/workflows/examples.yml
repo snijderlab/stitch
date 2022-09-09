@@ -3,7 +3,7 @@ name: examples
 on:
   push:
     branches:
-      -180
+      - 180
 
 jobs:
   examples:
