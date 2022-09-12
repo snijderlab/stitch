@@ -571,7 +571,7 @@ $@"<tr>
                                         var len = (next_space > 0 ? next_space : aligned[i].Length) - start;
                                         var fasta_seq = aligned[i].Substring(start, len);
                                         fasta_seq = fasta_seq.Replace(gap_char, '.');
-                                        fasta_seq = new String('-', start) + fasta_seq + new String('-', aligned[0].Length - start - len);
+                                        fasta_seq = new String('~', start) + fasta_seq + new String('~', aligned[0].Length - start - len);
                                         data_buffer.AppendLine($">{rid} score:{template.Matches[piece.index].Score} alignment:{template.Matches[piece.index].Alignment.CIGAR()}\n{fasta_seq}");
                                     }
                                     placed_ids.Add(element_id);
