@@ -180,7 +180,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             e.Cancel = true;
             var def = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("== Aborted based on user input ==");
+            Console.WriteLine("\n== Aborted based on user input ==");
             Console.ForegroundColor = def;
             Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
             Console.Out.Flush();

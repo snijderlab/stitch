@@ -379,7 +379,8 @@ td.bar::before {
 /* Collapsible regions */
 
 .report label,
-.graph .copy-data {
+.graph .copy-data,
+.alignment .copy-data {
     display: block;
     font-size: 2em;
     color: var(--color-background);
@@ -508,9 +509,18 @@ input:checked+label+.collapsable,
 
 /* reads alignment */
 
+.alignment {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    grid-template-rows: min-content 1fr;
+}
+
+
 .reads-alignment {
     display: flex;
     flex-wrap: wrap;
+    grid-column: 1/3;
+    grid-row: 2;
 }
 
 .\" {
@@ -836,9 +846,15 @@ input:checked+label .overhang-block .text {
     margin-right: auto;
 }
 
+.alignment .copy-data {
+    height: fit-content;
+    align-self: center;
+}
+
 .point-graph label,
 .graph .copy-data,
-.phylogenetictree label {
+.phylogenetictree label,
+.alignment .copy-data {
     font-size: 1em;
     border: 2px solid var(--color-light);
     background: none;
@@ -847,18 +863,25 @@ input:checked+label .overhang-block .text {
     display: inline-block;
 }
 
-.graph .copy-data {
+.graph .copy-data,
+.alignment .copy-data {
     margin-left: auto;
     color: var(--color-light);
     font-size: .8em;
 }
 
-.graph .copy-data:hover {
+.graph .copy-data:hover,
+.graph .copy-data:focus,
+.graph .copy-data:focus-visible,
+.alignment .copy-data:hover,
+.alignment .copy-data:focus,
+.alignment .copy-data:focus-visible {
     border-color: var(--color-primary);
     color: var(--color-primary);
 }
 
-.graph .copy-data:active {
+.graph .copy-data:active,
+.alignment .copy-data:hover {
     border-color: var(--color-secondary);
     color: var(--color-secondary);
 }

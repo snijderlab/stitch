@@ -106,7 +106,7 @@ namespace HTMLNameSpace
                     buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
                 else
                     buffer.Append($"<h2 class='title'>{title}</h2>");
-            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
+            buffer.Append("<button class='copy-data'>Copy Data</button>");
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
@@ -219,7 +219,7 @@ namespace HTMLNameSpace
             }
 
             // Create Graph
-            buffer.Append("</div><div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
+            buffer.Append("</div><button class='copy-data'>Copy Data</button><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
@@ -294,7 +294,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div><div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
+            buffer.Append("<button class='copy-data'>Copy Data</button><div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
             // Create Graph
             foreach (var group in data)
             {

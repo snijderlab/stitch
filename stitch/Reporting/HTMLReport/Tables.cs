@@ -243,7 +243,7 @@ namespace HTMLNameSpace
                 else
                     buffer.Append($"<h2 class='title'>{title}</h2>");
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
-                buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
+                buffer.Append("<button class='copy-data'>Copy Data</button>");
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count; i++)
             {
@@ -275,7 +275,7 @@ namespace HTMLNameSpace
             }
             buffer.Append("</div>");
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
-                buffer.Append("<div class='copy-data' onclick='CopyGraphData()'>Copy Data</div>");
+                buffer.Append("<button class='copy-data'>Copy Data</button>");
             buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
         }
 

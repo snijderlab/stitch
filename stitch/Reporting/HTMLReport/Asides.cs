@@ -265,22 +265,23 @@ $@"<tr>
             if (alignedSequences.Count == 0)
                 return new List<double>();
 
-            buffer.Append("<h2>Alignment</h2>");
+            buffer.Append("<div class='alignment'><h2>Alignment</h2><button class='copy-data'>Copy Data</button>");
 
             // Loop over aligned
-            // For each position: (creates List<string[]>, per position, per sequence + templatesequence)
-            // Convert AA to string (fill in with gapchar)
+            // For each position: (creates List<string[]>, per position, per sequence + template_sequence)
+            // Convert AA to string (fill in with gap_char)
             // Convert Gap to string (get max length, align all gaps, fill in with spaces)
 
             // Convert to lines: (creates List<string>)
             // Combine horizontally
-            var totalsequences = alignedSequences[0].Sequences.Length;
-            var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[totalsequences + 1];
-            const char gapchar = '-';
-            const char nonbreakingspace = '\u00A0';
+            var total_sequences = alignedSequences[0].Sequences.Length;
+            var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[total_sequences + 1];
+            const char gap_char = '-';
+            const char non_breaking_space = '\u00A0'; // &nbsp; in html
             var depthOfCoverage = new List<double>();
+            var data_buffer = new StringBuilder();
 
-            for (int i = 0; i < totalsequences + 1; i++)
+            for (int i = 0; i < total_sequences + 1; i++)
             {
                 lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>();
             }
@@ -299,11 +300,11 @@ $@"<tr>
 
                     if (index == -1)
                     {
-                        lines[i + 1].Add((gapchar.ToString(), -1, -1, AsideType.Read));
+                        lines[i + 1].Add((gap_char.ToString(), -1, -1, AsideType.Read));
                     }
                     else if (index == 0)
                     {
-                        lines[i + 1].Add((nonbreakingspace.ToString(), -1, -1, AsideType.Read));
+                        lines[i + 1].Add((non_breaking_space.ToString(), -1, -1, AsideType.Read));
                     }
                     else
                     {
@@ -328,7 +329,7 @@ $@"<tr>
                     }
                 }
                 // Add gap to the template
-                lines[0].Add((new string(gapchar, max_length), -1, -1, AsideType.Read));
+                lines[0].Add((new string(gap_char, max_length), -1, -1, AsideType.Read));
 
                 var depthGap = new List<double[]>();
                 // Add gap to the lines
@@ -348,15 +349,15 @@ $@"<tr>
                         depthGap.Add(d);
                     }
 
-                    char padchar = nonbreakingspace;
-                    if (Gaps[i].InSequence) padchar = gapchar;
+                    char pad_char = non_breaking_space;
+                    if (Gaps[i].InSequence) pad_char = gap_char;
 
                     var index = Gaps[i].ContigID == -1 ? -1 : Gaps[i].MatchIndex;
 
                     var type = AsideType.Read;
                     var idx = index;
 
-                    lines[i + 1].Add((seq.PadRight(max_length, padchar), idx, Sequences[i].SequencePosition - 1, type));
+                    lines[i + 1].Add((seq.PadRight(max_length, pad_char), idx, Sequences[i].SequencePosition - 1, type));
                 }
                 var depthGapCombined = new double[max_length];
                 foreach (var d in depthGap)
@@ -366,6 +367,7 @@ $@"<tr>
                 depthOfCoverage.AddRange(depthGapCombined.Select(a => (double)a));
             }
 
+            // The aligned reads, any space between, leading, or trailing the reads is filled with non_breaking_spaces, while gaps are indicated by the gap_char ('-')
             var aligned = new string[alignedSequences[0].Sequences.Length + 1];
             var types = new List<AsideType>[alignedSequences[0].Sequences.Length + 1];
 
@@ -387,33 +389,33 @@ $@"<tr>
             buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{Math.Max(depthOfCoverage.Max(), 1)}\">");
 
             // Create the front overhanging reads block
-            var frontoverhangbuffer = new StringBuilder();
-            bool frontoverhang = false;
-            frontoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
-            frontoverhangbuffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+            var front_overhang_buffer = new StringBuilder();
+            bool front_overhang = false;
+            front_overhang_buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
+            front_overhang_buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
 
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
                 {
-                    frontoverhang = true;
-                    frontoverhangbuffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
+                    front_overhang = true;
+                    front_overhang_buffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
-                    frontoverhangbuffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    front_overhang_buffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
 
-            if (frontoverhang)
+            if (front_overhang)
             {
-                buffer.Append(frontoverhangbuffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
+                buffer.Append(front_overhang_buffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
                 buffer.AppendLine($"</p></div></label></div>");
             }
 
             // Chop it up, add numbers etc
-            const int blocklength = 5;
+            const int block_length = 5;
 
             if (aligned.Length > 0)
             {
@@ -437,7 +439,7 @@ $@"<tr>
                 // Fill in the gaps
                 for (int i = 0; i < aligned[0].Length; i++)
                 {
-                    if (aligned[0][i] == gapchar)
+                    if (aligned[0][i] == gap_char)
                     {
                         if (i == 0)
                         {
@@ -456,63 +458,63 @@ $@"<tr>
                 }
 
 
-                int alignedindex = 0;
-                int alignedlength = 0;
-                for (int block = 0; block * blocklength < aligned[0].Length; block++)
+                int aligned_index = 0;
+                int aligned_length = 0;
+                for (int block = 0; block * block_length < aligned[0].Length; block++)
                 {
                     // Get the right id's to generate the right links
-                    while (alignedlength < block * blocklength && alignedindex + 1 < lines[0].Count)
+                    while (aligned_length < block * block_length && aligned_index + 1 < lines[0].Count)
                     {
-                        alignedlength += lines[0][alignedindex].Sequence.Length;
-                        alignedindex++;
+                        aligned_length += lines[0][aligned_index].Sequence.Length;
+                        aligned_index++;
                     }
 
                     var positions = new List<(int index, int position, int length)>[aligned.Length];
 
                     for (int i = 1; i < aligned.Length; i++)
                     {
-                        int index = lines[i][alignedindex].Index;
-                        int position = lines[i][alignedindex].SequencePosition;
-                        int additionallength = 0;
-                        int additionalindex = 1;
+                        int index = lines[i][aligned_index].Index;
+                        int position = lines[i][aligned_index].SequencePosition;
+                        int additional_length = 0;
+                        int additional_index = 1;
                         positions[i] = new List<(int index, int position, int length)>();
 
-                        while (alignedlength + additionallength < (block + 1) * blocklength && alignedindex + additionalindex < lines[0].Count)
+                        while (aligned_length + additional_length < (block + 1) * block_length && aligned_index + additional_index < lines[0].Count)
                         {
-                            int thisindex = lines[i][alignedindex + additionalindex].Index;
-                            int thisposition = lines[i][alignedindex + additionalindex].SequencePosition;
+                            int this_index = lines[i][aligned_index + additional_index].Index;
+                            int this_position = lines[i][aligned_index + additional_index].SequencePosition;
 
                             if (index == -1)
                             {
-                                index = thisindex;
-                                position = thisposition;
+                                index = this_index;
+                                position = this_position;
                             }
-                            else if (thisindex != -1 && thisindex != index)
+                            else if (this_index != -1 && this_index != index)
                             {
-                                positions[i].Add((index, position, additionallength));
-                                index = thisindex;
-                                position = thisposition;
+                                positions[i].Add((index, position, additional_length));
+                                index = this_index;
+                                position = this_position;
                                 break;
                             }
 
-                            additionallength += lines[0][alignedindex + additionalindex].Sequence.Length;
-                            additionalindex++;
+                            additional_length += lines[0][aligned_index + additional_index].Sequence.Length;
+                            additional_index++;
                         }
 
                         if (index >= 0)
-                            positions[i].Add((index, position, blocklength));
+                            positions[i].Add((index, position, block_length));
                     }
 
 
                     // Add the sequence and the number to tell the position
                     string number = "";
-                    if (aligned[0].Length - block * blocklength >= blocklength)
+                    if (aligned[0].Length - block * block_length >= block_length)
                     {
-                        number = ((block + 1) * blocklength).ToString();
-                        number = string.Concat(Enumerable.Repeat("&nbsp;", blocklength - number.Length)) + number;
+                        number = ((block + 1) * block_length).ToString();
+                        number = string.Concat(Enumerable.Repeat("&nbsp;", block_length - number.Length)) + number;
                     }
-                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, blocklength)}>");
-                    var alignblock = new StringBuilder($"<div class='wrapper'><div class=\"number\">{number}</div><div class=\"seq\">{aligned[0].Substring(block * blocklength, Math.Min(blocklength, aligned[0].Length - block * blocklength))}</div>");
+                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, block_length)}>");
+                    var align_block = new StringBuilder($"<div class='wrapper'><div class=\"number\">{number}</div><div class=\"seq\">{aligned[0].Substring(block * block_length, Math.Min(block_length, aligned[0].Length - block * block_length))}</div>");
 
                     const string empty_text = "<div class='empty'></div>";
                     const string begin_block = "<div class='align-link'>";
@@ -521,7 +523,7 @@ $@"<tr>
                     {
                         if (positions[i].Count > 0)
                         {
-                            alignblock.Append(begin_block);
+                            align_block.Append(begin_block);
                             int offset = 0;
                             bool placed = false;
                             foreach (var piece in positions[i])
@@ -537,85 +539,98 @@ $@"<tr>
                                 }
                                 catch { }
                                 string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + piece.position;
-                                if (aligned[i].Length > block * blocklength + offset)
+                                if (aligned[i].Length > block * block_length + offset)
                                 {
                                     // Get the block of sequence for this piece, determine if there are leading or trailing spaces and add empty text for those
-                                    var seq = aligned[i].Substring(block * blocklength + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * blocklength - offset), blocklength - offset), 0));
+                                    var seq = aligned[i].Substring(block * block_length + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * block_length - offset), block_length - offset), 0));
                                     var length = seq.Length;
-                                    seq = seq.TrimStart(nonbreakingspace);
+                                    seq = seq.TrimStart(non_breaking_space);
                                     if (seq.Length == 0)
                                         continue; // Sequence was only whitespace so ignore
                                     var start_padding = length - seq.Length;
                                     if (start_padding > 0)
-                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", start_padding)));
+                                        align_block.Append(string.Concat(Enumerable.Repeat("&nbsp;", start_padding)));
 
                                     length = seq.Length;
-                                    seq = seq.TrimEnd(nonbreakingspace);
+                                    seq = seq.TrimEnd(non_breaking_space);
                                     var end_padding = length - seq.Length;
 
                                     var element_id = GetAsideIdentifier(template.Matches[piece.index].MetaData);
                                     var html_id = placed_ids.Contains(element_id) ? "" : " id='aligned-" + element_id + "'";
-                                    alignblock.Append($"<a href=\"{path}\"{html_id} class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+                                    align_block.Append($"<a href=\"{path}\"{html_id} class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
                                     placed = true;
 
                                     if (end_padding > 0)
-                                        alignblock.Append(string.Concat(Enumerable.Repeat("&nbsp;", end_padding)));
+                                        align_block.Append(string.Concat(Enumerable.Repeat("&nbsp;", end_padding)));
+
+                                    if (!placed_ids.Contains(element_id))
+                                    {
+                                        // Retrieve the full sequence for this read and place it in the fasta expo
+                                        var start = block * block_length + offset + start_padding;
+                                        var next_space = aligned[i].IndexOf(non_breaking_space, start);
+                                        var len = (next_space > 0 ? next_space : aligned[i].Length) - start;
+                                        var fasta_seq = aligned[i].Substring(start, len);
+                                        fasta_seq = fasta_seq.Replace(gap_char, '.');
+                                        fasta_seq = new String('-', start) + fasta_seq + new String('-', aligned[0].Length - start - len);
+                                        data_buffer.AppendLine($">{rid} score:{template.Matches[piece.index].Score} alignment:{template.Matches[piece.index].Alignment.CIGAR()}\n{fasta_seq}");
+                                    }
+                                    placed_ids.Add(element_id);
                                 }
                                 offset = piece.length;
                             }
                             if (!placed) // There are cases where the placed block would be empty, so catch that to make the trim empty work
                             {
-                                alignblock.Remove(alignblock.Length - begin_block.Length, begin_block.Length);
-                                alignblock.Append(empty_text);
+                                align_block.Remove(align_block.Length - begin_block.Length, begin_block.Length);
+                                align_block.Append(empty_text);
                                 empty += 1;
                             }
                             else
                             {
-                                alignblock.Append("</div>");
+                                align_block.Append("</div>");
                                 empty = 0;
                             }
                         }
                         else
                         {
-                            alignblock.Append(empty_text);
+                            align_block.Append(empty_text);
                             empty += 1;
                         }
                     }
                     // First add the coverage depth wrapper then the align-block
                     buffer.AppendLine("<div class='coverage-depth-wrapper'>");
 
-                    for (int i = block * blocklength; i < block * blocklength + Math.Min(blocklength, depthOfCoverage.Count - block * blocklength); i++)
+                    for (int i = block * block_length; i < block * block_length + Math.Min(block_length, depthOfCoverage.Count - block * block_length); i++)
                     {
                         buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
                     }
                     buffer.Append("</div>");
-                    var alignblock_string = alignblock.ToString();
-                    buffer.Append(alignblock_string.Substring(0, alignblock_string.Length - empty_text.Length * empty)); // trim the number of empty blocks that are known to be after the alignblock
+                    var align_block_string = align_block.ToString();
+                    buffer.Append(align_block_string.Substring(0, align_block_string.Length - empty_text.Length * empty)); // trim the number of empty blocks that are known to be after the alignblock
                     buffer.Append("</div></div>");
                 }
             }
 
             // Create the end overhanging reads block
-            var endoverhangbuffer = new StringBuilder();
-            bool endoverhang = false;
-            endoverhangbuffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
-            endoverhangbuffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
+            var end_overhang_buffer = new StringBuilder();
+            bool end_overhang = false;
+            end_overhang_buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
+            end_overhang_buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
                 {
-                    endoverhang = true;
-                    endoverhangbuffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
+                    end_overhang = true;
+                    end_overhang_buffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
                 }
                 else
                 {
-                    endoverhangbuffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    end_overhang_buffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
                 }
             }
-            if (endoverhang)
+            if (end_overhang)
             {
-                buffer.Append(endoverhangbuffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
+                buffer.Append(end_overhang_buffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
                 buffer.AppendLine($"</p></div></label></div>");
             }
 
@@ -626,7 +641,7 @@ $@"<tr>
                 AlignmentDetails(buffer, match, template);
             }
 
-            buffer.AppendLine("</div></div>");
+            buffer.AppendLine($"</div></div><textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
             return depthOfCoverage;
         }
 

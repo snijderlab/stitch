@@ -131,6 +131,11 @@ function Setup() {
         elements[i].addEventListener("mouseenter", openHelp)
         elements[i].addEventListener("mouseleave", closeHelp)
     }
+
+    var elements = document.getElementsByClassName("copy-data")
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("click", CopyGraphData)
+    }
 }
 
 function openHelp(event) {
@@ -181,13 +186,18 @@ function AlignmentDetailsClear() {
 }
 
 // Copy the graph data for the clicked on graph
-function CopyGraphData() {
-    var children = event.currentTarget.getElementsByClassName("graph-data");
-    if (event.currentTarget.className == "copy-data")
-        children = event.currentTarget.parentElement.getElementsByClassName("graph-data");
-    if (children.length > 0) {
-        children[0].select();
-        children[0].setSelectionRange(0, 99999);
-        document.execCommand("copy");
+var t;
+function CopyGraphData(event) {
+    var children = event.target.children;
+    if (event.target.className == "copy-data")
+        children = event.target.parentElement.children;
+
+    for (var i = 0; i < children.length; i++) {
+        if (children[i].className == "graph-data") {
+            children[i].select();
+            children[i].setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(children[i].value);
+            return;
+        }
     }
 }
