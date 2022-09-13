@@ -5,6 +5,7 @@ namespace HTMLNameSpace
     /// </summary>
     public class HTMLHelp
     {
+        public const string AnnotatedConsensusSequence = "The consensus sequence aligned with the germline sequence. The differences are accentuated by displaying the changes from the germline sequence below. The format follows the format of Domain Gap Align.";
         public const string ConsensusSequence = "The sequence obtained by taking the highest scoring amino acid for each position. The score is calculated as the sum of all positional scores for that amino acid on this position. Any position where no reads where mapped are filled in by the sequence from the template, otherwise the template does not have any direct effect on the scoring. Insertions into the consensus sequence are only taken into account if the total score for that insertion is higher than the 'default' score, which is calculated by summing all positional scores of all amino acids not followed by an insertion from the previous position.";
         public const string DOCGraph = "The depth of coverage reported is the sum of all positional scores for that position. This is reported with the same position numbering as the consensus sequence.";
         public const string Order = "The chosen templates for this recombination.";

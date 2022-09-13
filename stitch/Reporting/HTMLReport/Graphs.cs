@@ -125,9 +125,9 @@ namespace HTMLNameSpace
                     var set = data[i];
                     var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
-                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max * 100:F2}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
+                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
                     else
-                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min * 100:F2}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min:P2}'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
             }
@@ -144,8 +144,7 @@ namespace HTMLNameSpace
                 {
                     var set = data[i];
                     var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                    string height = (set.Value / max * 100).ToString();
-                    buffer.Append($"<span class='bar{Class}' style='height:{height:F2}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
 

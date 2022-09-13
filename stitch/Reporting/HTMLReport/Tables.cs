@@ -178,7 +178,7 @@ namespace HTMLNameSpace
             var templates = cdrs.Select(a => a.Template.EscapedIdentifier).Distinct().Count();
             var unique = cdrs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
 
-            buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template).</p><p>Consensus: ");
+            buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template). The consensus sequence is shown below.</p><p>");
 
             var diversity = new List<Dictionary<string, double>>();
 

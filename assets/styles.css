@@ -305,12 +305,19 @@ td.bar::before {
 
 /* Annotated Consensus Sequences */
 
+.annotated-consensus-sequence {
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    grid-template-rows: min-content max-content max-content;
+}
+
 .annotated {
     display: flex;
     flex-wrap: wrap;
     row-gap: 1em;
     font-family: Roboto Mono, monospace;
     align-items: baseline;
+    grid-column: 1 / 3;
 }
 
 .annotated>* {
@@ -859,9 +866,12 @@ input:checked+label .overhang-block .text {
     margin-right: auto;
 }
 
-.alignment .copy-data {
+.alignment .copy-data,
+.annotated-consensus-sequence .copy-data {
     height: fit-content;
+    width: fit-content;
     align-self: center;
+    justify-self: end;
 }
 
 .point-graph label,

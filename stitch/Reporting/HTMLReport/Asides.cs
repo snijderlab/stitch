@@ -166,6 +166,7 @@ $@"<tr>
             var annotated = template.ConsensusSequenceAnnotation();
             var match = template.AlignConsensusWithTemplate();
             var columns = new List<(char Template, char Query, char Difference, Annotation Class)>();
+            var data_buffer = new StringBuilder();
 
             int template_pos = match.StartTemplatePosition;
             int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
@@ -202,7 +203,10 @@ $@"<tr>
                 }
             }
 
-            buffer.Append($"<h2>Annotated consensus sequence {id}</h2><div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+            buffer.Append("<div class='annotated-consensus-sequence'>");
+            buffer.Append(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence));
+            buffer.Append(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
+            buffer.Append($"<div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
 
             var present = new HashSet<Annotation>();
             foreach (var column in columns)
@@ -218,6 +222,10 @@ $@"<tr>
                 buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
             }
             buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
+            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>");
+            var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
+            buffer.Append($"Consensus  {c}\nGermline   {g}\nDifference {d}");
+            buffer.Append("</textarea></div>");
         }
 
         static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
