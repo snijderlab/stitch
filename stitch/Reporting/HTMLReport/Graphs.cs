@@ -57,7 +57,7 @@ namespace HTMLNameSpace
             GroupedBargraph(buffer, labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title);
         }
 
-        public static void Histogram(StringBuilder buffer, List<double> data, string title, int bins = 10)
+        public static void Histogram(StringBuilder buffer, List<double> data, string title, string help = null, string data_help = null, int bins = 10)
         {
             if (data.Count == 0)
             {
@@ -88,10 +88,10 @@ namespace HTMLNameSpace
                 labeled[bin].Item2++;
             }
 
-            Bargraph(buffer, labeled.ToList(), title);
+            Bargraph(buffer, labeled.ToList(), title, help, data_help);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
+        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, string data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
         {
             if (data.Count == 0)
             {
@@ -106,7 +106,8 @@ namespace HTMLNameSpace
                     buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
                 else
                     buffer.Append($"<h2 class='title'>{title}</h2>");
-            buffer.Append("<button class='copy-data'>Copy Data</button>");
+
+            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help));
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
@@ -124,10 +125,10 @@ namespace HTMLNameSpace
                     var set = data[i];
                     var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
-                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max * 100}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
+                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max * 100:F2}%'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
                     else
-                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min * 100}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
-                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
+                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min * 100:F2}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
             }
             else
@@ -144,17 +145,12 @@ namespace HTMLNameSpace
                     var set = data[i];
                     var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     string height = (set.Value / max * 100).ToString();
-                    buffer.Append($"<span class='bar{Class}' style='height:{height}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
-                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value}");
+                    buffer.Append($"<span class='bar{Class}' style='height:{height:F2}%'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
 
             }
             buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
-        }
-
-        static void NegativeBargraph(StringBuilder buffer, List<(string Label, double Value)> data, double max, double min)
-        {
-
         }
 
         /// <summary>
@@ -219,7 +215,7 @@ namespace HTMLNameSpace
             }
 
             // Create Graph
-            buffer.Append("</div><button class='copy-data'>Copy Data</button><div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
+            buffer.Append("</div>" + CommonPieces.CopyData(title + " (TSV)") + "<div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
@@ -253,7 +249,7 @@ namespace HTMLNameSpace
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title)
+        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, string help, string data_help)
         {
             if (data.Count == 0 || data.Any(a => a.Points.Count == 0))
             {
@@ -285,7 +281,7 @@ namespace HTMLNameSpace
             // Create Legend
             var dataBuffer = new StringBuilder("Group\tPoint");
 
-            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()'><h2 class='title'>{title}</h2>");
+            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()'>" + CommonPieces.TagWithHelp("h2", title, help));
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
@@ -294,7 +290,7 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append("<button class='copy-data'>Copy Data</button><div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
+            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help) + "<div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
             // Create Graph
             foreach (var group in data)
             {

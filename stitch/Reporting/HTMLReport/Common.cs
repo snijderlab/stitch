@@ -86,7 +86,7 @@ namespace HTMLNameSpace
             string check = state == CollapsibleState.Open ? " checked" : "";
             return $@"<input type=""checkbox"" id=""{cid}""{check}/>
 <label for=""{cid}"">{name}</label>
-<div class=""collapsable"" id=""{id}"">{content}</div>";
+<div class=""collapsable"" id=""{id}""><div class='clearfix'></div>{content}</div>";
         }
 
         /// <summary> Create a warning to use in the HTML report to show users that they need to look into someting. </summary>
@@ -137,11 +137,26 @@ namespace HTMLNameSpace
         /// <param name="title">The title for the tag, and the help message.</param>
         /// <param name="help">The help content, can be any valid HTML but will be placed in paragraph tags.</param>
         /// <param name="tag">The tag level (`h1` for `<h1>` etc).</param>
+        /// <param name="classes">A list of classes to be added to this element.</param>
+        /// <param name="extra">Any extra text for the tag, eg "aria-hidden='true'".</param>
         /// <returns>The HTMl needed for this help.</returns>
         public static string TagWithHelp(string tag, string title, string help, string classes = null, string extra = "")
         {
             classes = classes != null ? $" class='{classes}'" : "";
             return $"<{tag}{classes}{extra}>{title}{UserHelp(title, help)}</{tag}>";
+        }
+
+        /// <summary>
+        /// Generate a Copy Data button for the user, while giving help about the data structure. It generates a button
+        /// which can be used (hovered/selected) by the user to show the accompanying help text.
+        /// </summary>
+        /// <param name="title">The title for the help message.</param>
+        /// <param name="content">The inner content to show, can be any valid HTML. (it will be enclosed in `<p>` tags)</param>
+        /// <returns>The HTMl needed for this button.</returns>
+        public static string CopyData(string title, string help = null)
+        {
+            var text = help != null ? $"<p>{help}</p>" : "";
+            return $"<button type='button' class='user-help copy-data'><span class='mark'>Copy Data</span><div class='content'><h3>{title}</h3>{text}<h4>Preview</h4><pre class='example'>Loading example...</pre><i>Click on the button to copy the data to your clipboard.</i></div></button>";
         }
     }
 }

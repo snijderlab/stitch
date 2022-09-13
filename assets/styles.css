@@ -436,7 +436,13 @@ input:checked+label {
     display: none;
     border-left: 2px solid var(--color-label);
     padding-left: .5rem;
-    overflow: auto;
+    overflow: visible;
+}
+
+.clearfix {
+    clear: both;
+    display: block;
+    height: 1px;
 }
 
 .source-code {
@@ -489,15 +495,15 @@ input:checked+label+.collapsable,
     border: 2px solid var(--color-primary);
     padding: 1rem;
     background-color: var(--color-background);
-    min-width: 500px;
-    width: min-content;
+    min-width: 300px;
+    max-width: 500px;
     color: var(--color-dark);
     text-align: justify;
     z-index: 100;
     font-weight: normal;
     cursor: auto;
     top: 1rem;
-    left: -250px;
+    left: -50%;
     user-select: text;
 }
 
@@ -505,6 +511,13 @@ input:checked+label+.collapsable,
 .user-help:focus .content,
 .user-help:focus-visible .content {
     display: block;
+}
+
+.copy-data .example {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+    max-width: 100%;
 }
 
 /* reads alignment */

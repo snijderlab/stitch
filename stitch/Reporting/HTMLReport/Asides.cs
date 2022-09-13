@@ -126,7 +126,7 @@ $@"<tr>
 
             SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
             buffer.Append("<div class='docplot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, 10, template.ConsensusSequenceAnnotation());
+            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, null, 10, template.ConsensusSequenceAnnotation());
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='widetable'><tr>
@@ -265,7 +265,7 @@ $@"<tr>
             if (alignedSequences.Count == 0)
                 return new List<double>();
 
-            buffer.Append("<div class='alignment'><h2>Alignment</h2><button class='copy-data'>Copy Data</button>");
+            buffer.Append("<div class='alignment'><h2>Alignment</h2>" + CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment));
 
             // Loop over aligned
             // For each position: (creates List<string[]>, per position, per sequence + template_sequence)
@@ -413,6 +413,8 @@ $@"<tr>
                 buffer.Append(front_overhang_buffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
                 buffer.AppendLine($"</p></div></label></div>");
             }
+
+            data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{aligned[0].Replace(gap_char, '.')}");
 
             // Chop it up, add numbers etc
             const int block_length = 5;

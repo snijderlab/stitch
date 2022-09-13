@@ -103,6 +103,7 @@ function get(name) {
         return decodeURIComponent(name[1]);
 }
 
+var t;
 function Setup() {
     var backbutton = document.getElementById("back-button");
     var ref = window.name.split('|').pop();
@@ -123,18 +124,23 @@ function Setup() {
         document.getElementsByClassName('aside-seq')[0].innerHTML = text.substring(0, pos) + "<span class='highlight'>" + text.substring(pos, pos + 1) + "</span>" + text.substring(pos + 1);
     }
 
+    var elements = document.getElementsByClassName("copy-data")
+    for (var i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("click", CopyGraphData)
+        var example = elements[i].getElementsByClassName("example")[0]
+        if (example)
+            example.innerText = GetGraphDataExample(elements[i]);
+    }
+
     var elements = document.getElementsByClassName("user-help")
     for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener("click", (event) => { event.stopPropagation() })
+        if (!elements[i].classList.contains("copy-data")) {
+            elements[i].addEventListener("click", (event) => { event.stopPropagation() })
+        }
         elements[i].addEventListener("focusin", openHelp)
         elements[i].addEventListener("focusout", closeHelp)
         elements[i].addEventListener("mouseenter", openHelp)
         elements[i].addEventListener("mouseleave", closeHelp)
-    }
-
-    var elements = document.getElementsByClassName("copy-data")
-    for (var i = 0; i < elements.length; i++) {
-        elements[i].addEventListener("click", CopyGraphData)
     }
 }
 
@@ -156,8 +162,6 @@ function openHelp(event) {
 function closeHelp(event) {
     var content = event.target.children[1]
     content.classList.remove("focus")
-    content.style.marginLeft = null;
-    content.style.marginTop = null;
 }
 
 function pauseEvent(e) {
@@ -186,10 +190,11 @@ function AlignmentDetailsClear() {
 }
 
 // Copy the graph data for the clicked on graph
-var t;
 function CopyGraphData(event) {
     var children = event.target.children;
-    if (event.target.className == "copy-data")
+    if (event.target.className == "mark")
+        children = event.target.parentElement.parentElement.children;
+    if (event.target.classList.contains("copy-data"))
         children = event.target.parentElement.children;
 
     for (var i = 0; i < children.length; i++) {
@@ -198,6 +203,20 @@ function CopyGraphData(event) {
             children[i].setSelectionRange(0, 99999);
             navigator.clipboard.writeText(children[i].value);
             return;
+        }
+    }
+}
+
+function GetGraphDataExample(element) {
+    var children = element.children;
+    if (element.className == "mark")
+        children = element.parentElement.parentElement.children;
+    if (element.classList.contains("copy-data"))
+        children = element.parentElement.children;
+
+    for (var i = 0; i < children.length; i++) {
+        if (children[i].className == "graph-data") {
+            return children[i].value.split("\n").slice(0, 4).join("\n");
         }
     }
 }

@@ -326,7 +326,7 @@ assetsfolder = '{AssetsFolderName}';
                     var template = Parameters.RecombinedSegment[group].Templates[0];
                     var (seq, doc) = template.ConsensusSequence();
                     buffer.Append($"<h2><a href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'>{Parameters.Segments[group].Item1}</a></h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>");
-                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage", null, 10, template.ConsensusSequenceAnnotation());
+                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage", null, null, 10, template.ConsensusSequenceAnnotation());
                     buffer.Append("</div><h3>Best scoring segments</h3><p>");
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
@@ -368,7 +368,7 @@ assetsfolder = '{AssetsFolderName}';
                 innerbuffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 innerbuffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
 
-                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", "This are the scores for all tested overlaps. The X-axis displays the overlaps the Y-axis the scores. If there are multiple overlaps with a high score make sure to manually check if stitch did indeed pick the best one.", 2);
+                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", HTMLHelp.SegmentJoining);
             }
             return innerbuffer.ToString();
         }

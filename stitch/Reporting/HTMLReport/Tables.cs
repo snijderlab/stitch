@@ -155,7 +155,7 @@ namespace HTMLNameSpace
     {unique}
 </tr>");
                 doc_buffer.Append($"<div class='docplot'>");
-                HTMLGraph.Bargraph(doc_buffer, HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLink(templates[i].MetaData, type, AssetsFolderName), null, 10, templates[i].ConsensusSequenceAnnotation());
+                HTMLGraph.Bargraph(doc_buffer, HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLink(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation());
                 doc_buffer.AppendLine("</div>");
             }
 
@@ -243,7 +243,7 @@ namespace HTMLNameSpace
                 else
                     buffer.Append($"<h2 class='title'>{title}</h2>");
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
-                buffer.Append("<button class='copy-data'>Copy Data</button>");
+                buffer.Append(CommonPieces.CopyData(title + " (TSV)", HTMLHelp.SequenceConsensusOverviewData));
             buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
             for (int i = 0; i < diversity.Count; i++)
             {
@@ -262,10 +262,10 @@ namespace HTMLNameSpace
                     {
                         var size = (item.Value / sum * fontsize).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size}px;transform:scaleX({inverse_size})'>{item.Key}</span>");
+                        buffer.Append($"<span style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'>{item.Key}</span>");
                         placed = true;
                     }
-                    data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"))}");
+                    data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
                 }
                 if (!placed)
                     buffer.Append($"<span>.</span>");
@@ -275,7 +275,7 @@ namespace HTMLNameSpace
             }
             buffer.Append("</div>");
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
-                buffer.Append("<button class='copy-data'>Copy Data</button>");
+                buffer.Append(CopyData("Sequence Consensus Overview (TSV)", HTMLHelp.SequenceConsensusOverviewData));
             buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
         }
 
@@ -328,7 +328,7 @@ namespace HTMLNameSpace
             else
                 header = new List<string> { "Score", "Matches", "Area" };
 
-            HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores");
+            HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores", HTMLHelp.OverviewOfScores, null);
         }
 
         static void BarTableHeader(StringBuilder buffer, List<Template> templates)
