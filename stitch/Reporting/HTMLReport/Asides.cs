@@ -179,7 +179,7 @@ $@"<tr>
                         {
                             var t = match.TemplateSequence[template_pos].Character;
                             var q = match.QuerySequence[query_pos].Character;
-                            columns.Add((t, q, t == q ? ' ' : q, annotated[template_pos]));
+                            columns.Add((t, q, t == q ? ' ' : q, annotated[template_pos - match.StartTemplatePosition]));
                             template_pos++;
                             query_pos++;
                         }
@@ -188,7 +188,7 @@ $@"<tr>
                         for (int i = 0; i < q.Length; i++)
                         {
                             var t = match.TemplateSequence[template_pos].Character;
-                            columns.Add((t, '.', ' ', annotated[template_pos]));
+                            columns.Add((t, '.', ' ', annotated[template_pos - match.StartTemplatePosition]));
                             template_pos++;
                         }
                         break;
@@ -196,7 +196,7 @@ $@"<tr>
                         for (int i = 0; i < t.Length; i++)
                         {
                             var q = match.QuerySequence[query_pos].Character;
-                            columns.Add(('.', q, q, annotated[template_pos]));
+                            columns.Add(('.', q, q, annotated[template_pos - match.StartTemplatePosition]));
                             query_pos++;
                         }
                         break;
@@ -690,6 +690,7 @@ $@"<tr>
             if (annotated == null) return "";
             var annotatedSequence = annotated.ToArray();
             var localLength = Math.Min(blocklength, annotatedSequence.Length - block * blocklength);
+            if (localLength < 1) return "";
             var annotation = annotatedSequence.SubArray(block * blocklength, localLength);
             var grouped = new List<(Annotation, uint)>() { (annotation[0], 1) };
             for (int i = 1; i < localLength; i++)

@@ -99,6 +99,7 @@ namespace HTMLNameSpace
                 return;
             }
             var dataBuffer = new StringBuilder("Label\tValue");
+            bool use_annotated = annotation != null && annotation.Length == data.Count;
 
             buffer.Append("<div class='graph'>");
             if (title != null)
@@ -123,7 +124,7 @@ namespace HTMLNameSpace
                 for (int i = 0; i < data.Count; i++)
                 {
                     var set = data[i];
-                    var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
+                    var Class = use_annotated && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
                         buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
                     else
@@ -143,7 +144,7 @@ namespace HTMLNameSpace
                 for (int i = 0; i < data.Count; i++)
                 {
                     var set = data[i];
-                    var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
+                    var Class = use_annotated && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
