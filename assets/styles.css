@@ -1176,9 +1176,19 @@ input:checked+label .overhang-block .text {
     --color: var(--color-secondary);
 }
 
+.point-graph .point:nth-child(3n+2),
+.point-graph label:nth-of-type(3n+2)::before {
+    border-radius: 5%;
+}
+
 .point-graph .point:nth-child(3n),
 .point-graph label:nth-of-type(3n) {
     --color: var(--color-tertiary);
+}
+
+.point-graph .point:nth-child(3n),
+.point-graph label:nth-of-type(3n)::before {
+    border-radius: 35%;
 }
 
 .point-graph .point:nth-child(6n+4),
