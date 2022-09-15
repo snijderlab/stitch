@@ -414,43 +414,7 @@ $@"<tr>
 
             html.Open("div", $"class='reads-alignment' style='--max-value:{Math.Max(depthOfCoverage.Max(), 1)}'");
 
-            // Create the front overhanging reads block
-            var front_html = new HTMLBuilder();
-            bool front_overhang = false;
-            front_html.Open("div", "class='align-block'");
-            front_html.Empty("input", $"type='checkbox' id='front-overhang-toggle-{id}'");
-            front_html.Open("label", $"for='front-overhang-toggle-{id}'");
-            front_html.Open("div", "class='align-block overhang-block front-overhang'");
-            front_html.Open("p");
-            front_html.OpenAndClose("span", "class='front-overhang-spacing'", "");
-
-            uint empty = 0;
-            for (int i = 1; i < aligned.Length; i++)
-            {
-                var match = template.Matches[i - 1];
-                if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
-                {
-                    front_overhang = true;
-                    front_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition)));
-                    front_html.OpenAndClose("span", "class='symbol'", "...");
-                    front_html.Empty("br");
-                    empty = 0;
-                }
-                else
-                {
-                    front_html.OpenAndClose("a", "href='#' class='text align-link'", "");
-                    front_html.OpenAndClose("span", "class='symbol'", "");
-                    front_html.Empty("br");
-                    empty += 1;
-                }
-            }
-
-            if (front_overhang)
-            {
-                front_html.UnsafeRemoveElementsFromEnd(empty * 3);
-                front_html.Close("div");
-                html.Add(front_html);
-            }
+            html.Add(FrontOverHang(id, aligned, template));
 
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{aligned[0].Replace(gap_char, '.')}");
 
@@ -546,99 +510,7 @@ $@"<tr>
                     }
 
 
-                    // Add the sequence and the number to tell the position
-                    string number = "";
-                    if (aligned[0].Length - block * block_length >= block_length)
-                    {
-                        number = ((block + 1) * block_length).ToString();
-                        number = string.Concat(Enumerable.Repeat(non_breaking_space, block_length - number.Length)) + number;
-                    }
                     html.Open("div", $"class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, block_length)}");
-                    var align_block = new HTMLBuilder();
-                    align_block.Open("div", "class='wrapper'");
-                    align_block.OpenAndClose("div", "class='number'", number.ToString());
-                    align_block.OpenAndClose("div", "class='seq'", aligned[0].Substring(block * block_length, Math.Min(block_length, aligned[0].Length - block * block_length)));
-
-                    empty = 0;
-                    for (int i = 1; i < aligned.Length; i++)
-                    {
-                        if (positions[i].Count > 0)
-                        {
-                            align_block.Open("div", "class='align-link'");
-                            int offset = 0;
-                            bool placed = false;
-                            foreach (var piece in positions[i])
-                            {
-                                var rid = "none";
-                                var name = GetAsideName(AsideType.Read);
-                                var unique = "";
-                                try
-                                {
-                                    var meta = template.Matches[piece.index].MetaData;
-                                    if (template.Matches[piece.index].Unique) unique = " unique";
-                                    rid = meta.EscapedIdentifier;
-                                }
-                                catch { }
-                                string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + piece.position;
-                                if (aligned[i].Length > block * block_length + offset)
-                                {
-                                    // Get the block of sequence for this piece, determine if there are leading or trailing spaces and add empty text for those
-                                    var seq = aligned[i].Substring(block * block_length + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * block_length - offset), block_length - offset), 0));
-                                    var length = seq.Length;
-                                    seq = seq.TrimStart(non_breaking_space);
-                                    if (seq.Length == 0)
-                                        continue; // Sequence was only whitespace so ignore
-                                    var start_padding = length - seq.Length;
-                                    if (start_padding > 0)
-                                        align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, start_padding)));
-
-                                    length = seq.Length;
-                                    seq = seq.TrimEnd(non_breaking_space);
-                                    var end_padding = length - seq.Length;
-
-                                    var element_id = GetAsideIdentifier(template.Matches[piece.index].MetaData);
-                                    var html_id = placed_ids.Contains(element_id) ? "" : " id='aligned-" + element_id + "'";
-                                    align_block.OpenAndClose("a", $"href=\"{path}\"{html_id} class='align-link{unique}' onmouseover='AlignmentDetails({template.Matches[piece.index].Index})' onmouseout='AlignmentDetailsClear()'", seq);
-                                    placed = true;
-
-                                    if (end_padding > 0)
-                                        align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, end_padding)));
-
-                                    if (!placed_ids.Contains(element_id))
-                                    {
-                                        // Retrieve the full sequence for this read and place it in the fasta expo
-                                        var start = block * block_length + offset + start_padding;
-                                        var next_space = aligned[i].IndexOf(non_breaking_space, start);
-                                        var len = (next_space > 0 ? next_space : aligned[i].Length) - start;
-                                        var fasta_seq = aligned[i].Substring(start, len);
-                                        fasta_seq = fasta_seq.Replace(gap_char, '.');
-                                        fasta_seq = new String('~', start) + fasta_seq + new String('~', aligned[0].Length - start - len);
-                                        data_buffer.AppendLine($">{rid} score:{template.Matches[piece.index].Score} alignment:{template.Matches[piece.index].Alignment.CIGAR()}\n{fasta_seq}");
-                                    }
-                                    placed_ids.Add(element_id);
-                                }
-                                offset = piece.length;
-                            }
-                            if (!placed) // There are cases where the placed block would be empty, so catch that to make the trim empty work
-                            {
-                                align_block.Close("div");
-                                align_block.UnsafeRemoveElementsFromEnd(1);
-                                align_block.OpenAndClose("div", "class='empty'", "");
-                                empty += 1;
-                            }
-                            else
-                            {
-                                align_block.Close("div");
-                                empty = 0;
-                            }
-                        }
-                        else
-                        {
-                            align_block.OpenAndClose("div", "class='empty'", "");
-                            empty += 1;
-                        }
-                    }
-                    // First add the coverage depth wrapper then the align-block
                     html.Open("div", "class='coverage-depth-wrapper'");
 
                     for (int i = block * block_length; i < block * block_length + Math.Min(block_length, depthOfCoverage.Count - block * block_length); i++)
@@ -646,13 +518,170 @@ $@"<tr>
                         html.OpenAndClose("span", $"class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'", "");
                     }
                     html.Close("div");
-                    align_block.UnsafeRemoveElementsFromEnd(empty);
-                    align_block.Close("div");
-                    html.Add(align_block);
+
+                    html.Add(AlignBlock(aligned, template, block, block_length, placed_ids, non_breaking_space, positions, gap_char, AssetsFolderName, location, data_buffer));
                     html.Close("div");
                 }
             }
 
+            html.Add(EndOverHang(id, aligned, template));
+
+            // Index menus
+            html.Open("div", "id='index-menus'");
+            foreach (var match in template.Matches)
+            {
+                AlignmentDetails(buffer, match, template);
+            }
+            html.Close("div");
+            html.Close("div");
+            html.Open("textarea", "class='graph-data' aria-hidden='true'");
+            html.Content(data_buffer.ToString());
+            html.Close("textarea");
+            html.Close("div");
+            return depthOfCoverage;
+        }
+
+        static HTMLBuilder AlignBlock(string[] aligned, Template template, int block, int block_length, HashSet<string> placed_ids, char non_breaking_space, List<(int index, int position, int length)>[] positions, char gap_char, string AssetsFolderName, List<string> location, StringBuilder data_buffer)
+        {
+            // Add the sequence and the number to tell the position
+            string number = "";
+            if (aligned[0].Length - block * block_length >= block_length)
+            {
+                number = ((block + 1) * block_length).ToString();
+                number = string.Concat(Enumerable.Repeat(non_breaking_space, block_length - number.Length)) + number;
+            }
+            var align_block = new HTMLBuilder();
+            align_block.Open("div", "class='wrapper'");
+            align_block.OpenAndClose("div", "class='number'", number.ToString());
+            align_block.OpenAndClose("div", "class='seq'", aligned[0].Substring(block * block_length, Math.Min(block_length, aligned[0].Length - block * block_length)));
+
+            uint empty = 0;
+            for (int i = 1; i < aligned.Length; i++)
+            {
+                if (positions[i].Count > 0)
+                {
+                    align_block.Open("div", "class='align-link'");
+                    int offset = 0;
+                    bool placed = false;
+                    foreach (var piece in positions[i])
+                    {
+                        var rid = "none";
+                        var name = GetAsideName(AsideType.Read);
+                        var unique = "";
+                        try
+                        {
+                            var meta = template.Matches[piece.index].MetaData;
+                            if (template.Matches[piece.index].Unique) unique = " unique";
+                            rid = meta.EscapedIdentifier;
+                        }
+                        catch { }
+                        string path = GetLinkToFolder(new List<string>() { AssetsFolderName, name + "s" }, location) + rid.Replace(':', '-') + ".html?pos=" + piece.position;
+                        if (aligned[i].Length > block * block_length + offset)
+                        {
+                            // Get the block of sequence for this piece, determine if there are leading or trailing spaces and add empty text for those
+                            var seq = aligned[i].Substring(block * block_length + offset, Math.Max(Math.Min(Math.Min(piece.length, aligned[i].Length - block * block_length - offset), block_length - offset), 0));
+                            var length = seq.Length;
+                            seq = seq.TrimStart(non_breaking_space);
+                            if (seq.Length == 0)
+                                continue; // Sequence was only whitespace so ignore
+                            var start_padding = length - seq.Length;
+                            if (start_padding > 0)
+                                align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, start_padding)));
+
+                            length = seq.Length;
+                            seq = seq.TrimEnd(non_breaking_space);
+                            var end_padding = length - seq.Length;
+
+                            var element_id = GetAsideIdentifier(template.Matches[piece.index].MetaData);
+                            var html_id = placed_ids.Contains(element_id) ? "" : " id='aligned-" + element_id + "'";
+                            align_block.OpenAndClose("a", $"href=\"{path}\"{html_id} class='align-link{unique}' onmouseover='AlignmentDetails({template.Matches[piece.index].Index})' onmouseout='AlignmentDetailsClear()'", seq);
+                            placed = true;
+
+                            if (end_padding > 0)
+                                align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, end_padding)));
+
+                            if (!placed_ids.Contains(element_id))
+                            {
+                                // Retrieve the full sequence for this read and place it in the fasta expo
+                                var start = block * block_length + offset + start_padding;
+                                var next_space = aligned[i].IndexOf(non_breaking_space, start);
+                                var len = (next_space > 0 ? next_space : aligned[i].Length) - start;
+                                var fasta_seq = aligned[i].Substring(start, len);
+                                fasta_seq = fasta_seq.Replace(gap_char, '.');
+                                fasta_seq = new String('~', start) + fasta_seq + new String('~', aligned[0].Length - start - len);
+                                data_buffer.AppendLine($">{rid} score:{template.Matches[piece.index].Score} alignment:{template.Matches[piece.index].Alignment.CIGAR()}\n{fasta_seq}");
+                            }
+                            placed_ids.Add(element_id);
+                        }
+                        offset = piece.length;
+                    }
+                    if (!placed) // There are cases where the placed block would be empty, so catch that to make the trim empty work
+                    {
+                        align_block.Close("div");
+                        align_block.UnsafeRemoveElementsFromEnd(1);
+                        align_block.OpenAndClose("div", "class='empty'", "");
+                        empty += 1;
+                    }
+                    else
+                    {
+                        align_block.Close("div");
+                        empty = 0;
+                    }
+                }
+                else
+                {
+                    align_block.OpenAndClose("div", "class='empty'", "");
+                    empty += 1;
+                }
+            }
+            align_block.UnsafeRemoveElementsFromEnd(empty);
+            align_block.Close("div");
+            return align_block;
+        }
+        static HTMLBuilder FrontOverHang(string id, string[] aligned, Template template)
+        {
+            // Create the front overhanging reads block
+            var front_html = new HTMLBuilder();
+            bool front_overhang = false;
+            front_html.Open("div", "class='align-block'");
+            front_html.Empty("input", $"type='checkbox' id='front-overhang-toggle-{id}'");
+            front_html.Open("label", $"for='front-overhang-toggle-{id}'");
+            front_html.Open("div", "class='align-block overhang-block front-overhang'");
+            front_html.Open("p");
+            front_html.OpenAndClose("span", "class='front-overhang-spacing'", "");
+
+            uint empty = 0;
+            for (int i = 1; i < aligned.Length; i++)
+            {
+                var match = template.Matches[i - 1];
+                if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
+                {
+                    front_overhang = true;
+                    front_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition)));
+                    front_html.OpenAndClose("span", "class='symbol'", "...");
+                    front_html.Empty("br");
+                    empty = 0;
+                }
+                else
+                {
+                    front_html.OpenAndClose("a", "href='#' class='text align-link'", "");
+                    front_html.OpenAndClose("span", "class='symbol'", "");
+                    front_html.Empty("br");
+                    empty += 1;
+                }
+            }
+
+            if (front_overhang)
+            {
+                front_html.UnsafeRemoveElementsFromEnd(empty * 3);
+                front_html.Close("div");
+                return front_html;
+            }
+            return new HTMLBuilder();
+        }
+
+        static HTMLBuilder EndOverHang(string id, string[] aligned, Template template)
+        {
             // Create the end overhanging reads block
             var end_html = new HTMLBuilder();
             bool end_overhang = false;
@@ -664,7 +693,7 @@ $@"<tr>
             end_html.Open("p");
             end_html.OpenAndClose("span", "class='end-overhang-spacing'", "");
 
-            empty = 0;
+            uint empty = 0;
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
@@ -691,22 +720,9 @@ $@"<tr>
                 end_html.Close("div");
                 end_html.Close("label");
                 end_html.Close("div");
-                html.Add(end_html);
+                return end_html;
             }
-
-            // Index menus
-            html.Open("div", "id='index-menus'");
-            foreach (var match in template.Matches)
-            {
-                AlignmentDetails(buffer, match, template);
-            }
-            html.Close("div");
-            html.Close("div");
-            html.Open("textarea", "class='graph-data' aria-hidden='true'");
-            html.Content(data_buffer.ToString());
-            html.Close("textarea");
-            html.Close("div");
-            return depthOfCoverage;
+            return new HTMLBuilder();
         }
 
         /// <summary>
