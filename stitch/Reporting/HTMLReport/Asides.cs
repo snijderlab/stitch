@@ -167,6 +167,7 @@ $@"<tr>
             var match = template.AlignConsensusWithTemplate();
             var columns = new List<(char Template, char Query, char Difference, Annotation Class)>();
             var data_buffer = new StringBuilder();
+            var html = new HTMLBuilder(buffer);
 
             int template_pos = match.StartTemplatePosition;
             int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
@@ -203,29 +204,43 @@ $@"<tr>
                 }
             }
 
-            buffer.Append("<div class='annotated-consensus-sequence'>");
-            buffer.Append(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence));
-            buffer.Append(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
-            buffer.Append($"<div class='annotated'><div class='names'><span>Consensus</span><span>Germline</span></div>");
+            html.Open("div", "class='annotated-consensus-sequence'");
+            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence));
+            html.UnsafeContent(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
+            html.Open("div", "class='annotated'");
+            html.Open("div", "class='names'");
+            html.OpenAndClose("span", "", "Consensus");
+            html.OpenAndClose("span", "", "Germline");
+            html.Close("div");
 
             var present = new HashSet<Annotation>();
             foreach (var column in columns)
             {
                 if (column.Template == 'X' && (column.Query == '.' || column.Query == 'X')) continue;
-                var title = "";
+                html.Open("div", $"class='{column.Class}'");
                 if (column.Class.IsAnyCDR())
                     if (!present.Contains(column.Class))
                     {
                         present.Add(column.Class);
-                        title = $"<span class='title'>{column.Class}</span>";
+                        html.OpenAndClose("span", "class='title'", column.Class.ToString());
                     }
-                buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
+                html.OpenAndClose("span", "", column.Query.ToString());
+                html.OpenAndClose("span", "", column.Template.ToString());
+                html.OpenAndClose("span", "class='dif'", column.Difference.ToString());
+                html.Close("div");
             }
-            buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
-            buffer.Append($"<textarea class='graph-data' aria-hidden='true'>");
+            html.Close("div");
+            html.Open("div", "class='annotated legend'");
+            html.OpenAndClose("p", "class='names'", "Legend");
+            html.OpenAndClose("span", "class='CDR'", "CDR");
+            html.OpenAndClose("span", "class='Conserved'", "Conserved");
+            html.OpenAndClose("span", "class='Glycosylationsite'", "Possible glycosylation site");
+            html.Close("div");
+            html.Open("textarea", "class='graph-data' aria-hidden='true'");
             var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
-            buffer.Append($"Consensus  {c}\nGermline   {g}\nDifference {d}");
-            buffer.Append("</textarea></div>");
+            html.Content($"Consensus  {c}\nGermline   {g}\nDifference {d}");
+            html.Close("textarea");
+            html.Close("div");
         }
 
         static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
@@ -273,7 +288,10 @@ $@"<tr>
             if (alignedSequences.Count == 0)
                 return new List<double>();
 
-            buffer.Append("<div class='alignment'><h2>Alignment</h2>" + CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment));
+            var html = new HTMLBuilder(buffer);
+            html.Open("div", "class='alignment'");
+            html.OpenAndClose("h2", "", "Alignment");
+            html.UnsafeContent(CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment));
 
             // Loop over aligned
             // For each position: (creates List<string[]>, per position, per sequence + template_sequence)
@@ -394,32 +412,44 @@ $@"<tr>
                 aligned[i] = sb.ToString();
             }
 
-            buffer.AppendLine($"<div class=\"reads-alignment\" style=\"--max-value:{Math.Max(depthOfCoverage.Max(), 1)}\">");
+            html.Open("div", $"class='reads-alignment' style='--max-value:{Math.Max(depthOfCoverage.Max(), 1)}'");
 
             // Create the front overhanging reads block
-            var front_overhang_buffer = new StringBuilder();
+            var front_html = new HTMLBuilder();
             bool front_overhang = false;
-            front_overhang_buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"front-overhang-toggle-{id}\"/><label for=\"front-overhang-toggle-{id}\">");
-            front_overhang_buffer.AppendFormat("<div class='align-block overhang-block front-overhang'><p><span class='front-overhang-spacing'></span>");
+            front_html.Open("div", "class='align-block'");
+            front_html.Empty("input", $"type='checkbox' id='front-overhang-toggle-{id}'");
+            front_html.Open("label", $"for='front-overhang-toggle-{id}'");
+            front_html.Open("div", "class='align-block overhang-block front-overhang'");
+            front_html.Open("p");
+            front_html.OpenAndClose("span", "class='front-overhang-spacing'", "");
 
+            uint empty = 0;
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
                 {
                     front_overhang = true;
-                    front_overhang_buffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition))}</a><span class='symbol'>...</span><br>");
+                    front_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition)));
+                    front_html.OpenAndClose("span", "class='symbol'", "...");
+                    front_html.Empty("br");
+                    empty = 0;
                 }
                 else
                 {
-                    front_overhang_buffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    front_html.OpenAndClose("a", "href='#' class='text align-link'", "");
+                    front_html.OpenAndClose("span", "class='symbol'", "");
+                    front_html.Empty("br");
+                    empty += 1;
                 }
             }
 
             if (front_overhang)
             {
-                buffer.Append(front_overhang_buffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
-                buffer.AppendLine($"</p></div></label></div>");
+                front_html.UnsafeRemoveElementsFromEnd(empty * 3);
+                front_html.Close("div");
+                html.Add(front_html);
             }
 
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{aligned[0].Replace(gap_char, '.')}");
@@ -521,19 +551,20 @@ $@"<tr>
                     if (aligned[0].Length - block * block_length >= block_length)
                     {
                         number = ((block + 1) * block_length).ToString();
-                        number = string.Concat(Enumerable.Repeat("&nbsp;", block_length - number.Length)) + number;
+                        number = string.Concat(Enumerable.Repeat(non_breaking_space, block_length - number.Length)) + number;
                     }
-                    buffer.Append($"<div class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, block_length)}>");
-                    var align_block = new StringBuilder($"<div class='wrapper'><div class=\"number\">{number}</div><div class=\"seq\">{aligned[0].Substring(block * block_length, Math.Min(block_length, aligned[0].Length - block * block_length))}</div>");
+                    html.Open("div", $"class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, block_length)}");
+                    var align_block = new HTMLBuilder();
+                    align_block.Open("div", "class='wrapper'");
+                    align_block.OpenAndClose("div", "class='number'", number.ToString());
+                    align_block.OpenAndClose("div", "class='seq'", aligned[0].Substring(block * block_length, Math.Min(block_length, aligned[0].Length - block * block_length)));
 
-                    const string empty_text = "<div class='empty'></div>";
-                    const string begin_block = "<div class='align-link'>";
-                    var empty = 0;
+                    empty = 0;
                     for (int i = 1; i < aligned.Length; i++)
                     {
                         if (positions[i].Count > 0)
                         {
-                            align_block.Append(begin_block);
+                            align_block.Open("div", "class='align-link'");
                             int offset = 0;
                             bool placed = false;
                             foreach (var piece in positions[i])
@@ -559,7 +590,7 @@ $@"<tr>
                                         continue; // Sequence was only whitespace so ignore
                                     var start_padding = length - seq.Length;
                                     if (start_padding > 0)
-                                        align_block.Append(string.Concat(Enumerable.Repeat("&nbsp;", start_padding)));
+                                        align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, start_padding)));
 
                                     length = seq.Length;
                                     seq = seq.TrimEnd(non_breaking_space);
@@ -567,11 +598,11 @@ $@"<tr>
 
                                     var element_id = GetAsideIdentifier(template.Matches[piece.index].MetaData);
                                     var html_id = placed_ids.Contains(element_id) ? "" : " id='aligned-" + element_id + "'";
-                                    align_block.Append($"<a href=\"{path}\"{html_id} class=\"align-link{unique}\" onmouseover=\"AlignmentDetails({template.Matches[piece.index].Index})\" onmouseout=\"AlignmentDetailsClear()\">{seq}</a>");
+                                    align_block.OpenAndClose("a", $"href=\"{path}\"{html_id} class='align-link{unique}' onmouseover='AlignmentDetails({template.Matches[piece.index].Index})' onmouseout='AlignmentDetailsClear()'", seq);
                                     placed = true;
 
                                     if (end_padding > 0)
-                                        align_block.Append(string.Concat(Enumerable.Repeat("&nbsp;", end_padding)));
+                                        align_block.Content(string.Concat(Enumerable.Repeat(non_breaking_space, end_padding)));
 
                                     if (!placed_ids.Contains(element_id))
                                     {
@@ -590,68 +621,88 @@ $@"<tr>
                             }
                             if (!placed) // There are cases where the placed block would be empty, so catch that to make the trim empty work
                             {
-                                align_block.Remove(align_block.Length - begin_block.Length, begin_block.Length);
-                                align_block.Append(empty_text);
+                                align_block.Close("div");
+                                align_block.UnsafeRemoveElementsFromEnd(1);
+                                align_block.OpenAndClose("div", "class='empty'", "");
                                 empty += 1;
                             }
                             else
                             {
-                                align_block.Append("</div>");
+                                align_block.Close("div");
                                 empty = 0;
                             }
                         }
                         else
                         {
-                            align_block.Append(empty_text);
+                            align_block.OpenAndClose("div", "class='empty'", "");
                             empty += 1;
                         }
                     }
                     // First add the coverage depth wrapper then the align-block
-                    buffer.AppendLine("<div class='coverage-depth-wrapper'>");
+                    html.Open("div", "class='coverage-depth-wrapper'");
 
                     for (int i = block * block_length; i < block * block_length + Math.Min(block_length, depthOfCoverage.Count - block * block_length); i++)
                     {
-                        buffer.Append($"<span class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'></span>");
+                        html.OpenAndClose("span", $"class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'", "");
                     }
-                    buffer.Append("</div>");
-                    var align_block_string = align_block.ToString();
-                    buffer.Append(align_block_string.Substring(0, align_block_string.Length - empty_text.Length * empty)); // trim the number of empty blocks that are known to be after the alignblock
-                    buffer.Append("</div></div>");
+                    html.Close("div");
+                    align_block.UnsafeRemoveElementsFromEnd(empty);
+                    align_block.Close("div");
+                    html.Add(align_block);
+                    html.Close("div");
                 }
             }
 
             // Create the end overhanging reads block
-            var end_overhang_buffer = new StringBuilder();
+            var end_html = new HTMLBuilder();
             bool end_overhang = false;
-            end_overhang_buffer.AppendLine($"<div class='align-block'><input type='checkbox' id=\"end-overhang-toggle-{id}\"/><label for=\"end-overhang-toggle-{id}\">");
-            end_overhang_buffer.AppendFormat("<div class='align-block overhang-block end-overhang'><p><span class='end-overhang-spacing'></span>");
+
+            end_html.Open("div", "class='align-block'");
+            end_html.Empty("input", $"type='checkbox' id='end-overhang-toggle-{id}'");
+            end_html.Open("label", $"for='end-overhang-toggle-{id}'");
+            end_html.Open("div", "class='align-block overhang-block end-overhang'");
+            end_html.Open("p");
+            end_html.OpenAndClose("span", "class='end-overhang-spacing'", "");
+
+            empty = 0;
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
                 if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
                 {
                     end_overhang = true;
-                    end_overhang_buffer.Append($"<a href=\"#\" class='text align-link'>{AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches))}</a><span class='symbol'>...</span><br>");
+                    end_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches)));
+                    end_html.OpenAndClose("span", "class='symbol'", "...");
+                    end_html.Empty("br");
+                    empty = 0;
                 }
                 else
                 {
-                    end_overhang_buffer.Append("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>");
+                    end_html.OpenAndClose("a", "href='#' class='text align-link'", "");
+                    end_html.OpenAndClose("span", "class='symbol'", "");
+                    end_html.Empty("br");
+                    empty += 1;
                 }
             }
             if (end_overhang)
             {
-                buffer.Append(end_overhang_buffer.ToString().TrimEnd("<a href=\"#\" class='text align-link'></a><span class='symbol'></span><br>"));
-                buffer.AppendLine($"</p></div></label></div>");
+                end_html.UnsafeRemoveElementsFromEnd(empty * 3);
+                end_html.Close("div");
+                html.Add(end_html);
             }
 
             // Index menus
-            buffer.Append("<div id='index-menus'>");
+            html.Open("div", "id='index-menus'");
             foreach (var match in template.Matches)
             {
                 AlignmentDetails(buffer, match, template);
             }
-
-            buffer.AppendLine($"</div></div><textarea class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
+            html.Close("div");
+            html.Close("div");
+            html.Open("textarea", "class='graph-data' aria-hidden='true'");
+            html.Content(data_buffer.ToString());
+            html.Close("textarea");
+            html.Close("div");
             return depthOfCoverage;
         }
 
