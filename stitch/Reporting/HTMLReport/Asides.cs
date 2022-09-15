@@ -687,6 +687,9 @@ $@"<tr>
             if (end_overhang)
             {
                 end_html.UnsafeRemoveElementsFromEnd(empty * 3);
+                end_html.Close("p");
+                end_html.Close("div");
+                end_html.Close("label");
                 end_html.Close("div");
                 html.Add(end_html);
             }
