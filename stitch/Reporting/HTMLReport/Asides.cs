@@ -222,7 +222,7 @@ $@"<tr>
                 buffer.Append($"<div class='{column.Class}'>{title}<span>{column.Query}</span><span>{column.Template}</span><span class='dif'>{column.Difference}</span></div>");
             }
             buffer.Append("</div><div class='annotated legend'><p class='names'>Legend</p><span class='CDR'>CDR</span><span class='Conserved'>Conserved</span><span class='Glycosylationsite'>Possible glycosylation site</span></div>");
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>");
+            buffer.Append($"<textarea class='graph-data' aria-hidden='true'>");
             var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
             buffer.Append($"Consensus  {c}\nGermline   {g}\nDifference {d}");
             buffer.Append("</textarea></div>");
@@ -651,7 +651,7 @@ $@"<tr>
                 AlignmentDetails(buffer, match, template);
             }
 
-            buffer.AppendLine($"</div></div><textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
+            buffer.AppendLine($"</div></div><textarea class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
             return depthOfCoverage;
         }
 
@@ -800,7 +800,6 @@ $@"<tr>
 
                 buffer.Append($"<span class='{id}' style='flex-grow:{piece.Length}'></span>");
             }
-            buffer.Append("</div>");
         }
 
         static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, string help = null)

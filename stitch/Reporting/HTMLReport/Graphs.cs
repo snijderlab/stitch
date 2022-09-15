@@ -150,7 +150,7 @@ namespace HTMLNameSpace
                 }
 
             }
-            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         /// <summary>
@@ -239,7 +239,7 @@ namespace HTMLNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         static int graph_counter = 0;
@@ -318,7 +318,7 @@ namespace HTMLNameSpace
                 buffer.Append("</div>");
             }
 
-            buffer.Append($"</div><textarea type='text' class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         /// <summary>

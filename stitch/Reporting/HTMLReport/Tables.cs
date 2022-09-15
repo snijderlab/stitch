@@ -276,7 +276,7 @@ namespace HTMLNameSpace
             buffer.Append("</div>");
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
                 buffer.Append(CopyData("Sequence Consensus Overview (TSV)", HTMLHelp.SequenceConsensusOverviewData));
-            buffer.Append($"<textarea type='text' class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
+            buffer.Append($"<textarea class='graph-data' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
         }
 
         public static void TableHeader(StringBuilder buffer, List<Template> templates, int totalReads)
