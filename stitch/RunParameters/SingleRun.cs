@@ -147,9 +147,9 @@ namespace AssemblyNameSpace
                 string JSONBlock(string name, string unit, string value, string extra = null)
                 {
                     if (extra != null)
-                        return $"{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value},\"extra\":\"{extra}\"}},";
+                        return $",{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value},\"extra\":\"{extra}\"}}";
                     else
-                        return $"{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value}}},";
+                        return $",{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value}}}";
                 }
                 var buffer = new StringBuilder();
                 IEnumerable<(string, Template)> templates = null;
@@ -166,7 +166,6 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    buffer.Append("[");
                     // Give the scoring result for each result
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates))
                     {
@@ -176,7 +175,13 @@ namespace AssemblyNameSpace
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString("G3")));
                     }
-                    File.WriteAllText("benchmark-output.json", buffer.ToString().TrimEnd(',') + "]");
+
+                    // Add this information to the file, appending where needed while keeping the format correct. Note: the list will not be closed this will need to be done afterwards.
+                    const string file_name = "benchmark-output.json";
+                    if (File.Exists(file_name))
+                        File.AppendAllText(file_name, buffer.ToString());
+                    else
+                        File.WriteAllText(file_name, "[" + buffer.ToString().TrimStart(','));
                 }
             }
 
