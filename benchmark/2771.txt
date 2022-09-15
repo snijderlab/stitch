@@ -1,6 +1,5 @@
 -Run Info---------------
-Version    : 1.0
-Runname    : Monoclonal Herceptin
+Version    : 1.1
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
