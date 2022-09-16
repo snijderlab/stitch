@@ -12,7 +12,7 @@ using System;
 
 namespace AssemblyNameSpace
 {
-    public class Fragmentation
+    public static class Fragmentation
     {
         public static Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> GetSpectra(IEnumerable<ReadMetaData.Peaks> peptides, string directory)
         {
@@ -84,7 +84,7 @@ namespace AssemblyNameSpace
             var asm2 = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumDeiso, hl_precursor, toleranceInPpm: 20), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(20, Tolerance.ErrorUnit.PPM) }, 1);
             var asm3 = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: 5), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(5, Tolerance.ErrorUnit.PPM) }, (short)precursor.ChargeState);
             var asm4 = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: 20), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(20, Tolerance.ErrorUnit.PPM) }, (short)precursor.ChargeState);
-            var asmtopX = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumDeisoTopX, hl_precursor, toleranceInPpm: 5), peptide, model, 1);
+            var asm1topX = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumDeisoTopX, hl_precursor, toleranceInPpm: 5), peptide, model, 1);
             var asm2topX = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumDeisoTopX, hl_precursor, toleranceInPpm: 20), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(20, Tolerance.ErrorUnit.PPM) }, 1);
             var asm3topX = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumTopX, hl_precursor, toleranceInPpm: 5), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(5, Tolerance.ErrorUnit.PPM) }, (short)precursor.ChargeState);
             var asm4topX = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrumTopX, hl_precursor, toleranceInPpm: 20), peptide, new PeptideFragment.FragmentModel(model) { tolerance = new Tolerance(20, Tolerance.ErrorUnit.PPM) }, (short)precursor.ChargeState);
@@ -108,6 +108,29 @@ namespace AssemblyNameSpace
 
             // determine the type of fragmentation used
             model = PeptideFragment.GetFragmentModel(filter.Fragmentation);
+        }
+
+        public static List<string> GetFragmentTypes(this PeptideFragment peptide)
+        {
+            var output = new List<string>();
+            if ((peptide.FragmentType & PeptideFragment.ION_A) != 0) output.Add("a");
+            if ((peptide.FragmentType & PeptideFragment.ION_B) != 0) output.Add("b");
+            if ((peptide.FragmentType & PeptideFragment.ION_C) != 0) output.Add("c");
+            if ((peptide.FragmentType & PeptideFragment.ION_D) != 0) output.Add("c");
+            if ((peptide.FragmentType & PeptideFragment.ION_U) != 0) output.Add("u");
+            if ((peptide.FragmentType & PeptideFragment.ION_V) != 0) output.Add("v");
+            if ((peptide.FragmentType & PeptideFragment.ION_W) != 0) output.Add("w");
+            if ((peptide.FragmentType & PeptideFragment.ION_X) != 0) output.Add("x");
+            if ((peptide.FragmentType & PeptideFragment.ION_Y) != 0) output.Add("y");
+            if ((peptide.FragmentType & PeptideFragment.ION_Z) != 0) output.Add("z");
+            if ((peptide.FragmentType & PeptideFragment.ION_INTERNALFRAGMENT) != 0) output.Add("internal");
+            if ((peptide.FragmentType & PeptideFragment.ION_PRECURSOR) != 0) output.Add("precursor");
+            if ((peptide.FragmentType & PeptideFragment.ION_IMMONIUM) != 0) output.Add("immonium");
+            if ((peptide.FragmentType & PeptideFragment.ION_UNASSIGNED) != 0) output.Add("unassigned");
+            if ((peptide.FragmentType & PeptideFragment.ION_DIAGNOSTIC) != 0) output.Add("diagnostic");
+            if ((peptide.FragmentType & PeptideFragment.ION_NONE) != 0) output.Add("none");
+            if ((peptide.FragmentType & PeptideFragment.ION_END_OF_LIST) != 0) output.Add("end");
+            return output;
         }
     }
 }

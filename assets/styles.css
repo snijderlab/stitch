@@ -125,11 +125,11 @@ table+table {
     margin-top: 1em;
 }
 
-.widetable {
+.wide-table {
     width: 100%;
 }
 
-.smallcell {
+.small-cell {
     min-width: 4rem;
     width: 15%;
 }
@@ -157,7 +157,7 @@ table+table {
 }
 
 @media (min-width: 800px) {
-    .smallcell {
+    .small-cell {
         width: 10%;
     }
 }
@@ -207,8 +207,8 @@ th[onclick]::before {
     bottom: 0;
 }
 
-th[data-sortorder="asc"]::after,
-th[data-sortorder="desc"]::before {
+th[data-sort-order="asc"]::after,
+th[data-sort-order="desc"]::before {
     color: var(--color-primary);
 }
 
@@ -453,7 +453,7 @@ input:checked+label {
     overflow: visible;
 }
 
-.clearfix {
+.clear-fix {
     clear: both;
     display: block;
     height: 1px;
@@ -712,65 +712,65 @@ input:checked+label .overhang-block .text {
 
 /* ScoreTree */
 
-.phylogenetictree .container {
+.phylogenetic-tree .container {
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
 }
 
-.phylogenetictree .legend {
+.phylogenetic-tree .legend {
     --color: var(--color-secondary);
     margin: .8em 1em 0 0;
     display: inline-block;
 }
 
-.phylogenetictree .legend.unique {
+.phylogenetic-tree .legend.unique {
     --color: var(--color-tertiary);
 }
 
-.phylogenetictree label {
+.phylogenetic-tree label {
     margin-right: 1em;
 }
 
-.phylogenetictree .tree {
+.phylogenetic-tree .tree {
     flex-grow: 1;
     z-index: 2;
 }
 
-.phylogenetictree svg {
+.phylogenetic-tree svg {
     stroke: var(--color-dark);
     stroke-width: 2px;
     overflow-x: overlay;
 }
 
-.phylogenetictree svg * {
+.phylogenetic-tree svg * {
     pointer-events: none;
 }
 
-.phylogenetictree .value {
+.phylogenetic-tree .value {
     fill: var(--color-secondary);
     fill-opacity: 1;
     pointer-events: all;
     cursor: pointer;
 }
 
-.phylogenetictree .value.unique {
+.phylogenetic-tree .value.unique {
     fill: var(--color-tertiary);
 }
 
-.phylogenetictree .showdata-0:checked~* .value {
+.phylogenetic-tree .show-data-0:checked~* .value {
     fill-opacity: var(--score);
 }
 
-.phylogenetictree .showdata-1:checked~* .value {
+.phylogenetic-tree .show-data-1:checked~* .value {
     fill-opacity: var(--matches);
 }
 
-.phylogenetictree .showdata-2:checked~* .value {
+.phylogenetic-tree .show-data-2:checked~* .value {
     fill-opacity: var(--area);
 }
 
-.phylogenetictree .info {
+.phylogenetic-tree .info {
     font: normal 1em "Roboto";
     fill: var(--color-dark);
     opacity: 0;
@@ -778,29 +778,29 @@ input:checked+label .overhang-block .text {
     stroke: var(--color-background);
 }
 
-.phylogenetictree .info-link,
-.phylogenetictree .info-link * {
+.phylogenetic-tree .info-link,
+.phylogenetic-tree .info-link * {
     pointer-events: all;
     cursor: pointer;
 }
 
-.phylogenetictree .info-link {
+.phylogenetic-tree .info-link {
     --color-used: var(--color-primary);
 }
 
-.phylogenetictree .info-link:hover {
+.phylogenetic-tree .info-link:hover {
     --color-used: var(--color-secondary);
 }
 
-.phylogenetictree .info-link:active {
+.phylogenetic-tree .info-link:active {
     --color-used: var(--color-tertiary);
 }
 
-.phylogenetictree .info-link.highlight {
+.phylogenetic-tree .info-link.highlight {
     --color-used: var(--color-secondary);
 }
 
-.phylogenetictree .info-link text {
+.phylogenetic-tree .info-link text {
     fill: var(--color-used);
     text-decoration: none;
     font-size: 13.2px;
@@ -808,19 +808,19 @@ input:checked+label .overhang-block .text {
     dominant-baseline: middle;
 }
 
-.phylogenetictree .info-link rect {
+.phylogenetic-tree .info-link rect {
     stroke: var(--color-used);
     stroke-width: 1px;
     fill: var(--color-background);
 }
 
-.phylogenetictree .showdata-0:checked~* .value:hover~.info.info-0,
-.phylogenetictree .showdata-1:checked~* .value:hover~.info.info-1,
-.phylogenetictree .showdata-2:checked~* .value:hover~.info.info-2 {
+.phylogenetic-tree .show-data-0:checked~* .value:hover~.info.info-0,
+.phylogenetic-tree .show-data-1:checked~* .value:hover~.info.info-1,
+.phylogenetic-tree .show-data-2:checked~* .value:hover~.info.info-2 {
     opacity: 1;
 }
 
-.phylogenetictree .names {
+.phylogenetic-tree .names {
     display: flex;
     flex-direction: column;
     padding-top: .7em;
@@ -834,7 +834,7 @@ input:checked+label .overhang-block .text {
 .sequence-logo {
     display: flex;
     flex-wrap: wrap;
-    font-size: var(--sequence-logo-fontsize);
+    font-size: var(--sequence-logo-font-size);
     font-family: Roboto Mono, monospace;
     margin-top: -0.4em;
     margin-bottom: 1.5em;
@@ -887,7 +887,7 @@ input:checked+label .overhang-block .text {
 
 .point-graph label,
 .graph .copy-data,
-.phylogenetictree label,
+.phylogenetic-tree label,
 .alignment .copy-data {
     font-size: 1em;
     border: 2px solid var(--color-light);
@@ -949,7 +949,7 @@ input:checked+label .overhang-block .text {
     align-self: flex-end;
 }
 
-.histogram .yaxis {
+.histogram .y-axis {
     display: flex;
     height: 100%;
     flex-direction: column;
@@ -988,7 +988,7 @@ input:checked+label .overhang-block .text {
 
 /* Negative histogram */
 
-.histogram.negative .yaxis {
+.histogram.negative .y-axis {
     grid-row-start: 1;
     grid-row-end: 3;
 }
@@ -1108,13 +1108,13 @@ input:checked+label .overhang-block .text {
 }
 
 .point-graph input:checked+label,
-.phylogenetictree input:checked+label {
+.phylogenetic-tree input:checked+label {
     border-color: var(--color-primary);
     border-radius: .2rem;
 }
 
 .point-graph label::before,
-.phylogenetictree .legend::before {
+.phylogenetic-tree .legend::before {
     content: "";
     top: 0;
     left: 0;
@@ -1129,7 +1129,7 @@ input:checked+label .overhang-block .text {
 }
 
 .point-graph label::after,
-.phylogenetictree label::after {
+.phylogenetic-tree label::after {
     content: unset !important;
 }
 
@@ -1211,27 +1211,27 @@ input:checked+label .overhang-block .text {
     background: none;
 }
 
-.point-graph .showdata-0:checked~* .point:nth-child(1) {
+.point-graph .show-data-0:checked~* .point:nth-child(1) {
     display: block;
 }
 
-.point-graph .showdata-1:checked~* .point:nth-child(2) {
+.point-graph .show-data-1:checked~* .point:nth-child(2) {
     display: block;
 }
 
-.point-graph .showdata-2:checked~* .point:nth-child(3) {
+.point-graph .show-data-2:checked~* .point:nth-child(3) {
     display: block;
 }
 
-.point-graph .showdata-3:checked~* .point:nth-child(4) {
+.point-graph .show-data-3:checked~* .point:nth-child(4) {
     display: block;
 }
 
-.point-graph .showdata-4:checked~* .point:nth-child(5) {
+.point-graph .show-data-4:checked~* .point:nth-child(5) {
     display: block;
 }
 
-.point-graph .showdata-5:checked~* .point:nth-child(6) {
+.point-graph .show-data-5:checked~* .point:nth-child(6) {
     display: block;
 }
 
@@ -1264,7 +1264,7 @@ input:checked+label .overhang-block .text {
     transform: rotate(90deg);
 }
 
-.point-graph .yaxis {
+.point-graph .y-axis {
     display: flex;
     flex-direction: column;
     height: var(--graph-height-inc);
@@ -1275,7 +1275,7 @@ input:checked+label .overhang-block .text {
     position: relative;
 }
 
-.point-graph .yaxis::after {
+.point-graph .y-axis::after {
     content: "";
     display: block;
     position: absolute;
@@ -1287,14 +1287,14 @@ input:checked+label .overhang-block .text {
     z-index: -10;
 }
 
-.point-graph .yaxis .title {
+.point-graph .y-axis .title {
     writing-mode: vertical-lr;
     align-self: center;
     transform: rotate(180deg);
 }
 
-.point-graph .yaxis .max,
-.point-graph .yaxis .min {
+.point-graph .y-axis .max,
+.point-graph .y-axis .min {
     font-size: 10px;
 }
 
@@ -1351,7 +1351,7 @@ input:checked+label .overhang-block .text {
 .spectrum .peak {
     position: absolute;
     height: calc(var(--intensity) * 100%);
-    left: calc(var(--mz) * 1px);
+    left: calc(var(--mz) / var(--max-mz) * 100%);
     width: 2px;
     background-color: var(--color-dark);
 }
@@ -1361,22 +1361,22 @@ input:checked+label .overhang-block .text {
 
 /* Special rules for depth of coverage plots */
 
-.docplot {
+.doc-plot {
     flex-basis: 100%;
 }
 
-.docplot .histogram {
+.doc-plot .histogram {
     grid-template-rows: 50px 1fr;
     gap: 0;
     grid-template-columns: minmax(0px, max-content) repeat(auto-fit, minmax(0px, 1fr));
 }
 
-.docplot .histogram .bar span {
+.doc-plot .histogram .bar span {
     position: absolute;
     color: var(--color-dark)
 }
 
-.docplot .histogram .label {
+.doc-plot .histogram .label {
     overflow-x: visible;
 }
 
@@ -1418,7 +1418,7 @@ input:checked+label .overhang-block .text {
     font-size: .7em;
 }
 
-.alignment-details .histogram .yaxis,
+.alignment-details .histogram .y-axis,
 .alignment-details .histogram .empty {
     display: none;
 }
@@ -1483,28 +1483,28 @@ input:checked+label .overhang-block .text {
         height: auto;
     }
 
-    .phylogenetictree label,
+    .phylogenetic-tree label,
     .graph label {
         display: none;
     }
 
-    .phylogenetictree input:checked+label,
+    .phylogenetic-tree input:checked+label,
     .graph input:checked+label {
         display: inline-block;
     }
 
-    .phylogenetictree input:checked+label::before {
+    .phylogenetic-tree input:checked+label::before {
         display: inline-block;
         content: "Displays:";
         margin-right: .5em;
     }
 
-    .phylogenetictree .info-link text {
+    .phylogenetic-tree .info-link text {
         fill: var(--color-dark);
         font-size: 16px;
     }
 
-    .phylogenetictree .info-link rect {
+    .phylogenetic-tree .info-link rect {
         display: none;
     }
 

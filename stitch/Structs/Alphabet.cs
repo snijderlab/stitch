@@ -45,7 +45,7 @@ namespace AssemblyNameSpace
         public const char GapChar = '.';
 
         /// <summary>
-        /// The char that represents a stopcodon, where translation will stop.
+        /// The char that represents a stop codon, where translation will stop.
         /// </summary>
         public const char StopCodon = '*';
 

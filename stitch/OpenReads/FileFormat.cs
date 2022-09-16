@@ -49,7 +49,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// An older version of a PEAKS export.
             /// </summary>
-            /// <returns>The fileformat.</returns>
+            /// <returns>The file format.</returns>
             public static FileFormat.Peaks OldFormat()
             {
                 return new FileFormat.Peaks
@@ -76,7 +76,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Version X of PEAKS export. (made for build 31 january 2019)
             /// </summary>
-            /// <returns>The fileformat.</returns>
+            /// <returns>The file format.</returns>
             public static FileFormat.Peaks PeaksX()
             {
                 return new FileFormat.Peaks
@@ -106,7 +106,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Version X+ of PEAKS export. (made for build 20 november 2019)
             /// </summary>
-            /// <returns>The fileformat.</returns>
+            /// <returns>The file format.</returns>
             public static FileFormat.Peaks PeaksXPlus()
             {
                 return new FileFormat.Peaks
@@ -136,9 +136,9 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// A custom version of a PEAKS fileformat.
+            /// A custom version of a PEAKS file format.
             /// </summary>
-            /// <returns>The fileformat.</returns>
+            /// <returns>The file format.</returns>
             public static FileFormat.Peaks CustomFormat(int fraction, int sourceFile, int feature, int scan, int peptide, int tagLength, int deNovoScore, int alc, int length, int mz, int z, int rt, int predictedRT, int area, int mass, int ppm, int ptm, int localConfidence, int tag, int mode)
             {
                 return new FileFormat.Peaks

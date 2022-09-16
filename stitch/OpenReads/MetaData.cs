@@ -18,7 +18,7 @@ namespace AssemblyNameSpace
     public static class ReadMetaData
     {
         /// <summary>
-        /// To save metadata of a read/path of which could be used in calculations to determine the likelyhood
+        /// To save metadata of a read/path of which could be used in calculations to determine the likelihood
         ///  of certain assignments or for quality control or ease of use for humans.
         /// </summary>
         public abstract class IMetaData
@@ -109,7 +109,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            /// <param name="identifier">The identifier for this read, does not have to be unique, the namefilter will enforce that.</param>
+            /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
             public Simple(FileIdentifier file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
 
             /// <summary>
@@ -121,7 +121,7 @@ namespace AssemblyNameSpace
             }
         }
 
-        /// <summary> A class to hold metainformation from fasta data. </summary>
+        /// <summary> A class to hold meta information from fasta data. </summary>
         public class Fasta : IMetaData
         {
             /// <summary>
@@ -143,15 +143,15 @@ namespace AssemblyNameSpace
                 this.FastaHeader = fastaHeader;
             }
 
-            /// <summary> Generate HTML with all metainformation from the fasta data. </summary>
-            /// <returns> Returns an HTML string with the metainformation. </returns>
+            /// <summary> Generate HTML with all meta information from the fasta data. </summary>
+            /// <returns> Returns an HTML string with the meta information. </returns>
             public override string ToHTML()
             {
                 return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>\n<h3>Fasta header</h3>\n<p>{FastaHeader}</p>{File.ToHTML()}";
             }
         }
 
-        /// <summary> A struct to hold metainformation from PEAKS data. </summary>
+        /// <summary> A struct to hold meta information from PEAKS data. </summary>
         public class Peaks : IMetaData
         {
             /// <summary> The Fraction number of the peptide. </summary>
@@ -246,23 +246,23 @@ namespace AssemblyNameSpace
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parsefile, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
             {
                 var result = new ParseResult<Peaks>();
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
-                var fields = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parsefile);
+                var fields = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parse_file);
 
-                if (String.IsNullOrWhiteSpace(parsefile.Lines[linenumber]))
+                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber]))
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line is empty", "", "", true));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Line is empty", "", "", true));
                     return result;
                 }
 
                 if (fields.Count < 5)
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
                     return result;
                 }
 
@@ -281,7 +281,7 @@ namespace AssemblyNameSpace
                 {
                     if (pos > fields.Count - 1)
                     {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
                     }
                     return true;
@@ -289,7 +289,7 @@ namespace AssemblyNameSpace
 
                 if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parsefile), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return result;
                 }
                 var peaks = new Peaks(file, fields[pf.scan].Text, filter);
@@ -402,8 +402,8 @@ namespace AssemblyNameSpace
                 return meta;
             }
 
-            /// <summary> Generate HTML with all metainformation from the PEAKS data. </summary>
-            /// <returns> Returns an HTML string with the metainformation. </returns>
+            /// <summary> Generate HTML with all meta information from the PEAKS data. </summary>
+            /// <returns> Returns an HTML string with the meta information. </returns>
             public override string ToHTML()
             {
                 var output = new StringBuilder();

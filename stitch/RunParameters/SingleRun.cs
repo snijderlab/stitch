@@ -51,7 +51,7 @@ namespace AssemblyNameSpace
             public readonly RunVariables runVariables;
 
             /// <summary>
-            /// To create a single run with a single dataparameter as input. Without assembly
+            /// To create a single run with a single data parameter as input. Without assembly
             /// </summary>
             /// <param name="id">The ID of the run.</param>
             /// <param name="runname">The name of the run.</param>
@@ -175,20 +175,20 @@ namespace AssemblyNameSpace
                         switch (report)
                         {
                             case Report.HTML h:
-                                var htmlreport = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
-                                htmlreport.Save(h.CreateName(folder, this));
+                                var html_report = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
+                                html_report.Save(h.CreateName(folder, this));
                                 break;
                             case Report.FASTA f:
-                                var fastareport = new FASTAReport(parameters, f.MinimalScore, f.OutputType, MaxNumberOfCPUCores);
-                                fastareport.Save(f.CreateName(folder, this));
+                                var fasta_report = new FASTAReport(parameters, f.MinimalScore, f.OutputType, MaxNumberOfCPUCores);
+                                fasta_report.Save(f.CreateName(folder, this));
                                 break;
                             case Report.CSV c:
-                                var csvreport = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
-                                csvreport.Save(c.CreateName(folder, this));
+                                var csv_report = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
+                                csv_report.Save(c.CreateName(folder, this));
                                 break;
                             case Report.JSON j:
-                                var jsonreport = new JSONReport(parameters, MaxNumberOfCPUCores);
-                                jsonreport.Save(j.CreateName(folder, this));
+                                var json_report = new JSONReport(parameters, MaxNumberOfCPUCores);
+                                json_report.Save(j.CreateName(folder, this));
                                 break;
                         }
                     }
@@ -272,7 +272,7 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                 var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
-                var namefilter = new NameFilter();
+                var name_filter = new NameFilter();
                 bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
                 int offset = 0;
@@ -308,7 +308,7 @@ namespace AssemblyNameSpace
                         select acc.Concat(new[] { item }));
 
                     var recombined_segment_group = new Segment(new List<Template>(), alph, "Recombined Segment", Recombine.CutoffScore);
-                    recombined_segment_group.SegmentJoiningScores = CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, namefilter);
+                    recombined_segment_group.SegmentJoiningScores = CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, name_filter);
                     if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
                     var local_matches = recombined_segment_group.Match(Input);
@@ -364,7 +364,7 @@ namespace AssemblyNameSpace
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter namefilter)
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter)
             {
                 var recombined_templates = new List<Template>();
                 var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
@@ -423,7 +423,7 @@ namespace AssemblyNameSpace
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), namefilter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), name_filter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

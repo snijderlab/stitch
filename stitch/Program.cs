@@ -162,14 +162,14 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bar.Start(4); // Max steps, can be turned down if no Recombination is done
             }
 
-            var inputparams = ParseCommandFile.Batch(filename, false);
+            var input_params = ParseCommandFile.Batch(filename, false);
             if (runVariables.ExpectedResult.Count == 0)
             {
                 bar.Update();
-                bar.Start(inputparams.Recombine != null ? 4 : 3);
+                bar.Start(input_params.Recombine != null ? 4 : 3);
             }
 
-            inputparams.CreateRun(runVariables, bar).Calculate();
+            input_params.CreateRun(runVariables, bar).Calculate();
         }
 
         /// <summary>
@@ -191,8 +191,8 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         static void CleanFasta(string filename, string output)
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
-            var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
+            var name_filter = new NameFilter();
+            var reads = OpenReads.Fasta(name_filter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
             SaveAndCleanFasta(output, reads);
         }
 
@@ -367,7 +367,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         }
 
         /// <summary>
-        /// Create an annotated fasta file from a HTML page from IMGT in the old format, based on &lt;pre&gt; or preredered text.
+        /// Create an annotated fasta file from a HTML page from IMGT in the old format, based on &lt;pre&gt; or pre rendered text.
         /// </summary>
         /// <param name="filename">The HTML file</param>
         /// <param name="output">The file name for the Fasta file</param>
@@ -384,23 +384,23 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             foreach (Match match in matches)
             {
                 var name = match.Groups[1].Value.Trim();
-                var subcontent = content.Substring(match.Groups[0].Index + match.Groups[0].Value.Length); // skip above pattern
+                var sub_content = content.Substring(match.Groups[0].Index + match.Groups[0].Value.Length); // skip above pattern
                 var dict = new Dictionary<string, string>();
-                subcontent = subcontent.TrimStart();
+                sub_content = sub_content.TrimStart();
 
                 // Go over all lines, which all contain a single isotype plus its sequence
-                while (!subcontent.StartsWith("<B") && !subcontent.StartsWith("<b") && subcontent.Length > 0)
+                while (!sub_content.StartsWith("<B") && !sub_content.StartsWith("<b") && sub_content.Length > 0)
                 {
-                    var index = subcontent.IndexOf("\n");
+                    var index = sub_content.IndexOf("\n");
                     string line;
                     if (index > 0)
                     {
-                        line = subcontent.Substring(0, index).Trim();
-                        subcontent = subcontent.Substring(index).TrimStart();
+                        line = sub_content.Substring(0, index).Trim();
+                        sub_content = sub_content.Substring(index).TrimStart();
                     }
                     else
                     {
-                        line = subcontent;
+                        line = sub_content;
                     }
                     // Parse the line to retrieve the isotype name and sequence and remove all other stuff
                     var line_re = new Regex(@"^.+(IG\w+)[^<]*</font>.+?(\(.+)$", RegexOptions.Compiled | RegexOptions.IgnoreCase);
@@ -431,7 +431,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             {
                 foreach (var (isotype, sequence) in region.Item2)
                 {
-                    if (isotype != "IGHGP") // This is a known pseudogene which is present on some pages
+                    if (isotype != "IGHGP") // This is a known pseudo gene which is present on some pages
                         if (results.ContainsKey(isotype))
                             results[isotype] = results[isotype] + sequence;
                         else
@@ -439,12 +439,12 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 }
             }
 
-            var namefilter = new NameFilter();
+            var name_filter = new NameFilter();
             var file = new ReadMetaData.FileIdentifier();
             var list = new List<(string, ReadMetaData.IMetaData)>(results.Count);
             foreach (var (isotype, sequence) in results)
             {
-                list.Add((sequence, new ReadMetaData.Fasta(isotype, isotype, file, namefilter)));
+                list.Add((sequence, new ReadMetaData.Fasta(isotype, isotype, file, name_filter)));
             }
 
             SaveAndCleanFasta(output, list);
@@ -454,7 +454,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true)
         {
             var sequences = new List<(string Sequence, ReadMetaData.IMetaData)>();
-            var namefilter = new NameFilter();
+            var name_filter = new NameFilter();
             var file = new ReadMetaData.FileIdentifier();
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
@@ -483,7 +483,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bool C = new List<String> { "CL", "C-KAPPA", "C-LAMBDA", "C-IOTA", "C-ALPHA", "C-BETA", "C-BETA-1", "C-BETA-2", "C-GAMMA", "C-GAMMA-1", "C-GAMMA-2", "C-DELTA" }.Contains(pieces[5]);
                 var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
 
-                if (pieces[6] == "ORF" || pieces[6] == "P") continue; // Remove Pseudogenes and Open Reading Frames 
+                if (pieces[6] == "ORF" || pieces[6] == "P") continue; // Remove Pseudo genes and Open Reading Frames 
 
                 List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result)
                 {
@@ -497,7 +497,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     {
                         if (!string.IsNullOrEmpty(current_seq))
                             result.Add((new List<string>(current_classes), current_seq));
-                        int i = 13; // Skip to classname
+                        int i = 13; // Skip to class name
                         for (int j = 0; i + j < input.Length; j++)
                         {
                             if (input[i + j] == '"')
@@ -537,9 +537,9 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 foreach (var (classes, seq) in final_sequence)
                 {
                     var type = "";
-                    foreach (var classname in classes)
+                    foreach (var class_name in classes)
                     {
-                        switch (classname)
+                        switch (class_name)
                         {
                             case "loop":
                                 if (V) // Only in the V region are loops designated as CDRs
@@ -556,7 +556,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                             case "mutation":
                                 break;
                             default:
-                                type = "UNKOWN: " + classname;
+                                type = "UNKNOWN: " + class_name;
                                 break;
                         };
                     }
@@ -612,7 +612,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     else
                         encoded_sequence.Append($"({piece.Type} {piece.Sequence})");
                 }
-                sequences.Add((encoded_sequence.ToString(), new ReadMetaData.Fasta(pieces[2], pieces[2], file, namefilter)));
+                sequences.Add((encoded_sequence.ToString(), new ReadMetaData.Fasta(pieces[2], pieces[2], file, name_filter)));
             }
             SaveAndCleanFasta(output, sequences);
         }

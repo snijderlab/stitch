@@ -25,11 +25,11 @@ namespace AssemblyNameSpace
         public readonly string Runname;
 
         public readonly Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments)
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();
-            RecombinedSegment = recombinedsegment.AsReadOnly();
+            RecombinedSegment = recombined_segment.AsReadOnly();
             BatchFile = batchFile;
             runVariables = variables;
             Runname = runname;
@@ -37,7 +37,7 @@ namespace AssemblyNameSpace
         }
     }
     /// <summary>
-    /// To be a basepoint for any reporting options, handling all the metadata.
+    /// To be a base point for any reporting options, handling all the metadata.
     /// </summary>
     public abstract class Report
     {

@@ -110,10 +110,10 @@ namespace AssemblyNameSpace
                 }
 
                 var tail = $"| {Math.Round((double)value / max_value * 100),3}% {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}";
-                var barlength = width - tail.Length - 1;
-                var position = (int)Math.Round((double)value / max_value * barlength);
+                var bar_length = width - tail.Length - 1;
+                var position = (int)Math.Round((double)value / max_value * bar_length);
                 var stem = new String('-', position);
-                var empty = new String(' ', barlength - position);
+                var empty = new String(' ', bar_length - position);
                 Console.Write($"{stem}>{empty}{tail}\b");
 
                 free = true;

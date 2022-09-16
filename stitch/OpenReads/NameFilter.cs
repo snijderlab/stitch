@@ -37,26 +37,26 @@ namespace AssemblyNameSpace
         /// <summary>
         /// The invalid chars in a file path
         /// </summary>
-        readonly HashSet<char> invalidchars;
+        readonly HashSet<char> invalid_chars;
 
         /// <summary>
         /// Create a new NameFilter
         /// </summary>
         public NameFilter()
         {
-            invalidchars = new HashSet<char>(Path.GetInvalidFileNameChars());
-            invalidchars.Add('*');
-            invalidchars.Add('<');
-            invalidchars.Add('>');
-            invalidchars.Add('!');
-            invalidchars.Add('%');
-            invalidchars.Add('.');
-            invalidchars.Add(' ');
+            invalid_chars = new HashSet<char>(Path.GetInvalidFileNameChars());
+            invalid_chars.Add('*');
+            invalid_chars.Add('<');
+            invalid_chars.Add('>');
+            invalid_chars.Add('!');
+            invalid_chars.Add('%');
+            invalid_chars.Add('.');
+            invalid_chars.Add(' ');
         }
 
         /// <summary>
         /// Escapes the given identifier and returns the amount of read with exactly the same identifer
-        /// that were already Escaped by this namefilter plus one. So it can be seen as the index 
+        /// that were already Escaped by this name filter plus one. So it can be seen as the index 
         /// (1-based) of this identifier in the list of identical identifiers. The total number of 
         /// duplicates can be found by using the 'Count' member of the IdenticalIdentifiersNode (BST).
         /// </summary>
@@ -67,7 +67,7 @@ namespace AssemblyNameSpace
 
             for (int i = 0; i < chars.Length; i++)
             {
-                if (invalidchars.Contains(chars[i])) chars[i] = '_';
+                if (invalid_chars.Contains(chars[i])) chars[i] = '_';
             }
 
             var name = new string(chars);

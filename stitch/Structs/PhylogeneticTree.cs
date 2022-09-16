@@ -14,13 +14,13 @@ namespace AssemblyNameSpace
         /// </summary>
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
-        /// <param name="addOutgroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet, bool addOutgroup = true)
+        /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
+        public static Tree<string> CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet, bool addOutGroup = true)
         {
-            if (addOutgroup)
+            if (addOutGroup)
             {
                 var avg = Sequences.Select(e => e.Sequence.Length).Average();
-                Sequences.Add(("Outgroup", HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg))));
+                Sequences.Add(("OutGroup", HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg))));
             }
             var length = Sequences.Count;
             var distance = new double[length, length];
@@ -79,24 +79,24 @@ namespace AssemblyNameSpace
                 length -= 1;
                 var new_distance = new double[length, length];
                 var new_leaves = new Tree<string>[length];
-                int skiprow = 0;
+                int skip_row = 0;
                 for (int i = 0; i < length + 1; i++)
                 {
-                    if (i == min.Item3) { skiprow = 1; continue; }
-                    else if (i == min.Item2) new_leaves[i - skiprow] = node;
-                    else new_leaves[i - skiprow] = leaves[i];
+                    if (i == min.Item3) { skip_row = 1; continue; }
+                    else if (i == min.Item2) new_leaves[i - skip_row] = node;
+                    else new_leaves[i - skip_row] = leaves[i];
 
-                    int skipcolumn = 0;
+                    int skip_column = 0;
                     for (int j = 0; j < length + 1; j++)
                     {
                         if (j == min.Item3)
-                            skipcolumn = 1;
+                            skip_column = 1;
                         else if (i == min.Item2)
-                            new_distance[i - skiprow, j - skipcolumn] = (distance[min.Item2, j] + distance[min.Item3, j] + distance[min.Item2, min.Item3]) / 2;
+                            new_distance[i - skip_row, j - skip_column] = (distance[min.Item2, j] + distance[min.Item3, j] + distance[min.Item2, min.Item3]) / 2;
                         else if (j == min.Item2)
-                            new_distance[i - skiprow, j - skipcolumn] = (distance[min.Item2, i] + distance[min.Item3, i] + distance[min.Item2, min.Item3]) / 2;
+                            new_distance[i - skip_row, j - skip_column] = (distance[min.Item2, i] + distance[min.Item3, i] + distance[min.Item2, min.Item3]) / 2;
                         else
-                            new_distance[i - skiprow, j - skipcolumn] = distance[i, j];
+                            new_distance[i - skip_row, j - skip_column] = distance[i, j];
                     }
                 }
                 distance = new_distance;
@@ -106,13 +106,13 @@ namespace AssemblyNameSpace
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
 
-            if (addOutgroup)
+            if (addOutGroup)
             {
                 var path = new List<(Tree<string>, double)>();
                 output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
                 {
                     acc.Add((item, dis));
-                    if (item.Value == "Outgroup")
+                    if (item.Value == "OutGroup")
                         path = new List<(Tree<string>, double)>(acc);
                     return acc;
                 },
@@ -146,7 +146,7 @@ namespace AssemblyNameSpace
                     index += 1;
                 }
                 var new_dis = new_branch.Item1 / 2;
-                // Only take the newly build tree, as the only thing remaining in the tree is the Outgroup
+                // Only take the newly build tree, as the only thing remaining in the tree is the OutGroup
                 output = new_branch.Item2;
             }
 

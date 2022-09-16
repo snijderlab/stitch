@@ -325,7 +325,7 @@ assetsfolder = '{AssetsFolderName}';
                     if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var template = Parameters.RecombinedSegment[group].Templates[0];
                     var (seq, doc) = template.ConsensusSequence();
-                    buffer.Append($"<h2><a href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'>{Parameters.Segments[group].Item1}</a></h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='docplot'>");
+                    buffer.Append($"<h2><a href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'>{Parameters.Segments[group].Item1}</a></h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='doc-plot'>");
                     HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage", null, null, 10, template.ConsensusSequenceAnnotation());
                     buffer.Append("</div><h3>Best scoring segments</h3><p>");
 

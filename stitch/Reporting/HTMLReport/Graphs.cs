@@ -33,29 +33,29 @@ namespace HTMLNameSpace
             if (max == min) bins = 1;
             double step = (max - min) / bins;
 
-            var labeled = new (string, List<double>)[bins];
+            var labelled = new (string, List<double>)[bins];
 
             double low = min;
             for (int i = 0; i < bins; i++)
             {
-                labeled[i] = ($"{low:G3}-{low + step:G3}", Enumerable.Repeat(0.0, data.Count).ToList());
+                labelled[i] = ($"{low:G3}-{low + step:G3}", Enumerable.Repeat(0.0, data.Count).ToList());
                 low += step;
             }
 
-            for (int setindex = 0; setindex < data.Count; setindex++)
+            for (int set_index = 0; set_index < data.Count; set_index++)
             {
-                foreach (var item in data[setindex].Data)
+                foreach (var item in data[set_index].Data)
                 {
                     int bin = (int)Math.Floor((item - min) / step);
 
                     if (bin > bins - 1) bin = bins - 1;
                     else if (bin < 0) bin = 0;
 
-                    labeled[bin].Item2[setindex]++;
+                    labelled[bin].Item2[set_index]++;
                 }
             }
 
-            GroupedBargraph(buffer, labeled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title);
+            GroupedBargraph(buffer, labelled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title);
         }
 
         public static void Histogram(StringBuilder buffer, List<double> data, string title, string help = null, string data_help = null, int bins = 10)
@@ -70,12 +70,12 @@ namespace HTMLNameSpace
             if (max == min) bins = 1;
             double step = (max - min) / bins;
 
-            var labeled = new (string, double)[bins];
+            var labelled = new (string, double)[bins];
 
             double low = min;
             for (int i = 0; i < bins; i++)
             {
-                labeled[i] = ($"{low:G3}-{low + step:G3}", 0);
+                labelled[i] = ($"{low:G3}-{low + step:G3}", 0);
                 low += step;
             }
 
@@ -86,10 +86,10 @@ namespace HTMLNameSpace
                 if (bin > bins - 1) bin = bins - 1;
                 else if (bin < 0) bin = 0;
 
-                labeled[bin].Item2++;
+                labelled[bin].Item2++;
             }
 
-            Bargraph(buffer, labeled.ToList(), title, help, data_help);
+            Bargraph(buffer, labelled.ToList(), title, help, data_help);
         }
 
         public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, string data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
@@ -118,7 +118,7 @@ namespace HTMLNameSpace
                 max = Math.Max(max, 0); // Make sure to not start graphs below zero as this breaks the layout
                 buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
                 // Y axis
-                buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
+                buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
 
                 // Data
                 for (int i = 0; i < data.Count; i++)
@@ -138,7 +138,7 @@ namespace HTMLNameSpace
                 buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
 
                 // Y axis
-                buffer.Append($"<span class='yaxis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
+                buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
 
                 // Data
                 for (int i = 0; i < data.Count; i++)
@@ -171,19 +171,19 @@ namespace HTMLNameSpace
             }
 
             int dimensions = header.Count;
-            double[] maxvalues = new double[dimensions];
-            double[] minvalues = new double[dimensions];
+            double[] max_values = new double[dimensions];
+            double[] min_values = new double[dimensions];
 
-            Array.Fill(maxvalues, Double.MinValue);
-            Array.Fill(minvalues, Double.MaxValue);
+            Array.Fill(max_values, Double.MinValue);
+            Array.Fill(min_values, Double.MaxValue);
 
             foreach ((_, var dims) in data)
             {
                 if (dims.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dims.Count}) as the rest ({dimensions}).");
                 for (int i = 0; i < dimensions; i++)
                 {
-                    if (dims[i] > maxvalues[i]) maxvalues[i] = dims[i];
-                    if (dims[i] < minvalues[i]) minvalues[i] = dims[i];
+                    if (dims[i] > max_values[i]) max_values[i] = dims[i];
+                    if (dims[i] < min_values[i]) min_values[i] = dims[i];
                 }
             }
 
@@ -195,8 +195,8 @@ namespace HTMLNameSpace
             {
                 var dimensionIndex = header[i].Dimension;
 
-                if (maxvalues[i] > dimensionMax[dimensionIndex]) dimensionMax[dimensionIndex] = maxvalues[i];
-                if (minvalues[i] > dimensionMin[dimensionIndex]) dimensionMin[dimensionIndex] = maxvalues[i];
+                if (max_values[i] > dimensionMax[dimensionIndex]) dimensionMax[dimensionIndex] = max_values[i];
+                if (min_values[i] > dimensionMin[dimensionIndex]) dimensionMin[dimensionIndex] = max_values[i];
             }
 
             for (int i = 0; i < dimensionDimensions; i++)
@@ -259,11 +259,11 @@ namespace HTMLNameSpace
             graph_counter++;
             string identifier = $"graph-{graph_counter}";
             int dimensions = header.Count;
-            double[] maxvalues = new double[dimensions];
-            double[] minvalues = new double[dimensions];
+            double[] max_values = new double[dimensions];
+            double[] min_values = new double[dimensions];
 
-            Array.Fill(maxvalues, Double.MinValue);
-            Array.Fill(minvalues, Double.MaxValue);
+            Array.Fill(max_values, Double.MinValue);
+            Array.Fill(min_values, Double.MaxValue);
 
             foreach ((_, var group) in data)
             {
@@ -272,8 +272,8 @@ namespace HTMLNameSpace
                     if (values.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({values.Count}) as the rest ({dimensions}).");
                     for (int i = 0; i < dimensions; i++)
                     {
-                        if (values[i] > maxvalues[i]) maxvalues[i] = values[i];
-                        if (values[i] < minvalues[i]) minvalues[i] = values[i];
+                        if (values[i] > max_values[i]) max_values[i] = values[i];
+                        if (values[i] < min_values[i]) min_values[i] = values[i];
                     }
                 }
             }
@@ -285,12 +285,12 @@ namespace HTMLNameSpace
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
-                buffer.Append($"<input type='checkbox' class='showdata-{i}' id='{identifier}-showdata-{i}'{check}/>");
-                buffer.Append($"<label for='{identifier}-showdata-{i}'>{header[i]}</label>");
+                buffer.Append($"<input type='checkbox' class='show-data-{i}' id='{identifier}-show-data-{i}'{check}/>");
+                buffer.Append($"<label for='{identifier}-show-data-{i}'>{header[i]}</label>");
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help) + "<div class='plot'><div class='yaxis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
+            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help) + "<div class='plot'><div class='y-axis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
             // Create Graph
             foreach (var group in data)
             {
@@ -303,7 +303,7 @@ namespace HTMLNameSpace
                     // Create Points
                     for (int i = 0; i < dimensions; i++)
                     {
-                        buffer.Append($"<span class='point' style='--x:{(point.Values[i] - minvalues[i]) / (maxvalues[i] - minvalues[1])}'></span>");
+                        buffer.Append($"<span class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[1])}'></span>");
                         dataBuffer.Append($"\t{point.Values[i]}");
                     }
                     buffer.Append($"</a><span class='label'><a href='#{identifier}-{point.Label}'>{point.Label}</a></span>");
@@ -363,13 +363,13 @@ namespace HTMLNameSpace
             var max_x = xf * (columns + 1);
             var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
 
-            html.Open("div", "class='phylogenetictree'");
+            html.Open("div", "class='phylogenetic-tree'");
 
             var button_names = new string[] { "Score", "Matches", "Area" };
             for (int i = 0; i < button_names.Length; i++)
             {
                 var check = i == 0 ? " checked " : "";
-                html.Empty("input", $"type='radio' class='showdata-{i}' name='{id}' id='{id}-{i}'{check}");
+                html.Empty("input", $"type='radio' class='show-data-{i}' name='{id}' id='{id}-{i}'{check}");
                 html.OpenAndClose("label", $"for='{id}-{i}'", button_names[i]);
             }
             html.OpenAndClose("p", "class='legend'", "Cumulative value of all children (excluding unique)");
@@ -459,6 +459,7 @@ namespace HTMLNameSpace
             html.Open("div", "class='peptide'");
             var n_term = new bool[sequence.Length];
             var c_term = new bool[sequence.Length];
+            var max_mz = 0.0;
             foreach (var fragment in fragments)
             {
                 if (fragment.Terminus == Proteomics.Terminus.C)
@@ -471,13 +472,16 @@ namespace HTMLNameSpace
                     n_term[fragment.Position] = true;
                     //Console.WriteLine($"From N term at position {fragment.Position} is char {fragment.Letter} and in sequence {sequence[fragment.Position - 1]} or end {sequence[sequence.Length - (fragment.Position - 1)]}");
                 }
+                max_mz = Math.Max(max_mz, fragment.Mz);
             }
+
+            // Display the full sequence from N to C terminus with its fragments annotated
             for (int i = 0; i < sequence.Length; i++)
             {
                 var n = n_term[i] ? " n" : "";
                 var c = c_term[i] ? " c" : "";
                 var classes = n + c;
-                classes = String.IsNullOrWhiteSpace(classes) ? "" : "class='" + classes + "'";
+                classes = String.IsNullOrWhiteSpace(classes) ? "" : "class='" + classes.Trim() + "'";
                 html.OpenAndClose("span", classes, sequence[i].ToString());
             }
             html.Close("div");
@@ -489,18 +493,21 @@ namespace HTMLNameSpace
             html.OpenAndClose("span", "", "1");
             html.Close("div");
 
-            html.Open("div", "class='canvas'");
+            html.Open("div", $"class='canvas' style='--max-mz:{max_mz}'");
 
             foreach (var fragment in fragments)
             {
-                html.OpenAndClose("span", $"class='peak {fragment.FragmentType}' style='--mz:{fragment.Mz};--intensity:1;'", "");
+                html.OpenAndClose("span", $"class='peak {PeptideFragment.IonToString(fragment.FragmentType)} {PeptideFragment.MassShiftToString(fragment.MassShift)}' style='--mz:{fragment.Mz};--intensity:1;'", "");
             }
 
             html.Close("div");
 
             html.Open("div", "class='x-axis'");
             html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "", "1");
+            html.OpenAndClose("span", "class='1_4'", (max_mz / 4).ToString("G3"));
+            html.OpenAndClose("span", "", (max_mz / 2).ToString("G3"));
+            html.OpenAndClose("span", "class='3_4'", (3 * max_mz / 4).ToString("G3"));
+            html.OpenAndClose("span", "", max_mz.ToString("G3"));
             html.Close("div");
 
             html.Close("div");
