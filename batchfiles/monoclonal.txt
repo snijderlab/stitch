@@ -124,6 +124,9 @@ Report ->
     HTML ->
         Path: report-monoclonal.html
     <-
+    JSON ->
+        Path: report-monoclonal.json
+    <-
     FASTA ->
         Path: report-monoclonal-tm.fasta
         OutputType: TemplateMatching

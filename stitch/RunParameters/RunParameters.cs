@@ -458,6 +458,13 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
+            /// To indicate to return an JSON report.
+            /// </summary>
+            public class JSON : Parameter
+            {
+            }
+
+            /// <summary>
             /// The type sequences in the fasta to give as output
             /// </summary>
             public enum OutputType { TemplateMatches, Recombine }

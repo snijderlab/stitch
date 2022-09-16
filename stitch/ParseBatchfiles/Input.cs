@@ -878,12 +878,31 @@ namespace AssemblyNameSpace
                                         hsettings.Path = setting.GetValue();
                                         break;
                                     default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path' and 'DotDistribution'"));
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path'"));
                                         break;
                                 }
                             }
                             if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             output.Files.Add(hsettings);
+                            break;
+                        case "json":
+                            var jsettings = new RunParameters.Report.JSON();
+
+                            foreach (var setting in pair.GetValues())
+                            {
+                                switch (setting.Name)
+                                {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(jsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        jsettings.Path = setting.GetValue();
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "JSON", "'Path'"));
+                                        break;
+                                }
+                            }
+                            if (string.IsNullOrWhiteSpace(jsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(jsettings);
                             break;
                         case "fasta":
                             var fsettings = new RunParameters.Report.FASTA();

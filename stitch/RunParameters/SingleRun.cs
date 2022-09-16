@@ -174,6 +174,10 @@ namespace AssemblyNameSpace
                                 var csvreport = new CSVReport(parameters, c.OutputType, MaxNumberOfCPUCores);
                                 csvreport.Save(c.CreateName(folder, this));
                                 break;
+                            case Report.JSON j:
+                                var jsonreport = new JSONReport(parameters, MaxNumberOfCPUCores);
+                                jsonreport.Save(j.CreateName(folder, this));
+                                break;
                         }
                     }
                 }

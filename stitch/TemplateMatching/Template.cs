@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
 using static AssemblyNameSpace.HelperFunctionality;
+using System.Text.Json.Serialization;
 
 
 namespace AssemblyNameSpace
@@ -97,6 +98,7 @@ namespace AssemblyNameSpace
         /// </summary>
         public readonly TemplateLocation Location;
 
+        [JsonIgnore]
         /// <summary>
         /// The parent segment, needed to get the settings for scoring, alphabet etc
         /// </summary>

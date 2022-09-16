@@ -9,6 +9,8 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Text.Json;
+using System.Text.Json.Serialization;
 
 namespace AssemblyNameSpace
 {
@@ -17,6 +19,7 @@ namespace AssemblyNameSpace
     /// </summary>
     public class Alphabet
     {
+        [JsonIgnore]
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
         /// As such this matrix is rectangular. </summary>
         public readonly int[,] ScoringMatrix;

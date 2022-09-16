@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using System.Text.Json.Serialization;
 
 namespace AssemblyNameSpace
 {
@@ -21,6 +22,7 @@ namespace AssemblyNameSpace
         /// <value> The code of this AminoAcid. </value>
         public readonly char Character;
 
+        [JsonIgnore]
         /// <summary>
         /// The alphabet used.
         /// </summary>
