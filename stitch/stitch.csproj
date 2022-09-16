@@ -10,6 +10,11 @@
     <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Version>1.1.4</Version>
   </PropertyGroup>
+
+  <ItemGroup>
+      <PackageReference Include="hecklib.core" Version="2.5.*" />
+      <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.*" />
+  </ItemGroup>
   
   <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
     <Exec 

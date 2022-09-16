@@ -23,7 +23,9 @@ namespace AssemblyNameSpace
         public readonly ParsedFile BatchFile;
         public readonly RunVariables runVariables;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname = "Runname")
+
+        public readonly Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> Fragments;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();
@@ -31,6 +33,7 @@ namespace AssemblyNameSpace
             BatchFile = batchFile;
             runVariables = variables;
             Runname = runname;
+            Fragments = fragments;
         }
     }
     /// <summary>

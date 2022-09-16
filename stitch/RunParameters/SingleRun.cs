@@ -23,6 +23,7 @@ namespace AssemblyNameSpace
             /// THe name of this run.
             /// </summary>
             public string Runname;
+            public string RawDataDirectory;
             public readonly int MaxNumberOfCPUCores;
 
             /// <summary>
@@ -58,7 +59,7 @@ namespace AssemblyNameSpace
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, ProgressBar bar = null)
+            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -69,6 +70,7 @@ namespace AssemblyNameSpace
                 MaxNumberOfCPUCores = maxNumberOfCPUCores;
                 runVariables = variables;
                 progressBar = bar;
+                RawDataDirectory = rawDataDirectory;
             }
 
             /// <summary>
@@ -106,7 +108,17 @@ namespace AssemblyNameSpace
                     recombine_sw.Stop();
                 }
 
-                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname);
+                Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments = null;
+                if (this.RawDataDirectory != null)
+                {
+                    fragments = Fragmentation.GetSpectra(Input.Select(item =>
+                    {
+                        if (item.Item2 is ReadMetaData.Peaks p) return p;
+                        else return null;
+                    }).Where(i => i != null), this.RawDataDirectory);
+                }
+
+                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here
                 if (runVariables.ExpectedResult.Count > 0)

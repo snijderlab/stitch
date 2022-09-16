@@ -1298,6 +1298,66 @@ input:checked+label .overhang-block .text {
     font-size: 10px;
 }
 
+/* Spectrum */
+
+.spectrum .peptide {
+    font-size: 1.25em;
+    margin: 1em;
+}
+
+.spectrum .peptide .c {
+    border-left: 2px solid var(--color-primary);
+    border-top: 2px solid var(--color-primary);
+}
+
+.spectrum .peptide .n {
+    border-right: 2px solid var(--color-secondary);
+    border-bottom: 2px solid var(--color-secondary);
+}
+
+.spectrum .canvas-wrapper {
+    width: 100%;
+    display: grid;
+    grid-template-rows: 1fr 2em;
+    grid-template-columns: 2em 1fr;
+    grid-template-areas:
+        "y-axis canvas"
+        ". x-axis";
+}
+
+.spectrum .y-axis {
+    grid-area: y-axis;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column-reverse;
+    min-height: 250px;
+    align-items: flex-end;
+}
+
+.spectrum .x-axis {
+    grid-area: x-axis;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.spectrum .canvas {
+    grid-area: canvas;
+    position: relative;
+    border-left: 2px solid var(--color-dark);
+    border-bottom: 2px solid var(--color-dark);
+}
+
+.spectrum .peak {
+    position: absolute;
+    height: calc(var(--intensity) * 100%);
+    left: calc(var(--mz) * 1px);
+    width: 2px;
+    background-color: var(--color-dark);
+}
+
+
+
 
 /* Special rules for depth of coverage plots */
 

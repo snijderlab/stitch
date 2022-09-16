@@ -23,6 +23,10 @@ namespace AssemblyNameSpace
             /// The name of this run.
             /// </summary>
             public string Runname = "";
+            /// <summary>
+            /// The directory which contains all raw files.
+            /// </summary>
+            public string RawDataDirectory = null;
 
             /// <summary>
             /// Determines the maximum number of CPU cores to be used.
@@ -59,7 +63,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public SingleRun CreateRun(RunVariables variables, ProgressBar bar = null)
             {
-                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, variables, bar);
+                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, variables, RawDataDirectory, bar);
             }
         }
     }

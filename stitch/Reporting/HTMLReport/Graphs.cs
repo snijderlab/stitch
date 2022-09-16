@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AssemblyNameSpace;
+using HeckLib.chemistry;
 
 namespace HTMLNameSpace
 {
@@ -435,6 +436,75 @@ namespace HTMLNameSpace
             html.Close("div");
             html.Close("div");
 
+            return html.ToString();
+        }
+
+        public static string RenderSpectrum(string sequence, ReadMetaData.Peaks metadata, PeptideFragment[] fragments)
+        {
+            // public int GroupId;
+            // public Proteomics.Terminus Terminus;
+            // public string Description;
+            // public int MassShift;
+            // public int FragmentType;
+            // public short Charge;
+            // public double Mz;
+            // public int SeriesNr;
+            // public int Position;
+            // public char Letter;
+            var html = new HTMLBuilder();
+
+            var data = fragments.Select(f => (f.Description, f.Mz * f.Charge)).ToList();
+            html.Open("div", "class='spectrum'");
+            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum", "TODO"));
+            html.Open("div", "class='peptide'");
+            var n_term = new bool[sequence.Length];
+            var c_term = new bool[sequence.Length];
+            foreach (var fragment in fragments)
+            {
+                if (fragment.Terminus == Proteomics.Terminus.C)
+                {
+                    c_term[fragment.Position] = true;
+                    //Console.WriteLine($"From C term at position {fragment.Position} is char {fragment.Letter} and in sequence {sequence[fragment.Position - 1]} or end {sequence[sequence.Length - (fragment.Position - 1)]}");
+                }
+                else if (fragment.Terminus == Proteomics.Terminus.N)
+                {
+                    n_term[fragment.Position] = true;
+                    //Console.WriteLine($"From N term at position {fragment.Position} is char {fragment.Letter} and in sequence {sequence[fragment.Position - 1]} or end {sequence[sequence.Length - (fragment.Position - 1)]}");
+                }
+            }
+            for (int i = 0; i < sequence.Length; i++)
+            {
+                var n = n_term[i] ? " n" : "";
+                var c = c_term[i] ? " c" : "";
+                var classes = n + c;
+                classes = String.IsNullOrWhiteSpace(classes) ? "" : "class='" + classes + "'";
+                html.OpenAndClose("span", classes, sequence[i].ToString());
+            }
+            html.Close("div");
+
+            html.Open("div", "class='canvas-wrapper'");
+
+            html.Open("div", "class='y-axis'");
+            html.OpenAndClose("span", "", "0");
+            html.OpenAndClose("span", "", "1");
+            html.Close("div");
+
+            html.Open("div", "class='canvas'");
+
+            foreach (var fragment in fragments)
+            {
+                html.OpenAndClose("span", $"class='peak {fragment.FragmentType}' style='--mz:{fragment.Mz};--intensity:1;'", "");
+            }
+
+            html.Close("div");
+
+            html.Open("div", "class='x-axis'");
+            html.OpenAndClose("span", "", "0");
+            html.OpenAndClose("span", "", "1");
+            html.Close("div");
+
+            html.Close("div");
+            html.Close("div");
             return html.ToString();
         }
     }
