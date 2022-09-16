@@ -142,7 +142,8 @@ namespace HTMLNameSpace
         /// <returns>The HTMl needed for this help.</returns>
         public static string TagWithHelp(string tag, string title, string help, string classes = null, string extra = "")
         {
-            classes = classes != null ? $" class='{classes}'" : "";
+            classes = classes != null ? $" class='{classes.Trim()}'" : "";
+            extra = extra != "" ? " " + extra.Trim() : "";
             return $"<{tag}{classes}{extra}>{title}{UserHelp(title, help)}</{tag}>";
         }
 
