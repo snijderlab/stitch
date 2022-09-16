@@ -142,6 +142,17 @@ function Setup() {
         elements[i].addEventListener("mouseenter", openHelp)
         elements[i].addEventListener("mouseleave", closeHelp)
     }
+
+    // Highlight the correct nodes and table row on the homepage after clicking on the point graph
+    var split = window.location.href.split('#')
+    if (split.length == 2) {
+        var parts = split[1].split('_');
+        var target = parts[parts.length - 1];
+        var elements = document.querySelectorAll("[id$=\"" + target + "\"]")
+        for (var i = 0; i < elements.length; i++) {
+            elements[i].classList.add("highlight");
+        }
+    }
 }
 
 function openHelp(event) {

@@ -220,7 +220,8 @@ td.seq {
 
 .report tr:target,
 .report tr:hover,
-.report tr.selected {
+.report tr.selected,
+.report tr.highlight {
     color: var(--color-tertiary);
     --color-primary: var(--color-tertiary);
 }
@@ -247,6 +248,12 @@ td.seq {
     margin: .1em;
     border-radius: .2rem;
     font-size: .8em;
+}
+
+.info-link.highlight {
+    color: var(--color-tertiary);
+    border: 1px solid var(--color-tertiary);
+    --color-used: var(--color-tertiary);
 }
 
 .info-link:hover {
@@ -787,6 +794,10 @@ input:checked+label .overhang-block .text {
 
 .phylogenetictree .info-link:active {
     --color-used: var(--color-tertiary);
+}
+
+.phylogenetictree .info-link.highlight {
+    --color-used: var(--color-secondary);
 }
 
 .phylogenetictree .info-link text {
