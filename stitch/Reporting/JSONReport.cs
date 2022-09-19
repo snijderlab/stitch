@@ -38,6 +38,7 @@ namespace AssemblyNameSpace
                     new AminoAcidListConverter()
                 }
             };
+#pragma warning disable IL2026
             return JsonSerializer.Serialize(Parameters, options);
         }
     }
