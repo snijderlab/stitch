@@ -16,6 +16,7 @@ namespace HTMLNameSpace
         public const string SegmentJoining = "This are the scores for all tested overlaps. The X-axis displays the overlaps the Y-axis the scores. If there are multiple overlaps with a high score make sure to manually check if stitch did indeed pick the best one.";
         public const string SequenceConsensusOverview = "This displays the found diversity of amino acids for each position. The amino acids are linearly scaled to the respective score. The score is calculated as the sum of all positional scores (if present otherwise the general scores) for this position in all aligned reads. Any positions where no reads where mapped are displayed as dots '.'.";
         public const string SequenceConsensusOverviewData = "A TSV file with for each position in the consensus sequence all found amino acids with its score. This par is saved as two consecutive columns filled with first the amino acid and second the score.";
+        public const string Spectrum = "The raw spectrum of this peptide. The fragments are coloured according to ion type (see legend). Any peaks with a star '*' as text can be hovered over to see the full details, first the ion type second the mass shift type.";
         public const string TemplateIdentifier = "The identifier for this template.";
         public const string TemplateLength = "The length of the sequence in amino acids, excluding any 'X's added by 'GapHead' or 'GapTail'.";
         public const string TemplateMatches = "The total number of placed reads on this template.";

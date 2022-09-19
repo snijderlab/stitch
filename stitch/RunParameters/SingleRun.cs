@@ -108,7 +108,7 @@ namespace AssemblyNameSpace
                     recombine_sw.Stop();
                 }
 
-                Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments = null;
+                Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
                     fragments = Fragmentation.GetSpectra(Input.Select(item =>

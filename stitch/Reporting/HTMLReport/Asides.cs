@@ -19,7 +19,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> Fragments)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>

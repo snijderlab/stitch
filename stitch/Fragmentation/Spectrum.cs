@@ -14,9 +14,9 @@ namespace AssemblyNameSpace
 {
     public static class Fragmentation
     {
-        public static Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> GetSpectra(IEnumerable<ReadMetaData.Peaks> peptides, string directory)
+        public static Dictionary<ReadMetaData.Peaks, PeptideSpectrum> GetSpectra(IEnumerable<ReadMetaData.Peaks> peptides, string directory)
         {
-            var fragments = new Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]>(peptides.Count());
+            var fragments = new Dictionary<ReadMetaData.Peaks, PeptideSpectrum>(peptides.Count());
 
             foreach (var group in peptides.GroupBy(m => m.Source_File))
             {
@@ -64,7 +64,7 @@ namespace AssemblyNameSpace
                     maxCharge = (short)precursor.ChargeState;
                     PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
                     var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
-                    fragments.Add(meta, peptide_fragments);
+                    fragments.Add(meta, new PeptideSpectrum(matchedFragments, spectrum, peptide_fragments));
                 }
             }
             return fragments;
@@ -131,6 +131,18 @@ namespace AssemblyNameSpace
             if ((peptide.FragmentType & PeptideFragment.ION_NONE) != 0) output.Add("none");
             if ((peptide.FragmentType & PeptideFragment.ION_END_OF_LIST) != 0) output.Add("end");
             return output;
+        }
+
+        public class PeptideSpectrum
+        {
+            public readonly (HeckLib.chemistry.PeptideFragment Fragment, HeckLib.Centroid Centroid)[] MatchedFragments;
+            public readonly HeckLib.chemistry.PeptideFragment[] TheoreticalFragments;
+
+            public PeptideSpectrum(HeckLib.chemistry.PeptideFragment[] matchedFragments, HeckLib.Centroid[] matchedPeaks, HeckLib.chemistry.PeptideFragment[] theoreticalFragments)
+            {
+                MatchedFragments = matchedFragments.Zip(matchedPeaks).ToArray();
+                TheoreticalFragments = theoreticalFragments;
+            }
         }
     }
 }

@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace AssemblyNameSpace
 {
@@ -23,9 +24,9 @@ namespace AssemblyNameSpace
         public readonly ParsedFile BatchFile;
         public readonly RunVariables runVariables;
         public readonly string Runname;
-
-        public readonly Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, HeckLib.chemistry.PeptideFragment[]> fragments)
+        [JsonIgnore]
+        public readonly Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();

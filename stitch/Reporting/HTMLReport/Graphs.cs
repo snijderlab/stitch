@@ -439,50 +439,49 @@ namespace HTMLNameSpace
             return html.ToString();
         }
 
-        public static string RenderSpectrum(string sequence, ReadMetaData.Peaks metadata, PeptideFragment[] fragments)
+        public static string RenderSpectrum(string sequence, ReadMetaData.Peaks metadata, Fragmentation.PeptideSpectrum spectrum)
         {
-            // public int GroupId;
-            // public Proteomics.Terminus Terminus;
-            // public string Description;
-            // public int MassShift;
-            // public int FragmentType;
-            // public short Charge;
-            // public double Mz;
-            // public int SeriesNr;
-            // public int Position;
-            // public char Letter;
             var html = new HTMLBuilder();
-
-            var data = fragments.Select(f => (f.Description, f.Mz * f.Charge)).ToList();
             html.Open("div", "class='spectrum'");
-            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum", "TODO"));
+            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum", HTMLHelp.Spectrum));
+            html.Open("div", "class='legend'");
+            html.OpenAndClose("span", "class='title'", "Ion legend");
+            html.OpenAndClose("span", "class='A'", "A");
+            html.OpenAndClose("span", "class='B'", "B");
+            html.OpenAndClose("span", "class='C'", "C");
+            html.OpenAndClose("span", "class='X'", "X");
+            html.OpenAndClose("span", "class='Y'", "Y");
+            html.OpenAndClose("span", "class='Z'", "Z");
+            html.Close("div");
             html.Open("div", "class='peptide'");
-            var n_term = new bool[sequence.Length];
-            var c_term = new bool[sequence.Length];
+
+            var fragment_overview = new HashSet<string>[sequence.Length];
+            for (int i = 0; i < sequence.Length; i++) fragment_overview[i] = new HashSet<string>();
             var max_mz = 0.0;
-            foreach (var fragment in fragments)
+            var max_intensity = 0.0;
+
+            foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
-                if (fragment.Terminus == Proteomics.Terminus.C)
-                {
-                    c_term[fragment.Position] = true;
-                    //Console.WriteLine($"From C term at position {fragment.Position} is char {fragment.Letter} and in sequence {sequence[fragment.Position - 1]} or end {sequence[sequence.Length - (fragment.Position - 1)]}");
-                }
-                else if (fragment.Terminus == Proteomics.Terminus.N)
-                {
-                    n_term[fragment.Position] = true;
-                    //Console.WriteLine($"From N term at position {fragment.Position} is char {fragment.Letter} and in sequence {sequence[fragment.Position - 1]} or end {sequence[sequence.Length - (fragment.Position - 1)]}");
-                }
+                if (fragment == null || fragment.Position == -1) continue;
                 max_mz = Math.Max(max_mz, fragment.Mz);
+                max_intensity = Math.Max(max_intensity, centroid.Intensity);
+                var position = fragment.Position - 1;
+                if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position - 1;
+                fragment_overview[position].Add(PeptideFragment.IonToString(fragment.FragmentType));
             }
+            max_mz *= 1.01;
+            max_intensity *= 1.01;
 
             // Display the full sequence from N to C terminus with its fragments annotated
             for (int i = 0; i < sequence.Length; i++)
             {
-                var n = n_term[i] ? " n" : "";
-                var c = c_term[i] ? " c" : "";
-                var classes = n + c;
-                classes = String.IsNullOrWhiteSpace(classes) ? "" : "class='" + classes.Trim() + "'";
-                html.OpenAndClose("span", classes, sequence[i].ToString());
+                html.Open("span");
+                html.Content(sequence[i].ToString());
+                foreach (var fragment_type in fragment_overview[i])
+                {
+                    html.OpenAndClose("span", $"class='corner {fragment_type}'", "");
+                }
+                html.Close("span");
             }
             html.Close("div");
 
@@ -490,14 +489,32 @@ namespace HTMLNameSpace
 
             html.Open("div", "class='y-axis'");
             html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "", "1");
+            html.OpenAndClose("span", "class='1_4'", (max_intensity / 4).ToString("G3"));
+            html.OpenAndClose("span", "", (max_intensity / 2).ToString("G3"));
+            html.OpenAndClose("span", "class='3_4'", (3 * max_intensity / 4).ToString("G3"));
+            html.OpenAndClose("span", "", max_intensity.ToString("G3"));
             html.Close("div");
 
-            html.Open("div", $"class='canvas' style='--max-mz:{max_mz}'");
+            html.Open("div", $"class='canvas' style='--max-mz:{max_mz};--max-intensity:{max_intensity};'");
 
-            foreach (var fragment in fragments)
+            foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
-                html.OpenAndClose("span", $"class='peak {PeptideFragment.IonToString(fragment.FragmentType)} {PeptideFragment.MassShiftToString(fragment.MassShift)}' style='--mz:{fragment.Mz};--intensity:1;'", "");
+                if (fragment == null) continue;
+                var ion = PeptideFragment.IonToString(fragment.FragmentType).Replace(' ', '-');
+                var shift = PeptideFragment.MassShiftToString(fragment.MassShift).Replace(' ', '-').Replace(' ', '-');
+                var normal_ion = (fragment.FragmentType == PeptideFragment.ION_A || fragment.FragmentType == PeptideFragment.ION_B || fragment.FragmentType == PeptideFragment.ION_C || fragment.FragmentType == PeptideFragment.ION_X || fragment.FragmentType == PeptideFragment.ION_Y || fragment.FragmentType == PeptideFragment.ION_Z);
+                if (fragment.Position == -1 || !normal_ion)
+                {
+                    html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                    html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
+                    html.Close("span");
+                }
+                else
+                {
+                    html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                    html.OpenAndClose("span", "", ion + fragment.Position.ToString());
+                    html.Close("span");
+                }
             }
 
             html.Close("div");
