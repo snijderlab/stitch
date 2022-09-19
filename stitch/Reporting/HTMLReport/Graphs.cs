@@ -116,7 +116,7 @@ namespace HTMLNameSpace
             if (min < 0)
             {
                 max = Math.Max(max, 0); // Make sure to not start graphs below zero as this breaks the layout
-                buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
+                buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' aria-hidden='true' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
                 // Y axis
                 buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
 
@@ -135,7 +135,7 @@ namespace HTMLNameSpace
             else
             {
                 min = 0; // always start graphs at 0 
-                buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()'>");
+                buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()' aria-hidden='true'>");
 
                 // Y axis
                 buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
@@ -150,7 +150,7 @@ namespace HTMLNameSpace
                 }
 
             }
-            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         /// <summary>
@@ -215,7 +215,7 @@ namespace HTMLNameSpace
             }
 
             // Create Graph
-            buffer.Append("</div>" + CommonPieces.CopyData(title + " (TSV)") + "<div class='histogram grouped' oncontextmenu='CopyGraphData()'>");
+            buffer.Append("</div>" + CommonPieces.CopyData(title + " (TSV)") + "<div class='histogram grouped' aria-hidden='true' oncontextmenu='CopyGraphData()'>");
             foreach (var set in data)
             {
                 buffer.Append($"<span class='group'>");
@@ -239,7 +239,7 @@ namespace HTMLNameSpace
                 buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
             }
 
-            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         static int graph_counter = 0;
@@ -281,7 +281,7 @@ namespace HTMLNameSpace
             // Create Legend
             var dataBuffer = new StringBuilder("Group\tPoint");
 
-            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()'>" + CommonPieces.TagWithHelp("h2", title, help));
+            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()' aria-hidden='true'>" + CommonPieces.TagWithHelp("h2", title, help));
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
@@ -318,7 +318,7 @@ namespace HTMLNameSpace
                 buffer.Append("</div>");
             }
 
-            buffer.Append($"</div><textarea class='graph-data' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
         }
 
         /// <summary>
@@ -485,7 +485,7 @@ namespace HTMLNameSpace
             }
             html.Close("div");
 
-            html.Open("div", "class='canvas-wrapper'");
+            html.Open("div", "class='canvas-wrapper' aria-hidden='true'");
 
             html.Open("div", "class='y-axis'");
             html.OpenAndClose("span", "", "0");

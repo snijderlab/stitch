@@ -56,8 +56,8 @@ namespace AssemblyNameSpace
             }
             catch (Exception e)
             {
-                Console.WriteLine($"Internal error: the tree for {name} will not be available but the program will continue. Please report this including your batchfile and used templates.");
-                Console.WriteLine(e);
+                (new InputNameSpace.ErrorMessage(name, "Error rendering tree", "The tree will not be available but the program will continue. Please report this including your batchfile and used templates.", "", true)).Print();
+                InputNameSpace.ErrorMessage.PrintException(e);
             }
         }
         /// <summary>

@@ -369,7 +369,8 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"\nThere were {Messages.Count} error(s) while parsing.\n");
+                var plural = Messages.Count == 1 ? "" : "s";
+                Console.WriteLine($"\nThere were {Messages.Count} error{plural} while parsing.\n");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)
@@ -1455,7 +1456,6 @@ namespace AssemblyNameSpace
             static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive)
             {
                 var try_path = GetFullPathPrivate(path);
-                Console.WriteLine("FullPath: " + path + " / " + try_path);
 
                 try
                 {

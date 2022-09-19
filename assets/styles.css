@@ -1588,11 +1588,8 @@ input:checked+label .overhang-block .text {
     background-color: var(--color-foreground);
 }
 
-[aria-hidden="true"] {
-    opacity: 0;
-    position: absolute;
-    z-index: -9999;
-    pointer-events: none;
+.hidden {
+    display: none;
 }
 
 @media print {

@@ -134,7 +134,7 @@ namespace AssemblyNameSpace
             }
             catch
             {
-                Console.WriteLine($"Got an error while looking up the homology for this code {this.Character} and that code {right.Character}, probably there is one (or more) character that is not valid");
+                (new InputNameSpace.ErrorMessage($"{this.Character} or {right.Character}", "Amino Acid could not be found", "Got an error while looking up the homology for these aminoacids probably there is one (or more) character that is not valid.")).Print();
                 throw;
             }
         }

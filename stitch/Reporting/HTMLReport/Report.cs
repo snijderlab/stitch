@@ -528,7 +528,7 @@ assetsfolder = '{AssetsFolderName}';
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine(e);
+                        new InputNameSpace.ErrorMessage(source, "Could not copy asset", e.Message, "", true).Print();
                     }
                 }
                 else
@@ -571,7 +571,8 @@ assetsfolder = '{AssetsFolderName}';
             }
             catch (Exception e)
             {
-                Console.WriteLine(e);
+                InputNameSpace.ErrorMessage.PrintException(e);
+                return;
             }
 
             await t;

@@ -243,7 +243,7 @@ $@"<tr>
             html.OpenAndClose("span", "class='Conserved'", "Conserved");
             html.OpenAndClose("span", "class='Glycosylationsite'", "Possible glycosylation site");
             html.Close("div");
-            html.Open("textarea", "class='graph-data' aria-hidden='true'");
+            html.Open("textarea", "class='graph-data hidden' aria-hidden='true'");
             var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
             html.Content($"Consensus  {c}\nGermline   {g}\nDifference {d}");
             html.Close("textarea");
@@ -541,7 +541,7 @@ $@"<tr>
             }
             html.Close("div");
             html.Close("div");
-            html.Open("textarea", "class='graph-data' aria-hidden='true'");
+            html.Open("textarea", "class='graph-data hidden' aria-hidden='true'");
             html.Content(data_buffer.ToString());
             html.Close("textarea");
             html.Close("div");
