@@ -143,7 +143,54 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
             catch (Exception e)
             {
-                Console.WriteLine($"ERROR: {e.Message}\nSTACKTRACE: {e.StackTrace}\nSOURCE: {e.Source}\nTARGET: {e.TargetSite}");
+                var defaultColour = Console.ForegroundColor;
+                Console.ForegroundColor = ConsoleColor.Red;
+                Console.WriteLine($"\n>> Error: {e.Message}");
+
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine(" --> Stacktrace:");
+                Console.ForegroundColor = defaultColour;
+                //Console.WriteLine(e.StackTrace);
+                foreach (var line in e.StackTrace.Split(" at "))
+                {
+                    if (String.IsNullOrWhiteSpace(line)) continue;
+                    var pieces = Regex.Match(line, @"^\s*(.+\.)(\w+)(\(.+) in (.+\\)([^\\]+):line (.+)\s*$");
+                    if (pieces.Success)
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write("| ");
+                        Console.ForegroundColor = defaultColour;
+                        Console.Write(pieces.Groups[1]);
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write(pieces.Groups[2]);
+                        Console.ForegroundColor = defaultColour;
+                        Console.Write(pieces.Groups[3]);
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write(" in ");
+                        Console.ForegroundColor = defaultColour;
+                        Console.Write(pieces.Groups[4]);
+                        Console.ForegroundColor = ConsoleColor.Yellow;
+                        Console.Write(pieces.Groups[5]);
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write(":line ");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(pieces.Groups[6]);
+                        Console.ForegroundColor = defaultColour;
+                    }
+                    else
+                    {
+                        Console.ForegroundColor = ConsoleColor.Blue;
+                        Console.Write("| ");
+                        Console.ForegroundColor = ConsoleColor.Red;
+                        Console.WriteLine(line);
+                        Console.ForegroundColor = defaultColour;
+                    }
+                }
+
+                Console.WriteLine("\nPlease include this entire error if you open a new issue.");
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
+                Console.ForegroundColor = defaultColour;
                 return 1;
             }
             return 0;

@@ -369,7 +369,7 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                Console.WriteLine($"There were {Messages.Count} error(s) while parsing.\n");
+                Console.WriteLine($"\nThere were {Messages.Count} error(s) while parsing.\n");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)
