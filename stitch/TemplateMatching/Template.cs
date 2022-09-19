@@ -194,7 +194,7 @@ namespace AssemblyNameSpace
             {
                 Sequence = sequence;
 
-                // Precomputes a hashcode based on the actual sequence of the gap
+                // Pre computes a hash code based on the actual sequence of the gap
                 // TODO: Find out if a full sequence based hash is necessary
                 int hash = 1217;
                 int pos = 0;
@@ -252,10 +252,10 @@ namespace AssemblyNameSpace
             int start, length;
             bool placed, could_be_placed;
 
-            for (int matchindex = 0; matchindex < Matches.Count; matchindex++)
+            for (int match_index = 0; match_index < Matches.Count; match_index++)
             {
-                start = Matches[matchindex].StartTemplatePosition;
-                length = Matches[matchindex].LengthOnTemplate;
+                start = Matches[match_index].StartTemplatePosition;
+                length = Matches[match_index].LengthOnTemplate;
                 placed = false;
 
                 for (int l = 0; l < levels.Count; l++)
@@ -274,7 +274,7 @@ namespace AssemblyNameSpace
                     if (could_be_placed)
                     {
                         levels[l].Add((start, length));
-                        level_lookup[matchindex] = l;
+                        level_lookup[match_index] = l;
                         placed = true;
                         break;
                     }
@@ -283,7 +283,7 @@ namespace AssemblyNameSpace
                 if (!placed)
                 {
                     levels.Add(new List<(int Start, int Length)> { (start, length) });
-                    level_lookup[matchindex] = levels.Count - 1;
+                    level_lookup[match_index] = levels.Count - 1;
                 }
             }
 
@@ -301,19 +301,19 @@ namespace AssemblyNameSpace
             SequenceMatch match;
             SequenceMatch.MatchPiece piece;
 
-            for (int matchindex = 0; matchindex < Matches.Count; matchindex++)
+            for (int match_index = 0; match_index < Matches.Count; match_index++)
             {
-                match = Matches[matchindex];
+                match = Matches[match_index];
                 // Start at StartTemplatePosition and StartQueryPosition
                 int template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
-                int level = level_lookup[matchindex];
+                int level = level_lookup[match_index];
 
-                for (int pieceindex = 0; pieceindex < match.Alignment.Count; pieceindex++)
+                for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++)
                 {
-                    piece = match.Alignment[pieceindex];
-                    var inseq = pieceindex < match.Alignment.Count - 1 && pieceindex > 0;
+                    piece = match.Alignment[piece_index];
+                    var inseq = piece_index < match.Alignment.Count - 1 && piece_index > 0;
 
                     if (piece is SequenceMatch.Match m)
                     {
@@ -323,10 +323,10 @@ namespace AssemblyNameSpace
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
-                                           || (pieceindex < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
+                                           || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[level] = (matchindex, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
-                            if (!gap) output[template_pos].Gaps[level] = (matchindex, new None(), new double[0], contigid, in_sequence);
+                            output[template_pos].Sequences[level] = (match_index, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
+                            if (!gap) output[template_pos].Gaps[level] = (match_index, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
                             seq_pos++;
@@ -348,15 +348,15 @@ namespace AssemblyNameSpace
 
                         seq_pos += len;
                         int pos = Math.Max(Math.Min(template_pos - 1, output.Count - 1), 0);
-                        output[pos].Gaps[level] = (matchindex, sub_seq, cov, contigid, inseq);
+                        output[pos].Gaps[level] = (match_index, sub_seq, cov, contigid, inseq);
                     }
                     else if (piece is SequenceMatch.GapInTemplate gt)
                     {
                         // Skip to the next section
                         for (int i = 0; i < gt.Length && template_pos < output.Count; i++)
                         {
-                            output[template_pos].Sequences[level] = (matchindex, -1, 1, -1); //TODO: figure out the best score for a gap in a path
-                            output[template_pos].Gaps[level] = (matchindex, new None(), new double[0], -1, true);
+                            output[template_pos].Sequences[level] = (match_index, -1, 1, -1); //TODO: figure out the best score for a gap in a path
+                            output[template_pos].Gaps[level] = (match_index, new None(), new double[0], -1, true);
                             template_pos++;
                         }
                         gap = false;
@@ -536,7 +536,7 @@ namespace AssemblyNameSpace
         /// <summary>
         /// Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates.
         /// </summary>
-        /// <returns>The sequencematch containing the result</returns>
+        /// <returns>The sequence match containing the result</returns>
         public SequenceMatch AlignConsensusWithTemplate()
         {
             if (Recombination != null)

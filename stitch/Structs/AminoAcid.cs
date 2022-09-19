@@ -17,7 +17,7 @@ namespace AssemblyNameSpace
     /// be used in an efficient way. </summary>
     public struct AminoAcid
     {
-        /// <summary> The code (index of the char in the alpabet array of the parent).
+        /// <summary> The code (index of the char in the alphabet array of the parent).
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
         public readonly char Character;
@@ -37,7 +37,7 @@ namespace AssemblyNameSpace
             Character = input;
         }
 
-        /// <summary> Will create a string of this AminoAcid. Consiting of the character used to
+        /// <summary> Will create a string of this AminoAcid. Consisting of the character used to
         /// create this AminoAcid. </summary>
         /// <returns> Returns the character of this AminoAcid (based on the alphabet) as a string. </returns>
         public override string ToString()
@@ -46,8 +46,8 @@ namespace AssemblyNameSpace
         }
 
         /// <summary> Will create a string of a collection of AminoAcids. </summary>
-        /// <param name="collaction"> The collaction to create a string from. </param>
-        /// <returns> Returns the string of the collaction. </returns>
+        /// <param name="collection"> The collection to create a string from. </param>
+        /// <returns> Returns the string of the collection. </returns>
         public static string ArrayToString(ICollection<AminoAcid> collection)
         {
             var builder = new StringBuilder();
@@ -112,8 +112,8 @@ namespace AssemblyNameSpace
             return true;
         }
 
-        /// <summary> To get a hashcode for this AminoAcid. </summary>
-        /// <returns> Returns the hashcode of the AminoAcid. </returns>
+        /// <summary> To get a hash code for this AminoAcid. </summary>
+        /// <returns> Returns the hash code of the AminoAcid. </returns>
         public override int GetHashCode()
         {
             return 7559 ^ (Character.GetHashCode() * 13);

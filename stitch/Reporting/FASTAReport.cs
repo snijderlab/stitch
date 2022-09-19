@@ -17,10 +17,10 @@ namespace AssemblyNameSpace
         /// To retrieve all metadata.
         /// </summary>
         /// <param name="parameters">The parameters.</param>
-        /// <param name="minscore">The minimal score needed to be included in the file.</param>
-        public FASTAReport(ReportInputParameters parameters, int minscore, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
+        /// <param name="min_score">The minimal score needed to be included in the file.</param>
+        public FASTAReport(ReportInputParameters parameters, int min_score, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
         {
-            MinScore = minscore;
+            MinScore = min_score;
             OutputType = outputType;
         }
 

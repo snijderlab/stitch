@@ -19,7 +19,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -28,8 +28,15 @@ namespace HTMLNameSpace
     <h2>Sequence Length</h2>
     <p>{read.Sequence.Length}</p>
     ");
+            if (read.MetaData is ReadMetaData.Peaks p)
+            {
+                if (Fragments != null && Fragments.ContainsKey(p))
+                {
+                    buffer.Append(HTMLGraph.RenderSpectrum(read.Sequence, p, Fragments[p]));
+                }
+            }
             buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup));
-            buffer.Append("<table class='widetable'><tr><th>Group</th><th>Segment</th><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+            buffer.Append("<table class='wide-table'><tr><th>Group</th><th>Segment</th><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
             foreach (var group in segments)
             {
                 foreach (var segment in group.Item2)
@@ -57,7 +64,7 @@ $@"<tr>
             }
             if (recombined != null)
             {
-                buffer.Append("</table><table class='widetable'><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+                buffer.Append("</table><table class='wide-table'><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
                 foreach (var segment in recombined)
                 {
                     foreach (var template in segment.Templates)
@@ -125,18 +132,18 @@ $@"<tr>
             CreateAnnotatedSequence(buffer, human_id, template);
 
             SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
-            buffer.Append("<div class='docplot'>");
+            buffer.Append("<div class='doc-plot'>");
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, null, 10, template.ConsensusSequenceAnnotation());
             buffer.Append($@"</div>
     <h2>Scores</h2>
-    <table class='widetable'><tr>
-        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell")}
-        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell")}
+    <table class='wide-table'><tr>
+        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "small-cell")}
     </tr><tr>
         <td class='center'>{template.Sequence.Length}</td>
         <td class='center'>{template.Score}</td>
@@ -246,9 +253,9 @@ $@"<tr>
         static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
         {
             if (template.Matches.Count == 0) return;
-            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='docplot'>");
+            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='doc-plot'>");
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage), "Depth of Coverage (including gaps)");
-            buffer.Append("</div><div class='docplot'>");
+            buffer.Append("</div><div class='doc-plot'>");
             HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), "Log10 Depth of Coverage (including gaps)");
             buffer.Append("</div>");
 
@@ -733,9 +740,9 @@ $@"<tr>
         /// </summary>
         /// <param name="annotated">The annotation, a list of all Types for each position as finally aligned.</param>
         /// <param name="block">The selected block.</param>
-        /// <param name="blocklength">The selected blocklength.</param>
+        /// <param name="block_length">The selected block length.</param>
         /// <returns>The colour as a style element to directly put in a HTML element.</returns>
-        static string TemplateAlignmentAnnotation(List<Annotation> annotated, int block, int blocklength)
+        static string TemplateAlignmentAnnotation(List<Annotation> annotated, int block, int block_length)
         {
             string Color(Annotation Type)
             {
@@ -758,13 +765,13 @@ $@"<tr>
             }
             string Point(uint point)
             {
-                return Math.Round((double)point / blocklength * 100).ToString() + "%";
+                return Math.Round((double)point / block_length * 100).ToString() + "%";
             }
             if (annotated == null) return "";
             var annotatedSequence = annotated.ToArray();
-            var localLength = Math.Min(blocklength, annotatedSequence.Length - block * blocklength);
+            var localLength = Math.Min(block_length, annotatedSequence.Length - block * block_length);
             if (localLength < 1) return "";
-            var annotation = annotatedSequence.SubArray(block * blocklength, localLength);
+            var annotation = annotatedSequence.SubArray(block * block_length, localLength);
             var grouped = new List<(Annotation, uint)>() { (annotation[0], 1) };
             for (int i = 1; i < localLength; i++)
             {
@@ -801,7 +808,7 @@ $@"<tr>
 
         static void AlignmentDetails(StringBuilder buffer, SequenceMatch match, Template template)
         {
-            var doctitle = "Positional Score";
+            var doc_title = "Positional Score";
             var type = "Read";
 
             buffer.Append($@"
@@ -849,7 +856,7 @@ $@"<tr>
             }
             if (match.MetaData.PositionalScore.Length != 0)
             {
-                buffer.Append($"<tr><td>{doctitle}</td><td class='docplot'>");
+                buffer.Append($"<tr><td>{doc_title}</td><td class='doc-plot'>");
                 HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition));
                 buffer.Append("</td></tr>");
             }

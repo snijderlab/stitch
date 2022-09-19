@@ -18,15 +18,15 @@ namespace AssemblyNameSpace
         /// Parses a batch file and retrieves the 
         /// </summary>
         /// <param name="path">The path to the batch file.</param>
-        /// <returns>The runparameters as specified in the file.</returns>
+        /// <returns>The run parameters as specified in the file.</returns>
         public static FullRunParameters Batch(string path, bool languageServer = false)
         {
             var output = new FullRunParameters();
             var outEither = new ParseResult<FullRunParameters>(output);
-            var namefilter = new NameFilter();
+            var name_filter = new NameFilter();
 
             // Get the contents
-            string batchfilecontent = ParseHelper.GetAllText(path).ReturnOrFail().Replace("\t", "    "); // Remove tabs
+            string batchfile_content = ParseHelper.GetAllText(path).ReturnOrFail().Replace("\t", "    "); // Remove tabs
 
             // Set the working directory to the directory of the batchfile
             var original_working_directory = Directory.GetCurrentDirectory();
@@ -36,7 +36,7 @@ namespace AssemblyNameSpace
             }
 
             // Save the batchfile for use in the construction of error messages
-            var batchfile = new ParsedFile(path, batchfilecontent.Split('\n'));
+            var batchfile = new ParsedFile(path, batchfile_content.Split('\n'));
             output.BatchFile = batchfile;
 
             // Tokenize the file, into a key value pair tree
@@ -45,7 +45,7 @@ namespace AssemblyNameSpace
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters
 
-            bool versionspecified = false;
+            bool version_specified = false;
             List<KeyValue> order_groups = null;
             KeyValue readAlignmentKey = null;
 
@@ -57,17 +57,26 @@ namespace AssemblyNameSpace
                     case "runname":
                         output.Runname = pair.GetValue();
                         break;
+                    case "rawdatadirectory":
+                        if (output.RawDataDirectory != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.RawDataDirectory = ParseHelper.GetFullPath(pair).GetValue(outEither);
+                        if (!Directory.Exists(output.RawDataDirectory))
+                        {
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Could not find RawDataDirectory. Execution will continue, but the spectra will be missing from all reports.", "", "", true));
+                            output.RawDataDirectory = null;
+                        }
+                        break;
                     case "version":
                         var version = ParseHelper.ConvertToDouble(pair.GetValue(), pair.ValueRange).GetValue(outEither);
                         if (version < 1.0)
                         {
-                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (prerelease versions) are deprecated, please change to version '1.x'."));
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please change to version '1.x'."));
                         }
                         if (version >= 2.0)
                         {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "This version of Stitch cannot handle batchfiles major version 2.0 or higher, please change to version '1.x'."));
                         }
-                        versionspecified = true;
+                        version_specified = true;
                         break;
                     case "maxcores":
                         output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).GetValue(outEither);
@@ -78,7 +87,7 @@ namespace AssemblyNameSpace
                         break;
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.TemplateMatching = ParseHelper.ParseTemplateMatching(namefilter, pair).GetValue(outEither);
+                        output.TemplateMatching = ParseHelper.ParseTemplateMatching(name_filter, pair).GetValue(outEither);
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -225,10 +234,10 @@ namespace AssemblyNameSpace
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(namefilter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
+            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
 
             // Check if there is a version specified
-            if (!versionspecified)
+            if (!version_specified)
             {
                 outEither.AddMessage(new ErrorMessage(def_range, "No version specified", "There is no version specified for the batch file; This is needed to handle different versions in different ways."));
             }
@@ -286,7 +295,7 @@ namespace AssemblyNameSpace
         public ParseException(string msg)
             : base(msg) { }
     }
-    /// <summary>To save a result of a parse action, the value or a errormessage. </summary>
+    /// <summary>To save a result of a parse action, the value or a error message. </summary>
     public class ParseResult<T>
     {
         public T Value;
@@ -385,12 +394,12 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="separator">The separator to use.</param>
             /// <param name="linenumber">The linenumber.</param>
-            /// <param name="parsefile">The file where the line should be taken from.</param>
-            public static List<(string Text, FileRange Pos)> SplitLine(char separator, int linenumber, ParsedFile parsefile)
+            /// <param name="parse_file">The file where the line should be taken from.</param>
+            public static List<(string Text, FileRange Pos)> SplitLine(char separator, int linenumber, ParsedFile parse_file)
             {
                 var results = new List<(string, FileRange)>();
-                var lastpos = 0;
-                var line = parsefile.Lines[linenumber];
+                var last_pos = 0;
+                var line = parse_file.Lines[linenumber];
 
                 // Find the fields on this line
                 for (int pos = 0; pos < line.Length; pos++)
@@ -398,21 +407,21 @@ namespace AssemblyNameSpace
                     if (line[pos] == separator)
                     {
                         results.Add((
-                            line.Substring(lastpos, pos - lastpos).Trim(),
-                            new FileRange(new Position(linenumber, lastpos + 1, parsefile), new Position(linenumber, pos + 1, parsefile))
+                            line.Substring(last_pos, pos - last_pos).Trim(),
+                            new FileRange(new Position(linenumber, last_pos + 1, parse_file), new Position(linenumber, pos + 1, parse_file))
                         ));
-                        lastpos = pos + 1;
+                        last_pos = pos + 1;
                     }
                 }
 
                 results.Add((
-                    line.Substring(lastpos, line.Length - lastpos).Trim(),
-                    new FileRange(new Position(linenumber, lastpos, parsefile), new Position(linenumber, Math.Max(0, line.Length - 1), parsefile))
+                    line.Substring(last_pos, line.Length - last_pos).Trim(),
+                    new FileRange(new Position(linenumber, last_pos, parse_file), new Position(linenumber, Math.Max(0, line.Length - 1), parse_file))
                 ));
                 return results;
             }
             /// <summary>
-            /// Converts a string to an int, while it generates meaningfull error messages for the end user.
+            /// Converts a string to an int, while it generates meaningful error messages for the end user.
             /// </summary>
             /// <param name="input">The string to be converted to an int.</param>
             /// <returns>If successfull: the number (int32)</returns>
@@ -434,11 +443,11 @@ namespace AssemblyNameSpace
                 }
                 catch
                 {
-                    return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
+                    return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
             /// <summary>
-            /// Converts a string to a double, while it generates meaningfull error messages for the end user.
+            /// Converts a string to a double, while it generates meaningful error messages for the end user.
             /// </summary>
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
@@ -460,7 +469,7 @@ namespace AssemblyNameSpace
                 }
                 catch
                 {
-                    return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unkown exception occurred."));
+                    return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
             public static ParseResult<InputData.InputParameters> ParseInputParameters(KeyValue key)
@@ -611,7 +620,7 @@ namespace AssemblyNameSpace
                             // Parse files one by one
                             var folder_path = "";
                             FileRange? folder_range = null;
-                            var startswith = "";
+                            var starts_with = "";
                             var identifier = new Regex(".*");
                             bool recursive = false;
 
@@ -627,8 +636,8 @@ namespace AssemblyNameSpace
                                         folder_range = setting.ValueRange;
                                         break;
                                     case "startswith":
-                                        if (!string.IsNullOrWhiteSpace(startswith)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        startswith = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(starts_with)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        starts_with = setting.GetValue();
                                         break;
                                     case "identifier":
                                         identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
@@ -659,7 +668,7 @@ namespace AssemblyNameSpace
                             {
                                 foreach (var file in files.Item1)
                                 {
-                                    if (!Path.GetFileName(file).StartsWith(startswith)) continue;
+                                    if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
                                     var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
 
@@ -689,7 +698,7 @@ namespace AssemblyNameSpace
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter namefilter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp)
+            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp)
             {
                 var result = new ParseResult<bool>();
                 result.Value = true;
@@ -711,11 +720,11 @@ namespace AssemblyNameSpace
                 {
                     var reads = file switch
                     {
-                        InputData.Peaks peaks => OpenReads.Peaks(namefilter, peaks, Input.LocalParameters),
-                        InputData.FASTA fasta => OpenReads.Fasta(namefilter, fasta.File, fasta.Identifier),
-                        InputData.Reads simple => OpenReads.Simple(namefilter, simple.File),
-                        InputData.Novor novor => OpenReads.Novor(namefilter, novor),
-                        _ => throw new ArgumentException("An unkown inputformat was provided to PrepareInput")
+                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, Input.LocalParameters),
+                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier),
+                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File),
+                        InputData.Novor novor => OpenReads.Novor(name_filter, novor),
+                        _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
                     if (!reads.HasFailed()) Input.Data.Raw.Add(reads.ReturnOrFail());
@@ -744,28 +753,28 @@ namespace AssemblyNameSpace
                             {
                                 if (segment.Name == "segment")
                                 {
-                                    var segmentvalue = ParseHelper.ParseSegment(nameFilter, segment, false).GetValue(outEither);
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, false).GetValue(outEither);
 
                                     // Check to see if the name is valid
-                                    if (outer_children.Select(db => db.Name).Contains(segmentvalue.Name))
+                                    if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
                                         outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique."));
-                                    if (segmentvalue.Name.Contains('*'))
+                                    if (segment_value.Name.Contains('*'))
                                         outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
-                                    outer_children.Add(segmentvalue);
+                                    outer_children.Add(segment_value);
                                 }
                                 else
                                 {
                                     var children = new List<SegmentValue>();
                                     foreach (var sub_segment in segment.GetValues())
                                     {
-                                        var segmentvalue = ParseHelper.ParseSegment(nameFilter, sub_segment, false).GetValue(outEither);
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).GetValue(outEither);
 
                                         // Check to see if the name is valid
-                                        if (children.Select(db => db.Name).Contains(segmentvalue.Name))
+                                        if (children.Select(db => db.Name).Contains(segment_value.Name))
                                             outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
-                                        if (segmentvalue.Name.Contains('*'))
+                                        if (segment_value.Name.Contains('*'))
                                             outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
-                                        children.Add(segmentvalue);
+                                        children.Add(segment_value);
                                     }
                                     output.Segments.Add((segment.OriginalName, children));
                                 }
@@ -867,65 +876,65 @@ namespace AssemblyNameSpace
                             output.Folder = Path.GetFullPath(pair.GetValue());
                             break;
                         case "html":
-                            var hsettings = new RunParameters.Report.HTML();
+                            var h_settings = new RunParameters.Report.HTML();
 
                             foreach (var setting in pair.GetValues())
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        hsettings.Path = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        h_settings.Path = setting.GetValue();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path'"));
                                         break;
                                 }
                             }
-                            if (string.IsNullOrWhiteSpace(hsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(hsettings);
+                            if (string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(h_settings);
                             break;
                         case "json":
-                            var jsettings = new RunParameters.Report.JSON();
+                            var j_settings = new RunParameters.Report.JSON();
 
                             foreach (var setting in pair.GetValues())
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(jsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        jsettings.Path = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        j_settings.Path = setting.GetValue();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "JSON", "'Path'"));
                                         break;
                                 }
                             }
-                            if (string.IsNullOrWhiteSpace(jsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(jsettings);
+                            if (string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(j_settings);
                             break;
                         case "fasta":
-                            var fsettings = new RunParameters.Report.FASTA();
+                            var f_settings = new RunParameters.Report.FASTA();
 
                             foreach (var setting in pair.GetValues())
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fsettings.Path = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        f_settings.Path = setting.GetValue();
                                         break;
                                     case "minimalscore":
-                                        fsettings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
                                         {
                                             case "templatematching":
-                                                fsettings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
+                                                f_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
                                                 break;
                                             case "recombine":
-                                                fsettings.OutputType = RunParameters.Report.OutputType.Recombine;
+                                                f_settings.OutputType = RunParameters.Report.OutputType.Recombine;
                                                 break;
                                             default:
                                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
@@ -937,28 +946,28 @@ namespace AssemblyNameSpace
                                         break;
                                 }
                             }
-                            if (string.IsNullOrWhiteSpace(fsettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(fsettings);
+                            if (string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(f_settings);
                             break;
                         case "csv":
-                            var csettings = new RunParameters.Report.CSV();
+                            var c_settings = new RunParameters.Report.CSV();
 
                             foreach (var setting in pair.GetValues())
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        csettings.Path = setting.GetValue();
+                                        if (!string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        c_settings.Path = setting.GetValue();
                                         break;
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
                                         {
                                             case "templatematching":
-                                                csettings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
+                                                c_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
                                                 break;
                                             case "recombine":
-                                                csettings.OutputType = RunParameters.Report.OutputType.Recombine;
+                                                c_settings.OutputType = RunParameters.Report.OutputType.Recombine;
                                                 break;
                                             default:
                                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "CSV OutputType", "'TemplateMatching' and 'Recombine'"));
@@ -970,8 +979,8 @@ namespace AssemblyNameSpace
                                         break;
                                 }
                             }
-                            if (string.IsNullOrWhiteSpace(csettings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(csettings);
+                            if (string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(c_settings);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Report", "'HTML', 'FASTA' and 'CSV'"));
@@ -1002,15 +1011,15 @@ namespace AssemblyNameSpace
                     {
                         case "path":
                             if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var alltext = GetAllText(setting);
+                            var all_text = GetAllText(setting);
 
-                            if (alltext.HasFailed())
+                            if (all_text.HasFailed())
                             {
-                                alltext.GetValue(outEither);
+                                all_text.GetValue(outEither);
                                 return outEither;
                             }
 
-                            var content = alltext.GetValue(outEither).Split("\n");
+                            var content = all_text.GetValue(outEither).Split("\n");
                             var counter = new Tokenizer.Counter(new ParsedFile(GetFullPath(setting).GetValue(outEither), content));
                             result = ParseAlphabetData(content, counter).GetValue(outEither);
                             asettings.Alphabet = result.Item1;
@@ -1067,8 +1076,8 @@ namespace AssemblyNameSpace
 
                 for (int i = 0; i < lines.Length; i++)
                 {
-                    var startline = counter.GetPosition();
-                    var splitline = new List<(string, FileRange)>();
+                    var start_line = counter.GetPosition();
+                    var split_line = new List<(string, FileRange)>();
                     var line = lines[i];
                     Tokenizer.ParseHelper.Trim(ref line, counter);
 
@@ -1084,11 +1093,11 @@ namespace AssemblyNameSpace
                             var start = counter.GetPosition();
                             var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
                             var range = new FileRange(start, counter.GetPosition());
-                            splitline.Add((cell, range));
+                            split_line.Add((cell, range));
                         }
                         Tokenizer.ParseHelper.Trim(ref line, counter);
                     }
-                    cells.Add((startline, splitline));
+                    cells.Add((start_line, split_line));
                     counter.NextLine();
                 }
 
@@ -1115,7 +1124,7 @@ namespace AssemblyNameSpace
 
                 if (!alphabet.Contains(Alphabet.GapChar))
                 {
-                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{Alphabet.GapChar}' is missing in the alpabet definition.", "", true));
+                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{Alphabet.GapChar}' is missing in the alphabet definition.", "", true));
                 }
 
                 var scoring_matrix = new int[columns - 1, columns - 1];
@@ -1147,7 +1156,7 @@ namespace AssemblyNameSpace
 
                     if (outEither.Value.GetGroupNumbers().Length <= 1)
                     {
-                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no caputuring groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
+                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no capturing groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
                     }
                     else if (outEither.Value.GetGroupNumbers().Length > 3)
                     {
@@ -1165,7 +1174,7 @@ namespace AssemblyNameSpace
             /// </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter namefilter, KeyValue node, bool extended)
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, bool extended)
             {
                 // Parse files one by one
                 var file_path = "";
@@ -1252,34 +1261,34 @@ namespace AssemblyNameSpace
                 var folder_reads = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
                 if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(namefilter, fileId, tsettings.Identifier);
+                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier);
                 else if (file_path.EndsWith(".txt"))
-                    folder_reads = OpenReads.Simple(namefilter, fileId);
+                    folder_reads = OpenReads.Simple(name_filter, fileId);
                 else if (file_path.EndsWith(".csv"))
                 {
                     peaks_settings.File = fileId;
-                    folder_reads = OpenReads.Peaks(namefilter, peaks_settings);
+                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings);
                 }
                 else
-                    outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid fileformat", "The file should be of .txt, .fasta or .csv type."));
+                    outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
 
                 outEither.Messages.AddRange(folder_reads.Messages);
                 if (!folder_reads.HasFailed()) tsettings.Templates = folder_reads.ReturnOrFail();
 
                 return outEither;
             }
-            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool withprefix, InputData.Peaks peaks_settings)
+            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool with_prefix, InputData.Peaks peaks_settings)
             {
                 var outEither = new ParseResult<bool>(true);
                 var name = setting.Name;
 
-                if (withprefix && !name.StartsWith("peaks"))
+                if (with_prefix && !name.StartsWith("peaks"))
                 {
                     outEither.Value = false;
                     return outEither;
                 }
 
-                if (withprefix) name = name.Substring(5);
+                if (with_prefix) name = name.Substring(5);
 
                 switch (name)
                 {
@@ -1313,7 +1322,7 @@ namespace AssemblyNameSpace
                             peaks_settings.DecimalSeparator = setting.GetValue().First();
                         break;
                     default:
-                        var (parameters, success) = GetLocalPeaksParameters(setting, withprefix, peaks_settings.Parameter).GetValue(outEither);
+                        var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).GetValue(outEither);
                         peaks_settings.Parameter = parameters;
 
                         if (success == false)
@@ -1323,19 +1332,19 @@ namespace AssemblyNameSpace
 
                 return outEither;
             }
-            public static ParseResult<(InputData.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool withprefix, InputData.PeaksParameters parameters)
+            public static ParseResult<(InputData.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool with_prefix, InputData.PeaksParameters parameters)
             {
                 var outEither = new ParseResult<(InputData.PeaksParameters, bool)>();
                 outEither.Value = (parameters, true);
                 var name = setting.Name;
 
-                if (withprefix && !name.StartsWith("peaks"))
+                if (with_prefix && !name.StartsWith("peaks"))
                 {
                     outEither.Value = (parameters, false);
                     return outEither;
                 }
 
-                if (withprefix) name = name.Substring(5);
+                if (with_prefix) name = name.Substring(5);
 
                 switch (name)
                 {
@@ -1445,14 +1454,14 @@ namespace AssemblyNameSpace
             }
             static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive)
             {
-                var trypath = GetFullPathPrivate(path);
-                Console.WriteLine("FullPath: " + path + " / " + trypath);
+                var try_path = GetFullPathPrivate(path);
+                Console.WriteLine("FullPath: " + path + " / " + try_path);
 
                 try
                 {
                     var option = SearchOption.TopDirectoryOnly;
                     if (recursive) option = SearchOption.AllDirectories;
-                    return (Directory.GetFiles(trypath.Item1, "*", option), "", "", "");
+                    return (Directory.GetFiles(try_path.Item1, "*", option), "", "", "");
                 }
                 catch (ArgumentException)
                 {
@@ -1470,44 +1479,44 @@ namespace AssemblyNameSpace
                 {
                     try
                     {
-                        var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
+                        var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
                         var drive = pieces[0].Split(':')[0];
                         if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
                         {
-                            string currentpath = $"{drive}:\\";
+                            string current_path = $"{drive}:\\";
                             for (int i = 1; i < pieces.Length - 1; i++)
                             {
-                                string nextpath = currentpath + pieces[i] + "\\";
+                                string next_path = current_path + pieces[i] + "\\";
 
-                                if (!Directory.Exists(nextpath))
+                                if (!Directory.Exists(next_path))
                                 {
-                                    var directories = Directory.GetDirectories(currentpath);
+                                    var directories = Directory.GetDirectories(current_path);
                                     var extra = "";
 
                                     if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
                                     else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
                                     else
                                     {
-                                        int maxvalue = 0;
-                                        string maxname = "";
+                                        int max_value = 0;
+                                        string max_name = "";
                                         foreach (var dir in directories)
                                         {
                                             int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                            if (score > maxvalue)
+                                            if (score > max_value)
                                             {
-                                                maxname = Path.GetFileName(dir);
-                                                maxvalue = score;
+                                                max_name = Path.GetFileName(dir);
+                                                max_value = score;
                                             }
                                         }
-                                        extra = $"\nDid you mean '{maxname}'?";
+                                        extra = $"\nDid you mean '{max_name}'?";
                                     }
 
                                     return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
                                 }
-                                currentpath = nextpath;
+                                current_path = next_path;
                             }
                             // Will likely be never used because that would raise a FileNotFoundException
-                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{currentpath}'.");
+                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
                         }
                         else
                         {
@@ -1557,11 +1566,11 @@ namespace AssemblyNameSpace
             }
             static (string, string, string) GetAllTextPrivate(string path)
             {
-                var trypath = GetFullPathPrivate(path);
+                var try_path = GetFullPathPrivate(path);
 
-                if (string.IsNullOrEmpty(trypath.Item2))
+                if (string.IsNullOrEmpty(try_path.Item2))
                 {
-                    if (Directory.Exists(trypath.Item1))
+                    if (Directory.Exists(try_path.Item1))
                     {
                         return ("Could not open file", "The file given is a directory.", "");
                     }
@@ -1569,50 +1578,50 @@ namespace AssemblyNameSpace
                     {
                         try
                         {
-                            return (File.ReadAllText(trypath.Item1), "", "");
+                            return (File.ReadAllText(try_path.Item1), "", "");
                         }
                         catch (DirectoryNotFoundException)
                         {
                             try
                             {
-                                var pieces = trypath.Item1.Split(new char[] { '\\', '/' });
+                                var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
                                 var drive = pieces[0].Split(':')[0];
                                 if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
                                 {
-                                    string currentpath = $"{drive}:\\";
+                                    string current_path = $"{drive}:\\";
                                     for (int i = 1; i < pieces.Length - 1; i++)
                                     {
-                                        string nextpath = currentpath + pieces[i] + "\\";
+                                        string next_path = current_path + pieces[i] + "\\";
 
-                                        if (!Directory.Exists(nextpath))
+                                        if (!Directory.Exists(next_path))
                                         {
-                                            var directories = Directory.GetDirectories(currentpath);
+                                            var directories = Directory.GetDirectories(current_path);
                                             var extra = "";
 
                                             if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
                                             else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
                                             else
                                             {
-                                                int maxvalue = 0;
-                                                string maxname = "";
+                                                int max_value = 0;
+                                                string max_name = "";
                                                 foreach (var dir in directories)
                                                 {
                                                     int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                                    if (score > maxvalue)
+                                                    if (score > max_value)
                                                     {
-                                                        maxname = Path.GetFileName(dir);
-                                                        maxvalue = score;
+                                                        max_name = Path.GetFileName(dir);
+                                                        max_value = score;
                                                     }
                                                 }
-                                                extra = $"\nDid you mean '{maxname}'?";
+                                                extra = $"\nDid you mean '{max_name}'?";
                                             }
 
                                             return ("Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
                                         }
-                                        currentpath = nextpath;
+                                        current_path = next_path;
                                     }
                                     // Will likely be never used because that would raise a FileNotFoundException
-                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{currentpath}'.");
+                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
                                 }
                                 else
                                 {
@@ -1626,21 +1635,21 @@ namespace AssemblyNameSpace
                         }
                         catch (FileNotFoundException)
                         {
-                            int maxvalue = 0;
-                            string maxname = "";
-                            string name = Path.GetFileName(trypath.Item1);
+                            int max_value = 0;
+                            string max_name = "";
+                            string name = Path.GetFileName(try_path.Item1);
 
-                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(trypath.Item1)))
+                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(try_path.Item1)))
                             {
                                 int score = HelperFunctionality.SmithWatermanStrings(file, name);
-                                if (score > maxvalue)
+                                if (score > max_value)
                                 {
-                                    maxname = Path.GetFileName(file);
-                                    maxvalue = score;
+                                    max_name = Path.GetFileName(file);
+                                    max_value = score;
                                 }
                             }
 
-                            return ("Could not open file", "The specified file could not be found.", $"Did you mean '{maxname}'?");
+                            return ("Could not open file", "The specified file could not be found.", $"Did you mean '{max_name}'?");
                         }
                         catch (IOException)
                         {
@@ -1658,7 +1667,7 @@ namespace AssemblyNameSpace
                 }
                 else
                 {
-                    return (trypath.Item1, trypath.Item2, "");
+                    return (try_path.Item1, try_path.Item2, "");
                 }
             }
         }

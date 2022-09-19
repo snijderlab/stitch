@@ -27,11 +27,11 @@ namespace HTMLNameSpace
 
             TableHeader(buffer, "reads", reads.Select(a => (double)a.Item1.Length));
 
-            buffer.AppendLine(@"<table id=""reads-table"" class=""widetable"">
+            buffer.AppendLine(@"<table id=""reads-table"" class=""wide-table"">
 <tr>
-    <th onclick=""sortTable('reads-table', 0, 'string')"" class=""smallcell"">Identifier</th>
+    <th onclick=""sortTable('reads-table', 0, 'string')"" class=""small-cell"">Identifier</th>
     <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('reads-table', 2, 'number')"" class=""smallcell"">Sequence Length</th>
+    <th onclick=""sortTable('reads-table', 2, 'number')"" class=""small-cell"">Sequence Length</th>
 </tr>");
             string id, link;
 
@@ -94,22 +94,22 @@ namespace HTMLNameSpace
 
             string unique = "";
             if (displayUnique) unique =
-                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "smallcell", SortOn(5 + order_factor, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "smallcell", SortOn(6 + order_factor, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "smallcell", SortOn(7 + order_factor, "number"));
+                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "small-cell", SortOn(5 + order_factor, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "small-cell", SortOn(6 + order_factor, "number")) +
+                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "small-cell", SortOn(7 + order_factor, "number"));
 
             string order = "";
-            if (displayOrder) order = CommonPieces.TagWithHelp("th", "Order", HTMLHelp.Order, "smallcell", SortOn(2, "id"));
+            if (displayOrder) order = CommonPieces.TagWithHelp("th", "Order", HTMLHelp.Order, "small-cell", SortOn(2, "id"));
 
             var table_buffer = new StringBuilder();
-            table_buffer.AppendLine($@"<table id=""{table_id}"" class=""widetable"">
+            table_buffer.AppendLine($@"<table id=""{table_id}"" class=""wide-table"">
 <tr>
-    {CommonPieces.TagWithHelp("th", "Identifier", HTMLHelp.TemplateIdentifier, "smallcell", SortOn(0, "id"))}
-    {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "smallcell", SortOn(1, "number"))}
+    {CommonPieces.TagWithHelp("th", "Identifier", HTMLHelp.TemplateIdentifier, "small-cell", SortOn(0, "id"))}
+    {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "small-cell", SortOn(1, "number"))}
     {order}
-    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "smallcell", SortOn(2 + order_factor, "number") + " data-sortorder='desc'")}
-    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "smallcell", SortOn(3 + order_factor, "number"))}
-    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "smallcell", SortOn(4 + order_factor, "number"))}
+    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'")}
+    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "small-cell", SortOn(3 + order_factor, "number"))}
+    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "small-cell", SortOn(4 + order_factor, "number"))}
     {unique}
 </tr>");
 
@@ -154,7 +154,7 @@ namespace HTMLNameSpace
     <td class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'>{templates[i].TotalArea:G3}</td>
     {unique}
 </tr>");
-                doc_buffer.Append($"<div class='docplot'>");
+                doc_buffer.Append($"<div class='doc-plot'>");
                 HTMLGraph.Bargraph(doc_buffer, HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLink(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation());
                 doc_buffer.AppendLine("</div>");
             }
@@ -167,22 +167,22 @@ namespace HTMLNameSpace
             return buffer.ToString();
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> cdrs, string AssetsFolderName, string title, int total_reads, int total_templates)
+        public static void CDRTable(StringBuilder buffer, List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
 
             buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'>");
 
-            var matched = cdrs.Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
-            var templates = cdrs.Select(a => a.Template.EscapedIdentifier).Distinct().Count();
-            var unique = cdrs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
+            var matched = CDRs.Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
+            var templates = CDRs.Select(a => a.Template.EscapedIdentifier).Distinct().Count();
+            var unique = CDRs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
 
             buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template). The consensus sequence is shown below.</p><p>");
 
             var diversity = new List<Dictionary<string, double>>();
 
-            foreach (var row in cdrs)
+            foreach (var row in CDRs)
             {
                 for (int i = 0; i < row.Sequence.Length; i++)
                 {
@@ -206,14 +206,14 @@ namespace HTMLNameSpace
 
             buffer.AppendLine($@"</p></div><table id=""{table_id}"">
 <tr>
-    <th {SortOn(1, "id")} class=""smallcell"">Identifier</th>
-    <th {SortOn(2, "string")} class=""smallcell"">Sequence</th>
-    <th {SortOn(0, "id")} class=""smallcell"">Template</th>
+    <th {SortOn(1, "id")} class=""small-cell"">Identifier</th>
+    <th {SortOn(2, "string")} class=""small-cell"">Sequence</th>
+    <th {SortOn(0, "id")} class=""small-cell"">Template</th>
 </tr>");
 
-            var cdrs_deduplicated = cdrs.GroupBy(cdr => cdr.Sequence).OrderBy(group => group.Key);
+            var CDRs_deduplicated = CDRs.GroupBy(cdr => cdr.Sequence).OrderBy(group => group.Key);
 
-            foreach (var group in cdrs_deduplicated)
+            foreach (var group in CDRs_deduplicated)
             {
                 var row = group.First();
                 var id = GetAsideIdentifier(row.MetaData);
@@ -233,7 +233,7 @@ namespace HTMLNameSpace
         {
             const double threshold = 0.05;
             const int height = 35;
-            const int fontsize = 30;
+            const int font_size = 30;
 
             var data_buffer = new StringBuilder();
             buffer.Append("<div class='graph'>");
@@ -244,7 +244,7 @@ namespace HTMLNameSpace
                     buffer.Append($"<h2 class='title'>{title}</h2>");
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
                 buffer.Append(CommonPieces.CopyData(title + " (TSV)", HTMLHelp.SequenceConsensusOverviewData));
-            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-fontsize:{fontsize}px;'>");
+            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'>");
             for (int i = 0; i < diversity.Count; i++)
             {
                 var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
@@ -260,7 +260,7 @@ namespace HTMLNameSpace
                 {
                     if (item.Key != "~" && (double)item.Value / sum > threshold)
                     {
-                        var size = (item.Value / sum * fontsize).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var size = (item.Value / sum * font_size).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         buffer.Append($"<span style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'>{item.Key}</span>");
                         placed = true;
@@ -338,12 +338,12 @@ namespace HTMLNameSpace
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
-            var typedata = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
+            var type_data = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
             foreach (var item in templates)
             {
-                if (typedata.ContainsKey(item.Class))
+                if (type_data.ContainsKey(item.Class))
                 {
-                    var data = typedata[item.Class];
+                    var data = type_data[item.Class];
                     if (data.MaxScore < item.Score) data.MaxScore = item.Score;
                     data.TotalScore += item.Score;
                     if (data.UniqueMaxScore < item.Score) data.UniqueMaxScore = item.UniqueScore;
@@ -353,17 +353,17 @@ namespace HTMLNameSpace
                     data.UniqueMatches += item.UniqueMatches;
                     data.Area += item.TotalArea;
                     data.UniqueArea += item.TotalUniqueArea;
-                    typedata[item.Class] = data;
+                    type_data[item.Class] = data;
                 }
                 else
                 {
-                    typedata.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count, item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
+                    type_data.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count, item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
                 }
             }
 
-            var scoreData = new List<(string, List<double>)>(typedata.Count);
-            var areaData = new List<(string, List<double>)>(typedata.Count);
-            foreach (var (type, data) in typedata)
+            var scoreData = new List<(string, List<double>)>(type_data.Count);
+            var areaData = new List<(string, List<double>)>(type_data.Count);
+            foreach (var (type, data) in type_data)
             {
                 var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
                 var areaList = new List<double> { data.Matches, data.Area };

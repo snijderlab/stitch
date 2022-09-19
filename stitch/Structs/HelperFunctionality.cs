@@ -15,10 +15,10 @@ namespace AssemblyNameSpace
     /// <summary> A class to store extension methods to help in the process of coding. </summary>
     public static class HelperFunctionality
     {
-        /// <summary> To copy a subarray to a new array. </summary>
+        /// <summary> To copy a sub array to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
-        /// <param name="length"> The length of the created subarray. </param>
+        /// <param name="length"> The length of the created sub array. </param>
         /// <typeparam name="T"> The type of the elements in the array. </typeparam>
         /// <returns> Returns a new array with clones of the original array. </returns>
         public static T[] SubArray<T>(this T[] data, int index, int length)
@@ -34,10 +34,10 @@ namespace AssemblyNameSpace
                 throw new ArgumentException($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
-        /// <summary> To copy a subarray to a new array. </summary>
+        /// <summary> To copy a sub array to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
-        /// <param name="length"> The length of the created subarray. </param>
+        /// <param name="length"> The length of the created sub array. </param>
         /// <typeparam name="T"> The type of the elements in the array. </typeparam>
         /// <returns> Returns a new array with clones of the original array. </returns>
         public static double[] ElementwiseAdd(this double[] data, double[] that)
@@ -109,7 +109,7 @@ namespace AssemblyNameSpace
             Span<int> indices_template = template.Length <= 1024 ? stackalloc int[template.Length] : new int[template.Length];
             Span<int> indices_query = query.Length <= 1024 ? stackalloc int[query.Length] : new int[query.Length];
 
-            int rowsize = query.Length + 1;
+            int row_size = query.Length + 1;
 
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Length; i++)
@@ -139,19 +139,19 @@ namespace AssemblyNameSpace
 
                     // Calculate the score for the current position
                     if (gap)
-                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1]; // Match Gap, 0 penalty
+                        a = score_matrix[row_size * (tem_pos - 1) + query_pos - 1]; // Match Gap, 0 penalty
                     else
                     {
                         //The following line is the most time consuming in this whole function, maybe cache the matrix?? - now test it
                         score = alphabet_scores[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
-                        a = score_matrix[rowsize * (tem_pos - 1) + query_pos - 1] + score; // Match
+                        a = score_matrix[row_size * (tem_pos - 1) + query_pos - 1] + score; // Match
                     }
 
-                    bpos = rowsize * tem_pos + query_pos - 1;
+                    bpos = row_size * tem_pos + query_pos - 1;
 
                     b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.GapInQuery || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
-                    cpos = rowsize * (tem_pos - 1) + query_pos;
+                    cpos = row_size * (tem_pos - 1) + query_pos;
 
                     c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.GapInTemplate || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
@@ -184,8 +184,8 @@ namespace AssemblyNameSpace
                         direction = Direction.NoMatch;
                     }
 
-                    score_matrix[rowsize * tem_pos + query_pos] = value;
-                    direction_matrix[rowsize * tem_pos + query_pos] = (int)direction;
+                    score_matrix[row_size * tem_pos + query_pos] = value;
+                    direction_matrix[row_size * tem_pos + query_pos] = (int)direction;
 
                     // Keep track of the maximal value
                     if (value > max_value)
@@ -197,13 +197,13 @@ namespace AssemblyNameSpace
                 }
             }
 
-            // Traceback
+            // Trace back
             // TODO: Adjust the score on each position based on the DOC, to create a fairer score
             var match_list = new List<SequenceMatch.MatchPiece>();
 
             while (true)
             {
-                switch (direction_matrix[rowsize * max_index_t + max_index_q])
+                switch (direction_matrix[row_size * max_index_t + max_index_q])
                 {
                     case (int)Direction.Match:
                         match_list.Add(new SequenceMatch.Match(1));
@@ -224,7 +224,7 @@ namespace AssemblyNameSpace
                         max_index_q--;
                         break;
                     case (int)Direction.NoMatch:
-                        goto END_OF_CRAWL; // I am hopefull this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
+                        goto END_OF_CRAWL; // I am hopeful this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
                         break;
                 }
             }
@@ -354,14 +354,14 @@ namespace AssemblyNameSpace
 
         public static string DisplayTime(long elapsedMilliseconds)
         {
-            const long sectime = 1000;
-            const long mintime = 60 * sectime;
-            const long htime = 60 * mintime;
+            const long sec_time = 1000;
+            const long min_time = 60 * sec_time;
+            const long htime = 60 * min_time;
 
             long hours = elapsedMilliseconds / htime;
-            long minutes = elapsedMilliseconds / mintime - hours * 60;
-            long seconds = elapsedMilliseconds / sectime - hours * 60 * 60 - minutes * 60;
-            long milliseconds = elapsedMilliseconds - hours * htime - minutes * mintime - seconds * sectime;
+            long minutes = elapsedMilliseconds / min_time - hours * 60;
+            long seconds = elapsedMilliseconds / sec_time - hours * 60 * 60 - minutes * 60;
+            long milliseconds = elapsedMilliseconds - hours * htime - minutes * min_time - seconds * sec_time;
 
             if (hours > 0)
                 return $"{hours}:{minutes:D2} h";

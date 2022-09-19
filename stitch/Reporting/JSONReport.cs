@@ -19,8 +19,6 @@ namespace AssemblyNameSpace
         /// <summary>
         /// To retrieve all metadata.
         /// </summary>
-        /// <param name="parameters">The parameters.</param>
-        /// <param name="minscore">The minimal score needed to be included in the file.</param>
         public JSONReport(ReportInputParameters parameters, int maxThreads) : base(parameters, maxThreads)
         {
         }
@@ -40,6 +38,7 @@ namespace AssemblyNameSpace
                     new AminoAcidListConverter()
                 }
             };
+#pragma warning disable IL2026
             return JsonSerializer.Serialize(Parameters, options);
         }
     }

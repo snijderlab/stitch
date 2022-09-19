@@ -94,7 +94,7 @@ namespace AssemblyNameSpace
             }
 
             /// <summary>
-            /// A dataparameter for PEAKS input files.
+            /// A data parameter for PEAKS input files.
             /// </summary>
             public class Peaks : Parameter
             {
@@ -129,7 +129,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public class FASTA : Parameter
             {
-                /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+                /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public Regex Identifier = new Regex("(.*)");
 
                 public override string Display()
@@ -143,7 +143,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public class Novor : Parameter
             {
-                /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+                /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public char Separator = ',';
                 public ReadMetaData.FileIdentifier DeNovoFile = null;
                 public ReadMetaData.FileIdentifier PSMSFile = null;
@@ -259,7 +259,7 @@ namespace AssemblyNameSpace
             /// </summary>
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 
-            /// <summary> To parse the identifier from the headerstring in the fasta file </summary>
+            /// <summary> To parse the identifier from the header string in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
             public bool GapTail = false;
             public bool GapHead = false;
@@ -480,7 +480,7 @@ namespace AssemblyNameSpace
                 public int MinimalScore = 0;
 
                 /// <summary>
-                /// The outputtype of the sequences
+                /// The output type of the sequences
                 /// </summary>
                 public OutputType OutputType = OutputType.TemplateMatches;
             }
@@ -491,7 +491,7 @@ namespace AssemblyNameSpace
             public class CSV : Parameter
             {
                 /// <summary>
-                /// The outputtype of the sequences
+                /// The output type of the sequences
                 /// </summary>
                 public OutputType OutputType = OutputType.TemplateMatches;
             }

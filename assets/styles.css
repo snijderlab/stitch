@@ -1,31 +1,37 @@
 * {
     --color-primary: #569CD6;
-    --color-primary-shade: #1d4f78;
+    --color-primary-s1: #1d4f78;
+    --color-primary-s2: #9CDCFE;
     --color-secondary: #4EC9B0;
     --color-tertiary: #F48771;
+    --color-quaternary: #DCD08F;
+    --color-quinary: #b57fd7;
+    --color-yellow: #DCD08F;
     --color-primary-o: rgba(86, 156, 214, 20%);
     --color-primary-shade-o: rgb(29, 79, 120, 20%);
     --color-secondary-o: rgba(78, 201, 176, 20%);
     --color-tertiary-o: rgba(244, 135, 113, 20%);
-    --color-dark: #1E1E1E;
-    --color-light: #7E7E7E;
+    --color-foreground: #1E1E1E;
+    --color-halfway: #7E7E7E;
     --color-background: #fff;
-    --color-yellow: #DCD08F;
     --color-label: var(--color-primary);
 }
 
 @media screen and (prefers-color-scheme: dark) {
     * {
         --color-primary: #569CD6;
-        --color-primary-shade: #9CDCFE;
+        --color-primary-s1: #9CDCFE;
+        --color-primary-s2: #1d4f78;
         --color-secondary: #F48771;
         --color-tertiary: #DCD08F;
+        --color-quaternary: #4EC9B0;
+        --color-quinary: #b57fd7;
         --color-primary-o: rgba(86, 156, 214, 20%);
         --color-primary-shade-o: rgba(156, 220, 254, 20%);
         --color-secondary-o: rgba(244, 135, 113, 20%);
         --color-tertiary-o: rgba(220, 208, 143, 20%);
-        --color-dark: #D4D4D4;
-        --color-light: #7E7E7E;
+        --color-foreground: #D4D4D4;
+        --color-halfway: #7E7E7E;
         --color-background: #1E1E1E;
     }
 }
@@ -33,7 +39,7 @@
 body {
     font-family: "Roboto", sans-serif;
     margin: 0;
-    color: var(--color-dark);
+    color: var(--color-foreground);
     background-color: var(--color-background);
 }
 
@@ -125,11 +131,11 @@ table+table {
     margin-top: 1em;
 }
 
-.widetable {
+.wide-table {
     width: 100%;
 }
 
-.smallcell {
+.small-cell {
     min-width: 4rem;
     width: 15%;
 }
@@ -157,14 +163,14 @@ table+table {
 }
 
 @media (min-width: 800px) {
-    .smallcell {
+    .small-cell {
         width: 10%;
     }
 }
 
 td,
 th {
-    border: 1px solid var(--color-light);
+    border: 1px solid var(--color-halfway);
     padding: .1rem;
 }
 
@@ -190,7 +196,7 @@ th[onclick] {
 
 th[onclick]::after,
 th[onclick]::before {
-    color: var(--color-light);
+    color: var(--color-halfway);
     display: inline-block;
     position: absolute;
     right: .25rem;
@@ -207,8 +213,8 @@ th[onclick]::before {
     bottom: 0;
 }
 
-th[data-sortorder="asc"]::after,
-th[data-sortorder="desc"]::before {
+th[data-sort-order="asc"]::after,
+th[data-sort-order="desc"]::before {
     color: var(--color-primary);
 }
 
@@ -339,7 +345,7 @@ td.bar::before {
 .annotated .title,
 .annotated .names {
     font-style: italic;
-    color: var(--color-light);
+    color: var(--color-halfway);
     font-family: "Roboto", sans-serif;
     padding-right: .25em;
 }
@@ -408,7 +414,7 @@ td.bar::before {
 }
 
 .report>.collapsable>* {
-    --color-label: var(--color-primary-shade);
+    --color-label: var(--color-primary-s1);
 }
 
 .report label::after {
@@ -453,7 +459,7 @@ input:checked+label {
     overflow: visible;
 }
 
-.clearfix {
+.clear-fix {
     clear: both;
     display: block;
     height: 1px;
@@ -481,7 +487,7 @@ input:checked+label+.collapsable,
 
 /* user help */
 .user-help {
-    --color-used: var(--color-light);
+    --color-used: var(--color-halfway);
     border: 2px solid var(--color-used);
     background-color: var(--color-background);
     position: relative;
@@ -511,7 +517,7 @@ input:checked+label+.collapsable,
     background-color: var(--color-background);
     min-width: 300px;
     max-width: 500px;
-    color: var(--color-dark);
+    color: var(--color-foreground);
     text-align: justify;
     z-index: 100;
     font-weight: normal;
@@ -589,7 +595,7 @@ input:checked+label+.collapsable,
 }
 
 .align-link {
-    color: var(--color-primary-shade);
+    color: var(--color-primary-s1);
     text-decoration: none;
 }
 
@@ -610,7 +616,7 @@ input:checked+label+.collapsable,
 
 .coverage-depth-bar {
     height: calc(var(--value) / var(--max-value) * 50px);
-    background-color: var(--color-primary-shade);
+    background-color: var(--color-primary-s1);
     width: calc(1ch - 2px);
     display: inline-block;
     margin: 0 1px;
@@ -654,14 +660,14 @@ input:checked+label .overhang-block .text {
     padding: 0;
     margin: 0;
     font-size: 1rem;
-    color: var(--color-dark);
+    color: var(--color-foreground);
     background-color: transparent;
 }
 
 .reads-alignment label::before {
     content: "+";
     color: var(--color-background);
-    background-color: var(--color-primary-shade);
+    background-color: var(--color-primary-s1);
     margin: .2em;
     padding: .1em .4em;
     border-radius: 50%;
@@ -706,101 +712,101 @@ input:checked+label .overhang-block .text {
 }
 
 .footer p {
-    color: var(--color-light);
+    color: var(--color-halfway);
 }
 
 
 /* ScoreTree */
 
-.phylogenetictree .container {
+.phylogenetic-tree .container {
     display: flex;
     gap: 8px;
     flex-wrap: nowrap;
 }
 
-.phylogenetictree .legend {
+.phylogenetic-tree .legend {
     --color: var(--color-secondary);
     margin: .8em 1em 0 0;
     display: inline-block;
 }
 
-.phylogenetictree .legend.unique {
+.phylogenetic-tree .legend.unique {
     --color: var(--color-tertiary);
 }
 
-.phylogenetictree label {
+.phylogenetic-tree label {
     margin-right: 1em;
 }
 
-.phylogenetictree .tree {
+.phylogenetic-tree .tree {
     flex-grow: 1;
     z-index: 2;
 }
 
-.phylogenetictree svg {
-    stroke: var(--color-dark);
+.phylogenetic-tree svg {
+    stroke: var(--color-foreground);
     stroke-width: 2px;
     overflow-x: overlay;
 }
 
-.phylogenetictree svg * {
+.phylogenetic-tree svg * {
     pointer-events: none;
 }
 
-.phylogenetictree .value {
+.phylogenetic-tree .value {
     fill: var(--color-secondary);
     fill-opacity: 1;
     pointer-events: all;
     cursor: pointer;
 }
 
-.phylogenetictree .value.unique {
+.phylogenetic-tree .value.unique {
     fill: var(--color-tertiary);
 }
 
-.phylogenetictree .showdata-0:checked~* .value {
+.phylogenetic-tree .show-data-0:checked~* .value {
     fill-opacity: var(--score);
 }
 
-.phylogenetictree .showdata-1:checked~* .value {
+.phylogenetic-tree .show-data-1:checked~* .value {
     fill-opacity: var(--matches);
 }
 
-.phylogenetictree .showdata-2:checked~* .value {
+.phylogenetic-tree .show-data-2:checked~* .value {
     fill-opacity: var(--area);
 }
 
-.phylogenetictree .info {
+.phylogenetic-tree .info {
     font: normal 1em "Roboto";
-    fill: var(--color-dark);
+    fill: var(--color-foreground);
     opacity: 0;
     paint-order: stroke;
     stroke: var(--color-background);
 }
 
-.phylogenetictree .info-link,
-.phylogenetictree .info-link * {
+.phylogenetic-tree .info-link,
+.phylogenetic-tree .info-link * {
     pointer-events: all;
     cursor: pointer;
 }
 
-.phylogenetictree .info-link {
+.phylogenetic-tree .info-link {
     --color-used: var(--color-primary);
 }
 
-.phylogenetictree .info-link:hover {
+.phylogenetic-tree .info-link:hover {
     --color-used: var(--color-secondary);
 }
 
-.phylogenetictree .info-link:active {
+.phylogenetic-tree .info-link:active {
     --color-used: var(--color-tertiary);
 }
 
-.phylogenetictree .info-link.highlight {
+.phylogenetic-tree .info-link.highlight {
     --color-used: var(--color-secondary);
 }
 
-.phylogenetictree .info-link text {
+.phylogenetic-tree .info-link text {
     fill: var(--color-used);
     text-decoration: none;
     font-size: 13.2px;
@@ -808,19 +814,19 @@ input:checked+label .overhang-block .text {
     dominant-baseline: middle;
 }
 
-.phylogenetictree .info-link rect {
+.phylogenetic-tree .info-link rect {
     stroke: var(--color-used);
     stroke-width: 1px;
     fill: var(--color-background);
 }
 
-.phylogenetictree .showdata-0:checked~* .value:hover~.info.info-0,
-.phylogenetictree .showdata-1:checked~* .value:hover~.info.info-1,
-.phylogenetictree .showdata-2:checked~* .value:hover~.info.info-2 {
+.phylogenetic-tree .show-data-0:checked~* .value:hover~.info.info-0,
+.phylogenetic-tree .show-data-1:checked~* .value:hover~.info.info-1,
+.phylogenetic-tree .show-data-2:checked~* .value:hover~.info.info-2 {
     opacity: 1;
 }
 
-.phylogenetictree .names {
+.phylogenetic-tree .names {
     display: flex;
     flex-direction: column;
     padding-top: .7em;
@@ -834,7 +840,7 @@ input:checked+label .overhang-block .text {
 .sequence-logo {
     display: flex;
     flex-wrap: wrap;
-    font-size: var(--sequence-logo-fontsize);
+    font-size: var(--sequence-logo-font-size);
     font-family: Roboto Mono, monospace;
     margin-top: -0.4em;
     margin-bottom: 1.5em;
@@ -887,20 +893,20 @@ input:checked+label .overhang-block .text {
 
 .point-graph label,
 .graph .copy-data,
-.phylogenetictree label,
+.phylogenetic-tree label,
 .alignment .copy-data {
     font-size: 1em;
-    border: 2px solid var(--color-light);
+    border: 2px solid var(--color-halfway);
     background: none;
     font-weight: normal;
-    color: var(--color-dark);
+    color: var(--color-foreground);
     display: inline-block;
 }
 
 .graph .copy-data,
 .alignment .copy-data {
     margin-left: auto;
-    color: var(--color-light);
+    color: var(--color-halfway);
     font-size: .8em;
 }
 
@@ -949,12 +955,12 @@ input:checked+label .overhang-block .text {
     align-self: flex-end;
 }
 
-.histogram .yaxis {
+.histogram .y-axis {
     display: flex;
     height: 100%;
     flex-direction: column;
     justify-content: space-between;
-    border-right: 2px solid var(--color-dark);
+    border-right: 2px solid var(--color-foreground);
     padding-right: 2px;
     align-items: flex-end;
 }
@@ -964,7 +970,7 @@ input:checked+label .overhang-block .text {
     align-self: end;
     display: flex;
     flex-direction: column;
-    border-bottom: 2px solid var(--color-dark);
+    border-bottom: 2px solid var(--color-foreground);
 }
 
 .histogram .bar span {
@@ -988,7 +994,7 @@ input:checked+label .overhang-block .text {
 
 /* Negative histogram */
 
-.histogram.negative .yaxis {
+.histogram.negative .y-axis {
     grid-row-start: 1;
     grid-row-end: 3;
 }
@@ -996,7 +1002,7 @@ input:checked+label .overhang-block .text {
 .histogram .bar.negative {
     align-self: start;
     margin-top: -2px;
-    border-top: 2px solid var(--color-dark);
+    border-top: 2px solid var(--color-foreground);
     border-bottom: none;
 }
 
@@ -1011,7 +1017,7 @@ input:checked+label .overhang-block .text {
     display: flex;
     flex-direction: row;
     padding-right: 8px;
-    border-bottom: 2px solid var(--color-dark);
+    border-bottom: 2px solid var(--color-foreground);
 }
 
 .group:last-of-type {
@@ -1070,7 +1076,7 @@ input:checked+label .overhang-block .text {
 
 .tooltip .dim:nth-child(4n+1),
 .histogram-header span:nth-child(4n+1) {
-    color: var(--color-primary-shade);
+    color: var(--color-primary-s1);
 }
 
 .tooltip .dim:nth-child(4n+2),
@@ -1084,7 +1090,7 @@ input:checked+label .overhang-block .text {
 }
 
 .group .bar:nth-child(4n+1) {
-    background-color: var(--color-primary-shade);
+    background-color: var(--color-primary-s1);
 }
 
 .group .bar:nth-child(4n+2) {
@@ -1108,13 +1114,13 @@ input:checked+label .overhang-block .text {
 }
 
 .point-graph input:checked+label,
-.phylogenetictree input:checked+label {
+.phylogenetic-tree input:checked+label {
     border-color: var(--color-primary);
     border-radius: .2rem;
 }
 
 .point-graph label::before,
-.phylogenetictree .legend::before {
+.phylogenetic-tree .legend::before {
     content: "";
     top: 0;
     left: 0;
@@ -1129,7 +1135,7 @@ input:checked+label .overhang-block .text {
 }
 
 .point-graph label::after,
-.phylogenetictree label::after {
+.phylogenetic-tree label::after {
     content: unset !important;
 }
 
@@ -1211,27 +1217,27 @@ input:checked+label .overhang-block .text {
     background: none;
 }
 
-.point-graph .showdata-0:checked~* .point:nth-child(1) {
+.point-graph .show-data-0:checked~* .point:nth-child(1) {
     display: block;
 }
 
-.point-graph .showdata-1:checked~* .point:nth-child(2) {
+.point-graph .show-data-1:checked~* .point:nth-child(2) {
     display: block;
 }
 
-.point-graph .showdata-2:checked~* .point:nth-child(3) {
+.point-graph .show-data-2:checked~* .point:nth-child(3) {
     display: block;
 }
 
-.point-graph .showdata-3:checked~* .point:nth-child(4) {
+.point-graph .show-data-3:checked~* .point:nth-child(4) {
     display: block;
 }
 
-.point-graph .showdata-4:checked~* .point:nth-child(5) {
+.point-graph .show-data-4:checked~* .point:nth-child(5) {
     display: block;
 }
 
-.point-graph .showdata-5:checked~* .point:nth-child(6) {
+.point-graph .show-data-5:checked~* .point:nth-child(6) {
     display: block;
 }
 
@@ -1250,7 +1256,7 @@ input:checked+label .overhang-block .text {
     transform-origin: left;
     font-size: 10px;
     transform: rotate(90deg);
-    color: var(--color-dark);
+    color: var(--color-foreground);
 }
 
 .point-graph .group-label {
@@ -1264,59 +1270,257 @@ input:checked+label .overhang-block .text {
     transform: rotate(90deg);
 }
 
-.point-graph .yaxis {
+.point-graph .y-axis {
     display: flex;
     flex-direction: column;
     height: var(--graph-height-inc);
     justify-content: space-between;
     align-items: flex-end;
-    border-right: 2px solid var(--color-dark);
+    border-right: 2px solid var(--color-foreground);
     padding-right: 2px;
     position: relative;
 }
 
-.point-graph .yaxis::after {
+.point-graph .y-axis::after {
     content: "";
     display: block;
     position: absolute;
     height: 2px;
     width: calc(100vw - 200% - 55px);
     left: 100%;
-    background-color: var(--color-dark);
+    background-color: var(--color-foreground);
     top: var(--graph-height-inc);
     z-index: -10;
 }
 
-.point-graph .yaxis .title {
+.point-graph .y-axis .title {
     writing-mode: vertical-lr;
     align-self: center;
     transform: rotate(180deg);
 }
 
-.point-graph .yaxis .max,
-.point-graph .yaxis .min {
+.point-graph .y-axis .max,
+.point-graph .y-axis .min {
     font-size: 10px;
+}
+
+/* Spectrum */
+
+.spectrum {
+    --color: red;
+}
+
+.spectrum .legend {
+    display: flex;
+    gap: 1em;
+}
+
+.spectrum .legend .title {
+    font-style: italic;
+    --color: var(--color-halfway);
+}
+
+.spectrum .legend>* {
+    color: var(--color);
+}
+
+.spectrum .peptide {
+    font-size: 1.25em;
+    margin: 1em;
+    display: flex;
+    --spacing: 3px;
+    --size: 50%;
+}
+
+.spectrum .A {
+    --color: var(--color-primary);
+}
+
+.spectrum .B {
+    --color: var(--color-secondary);
+}
+
+.spectrum .C {
+    --color: var(--color-tertiary);
+}
+
+.spectrum .X {
+    --color: var(--color-quaternary);
+}
+
+.spectrum .Y {
+    --color: var(--color-quinary);
+}
+
+.spectrum .Z {
+    --color: var(--color-primary-s1);
+}
+
+.spectrum .peptide>* {
+    position: relative;
+    padding: .5em;
+    display: block;
+}
+
+.spectrum .corner {
+    position: absolute;
+    display: block;
+    border: 2px solid var(--color);
+    width: var(--size);
+    height: var(--size);
+}
+
+.spectrum .corner.X,
+.spectrum .corner.Y,
+.spectrum .corner.Z {
+    border-right: none;
+    border-bottom: none;
+    top: 0px;
+    left: 0px;
+}
+
+.spectrum .corner.Y {
+    top: var(--spacing);
+    left: var(--spacing);
+    height: calc(var(--size) - var(--spacing));
+    width: calc(var(--size) - var(--spacing));
+}
+
+.spectrum .corner.Z {
+    top: calc(2 * var(--spacing));
+    left: calc(2 * var(--spacing));
+    height: calc(var(--size) - 2 * var(--spacing));
+    width: calc(var(--size) - 2 * var(--spacing));
+}
+
+.spectrum .corner.A,
+.spectrum .corner.B,
+.spectrum .corner.C {
+    border-left: none;
+    border-top: none;
+    bottom: 0px;
+    right: 0px;
+}
+
+.spectrum .corner.B {
+    bottom: var(--spacing);
+    right: var(--spacing);
+    height: calc(var(--size) - var(--spacing));
+    width: calc(var(--size) - var(--spacing));
+}
+
+.spectrum .corner.C {
+    bottom: calc(2 * var(--spacing));
+    right: calc(2 * var(--spacing));
+    height: calc(var(--size) - 2 * var(--spacing));
+    width: calc(var(--size) - 2 * var(--spacing));
+}
+
+.spectrum .canvas-wrapper {
+    width: 100%;
+    display: grid;
+    grid-template-rows: 1fr 2em;
+    grid-template-columns: 4.5em 1fr;
+    grid-template-areas:
+        "y-axis canvas"
+        ". x-axis";
+}
+
+.spectrum .y-axis {
+    grid-area: y-axis;
+    display: flex;
+    justify-content: space-between;
+    flex-direction: column-reverse;
+    min-height: 250px;
+    align-items: flex-end;
+    position: relative;
+    padding-right: 2px;
+}
+
+.spectrum .y-axis::after {
+    content: "Intensity";
+    position: absolute;
+    top: 50%;
+    left: -50%;
+    text-align: center;
+    font-style: italic;
+    color: var(--color-halfway);
+    transform: rotate(270deg);
+}
+
+
+.spectrum .x-axis {
+    position: relative;
+    grid-area: x-axis;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.spectrum .x-axis::after {
+    content: "M/Z";
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    text-align: center;
+    font-style: italic;
+    color: var(--color-halfway);
+}
+
+.spectrum .canvas {
+    grid-area: canvas;
+    position: relative;
+    border-left: 2px solid var(--color-foreground);
+    border-bottom: 2px solid var(--color-foreground);
+}
+
+.spectrum .peak {
+    position: absolute;
+    height: calc(var(--intensity) / var(--max-intensity) * 100%);
+    top: calc(100% - var(--intensity) / var(--max-intensity) * 100%);
+    left: calc(var(--mz) / var(--max-mz) * 100%);
+    width: 2px;
+    background-color: var(--color);
+}
+
+.spectrum .peak span {
+    position: absolute;
+    top: -1.2em;
+    left: -.5em;
+    text-anchor: end;
+}
+
+.spectrum .peak:hover span {
+    color: var(--color-primary);
+    z-index: 1000;
+    font-weight: 500;
+}
+
+.spectrum .peak:hover span.special::after {
+    content: var(--content);
+    position: absolute;
+    display: block;
 }
 
 
 /* Special rules for depth of coverage plots */
 
-.docplot {
+.doc-plot {
     flex-basis: 100%;
 }
 
-.docplot .histogram {
+.doc-plot .histogram {
     grid-template-rows: 50px 1fr;
     gap: 0;
     grid-template-columns: minmax(0px, max-content) repeat(auto-fit, minmax(0px, 1fr));
 }
 
-.docplot .histogram .bar span {
+.doc-plot .histogram .bar span {
     position: absolute;
-    color: var(--color-dark)
+    color: var(--color-foreground)
 }
 
-.docplot .histogram .label {
+.doc-plot .histogram .label {
     overflow-x: visible;
 }
 
@@ -1358,7 +1562,7 @@ input:checked+label .overhang-block .text {
     font-size: .7em;
 }
 
-.alignment-details .histogram .yaxis,
+.alignment-details .histogram .y-axis,
 .alignment-details .histogram .empty {
     display: none;
 }
@@ -1381,7 +1585,7 @@ input:checked+label .overhang-block .text {
 }
 
 .sequence-match-graphic .gap-in-query {
-    background-color: var(--color-dark);
+    background-color: var(--color-foreground);
 }
 
 [aria-hidden="true"] {
@@ -1403,7 +1607,7 @@ input:checked+label .overhang-block .text {
     .report label,
     .report .collapsable>label {
         background: none;
-        color: var(--color-dark);
+        color: var(--color-foreground);
         border: none;
     }
 
@@ -1414,7 +1618,7 @@ input:checked+label .overhang-block .text {
     }
 
     .info-link {
-        color: var(--color-dark);
+        color: var(--color-foreground);
         border: none;
         font-size: 1em;
     }
@@ -1423,28 +1627,28 @@ input:checked+label .overhang-block .text {
         height: auto;
     }
 
-    .phylogenetictree label,
+    .phylogenetic-tree label,
     .graph label {
         display: none;
     }
 
-    .phylogenetictree input:checked+label,
+    .phylogenetic-tree input:checked+label,
     .graph input:checked+label {
         display: inline-block;
     }
 
-    .phylogenetictree input:checked+label::before {
+    .phylogenetic-tree input:checked+label::before {
         display: inline-block;
         content: "Displays:";
         margin-right: .5em;
     }
 
-    .phylogenetictree .info-link text {
-        fill: var(--color-dark);
+    .phylogenetic-tree .info-link text {
+        fill: var(--color-foreground);
         font-size: 16px;
     }
 
-    .phylogenetictree .info-link rect {
+    .phylogenetic-tree .info-link rect {
         display: none;
     }
 

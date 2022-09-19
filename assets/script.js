@@ -6,19 +6,19 @@ function sortTable(id, column_number, type) {
     let headers = table.getElementsByTagName("TR")[0].getElementsByTagName("th");
 
     sorted = false
-    if (headers[column_number].getAttribute('data-sortorder') == "asc") {
+    if (headers[column_number].getAttribute('data-sort-order') == "asc") {
         dir = "desc";
         sorted = true
     }
-    if (headers[column_number].getAttribute('data-sortorder') == "desc") {
+    if (headers[column_number].getAttribute('data-sort-order') == "desc") {
         dir = "asc";
         sorted = true
     }
 
     for (var j = 0; j < headers.length; j++) {
-        headers[j].setAttribute('data-sortorder', "");
+        headers[j].setAttribute('data-sort-order', "");
     }
-    headers[column_number].setAttribute('data-sortorder', dir);
+    headers[column_number].setAttribute('data-sort-order', dir);
 
     rows = Array.from(table.getElementsByTagName("TR"));
     values = [null]

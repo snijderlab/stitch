@@ -11,6 +11,7 @@ using System.Threading.Tasks;
 using System.Globalization;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
+using System.Text.Json.Serialization;
 
 namespace AssemblyNameSpace
 {
@@ -23,18 +24,21 @@ namespace AssemblyNameSpace
         public readonly ParsedFile BatchFile;
         public readonly RunVariables runVariables;
         public readonly string Runname;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombinedsegment, ParsedFile batchFile, RunVariables variables, string runname = "Runname")
+        [JsonIgnore]
+        public readonly Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();
-            RecombinedSegment = recombinedsegment.AsReadOnly();
+            RecombinedSegment = recombined_segment.AsReadOnly();
             BatchFile = batchFile;
             runVariables = variables;
             Runname = runname;
+            Fragments = fragments;
         }
     }
     /// <summary>
-    /// To be a basepoint for any reporting options, handling all the metadata.
+    /// To be a base point for any reporting options, handling all the metadata.
     /// </summary>
     public abstract class Report
     {
