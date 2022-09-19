@@ -674,6 +674,9 @@ $@"<tr>
             if (front_overhang)
             {
                 front_html.UnsafeRemoveElementsFromEnd(empty * 3);
+                front_html.Close("p");
+                front_html.Close("div");
+                front_html.Close("label");
                 front_html.Close("div");
                 return front_html;
             }
