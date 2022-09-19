@@ -66,7 +66,7 @@ namespace HTMLNameSpace
         /// <param name="tag">The tag eg "p"</param>
         /// <param name="heading">The extra headings eg "class='stuff'" (leading space will be added automatically)</param>
         /// <param name="content">The inner content eg "Text" (It will be HTML encoded)</param>
-        public void OpenAndClose(string tag, string heading, string content)
+        public void OpenAndClose(string tag, string heading, string content = "")
         {
             heading = String.IsNullOrWhiteSpace(heading) ? "" : " " + heading; //Add leading space
             buffer.Append($"<{tag}{heading}>{System.Web.HttpUtility.HtmlEncode(content)}</{tag}>");
