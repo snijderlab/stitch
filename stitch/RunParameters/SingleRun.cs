@@ -108,6 +108,7 @@ namespace AssemblyNameSpace
                     recombine_sw.Stop();
                 }
 
+                // Raw data
                 Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
@@ -116,6 +117,7 @@ namespace AssemblyNameSpace
                         if (item.Item2 is ReadMetaData.Peaks p) return p;
                         else return null;
                     }).Where(i => i != null), this.RawDataDirectory);
+                    progressBar.Update();
                 }
 
                 var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);

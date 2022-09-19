@@ -159,14 +159,14 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             if (runVariables.ExpectedResult.Count == 0)
             {
                 bar = new ProgressBar();
-                bar.Start(4); // Max steps, can be turned down if no Recombination is done
+                bar.Start(5); // Max steps, can be turned down if no Recombination is done
             }
 
             var input_params = ParseCommandFile.Batch(filename, false);
             if (runVariables.ExpectedResult.Count == 0)
             {
                 bar.Update();
-                bar.Start(input_params.Recombine != null ? 4 : 3);
+                bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.RawDataDirectory != null ? 1 : 0));
             }
 
             input_params.CreateRun(runVariables, bar).Calculate();
