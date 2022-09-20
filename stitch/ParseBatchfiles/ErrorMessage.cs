@@ -301,7 +301,7 @@ namespace AssemblyNameSpace
                     }
                 }
 
-                Console.WriteLine("\nPlease include this entire error if you open a new issue.");
+                Console.WriteLine("\nPlease include this entire error if you open a bug report.");
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
                 Console.ForegroundColor = defaultColour;

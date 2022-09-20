@@ -109,7 +109,7 @@ namespace AssemblyNameSpace
                 }
 
                 // Raw data
-                Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments = null;
+                Dictionary<string, Fragmentation.PeptideSpectrum[]> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
                     fragments = Fragmentation.GetSpectra(Input.Select(item =>

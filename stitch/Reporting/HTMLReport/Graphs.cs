@@ -439,11 +439,17 @@ namespace HTMLNameSpace
             return html.ToString();
         }
 
-        public static string RenderSpectrum(string sequence, ReadMetaData.Peaks metadata, Fragmentation.PeptideSpectrum spectrum)
+        /// <summary>
+        /// Render a spectrum of a peptide. Displays a legend, an overview of the peptide and its fragments, and the full spectrum.
+        /// </summary>
+        /// <param name="sequence">The sequence of the peptide.</param>
+        /// <param name="spectrum">The spectrum to display.</param>
+        /// <returns>HTML with title included.</returns>
+        public static string RenderSpectrum(string sequence, Fragmentation.PeptideSpectrum spectrum)
         {
             var html = new HTMLBuilder();
             html.Open("div", "class='spectrum'");
-            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum", HTMLHelp.Spectrum));
+            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum " + spectrum.ScanID, HTMLHelp.Spectrum));
             html.Open("div", "class='legend'");
             html.OpenAndClose("span", "class='title'", "Ion legend");
             html.OpenAndClose("span", "class='A'", "A");
@@ -452,25 +458,39 @@ namespace HTMLNameSpace
             html.OpenAndClose("span", "class='X'", "X");
             html.OpenAndClose("span", "class='Y'", "Y");
             html.OpenAndClose("span", "class='Z'", "Z");
+            html.OpenAndClose("span", "", "Other");
+            html.OpenAndClose("span", "class='unassigned'", "Unassigned");
+            html.Open("span", "class='amino-acid'");
+            html.Content("Amino Acid");
+            html.OpenAndClose("sup", "", "Charge");
+            html.OpenAndClose("sub", "style='margin-left:-6ch'", "Position");
+            html.Close("span");
             html.Close("div");
             html.Open("div", "class='peptide'");
 
             var fragment_overview = new HashSet<string>[sequence.Length];
             for (int i = 0; i < sequence.Length; i++) fragment_overview[i] = new HashSet<string>();
             var max_mz = 0.0;
-            var max_intensity = 0.0;
+            var max_intensity = spectrum.MatchedFragments.Select(s => s.Centroid.Intensity).Max();
+            var unassigned_threshold = 0.02 * max_intensity;
 
             foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
-                if (fragment == null || fragment.Position == -1) continue;
-                max_mz = Math.Max(max_mz, fragment.Mz);
-                max_intensity = Math.Max(max_intensity, centroid.Intensity);
-                var position = fragment.Position - 1;
-                if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position - 1;
-                fragment_overview[position].Add(PeptideFragment.IonToString(fragment.FragmentType));
+                if (fragment == null || fragment.Position == -1)
+                {
+                    if (centroid.Intensity > unassigned_threshold)
+                        max_mz = Math.Max(max_mz, centroid.Mz);
+                }
+                else
+                {
+                    max_mz = Math.Max(max_mz, centroid.Mz);
+                    var position = fragment.Position - 1;
+                    if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position - 1;
+                    fragment_overview[position].Add(PeptideFragment.IonToString(fragment.FragmentType));
+                }
             }
             max_mz *= 1.01;
-            max_intensity *= 1.01;
+            max_intensity *= 1.01f;
 
             // Display the full sequence from N to C terminus with its fragments annotated
             for (int i = 0; i < sequence.Length; i++)
@@ -499,21 +519,32 @@ namespace HTMLNameSpace
 
             foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
-                if (fragment == null) continue;
-                var ion = PeptideFragment.IonToString(fragment.FragmentType).Replace(' ', '-');
-                var shift = PeptideFragment.MassShiftToString(fragment.MassShift).Replace(' ', '-').Replace(' ', '-');
-                var normal_ion = (fragment.FragmentType == PeptideFragment.ION_A || fragment.FragmentType == PeptideFragment.ION_B || fragment.FragmentType == PeptideFragment.ION_C || fragment.FragmentType == PeptideFragment.ION_X || fragment.FragmentType == PeptideFragment.ION_Y || fragment.FragmentType == PeptideFragment.ION_Z);
-                if (fragment.Position == -1 || !normal_ion)
+                if (fragment == null)
                 {
-                    html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
-                    html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
-                    html.Close("span");
+                    if (centroid.Intensity > unassigned_threshold)
+                        html.OpenAndClose("span", $"class='peak unassigned' style='--mz:{centroid.Mz};--intensity:{centroid.Intensity};'");
                 }
                 else
                 {
-                    html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
-                    html.OpenAndClose("span", "", ion + fragment.Position.ToString());
-                    html.Close("span");
+                    var ion = PeptideFragment.IonToString(fragment.FragmentType).Replace(' ', '-');
+                    var shift = PeptideFragment.MassShiftToString(fragment.MassShift).Replace(' ', '-').Replace(' ', '-');
+                    var normal_ion = (fragment.FragmentType == PeptideFragment.ION_A || fragment.FragmentType == PeptideFragment.ION_B || fragment.FragmentType == PeptideFragment.ION_C || fragment.FragmentType == PeptideFragment.ION_X || fragment.FragmentType == PeptideFragment.ION_Y || fragment.FragmentType == PeptideFragment.ION_Z);
+                    if (fragment.Position == -1 || !normal_ion)
+                    {
+                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                        html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
+                        html.Close("span");
+                    }
+                    else
+                    {
+                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                        html.Open("span", "");
+                        html.Content(ion);
+                        html.OpenAndClose("sup", "", fragment.Charge.ToString());
+                        html.OpenAndClose("sub", "", fragment.Position.ToString());
+                        html.Close("span");
+                        html.Close("span");
+                    }
                 }
             }
 

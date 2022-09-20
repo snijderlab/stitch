@@ -19,7 +19,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, Fragmentation.PeptideSpectrum[]> Fragments)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -30,9 +30,12 @@ namespace HTMLNameSpace
     ");
             if (read.MetaData is ReadMetaData.Peaks p)
             {
-                if (Fragments != null && Fragments.ContainsKey(p))
+                if (Fragments != null && Fragments.ContainsKey(p.EscapedIdentifier))
                 {
-                    buffer.Append(HTMLGraph.RenderSpectrum(read.Sequence, p, Fragments[p]));
+                    foreach (var spectrum in Fragments[p.EscapedIdentifier])
+                    {
+                        buffer.Append(HTMLGraph.RenderSpectrum(read.Sequence, spectrum));
+                    }
                 }
             }
             buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup));

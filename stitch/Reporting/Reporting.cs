@@ -25,8 +25,8 @@ namespace AssemblyNameSpace
         public readonly RunVariables runVariables;
         public readonly string Runname;
         [JsonIgnore]
-        public readonly Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<ReadMetaData.Peaks, Fragmentation.PeptideSpectrum> fragments)
+        public readonly Dictionary<string, Fragmentation.PeptideSpectrum[]> Fragments;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, Fragmentation.PeptideSpectrum[]> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();

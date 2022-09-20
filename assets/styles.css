@@ -72,6 +72,15 @@ a:active {
     color: var(--color-tertiary);
 }
 
+sup,
+sub {
+    font-family: Roboto Mono, monospace;
+}
+
+sup+sub {
+    margin-left: -1ch;
+}
+
 .report {
     padding: 0 1em;
 }
@@ -1313,6 +1322,7 @@ input:checked+label .overhang-block .text {
 .spectrum .legend {
     display: flex;
     gap: 1em;
+    align-content: baseline;
 }
 
 .spectrum .legend .title {
@@ -1320,8 +1330,14 @@ input:checked+label .overhang-block .text {
     --color: var(--color-halfway);
 }
 
+.spectrum .legend .amino-acid {
+    --color: var(--color-foreground);
+    margin-top: -.35rem;
+}
+
 .spectrum .legend>* {
     color: var(--color);
+    cursor: default;
 }
 
 .spectrum .peptide {
@@ -1354,6 +1370,11 @@ input:checked+label .overhang-block .text {
 
 .spectrum .Z {
     --color: var(--color-primary-s1);
+}
+
+.spectrum .unassigned {
+    --color: var(--color-halfway);
+    z-index: -10;
 }
 
 .spectrum .peptide>* {
@@ -1479,15 +1500,17 @@ input:checked+label .overhang-block .text {
     height: calc(var(--intensity) / var(--max-intensity) * 100%);
     top: calc(100% - var(--intensity) / var(--max-intensity) * 100%);
     left: calc(var(--mz) / var(--max-mz) * 100%);
-    width: 2px;
+    width: 1px;
     background-color: var(--color);
 }
 
 .spectrum .peak span {
     position: absolute;
-    top: -1.2em;
+    top: -1.6em;
     left: -.5em;
     text-anchor: end;
+    z-index: 10;
+    cursor: default;
 }
 
 .spectrum .peak:hover span {
