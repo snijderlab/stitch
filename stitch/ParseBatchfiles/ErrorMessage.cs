@@ -1,6 +1,7 @@
 using System;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Reflection;
 
 namespace AssemblyNameSpace
 {
@@ -299,6 +300,10 @@ namespace AssemblyNameSpace
                         Console.WriteLine(line.Trim());
                     }
                 }
+                Console.ForegroundColor = ConsoleColor.Blue;
+                Console.Write("Version: ");
+                Console.ForegroundColor = defaultColour;
+                Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 
                 Console.WriteLine("\nPlease include this entire error if you open a bug report.");
                 Console.ForegroundColor = ConsoleColor.Blue;
