@@ -474,12 +474,6 @@ input:checked+label {
     height: 1px;
 }
 
-.source-code {
-    margin: 0;
-    padding-top: 1em;
-    font-family: 'Roboto Mono';
-    font-size: 12px;
-}
 
 input[type="checkbox"] {
     display: none;
@@ -492,6 +486,30 @@ input[type="radio"] {
 input:checked+label+.collapsable,
 .collapsable:target {
     display: block;
+}
+
+/* source code */
+.source-code {
+    margin: 0;
+    padding-top: 1em;
+    font-family: 'Roboto Mono';
+    font-size: 12px;
+}
+
+.source-code .op {
+    color: var(--color-halfway);
+}
+
+.source-code .id {
+    color: var(--color-primary);
+}
+
+.source-code .value {
+    color: var(--color-secondary);
+}
+
+.source-code .comment {
+    color: var(--color-tertiary);
 }
 
 /* user help */

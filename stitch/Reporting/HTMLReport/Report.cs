@@ -302,10 +302,30 @@ assets_folder = '{AssetsFolderName}';
         {
             if (BatchFile != null)
             {
+                string Render(string line)
+                {
+                    if (line.Trim().StartsWith('-'))
+                        return $"<span class='comment'>{line}</span>";
+
+                    var open = Regex.Match(line, @"^(\s*)([\w ]+)(\s*)->$");
+                    if (open.Success)
+                        return $"{open.Groups[1]}<span class='id'>{open.Groups[2]}</span>{open.Groups[3]}<span class='op'>-&gt;</span>";
+
+                    var single = Regex.Match(line, @"^(\s*)([\w ]+)(\s*):(.+)$");
+                    if (single.Success)
+                        return $"{single.Groups[1]}<span class='id'>{single.Groups[2]}</span>{single.Groups[3]}<span class='op'>:</span><span class='value'>{single.Groups[4]}</span>";
+
+                    var close = Regex.Match(line, @"^(\s*)<-$");
+                    if (close.Success)
+                        return $"{close.Groups[1]}<span class='op'>&lt;-</span>";
+
+                    return line;
+                }
+
                 var buffer = new StringBuilder();
                 var bf = BatchFile;
                 buffer.Append($"<pre class='source-code'><i>{bf.Filename}</i>\n");
-                foreach (var line in bf.Lines) buffer.AppendLine(line.TrimEnd());
+                foreach (var line in bf.Lines) buffer.AppendLine(Render(line.TrimEnd()));
                 buffer.Append("</pre>");
                 return buffer.ToString();
             }

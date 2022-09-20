@@ -62,7 +62,7 @@ namespace AssemblyNameSpace
                         output.RawDataDirectory = ParseHelper.GetFullPath(pair).GetValue(outEither);
                         if (!Directory.Exists(output.RawDataDirectory))
                         {
-                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Could not find RawDataDirectory. Execution will continue, but the spectra will be missing from all reports.", "", "", true));
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Could not find RawDataDirectory.", "Execution will continue, but the spectra will be missing from all reports.", "", true));
                             output.RawDataDirectory = null;
                         }
                         break;
