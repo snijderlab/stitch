@@ -40,12 +40,12 @@ namespace AssemblyNameSpace
         /// <summary> Generates a list of asides for details viewing. </summary>
         public void CreateAsides()
         {
-            var jobbuffer = new List<(AsideType, int, int, int)>();
+            var job_buffer = new List<(AsideType, int, int, int)>();
 
             // Read Asides
             for (int i = 0; i < Parameters.Input.Count; i++)
             {
-                jobbuffer.Add((AsideType.Read, -1, -1, i));
+                job_buffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
             if (Parameters.Segments != null)
@@ -53,27 +53,27 @@ namespace AssemblyNameSpace
                 for (int i = 0; i < Parameters.Segments.Count; i++)
                     for (int j = 0; j < Parameters.Segments[i].Item2.Count; j++)
                         for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count; k++)
-                            jobbuffer.Add((AsideType.Template, i, j, k));
+                            job_buffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
             if (Parameters.RecombinedSegment != null)
             {
                 for (int i = 0; i < Parameters.RecombinedSegment.Count; i++)
                     for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count; j++)
-                        jobbuffer.Add((AsideType.RecombinedTemplate, i, -1, j));
+                        job_buffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
 
             if (MaxThreads > 1)
             {
                 Parallel.ForEach(
-                    jobbuffer,
+                    job_buffer,
                     new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
                     (a, _) => CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4)
                 );
             }
             else
             {
-                foreach (var (t, i3, i2, i1) in jobbuffer)
+                foreach (var (t, i3, i2, i1) in job_buffer)
                 {
                     CreateAndSaveAside(t, i3, i2, i1);
                 }
@@ -83,40 +83,40 @@ namespace AssemblyNameSpace
         void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
         {
             var buffer = new StringBuilder();
-            var innerbuffer = new StringBuilder();
+            var inner_buffer = new StringBuilder();
 
             ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
             switch (aside)
             {
                 case AsideType.Read:
-                    HTMLAsides.CreateReadAside(innerbuffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
+                    HTMLAsides.CreateReadAside(inner_buffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
                     metadata = Parameters.Input[index1].MetaData;
                     break;
                 case AsideType.Template:
                     var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
+                    HTMLAsides.CreateTemplateAside(inner_buffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
                     metadata = template.MetaData;
                     break;
                 case AsideType.RecombinedTemplate:
                     var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(innerbuffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
+                    HTMLAsides.CreateTemplateAside(inner_buffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
                     metadata = rTemplate.MetaData;
                     break;
             };
             var location = new List<string>() { AssetsFolderName, GetAsideName(aside) + "s" };
-            var homelocation = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
+            var home_location = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
             var id = GetAsideIdentifier(metadata);
             var link = GetLinkToFolder(location, new List<string>());
-            var fullpath = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
+            var full_path = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
             buffer.Append("<!DOCTYPE html>\n<html lang='en-GB'>");
             buffer.Append(CreateHeader("Details " + id, location));
             buffer.Append("<body class='details' onload='Setup()'>");
-            buffer.Append($"<a href='{homelocation}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
-            buffer.Append(innerbuffer.ToString());
+            buffer.Append($"<a href='{home_location}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
+            buffer.Append(inner_buffer.ToString());
             buffer.Append("</body></html>");
 
-            SaveAndCreateDirectories(fullpath, buffer.ToString());
+            SaveAndCreateDirectories(full_path, buffer.ToString());
         }
 
         void CreateCDROverview(string id, StringBuilder buffer, List<Segment> segments)
@@ -243,20 +243,20 @@ namespace AssemblyNameSpace
                 }
             }
 
-            var innerbuffer = new StringBuilder();
-            innerbuffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
+            var inner_buffer = new StringBuilder();
+            inner_buffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
             if (cdr1_reads.Count == 0 && cdr2_reads.Count == 0 && cdr3_reads.Count == 0)
-                innerbuffer.AppendLine("<p>No CDR reads could be placed.</p>");
+                inner_buffer.AppendLine("<p>No CDR reads could be placed.</p>");
             else
             {
-                innerbuffer.AppendLine("<div class='cdr-tables'>");
-                if (cdr1_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
-                if (cdr2_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
-                if (cdr3_reads.Count > 0) HTMLTables.CDRTable(innerbuffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
-                innerbuffer.AppendLine("</div>");
+                inner_buffer.AppendLine("<div class='cdr-tables'>");
+                if (cdr1_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
+                if (cdr2_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
+                if (cdr3_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
+                inner_buffer.AppendLine("</div>");
             }
 
-            buffer.Append(CommonPieces.Collapsible(id, "CDR regions", innerbuffer.ToString()));
+            buffer.Append(CommonPieces.Collapsible(id, "CDR regions", inner_buffer.ToString()));
         }
 
         private string CreateHeader(string title, List<string> location)
@@ -357,32 +357,32 @@ assetsfolder = '{AssetsFolderName}';
 
         private string CreateSegmentJoining(int group)
         {
-            var innerbuffer = new StringBuilder();
+            var inner_buffer = new StringBuilder();
             foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
             {
                 var A = Parameters.Segments[group].Item2[set.Index - 1];
                 var B = Parameters.Segments[group].Item2[set.Index];
-                innerbuffer.Append($"<h2>{A.Name} * {B.Name}</h2>");
+                inner_buffer.Append($"<h2>{A.Name} * {B.Name}</h2>");
                 var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3 + set.Score.Best.Position));
                 var seqB = AminoAcid.ArrayToString(set.SeqB.Take(3 + set.Score.Best.Position).ToArray());
-                innerbuffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
-                innerbuffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
+                inner_buffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                inner_buffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
 
-                HTMLGraph.Bargraph(innerbuffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", HTMLHelp.SegmentJoining);
+                HTMLGraph.Bargraph(inner_buffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", HTMLHelp.SegmentJoining);
             }
-            return innerbuffer.ToString();
+            return inner_buffer.ToString();
         }
 
         private string CreateMain()
         {
-            var innerbuffer = new StringBuilder();
+            var inner_buffer = new StringBuilder();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
             if (Parameters.Segments != null)
                 for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
-                    var groupbuffer = new StringBuilder();
+                    var group_buffer = new StringBuilder();
                     var id = Parameters.Segments[group].Item1.ToLower().Replace(' ', '-');
 
                     if (Parameters.RecombinedSegment.Count != 0)
@@ -390,26 +390,26 @@ assetsfolder = '{AssetsFolderName}';
                         if (id == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        groupbuffer.Append(Collapsible(id + "-recombination", "Recombination Table", HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                        group_buffer.Append(Collapsible(id + "-recombination", "Recombination Table", HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
                         if (decoy.Count > 0)
-                            groupbuffer.Append(Collapsible(id + "-recombination-decoy", "Recombination Decoy", HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                            group_buffer.Append(Collapsible(id + "-recombination-decoy", "Recombination Decoy", HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
 
                         if (Parameters.RecombinedSegment[group].SegmentJoiningScores.Count > 0)
-                            groupbuffer.Append(Collapsible(id + "-segment-joining", "Segment joining", CreateSegmentJoining(group)));
+                            group_buffer.Append(Collapsible(id + "-segment-joining", "Segment joining", CreateSegmentJoining(group)));
                     }
 
-                    groupbuffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
+                    group_buffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
 
-                    CreateCDROverview(id + "-cdr", groupbuffer, Parameters.Segments[group].Item2);
+                    CreateCDROverview(id + "-cdr", group_buffer, Parameters.Segments[group].Item2);
 
                     if (Parameters.Segments.Count == 1)
-                        innerbuffer.Append(groupbuffer);
+                        inner_buffer.Append(group_buffer);
                     else
-                        innerbuffer.Append(Collapsible(id, Parameters.Segments[group].Item1, groupbuffer.ToString()));
+                        inner_buffer.Append(Collapsible(id, Parameters.Segments[group].Item1, group_buffer.ToString()));
                 }
 
-            innerbuffer.Append(Collapsible("reads", "Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
-            innerbuffer.Append(Collapsible("batchfile", "Batch File", BatchFileHTML()));
+            inner_buffer.Append(Collapsible("reads", "Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
+            inner_buffer.Append(Collapsible("batchfile", "Batch File", BatchFileHTML()));
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
@@ -423,7 +423,7 @@ assetsfolder = '{AssetsFolderName}';
 
  {GetWarnings()}
  <div class='overview'>{CreateOverview()}</div>
- {innerbuffer}
+ {inner_buffer}
  {Docs()}
 
 <div class=""footer"">

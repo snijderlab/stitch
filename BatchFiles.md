@@ -167,6 +167,16 @@ _Examples_
 MaxCores: 4
 MaxCores: 86
 ```
+
+##### RawDataDirectory (s)
+
+The path to the directory that contains all raw data files. This should be the directory in which the files that are listed in the Peaks input files are located. If  any one particular file, or a particular scan could not be found this will be ignored and the output report will just not contain that spectrum. If the full directory could not be located there will be a warning, but the reports will still be generated. For now only Thermo raw files are supported. More information can be found in the library used for opening the raw files 'Hecklib.core' and 'Hecklib.rawfiles'.
+
+_Example_
+```
+RawDataDirectory: R:/RawData/08-2022/
+```
+
 #### Input
 
 This scope contains parameters to load reads.
