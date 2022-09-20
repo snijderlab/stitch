@@ -87,13 +87,7 @@ function sortTable(id, column_number, type) {
 }
 
 function Select(id) {
-    window.location.href = assetsfolder + "/contigs/" + id.replace(':', '-') + ".html";
-}
-
-function lpad(str, padString, length) {
-    while (str.length < length)
-        str = padString + str;
-    return str;
+    window.location.href = assets_folder + "/contigs/" + id.replace(':', '-') + ".html";
 }
 
 var dragging = false;
@@ -105,18 +99,18 @@ function get(name) {
 
 var t;
 function Setup() {
-    var backbutton = document.getElementById("back-button");
+    var back_button = document.getElementById("back-button");
     var ref = window.name.split('|').pop();
-    if (backbutton && ref) {
-        backbutton.href = ref;
+    if (back_button && ref) {
+        back_button.href = ref;
         var id = ref.split('/').pop().split('.')[0].replace(/-/g, ':');
-        backbutton.innerText = id;
-        if (id != assetsfolder.replace(/-/g, ':')) backbutton.style = "display: inline-block;"
+        back_button.innerText = id;
+        if (id != assets_folder.replace(/-/g, ':')) back_button.style = "display: inline-block;"
     }
 
     window.name = window.name + "|" + window.location.href
 
-    if (window.name.split('|').pop().split('/').pop().split('.')[0].replace(/-/g, ':') == assetsfolder.replace(/-/g, ':')) window.name = window.location.href;
+    if (window.name.split('|').pop().split('/').pop().split('.')[0].replace(/-/g, ':') == assets_folder.replace(/-/g, ':')) window.name = window.location.href;
 
     if (get('pos')) {
         var pos = parseInt(get('pos'));
@@ -153,6 +147,8 @@ function Setup() {
             elements[i].classList.add("highlight");
         }
     }
+
+    SpectrumSetUp()
 }
 
 function openHelp(event) {
@@ -229,5 +225,144 @@ function GetGraphDataExample(element) {
         if (children[i].classList.contains("graph-data")) {
             return children[i].value.split("\n").slice(0, 4).join("\n");
         }
+    }
+}
+
+/* Spectrum viewer code */
+function SpectrumSetUp() {
+    var elements = document.querySelectorAll(".spectrum .peptide span");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("mouseenter", HighlightAminoAcid);
+        elements[i].addEventListener("mouseleave", RemoveHighlight);
+    }
+    var elements = document.querySelectorAll(".spectrum .legend input");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("change", ToggleFeature);
+    }
+    var elements = document.querySelectorAll(".spectrum .canvas");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("mousedown", spectrumDragStart)
+        elements[i].addEventListener("mousemove", spectrumDrag)
+        elements[i].addEventListener("mouseup", spectrumDragEnd)
+        elements[i].addEventListener("mouseout", spectrumDragOut)
+    }
+    var elements = document.querySelectorAll(".spectrum .zoom-out");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("mousedown", spectrumZoomOut)
+    }
+}
+
+/* Highlight an aminoacid that the user hovered over in the peptide spectrum */
+var highlight;
+function HighlightAminoAcid(event) {
+    var t = event.target; // <span> with the sequence
+    if (t.classList.contains("corner"))
+        t = t.parentElement;
+    if (highlight == t.dataset.pos) return;
+    highlight = t.dataset.pos;
+    var canvas = t.parentElement.parentElement.children[4].children[1]; // Get the canvas
+    canvas.classList.add("highlight");
+    var peaks = canvas.children;
+    for (let i = 0; i < peaks.length; i++) {
+        if (peaks[i].dataset.pos == t.dataset.pos) {
+            peaks[i].classList.add("highlight")
+        }
+    }
+}
+
+/* Remove peptide spectrum highlight */
+function RemoveHighlight(event) {
+    var t = event.target; // <span> with the sequence
+    if (t.classList.contains("corner"))
+        return;
+    var canvas = t.parentElement.parentElement.children[4].children[1]; // Get the canvas
+    canvas.classList.remove("highlight");
+    var peaks = canvas.children;
+    for (let i = 0; i < peaks.length; i++) {
+        peaks[i].classList.remove("highlight")
+    }
+    highlight = undefined;
+}
+
+/* Toggle features on or off in the spectrum (eg background peaks, peak labels) */
+function ToggleFeature(event) {
+    if (event.target.checked) {
+        event.target.parentElement.parentElement.children[4].classList.add(event.target.className);
+    } else {
+        event.target.parentElement.parentElement.children[4].classList.remove(event.target.className);
+    }
+}
+
+var startPoint;
+var selection;
+function spectrumDragStart(event) {
+    if (event.target.classList.contains("canvas")) {
+        event.target.classList.add("dragging")
+        startPoint = event.offsetX;
+        selection = event.target.getElementsByClassName("selection")[0]
+        selection.hidden = false
+        selection.style.setProperty("left", startPoint + "px")
+        selection.style.setProperty("width", "0px")
+    }
+}
+
+function spectrumDrag(event) {
+    if (startPoint != undefined) {
+        selection.style.setProperty("left", Math.min(event.offsetX, startPoint) + "px")
+        selection.style.setProperty("width", Math.abs(event.offsetX - startPoint) + "px")
+    }
+}
+
+function spectrumDragOut(event) {
+    if (selection != undefined) {
+        selection.hidden = true
+    }
+    selection = undefined
+    startPoint = undefined
+}
+
+function spectrumDragEnd(event) {
+    if (event.target.classList.contains("canvas") && startPoint != undefined) {
+        var d = event.target.dataset;
+        if (d.minMz == undefined) d.minMz = 0;
+        if (d.maxMz == undefined) d.maxMz = d.initialMaxMz;
+        event.target.classList.remove("dragging")
+        selection.hidden = true;
+        var width = event.target.getBoundingClientRect().width;
+        var min = Math.min(startPoint, event.offsetX) / width;
+        var max = Math.max(startPoint, event.offsetX) / width;
+        var minMz = Number(d.minMz);
+        var maxMz = Number(d.maxMz);
+        var min = min * Math.max(1, maxMz - minMz) + minMz;
+        var max = max * Math.max(1, maxMz - minMz) + minMz;
+        d.minMz = min;
+        d.maxMz = max;
+        event.target.style.setProperty("--min-mz", min);
+        event.target.style.setProperty("--max-mz", max);
+
+        UpdateSpectrumXAxis(event.target)
+    }
+}
+
+function spectrumZoomOut(event) {
+    var d = event.target.parentElement.dataset;
+    d.minMz = 0;
+    d.maxMz = d.initialMaxMz;
+    event.target.parentElement.style.setProperty("--min-mz", 0);
+    event.target.parentElement.style.setProperty("--max-mz", d.initialMaxMz);
+
+    UpdateSpectrumXAxis(event.target.parentElement)
+}
+
+// Give the canvas element
+function UpdateSpectrumXAxis(ele) {
+    // Update x-axis
+    var axis = ele.parentElement.getElementsByClassName("x-axis")[0];
+    var ticks = axis.children;
+    var min = Number(ele.dataset.minMz);
+    var max = Number(ele.dataset.maxMz);
+    var factor = max - min < 5 ? 100 : max - min < 50 ? 10 : 1;
+    for (let i = 0; i < ticks.length; i++) {
+        ticks[i].innerText = Math.round((min + i / 4 * (max - min)) * factor) / factor;
     }
 }

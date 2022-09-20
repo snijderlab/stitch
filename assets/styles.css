@@ -893,7 +893,8 @@ input:checked+label .overhang-block .text {
 }
 
 .alignment .copy-data,
-.annotated-consensus-sequence .copy-data {
+.annotated-consensus-sequence .copy-data,
+.spectrum .copy-data {
     height: fit-content;
     width: -moz-fit-content;
     width: fit-content;
@@ -1318,12 +1319,16 @@ input:checked+label .overhang-block .text {
 
 .spectrum {
     --color: red;
+    display: grid;
+    grid-template-columns: 1fr max-content;
+    grid-template-rows: max-content max-content max-content max-content;
 }
 
 .spectrum .legend {
     display: flex;
     gap: 1em;
-    align-content: baseline;
+    align-items: center;
+    grid-column: 1/3;
 }
 
 .spectrum .legend .title {
@@ -1331,9 +1336,20 @@ input:checked+label .overhang-block .text {
     --color: var(--color-halfway);
 }
 
-.spectrum .legend .amino-acid {
+.spectrum .legend label {
+    padding: 2px;
+    border: 2px solid var(--color-halfway);
+    border-radius: .2rem;
+    user-select: none;
+    cursor: pointer;
+}
+
+.spectrum .legend input:checked+label {
+    border-color: var(--color-primary);
+}
+
+.spectrum .legend .label {
     --color: var(--color-foreground);
-    margin-top: -.35rem;
 }
 
 .spectrum .legend>* {
@@ -1345,6 +1361,7 @@ input:checked+label .overhang-block .text {
     font-size: 1.25em;
     margin: 1em;
     display: flex;
+    grid-column: 1/3;
     --spacing: 3px;
     --size: 50%;
 }
@@ -1375,13 +1392,18 @@ input:checked+label .overhang-block .text {
 
 .spectrum .unassigned {
     --color: var(--color-halfway);
-    z-index: -10;
 }
 
 .spectrum .peptide>* {
     position: relative;
     padding: .5em;
     display: block;
+    cursor: crosshair;
+    user-select: none;
+}
+
+.spectrum .peptide>*:hover {
+    background-color: var(--color-primary-o);
 }
 
 .spectrum .corner {
@@ -1441,6 +1463,7 @@ input:checked+label .overhang-block .text {
 .spectrum .canvas-wrapper {
     width: 100%;
     display: grid;
+    grid-column: 1/3;
     grid-template-rows: 1fr 2em;
     grid-template-columns: 4.5em 1fr;
     grid-template-areas:
@@ -1459,6 +1482,16 @@ input:checked+label .overhang-block .text {
     padding-right: 2px;
 }
 
+.spectrum .unassigned .y-axis .unassigned,
+.spectrum .y-axis .assigned {
+    display: block;
+}
+
+.spectrum .unassigned .y-axis .assigned,
+.spectrum .y-axis .unassigned {
+    display: none;
+}
+
 .spectrum .y-axis::after {
     content: "Intensity";
     position: absolute;
@@ -1469,7 +1502,6 @@ input:checked+label .overhang-block .text {
     color: var(--color-halfway);
     transform: rotate(270deg);
 }
-
 
 .spectrum .x-axis {
     position: relative;
@@ -1494,15 +1526,56 @@ input:checked+label .overhang-block .text {
     position: relative;
     border-left: 2px solid var(--color-foreground);
     border-bottom: 2px solid var(--color-foreground);
+    user-select: none;
+    --min-mz: calc(var(--zoom-min) * var(--initial-max-mz));
+    --max-mz: calc(var(--zoom-max) * var(--initial-max-mz));
+    overflow-x: clip;
+    overflow-y: visible;
+}
+
+.spectrum .canvas .zoom-out {
+    position: absolute;
+    top: 0px;
+    right: 0px;
+    color: var(--color-halfway);
+    padding: .2rem;
+    border: 2px solid var(--color-halfway);
+    background-color: transparent;
+    border-radius: .2rem;
+    font-size: 0.8em;
+}
+
+.spectrum .canvas .zoom-out:hover {
+    color: var(--color-primary);
+    border-color: var(--color-primary);
+}
+
+.spectrum .canvas .zoom-out:active {
+    color: var(--color-secondary);
+    border-color: var(--color-secondary);
 }
 
 .spectrum .peak {
     position: absolute;
     height: calc(var(--intensity) / var(--max-intensity) * 100%);
     top: calc(100% - var(--intensity) / var(--max-intensity) * 100%);
-    left: calc(var(--mz) / var(--max-mz) * 100%);
+    left: calc((var(--mz) - var(--min-mz)) / (var(--max-mz) - var(--min-mz)) * 100%);
     width: 1px;
     background-color: var(--color);
+}
+
+.spectrum .unassigned .peak {
+    height: calc(var(--intensity) / var(--max-intensity-unassigned) * 100%);
+    top: calc(100% - var(--intensity) / var(--max-intensity-unassigned) * 100%);
+}
+
+.spectrum .peak.unassigned {
+    display: none;
+    z-index: -10;
+}
+
+.spectrum .unassigned .peak.unassigned {
+    display: block;
 }
 
 .spectrum .peak span {
@@ -1512,18 +1585,49 @@ input:checked+label .overhang-block .text {
     text-anchor: end;
     z-index: 10;
     cursor: default;
+    display: none;
+}
+
+.spectrum .label .peak span {
+    display: block;
 }
 
 .spectrum .peak:hover span {
     color: var(--color-primary);
     z-index: 1000;
     font-weight: 500;
+    display: block;
 }
 
 .spectrum .peak:hover span.special::after {
     content: var(--content);
     position: absolute;
     display: block;
+}
+
+.spectrum .highlight .peak {
+    opacity: .1;
+}
+
+.spectrum .highlight .peak span {
+    opacity: 0;
+}
+
+.spectrum .highlight .peak.highlight,
+.spectrum .highlight .peak.highlight span {
+    opacity: 1;
+}
+
+.spectrum .selection {
+    border: 2px solid var(--color-primary);
+    height: 100%;
+    box-sizing: border-box;
+    position: absolute;
+    pointer-events: none;
+}
+
+.spectrum .canvas.dragging * {
+    pointer-events: none;
 }
 
 

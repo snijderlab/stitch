@@ -448,8 +448,10 @@ namespace HTMLNameSpace
         public static string RenderSpectrum(string sequence, Fragmentation.PeptideSpectrum spectrum)
         {
             var html = new HTMLBuilder();
+            var data_buffer = new StringBuilder();
             html.Open("div", "class='spectrum'");
             html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum " + spectrum.ScanID, HTMLHelp.Spectrum));
+            html.UnsafeContent(CommonPieces.CopyData($"Spectrum {spectrum.ScanID} (TSV)"));
             html.Open("div", "class='legend'");
             html.OpenAndClose("span", "class='title'", "Ion legend");
             html.OpenAndClose("span", "class='A'", "A");
@@ -459,43 +461,53 @@ namespace HTMLNameSpace
             html.OpenAndClose("span", "class='Y'", "Y");
             html.OpenAndClose("span", "class='Z'", "Z");
             html.OpenAndClose("span", "", "Other");
-            html.OpenAndClose("span", "class='unassigned'", "Unassigned");
-            html.Open("span", "class='amino-acid'");
-            html.Content("Amino Acid");
+            var id = spectrum.ScanID.Replace(':', '_');
+            html.Empty("input", $"id='{id}_unassigned' type='checkbox' checked class='unassigned'");
+            html.OpenAndClose("label", $"for='{id}_unassigned' class='unassigned'", "Unassigned");
+            html.Empty("input", $"id='{id}_label' type='checkbox' checked class='label'");
+            html.Open("label", $"for='{id}_label' class='label'");
+            html.Content("Ion");
             html.OpenAndClose("sup", "", "Charge");
             html.OpenAndClose("sub", "style='margin-left:-6ch'", "Position");
-            html.Close("span");
+            html.Close("label");
             html.Close("div");
             html.Open("div", "class='peptide'");
 
             var fragment_overview = new HashSet<string>[sequence.Length];
             for (int i = 0; i < sequence.Length; i++) fragment_overview[i] = new HashSet<string>();
             var max_mz = 0.0;
-            var max_intensity = spectrum.MatchedFragments.Select(s => s.Centroid.Intensity).Max();
-            var unassigned_threshold = 0.02 * max_intensity;
+            var max_intensity = 0.0;
+            var max_intensity_unassigned = 0.0;
+            var unassigned_threshold = 0.02 * spectrum.MatchedFragments.Select(s => s.Centroid.Intensity).Max();
 
             foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
                 if (fragment == null || fragment.Position == -1)
                 {
                     if (centroid.Intensity > unassigned_threshold)
+                    {
                         max_mz = Math.Max(max_mz, centroid.Mz);
+                        max_intensity_unassigned = Math.Max(max_intensity_unassigned, centroid.Intensity);
+                    }
                 }
                 else
                 {
                     max_mz = Math.Max(max_mz, centroid.Mz);
+                    max_intensity = Math.Max(max_intensity, centroid.Intensity);
                     var position = fragment.Position - 1;
                     if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position - 1;
                     fragment_overview[position].Add(PeptideFragment.IonToString(fragment.FragmentType));
                 }
             }
             max_mz *= 1.01;
-            max_intensity *= 1.01f;
+            max_intensity *= 1.01;
+            max_intensity_unassigned *= 1.01;
+            max_intensity_unassigned = Math.Max(max_intensity, max_intensity_unassigned);
 
             // Display the full sequence from N to C terminus with its fragments annotated
             for (int i = 0; i < sequence.Length; i++)
             {
-                html.Open("span");
+                html.Open("span", $"data-pos='{i + 1}'");
                 html.Content(sequence[i].ToString());
                 foreach (var fragment_type in fragment_overview[i])
                 {
@@ -505,24 +517,35 @@ namespace HTMLNameSpace
             }
             html.Close("div");
 
-            html.Open("div", "class='canvas-wrapper' aria-hidden='true'");
+            html.Open("div", "class='canvas-wrapper unassigned label' aria-hidden='true'");
 
             html.Open("div", "class='y-axis'");
             html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "class='1_4'", (max_intensity / 4).ToString("G3"));
-            html.OpenAndClose("span", "", (max_intensity / 2).ToString("G3"));
-            html.OpenAndClose("span", "class='3_4'", (3 * max_intensity / 4).ToString("G3"));
-            html.OpenAndClose("span", "", max_intensity.ToString("G3"));
+            html.OpenAndClose("span", "class='assigned'", (max_intensity / 4).ToString("G3"));
+            html.OpenAndClose("span", "class='assigned'", (max_intensity / 2).ToString("G3"));
+            html.OpenAndClose("span", "class='assigned'", (3 * max_intensity / 4).ToString("G3"));
+            html.OpenAndClose("span", "class='assigned last'", max_intensity.ToString("G3"));
+            html.OpenAndClose("span", "class='unassigned'", (max_intensity_unassigned / 4).ToString("G3"));
+            html.OpenAndClose("span", "class='unassigned'", (max_intensity_unassigned / 2).ToString("G3"));
+            html.OpenAndClose("span", "class='unassigned'", (3 * max_intensity_unassigned / 4).ToString("G3"));
+            html.OpenAndClose("span", "class='unassigned last'", max_intensity_unassigned.ToString("G3"));
             html.Close("div");
 
-            html.Open("div", $"class='canvas' style='--max-mz:{max_mz};--max-intensity:{max_intensity};'");
+            html.Open("div", $"class='canvas' style='--min-mz:0;--max-mz:{max_mz};--max-intensity:{max_intensity};--max-intensity-unassigned:{max_intensity_unassigned};' data-initial-max-mz='{max_mz}'");
+            html.OpenAndClose("span", "class='selection' hidden='true'");
+            html.OpenAndClose("div", "class='zoom-out'", "Zoom Out");
+
+            data_buffer.AppendLine("Mz\tCharge\tIntensity\tFragmentType\tMassShift\tPosition");
 
             foreach (var (fragment, centroid) in spectrum.MatchedFragments)
             {
                 if (fragment == null)
                 {
                     if (centroid.Intensity > unassigned_threshold)
+                    {
                         html.OpenAndClose("span", $"class='peak unassigned' style='--mz:{centroid.Mz};--intensity:{centroid.Intensity};'");
+                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t-\t-\t-");
+                    }
                 }
                 else
                 {
@@ -534,16 +557,20 @@ namespace HTMLNameSpace
                         html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
                         html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
                         html.Close("span");
+                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t{PeptideFragment.IonToString(fragment.FragmentType)}\t{PeptideFragment.MassShiftToString(fragment.MassShift)}\t-");
                     }
                     else
                     {
-                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                        var position = fragment.Position;
+                        if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position + 1;
+                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};' data-pos='{position}'");
                         html.Open("span", "");
                         html.Content(ion);
                         html.OpenAndClose("sup", "", fragment.Charge.ToString());
                         html.OpenAndClose("sub", "", fragment.Position.ToString());
                         html.Close("span");
                         html.Close("span");
+                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t{PeptideFragment.IonToString(fragment.FragmentType)}\t{PeptideFragment.MassShiftToString(fragment.MassShift)}\t{fragment.Position}");
                     }
                 }
             }
@@ -552,13 +579,14 @@ namespace HTMLNameSpace
 
             html.Open("div", "class='x-axis'");
             html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "class='1_4'", (max_mz / 4).ToString("G3"));
-            html.OpenAndClose("span", "", (max_mz / 2).ToString("G3"));
-            html.OpenAndClose("span", "class='3_4'", (3 * max_mz / 4).ToString("G3"));
-            html.OpenAndClose("span", "", max_mz.ToString("G3"));
+            html.OpenAndClose("span", "class='1_4'", (max_mz / 4).ToString("F0"));
+            html.OpenAndClose("span", "", (max_mz / 2).ToString("F0"));
+            html.OpenAndClose("span", "class='3_4'", (3 * max_mz / 4).ToString("F0"));
+            html.OpenAndClose("span", "", max_mz.ToString("F0"));
             html.Close("div");
 
             html.Close("div");
+            html.OpenAndClose("textarea", "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close("div");
             return html.ToString();
         }

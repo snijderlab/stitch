@@ -291,7 +291,7 @@ namespace AssemblyNameSpace
 }}
 </style>
 <script>
-assetsfolder = '{AssetsFolderName}';
+assets_folder = '{AssetsFolderName}';
 </script>
 <script src='{link}script.js'></script>
 <link rel='stylesheet' href='{link}styles.css'>
