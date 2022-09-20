@@ -514,7 +514,6 @@ assetsfolder = '{AssetsFolderName}';
 
         void CopyAssets()
         {
-            if (Parameters.runVariables.LiveServer) return;
             var executable_folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
             void CopyAssetsFile(string name)
@@ -535,13 +534,14 @@ assetsfolder = '{AssetsFolderName}';
                     new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
             }
 
+            CopyAssetsFile("export_pdf_example.png");
+            if (Parameters.runVariables.LiveServer) return;
             CopyAssetsFile("styles.css");
             CopyAssetsFile("script.js");
             CopyAssetsFile("Roboto-Regular.ttf");
             CopyAssetsFile("Roboto-Medium.ttf");
             CopyAssetsFile("RobotoMono-Regular.ttf");
             CopyAssetsFile("RobotoMono-Medium.ttf");
-            CopyAssetsFile("export_pdf_example.png");
         }
 
         /// <summary> Creates an HTML report to view the results and metadata. </summary>

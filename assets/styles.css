@@ -895,6 +895,7 @@ input:checked+label .overhang-block .text {
 .alignment .copy-data,
 .annotated-consensus-sequence .copy-data {
     height: fit-content;
+    width: -moz-fit-content;
     width: fit-content;
     align-self: center;
     justify-self: end;

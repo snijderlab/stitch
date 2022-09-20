@@ -203,13 +203,13 @@ function AlignmentDetailsClear() {
 // Copy the graph data for the clicked on graph
 function CopyGraphData(event) {
     var children = event.target.children;
-    if (event.target.className == "mark")
+    if (element.classList.contains("mark"))
         children = event.target.parentElement.parentElement.children;
     if (event.target.classList.contains("copy-data"))
         children = event.target.parentElement.children;
 
     for (var i = 0; i < children.length; i++) {
-        if (children[i].className == "graph-data") {
+        if (children[i].classList.contains("graph-data")) {
             children[i].select();
             children[i].setSelectionRange(0, 99999);
             navigator.clipboard.writeText(children[i].value);
@@ -220,13 +220,13 @@ function CopyGraphData(event) {
 
 function GetGraphDataExample(element) {
     var children = element.children;
-    if (element.className == "mark")
+    if (element.classList.contains("mark"))
         children = element.parentElement.parentElement.children;
     if (element.classList.contains("copy-data"))
         children = element.parentElement.children;
 
     for (var i = 0; i < children.length; i++) {
-        if (children[i].className == "graph-data") {
+        if (children[i].classList.contains("graph-data")) {
             return children[i].value.split("\n").slice(0, 4).join("\n");
         }
     }
