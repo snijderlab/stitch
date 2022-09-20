@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using AssemblyNameSpace;
 using HeckLib.chemistry;
+using System.Text.Json;
 
 namespace HTMLNameSpace
 {
@@ -374,6 +375,7 @@ namespace HTMLNameSpace
             }
             html.OpenAndClose("p", "class='legend'", "Cumulative value of all children (excluding unique)");
             html.OpenAndClose("p", "class='legend unique'", "Cumulative value for unique matches");
+            html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)"));
             html.Open("div", "class='container'");
             html.Open("div", $"class='tree' style='max-width:{max_x + radius + text_width}px'");
             html.Open("svg", $"viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'");
@@ -431,9 +433,33 @@ namespace HTMLNameSpace
                 html.Close("g");
             });
 
+            var json = tree.DataTree.Fold((ad, a, bd, b) =>
+            {
+                var obj = new JsonObject();
+                obj.Keys.Add("left", a);
+                obj.Keys.Add("left_score", new JsonNumber(ad));
+                obj.Keys.Add("right", b);
+                obj.Keys.Add("right_score", new JsonNumber(bd));
+                return obj;
+            }, value =>
+            {
+                var obj = new JsonObject();
+                obj.Keys.Add("name", new JsonString(value.Name));
+                obj.Keys.Add("score", new JsonNumber(value.Score));
+                obj.Keys.Add("uniqueScore", new JsonNumber(value.UniqueScore));
+                obj.Keys.Add("matches", new JsonNumber(value.Matches));
+                obj.Keys.Add("uniqueMatches", new JsonNumber(value.UniqueMatches));
+                obj.Keys.Add("area", new JsonNumber(value.Area));
+                obj.Keys.Add("uniqueArea", new JsonNumber(value.UniqueArea));
+                return obj;
+            });
+            var data_buffer = new StringBuilder();
+            json.ToString(data_buffer);
+
             html.Close("svg");
             html.Close("div");
             html.Close("div");
+            html.OpenAndClose("textarea", "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close("div");
 
             return html.ToString();

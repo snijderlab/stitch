@@ -268,7 +268,7 @@ namespace AssemblyNameSpace
                 foreach (var line in e.StackTrace.Split(" at "))
                 {
                     if (String.IsNullOrWhiteSpace(line)) continue;
-                    var pieces = Regex.Match(line, @"^\s*(.+\.)(\w+)(\(.+) in (.+\\)([^\\]+):line (.+)\s*$");
+                    var pieces = Regex.Match(line, @"^\s*(.+\.)(\w+)((?:\[.+\])?\(.+) in (.+\\)([^\\]+):line (.+)\s*$");
                     if (pieces.Success)
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
@@ -295,9 +295,8 @@ namespace AssemblyNameSpace
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(line);
                         Console.ForegroundColor = defaultColour;
+                        Console.WriteLine(line.Trim());
                     }
                 }
 

@@ -394,6 +394,19 @@ namespace AssemblyNameSpace
                     return tree(Left.Value.Item2.Fold(tree, leaf), Right.Value.Item2.Fold(tree, leaf));
             }
 
+            /// <summary> Fold two functions over the tree by applying them to every tree and leaf in a depth first way. </summary>
+            /// <param name="tree"> The function to apply to every branch (a node which has a Left and/or Right node). </param>
+            /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
+            /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
+            /// <returns> The accumulator. </returns>
+            public TAcc Fold<TAcc>(Func<double, TAcc, double, TAcc, TAcc> tree, Func<TValue, TAcc> leaf)
+            {
+                if (IsLeaf)
+                    return leaf(this.Value);
+                else
+                    return tree(Left.Value.Item1, Left.Value.Item2.Fold(tree, leaf), Right.Value.Item1, Right.Value.Item2.Fold(tree, leaf));
+            }
+
             /// <summary> Apply a function to every branch in the tree. </summary>
             /// <param name="f"> The function to apply. </param>
             public void Apply(Action<Tree<TValue>> f)
