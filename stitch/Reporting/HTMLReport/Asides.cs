@@ -860,7 +860,7 @@ $@"<tr>
             if (match.MetaData.PositionalScore.Length != 0)
             {
                 buffer.Append($"<tr><td>{doc_title}</td><td class='doc-plot'>");
-                HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition));
+                HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true));
                 buffer.Append("</td></tr>");
             }
 

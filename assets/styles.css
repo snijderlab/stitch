@@ -1666,6 +1666,7 @@ input:checked+label .overhang-block .text {
     border-right: none;
     padding: 1em;
     padding-top: 0;
+    z-index: 1000;
 }
 
 .alignment-details.active {
@@ -1686,8 +1687,17 @@ input:checked+label .overhang-block .text {
     grid-template-columns: none;
 }
 
+.alignment-details .histogram .bar {
+    min-width: 1ch;
+    max-width: 1ch;
+    border-bottom: none;
+}
+
 .alignment-details .histogram .label {
     font-size: .7em;
+    width: 1ch;
+    overflow-x: visible;
+    text-align: right;
 }
 
 .alignment-details .histogram .y-axis,
@@ -1701,7 +1711,7 @@ input:checked+label .overhang-block .text {
 
 .sequence-match-graphic>* {
     padding: 1px;
-    height: 1ch
+    height: .8em;
 }
 
 .sequence-match-graphic .match {

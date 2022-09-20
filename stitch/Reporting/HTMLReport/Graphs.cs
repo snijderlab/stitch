@@ -10,13 +10,13 @@ namespace HTMLNameSpace
 {
     static class HTMLGraph
     {
-        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0)
+        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, bool skipOnMagnitude = false)
         {
             int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
             if (label == 0) label = 1;
             var annotated = new List<(string, double)>();
             for (int i = offset; i < data.Count + offset; i++)
-                annotated.Add((i % label == 0 ? $"{i:G3}" : "", data[i - offset]));
+                annotated.Add(((skipOnMagnitude && (i % Math.Ceiling(Math.Log10(i)) == 0 || i == 1)) || (!skipOnMagnitude && (i % label == 0)) ? $"{i:G3}" : "", data[i - offset]));
 
             return annotated;
         }
@@ -109,7 +109,8 @@ namespace HTMLNameSpace
                 else
                     buffer.Append($"<h2 class='title'>{title}</h2>");
 
-            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help));
+            if (title != null) // Copy data should not appear in the alignment read detail index menus
+                buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help));
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
@@ -151,7 +152,10 @@ namespace HTMLNameSpace
                 }
 
             }
-            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            buffer.Append("</div>");
+            if (title != null)
+                buffer.Append($"<textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea>");
+            buffer.Append("</div>");
         }
 
         /// <summary>
