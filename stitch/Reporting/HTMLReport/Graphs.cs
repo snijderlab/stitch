@@ -495,11 +495,14 @@ namespace HTMLNameSpace
             var id = spectrum.ScanID.Replace(':', '_');
             html.Empty("input", $"id='{id}_unassigned' type='checkbox' checked class='unassigned'");
             html.OpenAndClose("label", $"for='{id}_unassigned' class='unassigned'", "Unassigned");
-            html.Empty("input", $"id='{id}_label' type='checkbox' checked class='label'");
-            html.Open("label", $"for='{id}_label' class='label'");
+            html.Open("label", $"class='label'");
             html.Content("Ion");
             html.OpenAndClose("sup", "", "Charge");
-            html.OpenAndClose("sub", "style='margin-left:-6ch'", "Position");
+            html.OpenAndClose("sub", "style='margin-left:-6ch;margin-right:.5rem;'", "Position");
+            html.Content("Show for top:");
+            html.OpenAndClose("input", $"id='{id}_label' type='range' min='0' max='100' value='100'");
+            html.OpenAndClose("input", $"id='{id}_label_value' type='number' min='0' max='100' value='100'");
+            html.Content("%");
             html.Close("label");
             html.Close("div");
             html.Open("div", "class='peptide'");
@@ -585,7 +588,7 @@ namespace HTMLNameSpace
                     var normal_ion = (fragment.FragmentType == PeptideFragment.ION_A || fragment.FragmentType == PeptideFragment.ION_B || fragment.FragmentType == PeptideFragment.ION_C || fragment.FragmentType == PeptideFragment.ION_X || fragment.FragmentType == PeptideFragment.ION_Y || fragment.FragmentType == PeptideFragment.ION_Z);
                     if (fragment.Position == -1 || !normal_ion)
                     {
-                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
+                        html.Open("span", $"class='peak {ion} {shift} label' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
                         html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
                         html.Close("span");
                         data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t{PeptideFragment.IonToString(fragment.FragmentType)}\t{PeptideFragment.MassShiftToString(fragment.MassShift)}\t-");
@@ -594,7 +597,7 @@ namespace HTMLNameSpace
                     {
                         var position = fragment.Position;
                         if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position + 1;
-                        html.Open("span", $"class='peak {ion} {shift}' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};' data-pos='{position}'");
+                        html.Open("span", $"class='peak {ion} {shift} label' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};' data-pos='{position}'");
                         html.Open("span", "");
                         html.Content(ion);
                         html.OpenAndClose("sup", "", fragment.Charge.ToString());

@@ -1384,6 +1384,21 @@ input:checked+label .overhang-block .text {
 
 .spectrum .legend .label {
     --color: var(--color-foreground);
+    cursor: default;
+}
+
+.spectrum .legend .label input[type=range] {
+    width: 6em;
+    vertical-align: middle;
+    cursor: pointer;
+}
+
+.spectrum .legend .label input[type=number] {
+    width: 5ch;
+    background-color: var(--color-background);
+    color: var(--color-foreground);
+    border: 2px solid var(--color-halfway);
+    border-radius: .2rem;
 }
 
 .spectrum .legend>* {
@@ -1627,7 +1642,7 @@ input:checked+label .overhang-block .text {
     opacity: 0;
 }
 
-.spectrum .label .peak span {
+.spectrum .peak.label span {
     opacity: 1;
 }
 
@@ -1835,9 +1850,17 @@ input:checked+label .overhang-block .text {
         font-weight: normal;
     }
 
+    .spectrum .legend input {
+        border: none !important;
+        margin-left: .2rem;
+        width: max-content;
+    }
+
     .text-header,
     .copy-data,
     .source-code,
+    .user-help,
+    .zoom-out,
     table,
     .report label::after,
     .overview h3,
@@ -1846,7 +1869,8 @@ input:checked+label .overhang-block .text {
     [id$="cdr"] p,
     [id$="segment-joining"] p,
     [id$="segment-joining"] pre,
-    [id$="segment-joining"] .title {
+    [id$="segment-joining"] .title,
+    input[type=range] {
         display: none !important;
     }
 }

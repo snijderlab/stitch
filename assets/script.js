@@ -1,3 +1,5 @@
+"use strict";
+
 function sortTable(id, column_number, type) {
     var table, rows, switching, i, x, y, shouldSwitch, dir = 0;
     table = document.getElementById(id);
@@ -241,7 +243,7 @@ function SpectrumSetUp() {
     }
     var elements = document.querySelectorAll(".spectrum .legend input");
     for (let i = 0; i < elements.length; i++) {
-        elements[i].addEventListener("change", ToggleFeature);
+        elements[i].addEventListener("change", SpectrumInputChange);
     }
     var elements = document.querySelectorAll(".spectrum .canvas");
     for (let i = 0; i < elements.length; i++) {
@@ -297,12 +299,45 @@ function RemoveHighlight(event) {
     highlight = undefined;
 }
 
-/* Toggle features on or off in the spectrum (eg background peaks, peak labels) */
-function ToggleFeature(event) {
-    if (event.target.checked) {
-        event.target.parentElement.parentElement.children[4].classList.add(event.target.className);
-    } else {
-        event.target.parentElement.parentElement.children[4].classList.remove(event.target.className);
+/** Toggle features on or off in the spectrum (eg background peaks, peak labels) 
+ * @param {Event} event 
+*/
+function SpectrumInputChange(event) {
+    if (event.target.type == "checkbox") {
+        if (event.target.checked) {
+            event.target.parentElement.parentElement.children[4].classList.add(event.target.className);
+        } else {
+            event.target.parentElement.parentElement.children[4].classList.remove(event.target.className);
+        }
+    } else if (event.target.type == "range") {
+        var ele = document.getElementById(event.target.id + "_value");
+        ele.value = event.target.value;
+        SpectrumUpdateLabels(Number(event.target.value), event.target.parentElement.parentElement.parentElement.children[4].children[1])
+    } else if (event.target.type == "number") {
+        var ele = document.getElementById(event.target.id.substring(0, event.target.id.length - 6));
+        ele.value = event.target.value;
+        SpectrumUpdateLabels(Number(event.target.value), event.target.parentElement.parentElement.parentElement.children[4].children[1])
+    }
+}
+
+/** Update the spectrum to only show the label for peaks within the given percentage group 
+ * @param {Number} value the percentage to include (0-100) 
+ * @param {Element} canvas the canvas to work on
+*/
+function SpectrumUpdateLabels(value, canvas) {
+    var style = window.getComputedStyle(canvas);
+    var max = Number(style.getPropertyValue("--max-intensity"));
+    if (canvas.classList.contains("unassigned")) {
+        max = Number(style.getPropertyValue("--max-intensity-unassigned"));
+    }
+    var peaks = canvas.children;
+    for (let i = 0; i < peaks.length; i++) {
+        var v = Number(window.getComputedStyle(peaks[i]).getPropertyValue("--intensity"));
+        if (v > max * (100 - value) / 100) {
+            peaks[i].classList.add("label");
+        } else {
+            peaks[i].classList.remove("label");
+        }
     }
 }
 
