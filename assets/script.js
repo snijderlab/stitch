@@ -234,6 +234,11 @@ function SpectrumSetUp() {
         elements[i].addEventListener("mouseenter", HighlightAminoAcid);
         elements[i].addEventListener("mouseleave", RemoveHighlight);
     }
+    var elements = document.querySelectorAll(".spectrum .legend .ion");
+    for (let i = 0; i < elements.length; i++) {
+        elements[i].addEventListener("mouseenter", HighlightAminoAcid);
+        elements[i].addEventListener("mouseleave", RemoveHighlight);
+    }
     var elements = document.querySelectorAll(".spectrum .legend input");
     for (let i = 0; i < elements.length; i++) {
         elements[i].addEventListener("change", ToggleFeature);
@@ -257,14 +262,23 @@ function HighlightAminoAcid(event) {
     var t = event.target; // <span> with the sequence
     if (t.classList.contains("corner"))
         t = t.parentElement;
-    if (highlight == t.dataset.pos) return;
-    highlight = t.dataset.pos;
+    if (highlight == t) return;
+    highlight = t;
     var canvas = t.parentElement.parentElement.children[4].children[1]; // Get the canvas
     canvas.classList.add("highlight");
-    var peaks = canvas.children;
-    for (let i = 0; i < peaks.length; i++) {
-        if (peaks[i].dataset.pos == t.dataset.pos) {
-            peaks[i].classList.add("highlight")
+
+    if (t.classList.contains("ion")) {
+        var cl = t.classList[1];
+        var elements = canvas.querySelectorAll("." + cl);
+        for (let i = 0; i < elements.length; i++) {
+            elements[i].classList.add("highlight");
+        }
+    } else {
+        var peaks = canvas.children;
+        for (let i = 0; i < peaks.length; i++) {
+            if (peaks[i].dataset.pos == t.dataset.pos) {
+                peaks[i].classList.add("highlight")
+            }
         }
     }
 }

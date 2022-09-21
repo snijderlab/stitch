@@ -1344,18 +1344,34 @@ input:checked+label .overhang-block .text {
 
 .spectrum .legend {
     display: flex;
-    gap: 1em;
     align-items: center;
     grid-column: 1/3;
+}
+
+.spectrum .legend>.ion {
+    cursor: crosshair;
+    user-select: none;
+    padding: .5rem;
+}
+
+.spectrum .legend>.ion:hover {
+    background-color: var(--color-primary-o);
+}
+
+.spectrum .legend>.other {
+    user-select: none;
+    padding: .5rem;
 }
 
 .spectrum .legend .title {
     font-style: italic;
     --color: var(--color-halfway);
+    margin-right: .5rem;
 }
 
 .spectrum .legend label {
-    padding: 2px;
+    margin: 0 .5rem;
+    padding: .1em .25em;
     border: 2px solid var(--color-halfway);
     border-radius: .2rem;
     user-select: none;
@@ -1394,6 +1410,10 @@ input:checked+label .overhang-block .text {
 
 .spectrum .C {
     --color: var(--color-tertiary);
+}
+
+.spectrum .W {
+    --color: var(--color-primary);
 }
 
 .spectrum .X {
@@ -1580,6 +1600,7 @@ input:checked+label .overhang-block .text {
     left: calc((var(--mz) - var(--min-mz)) / (var(--max-mz) - var(--min-mz)) * 100%);
     width: 1px;
     background-color: var(--color);
+    transition: opacity 250ms;
 }
 
 .spectrum .unassigned .peak {
@@ -1603,18 +1624,18 @@ input:checked+label .overhang-block .text {
     text-anchor: end;
     z-index: 10;
     cursor: default;
-    display: none;
+    opacity: 0;
 }
 
 .spectrum .label .peak span {
-    display: block;
+    opacity: 1;
 }
 
 .spectrum .peak:hover span {
     color: var(--color-primary);
     z-index: 1000;
     font-weight: 500;
-    display: block;
+    opacity: 1;
 }
 
 .spectrum .peak:hover span.special::after {
