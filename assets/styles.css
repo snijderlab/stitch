@@ -74,7 +74,7 @@ a:active {
 
 sup,
 sub {
-    font-family: Roboto Mono, monospace;
+    font-family: "Roboto Mono", monospace;
 }
 
 sup+sub {
@@ -91,7 +91,7 @@ sup+sub {
 
 .aside-seq {
     word-break: break-all;
-    font-family: Roboto Mono, monospace;
+    font-family: "Roboto Mono", monospace;
     user-select: all;
 }
 
@@ -102,7 +102,7 @@ sup+sub {
 
 .seq {
     word-break: break-all;
-    font-family: Roboto Mono, monospace;
+    font-family: "Roboto Mono", monospace;
 }
 
 .overview-link {
@@ -337,7 +337,7 @@ td.bar::before {
     display: flex;
     flex-wrap: wrap;
     row-gap: 1em;
-    font-family: Roboto Mono, monospace;
+    font-family: "Roboto Mono", monospace;
     align-items: baseline;
     grid-column: 1 / 3;
 }
@@ -492,7 +492,7 @@ input:checked+label+.collapsable,
 .source-code {
     margin: 0;
     padding-top: 1em;
-    font-family: 'Roboto Mono';
+    font-family: "Roboto Mono";
     font-size: 12px;
 }
 
@@ -773,7 +773,7 @@ input:checked+label .overhang-block .text {
 .phylogenetic-tree svg {
     stroke: var(--color-foreground);
     stroke-width: 2px;
-    overflow-x: overlay;
+    overflow-x: visible;
 }
 
 .phylogenetic-tree svg * {
@@ -868,7 +868,7 @@ input:checked+label .overhang-block .text {
     display: flex;
     flex-wrap: wrap;
     font-size: var(--sequence-logo-font-size);
-    font-family: Roboto Mono, monospace;
+    font-family: "Roboto Mono", monospace;
     margin-top: -0.4em;
     margin-bottom: 1.5em;
     color: var(--color-primary);
@@ -1050,7 +1050,7 @@ input:checked+label .overhang-block .text {
 }
 
 .group:last-of-type {
-    padding-right: none;
+    padding-right: 0;
 }
 
 .group .bar {
@@ -1612,7 +1612,7 @@ input:checked+label .overhang-block .text {
     position: absolute;
     height: calc(var(--intensity) / var(--max-intensity) * 100%);
     top: calc(100% - var(--intensity) / var(--max-intensity) * 100%);
-    left: calc((var(--mz) - var(--min-mz)) / (var(--max-mz) - var(--min-mz)) * 100%);
+    left: calc(100% * (var(--mz) - var(--min-mz)) / (var(--max-mz) - var(--min-mz)));
     width: 1px;
     background-color: var(--color);
     transition: opacity 250ms;
