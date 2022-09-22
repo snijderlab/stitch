@@ -399,12 +399,12 @@ namespace AssemblyNameSpace
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public TAcc Fold<TAcc>(Func<double, TAcc, double, TAcc, TAcc> tree, Func<TValue, TAcc> leaf)
+            public TAcc Fold<TAcc>(Func<TValue, double, TAcc, double, TAcc, TAcc> tree, Func<TValue, TAcc> leaf)
             {
                 if (IsLeaf)
                     return leaf(this.Value);
                 else
-                    return tree(Left.Value.Item1, Left.Value.Item2.Fold(tree, leaf), Right.Value.Item1, Right.Value.Item2.Fold(tree, leaf));
+                    return tree(this.Value, Left.Value.Item1, Left.Value.Item2.Fold(tree, leaf), Right.Value.Item1, Right.Value.Item2.Fold(tree, leaf));
             }
 
             /// <summary> Apply a function to every branch in the tree. </summary>

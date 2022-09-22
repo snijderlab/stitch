@@ -369,6 +369,7 @@ namespace HTMLNameSpace
             var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
 
             html.Open("div", "class='phylogenetic-tree'");
+            html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree));
 
             var button_names = new string[] { "Score", "Matches", "Area" };
             for (int i = 0; i < button_names.Length; i++)
@@ -379,7 +380,7 @@ namespace HTMLNameSpace
             }
             html.OpenAndClose("p", "class='legend'", "Cumulative value of all children (excluding unique)");
             html.OpenAndClose("p", "class='legend unique'", "Cumulative value for unique matches");
-            html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)"));
+            html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)", HTMLHelp.TreeData));
             html.Open("div", "class='container'");
             html.Open("div", $"class='tree' style='max-width:{max_x + radius + text_width}px'");
             html.Open("svg", $"viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'");
@@ -437,13 +438,16 @@ namespace HTMLNameSpace
                 html.Close("g");
             });
 
-            var json = tree.DataTree.Fold((ad, a, bd, b) =>
+            var json = tree.DataTree.Fold((value, ad, a, bd, b) =>
             {
                 var obj = new JsonObject();
                 obj.Keys.Add("left", a);
-                obj.Keys.Add("left_score", new JsonNumber(ad));
+                obj.Keys.Add("leftDistance", new JsonNumber(ad));
                 obj.Keys.Add("right", b);
-                obj.Keys.Add("right_score", new JsonNumber(bd));
+                obj.Keys.Add("rightDistance", new JsonNumber(bd));
+                obj.Keys.Add("score", new JsonNumber(value.Score));
+                obj.Keys.Add("matches", new JsonNumber(value.Matches));
+                obj.Keys.Add("area", new JsonNumber(value.Area));
                 return obj;
             }, value =>
             {
