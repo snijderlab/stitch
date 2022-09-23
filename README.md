@@ -48,7 +48,7 @@ The project is built with dotnet (.NET 6.0) development is done on windows, but 
 dotnet run --project stitch <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `rootfolder\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `.\assets`.
 
 ```
 mklink /J stitch\bin\debug\net6.0\win-x64\assets\ assets\
@@ -95,6 +95,9 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 
 * Both authors are part of the group ["Biomolecular Mass Spectrometry and Proteomics"](https://www.uu.nl/en/research/biomolecular-mass-spectrometry-and-proteomics) ([or here](https://www.hecklab.com/biomolecular-mass-spectrometry-and-proteomics/)) at the [university of Utrecht](https://www.uu.nl/)
 
+## Dependencies
+* Hecklib core, public nuget package see `nuget.config` for more info on the exact url
+* Stitch assets git submodule, contains the css and js to make the html report shine. A separate submodule to simplify reuse of these files.
 
 ## License
 
