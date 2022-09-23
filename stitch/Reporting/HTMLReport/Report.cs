@@ -536,9 +536,9 @@ assets_folder = '{AssetsFolderName}';
         {
             var executable_folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-            void CopyAssetsFile(string name)
+            void CopyAssetsFile(string name, string directory = "assets")
             {
-                var source = Path.Join(executable_folder, "assets", name);
+                var source = Path.Join(executable_folder, directory, name);
                 if (File.Exists(source))
                 {
                     try
@@ -554,7 +554,7 @@ assets_folder = '{AssetsFolderName}';
                     new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
             }
 
-            CopyAssetsFile("export_pdf_example.png");
+            CopyAssetsFile("export_pdf_example.png", "images");
             if (Parameters.runVariables.LiveServer) return;
             CopyAssetsFile("styles.css");
             CopyAssetsFile("script.js");

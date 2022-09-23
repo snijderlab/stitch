@@ -52,6 +52,7 @@ It will warn you that the assets folder is missing, this can be fixed by creatin
 
 ```
 mklink /J stitch\bin\debug\net6.0\win-x64\assets\ assets\
+mklink /J stitch\bin\debug\net6.0\win-x64\images\ images\
 ```
 
 To generate a single executable run:
