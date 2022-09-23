@@ -1,0 +1,126 @@
+-Run Info---------------
+Version    : 1.1
+
+- Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
+Input ->
+    Peaks ->
+        Path     : 1028.csv
+        Format   : X+
+        Name     : 01
+        CutoffALC: 90
+    <-
+<-
+
+TemplateMatching ->
+    EnforceUnique: True
+    CutoffScore          : 10
+
+    Alphabet ->
+        Path            : ../alphabets/blosum62_X1.csv
+        Name            : Blosum62
+        GapStartPenalty : 12
+        GapExtendPenalty: 1
+    <-
+
+    Segments->
+        - Homo Sapiens segments
+        Heavy Chain->
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGHV.fasta
+                Name      : IGHV
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGHJ.fasta
+                Name      : IGHJ
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGHC.fasta
+                Name      : IGHC
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+        <-
+        Light Chain->
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGKV,IGLV.fasta
+                Name      : IGLV
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGKJ,IGLJ.fasta
+                Name      : IGLJ
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+            Segment->
+                Path      : ../templates/Homo_sapiens_IGKC,IGLC.fasta
+                Name      : IGLC
+                Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+            <-
+        <-
+        - Mus musculus segments
+        - Mus Heavy Chain->
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGHV.fasta
+        -         Name      : IGHV
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        -     <-
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGHJ.fasta
+        -         Name      : IGHJ
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        -     <-
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGHC_uniprot.fasta
+        -         Name      : IGHC
+        -         Identifier: ^sp\|[\w]*\|([\w]+)_
+        -     <-
+        - <-
+        - Mus Light Chain->
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGKV,IGLV.fasta
+        -         Name      : IGLV
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        -     <-
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGKJ,IGLJ.fasta
+        -         Name      : IGLJ
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        -     <-
+        -     Segment->
+        -         Path      : ../templates/Mus_musculus_IGKC,IGLC.fasta
+        -         Name      : IGLC
+        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        -     <-
+        - <-
+        - Decoy ->
+        -     Segment->
+        -         Path      : ../templates/common.contaminants.fasta
+        -         Name      : Common contaminants
+        -     <-
+        - <-
+    <-
+<-
+
+Recombine->
+    -Pick the <n> highest scoring templates from each segment
+    N          : 1
+    -Decoy      : True
+    CutoffScore: 10
+
+    -Separated by whitespace means directly attached
+    -Separated by * means with a gap attached
+    Order->
+        Heavy Chain: IGHV * IGHJ IGHC
+        Light Chain: IGLV IGLJ IGLC
+        Mus Heavy Chain: IGHV * IGHJ IGHC
+        Mus Light Chain: IGLV IGLJ IGLC
+    <-
+<-
+
+Report ->
+    Folder: ../results/{datetime} {name}/
+    HTML ->
+        Path: report-monoclonal.html
+    <-
+<-

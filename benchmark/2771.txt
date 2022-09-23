@@ -7,7 +7,7 @@ Input ->
         Path     : 2771.csv
         Format   : X+
         Name     : 01
-        CutoffALC: 70
+        CutoffALC: 90
     <-
 <-
 
