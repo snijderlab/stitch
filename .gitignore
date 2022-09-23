@@ -2,7 +2,6 @@
 *.log
 *.zip
 *.dot
-*.png
 *.svg
 *.cache
 **/bin
