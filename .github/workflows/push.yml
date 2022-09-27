@@ -11,6 +11,7 @@ jobs:
     uses: snijderlab/stitch/.github/workflows/check.yml@master
 
   benchmark:
+    environment: Actions
     uses: snijderlab/stitch/.github/workflows/benchmark.yml@master  
 
   deploy:
