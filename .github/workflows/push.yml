@@ -10,5 +10,9 @@ jobs:
   check:
     uses: snijderlab/stitch/.github/workflows/check.yml@master
 
+  benchmark:
+    if: ${{ github.event_name == 'release' || github.event.action == 'labeled' && github.event.label.name == 'possible scoring change' }}
+    uses: snijderlab/stitch/.github/workflows/benchmark.yml@master  
+
   deploy:
     uses: snijderlab/stitch/.github/workflows/deploy.yml@master

@@ -2,9 +2,6 @@ name: analysis
 
 on:
   workflow_call:
-  push:
-    branches:
-      - 178
 
 permissions:
   contents: write

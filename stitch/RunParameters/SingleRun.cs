@@ -191,7 +191,7 @@ namespace AssemblyNameSpace
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate)).ToString("G3")));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate) * 100).ToString("G3")));
                     }
 
                     // Add this information to the file, appending where needed while keeping the format correct. Note: the list will not be closed this will need to be done afterwards.
