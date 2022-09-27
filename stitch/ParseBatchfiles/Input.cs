@@ -369,8 +369,9 @@ namespace AssemblyNameSpace
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
-                var plural = Messages.Count == 1 ? "" : "s";
-                Console.WriteLine($"\nThere were {Messages.Count} error{plural} while parsing.\n");
+                var s = Messages.Count == 1 ? "" : "s";
+                var were = Messages.Count == 1 ? "was" : "were";
+                Console.WriteLine($"\nThere {were} {Messages.Count} error{s} while parsing.");
                 Console.ForegroundColor = defaultColour;
 
                 foreach (var msg in Messages)

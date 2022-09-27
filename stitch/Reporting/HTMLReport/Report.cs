@@ -262,12 +262,14 @@ namespace AssemblyNameSpace
         private string CreateHeader(string title, List<string> location)
         {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
+            var assets_folder = link;
             if (Parameters.runVariables.LiveServer)
                 link = "http://localhost:5500/assets/";
             return $@"<head>
 <meta charset=""utf-8"">
 <meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-<title>{title}</title>
+<link rel='icon' href='{assets_folder}favicon.ico' type='image/x-icon' />
+<title>{title} | Stitch</title>
 <style>
 @font-face {{
   font-family: Roboto;
@@ -280,12 +282,12 @@ namespace AssemblyNameSpace
   font-weight: 500;
 }}
 @font-face {{
-  font-family: Roboto Mono;
+  font-family: 'Roboto Mono';
   src: url({link}RobotoMono-Regular.ttf);
   font-weight: normal;
 }}
 @font-face {{
-  font-family: Roboto Mono;
+  font-family: 'Roboto Mono';
   src: url({link}RobotoMono-Medium.ttf);
   font-weight: 500;
 }}
@@ -435,7 +437,7 @@ assets_folder = '{AssetsFolderName}';
 
             var html = $@"<!DOCTYPE html>
 <html lang='en-GB'>
-{CreateHeader($"Stitch: {Parameters.Runname}", new List<string>())}
+{CreateHeader(Parameters.Runname, new List<string>())}
 <body onload=""Setup()"">
 <div class=""report"">
 <h1>Stitch Interactive Report Run: {Parameters.Runname}</h1>
@@ -555,6 +557,7 @@ assets_folder = '{AssetsFolderName}';
             }
 
             CopyAssetsFile("export_pdf_example.png", "images");
+            CopyAssetsFile("favicon.ico", "images");
             if (Parameters.runVariables.LiveServer) return;
             CopyAssetsFile("styles.css");
             CopyAssetsFile("script.js");
