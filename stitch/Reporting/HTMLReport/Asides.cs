@@ -424,7 +424,7 @@ $@"<tr>
 
             html.Open("div", $"class='reads-alignment' style='--max-value:{Math.Max(depthOfCoverage.Max(), 1)}'");
 
-            html.Add(FrontOverHang(id, aligned, template));
+            html.Add(OverHang(id, aligned, template, true));
 
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{aligned[0].Replace(gap_char, '.')}");
 
@@ -534,7 +534,7 @@ $@"<tr>
                 }
             }
 
-            html.Add(EndOverHang(id, aligned, template));
+            html.Add(OverHang(id, aligned, template, false));
 
             // Index menus
             html.Open("div", "id='index-menus'");
@@ -648,92 +648,54 @@ $@"<tr>
             align_block.Close("div");
             return align_block;
         }
-        static HTMLBuilder FrontOverHang(string id, string[] aligned, Template template)
+
+        static HTMLBuilder OverHang(string id, string[] aligned, Template template, bool front)
         {
-            // Create the front overhanging reads block
-            var front_html = new HTMLBuilder();
-            bool front_overhang = false;
-            front_html.Open("div", "class='align-block'");
-            front_html.Empty("input", $"type='checkbox' id='front-overhang-toggle-{id}'");
-            front_html.Open("label", $"for='front-overhang-toggle-{id}'");
-            front_html.Open("div", "class='align-block overhang-block front-overhang'");
-            front_html.Open("p");
-            front_html.OpenAndClose("span", "class='front-overhang-spacing'", "");
+            // Create the overhanging reads block
+            var html = new HTMLBuilder();
+            bool overhang = false;
+            var name = front ? "front" : "end";
+
+            html.Open("div", "class='align-block'");
+            html.Empty("input", $"type='checkbox' id='{name}-overhang-toggle-{id}'");
+            html.Open("label", $"for='{name}-overhang-toggle-{id}'");
+            html.Open("div", $"class='align-block overhang-block {name}-overhang'");
+            html.OpenAndClose("span", $"class='{name}-overhang-spacing'", "");
 
             uint empty = 0;
             for (int i = 1; i < aligned.Length; i++)
             {
                 var match = template.Matches[i - 1];
-                if (match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
+                html.Open("div", "class='align-link'");
+                if (front && match.StartQueryPosition != 0 && match.StartTemplatePosition == 0)
                 {
-                    front_overhang = true;
-                    front_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition)));
-                    front_html.OpenAndClose("span", "class='symbol'", "...");
-                    front_html.Empty("br");
+                    overhang = true;
+                    html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(0, match.StartQueryPosition)));
+                    html.OpenAndClose("span", "class='symbol'", "...");
+                    empty = 0;
+                }
+                else if (!front && match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
+                {
+                    overhang = true;
+                    html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches)));
+                    html.OpenAndClose("span", "class='symbol'", "...");
                     empty = 0;
                 }
                 else
                 {
-                    front_html.OpenAndClose("a", "href='#' class='text align-link'", "");
-                    front_html.OpenAndClose("span", "class='symbol'", "");
-                    front_html.Empty("br");
+                    html.OpenAndClose("p", "class='text'", "");
+                    html.OpenAndClose("span", "class='symbol'", "");
                     empty += 1;
                 }
+                html.Close("div");
             }
-
-            if (front_overhang)
+            if (overhang)
             {
-                front_html.UnsafeRemoveElementsFromEnd(empty * 3);
-                front_html.Close("p");
-                front_html.Close("div");
-                front_html.Close("label");
-                front_html.Close("div");
-                return front_html;
-            }
-            return new HTMLBuilder();
-        }
-
-        static HTMLBuilder EndOverHang(string id, string[] aligned, Template template)
-        {
-            // Create the end overhanging reads block
-            var end_html = new HTMLBuilder();
-            bool end_overhang = false;
-
-            end_html.Open("div", "class='align-block'");
-            end_html.Empty("input", $"type='checkbox' id='end-overhang-toggle-{id}'");
-            end_html.Open("label", $"for='end-overhang-toggle-{id}'");
-            end_html.Open("div", "class='align-block overhang-block end-overhang'");
-            end_html.Open("p");
-            end_html.OpenAndClose("span", "class='end-overhang-spacing'", "");
-
-            uint empty = 0;
-            for (int i = 1; i < aligned.Length; i++)
-            {
-                var match = template.Matches[i - 1];
-                if (match.StartQueryPosition + match.TotalMatches < match.QuerySequence.Length && match.StartTemplatePosition + match.TotalMatches == match.TemplateSequence.Length)
-                {
-                    end_overhang = true;
-                    end_html.OpenAndClose("a", "href='#' class='text align-link'", AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + match.TotalMatches, match.QuerySequence.Length - match.StartQueryPosition - match.TotalMatches)));
-                    end_html.OpenAndClose("span", "class='symbol'", "...");
-                    end_html.Empty("br");
-                    empty = 0;
-                }
-                else
-                {
-                    end_html.OpenAndClose("a", "href='#' class='text align-link'", "");
-                    end_html.OpenAndClose("span", "class='symbol'", "");
-                    end_html.Empty("br");
-                    empty += 1;
-                }
-            }
-            if (end_overhang)
-            {
-                end_html.UnsafeRemoveElementsFromEnd(empty * 3);
-                end_html.Close("p");
-                end_html.Close("div");
-                end_html.Close("label");
-                end_html.Close("div");
-                return end_html;
+                html.UnsafeRemoveElementsFromEnd(empty * 3);
+                html.Close("div");
+                html.Close("label");
+                html.Close("div");
+                return html;
             }
             return new HTMLBuilder();
         }
