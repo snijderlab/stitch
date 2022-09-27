@@ -2,6 +2,9 @@ using System;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Reflection;
+using System.IO;
+using System.Linq;
+using System.Collections.Generic;
 
 namespace AssemblyNameSpace
 {
@@ -265,7 +268,7 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(" --> Stacktrace:");
                 Console.ForegroundColor = defaultColour;
-                Console.WriteLine(e.StackTrace);
+
                 foreach (var l in e.StackTrace.Split(" at "))
                 {
                     var line = l.Trim();
@@ -289,7 +292,7 @@ namespace AssemblyNameSpace
                         }
                         Console.ForegroundColor = ConsoleColor.Yellow;
                         Console.Write(full_pieces.Groups[3]);
-                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.ForegroundColor = ConsoleColor.DarkGray;
                         Console.Write(full_pieces.Groups[4]);
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                         Console.Write("(");
@@ -301,8 +304,12 @@ namespace AssemblyNameSpace
                         {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Write(" in ");
+                            var path_pieces = full_pieces.Groups[6].Value.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).ToList();
+                            var index = path_pieces.IndexOf("stitch");
+                            Console.ForegroundColor = ConsoleColor.DarkGray;
+                            Console.Write(string.Join(Path.DirectorySeparatorChar, path_pieces.Take(index)) + Path.DirectorySeparatorChar);
                             Console.ForegroundColor = defaultColour;
-                            Console.Write(full_pieces.Groups[6]);
+                            Console.Write(string.Join(Path.DirectorySeparatorChar, path_pieces.Skip(index)) + Path.DirectorySeparatorChar);
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.Write(full_pieces.Groups[7]);
                             Console.ForegroundColor = ConsoleColor.Blue;
