@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using HeckLib.chemistry;
 
 namespace AssemblyNameSpace
 {
@@ -118,6 +119,14 @@ namespace AssemblyNameSpace
                         else return null;
                     }).Where(i => i != null), this.RawDataDirectory);
                     progressBar.Update();
+
+                    foreach (var fragment in fragments)
+                    {
+                        if (fragment.Value.Any(f => f.MatchedFragments.Any(p => p.Fragment.FragmentType == PeptideFragment.ION_W)))
+                        {
+                            Console.WriteLine($"W ion found at: {fragment.Key}");
+                        }
+                    }
                 }
 
                 var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);

@@ -265,40 +265,61 @@ namespace AssemblyNameSpace
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine(" --> Stacktrace:");
                 Console.ForegroundColor = defaultColour;
-                //Console.WriteLine(e.StackTrace);
-                foreach (var line in e.StackTrace.Split(" at "))
+                Console.WriteLine(e.StackTrace);
+                foreach (var l in e.StackTrace.Split(" at "))
                 {
+                    var line = l.Trim();
                     if (String.IsNullOrWhiteSpace(line)) continue;
-                    var pieces = Regex.Match(line, @"^\s*(.+\.)(\w+)((?:\[.+\])?\(.+) in (.+\\)([^\\]+):line (.+)\s*$");
-                    if (pieces.Success)
+                    // Regex to match stacktrace lines. path.<name>?function[generic]?(arguments) in path\name:line number
+                    var full_pieces = Regex.Match(line, @"^\s*(.+\.)((?:<.+>)?)([_\w\d]+)((?:\[.+\])?)\((.*)\)(?: in (.+\\)([^\\]+):line (.+))?\s*$");
+                    if (full_pieces.Success)
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
                         Console.ForegroundColor = defaultColour;
-                        Console.Write(pieces.Groups[1]);
+                        Console.Write(full_pieces.Groups[1]);
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
+                        if (full_pieces.Groups[2].Length > 0)
+                        {
+                            Console.Write("<");
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write(full_pieces.Groups[2].Value.Substring(1, full_pieces.Groups[2].Length - 2));
+                            Console.ForegroundColor = ConsoleColor.DarkBlue;
+                            Console.Write(">");
+                        }
                         Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write(pieces.Groups[2]);
+                        Console.Write(full_pieces.Groups[3]);
+                        Console.ForegroundColor = ConsoleColor.Green;
+                        Console.Write(full_pieces.Groups[4]);
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
+                        Console.Write("(");
                         Console.ForegroundColor = defaultColour;
-                        Console.Write(pieces.Groups[3]);
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.Write(" in ");
-                        Console.ForegroundColor = defaultColour;
-                        Console.Write(pieces.Groups[4]);
-                        Console.ForegroundColor = ConsoleColor.Yellow;
-                        Console.Write(pieces.Groups[5]);
-                        Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.Write(":line ");
-                        Console.ForegroundColor = ConsoleColor.Red;
-                        Console.WriteLine(pieces.Groups[6]);
-                        Console.ForegroundColor = defaultColour;
+                        Console.Write(full_pieces.Groups[5]);
+                        Console.ForegroundColor = ConsoleColor.DarkBlue;
+                        Console.Write(")");
+                        if (full_pieces.Groups[6].Length > 0)
+                        {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write(" in ");
+                            Console.ForegroundColor = defaultColour;
+                            Console.Write(full_pieces.Groups[6]);
+                            Console.ForegroundColor = ConsoleColor.Yellow;
+                            Console.Write(full_pieces.Groups[7]);
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write(":line ");
+                            Console.ForegroundColor = ConsoleColor.Red;
+                            Console.Write(full_pieces.Groups[8]);
+                        }
                     }
                     else
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
                         Console.ForegroundColor = defaultColour;
-                        Console.WriteLine(line.Trim());
+                        Console.Write(line.Trim());
                     }
+                    Console.ForegroundColor = defaultColour;
+                    Console.WriteLine("");
                 }
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.Write("Version: ");
