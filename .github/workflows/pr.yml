@@ -9,4 +9,6 @@ jobs:
     uses: snijderlab/stitch/.github/workflows/check.yml@master
   
   benchmark:
-    uses: snijderlab/stitch/.github/workflows/benchmark.yml@master  
+    uses: snijderlab/stitch/.github/workflows/benchmark.yml@master 
+    secrets:
+      BENCHMARK_ACTION_BOT_TOKEN: ${{ secrets.BENCHMARK_ACTION_BOT_TOKEN }} 
