@@ -2,9 +2,9 @@ name: analysis
 
 on:
   workflow_call:
-  secrets:
-      BENCHMARK_ACTION_BOT_TOKEN:
-        required: true
+    secrets:
+        BENCHMARK_ACTION_BOT_TOKEN:
+          required: true
 
 permissions:
   contents: write
