@@ -9,5 +9,4 @@ jobs:
     uses: snijderlab/stitch/.github/workflows/check.yml@master
   
   benchmark:
-    if: ${{ github.event.action == 'labeled' && github.event.label.name == 'possible scoring change' }}
     uses: snijderlab/stitch/.github/workflows/benchmark.yml@master  
