@@ -82,6 +82,8 @@ The 'batchfiles' folder contains some examples which can be run to see what the 
 - `monoclonal.txt`
 - `polyclonal.txt`
 
+The 'benchmarks' folder contains a set of examples with a known output which are used to benchmark the program continuously. The description of these examples can be found using the following doi 10.1021/acs.jproteome.1c00913.
+
 
 ## Credits
 
