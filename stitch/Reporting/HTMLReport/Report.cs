@@ -250,9 +250,9 @@ namespace AssemblyNameSpace
             else
             {
                 inner_buffer.AppendLine("<div class='cdr-tables'>");
-                if (cdr1_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates);
-                if (cdr2_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates);
-                if (cdr3_reads.Count > 0) HTMLTables.CDRTable(inner_buffer, cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates);
+                if (cdr1_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates));
+                if (cdr2_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates));
+                if (cdr3_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates));
                 inner_buffer.AppendLine("</div>");
             }
 
@@ -348,7 +348,7 @@ assets_folder = '{AssetsFolderName}';
                     var template = Parameters.RecombinedSegment[group].Templates[0];
                     var (seq, doc) = template.ConsensusSequence();
                     buffer.Append($"<h2><a href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'>{Parameters.Segments[group].Item1}</a></h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='doc-plot'>");
-                    HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(doc), "Depth of Coverage", null, null, 10, template.ConsensusSequenceAnnotation());
+                    buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()).ToString());
                     buffer.Append("</div><h3>Best scoring segments</h3><p>");
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
@@ -370,7 +370,7 @@ assets_folder = '{AssetsFolderName}';
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
                         buffer.Append($"<h3>{seg.Name}</h3>");
-                        HTMLTables.TableHeader(buffer, seg.Templates, Parameters.Input.Count);
+                        buffer.Append(HTMLTables.TableHeader(seg.Templates, Parameters.Input.Count));
                     }
                 }
             }
@@ -390,7 +390,7 @@ assets_folder = '{AssetsFolderName}';
                 inner_buffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 inner_buffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
 
-                HTMLGraph.Bargraph(inner_buffer, set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), "Other overlaps", HTMLHelp.SegmentJoining);
+                inner_buffer.Append(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HTMLHelp.SegmentJoining)).ToString());
             }
             return inner_buffer.ToString();
         }

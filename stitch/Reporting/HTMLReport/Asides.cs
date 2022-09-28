@@ -136,9 +136,9 @@ $@"<tr>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
 
-            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
+            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", new HtmlBuilder(HTMLHelp.SequenceConsensusOverview));
             buffer.Append("<div class='doc-plot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(consensus_doc), "Depth of Coverage of the Consensus Sequence", HTMLHelp.DOCGraph, null, 10, template.ConsensusSequenceAnnotation());
+            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()).ToString());
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='wide-table'><tr>
@@ -260,35 +260,35 @@ $@"<tr>
         {
             if (template.Matches.Count == 0) return;
             buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='doc-plot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage), "Depth of Coverage (including gaps)");
+            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage), new HtmlBuilder("Depth of Coverage (including gaps)")).ToString());
             buffer.Append("</div><div class='doc-plot'>");
-            HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), "Log10 Depth of Coverage (including gaps)");
+            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), new HtmlBuilder("Log10 Depth of Coverage (including gaps)")).ToString());
             buffer.Append("</div>");
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
                 buffer.Append("<div>");
-                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution");
+                buffer.Append(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution").ToString());
 
                 // Histogram of Length On Template
                 buffer.Append("</div><div>");
-                HTMLGraph.GroupedHistogram(buffer, new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution");
+                buffer.Append(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution").ToString());
             }
             else
             {
                 // Histogram of Scores
                 buffer.Append("<div>");
-                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.Score).ToList(), "Score Distribution");
+                buffer.Append(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList(), new HtmlBuilder("Score Distribution")).ToString());
 
                 // Histogram of Length On Template
                 buffer.Append("</div><div>");
-                HTMLGraph.Histogram(buffer, template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Length on Template Distribution");
+                buffer.Append(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), new HtmlBuilder("Length on Template Distribution")).ToString());
             }
 
             // Histogram of coverage, coverage per position excluding gaps
             buffer.Append("</div><div>");
-            HTMLGraph.Histogram(buffer, template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), "Coverage Distribution");
+            buffer.Append(HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), new HtmlBuilder("Coverage Distribution")).ToString());
 
             buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
         }
@@ -826,7 +826,7 @@ $@"<tr>
             if (match.MetaData.PositionalScore.Length != 0)
             {
                 buffer.Append($"<tr><td>{doc_title}</td><td class='doc-plot'>");
-                HTMLGraph.Bargraph(buffer, HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true));
+                buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)).ToString());
                 buffer.Append("</td></tr>");
             }
 
@@ -851,7 +851,7 @@ $@"<tr>
             }
         }
 
-        static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, string help = null)
+        static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, HtmlBuilder help = null)
         {
             var consensus_sequence = template.CombinedSequence();
             var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
@@ -877,7 +877,7 @@ $@"<tr>
                     }
                 }
             }
-            HTMLTables.SequenceConsensusOverview(buffer, diversity, title, help, template.ConsensusSequenceAnnotation());
+            buffer.Append(HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation()));
         }
     }
 }

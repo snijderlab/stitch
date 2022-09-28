@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using AssemblyNameSpace;
+using HtmlGenerator;
 
 namespace HTMLNameSpace
 {
@@ -47,6 +48,18 @@ namespace HTMLNameSpace
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
+        /// <returns>A ready for use identifier.</returns>
+        public static HtmlBuilder GetAsideLinkHtml(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
+        {
+            string class_name = GetAsideName(type);
+            target = String.IsNullOrEmpty(target) ? "" : "#" + target;
+            var html = new HtmlBuilder();
+            html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(metadata, type, AssetsFolderName, location)}{target}' class='info-link {class_name}-link' target='_blank'", GetAsideIdentifier(metadata, true));
+            return html;
+        }
+
+        /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
+        /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <returns>The link that can be used as href attribute in a link.</returns>
         public static string GetAsideRawLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
         {
@@ -87,6 +100,28 @@ namespace HTMLNameSpace
             return $@"<input type=""checkbox"" id=""{cid}""{check}/>
 <label for=""{cid}"">{name}</label>
 <div class=""collapsable"" id=""{id}""><div class='clear-fix'></div>{content}</div>";
+        }
+
+        /// <summary>
+        /// Create a collapsible region to be used as a main tab in the report.
+        /// </summary>
+        /// <param name="name">The name to display.</param>
+        /// <param name="content">The content.</param>
+        /// <param name="state">The state of the collapsible, default closed</param>
+        public static HtmlBuilder Collapsible(string id, string name, HtmlBuilder content, CollapsibleState state = CollapsibleState.Closed)
+        {
+            collapsible_counter++;
+            string cid = $"collapsible-{collapsible_counter}";
+            string check = state == CollapsibleState.Open ? " checked" : "";
+            var html = new HtmlBuilder();
+            html.Empty(HtmlTag.input, $"type='checkbox' id='{cid}'{check}");
+            html.OpenAndClose(HtmlTag.label, $"for='{cid}'", name);
+            html.Open(HtmlTag.div, "class='collapsable' id='{id}'");
+            html.OpenAndClose(HtmlTag.div, "class='clear-fix'");
+            html.Add(content);
+            html.Close(HtmlTag.div);
+
+            return html;
         }
 
         /// <summary> Create a warning to use in the HTML report to show users that they need to look into something. </summary>

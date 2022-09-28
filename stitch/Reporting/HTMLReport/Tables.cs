@@ -12,6 +12,7 @@ using System.Reflection;
 using AssemblyNameSpace;
 using static HTMLNameSpace.CommonPieces;
 using System.Collections.ObjectModel;
+using HtmlGenerator;
 
 namespace HTMLNameSpace
 {
@@ -21,53 +22,52 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static string CreateReadsTable(ReadOnlyCollection<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
+        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
         {
-            var buffer = new StringBuilder();
+            var html = new HtmlBuilder();
 
-            TableHeader(buffer, "reads", reads.Select(a => (double)a.Item1.Length));
+            html.Add(TableHeader("reads", reads.Select(a => (double)a.Item1.Length)));
+            html.Open(HtmlTag.table, "id='reads-table' class='wide-table'");
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 0, \"string\")' class='small-cell'", "Identifier");
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 1, \"string\")'", "Sequence");
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 2, \"number\")' class='small-cell'", "Sequence Length");
+            html.Close(HtmlTag.tr);
 
-            buffer.AppendLine(@"<table id=""reads-table"" class=""wide-table"">
-<tr>
-    <th onclick=""sortTable('reads-table', 0, 'string')"" class=""small-cell"">Identifier</th>
-    <th onclick=""sortTable('reads-table', 1, 'string')"">Sequence</th>
-    <th onclick=""sortTable('reads-table', 2, 'number')"" class=""small-cell"">Sequence Length</th>
-</tr>");
-            string id, link;
+            string id;
 
             for (int i = 0; i < reads.Count; i++)
             {
                 id = GetAsideIdentifier(reads[i].Item2);
-                link = GetAsideLink(reads[i].Item2, AsideType.Read, AssetsFolderName);
-                buffer.AppendLine($@"<tr id=""reads-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""seq"">{reads[i].Item1}</td>
-    <td class=""center"">{reads[i].Item1.Length}</td>
-</tr>");
+                html.Open(HtmlTag.tr, $"id='reads-{id}'");
+                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i].Item2, AsideType.Read, AssetsFolderName));
+                html.OpenAndClose(HtmlTag.td, "class='seq'", reads[i].Item1);
+                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Item1.Length.ToString());
+                html.Close(HtmlTag.tr);
             }
 
-            buffer.AppendLine("</table>");
+            html.Close(HtmlTag.table);
 
-            return buffer.ToString();
+            return html;
         }
 
-        public static string CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads)
+        public static HtmlBuilder CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads)
         {
-            var output = new StringBuilder();
+            var html = new HtmlBuilder();
 
             for (var i = 0; i < segments.Count; i++)
             {
                 var item = segments[i];
-                output.Append(Collapsible(item.Name, $"Segment {item.Name}", CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
+                html.Add(Collapsible(item.Name, $"Segment {item.Name}", CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
             }
 
-            return output.ToString();
+            return html;
         }
 
-        public static string CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
+        public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
         {
             table_counter++;
-            var buffer = new StringBuilder();
+            var html = new HtmlBuilder();
             var culture = CultureInfo.CurrentCulture;
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
@@ -86,32 +86,27 @@ namespace HTMLNameSpace
             }
 
             if (header)
-                TableHeader(buffer, templates, total_reads);
+                html.Add(TableHeader(templates, total_reads));
 
             if (tree != null)
-                buffer.AppendLine(Collapsible(name + "-tree", "Tree", HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), CollapsibleState.Open));
+                html.Add(Collapsible(name + "-tree", "Tree", HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), CollapsibleState.Open));
 
-
-            string unique = "";
-            if (displayUnique) unique =
-                CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "small-cell", SortOn(5 + order_factor, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "small-cell", SortOn(6 + order_factor, "number")) +
-                CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "small-cell", SortOn(7 + order_factor, "number"));
-
-            string order = "";
-            if (displayOrder) order = CommonPieces.TagWithHelp("th", "Order", HTMLHelp.Order, "small-cell", SortOn(2, "id"));
-
-            var table_buffer = new StringBuilder();
-            table_buffer.AppendLine($@"<table id=""{table_id}"" class=""wide-table"">
-<tr>
-    {CommonPieces.TagWithHelp("th", "Identifier", HTMLHelp.TemplateIdentifier, "small-cell", SortOn(0, "id"))}
-    {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "small-cell", SortOn(1, "number"))}
-    {order}
-    {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'")}
-    {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "small-cell", SortOn(3 + order_factor, "number"))}
-    {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "small-cell", SortOn(4 + order_factor, "number"))}
-    {unique}
-</tr>");
+            var table_buffer = new HtmlBuilder();
+            table_buffer.Open(HtmlTag.table, $"id='{table_id}' class='wide-table'");
+            table_buffer.Open(HtmlTag.tr);
+            table_buffer.TagWithHelp(HtmlTag.th, "Identifier", new HtmlBuilder(HTMLHelp.TemplateIdentifier), "small-cell", SortOn(0, "id"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Length", new HtmlBuilder(HTMLHelp.TemplateLength), "small-cell", SortOn(1, "number"));
+            if (displayOrder) table_buffer.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HTMLHelp.Order), "small-cell", SortOn(2, "id"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HTMLHelp.TemplateScore), "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'");
+            table_buffer.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HTMLHelp.TemplateMatches), "small-cell", SortOn(3 + order_factor, "number"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HTMLHelp.TemplateTotalArea), "small-cell", SortOn(4 + order_factor, "number"));
+            if (displayUnique)
+            {
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HTMLHelp.TemplateUniqueScore), "small-cell", SortOn(5 + order_factor, "number"));
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HTMLHelp.TemplateUniqueMatches), "small-cell", SortOn(6 + order_factor, "number"));
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HTMLHelp.TemplateUniqueArea), "small-cell", SortOn(7 + order_factor, "number"));
+            }
+            table_buffer.Close(HtmlTag.tr);
 
             (double, double, double, double, double, double) max_values = (Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue);
             foreach (var template in templates)
@@ -126,59 +121,67 @@ namespace HTMLNameSpace
                     );
             }
 
-            string id, link;
-            var doc_buffer = new StringBuilder();
+            string id;
+            var doc_buffer = new HtmlBuilder();
             for (int i = 0; i < templates.Count; i++)
             {
                 id = GetAsideIdentifier(templates[i].MetaData);
-                link = GetAsideLink(templates[i].MetaData, type, AssetsFolderName);
-                if (displayUnique) unique = $@"
-<td class='center bar' style='--relative-value:{templates[i].UniqueScore / max_values.Item4}'>{templates[i].UniqueScore}</td>
-<td class='center bar' style='--relative-value:{templates[i].UniqueMatches / max_values.Item5}'>{templates[i].UniqueMatches}</td>
-<td class='center bar' style='--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}'>{templates[i].TotalUniqueArea:G3}</td>
-";
+
+                table_buffer.Open(HtmlTag.tr, $"id='{table_id}-{id}'");
+                table_buffer.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(templates[i].MetaData, type, AssetsFolderName));
+                table_buffer.OpenAndClose(HtmlTag.td, "class='center'", templates[i].Sequence.Length.ToString());
                 if (displayOrder)
                 {
-                    var order_html = templates[i].Recombination.Aggregate(
-                            "",
-                            (acc, seg) => acc + " → " + GetAsideLink(seg.MetaData, AsideType.Template, AssetsFolderName)
-                        ).Substring(3);
-                    order = $"<td>{order_html}</td>";
+                    table_buffer.Open(HtmlTag.td);
+                    var first = true;
+                    foreach (var seg in templates[i].Recombination)
+                    {
+                        if (!first) table_buffer.Content(" → ");
+                        first = false;
+                        table_buffer.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
+                    }
+                    table_buffer.Close(HtmlTag.td);
                 }
-                table_buffer.AppendLine($@"<tr id='{table_id}-{id}'>
-    <td class='center'>{link}</td>
-    <td class='center'>{templates[i].Sequence.Length}</td>
-    {order}
-    <td class='center bar' style='--relative-value:{templates[i].Score / max_values.Item1}'>{templates[i].Score}</td>
-    <td class='center bar' style='--relative-value:{templates[i].Matches.Count / max_values.Item2}'>{templates[i].Matches.Count}</td>
-    <td class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'>{templates[i].TotalArea:G3}</td>
-    {unique}
-</tr>");
-                doc_buffer.Append($"<div class='doc-plot'>");
-                HTMLGraph.Bargraph(doc_buffer, HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLink(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation());
-                doc_buffer.AppendLine("</div>");
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Score / max_values.Item1}'", templates[i].Score.ToString());
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Matches.Count / max_values.Item2}'", templates[i].Matches.Count.ToString());
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'", templates[i].TotalArea.ToString("G3"));
+                if (displayUnique)
+                {
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueScore / max_values.Item4}'", templates[i].UniqueScore.ToString());
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueMatches / max_values.Item5}'", templates[i].UniqueMatches.ToString());
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}'", templates[i].TotalUniqueArea.ToString("G3"));
+                }
+                table_buffer.Close(HtmlTag.tr);
+
+                doc_buffer.Open(HtmlTag.div, "class='doc-plot'");
+                doc_buffer.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLinkHtml(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation()));
+                doc_buffer.Close(HtmlTag.div);
             }
 
-            table_buffer.AppendLine("</table>");
-            buffer.AppendLine(Collapsible(name + "-table", "Table", table_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
-            buffer.AppendLine(Collapsible(name + "-docs", "Depth Of Coverage Overview", doc_buffer.ToString(), templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
+            table_buffer.Close(HtmlTag.table);
+            html.Add(Collapsible(name + "-table", "Table", table_buffer, templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
+            html.Add(Collapsible(name + "-docs", "Depth Of Coverage Overview", doc_buffer, templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
             CultureInfo.CurrentCulture = culture;
 
-            return buffer.ToString();
+            return html;
         }
 
-        public static void CDRTable(StringBuilder buffer, List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
+        public static HtmlBuilder CDRTable(List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
 
-            buffer.AppendLine($"<div class='cdr-group'><h2>{title}</h2><div class='table-header-columns'>");
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.div, "class='cdr-group'");
+            html.OpenAndClose(HtmlTag.h2, "", title);
+            html.Open(HtmlTag.div, "class='table-header-columns'");
 
             var matched = CDRs.Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
             var templates = CDRs.Select(a => a.Template.EscapedIdentifier).Distinct().Count();
             var unique = CDRs.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier).Distinct().Count();
 
-            buffer.Append($"<p class='text-header'>{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template). The consensus sequence is shown below.</p><p>");
+            html.OpenAndClose(HtmlTag.p, "class='text-header'", $"{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template). The consensus sequence is shown below.");
+            html.Open(HtmlTag.p);
 
             var diversity = new List<Dictionary<string, double>>();
 
@@ -197,19 +200,20 @@ namespace HTMLNameSpace
                 }
             }
 
-            SequenceConsensusOverview(buffer, diversity);
+            html.Add(SequenceConsensusOverview(diversity));
 
             string SortOn(int column, string type)
             {
                 return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
             }
-
-            buffer.AppendLine($@"</p></div><table id=""{table_id}"">
-<tr>
-    <th {SortOn(1, "id")} class=""small-cell"">Identifier</th>
-    <th {SortOn(2, "string")} class=""small-cell"">Sequence</th>
-    <th {SortOn(0, "id")} class=""small-cell"">Template</th>
-</tr>");
+            html.Close(HtmlTag.p);
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.table, $"id='{table_id}'");
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.th, $"{SortOn(1, "id")} class='small-cell'", "Identifier");
+            html.OpenAndClose(HtmlTag.th, $"{SortOn(2, "string")} class='small-cell'", "Sequence");
+            html.OpenAndClose(HtmlTag.th, $"{SortOn(0, "id")} class='small-cell'", "Template");
+            html.Close(HtmlTag.tr);
 
             var CDRs_deduplicated = CDRs.GroupBy(cdr => cdr.Sequence).OrderBy(group => group.Key);
 
@@ -217,38 +221,46 @@ namespace HTMLNameSpace
             {
                 var row = group.First();
                 var id = GetAsideIdentifier(row.MetaData);
-                var link = group.Select(item => item.MetaData).Distinct().Aggregate("", (acc, item) => acc + GetAsideLink(item, AsideType.Template, AssetsFolderName));
-                var link_template = group.Select(item => item.Template).Distinct().Aggregate("", (acc, item) => acc + GetAsideLink(item, AsideType.Template, AssetsFolderName));
-                buffer.AppendLine($@"<tr id=""{table_id}-{id}"">
-    <td class=""center"">{link}</td>
-    <td class=""seq"">{row.Sequence.Replace('~', Alphabet.GapChar)}</td>
-    <td class=""center"">{link_template}</td>
-</tr>");
+
+                html.Open(HtmlTag.tr, $"id='{table_id}-{id}'");
+                html.Open(HtmlTag.td, "class='center'");
+                foreach (var g in group.Select(item => item.MetaData).Distinct())
+                    html.Add(GetAsideLinkHtml(g, AsideType.Template, AssetsFolderName));
+                html.Close(HtmlTag.td);
+                html.OpenAndClose(HtmlTag.td, "class='seq'", row.Sequence.Replace('~', Alphabet.GapChar));
+                html.Open(HtmlTag.td, "class='center'");
+                foreach (var g in group.Select(item => item.Template).Distinct())
+                    html.Add(GetAsideLinkHtml(g, AsideType.Template, AssetsFolderName));
+                html.Close(HtmlTag.td);
+                html.Close(HtmlTag.tr);
             }
 
-            buffer.AppendLine("</table></div>");
+            html.Close(HtmlTag.table);
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        public static void SequenceConsensusOverview(StringBuilder buffer, List<Dictionary<string, double>> diversity, string title = null, string help = null, HelperFunctionality.Annotation[] annotation = null)
+        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null)
         {
             const double threshold = 0.05;
             const int height = 35;
             const int font_size = 30;
 
+            var html = new HtmlBuilder();
             var data_buffer = new StringBuilder();
-            buffer.Append("<div class='graph'>");
+            html.Open(HtmlTag.div, "class='graph'");
             if (title != null)
                 if (help != null)
-                    buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
+                    html.TagWithHelp(HtmlTag.h2, title, help);
                 else
-                    buffer.Append($"<h2 class='title'>{title}</h2>");
+                    html.OpenAndClose(HtmlTag.h2, $"class='title'", title);
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
-                buffer.Append(CommonPieces.CopyData(title + " (TSV)", HTMLHelp.SequenceConsensusOverviewData));
-            buffer.Append($"<div class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'>");
+                html.CopyData(title + " (TSV)", new HtmlBuilder(HTMLHelp.SequenceConsensusOverviewData));
+            html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
             for (int i = 0; i < diversity.Count; i++)
             {
                 var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                buffer.Append($"<div class='sequence-logo-position{Class}'>");
+                html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}'");
 
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();
@@ -262,48 +274,55 @@ namespace HTMLNameSpace
                     {
                         var size = (item.Value / sum * font_size).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        buffer.Append($"<span style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'>{item.Key}</span>");
+                        html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'", item.Key);
                         placed = true;
                     }
                     data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
                 }
                 if (!placed)
-                    buffer.Append($"<span>.</span>");
+                    html.OpenAndClose(HtmlTag.span, "", ".");
 
-                buffer.Append("</div>");
+                html.Close(HtmlTag.div);
                 data_buffer.Append("\n");
             }
-            buffer.Append("</div>");
+            html.Close(HtmlTag.div);
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
-                buffer.Append(CopyData("Sequence Consensus Overview (TSV)", HTMLHelp.SequenceConsensusOverviewData));
-            buffer.Append($"<textarea class='graph-data hidden' aria-hidden='true'>{data_buffer.ToString()}</textarea></div>");
+                html.CopyData("Sequence Consensus Overview (TSV)", new HtmlBuilder(HTMLHelp.SequenceConsensusOverviewData));
+            html.OpenAndClose(HtmlTag.textarea, $"class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        public static void TableHeader(StringBuilder buffer, List<Template> templates, int totalReads)
+        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads)
         {
-            buffer.Append("<div class='table-header'>");
-            if (templates.Count > 15) PointsTableHeader(buffer, templates);
-            else if (templates.Count > 5) BarTableHeader(buffer, templates);
-            TextTableHeader(buffer, templates, totalReads);
-            buffer.Append("</div>");
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.div, "class='table-header'");
+            if (templates.Count > 15) html.Add(PointsTableHeader(templates));
+            else if (templates.Count > 5) html.Add(BarTableHeader(templates));
+            html.Add(TextTableHeader(templates, totalReads));
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static void TableHeader(StringBuilder buffer, string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
+        static HtmlBuilder TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
         {
-            buffer.Append($"<div class='table-header-{identifier}'>");
-            HTMLGraph.Histogram(buffer, lengths.ToList(), "Length distribution");
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.div, $"class='table-header-{identifier}'");
+            html.Add(HTMLGraph.Histogram(lengths.ToList(), new HtmlBuilder("Length distribution")));
             if (area != null)
             {
-                buffer.Append($"</div><div>");
-                HTMLGraph.Histogram(buffer, area.ToList(), "Area distribution");
+                html.Close(HtmlTag.div);
+                html.Open(HtmlTag.div);
+                html.Add(HTMLGraph.Histogram(area.ToList(), new HtmlBuilder("Area distribution")));
             }
-            buffer.Append("</div>");
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static void PointsTableHeader(StringBuilder buffer, List<Template> templates)
+        static HtmlBuilder PointsTableHeader(List<Template> templates)
         {
             if (templates.Select(a => a.Score).Sum() == 0)
-                return;
+                return new HtmlBuilder();
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             var data = new List<(string, List<(string, List<double>)>)>();
@@ -328,13 +347,14 @@ namespace HTMLNameSpace
             else
                 header = new List<string> { "Score", "Matches", "Area" };
 
-            HTMLGraph.GroupedPointGraph(buffer, data, header, "Overview of scores", HTMLHelp.OverviewOfScores, null);
+            return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", new HtmlBuilder(HTMLHelp.OverviewOfScores), null);
         }
 
-        static void BarTableHeader(StringBuilder buffer, List<Template> templates)
+        static HtmlBuilder BarTableHeader(List<Template> templates)
         {
+            var html = new HtmlBuilder();
             if (templates.Select(a => a.Score).Sum() == 0)
-                return;
+                return html;
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
@@ -388,14 +408,16 @@ namespace HTMLNameSpace
                 areaLabels.Add(("Unique Total Area", 1));
             }
 
-            buffer.Append("<div>");
-            HTMLGraph.GroupedBargraph(buffer, scoreData, scoreLabels, "Scores per group");
-            buffer.Append("</div><div>");
-            HTMLGraph.GroupedBargraph(buffer, areaData, areaLabels, "Area per group");
-            buffer.Append("</div>");
+            html.Open(HtmlTag.div);
+            html.Add(HTMLGraph.GroupedBargraph(scoreData, scoreLabels, "Scores per group"));
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.div);
+            html.Add(HTMLGraph.GroupedBargraph(areaData, areaLabels, "Area per group"));
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static void TextTableHeader(StringBuilder buffer, List<Template> templates, int total_reads)
+        static HtmlBuilder TextTableHeader(List<Template> templates, int total_reads)
         {
             var set = new HashSet<string>();
             var unique_set = new HashSet<string>();
@@ -404,7 +426,9 @@ namespace HTMLNameSpace
                 set.UnionWith(template.Matches.Select(a => a.MetaData.EscapedIdentifier));
                 unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier));
             }
-            buffer.Append($"<p class='text-header'>Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.</p>");
+            var html = new HtmlBuilder();
+            html.OpenAndClose(HtmlTag.p, "class='text-header'", $"Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.");
+            return html;
         }
     }
 }

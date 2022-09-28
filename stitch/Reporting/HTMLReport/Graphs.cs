@@ -21,12 +21,13 @@ namespace HTMLNameSpace
 
             return annotated;
         }
-        public static void GroupedHistogram(StringBuilder buffer, List<(List<double> Data, string Label)> data, string title, int bins = 10)
+        public static HtmlBuilder GroupedHistogram(List<(List<double> Data, string Label)> data, string title, int bins = 10)
         {
             if (data.Count == 0 || data.Any(a => a.Item1.Count == 0))
             {
-                buffer.Append("<em>No data, or a dataset contains no data.</em>");
-                return;
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
+                return html;
             }
 
             double min = data.Select(a => a.Data.Min()).Min();
@@ -57,15 +58,16 @@ namespace HTMLNameSpace
                 }
             }
 
-            GroupedBargraph(buffer, labelled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title);
+            return GroupedBargraph(labelled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title); ;
         }
 
-        public static void Histogram(StringBuilder buffer, List<double> data, string title, string help = null, string data_help = null, int bins = 10)
+        public static HtmlBuilder Histogram(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null, int bins = 10)
         {
+            var html = new HtmlBuilder();
             if (data.Count == 0)
             {
-                buffer.Append("<em>No data.</em>");
-                return;
+                html.OpenAndClose(HtmlTag.em, "", "No data.");
+                return html;
             }
             double min = data.Min();
             double max = data.Max();
@@ -91,27 +93,33 @@ namespace HTMLNameSpace
                 labelled[bin].Item2++;
             }
 
-            Bargraph(buffer, labelled.ToList(), title, help, data_help);
+            return Bargraph(labelled.ToList(), title, help, data_help);
         }
 
-        public static void Bargraph(StringBuilder buffer, List<(string Label, double Value)> data, string title = null, string help = null, string data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
+        public static HtmlBuilder Bargraph(List<(string Label, double Value)> data, HtmlBuilder title = null, HtmlBuilder help = null, HtmlBuilder data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
         {
+            var html = new HtmlBuilder();
             if (data.Count == 0)
             {
-                buffer.Append("<em>No data.</em>");
-                return;
+                html.OpenAndClose(HtmlTag.em, "", "No data.");
+                return html;
             }
             var dataBuffer = new StringBuilder("Label\tValue");
 
-            buffer.Append("<div class='graph'>");
+            html.Open(HtmlTag.div, "class='graph'");
             if (title != null)
                 if (help != null)
-                    buffer.Append(CommonPieces.TagWithHelp("h2", title, help));
+                {
+                    html.Open(HtmlTag.h2);
+                    html.Add(title);
+                    html.UserHelp("Bargraph", help);
+                    html.Close(HtmlTag.h2);
+                }
                 else
-                    buffer.Append($"<h2 class='title'>{title}</h2>");
+                    html.OpenAndClose(HtmlTag.h2, "class='title'", title);
 
             if (title != null) // Copy data should not appear in the alignment read detail index menus
-                buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help));
+                html.CopyData(title + " (TSV)", data_help);
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
@@ -119,9 +127,13 @@ namespace HTMLNameSpace
             if (min < 0)
             {
                 max = Math.Max(max, 0); // Make sure to not start graphs below zero as this breaks the layout
-                buffer.Append($"<div class='histogram negative' oncontextmenu='CopyGraphData()' aria-hidden='true' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'>");
+                html.Open(HtmlTag.div, $"class='histogram negative' oncontextmenu='CopyGraphData()' aria-hidden='true' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'");
                 // Y axis
-                buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>{min:G3}</span></span><span class='empty'></span>");
+                html.Open(HtmlTag.span, "class='y-axis'");
+                html.OpenAndClose(HtmlTag.span, "class='max'", max.ToString("G3"));
+                html.OpenAndClose(HtmlTag.span, "class='min'", min.ToString("G3"));
+                html.OpenAndClose(HtmlTag.span, "class='empty'");
+                html.Close(HtmlTag.span);
 
                 // Data
                 for (int i = 0; i < data.Count; i++)
@@ -129,34 +141,55 @@ namespace HTMLNameSpace
                     var set = data[i];
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
-                        buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='empty'></span><span class='label'>{set.Label}</span>");
+                    {
+                        html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
+                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
+                        html.Close(HtmlTag.span);
+                        html.OpenAndClose(HtmlTag.span, "class='empty'");
+                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                    }
                     else
-                        buffer.Append($"<span class='empty'></span><span class='bar negative' style='height:{set.Value / min:P2}'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    {
+                        html.OpenAndClose(HtmlTag.span, "class='empty'");
+                        html.Open(HtmlTag.span, $"class='bar negative' style='height:{set.Value / min:P2}'");
+                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
+                        html.Close(HtmlTag.span);
+                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                    }
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
             }
             else
             {
                 min = 0; // always start graphs at 0 
-                buffer.Append("<div class='histogram' oncontextmenu='CopyGraphData()' aria-hidden='true'>");
+                html.Open(HtmlTag.div, "class='histogram' oncontextmenu='CopyGraphData()' aria-hidden='true'");
 
                 // Y axis
-                buffer.Append($"<span class='y-axis'><span class='max'>{max:G3}</span><span class='min'>0</span></span><span class='empty'></span>");
+                html.Open(HtmlTag.span, "class='y-axis'");
+                html.OpenAndClose(HtmlTag.span, "class='max'", max.ToString("G3"));
+                html.OpenAndClose(HtmlTag.span, "class='min'", "0");
+                html.Close(HtmlTag.span);
+                html.OpenAndClose(HtmlTag.span, "class='empty'");
 
                 // Data
                 for (int i = 0; i < data.Count; i++)
                 {
                     var set = data[i];
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                    buffer.Append($"<span class='bar{Class}' style='height:{set.Value / max:P2}'><span>{set.Value:G3}</span></span><span class='label'>{set.Label}</span>");
+                    html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
+                    html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
+                    html.Close(HtmlTag.span);
+                    html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
 
             }
-            buffer.Append("</div>");
+            html.Close(HtmlTag.div);
             if (title != null)
-                buffer.Append($"<textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea>");
-            buffer.Append("</div>");
+                html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", dataBuffer.ToString());
+            html.Close(HtmlTag.div);
+            return html;
         }
 
         /// <summary>
@@ -168,12 +201,13 @@ namespace HTMLNameSpace
         /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
         /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
         /// <returns></returns>
-        public static void GroupedBargraph(StringBuilder buffer, List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, string title, int factor = 2, bool baseYMinOnData = false)
+        public static HtmlBuilder GroupedBargraph(List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, string title, int factor = 2, bool baseYMinOnData = false)
         {
+            var html = new HtmlBuilder();
             if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0))
             {
-                buffer.Append("<em>No data, or a dataset contains no data.</em>");
-                return;
+                html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
+                return html;
             }
 
             int dimensions = header.Count;
@@ -212,19 +246,23 @@ namespace HTMLNameSpace
 
             // Create Legend
             var dataBuffer = new StringBuilder("Group");
+            html.Open(HtmlTag.div, "class='graph'");
+            html.OpenAndClose(HtmlTag.h2, "class='title'", title);
+            html.Open(HtmlTag.div, "class='histogram-header'");
 
-            buffer.Append($"<div class='graph'><h2 class='title'>{title}</h2><div class='histogram-header'>");
             for (int i = 0; i < dimensions; i++)
             {
-                buffer.Append($"<span>{header[i].Label}</span>");
+                html.OpenAndClose(HtmlTag.span, "", header[i].Label);
                 dataBuffer.Append($"\t\"{header[i].Label}\"");
             }
 
             // Create Graph
-            buffer.Append("</div>" + CommonPieces.CopyData(title + " (TSV)") + "<div class='histogram grouped' aria-hidden='true' oncontextmenu='CopyGraphData()'>");
+            html.Close(HtmlTag.div);
+            html.CopyData(title + " (TSV)");
+            html.Open(HtmlTag.div, "class='histogram grouped' aria-hidden='true' oncontextmenu='CopyGraphData()'");
             foreach (var set in data)
             {
-                buffer.Append($"<span class='group'>");
+                html.Open(HtmlTag.span, "class='group'");
                 dataBuffer.Append($"\n\"{set.Label}\"");
 
                 // Create Bars
@@ -232,20 +270,26 @@ namespace HTMLNameSpace
                 {
                     var dimensionIndex = header[i].Dimension;
                     string height = ((set.Dimensions[i] - dimensionMin[dimensionIndex]) / (dimensionMax[dimensionIndex] - dimensionMin[dimensionIndex]) * 100).ToString();
-                    buffer.Append($"<span class='bar' style='height:{height}%'></span>");
+                    html.OpenAndClose(HtmlTag.span, $"class='bar' style='height:{height}%'");
                     dataBuffer.Append($"\t{set.Dimensions[i]}");
                 }
 
                 // Create Tooltip
-                buffer.Append($"<span class='tooltip'>{set.Label}");
+                html.Open(HtmlTag.span, "class='tooltip'");
+                html.Content(set.Label);
                 for (int i = 0; i < dimensions; i++)
-                    buffer.Append($"<span class='dim'>{set.Dimensions[i]:G3}</span>");
+                    html.OpenAndClose(HtmlTag.span, "class='dim'", set.Dimensions[i].ToString("G3"));
 
                 // Create Label
-                buffer.Append($"</span></span><span class='label'>{set.Label}</span>");
+                html.Close(HtmlTag.span);
+                html.Close(HtmlTag.span);
+                html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
             }
 
-            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            html.Close(HtmlTag.div);
+            html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", dataBuffer.ToString());
+            html.Close(HtmlTag.div);
+            return html;
         }
 
         static int graph_counter = 0;
@@ -255,12 +299,13 @@ namespace HTMLNameSpace
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static void GroupedPointGraph(StringBuilder buffer, List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, string help, string data_help)
+        public static HtmlBuilder GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, HtmlBuilder help, HtmlBuilder data_help)
         {
+            var html = new HtmlBuilder();
             if (data.Count == 0 || data.Any(a => a.Points.Count == 0))
             {
-                buffer.Append("<em>No data, or a dataset contains no data.</em>");
-                return;
+                html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
+                return html;
             }
             graph_counter++;
             string identifier = $"graph-{graph_counter}";
@@ -287,32 +332,43 @@ namespace HTMLNameSpace
             // Create Legend
             var dataBuffer = new StringBuilder("Group\tPoint");
 
-            buffer.Append($"<div class='graph point-graph' oncontextmenu='CopyGraphData()' aria-hidden='true'>" + CommonPieces.TagWithHelp("h2", title, help));
+            html.Open(HtmlTag.div, $"class='graph point-graph' oncontextmenu='CopyGraphData()' aria-hidden='true'");
+            html.TagWithHelp(HtmlTag.h2, title, help);
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
-                buffer.Append($"<input type='checkbox' class='show-data-{i}' id='{identifier}-show-data-{i}'{check}/>");
-                buffer.Append($"<label for='{identifier}-show-data-{i}'>{header[i]}</label>");
+                html.Empty(HtmlTag.input, $"type='checkbox' class='show-data-{i}' id='{identifier}-show-data-{i}'{check}");
+                html.OpenAndClose(HtmlTag.label, $"for='{identifier}-show-data-{i}'>", header[i]);
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            buffer.Append(CommonPieces.CopyData(title + " (TSV)", data_help) + "<div class='plot'><div class='y-axis'><span class='max'>100%</span><span class='title'>Linear Relative Value</span><span class='min'>0%</span></div>");
+            html.CopyData(title + " (TSV)", data_help);
+            html.Open(HtmlTag.div, "class='plot'");
+            html.Open(HtmlTag.div, "class='y-axis'");
+            html.OpenAndClose(HtmlTag.span, "class='max'", "100%");
+            html.OpenAndClose(HtmlTag.span, "class='title'", "Linear Relative Value");
+            html.OpenAndClose(HtmlTag.span, "class='min'", "0%");
+            html.Close(HtmlTag.div);
+
             // Create Graph
             foreach (var group in data)
             {
-                buffer.Append($"<div class='group' style='flex-grow:{group.Points.Count}'>");
+                html.Open(HtmlTag.div, $"class='group' style='flex-grow:{group.Points.Count}'");
 
                 foreach (var point in group.Points)
                 {
                     dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label}");
-                    buffer.Append($"<a href='#{identifier}_{point.Label}' class='values'>");
+                    html.Open(HtmlTag.a, $"href='#{identifier}_{point.Label}' class='values'");
                     // Create Points
                     for (int i = 0; i < dimensions; i++)
                     {
-                        buffer.Append($"<span class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[1])}'></span>");
+                        html.OpenAndClose(HtmlTag.span, $"class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[1])}'");
                         dataBuffer.Append($"\t{point.Values[i]}");
                     }
-                    buffer.Append($"</a><span class='label'><a href='#{identifier}-{point.Label}'>{point.Label}</a></span>");
+                    html.Close(HtmlTag.a);
+                    html.Open(HtmlTag.span, "class='label'");
+                    html.OpenAndClose(HtmlTag.a, $"href='#{identifier}-{point.Label}'", point.Label);
+                    html.Close(HtmlTag.span);
                 }
 
                 // Create Tooltip
@@ -320,11 +376,14 @@ namespace HTMLNameSpace
                 //for (int i = 0; i < dimensions; i++)
                 //    buffer.Append($"<span class='dim'>{group.Dimensions[i]:G3}</span>");
                 if (group.Points.Count > 2)
-                    buffer.Append($"<span class='group-label'>{group.GroupLabel}</span>");
-                buffer.Append("</div>");
+                    html.OpenAndClose(HtmlTag.span, "class='group-label'", group.GroupLabel);
+                html.Close(HtmlTag.div);
             }
 
-            buffer.Append($"</div><textarea class='graph-data hidden' aria-hidden='true'>{dataBuffer.ToString()}</textarea></div>");
+            html.Close(HtmlTag.div);
+            html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", dataBuffer.ToString());
+            html.Close(HtmlTag.div);
+            return html;
         }
 
         /// <summary>
@@ -336,7 +395,7 @@ namespace HTMLNameSpace
         /// <param name="type"> The type of the leaf nodes. </param>
         /// <param name="AssetsFolderName"> The path to the assets folder from the current HTML. </param>
         /// <returns></returns>
-        public static string RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName)
+        public static HtmlBuilder RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName)
         {
             var html = new HtmlBuilder();
             const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
@@ -472,165 +531,7 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close(HtmlTag.div);
 
-            return html.ToString();
+            return html;
         }
-
-        /// <summary>
-        /// Render a spectrum of a peptide. Displays a legend, an overview of the peptide and its fragments, and the full spectrum.
-        /// </summary>
-        /// <param name="sequence">The sequence of the peptide.</param>
-        /// <param name="spectrum">The spectrum to display.</param>
-        /// <returns>HTML with title included.</returns>
-        /*
-        public static string RenderSpectrum(string sequence, Fragmentation.PeptideSpectrum spectrum)
-        {
-            var html = new HtmlBuilder();
-            var data_buffer = new StringBuilder();
-            html.Open(HtmlTag.div, "class='spectrum'");
-            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum " + spectrum.ScanID, HTMLHelp.Spectrum));
-            html.UnsafeContent(CommonPieces.CopyData($"Spectrum {spectrum.ScanID} (TSV)"));
-            html.Open(HtmlTag.div, "class='legend'");
-            html.OpenAndClose(HtmlTag.span, "class='title'", "Ion legend");
-            html.OpenAndClose(HtmlTag.span, "class='ion A'", "A");
-            html.OpenAndClose(HtmlTag.span, "class='ion B'", "B");
-            html.OpenAndClose(HtmlTag.span, "class='ion C'", "C");
-            html.OpenAndClose(HtmlTag.span, "class='ion W'", "W");
-            html.OpenAndClose(HtmlTag.span, "class='ion X'", "X");
-            html.OpenAndClose(HtmlTag.span, "class='ion Y'", "Y");
-            html.OpenAndClose(HtmlTag.span, "class='ion Z'", "Z");
-            html.OpenAndClose(HtmlTag.span, "class='other'", "Other");
-            var id = spectrum.ScanID.Replace(':', '_');
-            html.Empty("input", $"id='{id}_unassigned' type='checkbox' checked class='unassigned'");
-            html.OpenAndClose("label", $"for='{id}_unassigned' class='unassigned'", "Unassigned");
-            html.Open("label", $"class='label'");
-            html.Content("Ion");
-            html.OpenAndClose(Html"sup", "", "Charge");
-            html.OpenAndClose(Html"sub", "style='margin-left:-6ch;margin-right:.5rem;'", "Position");
-            html.Content("Show for top:");
-            html.OpenAndClose("input", $"id='{id}_label' type='range' min='0' max='100' value='100'");
-            html.OpenAndClose("input", $"id='{id}_label_value' type='number' min='0' max='100' value='100'");
-            html.Content("%");
-            html.Close("label");
-            html.Close(HtmlTag.div);
-            html.Open(HtmlTag.div, "class='peptide'");
-
-            var fragment_overview = new HashSet<string>[sequence.Length];
-            for (int i = 0; i < sequence.Length; i++) fragment_overview[i] = new HashSet<string>();
-            var max_mz = 0.0;
-            var max_intensity = 0.0;
-            var max_intensity_unassigned = 0.0;
-            var unassigned_threshold = 0.02 * spectrum.MatchedFragments.Select(s => s.Centroid.Intensity).Max();
-
-            foreach (var (fragment, centroid) in spectrum.MatchedFragments)
-            {
-                if (fragment == null || fragment.Position == -1)
-                {
-                    if (centroid.Intensity > unassigned_threshold)
-                    {
-                        max_mz = Math.Max(max_mz, centroid.Mz);
-                        max_intensity_unassigned = Math.Max(max_intensity_unassigned, centroid.Intensity);
-                    }
-                }
-                else
-                {
-                    max_mz = Math.Max(max_mz, centroid.Mz);
-                    max_intensity = Math.Max(max_intensity, centroid.Intensity);
-                    var position = fragment.Position - 1;
-                    if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position - 1;
-                    fragment_overview[position].Add(PeptideFragment.IonToString(fragment.FragmentType));
-                }
-            }
-            max_mz *= 1.01;
-            max_intensity *= 1.01;
-            max_intensity_unassigned *= 1.01;
-            max_intensity_unassigned = Math.Max(max_intensity, max_intensity_unassigned);
-
-            // Display the full sequence from N to C terminus with its fragments annotated
-            for (int i = 0; i < sequence.Length; i++)
-            {
-                html.Open("span", $"data-pos='{i + 1}'");
-                html.Content(sequence[i].ToString());
-                foreach (var fragment_type in fragment_overview[i])
-                {
-                    html.OpenAndClose("span", $"class='corner {fragment_type}'", "");
-                }
-                html.Close("span");
-            }
-            html.Close("div");
-
-            html.Open("div", "class='canvas-wrapper unassigned label' aria-hidden='true'");
-
-            html.Open("div", "class='y-axis'");
-            html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "class='assigned'", (max_intensity / 4).ToString("G3"));
-            html.OpenAndClose("span", "class='assigned'", (max_intensity / 2).ToString("G3"));
-            html.OpenAndClose("span", "class='assigned'", (3 * max_intensity / 4).ToString("G3"));
-            html.OpenAndClose("span", "class='assigned last'", max_intensity.ToString("G3"));
-            html.OpenAndClose("span", "class='unassigned'", (max_intensity_unassigned / 4).ToString("G3"));
-            html.OpenAndClose("span", "class='unassigned'", (max_intensity_unassigned / 2).ToString("G3"));
-            html.OpenAndClose("span", "class='unassigned'", (3 * max_intensity_unassigned / 4).ToString("G3"));
-            html.OpenAndClose("span", "class='unassigned last'", max_intensity_unassigned.ToString("G3"));
-            html.Close("div");
-
-            html.Open("div", $"class='canvas' style='--min-mz:0;--max-mz:{max_mz};--max-intensity:{max_intensity};--max-intensity-unassigned:{max_intensity_unassigned};' data-initial-max-mz='{max_mz}'");
-            html.OpenAndClose("span", "class='selection' hidden='true'");
-            html.OpenAndClose("div", "class='zoom-out'", "Zoom Out");
-
-            data_buffer.AppendLine("Mz\tCharge\tIntensity\tFragmentType\tMassShift\tPosition");
-
-            foreach (var (fragment, centroid) in spectrum.MatchedFragments)
-            {
-                if (fragment == null)
-                {
-                    if (centroid.Intensity > unassigned_threshold)
-                    {
-                        html.OpenAndClose("span", $"class='peak unassigned' style='--mz:{centroid.Mz};--intensity:{centroid.Intensity};'");
-                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t-\t-\t-");
-                    }
-                }
-                else
-                {
-                    var ion = PeptideFragment.IonToString(fragment.FragmentType).Replace(' ', '-');
-                    var shift = PeptideFragment.MassShiftToString(fragment.MassShift).Replace(' ', '-').Replace(' ', '-');
-                    var normal_ion = (fragment.FragmentType == PeptideFragment.ION_A || fragment.FragmentType == PeptideFragment.ION_B || fragment.FragmentType == PeptideFragment.ION_C || fragment.FragmentType == PeptideFragment.ION_X || fragment.FragmentType == PeptideFragment.ION_Y || fragment.FragmentType == PeptideFragment.ION_Z);
-                    if (fragment.Position == -1 || !normal_ion)
-                    {
-                        html.Open("span", $"class='peak {ion} {shift} label' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};'");
-                        html.OpenAndClose("span", $"class='special' style='--content:\"{ion} {shift}\"'", "*");
-                        html.Close("span");
-                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t{PeptideFragment.IonToString(fragment.FragmentType)}\t{PeptideFragment.MassShiftToString(fragment.MassShift)}\t-");
-                    }
-                    else
-                    {
-                        var position = fragment.Position;
-                        if (fragment.Terminus == Proteomics.Terminus.C) position = sequence.Length - position + 1;
-                        html.Open("span", $"class='peak {ion} {shift} label' style='--mz:{fragment.Mz};--intensity:{centroid.Intensity};' data-pos='{position}'");
-                        html.Open("span", "");
-                        html.Content(ion);
-                        html.OpenAndClose("sup", "", fragment.Charge.ToString());
-                        html.OpenAndClose("sub", "", fragment.Position.ToString());
-                        html.Close("span");
-                        html.Close("span");
-                        data_buffer.AppendLine($"{centroid.Mz}\t{centroid.Charge}\t{centroid.Intensity}\t{PeptideFragment.IonToString(fragment.FragmentType)}\t{PeptideFragment.MassShiftToString(fragment.MassShift)}\t{fragment.Position}");
-                    }
-                }
-            }
-
-            html.Close("div");
-
-            html.Open("div", "class='x-axis'");
-            html.OpenAndClose("span", "", "0");
-            html.OpenAndClose("span", "class='1_4'", (max_mz / 4).ToString("F0"));
-            html.OpenAndClose("span", "", (max_mz / 2).ToString("F0"));
-            html.OpenAndClose("span", "class='3_4'", (3 * max_mz / 4).ToString("F0"));
-            html.OpenAndClose("span", "", max_mz.ToString("F0"));
-            html.Close("div");
-
-            html.Close("div");
-            html.OpenAndClose("textarea", "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
-            html.Close("div");
-            return html.ToString();
-        }
-        */
     }
 }
