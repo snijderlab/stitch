@@ -36,11 +36,11 @@ namespace HTMLNameSpace
                 {
                     foreach (var spectrum in Fragments[p.EscapedIdentifier])
                     {
-                        buffer.Append(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HTMLHelp.Spectrum)));
+                        buffer.Append(Graph.RenderSpectrum(spectrum, HTMLHelp.Spectrum));
                     }
                 }
             }
-            buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup));
+            buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup.ToString()));
             buffer.Append("<table class='wide-table'><tr><th>Group</th><th>Segment</th><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
             foreach (var group in segments)
             {
@@ -132,23 +132,23 @@ $@"<tr>
 
             buffer.Append($@"<div id=""{id}"" class=""info-block template-info"">
     <h1>{title} {human_id}</h1>
-    {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence)}
+    {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence.ToString())}
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
 
-            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", new HtmlBuilder(HTMLHelp.SequenceConsensusOverview));
+            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
             buffer.Append("<div class='doc-plot'>");
-            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()).ToString());
+            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), HTMLHelp.DOCGraph, null, 10, template.ConsensusSequenceAnnotation()).ToString());
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='wide-table'><tr>
-        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches, "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea, "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches.ToString(), "small-cell")}
+        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea.ToString(), "small-cell")}
     </tr><tr>
         <td class='center'>{template.Sequence.Length}</td>
         <td class='center'>{template.Score}</td>
@@ -161,7 +161,7 @@ $@"<tr>
     {based}");
             var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
             CreateTemplateGraphs(buffer, template, DepthOfCoverage);
-            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", template.Recombination != null ? HTMLHelp.RecombinedSequence : HTMLHelp.TemplateSequence)}
+            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", template.Recombination != null ? HTMLHelp.RecombinedSequence.ToString() : HTMLHelp.TemplateSequence.ToString())}
     <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
     {meta}
 </div>");
@@ -217,7 +217,7 @@ $@"<tr>
             }
 
             html.Open(HtmlTag.div, "class='annotated-consensus-sequence'");
-            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence));
+            html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence.ToString()));
             html.UnsafeContent(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
             html.Open(HtmlTag.div, "class='annotated'");
             html.Open(HtmlTag.div, "class='names'");
@@ -304,7 +304,7 @@ $@"<tr>
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='alignment'");
             html.OpenAndClose(HtmlTag.h2, "", "Alignment");
-            html.UnsafeContent(CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment));
+            html.UnsafeContent(CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment.ToString()));
 
             // Loop over aligned
             // For each position: (creates List<string[]>, per position, per sequence + template_sequence)
@@ -543,7 +543,7 @@ $@"<tr>
             html.Open(HtmlTag.div, "id='index-menus'");
             foreach (var match in template.Matches)
             {
-                AlignmentDetails(buffer, match, template);
+                html.Add(AlignmentDetails(match, template));
             }
             html.Close(HtmlTag.div);
             html.Close(HtmlTag.div);
@@ -775,69 +775,63 @@ $@"<tr>
             }
         }
 
-        static void AlignmentDetails(StringBuilder buffer, SequenceMatch match, Template template)
+        static HtmlBuilder AlignmentDetails(SequenceMatch match, Template template)
         {
             var doc_title = "Positional Score";
             var type = "Read";
+            var html = new HtmlBuilder();
 
-            buffer.Append($@"
-    <div class='alignment-details' id='alignment-details-{match.Index}'>
-        <h4>{match.MetaData.Identifier}</h4>
-        <table>
-            <tr>
-                <td>Type</td>
-                <td>{type}</td>
-            </tr>
-            <tr>
-                <td>Score</td>
-                <td>{match.Score}</td>
-            </tr>
-            <tr>
-                <td>Total Area</td>
-                <td>{match.MetaData.TotalArea:G4}</td>
-            </tr>
-            <tr>
-                <td>Length on Template</td>
-                <td>{match.LengthOnTemplate}</td>
-            </tr>
-            <tr>
-                <td>Position on Template</td>
-                <td>{match.StartTemplatePosition}</td>
-            </tr>
-            <tr>
-                <td>Start on {type}</td>
-                <td>{match.StartQueryPosition}</td>
-            </tr>
-            <tr>
-                <td>Length of {type}</td>
-                <td>{match.QuerySequence.Length}</td>
-            </tr>");
+            void Row(string name, string content)
+            {
+                html.Open(HtmlTag.tr);
+                html.OpenAndClose(HtmlTag.td, "", name);
+                html.OpenAndClose(HtmlTag.td, "", content);
+                html.Close(HtmlTag.tr);
+            }
+
+            html.Open(HtmlTag.div, $"class='alignment-details' id='alignment-details-{match.Index}'");
+            html.OpenAndClose(HtmlTag.h4, "", match.MetaData.Identifier);
+            html.Open(HtmlTag.table);
+            Row("Type", type);
+            Row("Score", match.Score.ToString());
+            Row("Total area", match.MetaData.TotalArea.ToString());
+            Row("Length on Template", match.LengthOnTemplate.ToString());
+            Row("Position on Template", match.StartTemplatePosition.ToString());
+            Row($"Start on {type}", match.StartQueryPosition.ToString());
+            Row($"Length of {type}", match.QuerySequence.Length.ToString());
+
             if (template.ForcedOnSingleTemplate)
             {
-                buffer.Append("<tr><td>Unique</td><td>");
-                if (match.Unique) buffer.Append("Yes");
-                else buffer.Append("No");
-                buffer.Append("</td></tr>");
+                Row("Unique", match.Unique ? "Yes" : "No");
             }
             if (match.MetaData is ReadMetaData.Peaks p)
             {
-                buffer.Append($"<tr><td>Peaks ALC</td><td>{p.DeNovoScore}</td></tr>");
+                Row("Peaks ALC", p.DeNovoScore.ToString());
             }
             if (match.MetaData.PositionalScore.Length != 0)
             {
-                buffer.Append($"<tr><td>{doc_title}</td><td class='doc-plot'>");
-                buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)).ToString());
-                buffer.Append("</td></tr>");
+                html.Open(HtmlTag.tr);
+                html.OpenAndClose(HtmlTag.td, "", doc_title);
+                html.Open(HtmlTag.td, "class='doc-plot'");
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Close(HtmlTag.td);
+                html.Close(HtmlTag.tr);
             }
-
-            buffer.Append($@"<tr><td>Alignment graphic</td><td class='sequence-match-graphic'>");
-            SequenceMatchGraphic(buffer, match);
-            buffer.Append("</td></tr></table></div>");
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.td, "", "Alignment graphic");
+            html.Open(HtmlTag.td, "class='sequence-match-graphic'");
+            html.Add(SequenceMatchGraphic(match));
+            html.Close(HtmlTag.td);
+            html.Close(HtmlTag.tr);
+            html.Close(HtmlTag.table);
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static void SequenceMatchGraphic(StringBuilder buffer, SequenceMatch match)
+        static HtmlBuilder SequenceMatchGraphic(SequenceMatch match)
         {
             var id = "none";
+            var html = new HtmlBuilder();
             foreach (var piece in match.Alignment)
             {
                 if (piece is SequenceMatch.Match)
@@ -847,8 +841,9 @@ $@"<tr>
                 else if (piece is SequenceMatch.GapInQuery)
                     id = "gap-in-query";
 
-                buffer.Append($"<span class='{id}' style='flex-grow:{piece.Length}'></span>");
+                html.OpenAndClose(HtmlTag.span, $"class='{id}' style='flex-grow:{piece.Length}'");
             }
+            return html;
         }
 
         static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, HtmlBuilder help = null)

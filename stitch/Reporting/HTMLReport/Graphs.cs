@@ -429,7 +429,7 @@ namespace HTMLNameSpace
             var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
 
             html.Open(HtmlTag.div, "class='phylogenetic-tree'");
-            html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree));
+            html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree.ToString()));
 
             var button_names = new string[] { "Score", "Matches", "Area" };
             for (int i = 0; i < button_names.Length; i++)
@@ -440,7 +440,7 @@ namespace HTMLNameSpace
             }
             html.OpenAndClose(HtmlTag.p, "class='legend'", "Cumulative value of all children (excluding unique)");
             html.OpenAndClose(HtmlTag.p, "class='legend unique'", "Cumulative value for unique matches");
-            html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)", HTMLHelp.TreeData));
+            html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)", HTMLHelp.TreeData.ToString()));
             html.Open(HtmlTag.div, "class='container'");
             html.Open(HtmlTag.div, $"class='tree' style='max-width:{max_x + radius + text_width}px'");
             var svg = new SvgBuilder();
