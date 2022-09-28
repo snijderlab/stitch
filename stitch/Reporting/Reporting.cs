@@ -12,6 +12,7 @@ using System.Globalization;
 using System.ComponentModel;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
+using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
 namespace AssemblyNameSpace
 {
@@ -25,8 +26,8 @@ namespace AssemblyNameSpace
         public readonly RunVariables runVariables;
         public readonly string Runname;
         [JsonIgnore]
-        public readonly Dictionary<string, Fragmentation.PeptideSpectrum[]> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, Fragmentation.PeptideSpectrum[]> fragments)
+        public readonly Dictionary<string, AnnotatedSpectrumMatch[]> Fragments;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, AnnotatedSpectrumMatch[]> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();

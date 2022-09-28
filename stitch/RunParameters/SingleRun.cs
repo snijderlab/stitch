@@ -10,6 +10,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
 using HeckLib.chemistry;
+using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
 namespace AssemblyNameSpace
 {
@@ -110,7 +111,7 @@ namespace AssemblyNameSpace
                 }
 
                 // Raw data
-                Dictionary<string, Fragmentation.PeptideSpectrum[]> fragments = null;
+                Dictionary<string, AnnotatedSpectrumMatch[]> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
                     fragments = Fragmentation.GetSpectra(Input.Select(item =>

@@ -5,6 +5,7 @@ using System.Text;
 using AssemblyNameSpace;
 using HeckLib.chemistry;
 using System.Text.Json;
+using HtmlGenerator;
 
 namespace HTMLNameSpace
 {
@@ -337,7 +338,7 @@ namespace HTMLNameSpace
         /// <returns></returns>
         public static string RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName)
         {
-            var html = new HTMLBuilder();
+            var html = new HtmlBuilder();
             const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
             const double yf = 22;   // Height of the labels
             const double radius = 10;  // Radius of the score circles
@@ -368,22 +369,23 @@ namespace HTMLNameSpace
             var max_x = xf * (columns + 1);
             var max = tree.DataTree.Fold((0, 0, 0, 0, 0.0, 0.0), (acc, value) => (Math.Max(value.Score, acc.Item1), Math.Max(value.UniqueScore, acc.Item2), Math.Max(value.Matches, acc.Item3), Math.Max(value.UniqueMatches, acc.Item4), Math.Max(value.Area, acc.Item5), Math.Max(value.UniqueArea, acc.Item6)));
 
-            html.Open("div", "class='phylogenetic-tree'");
+            html.Open(HtmlTag.div, "class='phylogenetic-tree'");
             html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree));
 
             var button_names = new string[] { "Score", "Matches", "Area" };
             for (int i = 0; i < button_names.Length; i++)
             {
                 var check = i == 0 ? " checked " : "";
-                html.Empty("input", $"type='radio' class='show-data-{i}' name='{id}' id='{id}-{i}'{check}");
-                html.OpenAndClose("label", $"for='{id}-{i}'", button_names[i]);
+                html.Empty(HtmlTag.input, $"type='radio' class='show-data-{i}' name='{id}' id='{id}-{i}'{check}");
+                html.OpenAndClose(HtmlTag.label, $"for='{id}-{i}'", button_names[i]);
             }
-            html.OpenAndClose("p", "class='legend'", "Cumulative value of all children (excluding unique)");
-            html.OpenAndClose("p", "class='legend unique'", "Cumulative value for unique matches");
+            html.OpenAndClose(HtmlTag.p, "class='legend'", "Cumulative value of all children (excluding unique)");
+            html.OpenAndClose(HtmlTag.p, "class='legend unique'", "Cumulative value for unique matches");
             html.UnsafeContent(CommonPieces.CopyData("Tree (JSON)", HTMLHelp.TreeData));
-            html.Open("div", "class='container'");
-            html.Open("div", $"class='tree' style='max-width:{max_x + radius + text_width}px'");
-            html.Open("svg", $"viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'");
+            html.Open(HtmlTag.div, "class='container'");
+            html.Open(HtmlTag.div, $"class='tree' style='max-width:{max_x + radius + text_width}px'");
+            var svg = new SvgBuilder();
+            svg.Open(SvgTag.svg, $"viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'");
 
             string GetScores((int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) value, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) max, bool unique)
             {
@@ -409,33 +411,33 @@ namespace HTMLNameSpace
                 var y = t.Value.Y * yf;
                 var ly = t.Left.Value.Item2.Value.Y * yf;
                 var ry = t.Right.Value.Item2.Value.Y * yf;
-                html.Open("g");
-                html.OpenAndClose("line", $"x1={x}px y1={ly}px x2={x}px y2={y - radius}px");
-                html.OpenAndClose("line", $"x1={x}px y1={y + radius}px x2={x}px y2={ry}px");
-                html.OpenAndClose("line", $"x1={x - stroke / 2}px y1={ly}px x2={x1}px y2={ly}px");
-                html.OpenAndClose("line", $"x1={x - stroke / 2}px y1={ry}px x2={x1}px y2={ry}px");
-                html.OpenAndClose("circle", $"cx={x}px cy={y}px r={radius}px class='value' style='{GetScores(t.Value.Scores, max, false)}'");
-                html.OpenAndClose("text", $"x={x + radius + stroke * 2}px y={y}px class='info info-0'", $"Score: {t.Value.Scores.Score} ({(double)t.Value.Scores.Score / max.Item1:P})");
-                html.OpenAndClose("text", $"x={x + radius + stroke * 2}px y={y}px class='info info-1'", $"Matches: {t.Value.Scores.Matches} ({(double)t.Value.Scores.Matches / max.Item3:P})");
-                html.OpenAndClose("text", $"x={x + radius + stroke * 2}px y={y}px class='info info-2'", $"Area: {t.Value.Scores.Area:G3} ({(double)t.Value.Scores.Area / max.Item5:P})");
-                html.Close("g");
+                svg.Open(SvgTag.g);
+                svg.OpenAndClose(SvgTag.line, $"x1={x}px y1={ly}px x2={x}px y2={y - radius}px");
+                svg.OpenAndClose(SvgTag.line, $"x1={x}px y1={y + radius}px x2={x}px y2={ry}px");
+                svg.OpenAndClose(SvgTag.line, $"x1={x - stroke / 2}px y1={ly}px x2={x1}px y2={ly}px");
+                svg.OpenAndClose(SvgTag.line, $"x1={x - stroke / 2}px y1={ry}px x2={x1}px y2={ry}px");
+                svg.OpenAndClose(SvgTag.circle, $"cx={x}px cy={y}px r={radius}px class='value' style='{GetScores(t.Value.Scores, max, false)}'");
+                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-0'", $"Score: {t.Value.Scores.Score} ({(double)t.Value.Scores.Score / max.Item1:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-1'", $"Matches: {t.Value.Scores.Matches} ({(double)t.Value.Scores.Matches / max.Item3:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-2'", $"Area: {t.Value.Scores.Area:G3} ({(double)t.Value.Scores.Area / max.Item5:P})");
+                svg.Close(SvgTag.g);
             }, leaf =>
             {
                 var x = leaf.X * xf;
                 var y = leaf.Y * yf;
                 var end = max_x - radius - stroke;
-                html.Open("g");
-                if (leaf.X != columns) html.OpenAndClose("line", $"x1={x + stroke / 2}px y1={y}px x2={end - radius}px y2={y}px");
-                html.OpenAndClose("path", $"d='M {end} {y + radius} A {radius} {radius} 0 0 1 {end} {y - radius}' class='value' style='{GetScores(leaf.Scores, max, false)}'");
-                html.OpenAndClose("path", $"d='M {end} {y - radius} A {radius} {radius} 0 0 1 {end} {y + radius}' class='value unique' style='{GetScores(leaf.Scores, max, true)}'");
-                html.OpenAndClose("text", $"x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'", $"Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})");
-                html.OpenAndClose("text", $"x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'", $"Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})");
-                html.OpenAndClose("text", $"x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'", $"Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})");
-                html.Open("a", $"class='info-link' id='tree-leaf-{CommonPieces.GetAsideIdentifier(leaf.MetaData, false)}' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}' target='_blank'");
-                html.OpenAndClose("rect", $"x={max_x + radius}px y={y - yf / 2 + stroke}px width={text_width}px height={yf - stroke * 2}px rx=3.2px");
-                html.OpenAndClose("text", $"x={max_x + radius + stroke * 2}px y={y + 1}px", CommonPieces.GetAsideIdentifier(leaf.MetaData, true));
-                html.Close("a");
-                html.Close("g");
+                svg.Open(SvgTag.g);
+                if (leaf.X != columns) svg.OpenAndClose(SvgTag.line, $"x1={x + stroke / 2}px y1={y}px x2={end - radius}px y2={y}px");
+                svg.OpenAndClose(SvgTag.path, $"d='M {end} {y + radius} A {radius} {radius} 0 0 1 {end} {y - radius}' class='value' style='{GetScores(leaf.Scores, max, false)}'");
+                svg.OpenAndClose(SvgTag.path, $"d='M {end} {y - radius} A {radius} {radius} 0 0 1 {end} {y + radius}' class='value unique' style='{GetScores(leaf.Scores, max, true)}'");
+                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'", $"Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'", $"Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'", $"Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})");
+                svg.Open(SvgTag.a, $"class='info-link' id='tree-leaf-{CommonPieces.GetAsideIdentifier(leaf.MetaData, false)}' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}' target='_blank'");
+                svg.OpenAndClose(SvgTag.rect, $"x={max_x + radius}px y={y - yf / 2 + stroke}px width={text_width}px height={yf - stroke * 2}px rx=3.2px");
+                svg.OpenAndClose(SvgTag.text, $"x={max_x + radius + stroke * 2}px y={y + 1}px", CommonPieces.GetAsideIdentifier(leaf.MetaData, true));
+                svg.Close(SvgTag.a);
+                svg.Close(SvgTag.g);
             });
 
             var json = tree.DataTree.Fold((value, ad, a, bd, b) =>
@@ -463,12 +465,12 @@ namespace HTMLNameSpace
             });
             var data_buffer = new StringBuilder();
             json.ToString(data_buffer);
-
-            html.Close("svg");
-            html.Close("div");
-            html.Close("div");
-            html.OpenAndClose("textarea", "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
-            html.Close("div");
+            svg.Close(SvgTag.svg);
+            html.Add(svg);
+            html.Close(HtmlTag.div);
+            html.Close(HtmlTag.div);
+            html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
+            html.Close(HtmlTag.div);
 
             return html.ToString();
         }
@@ -479,37 +481,38 @@ namespace HTMLNameSpace
         /// <param name="sequence">The sequence of the peptide.</param>
         /// <param name="spectrum">The spectrum to display.</param>
         /// <returns>HTML with title included.</returns>
+        /*
         public static string RenderSpectrum(string sequence, Fragmentation.PeptideSpectrum spectrum)
         {
-            var html = new HTMLBuilder();
+            var html = new HtmlBuilder();
             var data_buffer = new StringBuilder();
-            html.Open("div", "class='spectrum'");
+            html.Open(HtmlTag.div, "class='spectrum'");
             html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Spectrum " + spectrum.ScanID, HTMLHelp.Spectrum));
             html.UnsafeContent(CommonPieces.CopyData($"Spectrum {spectrum.ScanID} (TSV)"));
-            html.Open("div", "class='legend'");
-            html.OpenAndClose("span", "class='title'", "Ion legend");
-            html.OpenAndClose("span", "class='ion A'", "A");
-            html.OpenAndClose("span", "class='ion B'", "B");
-            html.OpenAndClose("span", "class='ion C'", "C");
-            html.OpenAndClose("span", "class='ion W'", "W");
-            html.OpenAndClose("span", "class='ion X'", "X");
-            html.OpenAndClose("span", "class='ion Y'", "Y");
-            html.OpenAndClose("span", "class='ion Z'", "Z");
-            html.OpenAndClose("span", "class='other'", "Other");
+            html.Open(HtmlTag.div, "class='legend'");
+            html.OpenAndClose(HtmlTag.span, "class='title'", "Ion legend");
+            html.OpenAndClose(HtmlTag.span, "class='ion A'", "A");
+            html.OpenAndClose(HtmlTag.span, "class='ion B'", "B");
+            html.OpenAndClose(HtmlTag.span, "class='ion C'", "C");
+            html.OpenAndClose(HtmlTag.span, "class='ion W'", "W");
+            html.OpenAndClose(HtmlTag.span, "class='ion X'", "X");
+            html.OpenAndClose(HtmlTag.span, "class='ion Y'", "Y");
+            html.OpenAndClose(HtmlTag.span, "class='ion Z'", "Z");
+            html.OpenAndClose(HtmlTag.span, "class='other'", "Other");
             var id = spectrum.ScanID.Replace(':', '_');
             html.Empty("input", $"id='{id}_unassigned' type='checkbox' checked class='unassigned'");
             html.OpenAndClose("label", $"for='{id}_unassigned' class='unassigned'", "Unassigned");
             html.Open("label", $"class='label'");
             html.Content("Ion");
-            html.OpenAndClose("sup", "", "Charge");
-            html.OpenAndClose("sub", "style='margin-left:-6ch;margin-right:.5rem;'", "Position");
+            html.OpenAndClose(Html"sup", "", "Charge");
+            html.OpenAndClose(Html"sub", "style='margin-left:-6ch;margin-right:.5rem;'", "Position");
             html.Content("Show for top:");
             html.OpenAndClose("input", $"id='{id}_label' type='range' min='0' max='100' value='100'");
             html.OpenAndClose("input", $"id='{id}_label_value' type='number' min='0' max='100' value='100'");
             html.Content("%");
             html.Close("label");
-            html.Close("div");
-            html.Open("div", "class='peptide'");
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.div, "class='peptide'");
 
             var fragment_overview = new HashSet<string>[sequence.Length];
             for (int i = 0; i < sequence.Length; i++) fragment_overview[i] = new HashSet<string>();
@@ -628,5 +631,6 @@ namespace HTMLNameSpace
             html.Close("div");
             return html.ToString();
         }
+        */
     }
 }
