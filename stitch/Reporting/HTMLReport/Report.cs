@@ -390,7 +390,7 @@ assets_folder = '{AssetsFolderName}';
                 inner_buffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 inner_buffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
 
-                inner_buffer.Append(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), HTMLHelp.SegmentJoining).ToString());
+                inner_buffer.Append(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HtmlGenerator.HtmlTag.p, HTMLHelp.SegmentJoining)).ToString());
             }
             return inner_buffer.ToString();
         }

@@ -7,6 +7,7 @@ namespace AssemblyNameSpace
 {
     public class ProgressBar : IDisposable
     {
+        public static bool Off = false;
         readonly object ValueKey = new object();
         int max_value;
         int current_value = 0;
@@ -74,7 +75,7 @@ namespace AssemblyNameSpace
 
         void Draw(bool clear = true)
         {
-            if (free)
+            if (free && !Off)
             {
                 free = false;
 

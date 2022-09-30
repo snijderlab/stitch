@@ -261,6 +261,7 @@ namespace AssemblyNameSpace
             /// <param name="e">The exception</param>
             public static void PrintException(Exception e)
             {
+                ProgressBar.Off = true;
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
                 Console.WriteLine($"\n>> Error: {e.Message}");

@@ -94,17 +94,17 @@ namespace HTMLNameSpace
             var table_buffer = new HtmlBuilder();
             table_buffer.Open(HtmlTag.table, $"id='{table_id}' class='wide-table'");
             table_buffer.Open(HtmlTag.tr);
-            table_buffer.TagWithHelp(HtmlTag.th, "Identifier", HTMLHelp.TemplateIdentifier, "small-cell", SortOn(0, "id"));
-            table_buffer.TagWithHelp(HtmlTag.th, "Length", HTMLHelp.TemplateLength, "small-cell", SortOn(1, "number"));
-            if (displayOrder) table_buffer.TagWithHelp(HtmlTag.th, "Order", HTMLHelp.Order, "small-cell", SortOn(2, "id"));
-            table_buffer.TagWithHelp(HtmlTag.th, "Score", HTMLHelp.TemplateScore, "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'");
-            table_buffer.TagWithHelp(HtmlTag.th, "Matches", HTMLHelp.TemplateMatches, "small-cell", SortOn(3 + order_factor, "number"));
-            table_buffer.TagWithHelp(HtmlTag.th, "Total Area", HTMLHelp.TemplateTotalArea, "small-cell", SortOn(4 + order_factor, "number"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Identifier", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateIdentifier), "small-cell", SortOn(0, "id"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Length", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateLength), "small-cell", SortOn(1, "number"));
+            if (displayOrder) table_buffer.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HtmlTag.p, HTMLHelp.Order), "small-cell", SortOn(2, "id"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateScore), "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'");
+            table_buffer.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateMatches), "small-cell", SortOn(3 + order_factor, "number"));
+            table_buffer.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea), "small-cell", SortOn(4 + order_factor, "number"));
             if (displayUnique)
             {
-                table_buffer.TagWithHelp(HtmlTag.th, "Unique Score", HTMLHelp.TemplateUniqueScore, "small-cell", SortOn(5 + order_factor, "number"));
-                table_buffer.TagWithHelp(HtmlTag.th, "Unique Matches", HTMLHelp.TemplateUniqueMatches, "small-cell", SortOn(6 + order_factor, "number"));
-                table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", HTMLHelp.TemplateUniqueArea, "small-cell", SortOn(7 + order_factor, "number"));
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueScore), "small-cell", SortOn(5 + order_factor, "number"));
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueMatches), "small-cell", SortOn(6 + order_factor, "number"));
+                table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueArea), "small-cell", SortOn(7 + order_factor, "number"));
             }
             table_buffer.Close(HtmlTag.tr);
 
@@ -255,7 +255,7 @@ namespace HTMLNameSpace
                 else
                     html.OpenAndClose(HtmlTag.h2, $"class='title'", title);
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
-                html.CopyData(title + " (TSV)", HTMLHelp.SequenceConsensusOverviewData);
+                html.CopyData(title + " (TSV)", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverviewData));
             html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
             for (int i = 0; i < diversity.Count; i++)
             {
@@ -287,7 +287,7 @@ namespace HTMLNameSpace
             }
             html.Close(HtmlTag.div);
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides
-                html.CopyData("Sequence Consensus Overview (TSV)", HTMLHelp.SequenceConsensusOverviewData);
+                html.CopyData("Sequence Consensus Overview (TSV)", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverviewData));
             html.OpenAndClose(HtmlTag.textarea, $"class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close(HtmlTag.div);
             return html;
@@ -347,7 +347,7 @@ namespace HTMLNameSpace
             else
                 header = new List<string> { "Score", "Matches", "Area" };
 
-            return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", HTMLHelp.OverviewOfScores, null);
+            return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", new HtmlBuilder(HtmlTag.p, HTMLHelp.OverviewOfScores), null);
         }
 
         static HtmlBuilder BarTableHeader(List<Template> templates)

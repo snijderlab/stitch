@@ -36,7 +36,7 @@ namespace HTMLNameSpace
                 {
                     foreach (var spectrum in Fragments[p.EscapedIdentifier])
                     {
-                        buffer.Append(Graph.RenderSpectrum(spectrum, HTMLHelp.Spectrum));
+                        buffer.Append(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
                     }
                 }
             }
@@ -136,9 +136,9 @@ $@"<tr>
     <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
             CreateAnnotatedSequence(buffer, human_id, template);
 
-            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", HTMLHelp.SequenceConsensusOverview);
+            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview));
             buffer.Append("<div class='doc-plot'>");
-            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), HTMLHelp.DOCGraph, null, 10, template.ConsensusSequenceAnnotation()).ToString());
+            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()).ToString());
             buffer.Append($@"</div>
     <h2>Scores</h2>
     <table class='wide-table'><tr>
