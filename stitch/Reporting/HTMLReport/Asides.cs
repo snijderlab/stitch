@@ -183,6 +183,7 @@ $@"<tr>
 
             int template_pos = match.StartTemplatePosition;
             int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
+
             foreach (var piece in match.Alignment)
             {
                 switch (piece)
@@ -192,7 +193,7 @@ $@"<tr>
                         {
                             var t = match.TemplateSequence[template_pos].Character;
                             var q = match.QuerySequence[query_pos].Character;
-                            columns.Add((t, q, t == q ? ' ' : q, annotated[template_pos - match.StartTemplatePosition]));
+                            columns.Add((t, q, t == q ? ' ' : q, annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                             query_pos++;
                         }
@@ -201,7 +202,7 @@ $@"<tr>
                         for (int i = 0; i < q.Length; i++)
                         {
                             var t = match.TemplateSequence[template_pos].Character;
-                            columns.Add((t, '.', ' ', annotated[template_pos - match.StartTemplatePosition]));
+                            columns.Add((t, '.', ' ', annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                         }
                         break;
@@ -209,7 +210,7 @@ $@"<tr>
                         for (int i = 0; i < t.Length; i++)
                         {
                             var q = match.QuerySequence[query_pos].Character;
-                            columns.Add(('.', q, q, annotated[template_pos - match.StartTemplatePosition]));
+                            columns.Add(('.', q, q, annotated[query_pos - match.StartQueryPosition]));
                             query_pos++;
                         }
                         break;
@@ -437,21 +438,7 @@ $@"<tr>
             if (aligned.Length > 0)
             {
                 // Create a position based lookup list for the annotated sequence
-                var annotatedSequence = new List<Annotation>();
-                if (template.Recombination != null)
-                {
-                    foreach (var segment in template.Recombination)
-                    {
-                        // Remove Xs and overlap to get the final sequence as used in the recombination read alignment
-                        var x_start = segment.ConsensusSequence().Item1.TakeWhile(a => a.Character == 'X').Count();
-                        var main_sequence = segment.ConsensusSequence().Item1.Skip(x_start).TakeWhile(a => a.Character != 'X').Count();
-                        annotatedSequence.AddRange(segment.ConsensusSequenceAnnotation().Skip(x_start).Take(main_sequence).Skip(segment.Overlap));
-                    }
-                }
-                else
-                {
-                    annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
-                }
+                var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
 
                 // Fill in the gaps
                 for (int i = 0; i < aligned[0].Length; i++)

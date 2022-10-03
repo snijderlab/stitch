@@ -82,41 +82,49 @@ namespace AssemblyNameSpace
 
         void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
         {
-            var buffer = new StringBuilder();
-            var inner_buffer = new StringBuilder();
-
-            ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
-            switch (aside)
+            try
             {
-                case AsideType.Read:
-                    HTMLAsides.CreateReadAside(inner_buffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
-                    metadata = Parameters.Input[index1].MetaData;
-                    break;
-                case AsideType.Template:
-                    var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(inner_buffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
-                    metadata = template.MetaData;
-                    break;
-                case AsideType.RecombinedTemplate:
-                    var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                    HTMLAsides.CreateTemplateAside(inner_buffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
-                    metadata = rTemplate.MetaData;
-                    break;
-            };
-            var location = new List<string>() { AssetsFolderName, GetAsideName(aside) + "s" };
-            var home_location = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
-            var id = GetAsideIdentifier(metadata);
-            var link = GetLinkToFolder(location, new List<string>());
-            var full_path = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
+                var buffer = new StringBuilder();
+                var inner_buffer = new StringBuilder();
 
-            buffer.Append("<!DOCTYPE html>\n<html lang='en-GB'>");
-            buffer.Append(CreateHeader("Details " + id, location));
-            buffer.Append("<body class='details' onload='Setup()'>");
-            buffer.Append($"<a href='{home_location}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
-            buffer.Append(inner_buffer.ToString());
-            buffer.Append("</body></html>");
+                ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
+                switch (aside)
+                {
+                    case AsideType.Read:
+                        HTMLAsides.CreateReadAside(inner_buffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
+                        metadata = Parameters.Input[index1].MetaData;
+                        break;
+                    case AsideType.Template:
+                        var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
+                        HTMLAsides.CreateTemplateAside(inner_buffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
+                        metadata = template.MetaData;
+                        break;
+                    case AsideType.RecombinedTemplate:
+                        var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
+                        HTMLAsides.CreateTemplateAside(inner_buffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
+                        metadata = rTemplate.MetaData;
+                        break;
+                };
+                var location = new List<string>() { AssetsFolderName, GetAsideName(aside) + "s" };
+                var home_location = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
+                var id = GetAsideIdentifier(metadata);
+                var link = GetLinkToFolder(location, new List<string>());
+                var full_path = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
-            SaveAndCreateDirectories(full_path, buffer.ToString());
+                buffer.Append("<!DOCTYPE html>\n<html lang='en-GB'>");
+                buffer.Append(CreateHeader("Details " + id, location));
+                buffer.Append("<body class='details' onload='Setup()'>");
+                buffer.Append($"<a href='{home_location}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
+                buffer.Append(inner_buffer.ToString());
+                buffer.Append("</body></html>");
+
+                SaveAndCreateDirectories(full_path, buffer.ToString());
+            }
+            catch (Exception e)
+            {
+                InputNameSpace.ErrorMessage.PrintException(e);
+                throw new Exception("Exception raised in creation of aside. See above message for more details.");
+            }
         }
 
         void CreateCDROverview(string id, StringBuilder buffer, List<Segment> segments)

@@ -545,6 +545,9 @@ namespace AssemblyNameSpace
                 return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
         }
 
+        /// <summary>
+        /// The annotated consensus sequence given as an array with the length of the consensus sequence.
+        /// </summary>
         private Annotation[] ConsensusSequenceAnnotationCache = null;
         public Annotation[] ConsensusSequenceAnnotation()
         {
@@ -552,14 +555,16 @@ namespace AssemblyNameSpace
 
             var match = this.AlignConsensusWithTemplate();
             var annotation = new List<Annotation>(match.LengthOnQuery);
+
             List<(Annotation, string)> annotated = null;
             if (this.Recombination != null)
             {
                 annotated = this.Recombination.Aggregate(new List<(Annotation, string)>(), (acc, item) =>
             {
-                if (item.MetaData is ReadMetaData.Fasta meta)
-                    if (meta.AnnotatedSequence != null)
-                        acc.AddRange(meta.AnnotatedSequence);
+                var x_start = item.ConsensusSequence().Item1.TakeWhile(a => a.Character == 'X').Count();
+                var main_sequence = item.ConsensusSequence().Item1.Skip(x_start).TakeWhile(a => a.Character != 'X').Count();
+                var sequence = AminoAcid.ArrayToString(item.ConsensusSequence().Item1.Skip(x_start).Take(main_sequence).ToArray());
+                acc.AddRange(item.ConsensusSequenceAnnotation().Skip(x_start).Take(main_sequence).Skip(item.Overlap).Zip(sequence).Select((a) => (a.First, a.Second.ToString())));
                 return acc;
             });
             }
@@ -584,6 +589,7 @@ namespace AssemblyNameSpace
             }
 
             var columns = new List<(char Template, char Query, char Difference, string Class)>();
+            int query_pos = 0;
             int template_pos = 0;
             foreach (var piece in match.Alignment)
             {
@@ -592,16 +598,20 @@ namespace AssemblyNameSpace
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++)
                         {
-                            annotation.Add(GetClasses(template_pos));
+                            annotation.Add(GetClasses(query_pos));
+                            query_pos++;
                             template_pos++;
                         }
                         break;
-                    case SequenceMatch.GapInTemplate q:
+                    case SequenceMatch.GapInQuery q:
                         for (int i = 0; i < q.Length; i++)
                         {
-                            annotation.Add(GetClasses(template_pos));
-                            template_pos++;
+                            annotation.Add(GetClasses(query_pos));
+                            query_pos++;
                         }
+                        break;
+                    case SequenceMatch.GapInTemplate t:
+                        template_pos += t.Length;
                         break;
                     default:
                         break;

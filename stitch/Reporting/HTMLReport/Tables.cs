@@ -259,7 +259,7 @@ namespace HTMLNameSpace
             html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
             for (int i = 0; i < diversity.Count; i++)
             {
-                var Class = annotation != null && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
+                var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                 html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}'");
 
                 double sum = diversity[i].Values.Sum();
