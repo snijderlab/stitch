@@ -155,7 +155,7 @@ namespace AssemblyNameSpace
                 if (!string.IsNullOrEmpty(subject)) // Pre given location
                 {
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write("\n   | ");
+                    Console.Write("\n   │ ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
                 }
@@ -181,17 +181,17 @@ namespace AssemblyNameSpace
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write((line_index + 1).ToString().PadRight(number_width + 1, ' '));
-                        Console.Write("| ");
+                        Console.Write("│ ");
                         Console.ForegroundColor = defaultColour;
                         Console.Write(File.Lines[line_index]);
                         Console.Write("\n");
                     }
 
-                    void print_empty(bool newline)
+                    void print_empty(bool newline, char border = '│')
                     {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write(new string(' ', number_width + 1));
-                        Console.Write("|");
+                        Console.Write(border);
                         Console.ForegroundColor = defaultColour;
                         if (newline) Console.Write('\n');
                     }
@@ -209,7 +209,7 @@ namespace AssemblyNameSpace
                     {
                         var pos = new string(' ', start_position.Value.Column) + "^^^";
                         print_line(start_position.Value.Line);
-                        print_empty(false);
+                        print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
@@ -218,7 +218,7 @@ namespace AssemblyNameSpace
                     {
                         var pos = new string(' ', Math.Max(0, start_position.Value.Column)) + new string('^', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
                         print_line(start_position.Value.Line);
-                        print_empty(false);
+                        print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
@@ -229,7 +229,7 @@ namespace AssemblyNameSpace
                         {
                             line = File.Lines[i];
                             var number = (i + 1).ToString().PadRight(number_width + 1, ' ');
-                            Console.Write($"{number}| {line}\n");
+                            Console.Write($"{number}│ {line}\n");
                         }
                     }
                     for (int i = 1; i <= contextLines; i++)
