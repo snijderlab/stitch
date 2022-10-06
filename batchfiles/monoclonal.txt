@@ -9,7 +9,7 @@ Input ->
         Path     : ..\datasets\200305_HER_test_04_DENOVO.csv
         Format   : X+
         Name     : 01
-        CutoffALC: 90i
+        CutoffALC: 90
     <-
 <-
 
