@@ -1,5 +1,17 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.2.0
+_2022-10-06_
+
+* Added support for raw files viewing in the HTML reports, see the manual for how to work with this, for now only works with Peaks data and with Thermo raw files (#97, #186)
+* Created automated benchmarks (#178)
+* Added help and data to the last missing places (#184, #126)
+* Added a preview of the export data in graphs (#181)
+* Normalized reads intensities always in range 0-1 (#172)
+* Fixed small bug in highlighting templates in the scores plot (#182)
+* Fixed a bug related to sequence annotation (#187)
+* Lots of styling fixes and improvements in the HTML report, error messages and more
+
 # v1.1.4
 _2022-09-09_
 
