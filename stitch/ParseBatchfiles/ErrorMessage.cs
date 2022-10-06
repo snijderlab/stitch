@@ -21,7 +21,7 @@ namespace AssemblyNameSpace
             readonly string subject = "";
             readonly uint contextLines = 0;
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
             {
                 subject = sub;
                 shortDescription = shortD;
@@ -31,7 +31,7 @@ namespace AssemblyNameSpace
                 File = new ParsedFile();
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
             {
                 shortDescription = shortD;
                 longDescription = longD;
@@ -40,7 +40,7 @@ namespace AssemblyNameSpace
                 File = file;
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
             {
                 start_position = pos;
                 shortDescription = shortD;
@@ -50,7 +50,7 @@ namespace AssemblyNameSpace
                 File = pos.File;
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 1)
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
             {
                 start_position = range.Start;
                 end_position = range.End;
@@ -63,16 +63,16 @@ namespace AssemblyNameSpace
             }
             public static ErrorMessage DuplicateValue(FileRange range)
             {
-                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true, 2);
+                var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;
             }
             public static ErrorMessage MissingParameter(FileRange range, string parameter)
             {
-                return new ErrorMessage(range, $"Missing parameter: {parameter}", "", "", false, 0);
+                return new ErrorMessage(range, $"Missing parameter: {parameter}", "", "", false);
             }
             public static ErrorMessage UnknownKey(FileRange range, string context, string options)
             {
-                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", true, 0);
+                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", true);
             }
             public override string ToString()
             {
@@ -148,8 +148,9 @@ namespace AssemblyNameSpace
                 // Header
                 Console.ForegroundColor = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
                 var name = Warning ? "Warning" : "Error";
-                Console.WriteLine($"\n>> {name}: {shortDescription}");
+                Console.Write($"\n{name}: ");
                 Console.ForegroundColor = defaultColour;
+                Console.WriteLine(shortDescription);
 
                 // Location
                 if (!string.IsNullOrEmpty(subject)) // Pre given location
@@ -197,7 +198,8 @@ namespace AssemblyNameSpace
                     }
 
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write("  --> ");
+                    Console.Write(new string(' ', number_width + 1));
+                    Console.Write("╭── ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"{File.Filename}:{start_position.Value.Line + 1}:{start_position.Value.Column + 1}\n");
                     print_empty(true);
@@ -207,7 +209,7 @@ namespace AssemblyNameSpace
 
                     if (!end_position.HasValue || start_position.Value.Line > end_position.Value.Line) // Single position
                     {
-                        var pos = new string(' ', start_position.Value.Column) + "^^^";
+                        var pos = new string(' ', start_position.Value.Column) + "───";
                         print_line(start_position.Value.Line);
                         print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -216,7 +218,7 @@ namespace AssemblyNameSpace
                     }
                     else if (start_position.Value.Line == end_position.Value.Line) // Single line
                     {
-                        var pos = new string(' ', Math.Max(0, start_position.Value.Column)) + new string('^', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
+                        var pos = new string(' ', Math.Max(0, start_position.Value.Column)) + new string('─', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
                         print_line(start_position.Value.Line);
                         print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
@@ -234,7 +236,7 @@ namespace AssemblyNameSpace
                     }
                     for (int i = 1; i <= contextLines; i++)
                         if (endline + i < File.Lines.Length) print_line(endline + i);
-                    print_empty(true);
+                    print_empty(true, '╵');
                 }
 
                 // Body

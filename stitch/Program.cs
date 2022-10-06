@@ -21,6 +21,7 @@ namespace AssemblyNameSpace
         /// <summary> The entry point. </summary>
         static int Main()
         {
+            Console.OutputEncoding = Encoding.UTF8;
             Console.CancelKeyPress += HandleUserAbort;
 
             static List<string> ParseArgs()
