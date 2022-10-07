@@ -477,7 +477,7 @@ namespace AssemblyNameSpace
             html.Open(HtmlTag.p);
             html.Content("Version: ");
             html.OpenAndClose(HtmlTag.span, "class='version'", version);
-            html.Content(" please mention this in any bug reports.");
+            html.Content(" please mention this if you send in a bug report.");
             html.Close(HtmlTag.p);
             html.Close(HtmlTag.footer);
             html.Close(HtmlTag.div);
