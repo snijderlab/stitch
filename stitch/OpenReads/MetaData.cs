@@ -9,6 +9,7 @@ using System.Collections.Concurrent;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Globalization;
+using HtmlGenerator;
 
 namespace AssemblyNameSpace
 {
@@ -70,8 +71,8 @@ namespace AssemblyNameSpace
             /// <summary>
             /// To generate a HTML representation of this metadata for use in the HTML report.
             /// </summary>
-            /// <returns>A string containing the MetaData.</returns>
-            public abstract string ToHTML();
+            /// <returns>An HtmlBuilder containing the MetaData.</returns>
+            public abstract HtmlBuilder ToHTML();
 
             protected NameFilter nameFilter;
 
@@ -120,7 +121,7 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Returns Simple MetaData to HTML.
             /// </summary>
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
                 return File.ToHTML();
             }
@@ -150,9 +151,16 @@ namespace AssemblyNameSpace
 
             /// <summary> Generate HTML with all meta information from the fasta data. </summary>
             /// <returns> Returns an HTML string with the meta information. </returns>
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                return $"<h2>Meta Information from fasta</h2>\n<h3>Identifier</h3>\n<p>{Identifier}</p>\n<h3>Fasta header</h3>\n<p>{FastaHeader}</p>{File.ToHTML()}";
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from fasta");
+                html.OpenAndClose(HtmlTag.h3, "", "Identifier");
+                html.OpenAndClose(HtmlTag.p, "", Identifier);
+                html.OpenAndClose(HtmlTag.h3, "", "Fasta header");
+                html.OpenAndClose(HtmlTag.p, "", FastaHeader);
+                html.Add(File.ToHTML());
+                return html;
             }
         }
 
@@ -410,91 +418,141 @@ namespace AssemblyNameSpace
 
             /// <summary> Generate HTML with all meta information from the PEAKS data. </summary>
             /// <returns> Returns an HTML string with the meta information. </returns>
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                var output = new StringBuilder();
-                output.Append("<h2>Meta Information from PEAKS</h2>");
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from PEAKS");
 
                 // Look for each field if it is defined, otherwise leave it out
                 if (ScanID != null)
-                    output.Append($"<h3>Scan Identifier</h3>\n<p>{ScanID}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Scan Identifier");
+                    html.OpenAndClose(HtmlTag.p, "", ScanID.ToString());
+                }
 
                 // Create a display of the sequence with local confidence and modifications (if present)
                 if (Original_tag != null && Local_confidence != null)
                 {
-                    output.Append($"<h3>Original Sequence (length={Original_tag.Length})</h3>\n<div class='original-sequence' style='--max-value:100'>");
+                    html.OpenAndClose(HtmlTag.h3, "", $"Original sequence (length={Original_tag.Length})");
+                    html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                     int original_offset = 0;
 
                     for (int i = 0; i < Cleaned_sequence.Length; i++)
                     {
-                        output.Append($"<div><div class='coverage-depth-wrapper'><span class='coverage-depth-bar' style='--value:{Local_confidence[i]}'></span></div><p>{Cleaned_sequence[i]}</p>");
+                        html.Open(HtmlTag.div);
+                        html.Open(HtmlTag.div, "class='coverage-depth-wrapper'");
+                        html.OpenAndClose(HtmlTag.span, $"class='coverage-depth-bar' style='--value:{Local_confidence[i]}'", "");
+                        html.Close(HtmlTag.div);
+                        html.OpenAndClose(HtmlTag.p, "", Cleaned_sequence[i].ToString());
 
                         if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
                         {
-                            output.Append("<p class='modification'>");
+                            html.Open(HtmlTag.p, "class='modification'");
                             original_offset += 2;
                             while (Original_tag[original_offset] != ')')
                             {
-                                output.Append(Original_tag[original_offset]);
+                                html.Content(Original_tag[original_offset].ToString());
                                 original_offset++;
                                 if (original_offset > Original_tag.Length - 2)
                                 {
                                     break;
                                 }
                             }
-                            output.Append("</p>");
+                            html.Close(HtmlTag.p);
                         }
-                        output.Append("</div>");
+                        html.Close(HtmlTag.div);
                         original_offset++;
                     }
-                    output.Append("</div>");
+                    html.Close(HtmlTag.div);
                 }
 
                 if (Post_translational_modifications != null)
-                    output.Append($"<h3>Posttranslational Modifications</h3>\n<p>{Post_translational_modifications}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Posttranslational Modifications");
+                    html.OpenAndClose(HtmlTag.p, "", Post_translational_modifications);
+                }
 
                 if (Source_File != null)
-                    output.Append($"<h3>Source File</h3>\n<p>{Source_File}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Source File");
+                    html.OpenAndClose(HtmlTag.p, "", Source_File);
+                }
 
                 if (Fraction != null)
-                    output.Append($"<h3>Fraction</h3>\n<p>{Fraction}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Fraction");
+                    html.OpenAndClose(HtmlTag.p, "", Fraction);
+                }
 
                 if (Feature != null)
-                    output.Append($"<h3>Scan Feature</h3>\n<p>{Feature}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Scan Feature");
+                    html.OpenAndClose(HtmlTag.p, "", Feature);
+                }
 
                 if (DeNovoScore >= 0)
-                    output.Append($"<h3>De Novo Score</h3>\n<p>{DeNovoScore}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "De Novo Score");
+                    html.OpenAndClose(HtmlTag.p, "", DeNovoScore.ToString());
+                }
 
                 if (Confidence >= 0)
-                    output.Append($"<h3>Confidence score</h3>\n<p>{Confidence}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "ConfidenceScore");
+                    html.OpenAndClose(HtmlTag.p, "", Confidence.ToString());
+                }
 
                 if (Mass_over_charge >= 0)
-                    output.Append($"<h3>Mass Charge Ratio</h3>\n<p>{Mass_over_charge}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "m/z");
+                    html.OpenAndClose(HtmlTag.p, "", Mass_over_charge.ToString());
+                }
 
                 if (Mass >= 0)
-                    output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Mass");
+                    html.OpenAndClose(HtmlTag.p, "", Mass.ToString());
+                };
 
                 if (Charge >= 0)
-                    output.Append($"<h3>Charge</h3>\n<p>{Charge}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Charge");
+                    html.OpenAndClose(HtmlTag.p, "", Charge.ToString());
+                }
 
                 if (Retention_time >= 0)
-                    output.Append($"<h3>Retention Time</h3>\n<p>{Retention_time}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Retention Time");
+                    html.OpenAndClose(HtmlTag.p, "", Retention_time.ToString());
+                }
 
                 if (PredictedRetentionTime != null)
-                    output.Append($"<h3>Predicted Retention Time</h3>\n<p>{PredictedRetentionTime}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Predicted Retention Time");
+                    html.OpenAndClose(HtmlTag.p, "", PredictedRetentionTime.ToString());
+                }
 
                 if (Area >= 0)
-                    output.Append($"<h3>Area</h3>\n<p>{Area}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Area");
+                    html.OpenAndClose(HtmlTag.p, "", Area.ToString());
+                }
 
                 if (Parts_per_million >= 0)
-                    output.Append($"<h3>Parts Per Million</h3>\n<p>{Parts_per_million}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Parts Per Million");
+                    html.OpenAndClose(HtmlTag.p, "", Parts_per_million.ToString());
+                }
 
                 if (Fragmentation_mode != null)
-                    output.Append($"<h3>Fragmentation Mode</h3>\n<p>{Fragmentation_mode}</p>");
+                {
+                    html.OpenAndClose(HtmlTag.h3, "", "Fragmentation mode");
+                    html.OpenAndClose(HtmlTag.p, "", Fragmentation_mode);
+                }
 
-                output.Append(File.ToHTML());
+                html.Add(File.ToHTML());
 
-                return output.ToString();
+                return html;
             }
         }
 
@@ -552,22 +610,26 @@ namespace AssemblyNameSpace
             /// To generate a HTML representation of this metadata for use in the HTML report.
             /// </summary>
             /// <returns>A string containing the MetaData.</returns>
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                var output = new StringBuilder();
-                output.Append("<h2>Meta Information from Multiple reads</h2>");
-                output.Append($"<h3>Number of combined reads</h3><p>{Children.Count()}</p>");
-                output.Append($"<h3>Intensity</h3><p>{Intensity:G6}</p>");
-                output.Append($"<h3>TotalArea</h3><p>{TotalArea:G6}</p>");
-                output.Append($"<h3>PositionalScore</h3>{HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1)}");
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from Multiple reads");
+                html.OpenAndClose(HtmlTag.h3, "", "Number of combined reads");
+                html.OpenAndClose(HtmlTag.p, "", Children.Count().ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Intensity");
+                html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G6"));
+                html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
+                html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G6"));
+                html.OpenAndClose(HtmlTag.h3, "", "PositionalScore");
+                html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
                 foreach (var child in Children)
                 {
-                    output.Append(child.ToHTML());
+                    html.Add(child.ToHTML());
                 }
-                return output.ToString();
+                return html;
             }
 
-            public Combined(NameFilter filter, List<IMetaData> children) : base(null, "Combined", filter)
+            public Combined(NameFilter filter, List<IMetaData> children) : base(new FileIdentifier(), "Combined", filter)
             {
                 Children = children;
             }
@@ -641,20 +703,28 @@ namespace AssemblyNameSpace
             /// <summary>
             /// Returns Simple MetaData to HTML.
             /// </summary>
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                var output = new StringBuilder();
-                output.Append("<h2>Meta Information from Novor</h2>");
-                output.Append($"<h3>Fraction</h3>\n<p>{Fraction}</p>");
-                output.Append($"<h3>Scan</h3>\n<p>{Scan}</p>");
-                output.Append($"<h3>MZ</h3>\n<p>{MZ}</p>");
-                output.Append($"<h3>Z</h3>\n<p>{Z}</p>");
-                output.Append($"<h3>Score</h3>\n<p>{Score}</p>");
-                output.Append($"<h3>Mass</h3>\n<p>{Mass}</p>");
-                output.Append($"<h3>Error</h3>\n<p>{Error}</p>");
-                output.Append($"<h3>Original Sequence</h3>\n<p>{Sequence}</p>");
-                output.Append(File.ToHTML());
-                return output.ToString();
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from Novor");
+                html.OpenAndClose(HtmlTag.h3, "", "Fraction");
+                html.OpenAndClose(HtmlTag.p, "", Fraction);
+                html.OpenAndClose(HtmlTag.h3, "", "Scan");
+                html.OpenAndClose(HtmlTag.p, "", Scan.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "m/z");
+                html.OpenAndClose(HtmlTag.p, "", MZ.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Charge");
+                html.OpenAndClose(HtmlTag.p, "", Z.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Score");
+                html.OpenAndClose(HtmlTag.p, "", Score.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Mass");
+                html.OpenAndClose(HtmlTag.p, "", Mass.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Error");
+                html.OpenAndClose(HtmlTag.p, "", Error.ToString());
+                html.OpenAndClose(HtmlTag.h3, "", "Original Sequence");
+                html.OpenAndClose(HtmlTag.p, "", Sequence);
+                html.Add(File.ToHTML());
+                return html;
             }
         }
 
@@ -670,11 +740,12 @@ namespace AssemblyNameSpace
                 this.DBSequence = databaseSequence;
             }
 
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                var output = new StringBuilder(base.ToHTML());
-                output.Append($"<h3>DBSequence</h3>\n<p>{DBSequence}</p>");
-                return output.ToString();
+                var html = base.ToHTML();
+                html.OpenAndClose(HtmlTag.h3, "", "DBSequence");
+                html.OpenAndClose(HtmlTag.p, "", DBSequence);
+                return html;
             }
         }
 
@@ -695,12 +766,14 @@ namespace AssemblyNameSpace
                 this.Proteins = proteins;
             }
 
-            public override string ToHTML()
+            public override HtmlBuilder ToHTML()
             {
-                var output = new StringBuilder(base.ToHTML());
-                output.Append($"<h3>ID</h3>\n<p>{ID}</p>");
-                output.Append($"<h3>Proteins</h3>\n<p>{Proteins}</p>");
-                return output.ToString();
+                var html = base.ToHTML();
+                html.OpenAndClose(HtmlTag.h3, "", "ID");
+                html.OpenAndClose(HtmlTag.p, "", ID);
+                html.OpenAndClose(HtmlTag.h3, "", "Proteins");
+                html.OpenAndClose(HtmlTag.p, "", Proteins.ToString());
+                return html;
             }
         }
 
@@ -749,10 +822,16 @@ namespace AssemblyNameSpace
             /// To generate HTML for use in the metadata sidebar in the HTML report.
             /// </summary>
             /// <returns>A string containing the HTML.</returns>
-            public string ToHTML()
+            public HtmlBuilder ToHTML()
             {
-                if (!RefersToFile) return "";
-                return $"<h2>Originating File</h2><h3>Originating file identifier</h3>\n<p>{Name}</p>\n<h3>Originating file path</h3>\n<a href='file:///{path}' target='_blank'>{Path}</a>";
+                if (!RefersToFile) return new HtmlBuilder();
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Originating File");
+                html.OpenAndClose(HtmlTag.h3, "", "Originating file identifier");
+                html.OpenAndClose(HtmlTag.p, "", Name);
+                html.OpenAndClose(HtmlTag.h3, "", "Originating file path");
+                html.OpenAndClose(HtmlTag.a, $"href='file:///{path}' target='_blank'", Path);
+                return html;
             }
 
             public string Display()

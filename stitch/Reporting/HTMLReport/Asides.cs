@@ -21,24 +21,34 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
+        public static HtmlBuilder CreateReadAside((string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
         {
-            buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
-    <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
-    <h2>Sequence</h2>
-    <p class=""aside-seq"">{read.Sequence}</p>
-    <h2>Sequence Length</h2>
-    <p>{read.Sequence.Length}</p>
-    ");
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(read.MetaData)}' class='info-block read-info'");
+            html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(read.MetaData, true));
+            html.OpenAndClose(HtmlTag.h2, "", "Sequence");
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", read.Sequence);
+            html.OpenAndClose(HtmlTag.h2, "", "Sequence Length");
+            html.OpenAndClose(HtmlTag.p, "", read.Sequence.Length.ToString());
+
             if (Fragments != null && Fragments.ContainsKey(read.MetaData.EscapedIdentifier))
             {
                 foreach (var spectrum in Fragments[read.MetaData.EscapedIdentifier])
                 {
-                    buffer.Append(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
+                    html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
                 }
             }
-            buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup.ToString()));
-            buffer.Append("<table class='wide-table'><tr><th>Group</th><th>Segment</th><th>Template</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+            html.TagWithHelp(HtmlTag.h2, "Reverse Lookup", new HtmlBuilder(HTMLHelp.ReadLookup));
+            html.Open(HtmlTag.table, "class='wide-table'");
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.th, "", "Group");
+            html.OpenAndClose(HtmlTag.th, "", "Segment");
+            html.OpenAndClose(HtmlTag.th, "", "Template");
+            html.OpenAndClose(HtmlTag.th, "", "Location");
+            html.OpenAndClose(HtmlTag.th, "", "Score");
+            html.OpenAndClose(HtmlTag.th, "", "Unique");
+            html.Close(HtmlTag.tr);
+
             foreach (var group in segments)
             {
                 foreach (var segment in group.Item2)
@@ -49,16 +59,14 @@ namespace HTMLNameSpace
                         {
                             if (match.MetaData.Identifier == read.MetaData.Identifier)
                             {
-                                buffer.Append(
-$@"<tr>
-    <td class='center'>{group.Item1}</td>
-    <td class='center'>{segment.Name}</td>
-    <td class='center'>{GetAsideLink(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData))}</td>
-    <td class='center'>{match.StartTemplatePosition}</td>
-    <td class='center'>{match.Score}</td>
-    <td class='center'>{match.Unique}</td>
-</tr>"
-                                );
+                                html.Open(HtmlTag.tr);
+                                html.OpenAndClose(HtmlTag.td, "class='center'", group.Item1);
+                                html.OpenAndClose(HtmlTag.td, "class='center'", segment.Name);
+                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData)));
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.StartTemplatePosition.ToString());
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
+                                html.Close(HtmlTag.tr);
                             }
                         }
                     }
@@ -66,7 +74,14 @@ $@"<tr>
             }
             if (recombined != null)
             {
-                buffer.Append("</table><table class='wide-table'><tr><th>Recombined</th><th>Location</th><th>Score</th><th>Unique</th></tr>");
+                html.Close(HtmlTag.table);
+                html.Open(HtmlTag.table, "class='wide-table'");
+                html.Open(HtmlTag.tr);
+                html.OpenAndClose(HtmlTag.th, "", "Recombined");
+                html.OpenAndClose(HtmlTag.th, "", "Location");
+                html.OpenAndClose(HtmlTag.th, "", "Score");
+                html.OpenAndClose(HtmlTag.th, "", "Unique");
+                html.Close(HtmlTag.tr);
                 foreach (var segment in recombined)
                 {
                     foreach (var template in segment.Templates)
@@ -75,50 +90,57 @@ $@"<tr>
                         {
                             if (match.MetaData.Identifier == read.MetaData.Identifier)
                             {
-                                buffer.Append(
-$@"<tr>
-    <td class='center'>{GetAsideLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData))}</td>
-    <td class='center'>{match.StartTemplatePosition}</td>
-    <td class='center'>{match.Score}</td>
-    <td class='center'>{match.Unique}</td>
-</tr>"
-                                );
+                                html.Open(HtmlTag.tr);
+                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData)));
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.StartTemplatePosition.ToString());
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
+                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
+                                html.Close(HtmlTag.tr);
                             }
                         }
                     }
                 }
             }
 
-            buffer.Append($"</table>{read.MetaData.ToHTML()}</div>");
+            html.Close(HtmlTag.table);
+            html.Add(read.MetaData.ToHTML());
+            html.Close(HtmlTag.div);
+            return html;
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        public static void CreateTemplateAside(StringBuilder buffer, Template template, AsideType type, string AssetsFolderName, int totalReads)
+        public static HtmlBuilder CreateTemplateAside(Template template, AsideType type, string AssetsFolderName, int totalReads)
         {
+            var html = new HtmlBuilder();
             string id = GetAsideIdentifier(template.MetaData);
             string human_id = GetAsideIdentifier(template.MetaData, true);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
 
             var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
 
-            string meta = "";
-            if (template.MetaData != null && type == AsideType.Template)
-            {
-                meta = template.MetaData.ToHTML();
-            }
-
-            string based = "";
+            HtmlBuilder based = new HtmlBuilder();
             string title = "Segment";
             switch (type)
             {
                 case AsideType.RecombinedTemplate:
                     if (template.Recombination != null)
                     {
+                        var first = true;
                         var order = template.Recombination.Aggregate(
-                            "",
-                            (acc, seg) => acc + " → " + GetAsideLink(seg.MetaData, AsideType.Template, AssetsFolderName, location)
-                        ).Substring(3);
-                        based = $"<h2>Order</h2><p>{order}</p>";
+                            new HtmlBuilder(),
+                            (acc, seg) =>
+                            {
+                                if (first)
+                                {
+                                    acc.Content(" → ");
+                                    first = false;
+                                }
+                                acc.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName, location));
+                                return acc;
+                            }
+                        );
+                        based.OpenAndClose(HtmlTag.h2, "", "Order");
+                        based.OpenAndClose(HtmlTag.p, "", order);
                     }
                     title = "Recombined Template";
                     break;
@@ -126,45 +148,51 @@ $@"<tr>
                     break;
             }
 
+            html.Open(HtmlTag.div, $"id='{id} class='info-block template-info'");
+            html.OpenAndClose(HtmlTag.h1, "", title + " " + human_id);
+            html.TagWithHelp(HtmlTag.h2, "Consensus Sequence", new HtmlBuilder(HTMLHelp.ConsensusSequence.ToString()));
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(consensus_sequence));
+            html.Add(CreateAnnotatedSequence(human_id, template));
+            html.Add(SequenceConsensusOverview(template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
+            html.Open(HtmlTag.div, "class='doc-plot'");
+            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()));
+            html.Close(HtmlTag.div);
+            html.OpenAndClose(HtmlTag.h2, "", "Scores");
+            html.Open(HtmlTag.table, "class='wide-table'");
+            html.Open(HtmlTag.tr);
+            html.TagWithHelp(HtmlTag.th, "Length", new HtmlBuilder(HTMLHelp.TemplateLength.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HTMLHelp.TemplateScore.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HTMLHelp.TemplateMatches.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HTMLHelp.TemplateTotalArea.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HTMLHelp.TemplateUniqueScore.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HTMLHelp.TemplateUniqueMatches.ToString()), "small-cell");
+            html.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HTMLHelp.TemplateUniqueArea.ToString()), "small-cell");
+            html.Close(HtmlTag.tr);
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Sequence.Length.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Score.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count().ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueScore.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueMatches.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString());
+            html.Close(HtmlTag.tr);
+            html.Close(HtmlTag.table);
+            html.Add(based);
+            (var doc_html, var DepthOfCoverage) = CreateTemplateAlignment(template, id, location, AssetsFolderName);
+            html.Add(doc_html);
+            html.Add(CreateTemplateGraphs(template, DepthOfCoverage));
+            html.TagWithHelp(HtmlTag.h2, "Template Sequence", new HtmlBuilder(template.Recombination != null ? HTMLHelp.RecombinedSequence.ToString() : HTMLHelp.TemplateSequence.ToString()));
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(template.Sequence));
 
-            buffer.Append($@"<div id=""{id}"" class=""info-block template-info"">
-    <h1>{title} {human_id}</h1>
-    {CommonPieces.TagWithHelp("h2", "Consensus Sequence", HTMLHelp.ConsensusSequence.ToString())}
-    <p class='aside-seq'>{AminoAcid.ArrayToString(consensus_sequence)}</p>");
-            CreateAnnotatedSequence(buffer, human_id, template);
+            if (template.MetaData != null && type == AsideType.Template)
+                html.Add(template.MetaData.ToHTML());
 
-            SequenceConsensusOverview(buffer, template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview));
-            buffer.Append("<div class='doc-plot'>");
-            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()).ToString());
-            buffer.Append($@"</div>
-    <h2>Scores</h2>
-    <table class='wide-table'><tr>
-        {CommonPieces.TagWithHelp("th", "Length", HTMLHelp.TemplateLength.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Score", HTMLHelp.TemplateScore.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Matches", HTMLHelp.TemplateMatches.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Total Area", HTMLHelp.TemplateTotalArea.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Score", HTMLHelp.TemplateUniqueScore.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Matches", HTMLHelp.TemplateUniqueMatches.ToString(), "small-cell")}
-        {CommonPieces.TagWithHelp("th", "Unique Area", HTMLHelp.TemplateUniqueArea.ToString(), "small-cell")}
-    </tr><tr>
-        <td class='center'>{template.Sequence.Length}</td>
-        <td class='center'>{template.Score}</td>
-        <td class='center'>{template.Matches.Count()}</td>
-        <td class='center'>{template.TotalArea}</td>
-        <td class='center'>{template.UniqueScore}</td>
-        <td class='center'>{template.UniqueMatches}</td>
-        <td class='center'>{template.TotalUniqueArea}</td>
-    </tr></table>
-    {based}");
-            var DepthOfCoverage = CreateTemplateAlignment(buffer, template, id, location, AssetsFolderName);
-            CreateTemplateGraphs(buffer, template, DepthOfCoverage);
-            buffer.Append($@"{CommonPieces.TagWithHelp("h2", "Template Sequence", template.Recombination != null ? HTMLHelp.RecombinedSequence.ToString() : HTMLHelp.TemplateSequence.ToString())}
-    <p class=""aside-seq"">{AminoAcid.ArrayToString(template.Sequence)}</p>
-    {meta}
-</div>");
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static void CreateAnnotatedSequence(StringBuilder buffer, string id, Template template)
+        static HtmlBuilder CreateAnnotatedSequence(string id, Template template)
         {
             // Create an overview of the alignment from consensus with germline.
             // Also highlight differences and IMGT regions
@@ -251,55 +279,65 @@ $@"<tr>
             html.Content($"Consensus  {c}\nGermline   {g}\nDifference {d}");
             html.Close(HtmlTag.textarea);
             html.Close(HtmlTag.div);
-            buffer.Append(html.ToString());
+            return html;
         }
 
-        static void CreateTemplateGraphs(StringBuilder buffer, Template template, List<double> DepthOfCoverage)
+        static HtmlBuilder CreateTemplateGraphs(Template template, List<double> DepthOfCoverage)
         {
-            if (template.Matches.Count == 0) return;
-            buffer.Append("<h3>Graphs</h3><div class='template-graphs'><div class='doc-plot'>");
-            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage), new HtmlBuilder("Depth of Coverage (including gaps)")).ToString());
-            buffer.Append("</div><div class='doc-plot'>");
-            buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), new HtmlBuilder("Log10 Depth of Coverage (including gaps)")).ToString());
-            buffer.Append("</div>");
+            var html = new HtmlBuilder();
+            if (template.Matches.Count == 0) return html;
+            html.OpenAndClose(HtmlTag.h3, "", "Graphs");
+            html.Open(HtmlTag.div, "class='template-graphs'");
+            html.Open(HtmlTag.div, "class='doc-plot'");
+            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage), new HtmlBuilder("Depth of Coverage (including gaps)")));
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.div, "class='doc-plot'");
+            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), new HtmlBuilder("Log10 Depth of Coverage (including gaps)")));
+            html.Close(HtmlTag.div);
 
             if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
             {
                 // Histogram of Scores
-                buffer.Append("<div>");
-                buffer.Append(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution").ToString());
+                html.Open(HtmlTag.div);
+                html.Add(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution"));
 
                 // Histogram of Length On Template
-                buffer.Append("</div><div>");
-                buffer.Append(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution").ToString());
+                html.Close(HtmlTag.div);
+                html.Open(HtmlTag.div);
+                html.Add(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution"));
             }
             else
             {
                 // Histogram of Scores
-                buffer.Append("<div>");
-                buffer.Append(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList(), new HtmlBuilder("Score Distribution")).ToString());
+                html.Open(HtmlTag.div);
+                html.Add(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList(), new HtmlBuilder("Score Distribution")));
 
                 // Histogram of Length On Template
-                buffer.Append("</div><div>");
-                buffer.Append(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), new HtmlBuilder("Length on Template Distribution")).ToString());
+                html.Close(HtmlTag.div);
+                html.Open(HtmlTag.div);
+                html.Add(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), new HtmlBuilder("Length on Template Distribution")));
             }
 
             // Histogram of coverage, coverage per position excluding gaps
-            buffer.Append("</div><div>");
-            buffer.Append(HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), new HtmlBuilder("Coverage Distribution")).ToString());
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.div);
+            html.Add(HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), new HtmlBuilder("Coverage Distribution")));
 
-            buffer.Append("<i>Excludes gaps in reference to the template sequence</i></div></div>");
+            html.OpenAndClose(HtmlTag.i, "", "Excludes gaps in reference to the template sequence");
+            html.Close(HtmlTag.div);
+            html.Close(HtmlTag.div);
+            return html;
         }
 
-        static public List<double> CreateTemplateAlignment(StringBuilder buffer, Template template, string id, List<string> location, string AssetsFolderName)
+        static public (HtmlBuilder, List<double>) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName)
         {
             var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
+            var html = new HtmlBuilder();
 
             if (alignedSequences.Count == 0)
-                return new List<double>();
+                return (html, new List<double>());
 
-            var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='alignment'");
             html.OpenAndClose(HtmlTag.h2, "", "Alignment");
             html.UnsafeContent(CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment.ToString()));
@@ -535,8 +573,7 @@ $@"<tr>
             html.Content(data_buffer.ToString());
             html.Close(HtmlTag.textarea);
             html.Close(HtmlTag.div);
-            buffer.Append(html.ToString());
-            return depthOfCoverage;
+            return (html, depthOfCoverage);
         }
 
         static HtmlBuilder AlignBlock(string[] aligned, Template template, int block, int block_length, HashSet<string> placed_ids, char non_breaking_space, List<(int index, int position, int length)>[] positions, char gap_char, string AssetsFolderName, List<string> location, StringBuilder data_buffer)
@@ -830,7 +867,7 @@ $@"<tr>
             return html;
         }
 
-        static void SequenceConsensusOverview(StringBuilder buffer, Template template, string title = null, HtmlBuilder help = null)
+        static HtmlBuilder SequenceConsensusOverview(Template template, string title = null, HtmlBuilder help = null)
         {
             var consensus_sequence = template.CombinedSequence();
             var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
@@ -856,7 +893,7 @@ $@"<tr>
                     }
                 }
             }
-            buffer.Append(HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation()));
+            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation());
         }
     }
 }

@@ -12,6 +12,7 @@ using System.Reflection;
 using HTMLNameSpace;
 using static HTMLNameSpace.CommonPieces;
 using static AssemblyNameSpace.HelperFunctionality;
+using HtmlGenerator;
 
 namespace AssemblyNameSpace
 {
@@ -84,26 +85,27 @@ namespace AssemblyNameSpace
         {
             try
             {
-                var buffer = new StringBuilder();
-                var inner_buffer = new StringBuilder();
+                HtmlBuilder inner_html;
 
                 ReadMetaData.IMetaData metadata = new ReadMetaData.Simple(null, null);
                 switch (aside)
                 {
                     case AsideType.Read:
-                        HTMLAsides.CreateReadAside(inner_buffer, Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
+                        inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
                         metadata = Parameters.Input[index1].MetaData;
                         break;
                     case AsideType.Template:
                         var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                        HTMLAsides.CreateTemplateAside(inner_buffer, template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
+                        inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
                         metadata = template.MetaData;
                         break;
                     case AsideType.RecombinedTemplate:
                         var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                        HTMLAsides.CreateTemplateAside(inner_buffer, rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
+                        inner_html = HTMLAsides.CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
                         metadata = rTemplate.MetaData;
                         break;
+                    default:
+                        throw new InvalidEnumArgumentException("Tried to generated an aside page for a non existent type of aside. Please report this error.");
                 };
                 var location = new List<string>() { AssetsFolderName, GetAsideName(aside) + "s" };
                 var home_location = GetLinkToFolder(new List<string>(), location) + AssetsFolderName + ".html";
@@ -111,14 +113,18 @@ namespace AssemblyNameSpace
                 var link = GetLinkToFolder(location, new List<string>());
                 var full_path = Path.Join(Path.GetDirectoryName(FullAssetsFolderName), link) + id.Replace(':', '-') + ".html";
 
-                buffer.Append("<!DOCTYPE html>\n<html lang='en-GB'>");
-                buffer.Append(CreateHeader("Details " + id, location));
-                buffer.Append("<body class='details' onload='Setup()'>");
-                buffer.Append($"<a href='{home_location}' class='overview-link'>Overview</a><a href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'>Undefined</a>");
-                buffer.Append(inner_buffer.ToString());
-                buffer.Append("</body></html>");
+                var html = new HtmlBuilder();
+                html.UnsafeContent("<!DOCTYPE html>");
+                html.Open(HtmlTag.html, "lang='en-GB'");
+                html.UnsafeContent(CreateHeader("Details " + id, location));
+                html.Open(HtmlTag.body, "class='details' onload='Setup()'");
+                html.OpenAndClose(HtmlTag.a, $"href='{home_location}' class='overview-link'", "Overview");
+                html.OpenAndClose(HtmlTag.a, "href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'", "Undefined");
+                html.Add(inner_html);
+                html.Close(HtmlTag.body);
+                html.Close(HtmlTag.html);
 
-                SaveAndCreateDirectories(full_path, buffer.ToString());
+                SaveAndCreateDirectories(full_path, html.ToString());
             }
             catch (Exception e)
             {
