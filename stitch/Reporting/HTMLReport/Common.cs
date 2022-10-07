@@ -83,47 +83,6 @@ namespace HTMLNameSpace
             return string.Join("/", pieces.ToArray()) + "/";
         }
 
-        public enum CollapsibleState { Closed, Open };
-
-        static int collapsible_counter = 0;
-        /// <summary>
-        /// Create a collapsible region to be used as a main tab in the report.
-        /// </summary>
-        /// <param name="name">The name to display.</param>
-        /// <param name="content">The content.</param>
-        /// <param name="state">The state of the collapsible, default closed</param>
-        public static string Collapsible(string id, string name, string content, CollapsibleState state = CollapsibleState.Closed)
-        {
-            collapsible_counter++;
-            string cid = $"collapsible-{collapsible_counter}";
-            string check = state == CollapsibleState.Open ? " checked" : "";
-            return $@"<input type=""checkbox"" id=""{cid}""{check}/>
-<label for=""{cid}"">{name}</label>
-<div class=""collapsable"" id=""{id}""><div class='clear-fix'></div>{content}</div>";
-        }
-
-        /// <summary>
-        /// Create a collapsible region to be used as a main tab in the report.
-        /// </summary>
-        /// <param name="name">The name to display.</param>
-        /// <param name="content">The content.</param>
-        /// <param name="state">The state of the collapsible, default closed</param>
-        public static HtmlBuilder Collapsible(string id, string name, HtmlBuilder content, CollapsibleState state = CollapsibleState.Closed)
-        {
-            collapsible_counter++;
-            string cid = $"collapsible-{collapsible_counter}";
-            string check = state == CollapsibleState.Open ? " checked" : "";
-            var html = new HtmlBuilder();
-            html.Empty(HtmlTag.input, $"type='checkbox' id='{cid}'{check}");
-            html.OpenAndClose(HtmlTag.label, $"for='{cid}'", name);
-            html.Open(HtmlTag.div, "class='collapsable' id='{id}'");
-            html.OpenAndClose(HtmlTag.div, "class='clear-fix'");
-            html.Add(content);
-            html.Close(HtmlTag.div);
-
-            return html;
-        }
-
         /// <summary> Create a warning to use in the HTML report to show users that they need to look into something. </summary>
         /// <param name="title"> The title to of the warning. </param>
         /// <param name="content"> The content as raw HTML (so enclosed in &lt;p&gt; for normal text). </param>

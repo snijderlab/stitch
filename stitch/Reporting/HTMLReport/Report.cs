@@ -116,7 +116,7 @@ namespace AssemblyNameSpace
                 var html = new HtmlBuilder();
                 html.UnsafeContent("<!DOCTYPE html>");
                 html.Open(HtmlTag.html, "lang='en-GB'");
-                html.UnsafeContent(CreateHeader("Details " + id, location));
+                html.Add(CreateHeader("Details " + id, location));
                 html.Open(HtmlTag.body, "class='details' onload='Setup()'");
                 html.OpenAndClose(HtmlTag.a, $"href='{home_location}' class='overview-link'", "Overview");
                 html.OpenAndClose(HtmlTag.a, "href='#' id='back-button' class='overview-link' style='display:none;' onclick='GoBack()'", "Undefined");
@@ -133,7 +133,7 @@ namespace AssemblyNameSpace
             }
         }
 
-        void CreateCDROverview(string id, StringBuilder buffer, List<Segment> segments)
+        HtmlBuilder CreateCDROverview(string id, List<Segment> segments)
         {
             var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
             var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
@@ -213,7 +213,7 @@ namespace AssemblyNameSpace
                 }
             }
 
-            if (!found_cdr_region) return; // Do not create a collapsable segment if no CDR region could be found in the templates
+            if (!found_cdr_region) return new HtmlBuilder(); // Do not create a collapsable segment if no CDR region could be found in the templates
 
             string extend(string sequence, int size)
             {
@@ -257,35 +257,36 @@ namespace AssemblyNameSpace
                 }
             }
 
-            var inner_buffer = new StringBuilder();
-            inner_buffer.AppendLine("<p>All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.</p>");
+            var html = new HtmlBuilder();
+            html.OpenAndClose(HtmlTag.p, "", "All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.");
             if (cdr1_reads.Count == 0 && cdr2_reads.Count == 0 && cdr3_reads.Count == 0)
-                inner_buffer.AppendLine("<p>No CDR reads could be placed.</p>");
+                html.OpenAndClose(HtmlTag.p, "", "No CDR reads could be placed.");
             else
             {
-                inner_buffer.AppendLine("<div class='cdr-tables'>");
-                if (cdr1_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates));
-                if (cdr2_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates));
-                if (cdr3_reads.Count > 0) inner_buffer.Append(HTMLTables.CDRTable(cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates));
-                inner_buffer.AppendLine("</div>");
+                html.Open(HtmlTag.div, "class='cdr-tables'");
+                if (cdr1_reads.Count > 0) html.Add(HTMLTables.CDRTable(cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates));
+                if (cdr2_reads.Count > 0) html.Add(HTMLTables.CDRTable(cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates));
+                if (cdr3_reads.Count > 0) html.Add(HTMLTables.CDRTable(cdr3_reads, AssetsFolderName, "CDR3", Parameters.Input.Count, total_templates));
+                html.Close(HtmlTag.div);
             }
-
-            buffer.Append(CommonPieces.Collapsible(id, "CDR regions", inner_buffer.ToString()));
+            var outer = new HtmlBuilder();
+            outer.Collapsible(id, new HtmlBuilder("CDR regions"), html);
+            return outer;
         }
 
-        private string CreateHeader(string title, List<string> location)
+        private HtmlBuilder CreateHeader(string title, List<string> location)
         {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
             var assets_folder = link;
             if (Parameters.runVariables.LiveServer)
                 link = "http://localhost:5500/assets/";
-            return $@"<head>
-<meta charset=""utf-8"">
-<meta name=""viewport"" content=""width=device-width, initial-scale=1.0"">
-<link rel='icon' href='{assets_folder}favicon.ico' type='image/x-icon' />
-<title>{title} | Stitch</title>
-<style>
-@font-face {{
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.head);
+            html.Empty(HtmlTag.meta, "charset='utf-8'");
+            html.Empty(HtmlTag.meta, "name='viewport' content='width=device-width, initial-scale=1.0'");
+            html.Empty(HtmlTag.link, $"rel='icon' href='{assets_folder}favicon.ico' type='image/x-icon'");
+            html.OpenAndClose(HtmlTag.title, "", title + " | Stitch");
+            html.OpenAndClose(HtmlTag.style, "", $@"@font-face {{
   font-family: Roboto;
   src: url({link}Roboto-Regular.ttf);
   font-weight: normal;
@@ -304,17 +305,15 @@ namespace AssemblyNameSpace
   font-family: 'Roboto Mono';
   src: url({link}RobotoMono-Medium.ttf);
   font-weight: 500;
-}}
-</style>
-<script>
-assets_folder = '{AssetsFolderName}';
-</script>
-<script src='{link}script.js'></script>
-<link rel='stylesheet' href='{link}styles.css'>
-</head>";
+}}");
+            html.OpenAndClose(HtmlTag.script, "", $"assets_folder = '{AssetsFolderName}';");
+            html.OpenAndClose(HtmlTag.script, $"src='{link}script.js'", "");
+            html.Empty(HtmlTag.link, $"rel='stylesheet' href='{link}styles.css'");
+            html.Close(HtmlTag.head);
+            return html;
         }
 
-        private string BatchFileHTML()
+        private HtmlBuilder BatchFileHTML()
         {
             if (BatchFile != null)
             {
@@ -338,16 +337,17 @@ assets_folder = '{AssetsFolderName}';
                     return line;
                 }
 
-                var buffer = new StringBuilder();
+                var html = new HtmlBuilder();
                 var bf = BatchFile;
-                buffer.Append($"<pre class='source-code'><i>{bf.Filename}</i>\n");
-                foreach (var line in bf.Lines) buffer.AppendLine(Render(line.TrimEnd()));
-                buffer.Append("</pre>");
-                return buffer.ToString();
+                html.Open(HtmlTag.code);
+                html.OpenAndClose(HtmlTag.i, "", bf.Filename);
+                foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
+                html.Close(HtmlTag.code);
+                return html;
             }
             else
             {
-                return "<em>No BatchFile</em>";
+                return new HtmlBuilder(HtmlTag.em, "No BatchFile");
             }
         }
 
@@ -391,34 +391,34 @@ assets_folder = '{AssetsFolderName}';
             return buffer.ToString();
         }
 
-        private string CreateSegmentJoining(int group)
+        private HtmlBuilder CreateSegmentJoining(int group)
         {
-            var inner_buffer = new StringBuilder();
+            var html = new HtmlBuilder();
             foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
             {
                 var A = Parameters.Segments[group].Item2[set.Index - 1];
                 var B = Parameters.Segments[group].Item2[set.Index];
-                inner_buffer.Append($"<h2>{A.Name} * {B.Name}</h2>");
+                html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
                 var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3 + set.Score.Best.Position));
                 var seqB = AminoAcid.ArrayToString(set.SeqB.Take(3 + set.Score.Best.Position).ToArray());
-                inner_buffer.Append($"<pre class='seq'>...{seqA}\n      {seqB}...</pre>"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
-                inner_buffer.Append($"<p>Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}</p>");
+                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{A.Name}\n      {B.Name}"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                html.OpenAndClose(HtmlTag.p, "", $"Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}");
 
-                inner_buffer.Append(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HtmlGenerator.HtmlTag.p, HTMLHelp.SegmentJoining)).ToString());
+                html.Add(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HtmlGenerator.HtmlTag.p, HTMLHelp.SegmentJoining)));
             }
-            return inner_buffer.ToString();
+            return html;
         }
 
         private string CreateMain()
         {
-            var inner_buffer = new StringBuilder();
+            var inner_html = new HtmlBuilder();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
             if (Parameters.Segments != null)
                 for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
-                    var group_buffer = new StringBuilder();
+                    var group_html = new HtmlBuilder();
                     var id = Parameters.Segments[group].Item1.ToLower().Replace(' ', '-');
 
                     if (Parameters.RecombinedSegment.Count != 0)
@@ -426,26 +426,26 @@ assets_folder = '{AssetsFolderName}';
                         if (id == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        group_buffer.Append(Collapsible(id + "-recombination", "Recombination Table", HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                        group_html.Collapsible(id + "-recombination", new HtmlBuilder("Recombination Table"), HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true));
                         if (decoy.Count > 0)
-                            group_buffer.Append(Collapsible(id + "-recombination-decoy", "Recombination Decoy", HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true)));
+                            group_html.Collapsible(id + "-recombination-decoy", new HtmlBuilder("Recombination Decoy"), HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true));
 
                         if (Parameters.RecombinedSegment[group].SegmentJoiningScores.Count > 0)
-                            group_buffer.Append(Collapsible(id + "-segment-joining", "Segment joining", CreateSegmentJoining(group)));
+                            group_html.Collapsible(id + "-segment-joining", new HtmlBuilder("Segment joining"), CreateSegmentJoining(group));
                     }
 
-                    group_buffer.Append(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
+                    group_html.Add(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
 
-                    CreateCDROverview(id + "-cdr", group_buffer, Parameters.Segments[group].Item2);
+                    group_html.Add(CreateCDROverview(id + "-cdr", Parameters.Segments[group].Item2));
 
                     if (Parameters.Segments.Count == 1)
-                        inner_buffer.Append(group_buffer);
+                        inner_html.Add(group_html);
                     else
-                        inner_buffer.Append(Collapsible(id, Parameters.Segments[group].Item1, group_buffer.ToString()));
+                        inner_html.Collapsible(id, new HtmlBuilder(Parameters.Segments[group].Item1), group_html);
                 }
 
-            inner_buffer.Append(Collapsible("reads", "Reads Table", HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName)));
-            inner_buffer.Append(Collapsible("batchfile", "Batch File", BatchFileHTML()));
+            inner_html.Collapsible("reads", new HtmlBuilder("Reads Table"), HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName));
+            inner_html.Collapsible("batchfile", new HtmlBuilder("Batch File"), BatchFileHTML());
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
 
@@ -459,7 +459,7 @@ assets_folder = '{AssetsFolderName}';
 
  {GetWarnings()}
  <div class='overview'>{CreateOverview()}</div>
- {inner_buffer}
+ {inner_html}
  {Docs()}
 
 <div class=""footer"">
@@ -522,30 +522,33 @@ assets_folder = '{AssetsFolderName}';
             return buffer.ToString();
         }
 
-        string Docs()
+        HtmlBuilder Docs()
         {
-            var docs = new StringBuilder();
-            docs.Append(
-                @"<p>Answers to common questions can be found here. If anything is unclear, or you miss any features please reach
-                 out to the authors, all information can be found on the <a href='https://www.github.com/snijderlab/stitch' target='_blank'>repository</a>.</p>");
-            docs.Append(Collapsible("docs-export-svg", "Export Graphs to Vector Graphics",
-            @$"<p>If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this print
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.p, "");
+            html.Content("Answers to common questions can be found here. If anything is unclear, or you miss any features please reach out to the authors, all information can be found on the ");
+            html.OpenAndClose(HtmlTag.a, "href='https://www.github.com/snijderlab/stitch' target='_blank'", "repository");
+            html.Content(".");
+            html.Close(HtmlTag.p);
+            var export = new HtmlBuilder();
+            export.OpenAndClose(HtmlTag.p, "", @"If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this print
              the page to a pdf file and save the generated file. These files can be imported in most vector graphics editors.
               It is best to turn on the background graphics and turn off any headers, besides this setting the margins smaller
-              and using landscape or portrait could enhance the results. See the below picture for the options.</p>
-              <span onclick='window.print()' class='info-link' style='font-size:120%;margin-bottom:1em;'>Or click here to print</span>
-              <img src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome
-               with some extra options that could be beneficial.'/>"
-            ));
-            docs.Append(Collapsible("docs-share", "Sharing this report",
-            @$"<p>To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
+              and using landscape or portrait could enhance the results. See the below picture for the options.");
+            export.OpenAndClose(HtmlTag.span, "onclick='window.print()' class='info-link' style='font-size:120%;margin-bottom:1em;'", "Or click here to print");
+            export.Empty(HtmlTag.img, "src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome with some extra options that could be beneficial.'");
+            html.Collapsible("docs-export-svg", new HtmlBuilder("Export Graphs to Vector Graphics"), export);
+            html.Collapsible("docs-share", new HtmlBuilder("Sharing this report"),
+            new HtmlBuilder(HtmlTag.p, @$"To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
              be zipped and sent to anyone having a modern browser. This is quite easy to do in Windows as you can select the file
              (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
              making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder` in Windows 10
              or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all 
-             interactivity as provided by the report.</p>"
+             interactivity as provided by the report."
             ));
-            return Collapsible("docs", "Documentation", docs.ToString());
+            var outer = new HtmlBuilder();
+            outer.Collapsible("docs", new HtmlBuilder("Documentation"), html);
+            return outer;
         }
 
         void CopyAssets()

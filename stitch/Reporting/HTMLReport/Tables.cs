@@ -58,7 +58,7 @@ namespace HTMLNameSpace
             for (var i = 0; i < segments.Count; i++)
             {
                 var item = segments[i];
-                html.Add(Collapsible(item.Name, $"Segment {item.Name}", CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true)));
+                html.Collapsible(item.Name, new HtmlBuilder($"Segment {item.Name}"), CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true));
             }
 
             return html;
@@ -89,7 +89,7 @@ namespace HTMLNameSpace
                 html.Add(TableHeader(templates, total_reads));
 
             if (tree != null)
-                html.Add(Collapsible(name + "-tree", "Tree", HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), CollapsibleState.Open));
+                html.Collapsible(name + "-tree", new HtmlBuilder("Tree"), HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), HtmlBuilder.CollapsibleState.Open);
 
             var table_buffer = new HtmlBuilder();
             table_buffer.Open(HtmlTag.table, $"id='{table_id}' class='wide-table'");
@@ -159,8 +159,8 @@ namespace HTMLNameSpace
             }
 
             table_buffer.Close(HtmlTag.table);
-            html.Add(Collapsible(name + "-table", "Table", table_buffer, templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
-            html.Add(Collapsible(name + "-docs", "Depth Of Coverage Overview", doc_buffer, templates.Count < 5 ? CollapsibleState.Open : CollapsibleState.Closed));
+            html.Collapsible(name + "-table", new HtmlBuilder("Table"), table_buffer, templates.Count < 5 ? HtmlBuilder.CollapsibleState.Open : HtmlBuilder.CollapsibleState.Closed);
+            html.Collapsible(name + "-docs", new HtmlBuilder("Depth Of Coverage Overview"), doc_buffer, templates.Count < 5 ? HtmlBuilder.CollapsibleState.Open : HtmlBuilder.CollapsibleState.Closed);
             CultureInfo.CurrentCulture = culture;
 
             return html;
