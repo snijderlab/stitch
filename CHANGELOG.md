@@ -1,6 +1,14 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
-# v1.2.0
+# v1.2.1
+_2022-10-07_
+
+* Fixed an issue were the html assets (styling and scripts) were excluded from the deploy
+* Improved handling of multiple identical reads (#188)
+* Fixed small issues in the Html structure
+* Made improvements to the spectrum viewer (#186)
+
+# v1.2.0 (Yanked)
 _2022-10-06_
 
 * Added support for raw files viewing in the HTML reports, see the manual for how to work with this, for now only works with Peaks data and with Thermo raw files (#97, #186)
