@@ -732,7 +732,7 @@ namespace AssemblyNameSpace
                     if (!reads.HasFailed()) Input.Data.Raw.Add(reads.ReturnOrFail());
                 }
 
-                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp).GetValue(result);
+                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp, name_filter).GetValue(result);
 
                 return result;
             }

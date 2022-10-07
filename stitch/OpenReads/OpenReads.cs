@@ -318,15 +318,7 @@ namespace AssemblyNameSpace
 
                 if (meta.Confidence >= peaks_parameters.CutoffALC)
                 {
-                    if (!reads.Where(x => x.Item1 == meta.Cleaned_sequence).Any())
-                    {
-                        reads.Add((meta.Cleaned_sequence, meta));
-                    }
-                    else
-                    {
-                        int pos = reads.FindIndex(x => x.Item1 == meta.Cleaned_sequence);
-                        ((ReadMetaData.Peaks)reads[pos].Item2).Other_scans.Add(meta.ScanID);
-                    }
+                    reads.Add((meta.Cleaned_sequence, meta));
                 }
                 // Find local patches of high enough confidence
                 else if (peaks_parameters.LocalCutoffALC != -1 && peaks_parameters.MinLengthPatch != -1)
@@ -534,16 +526,16 @@ namespace AssemblyNameSpace
         /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
         /// </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads, Alphabet alp)
+        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads, Alphabet alp, NameFilter filter)
         {
-            return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads }, alp);
+            return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads }, alp, filter);
         }
 
         /// <summary>
         /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
         /// </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads, Alphabet alp)
+        public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads, Alphabet alp, NameFilter filter)
         {
             var filtered = new Dictionary<string, ReadMetaData.IMetaData>();
             var out_either = new ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>>();
@@ -554,8 +546,14 @@ namespace AssemblyNameSpace
                 {
                     if (filtered.ContainsKey(read.Sequence))
                     {
-                        filtered[read.Sequence].Intensity += read.MetaData.Intensity;
-                        // TODO: Trace the dual origins
+                        if (filtered[read.Sequence] is ReadMetaData.Combined c)
+                        {
+                            c.Children.Add(read.MetaData);
+                        }
+                        else
+                        {
+                            filtered[read.Sequence] = new ReadMetaData.Combined(filter, new List<ReadMetaData.IMetaData> { filtered[read.Sequence], read.MetaData });
+                        }
                     }
                     else
                     {

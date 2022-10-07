@@ -111,14 +111,10 @@ namespace AssemblyNameSpace
                 }
 
                 // Raw data
-                Dictionary<string, AnnotatedSpectrumMatch[]> fragments = null;
+                Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
-                    fragments = Fragmentation.GetSpectra(Input.Select(item =>
-                    {
-                        if (item.Item2 is ReadMetaData.Peaks p) return p;
-                        else return null;
-                    }).Where(i => i != null), this.RawDataDirectory);
+                    fragments = Fragmentation.GetSpectra(Input.Select(item => item.Item2).Where(i => i != null), this.RawDataDirectory);
                     progressBar.Update();
                 }
 

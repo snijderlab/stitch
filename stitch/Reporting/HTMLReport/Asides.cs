@@ -21,7 +21,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, AnnotatedSpectrumMatch[]> Fragments)
+        public static void CreateReadAside(StringBuilder buffer, (string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
         {
             buffer.Append($@"<div id=""{GetAsideIdentifier(read.MetaData)}"" class=""info-block read-info"">
     <h1>Read {GetAsideIdentifier(read.MetaData, true)}</h1>
@@ -30,14 +30,11 @@ namespace HTMLNameSpace
     <h2>Sequence Length</h2>
     <p>{read.Sequence.Length}</p>
     ");
-            if (read.MetaData is ReadMetaData.Peaks p)
+            if (Fragments != null && Fragments.ContainsKey(read.MetaData.EscapedIdentifier))
             {
-                if (Fragments != null && Fragments.ContainsKey(p.EscapedIdentifier))
+                foreach (var spectrum in Fragments[read.MetaData.EscapedIdentifier])
                 {
-                    foreach (var spectrum in Fragments[p.EscapedIdentifier])
-                    {
-                        buffer.Append(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
-                    }
+                    buffer.Append(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
                 }
             }
             buffer.Append(CommonPieces.TagWithHelp("h2", "Reverse Lookup", HTMLHelp.ReadLookup.ToString()));

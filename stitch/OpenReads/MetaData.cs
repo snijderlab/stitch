@@ -63,6 +63,11 @@ namespace AssemblyNameSpace
             public double TotalArea = 0;
 
             /// <summary>
+            /// Contains the information needed to find this metadata in a raw file.
+            /// </summary>
+            public virtual List<(string RawFile, string Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, string, string)>();
+
+            /// <summary>
             /// To generate a HTML representation of this metadata for use in the HTML report.
             /// </summary>
             /// <returns>A string containing the MetaData.</returns>
@@ -216,6 +221,14 @@ namespace AssemblyNameSpace
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
+            public override List<(string, string, string)> ScanNumbers
+            {
+                get
+                {
+                    return new List<(string, string, string)> { (Source_File, ScanID, Original_tag) };
+                }
+            }
+
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
 
@@ -225,9 +238,6 @@ namespace AssemblyNameSpace
 
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
-
-            /// <summary> Other scans giving the same sequence. </summary>
-            public List<string> Other_scans = null;
 
             /// <summary>
             /// To create a new metadata instance with this metadata.
@@ -361,9 +371,6 @@ namespace AssemblyNameSpace
                 if (pf.mode >= 0 && CheckFieldExists(pf.mode))
                     peaks.Fragmentation_mode = fields[pf.mode].Text;
 
-                // Initialize other scans list
-                peaks.Other_scans = new List<string>();
-
                 // Calculate intensity
                 if (peaks.Area != 0)
                 {
@@ -393,7 +400,6 @@ namespace AssemblyNameSpace
                 meta.Mass = this.Mass;
                 meta.Mass_over_charge = this.Mass_over_charge;
                 meta.Original_tag = new string(this.Original_tag);
-                meta.Other_scans = new List<string>(this.Other_scans);
                 meta.Parts_per_million = this.Parts_per_million;
                 meta.PredictedRetentionTime = new string(this.PredictedRetentionTime);
                 meta.Retention_time = this.Retention_time;
@@ -486,12 +492,84 @@ namespace AssemblyNameSpace
                 if (Fragmentation_mode != null)
                     output.Append($"<h3>Fragmentation Mode</h3>\n<p>{Fragmentation_mode}</p>");
 
-                if (Other_scans.Count > 0)
-                    output.Append($"<h3>Also found in scans</h3>\n<p>{Other_scans.Aggregate("", (a, b) => (a + " " + b))}</p>");
-
                 output.Append(File.ToHTML());
 
                 return output.ToString();
+            }
+        }
+
+        public class Combined : IMetaData
+        {
+
+            /// <summary>
+            /// Returns the positional score for this read, so for every position the confidence.
+            /// In this case it is defined as the average positional score for all children reads.
+            /// </summary>
+            public override double[] PositionalScore
+            {
+                get
+                {
+                    var scores = Children.Select(c => c.PositionalScore).Aggregate(new List<(int, double)>(), (acc, l) =>
+                    {
+                        if (acc.Count < l.Length)
+                        {
+                            acc.AddRange(Enumerable.Repeat((0, 0.0), l.Length - acc.Count));
+                        }
+                        for (int i = 0; i < l.Length; i++)
+                        {
+                            acc[i] = (acc[i].Item1 + 1, acc[i].Item2 + l[i]);
+                        }
+                        return acc;
+                    });
+                    var output = new double[scores.Count];
+                    for (int i = 0; i < scores.Count; i++)
+                    {
+                        output[i] = scores[i].Item2 / scores[i].Item1;
+                    }
+                    return output;
+                }
+            }
+
+            /// <summary>
+            /// Returns the overall intensity for this read. It is used to determine which read to 
+            /// choose if multiple reads exist at the same spot.
+            /// </summary>
+            public override double Intensity { get => Children.Average(m => m.Intensity); }
+
+            /// <summary>
+            /// Contains the total area as measured by mass spectrometry to be able to report this back to the user 
+            /// and help him/her get a better picture of the validity of the data.
+            /// </summary>
+            public new double TotalArea { get => Children.Sum(m => m.TotalArea); }
+            public override List<(string RawFile, string Scan, string OriginalTag)> ScanNumbers
+            {
+                get => Children.SelectMany(c => c.ScanNumbers).ToList();
+            }
+
+            public List<IMetaData> Children = new List<IMetaData>();
+
+            /// <summary>
+            /// To generate a HTML representation of this metadata for use in the HTML report.
+            /// </summary>
+            /// <returns>A string containing the MetaData.</returns>
+            public override string ToHTML()
+            {
+                var output = new StringBuilder();
+                output.Append("<h2>Meta Information from Multiple reads</h2>");
+                output.Append($"<h3>Number of combined reads</h3><p>{Children.Count()}</p>");
+                output.Append($"<h3>Intensity</h3><p>{Intensity:G6}</p>");
+                output.Append($"<h3>TotalArea</h3><p>{TotalArea:G6}</p>");
+                output.Append($"<h3>PositionalScore</h3>{HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1)}");
+                foreach (var child in Children)
+                {
+                    output.Append(child.ToHTML());
+                }
+                return output.ToString();
+            }
+
+            public Combined(NameFilter filter, List<IMetaData> children) : base(null, "Combined", filter)
+            {
+                Children = children;
             }
         }
 
