@@ -351,9 +351,9 @@ namespace AssemblyNameSpace
             }
         }
 
-        private string CreateOverview()
+        private HtmlBuilder CreateOverview()
         {
-            var buffer = new StringBuilder();
+            var html = new HtmlBuilder();
             if (Parameters.RecombinedSegment.Count != 0)
             {
                 for (int group = 0; group < Parameters.Segments.Count && group < Parameters.RecombinedSegment.Count; group++)
@@ -361,34 +361,40 @@ namespace AssemblyNameSpace
                     if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
                     var template = Parameters.RecombinedSegment[group].Templates[0];
                     var (seq, doc) = template.ConsensusSequence();
-                    buffer.Append($"<h2><a href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'>{Parameters.Segments[group].Item1}</a></h2><p class='aside-seq'>{AminoAcid.ArrayToString(seq)}</p><div class='doc-plot'>");
-                    buffer.Append(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()).ToString());
-                    buffer.Append("</div><h3>Best scoring segments</h3><p>");
+                    html.Open(HtmlTag.h2);
+                    html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'", Parameters.Segments[group].Item1);
+                    html.Close(HtmlTag.h2);
+                    html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
+                    html.Open(HtmlTag.div, "class='doc-plot'");
+                    html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
+                    html.Close(HtmlTag.div);
+                    html.OpenAndClose(HtmlTag.h3, "", "Best scoring segments");
+                    html.Open(HtmlTag.p);
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
                         if (seg.Templates.Count > 0)
-                            buffer.Append(GetAsideLink(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
+                            html.Add(GetAsideLinkHtml(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
                     }
-                    buffer.Append("</p>");
+                    html.Close(HtmlTag.p);
                 }
             }
             else
             {
                 for (int group = 0; group < Parameters.Segments.Count; group++)
                 {
-                    buffer.Append($"<h2>{Parameters.Segments[group].Item1}</h2>");
+                    html.OpenAndClose(HtmlTag.h2, "", Parameters.Segments[group].Item1);
 
                     for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
                     {
                         var seg = Parameters.Segments[group].Item2[segment];
-                        buffer.Append($"<h3>{seg.Name}</h3>");
-                        buffer.Append(HTMLTables.TableHeader(seg.Templates, Parameters.Input.Count));
+                        html.OpenAndClose(HtmlTag.h3, "", seg.Name);
+                        html.Add(HTMLTables.TableHeader(seg.Templates, Parameters.Input.Count));
                     }
                 }
             }
-            return buffer.ToString();
+            return html;
         }
 
         private HtmlBuilder CreateSegmentJoining(int group)
@@ -409,7 +415,7 @@ namespace AssemblyNameSpace
             return html;
         }
 
-        private string CreateMain()
+        private HtmlBuilder CreateMain()
         {
             var inner_html = new HtmlBuilder();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
@@ -448,34 +454,41 @@ namespace AssemblyNameSpace
             inner_html.Collapsible("batchfile", new HtmlBuilder("Batch File"), BatchFileHTML());
 
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
-
-            var html = $@"<!DOCTYPE html>
-<html lang='en-GB'>
-{CreateHeader(Parameters.Runname, new List<string>())}
-<body onload=""Setup()"">
-<div class=""report"">
-<h1>Stitch Interactive Report Run: {Parameters.Runname}</h1>
-<p>Generated at {timestamp}</p>
-
- {GetWarnings()}
- <div class='overview'>{CreateOverview()}</div>
- {inner_html}
- {Docs()}
-
-<div class=""footer"">
-    <p>Made by the Snijderlab in 2019-2022, the project is open source at <a href='https://www.github.com/snijderlab/stitch' target='_blank'>github.com/snijderlab/stitch</a> licensed under the <a href='https://choosealicense.com/licenses/mit/' target='_blank'>MIT license</a>.</p>
-    <p>Version: <span style='color:var(--color-dark);user-select:all'>{version}</span> please mention this in any bug reports.</p>
-</div>
-
-</div>
-</div>
-</body>";
+            var html = new HtmlBuilder();
+            html.UnsafeContent("<!DOCTYPE html>");
+            html.Open(HtmlTag.html, "lang='en-GB'");
+            html.Add(CreateHeader(Parameters.Runname, new List<string>()));
+            html.Open(HtmlTag.body, "onload='Setup()'");
+            html.Open(HtmlTag.div, "class='report'");
+            html.OpenAndClose(HtmlTag.h1, "", "Stitch Interactive Report Run: " + Parameters.Runname);
+            html.OpenAndClose(HtmlTag.p, "", "Generated at " + timestamp);
+            html.Add(GetWarnings());
+            html.OpenAndClose(HtmlTag.div, "class='overview'", CreateOverview());
+            html.Add(inner_html);
+            html.Add(Docs());
+            html.Open(HtmlTag.footer);
+            html.Open(HtmlTag.p);
+            html.Content("Made by the Snijderlab in 2019-2022, the project is open source at ");
+            html.OpenAndClose(HtmlTag.a, "href='https://www.github.com/snijderlab/stitch' target='_blank'", "github.com/snijderlab/stitch");
+            html.Content(" licensed under the ");
+            html.OpenAndClose(HtmlTag.a, "href='https://choosealicense.com/licenses/mit/' target='_blank'", "MIT license");
+            html.Content(".");
+            html.Close(HtmlTag.p);
+            html.Open(HtmlTag.p);
+            html.Content("Version: ");
+            html.OpenAndClose(HtmlTag.span, "class='version'", version);
+            html.Content(" please mention this in any bug reports.");
+            html.Close(HtmlTag.p);
+            html.Close(HtmlTag.footer);
+            html.Close(HtmlTag.div);
+            html.Close(HtmlTag.body);
+            html.Close(HtmlTag.html);
             return html;
         }
 
-        string GetWarnings()
+        HtmlBuilder GetWarnings()
         {
-            var buffer = new StringBuilder();
+            var html = new HtmlBuilder();
             if (Parameters.Segments != null)
             {
                 // High decoy scores
@@ -500,13 +513,13 @@ namespace AssemblyNameSpace
                                 var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
 
                                 if (decoy > normal * 0.5)
-                                    buffer.AppendLine(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                                    html.UnsafeContent(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
                             }
                         }
                     }
                 }
                 if (max_decoy_score > max_normal_score * 0.5)
-                    buffer.AppendLine(CommonPieces.TemplateHighDecoyWarning());
+                    html.UnsafeContent(CommonPieces.TemplateHighDecoyWarning());
 
                 // Segment joining
                 if (Parameters.RecombinedSegment.Count != 0)
@@ -516,10 +529,10 @@ namespace AssemblyNameSpace
                             {
                                 var A = Parameters.Segments[group].Item2[set.Index - 1];
                                 var B = Parameters.Segments[group].Item2[set.Index];
-                                buffer.AppendLine(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
+                                html.UnsafeContent(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
                             }
             }
-            return buffer.ToString();
+            return html;
         }
 
         HtmlBuilder Docs()
@@ -601,7 +614,7 @@ namespace AssemblyNameSpace
             {
                 var culture = System.Globalization.CultureInfo.CurrentCulture;
                 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
-                var html = CreateMain();
+                var html = CreateMain().ToString();
                 CreateAsides();
 
                 stopwatch.Stop();
