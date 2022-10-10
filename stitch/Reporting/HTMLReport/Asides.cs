@@ -130,11 +130,8 @@ namespace HTMLNameSpace
                             new HtmlBuilder(),
                             (acc, seg) =>
                             {
-                                if (first)
-                                {
-                                    acc.Content(" → ");
-                                    first = false;
-                                }
+                                if (first) first = false;
+                                else acc.Content(" → ");
                                 acc.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName, location));
                                 return acc;
                             }
@@ -153,10 +150,15 @@ namespace HTMLNameSpace
             html.TagWithHelp(HtmlTag.h2, "Consensus Sequence", new HtmlBuilder(HTMLHelp.ConsensusSequence.ToString()));
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(consensus_sequence));
             html.Add(CreateAnnotatedSequence(human_id, template));
+
             html.Add(SequenceConsensusOverview(template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
+
+            html.Add(SequenceAmbiguityOverview(template));
+
             html.Open(HtmlTag.div, "class='doc-plot'");
             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()));
             html.Close(HtmlTag.div);
+
             html.OpenAndClose(HtmlTag.h2, "", "Scores");
             html.Open(HtmlTag.table, "class='wide-table'");
             html.Open(HtmlTag.tr);
@@ -178,7 +180,9 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString());
             html.Close(HtmlTag.tr);
             html.Close(HtmlTag.table);
+
             html.Add(based);
+
             (var doc_html, var DepthOfCoverage) = CreateTemplateAlignment(template, id, location, AssetsFolderName);
             html.Add(doc_html);
             html.Add(CreateTemplateGraphs(template, DepthOfCoverage));
@@ -894,6 +898,98 @@ namespace HTMLNameSpace
                 }
             }
             return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation());
+        }
+
+        static HtmlBuilder SequenceAmbiguityOverview(Template template)
+        {
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.div, "class='ambiguity-overview'");
+            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder());
+
+            var ambiguous = template.SequenceAmbiguityAnalysis();
+
+            if (ambiguous.Length == 0 || ambiguous.All(n => n.Support.Count == 0))
+            {
+                html.OpenAndClose(HtmlTag.i, "", "No ambiguous positions for analysis.");
+            }
+            else
+            {
+                var max_support = ambiguous.SelectMany(n => n.Support.Values).Max();
+
+                // Find the position of each aminoacid node by determining the total support for that AA 
+                // at that position and sorting on highest at the top.
+                var placed = new List<(AminoAcid, double)>[ambiguous.Length];
+                for (int i = 0; i < placed.Length; i++) placed[i] = new();
+
+                void Update(int i, AminoAcid key, double value)
+                {
+                    var pos = placed[i].FindIndex(p => p.Item1 == key);
+                    if (pos == -1) placed[i].Add((key, value));
+                    else placed[i][pos] = (key, placed[i][pos].Item2 + value);
+                }
+
+                for (int i = 0; i < ambiguous.Length - 1; i++)
+                {
+                    foreach (var set in ambiguous[i].Support)
+                    {
+                        Update(i, set.Key.Item1, set.Value);
+                        Update(i + 1, set.Key.Item2, set.Value);
+                    }
+                }
+
+                for (int i = 0; i < placed.Length; i++) placed[i].Sort((a, b) => b.Item2.CompareTo(a.Item2));
+                var max_nodes = placed.Select(n => n.Count).Max();
+
+                // Now generate the Html + Svg
+                //html.CopyData("Ambiguity Overview (???)");
+                var svg = new SvgBuilder();
+                const int width_option = 80; // Horizontal size of an AA option
+                const int height_option = 20; // Vertical size of an AA option
+                const int pad = 10; // Padding in front of and after everything in the X axis
+                const int text_pad = 12; // Approximate size of text (cube)
+                const int clearing = 2; // Extra clearing in front of options
+                var w = (placed.Length - 1) * width_option + width_option / 2 + pad * 2;
+                var h = (max_nodes + 1) * height_option;
+                svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px'");
+                svg.Open(SvgTag.defs);
+                svg.Open(SvgTag.marker, "id='marker' viewBox='0 0 10 10' refX='1' refY='5' markerUnits='strokeWidth' markerWidth='1.5' markerHeight='1.5' orient='auto'");
+                svg.OpenAndClose(SvgTag.path, "d='M 0 0 L 10 5 L 0 10 z'");
+                svg.Close(SvgTag.marker);
+                svg.Close(SvgTag.defs);
+
+                for (var node_pos = 0; node_pos < placed.Length; node_pos++)
+                {
+                    svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{height_option}px' class='position'", ambiguous[node_pos].Position.ToString());
+                    var max_local = ambiguous[node_pos].Support.Count > 0 ? ambiguous[node_pos].Support.Values.Max() : 0;
+
+                    for (var option_pos = 0; option_pos < placed[node_pos].Count; option_pos++)
+                    {
+                        svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{(option_pos + 2) * height_option}px' class='option'", placed[node_pos][option_pos].Item1.Character.ToString());
+                    }
+
+                    foreach (var set in ambiguous[node_pos].Support)
+                    {
+                        var y1 = placed[node_pos].FindIndex(p => p.Item1 == set.Key.Item1);
+                        var y2 = placed[node_pos + 1].FindIndex(p => p.Item1 == set.Key.Item2);
+                        svg.OpenAndClose(SvgTag.line, $"x1={pad + node_pos * width_option + text_pad}px y1={(y1 + 2) * height_option - text_pad / 2}px x2={pad + (node_pos + 1) * width_option - clearing}px y2={(y2 + 2) * height_option - text_pad / 2}px class='support-arrow' style='--support-global:{set.Value / max_support};--support-local:{set.Value / max_local}'");
+                    }
+                }
+                svg.OpenAndClose(SvgTag.line, $"x1='0px' y1='{height_option + 4}px' x2='{w}px' y2='{height_option + 4}px' class='baseline'");
+                svg.Close(SvgTag.svg);
+
+                html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
+                html.OpenAndClose(HtmlTag.p, "", "Determine stroke width:");
+                html.Empty(HtmlTag.input, "type='checkbox' id='ambiguity-stroke-selector'");
+                html.Open(HtmlTag.label, "for='ambiguity-stroke-selector'");
+                html.OpenAndClose(HtmlTag.span, "", "Local");
+                html.OpenAndClose(HtmlTag.span, "", "Global");
+                html.Close(HtmlTag.label);
+                html.Add(svg);
+                html.Close(HtmlTag.div);
+            }
+
+            html.Close(HtmlTag.div);
+            return html;
         }
     }
 }

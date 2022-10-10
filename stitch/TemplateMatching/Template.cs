@@ -620,6 +620,79 @@ namespace AssemblyNameSpace
             ConsensusSequenceAnnotationCache = annotation.ToArray();
             return ConsensusSequenceAnnotationCache;
         }
+
+        /// <summary>
+        /// Find the ambiguous positions in this sequence an the support for the connections between these positions in the placed reads.
+        /// Only searches for support one node at a time.
+        /// </summary>
+        /// <returns>A list of AmbiguityNodes containing the Position and Support for the connection to the next node.</returns>
+        AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
+        public AmbiguityNode[] SequenceAmbiguityAnalysis()
+        {
+            if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
+            var consensus = this.CombinedSequence();
+            AmbiguityNode[] ambiguous;
+            try
+            {
+                ambiguous = consensus.Select((position, index) =>
+                {
+                    if (position.AminoAcids.Values.Max() < 0.75 * position.AminoAcids.Values.Sum())
+                    {
+                        return index;
+                    }
+                    else
+                    {
+                        return -1;
+                    }
+                }).Where(p => p != -1).Select(i => new AmbiguityNode(i)).ToArray();
+            }
+            catch (System.InvalidOperationException)
+            {
+                return new AmbiguityNode[0]; // For some stupid reason the .ToArray() throws an exception when no elements are present, while an empty array is totally valid.
+            }
+
+            for (int i = 0; i < ambiguous.Length - 1; i++)
+            {
+                var position = ambiguous[i].Position;
+                var next_position = ambiguous[i + 1].Position;
+
+                foreach (var peptide in this.Matches)
+                {
+                    var this_aa = peptide.GetAtTemplateIndex(position);
+                    var next_aa = peptide.GetAtTemplateIndex(next_position);
+                    if ((this_aa != null && next_aa != null))
+                        ambiguous[i].UpdateSupport(this_aa.Value, next_aa.Value, peptide.MetaData.Intensity);
+                }
+            }
+
+            SequenceAmbiguityAnalysisCache = ambiguous;
+            return SequenceAmbiguityAnalysisCache;
+        }
+
+        public struct AmbiguityNode
+        {
+            public int Position;
+            public Dictionary<(AminoAcid, AminoAcid), double> Support;
+
+            public AmbiguityNode(int position)
+            {
+                Position = position;
+                Support = new();
+            }
+
+            public void UpdateSupport(AminoAcid here, AminoAcid next, double Intensity)
+            {
+                var key = (here, next);
+                if (Support.ContainsKey(key))
+                {
+                    Support[key] += Intensity;
+                }
+                else
+                {
+                    Support[key] = Intensity;
+                }
+            }
+        }
     }
 
     /// <summary>

@@ -314,6 +314,40 @@ namespace AssemblyNameSpace
             return output;
         }
 
+        /// <summary>
+        /// Get the aminoacid of the query sequence at the given template sequence position.
+        /// </summary>
+        /// <param name="templatePosition">The position to get the AminoAcid from.</param>
+        /// <returns>The AminoAcid or null if it could not be found.</returns>
+        public AminoAcid? GetAtTemplateIndex(int templatePosition)
+        {
+            if (templatePosition < this.StartTemplatePosition || templatePosition > this.StartTemplatePosition + this.LengthOnTemplate) return null;
+
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+
+            foreach (var piece in this.Alignment)
+            {
+                if (piece is SequenceMatch.Match ma)
+                {
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                    if (pos > templatePosition) return this.QuerySequence[q_pos - (pos - templatePosition)];
+                }
+                else if (piece is SequenceMatch.GapInTemplate)
+                {
+                    pos += piece.Length;
+                    if (pos > templatePosition) return this.QuerySequence[q_pos];
+                }
+                else if (piece is SequenceMatch.GapInQuery)
+                {
+                    q_pos += piece.Length;
+                }
+            }
+
+            return null;
+        }
+
 
         /// <summary>
         /// Represents a piece of a match between two sequences
