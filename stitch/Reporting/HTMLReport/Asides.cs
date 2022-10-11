@@ -335,235 +335,68 @@ namespace HTMLNameSpace
 
         static public (HtmlBuilder, List<double>) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName)
         {
-            var alignedSequences = template.AlignedSequences();
+            //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
+            const char gap_char = '-';
 
-            if (alignedSequences.Count == 0)
+            if (template.Matches.Count == 0)
                 return (html, new List<double>());
 
             html.Open(HtmlTag.div, "class='alignment'");
             html.OpenAndClose(HtmlTag.h2, "", "Alignment");
-            html.UnsafeContent(CommonPieces.CopyData("Reads Alignment (FASTA)", HTMLHelp.ReadsAlignment.ToString()));
+            html.CopyData("Reads Alignment (FASTA)", new HtmlBuilder(HTMLHelp.ReadsAlignment));
 
-            // Loop over aligned
-            // For each position: (creates List<string[]>, per position, per sequence + template_sequence)
-            // Convert AA to string (fill in with gap_char)
-            // Convert Gap to string (get max length, align all gaps, fill in with spaces)
-
-            // Convert to lines: (creates List<string>)
-            // Combine horizontally
-            var total_sequences = alignedSequences[0].Sequences.Length;
-            var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[total_sequences + 1];
-            const char gap_char = '-';
-            const char non_breaking_space = '\u00A0'; // &nbsp; in html
             var depthOfCoverage = new List<double>();
             var data_buffer = new StringBuilder();
+            var consensus = template.ConsensusSequence();
 
-            for (int i = 0; i < total_sequences + 1; i++)
+            var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
+            // Fill in the gaps
+            //for (int i = 0; i < aligned[0].Length; i++)
+            //{
+            //    if (aligned[0][i] == gap_char)
+            //    {
+            //        if (i == 0)
+            //        {
+            //            annotatedSequence.Insert(i, annotatedSequence[i]);
+            //        }
+            //        else
+            //        {
+            //            if (annotatedSequence[i - 1] == Annotation.None || annotatedSequence[i] == Annotation.None)
+            //                annotatedSequence.Insert(i, Annotation.None);
+            //            else if (annotatedSequence[i - 1] != annotatedSequence[i])
+            //                annotatedSequence.Insert(i, Annotation.None);
+            //            else
+            //                annotatedSequence.Insert(i, annotatedSequence[i]);
+            //        }
+            //    }
+            //}
+
+            data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{AminoAcid.ArrayToString(consensus.Item1).Replace(gap_char, '.')}");
+
+            html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({consensus.Item1.Count}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
+            html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{consensus.Item1.Count}'", AminoAcid.ArrayToString(consensus.Item1));
+            var localMatches = template.Matches.ToList();
+
+
+
+
+            var lines = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>[alignedSequences.Count + 1];
+
+
+
+            //localMatches.Sort((a, b) => b.QuerySequence.Length.CompareTo(a.QuerySequence.Length));
+
+            foreach (var read in aligned)
             {
-                lines[i] = new List<(string Sequence, int Index, int SequencePosition, AsideType Type)>();
+                html.OpenAndClose(
+                    HtmlTag.a,
+                    $"href='{CommonPieces.GetAsideRawLink(read.MetaData, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{read.StartTemplatePosition};grid-column-end:{read.StartTemplatePosition + read.LengthOnTemplate};'",
+                    AminoAcid.ArrayToString(read.QuerySequence));
             }
 
-            for (int template_pos = 0; template_pos < alignedSequences.Count; template_pos++)
-            {
-                var (Sequences, Gaps) = alignedSequences[template_pos];
-                lines[0].Add((template.Sequence[template_pos].ToString(), -1, -1, AsideType.Read));
-                double depth = 0;
-
-                // Add the aligned amino acid
-                for (int i = 0; i < Sequences.Length; i++)
-                {
-                    int index = Sequences[i].SequencePosition;
-                    depth += Sequences[i].CoverageDepth;
-
-                    if (index == -1)
-                    {
-                        lines[i + 1].Add((gap_char.ToString(), -1, -1, AsideType.Read));
-                    }
-                    else if (index == 0)
-                    {
-                        lines[i + 1].Add((non_breaking_space.ToString(), -1, -1, AsideType.Read));
-                    }
-                    else
-                    {
-                        var type = AsideType.Read;
-                        var idx = Sequences[i].MatchIndex;
-
-                        lines[i + 1].Add((template.Matches[Sequences[i].MatchIndex].QuerySequence[index - 1].ToString(), idx, index - 1, type));
-                    }
-                }
-
-                depthOfCoverage.Add(depth);
-
-                // Add the gap
-                // TODO: Unaligned for now: the gaps are not aligned to each other, this could make it more good looking
-                int max_length = 0;
-                // Get the max length of the gaps 
-                for (int i = 0; i < Gaps.Length; i++)
-                {
-                    if (Gaps[i].Gap != null && Gaps[i].Gap.ToString().Length > max_length)
-                    {
-                        max_length = Gaps[i].Gap.ToString().Length;
-                    }
-                }
-                // Add gap to the template
-                lines[0].Add((new string(gap_char, max_length), -1, -1, AsideType.Read));
-
-                var depthGap = new List<double[]>();
-                // Add gap to the lines
-                for (int i = 0; i < Gaps.Length; i++)
-                {
-                    string seq;
-                    if (Gaps[i].Gap == null)
-                    {
-                        seq = "";
-                        depthGap.Add(Enumerable.Repeat(0.0, max_length).ToArray());
-                    }
-                    else
-                    {
-                        seq = Gaps[i].Gap.ToString();
-                        var d = new double[max_length];
-                        Gaps[i].CoverageDepth.CopyTo(d, max_length - Gaps[i].CoverageDepth.Length);
-                        depthGap.Add(d);
-                    }
-
-                    char pad_char = non_breaking_space;
-                    if (Gaps[i].InSequence) pad_char = gap_char;
-
-                    var index = Gaps[i].ContigID == -1 ? -1 : Gaps[i].MatchIndex;
-
-                    var type = AsideType.Read;
-                    var idx = index;
-
-                    lines[i + 1].Add((seq.PadRight(max_length, pad_char), idx, Sequences[i].SequencePosition - 1, type));
-                }
-                var depthGapCombined = new double[max_length];
-                foreach (var d in depthGap)
-                {
-                    depthGapCombined = depthGapCombined.ElementwiseAdd(d);
-                }
-                depthOfCoverage.AddRange(depthGapCombined.Select(a => (double)a));
-            }
-
-            // The aligned reads, any space between, leading, or trailing the reads is filled with non_breaking_spaces, while gaps are indicated by the gap_char ('-')
-            var aligned = new string[alignedSequences[0].Sequences.Length + 1];
-            var types = new List<AsideType>[alignedSequences[0].Sequences.Length + 1];
-
-            for (int i = 0; i < alignedSequences[0].Sequences.Length + 1; i++)
-            {
-                StringBuilder sb = new();
-                var typ = new List<AsideType>();
-
-                foreach ((var text, _, _, var type) in lines[i])
-                {
-                    sb.Append(text);
-                    typ.AddRange(Enumerable.Repeat(type, text.Length));
-                }
-
-                types[i] = typ;
-                aligned[i] = sb.ToString();
-            }
-
-            html.Open(HtmlTag.div, $"class='reads-alignment' style='--max-value:{Math.Max(depthOfCoverage.Max(), 1)}'");
-
-            html.Add(OverHang(id, aligned, template, true));
-
-            data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{aligned[0].Replace(gap_char, '.')}");
-
-            // Chop it up, add numbers etc
-            const int block_length = 5;
-
-            if (aligned.Length > 0)
-            {
-                // Create a position based lookup list for the annotated sequence
-                var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
-
-                // Fill in the gaps
-                for (int i = 0; i < aligned[0].Length; i++)
-                {
-                    if (aligned[0][i] == gap_char)
-                    {
-                        if (i == 0)
-                        {
-                            annotatedSequence.Insert(i, annotatedSequence[i]);
-                        }
-                        else
-                        {
-                            if (annotatedSequence[i - 1] == Annotation.None || annotatedSequence[i] == Annotation.None)
-                                annotatedSequence.Insert(i, Annotation.None);
-                            else if (annotatedSequence[i - 1] != annotatedSequence[i])
-                                annotatedSequence.Insert(i, Annotation.None);
-                            else
-                                annotatedSequence.Insert(i, annotatedSequence[i]);
-                        }
-                    }
-                }
-
-
-                int aligned_index = 0;
-                int aligned_length = 0;
-                for (int block = 0; block * block_length < aligned[0].Length; block++)
-                {
-                    // Get the right id's to generate the right links
-                    while (aligned_length < block * block_length && aligned_index + 1 < lines[0].Count)
-                    {
-                        aligned_length += lines[0][aligned_index].Sequence.Length;
-                        aligned_index++;
-                    }
-
-                    var positions = new List<(int index, int position, int length)>[aligned.Length];
-
-                    for (int i = 1; i < aligned.Length; i++)
-                    {
-                        int index = lines[i][aligned_index].Index;
-                        int position = lines[i][aligned_index].SequencePosition;
-                        int additional_length = 0;
-                        int additional_index = 1;
-                        positions[i] = new List<(int index, int position, int length)>();
-
-                        while (aligned_length + additional_length < (block + 1) * block_length && aligned_index + additional_index < lines[0].Count)
-                        {
-                            int this_index = lines[i][aligned_index + additional_index].Index;
-                            int this_position = lines[i][aligned_index + additional_index].SequencePosition;
-
-                            if (index == -1)
-                            {
-                                index = this_index;
-                                position = this_position;
-                            }
-                            else if (this_index != -1 && this_index != index)
-                            {
-                                positions[i].Add((index, position, additional_length));
-                                index = this_index;
-                                position = this_position;
-                                break;
-                            }
-
-                            additional_length += lines[0][aligned_index + additional_index].Sequence.Length;
-                            additional_index++;
-                        }
-
-                        if (index >= 0)
-                            positions[i].Add((index, position, block_length));
-                    }
-
-
-                    html.Open(HtmlTag.div, $"class='align-block'{TemplateAlignmentAnnotation(annotatedSequence, block, block_length)}");
-                    html.Open(HtmlTag.div, "class='coverage-depth-wrapper'");
-
-                    for (int i = block * block_length; i < block * block_length + Math.Min(block_length, depthOfCoverage.Count - block * block_length); i++)
-                    {
-                        html.OpenAndClose(HtmlTag.span, $"class='coverage-depth-bar' style='--value:{depthOfCoverage[i]}'", "");
-                    }
-                    html.Close(HtmlTag.div);
-
-                    html.Add(AlignBlock(aligned, template, block, block_length, placed_ids, non_breaking_space, positions, gap_char, AssetsFolderName, location, data_buffer));
-                    html.Close(HtmlTag.div);
-                }
-            }
-
-            html.Add(OverHang(id, aligned, template, false));
+            html.Close(HtmlTag.div);
 
             // Index menus
             html.Open(HtmlTag.div, "id='index-menus'");
@@ -572,10 +405,7 @@ namespace HTMLNameSpace
                 html.Add(AlignmentDetails(match, template));
             }
             html.Close(HtmlTag.div);
-            html.Close(HtmlTag.div);
-            html.Open(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'");
-            html.Content(data_buffer.ToString());
-            html.Close(HtmlTag.textarea);
+            html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close(HtmlTag.div);
             return (html, depthOfCoverage);
         }
@@ -733,10 +563,8 @@ namespace HTMLNameSpace
         /// Create the background colour annotation for the reads alignment blocks.
         /// </summary>
         /// <param name="annotated">The annotation, a list of all Types for each position as finally aligned.</param>
-        /// <param name="block">The selected block.</param>
-        /// <param name="block_length">The selected block length.</param>
         /// <returns>The colour as a style element to directly put in a HTML element.</returns>
-        static string TemplateAlignmentAnnotation(List<Annotation> annotated, int block, int block_length)
+        static string TemplateAlignmentAnnotation(List<Annotation> annotated)
         {
             string Color(Annotation Type)
             {
@@ -759,24 +587,21 @@ namespace HTMLNameSpace
             }
             string Point(uint point)
             {
-                return Math.Round((double)point / block_length * 100).ToString() + "%";
+                return Math.Round((double)point / annotated.Count() * 100).ToString() + "%";
             }
             if (annotated == null) return "";
             var annotatedSequence = annotated.ToArray();
-            var localLength = Math.Min(block_length, annotatedSequence.Length - block * block_length);
-            if (localLength < 1) return "";
-            var annotation = annotatedSequence.SubArray(block * block_length, localLength);
-            var grouped = new List<(Annotation, uint)>() { (annotation[0], 1) };
-            for (int i = 1; i < localLength; i++)
+            var grouped = new List<(Annotation, uint)>() { (annotated[0], 1) };
+            for (int i = 1; i < annotated.Count; i++)
             {
                 var last = grouped.Count - 1;
-                if (annotation[i] == grouped[last].Item1)
+                if (annotated[i] == grouped[last].Item1)
                 {
                     grouped[last] = (grouped[last].Item1, grouped[last].Item2 + 1);
                 }
                 else
                 {
-                    grouped.Add((annotation[i], 1));
+                    grouped.Add((annotated[i], 1));
                 }
             }
             if (grouped[0] == (Annotation.None, 5))
@@ -785,18 +610,18 @@ namespace HTMLNameSpace
             }
             else if (grouped[0].Item2 == 5)
             {
-                return " style='background-color:" + Color(grouped[0].Item1) + "'"; // Switch color based on type
+                return "background-color:" + Color(grouped[0].Item1) + ""; // Switch color based on type
             }
             else
             {
-                var output = " style='background:linear-gradient(to right";
+                var output = "background:linear-gradient(to right";
                 uint len = 0;
                 foreach (var piece in grouped)
                 {
                     output += ", " + Color(piece.Item1) + " " + Point(len) + ", " + Color(piece.Item1) + " " + Point(len + piece.Item2);
                     len += piece.Item2;
                 }
-                return output + ");'";
+                return output + ";";
             }
         }
 
