@@ -9,7 +9,7 @@ using System.Collections.Generic;
 using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
 
-namespace AssemblyTestNameSpace
+namespace StitchTest
 {
     [TestClass]
     public class HTMLReport_Test

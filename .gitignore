@@ -19,8 +19,8 @@ _site
 .vs/*
 .vs
 .profiler
-results/*
-tests/batchfiles/results/*
+results
+tests/results
 all_addmatch_cseq.txt
 textual.md
 benchmark-output.json

@@ -8,7 +8,7 @@ using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
 using static AssemblyNameSpace.SequenceMatch;
 
-namespace AssemblyTestNameSpace
+namespace StitchTest
 {
     [TestClass]
     public class SmithWaterman_Test

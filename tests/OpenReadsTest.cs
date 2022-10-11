@@ -8,7 +8,7 @@ using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
 using System.Text.RegularExpressions;
 
-namespace AssemblyTestNameSpace
+namespace StitchTest
 {
     [TestClass]
     public class OpenReads_Test

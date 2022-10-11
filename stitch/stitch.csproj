@@ -7,7 +7,6 @@
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
     <Optimize>false</Optimize>
-    <RuntimeIdentifier>win-x64</RuntimeIdentifier>
     <Version>1.2.1</Version>
   </PropertyGroup>
 

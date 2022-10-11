@@ -51,7 +51,7 @@ X,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,-4
 
     Segments->
         Segment->
-            Path      : ../../../datasets/herceptin_sequence.fasta
+            Path      : ../../datasets/herceptin_sequence.fasta
             Name      : Herceptin Sequence
         <-
     <-

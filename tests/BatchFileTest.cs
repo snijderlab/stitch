@@ -7,7 +7,7 @@ using System.Collections.Generic;
 using AssemblyNameSpace;
 using AssemblyNameSpace.RunParameters;
 
-namespace BatchFilesTestNameSpace
+namespace StitchTest
 {
     [TestClass]
     public class BatchFile_Test
@@ -15,21 +15,21 @@ namespace BatchFilesTestNameSpace
         /// <summary>
         /// All batchfiles given as examples should be valid
         /// </summary>
-        [TestMethod]
-        public void TestPublicExamples()
+        [DataTestMethod]
+        [DataRow("basic.txt")]
+        [DataRow("monoclonal.txt")]
+        [DataRow("polyclonal.txt")]
+        public void TestPublicExamples(string file)
         {
-            Console.WriteLine($"Root folder: {Path.GetFullPath(Globals.Root)}");
-            foreach (var file in Directory.GetFiles(Globals.Root + "batchfiles"))
+            try
             {
-                try
-                {
-                    AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
-                }
-                catch
-                {
-                    Console.WriteLine($"At file {file}");
-                    throw;
-                }
+                AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new RunVariables());
+            }
+            catch (Exception e)
+            {
+                AssemblyNameSpace.InputNameSpace.ErrorMessage.PrintException(e);
+                Console.WriteLine($"At file {file}");
+                throw;
             }
         }
 
@@ -40,7 +40,7 @@ namespace BatchFilesTestNameSpace
         public void TestSmallExamples()
         {
             Console.WriteLine($"Root folder: {Path.GetFullPath(Globals.Root)}");
-            foreach (var file in Directory.GetFiles(Globals.Root + "tests/batchfiles/test_files"))
+            foreach (var file in Directory.GetFiles(Globals.Root + "tests/test_files"))
             {
                 try
                 {
