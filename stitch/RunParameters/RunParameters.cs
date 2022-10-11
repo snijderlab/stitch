@@ -288,6 +288,11 @@ namespace AssemblyNameSpace
             public bool ForceGermlineIsoleucine = true;
 
             /// <summary>
+            /// The threshold which determines if a position is seen as ambiguous. Saved as fraction.
+            /// </summary>
+            public double AmbiguityThreshold = 0.75;
+
+            /// <summary>
             /// The templates themselves. Grouped by their template group.
             /// </summary>
             public List<(String Name, List<SegmentValue> Segments)> Segments = new List<(String, List<SegmentValue>)>();

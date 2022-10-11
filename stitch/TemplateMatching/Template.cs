@@ -626,17 +626,17 @@ namespace AssemblyNameSpace
         /// Only searches for support one node at a time.
         /// </summary>
         /// <returns>A list of AmbiguityNodes containing the Position and Support for the connection to the next node.</returns>
-        AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
-        public AmbiguityNode[] SequenceAmbiguityAnalysis()
+        (double, AmbiguityNode[]) SequenceAmbiguityAnalysisCache = (-1, null);
+        public AmbiguityNode[] SequenceAmbiguityAnalysis(double threshold)
         {
-            if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
+            if (SequenceAmbiguityAnalysisCache.Item1 == threshold) return SequenceAmbiguityAnalysisCache.Item2;
             var consensus = this.CombinedSequence();
             AmbiguityNode[] ambiguous;
             try
             {
                 ambiguous = consensus.Select((position, index) =>
                 {
-                    if (position.AminoAcids.Values.Max() < 0.75 * position.AminoAcids.Values.Sum())
+                    if (position.AminoAcids.Values.Max() < threshold * position.AminoAcids.Values.Sum())
                     {
                         return index;
                     }
@@ -665,8 +665,8 @@ namespace AssemblyNameSpace
                 }
             }
 
-            SequenceAmbiguityAnalysisCache = ambiguous;
-            return SequenceAmbiguityAnalysisCache;
+            SequenceAmbiguityAnalysisCache = (threshold, ambiguous);
+            return ambiguous;
         }
 
         public struct AmbiguityNode

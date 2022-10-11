@@ -3,7 +3,7 @@ Template-based assembly of proteomics short reads for de novo antibody sequencin
 
 ## Getting started
 
-There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#running-with-dotnet)). To use these first download the latest package, found on the [releases page](https://github.com/snijderlab/stitch/releases). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#building)). To use these first download the latest package, found on the [releases page](https://github.com/snijderlab/stitch/releases). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
 
 Windows:
 ```
@@ -51,8 +51,8 @@ dotnet run --project stitch <path to batchfile>
 It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `.\assets`.
 
 ```
-mklink /J stitch\bin\debug\net6.0\win-x64\assets\ assets\
-mklink /J stitch\bin\debug\net6.0\win-x64\images\ images\
+mklink /J stitch\bin\debug\net6.0\assets\ assets\
+mklink /J stitch\bin\debug\net6.0\images\ images\
 ```
 
 To generate a single executable run:

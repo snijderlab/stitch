@@ -4,14 +4,14 @@ namespace AssemblyNameSpace
     public class RunVariables
     {
         public readonly bool AutomaticallyOpen;
-        public readonly bool LiveServer;
+        public readonly string LiveServer;
         public readonly List<string> ExpectedResult;
         public RunVariables()
         {
             AutomaticallyOpen = false;
             ExpectedResult = new List<string>();
         }
-        public RunVariables(bool open, bool live, List<string> expectedResult)
+        public RunVariables(bool open, string live, List<string> expectedResult)
         {
             AutomaticallyOpen = open;
             LiveServer = live;

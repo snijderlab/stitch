@@ -240,7 +240,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null)
+        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null)
         {
             const double threshold = 0.05;
             const int height = 35;
@@ -260,7 +260,8 @@ namespace HTMLNameSpace
             for (int i = 0; i < diversity.Count; i++)
             {
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}'");
+                var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? " ambiguous" : "";
+                html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'");
 
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();

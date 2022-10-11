@@ -27,7 +27,8 @@ namespace AssemblyNameSpace
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
+        public readonly double AmbiguityThreshold;
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments, double ambiguityThreshold)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();
@@ -36,6 +37,7 @@ namespace AssemblyNameSpace
             runVariables = variables;
             Runname = runname;
             Fragments = fragments;
+            AmbiguityThreshold = ambiguityThreshold;
         }
     }
     /// <summary>

@@ -14,8 +14,9 @@ Input ->
 <-
 
 TemplateMatching ->
-    EnforceUnique: True
-    CutoffScore          : 10
+    EnforceUnique      : True
+    CutoffScore        : 10
+    AmbiguityThreshold : 0.9
 
     Alphabet ->
         Path            : ../alphabets/blosum62_X1.csv

@@ -79,7 +79,7 @@ namespace AssemblyNameSpace
                         version_specified = true;
                         break;
                     case "maxcores":
-                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).GetValue(outEither);
+                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).RestrictRange(0, int.MaxValue, "0..", pair.ValueRange).GetValue(outEither);
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -358,6 +358,11 @@ namespace AssemblyNameSpace
             fail.Messages.AddRange(Messages);
             return Value;
         }
+        public bool TryGetValue(out T output)
+        {
+            output = this.Value;
+            return !this.HasFailed();
+        }
         public void AddMessage(ErrorMessage failMessage)
         {
             Messages.Add(failMessage);
@@ -568,13 +573,7 @@ namespace AssemblyNameSpace
                                             novor_settings.Separator = setting.GetValue().First();
                                         break;
                                     case "cutoff":
-                                        var value = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
-                                        if (value < 0)
-                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Cutoff range", "The minimal value for the Novor cutoff is 0."));
-                                        else if (value > 100)
-                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Cutoff range", "The maximal value for the Novor cutoff is 100."));
-                                        else
-                                            novor_settings.Cutoff = (uint)value;
+                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
@@ -746,7 +745,10 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            break;
+                        case "ambiguitythreshold":
+                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, 1.0, "0..1", setting.ValueRange).GetValue(outEither);
                             break;
                         case "segments":
                             if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -794,7 +796,7 @@ namespace AssemblyNameSpace
                             output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").GetValue(outEither);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', and 'ForceGermlineIsoleucine'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', 'AmbiguityThreshold', and 'ForceGermlineIsoleucine'"));
                             break;
                     }
                 }
@@ -826,7 +828,7 @@ namespace AssemblyNameSpace
                     switch (setting.Name)
                     {
                         case "n":
-                            output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "order":
                             if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -836,7 +838,7 @@ namespace AssemblyNameSpace
                                     order.Add(group);
                             break;
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -927,7 +929,7 @@ namespace AssemblyNameSpace
                                         f_settings.Path = setting.GetValue();
                                         break;
                                     case "minimalscore":
-                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "outputtype":
                                         switch (setting.GetValue().ToLower())
@@ -1041,10 +1043,10 @@ namespace AssemblyNameSpace
                             asettings.Name = setting.GetValue();
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "gapextendpenalty":
-                            asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
@@ -1201,7 +1203,7 @@ namespace AssemblyNameSpace
                             tsettings.Name = setting.GetValue();
                             break;
                         case "cutoffscore":
-                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
                             break;
                         case "alphabet":
@@ -1351,13 +1353,13 @@ namespace AssemblyNameSpace
                 switch (name)
                 {
                     case "cutoffalc":
-                        parameters.CutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        parameters.CutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        parameters.LocalCutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                         break;
                     case "minlengthpatch":
-                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).GetValue(outEither);
+                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                         break;
                     default:
                         outEither.Value = (parameters, false);
@@ -1382,6 +1384,19 @@ namespace AssemblyNameSpace
                         break;
                 }
                 return output;
+            }
+            public static ParseResult<T> RestrictRange<T>(this ParseResult<T> value, T min, T max, string range, FileRange position) where T : IComparable<T>
+            {
+                T v;
+                if (value.TryGetValue(out v))
+                {
+                    if (v.CompareTo(min) < 0)
+                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was below the minimal value. The valid range is [{range}]"));
+                    else if (v.CompareTo(max) > 0)
+                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was above the maximal value. The valid range is [{range}]"));
+                }
+
+                return value;
             }
             public static ParseResult<string> GetFullPath(KeyValue setting)
             {

@@ -4,6 +4,7 @@
         "aethiopicus",
         "AEYFQH",
         "alph",
+        "ambiguitythreshold",
         "aminoacids",
         "anatinus",
         "asettings",
@@ -94,6 +95,7 @@
         "INTERNALFRAGMENT",
         "isoforms",
         "Isoleucine",
+        "jproteome",
         "KAOSPJPJ",
         "Kklksadjoijdlkjaslkdj",
         "klist",
@@ -192,5 +194,6 @@
         "YWYFDL",
         "YYYYYGMDV"
     ],
-    "editor.minimap.renderCharacters": false
+    "editor.minimap.renderCharacters": false,
+    "liveServer.settings.port": 5501
 }

@@ -109,7 +109,7 @@ namespace HTMLNameSpace
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        public static HtmlBuilder CreateTemplateAside(Template template, AsideType type, string AssetsFolderName, int totalReads)
+        public static HtmlBuilder CreateTemplateAside(Template template, AsideType type, string AssetsFolderName, int totalReads, double ambiguity_threshold)
         {
             var html = new HtmlBuilder();
             string id = GetAsideIdentifier(template.MetaData);
@@ -151,9 +151,9 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(consensus_sequence));
             html.Add(CreateAnnotatedSequence(human_id, template));
 
-            html.Add(SequenceConsensusOverview(template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
+            html.Add(SequenceConsensusOverview(template, ambiguity_threshold, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
 
-            html.Add(SequenceAmbiguityOverview(template));
+            html.Add(SequenceAmbiguityOverview(template, ambiguity_threshold));
 
             html.Open(HtmlTag.div, "class='doc-plot'");
             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()));
@@ -871,7 +871,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static HtmlBuilder SequenceConsensusOverview(Template template, string title = null, HtmlBuilder help = null)
+        static HtmlBuilder SequenceConsensusOverview(Template template, double ambiguity_threshold, string title = null, HtmlBuilder help = null)
         {
             var consensus_sequence = template.CombinedSequence();
             var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
@@ -897,16 +897,16 @@ namespace HTMLNameSpace
                     }
                 }
             }
-            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation());
+            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis(ambiguity_threshold).Select(a => a.Position).ToArray());
         }
 
-        static HtmlBuilder SequenceAmbiguityOverview(Template template)
+        static HtmlBuilder SequenceAmbiguityOverview(Template template, double threshold)
         {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='ambiguity-overview'");
-            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder());
+            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", threshold.ToString("P"))));
 
-            var ambiguous = template.SequenceAmbiguityAnalysis();
+            var ambiguous = template.SequenceAmbiguityAnalysis(threshold);
 
             if (ambiguous.Length == 0 || ambiguous.All(n => n.Support.Count == 0))
             {
@@ -941,7 +941,6 @@ namespace HTMLNameSpace
                 var max_nodes = placed.Select(n => n.Count).Max();
 
                 // Now generate the Html + Svg
-                //html.CopyData("Ambiguity Overview (???)");
                 var svg = new SvgBuilder();
                 const int width_option = 80; // Horizontal size of an AA option
                 const int height_option = 20; // Vertical size of an AA option

@@ -406,6 +406,10 @@ The templates to be used in this segment. Uses the same logic as Input->Folder t
 
 The mean score per position needed for a path to be included in the Segment score. Default value: 0.
 
+###### AmbiguityThreshold (s)
+
+The threshold which determines if a position is seen as ambiguous for the ambiguity overview analysis. Expressed as a fraction. Default value: 0.75.
+
 ###### Alphabet (m)
 
 Determines the alphabet to use. See the scope Alphabet for more information about its definition.

@@ -118,7 +118,7 @@ namespace AssemblyNameSpace
                     progressBar.Update();
                 }
 
-                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
+                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments, this.TemplateMatching.AmbiguityThreshold);
 
                 // If there is an expected outcome present to answers here
                 if (runVariables.ExpectedResult.Count > 0)

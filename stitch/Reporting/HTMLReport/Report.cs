@@ -96,12 +96,12 @@ namespace AssemblyNameSpace
                         break;
                     case AsideType.Template:
                         var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                        inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
+                        inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count, Parameters.AmbiguityThreshold);
                         metadata = template.MetaData;
                         break;
                     case AsideType.RecombinedTemplate:
                         var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                        inner_html = HTMLAsides.CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
+                        inner_html = HTMLAsides.CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count, Parameters.AmbiguityThreshold);
                         metadata = rTemplate.MetaData;
                         break;
                     default:
@@ -278,8 +278,8 @@ namespace AssemblyNameSpace
         {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
             var assets_folder = link;
-            if (Parameters.runVariables.LiveServer)
-                link = "http://localhost:5500/assets/";
+            if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer))
+                link = $"http://localhost:{Parameters.runVariables.LiveServer}/assets/";
             var html = new HtmlBuilder();
             html.Open(HtmlTag.head);
             html.Empty(HtmlTag.meta, "charset='utf-8'");
@@ -588,7 +588,7 @@ namespace AssemblyNameSpace
 
             CopyAssetsFile("export_pdf_example.png", "images");
             CopyAssetsFile("favicon.ico", "images");
-            if (Parameters.runVariables.LiveServer) return;
+            if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer)) return;
             CopyAssetsFile("styles.css");
             CopyAssetsFile("script.js");
             CopyAssetsFile("Roboto-Regular.ttf");
@@ -633,7 +633,7 @@ namespace AssemblyNameSpace
             if (Parameters.runVariables.AutomaticallyOpen)
             {
                 var p = new Process();
-                p.StartInfo = new ProcessStartInfo(Parameters.runVariables.LiveServer ? "http://localhost:5500/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename)
+                p.StartInfo = new ProcessStartInfo(!String.IsNullOrEmpty(Parameters.runVariables.LiveServer) ? $"http://localhost:{Parameters.runVariables.LiveServer}/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename)
                 {
                     UseShellExecute = true
                 };
