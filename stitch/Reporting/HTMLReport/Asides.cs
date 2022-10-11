@@ -904,7 +904,7 @@ namespace HTMLNameSpace
         {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='ambiguity-overview'");
-            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", threshold.ToString("P"))));
+            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", threshold.ToString("P0"))));
 
             var ambiguous = template.SequenceAmbiguityAnalysis(threshold);
 
@@ -948,7 +948,7 @@ namespace HTMLNameSpace
                 const int text_pad = 12; // Approximate size of text (cube)
                 const int clearing = 2; // Extra clearing in front of options
                 var w = (placed.Length - 1) * width_option + width_option / 2 + pad * 2;
-                var h = (max_nodes + 1) * height_option;
+                var h = (max_nodes + 1) * height_option + pad;
                 svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px'");
                 svg.Open(SvgTag.defs);
                 svg.Open(SvgTag.marker, "id='marker' viewBox='0 0 10 10' refX='1' refY='5' markerUnits='strokeWidth' markerWidth='1.5' markerHeight='1.5' orient='auto'");
@@ -958,7 +958,7 @@ namespace HTMLNameSpace
 
                 for (var node_pos = 0; node_pos < placed.Length; node_pos++)
                 {
-                    svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{height_option}px' class='position'", ambiguous[node_pos].Position.ToString());
+                    svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{height_option}px' class='position'", (ambiguous[node_pos].Position + 1).ToString());
                     var max_local = ambiguous[node_pos].Support.Count > 0 ? ambiguous[node_pos].Support.Values.Max() : 0;
 
                     for (var option_pos = 0; option_pos < placed[node_pos].Count; option_pos++)
@@ -976,13 +976,13 @@ namespace HTMLNameSpace
                 svg.OpenAndClose(SvgTag.line, $"x1='0px' y1='{height_option + 4}px' x2='{w}px' y2='{height_option + 4}px' class='baseline'");
                 svg.Close(SvgTag.svg);
 
-                html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
                 html.OpenAndClose(HtmlTag.p, "", "Determine stroke width:");
                 html.Empty(HtmlTag.input, "type='checkbox' id='ambiguity-stroke-selector'");
                 html.Open(HtmlTag.label, "for='ambiguity-stroke-selector'");
                 html.OpenAndClose(HtmlTag.span, "", "Local");
                 html.OpenAndClose(HtmlTag.span, "", "Global");
                 html.Close(HtmlTag.label);
+                html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
                 html.Add(svg);
                 html.Close(HtmlTag.div);
             }
