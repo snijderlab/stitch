@@ -337,6 +337,7 @@ namespace HTMLNameSpace
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
             const char gap_char = '-';
+            const char non_breaking_space = '\u00A0'; // &nbsp; in html
 
             if (template.Matches.Count == 0)
                 return html;
@@ -349,34 +350,13 @@ namespace HTMLNameSpace
             var data_buffer = new StringBuilder();
             var consensus = template.ConsensusSequence();
 
-            var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
-            // Fill in the gaps
-            //for (int i = 0; i < aligned[0].Length; i++)
-            //{
-            //    if (aligned[0][i] == gap_char)
-            //    {
-            //        if (i == 0)
-            //        {
-            //            annotatedSequence.Insert(i, annotatedSequence[i]);
-            //        }
-            //        else
-            //        {
-            //            if (annotatedSequence[i - 1] == Annotation.None || annotatedSequence[i] == Annotation.None)
-            //                annotatedSequence.Insert(i, Annotation.None);
-            //            else if (annotatedSequence[i - 1] != annotatedSequence[i])
-            //                annotatedSequence.Insert(i, Annotation.None);
-            //            else
-            //                annotatedSequence.Insert(i, annotatedSequence[i]);
-            //        }
-            //    }
-            //}
-
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{AminoAcid.ArrayToString(consensus.Item1).Replace(gap_char, '.')}");
 
             var localMatches = template.Matches.ToList();
-            localMatches.Sort((a, b) => b.LengthOnTemplate.CompareTo(a.LengthOnTemplate));
-            var gaps = new int[template.Sequence.Length];
+            localMatches.Sort((a, b) => b.LengthOnTemplate.CompareTo(a.LengthOnTemplate)); // Try to keep the longest matches at the top.
 
+            // Find the longest gaps for each position.
+            var gaps = new int[template.Sequence.Length];
             foreach (var match in localMatches)
             {
                 var pos = match.StartTemplatePosition;
@@ -398,6 +378,7 @@ namespace HTMLNameSpace
             }
             var total_length = gaps.Sum() + template.Sequence.Length + 1;
 
+            // Helper methods to insert the gaps in the sequences
             (string, int) DisplayWithGaps(SequenceMatch match)
             {
                 var pos = 0;
@@ -454,9 +435,46 @@ namespace HTMLNameSpace
                 return string.Concat(sequence);
             }
 
+            // Find template sequence and numbering
             var template_sequence = DisplayTemplateWithGaps();
+            var numbering = new StringBuilder();
+            var last_size = 1;
+            const int block_size = 10;
+            for (int i = 10; i < total_length - block_size; i += block_size)
+            {
+                var i_string = i.ToString();
+                numbering.Append(new string(non_breaking_space, block_size - last_size));
+                numbering.Append(i_string);
+                last_size = i_string.Length;
+            }
 
+            var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
+            // Fill in the gaps
+            for (int i = 0; i < template_sequence.Length; i++)
+            {
+                if (template_sequence[i] == gap_char)
+                {
+                    if (i == 0)
+                    {
+                        annotatedSequence.Insert(i, annotatedSequence[i]);
+                    }
+                    else
+                    {
+                        if (annotatedSequence[i - 1] == Annotation.None || annotatedSequence[i] == Annotation.None)
+                            annotatedSequence.Insert(i, Annotation.None);
+                        else if (annotatedSequence[i - 1] != annotatedSequence[i])
+                            annotatedSequence.Insert(i, Annotation.None);
+                        else
+                            annotatedSequence.Insert(i, annotatedSequence[i]);
+                    }
+                }
+            }
+            html.Open(HtmlTag.div, "class='buttons'");
+            html.OpenAndClose(HtmlTag.button, "onclick='ToggleCDRReads()'", "Only show CDR reads");
+            html.Close(HtmlTag.div);
+            html.Open(HtmlTag.div, "class='alignment-wrapper'");
             html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({total_length}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
+            html.OpenAndClose(HtmlTag.div, $"class='numbering' style='grid-column-end:{total_length}'", numbering.ToString());
             html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", template_sequence);
             foreach (var read in localMatches)
             {
@@ -466,13 +484,24 @@ namespace HTMLNameSpace
                 var end = start + seq.Length + 1; // Add padding between reads
                 if (start + seq.Length == total_length)
                     end -= 1;
-                var classes = read.Unique ? "class='unique' " : "";
+                var classes = new List<string>();
+                if (read.Unique) classes.Add("unique");
+                for (int i = 0; i < seq.Length && start - 1 + i < annotatedSequence.Count; i++)
+                    if (annotatedSequence[start - 1 + i].IsAnyCDR())
+                    {
+                        classes.Add("cdr");
+                        break;
+                    }
+                var classes_string = string.Join(' ', classes);
+                classes_string = string.IsNullOrEmpty(classes_string) ? "" : $"class='{classes_string}' ";
                 html.OpenAndClose(
                     HtmlTag.a,
-                    $"{classes}href='{CommonPieces.GetAsideRawLink(read.MetaData, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
+                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.MetaData, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
                     seq);
+                data_buffer.AppendLine($">{read.MetaData.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', total_length - end)}");
             }
 
+            html.Close(HtmlTag.div);
             html.Close(HtmlTag.div);
 
             // Index menus
@@ -496,28 +525,13 @@ namespace HTMLNameSpace
         {
             string Color(Annotation Type)
             {
-                if (Type == Annotation.None)
-                {
-                    return "var(--color-background)";
-                }
-                else if (Type.IsAnyCDR())
-                {
+                if (Type.IsAnyCDR())
                     return "var(--color-secondary-o)";
-                }
                 else if (Type == Annotation.Conserved)
-                {
                     return "var(--color-tertiary-o)";
-                }
                 else
-                {
                     return "var(--color-primary-o)";
-                }
             }
-            string Point(uint point)
-            {
-                return Math.Round((double)point / annotated.Count() * 100).ToString() + "%";
-            }
-            if (annotated == null) return "";
             var annotatedSequence = annotated.ToArray();
             var grouped = new List<(Annotation, uint)>() { (annotated[0], 1) };
             for (int i = 1; i < annotated.Count; i++)
@@ -532,25 +546,21 @@ namespace HTMLNameSpace
                     grouped.Add((annotated[i], 1));
                 }
             }
-            if (grouped[0] == (Annotation.None, 5))
+            var output1 = "background-image:";
+            var output2 = "background-size:";
+            var output3 = "background-position:";
+            uint len = 0;
+            foreach (var piece in grouped)
             {
-                return "";
-            }
-            else if (grouped[0].Item2 == 5)
-            {
-                return "background-color:" + Color(grouped[0].Item1) + ""; // Switch color based on type
-            }
-            else
-            {
-                var output = "background:linear-gradient(to right";
-                uint len = 0;
-                foreach (var piece in grouped)
+                if (piece.Item1 != Annotation.None)
                 {
-                    output += ", " + Color(piece.Item1) + " " + Point(len) + ", " + Color(piece.Item1) + " " + Point(len + piece.Item2);
-                    len += piece.Item2;
+                    output1 += "linear-gradient(to right, " + Color(piece.Item1) + ", " + Color(piece.Item1) + "),";
+                    output2 += $"{piece.Item2}ch,";
+                    output3 += $"{len}ch,";
                 }
-                return output + ";";
+                len += piece.Item2;
             }
+            return output1.TrimEnd(',') + ";" + output2.TrimEnd(',') + ";" + output3.TrimEnd(',') + ";background-repeat:no-repeat;";
         }
 
         static HtmlBuilder AlignmentDetails(SequenceMatch match, Template template)
