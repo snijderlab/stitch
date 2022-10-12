@@ -31,7 +31,7 @@ namespace StitchTest
             var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            (var html, var doc) = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(1.0, 20).ToList();
             CompareDOC(doc, doc_expected);
         }
@@ -53,7 +53,7 @@ namespace StitchTest
             var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            (var html, var doc) = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(2.0, 10).ToList();
             CompareDOC(doc, doc_expected);
         }
@@ -75,7 +75,7 @@ namespace StitchTest
             var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("E", meta) });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
-            (var html, var doc) = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(1.0, 1).ToList();
             CompareDOC(doc, doc_expected);
         }
@@ -94,7 +94,7 @@ namespace StitchTest
                 0, // Index
                 true
                 );
-            (var html, var doc) = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(segment.Templates[0], "id", new List<string>(), "");
+            var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(0.0, 0).ToList();
             CompareDOC(doc, doc_expected);
         }

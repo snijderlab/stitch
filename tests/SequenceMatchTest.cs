@@ -31,13 +31,13 @@ namespace StitchTest
                 1,
                 new List<SequenceMatch.MatchPiece> {
                     new SequenceMatch.Match(4),
-                    new SequenceMatch.GapInTemplate(1),
+                    new SequenceMatch.Deletion(1),
                     new SequenceMatch.Match(1),
-                    new SequenceMatch.GapInQuery(1),
+                    new SequenceMatch.Insertion(1),
                     new SequenceMatch.Match(3),
-                    new SequenceMatch.GapInTemplate(2),
+                    new SequenceMatch.Deletion(2),
                     new SequenceMatch.Match(2),
-                    new SequenceMatch.GapInQuery(2),
+                    new SequenceMatch.Insertion(2),
                     new SequenceMatch.Match(4), },
                 template_sequence,
                 query_sequence,
@@ -72,9 +72,9 @@ namespace StitchTest
                 gaps += $", {i}: {sm.GetAtTemplateIndex(i)}";
             }
             Console.WriteLine(gaps);
-            Assert.AreEqual('-', sm.GetAtTemplateIndex(5).Value.Character);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(5).Value.Character);
             Assert.AreEqual('A', sm.GetAtTemplateIndex(6).Value.Character);
-            Assert.AreEqual('A', sm.GetAtTemplateIndex(7).Value.Character);
+            Assert.AreEqual('B', sm.GetAtTemplateIndex(7).Value.Character);
             Assert.AreEqual('A', sm.GetAtTemplateIndex(11).Value.Character);
             Assert.AreEqual('A', sm.GetAtTemplateIndex(13).Value.Character);
         }
