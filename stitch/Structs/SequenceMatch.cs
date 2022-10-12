@@ -81,8 +81,8 @@ namespace AssemblyNameSpace
                 {
                     sum1 += match.Length;
                 }
-                if (m is SequenceMatch.GapInQuery gc) sum2 += gc.Length;
-                if (m is SequenceMatch.GapInTemplate gt) sum3 += gt.Length;
+                if (m is SequenceMatch.Insertion gc) sum2 += gc.Length;
+                if (m is SequenceMatch.Deletion gt) sum3 += gt.Length;
             }
             TotalMatches = sum1;
             LengthOnTemplate = sum1 + sum2;
@@ -121,12 +121,12 @@ namespace AssemblyNameSpace
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
-                    case GapInQuery gapC:
+                    case Insertion gapC:
                         buffer1.Append(new string('-', gapC.Length));
                         buffer2.Append(qSeq.Substring(query_pos, gapC.Length));
                         query_pos += gapC.Length;
                         break;
-                    case GapInTemplate gapT:
+                    case Deletion gapT:
                         buffer1.Append(tSeq.Substring(tem_pos, gapT.Length));
                         buffer2.Append(new string('-', gapT.Length));
                         tem_pos += gapT.Length;
@@ -182,10 +182,10 @@ namespace AssemblyNameSpace
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
-                    case GapInQuery gapC:
+                    case Insertion gapC:
                         query_pos += gapC.Length;
                         break;
-                    case GapInTemplate gapT:
+                    case Deletion gapT:
                         tem_pos += gapT.Length;
                         break;
                 }
@@ -245,7 +245,7 @@ namespace AssemblyNameSpace
                     pos += piece.Length;
                     q_pos += piece.Length;
                 }
-                else if (piece is SequenceMatch.GapInTemplate gt)
+                else if (piece is SequenceMatch.Deletion gt)
                 {
                     if (pos < startTemplatePosition + lengthOnTemplate && pos + piece.Length > startTemplatePosition)
                     {
@@ -255,7 +255,7 @@ namespace AssemblyNameSpace
 
                     pos += piece.Length;
                 }
-                else if (piece is SequenceMatch.GapInQuery gc)
+                else if (piece is SequenceMatch.Insertion gc)
                 {
                     if (pos < startTemplatePosition + lengthOnTemplate && pos > startTemplatePosition)
                     {
@@ -298,12 +298,12 @@ namespace AssemblyNameSpace
                     pos += piece.Length;
                     q_pos += piece.Length;
                 }
-                else if (piece is SequenceMatch.GapInTemplate)
+                else if (piece is SequenceMatch.Deletion)
                 {
                     output.GapInTemplate += piece.Length;
                     pos += piece.Length;
                 }
-                else if (piece is SequenceMatch.GapInQuery)
+                else if (piece is SequenceMatch.Insertion)
                 {
                     output.GapInQuery += piece.Length;
                     q_pos += piece.Length;
@@ -334,18 +334,52 @@ namespace AssemblyNameSpace
                     q_pos += piece.Length;
                     if (pos > templatePosition) return this.QuerySequence[q_pos - (pos - templatePosition)];
                 }
-                else if (piece is SequenceMatch.GapInTemplate)
+                else if (piece is SequenceMatch.Deletion)
                 {
                     pos += piece.Length;
                     if (pos > templatePosition) return this.QuerySequence[q_pos];
                 }
-                else if (piece is SequenceMatch.GapInQuery)
+                else if (piece is SequenceMatch.Insertion)
                 {
                     q_pos += piece.Length;
                 }
             }
 
             return null;
+        }
+        /// <summary>
+        /// Get the aminoacid of the query sequence at the given template sequence position.
+        /// </summary>
+        /// <param name="templatePosition">The position to get the AminoAcid from.</param>
+        /// <returns>The AminoAcid or null if it could not be found.</returns>
+        public int GetGapAtTemplateIndex(int templatePosition)
+        {
+            if (templatePosition < this.StartTemplatePosition || templatePosition > this.StartTemplatePosition + this.LengthOnTemplate) return 0;
+
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+
+            foreach (var piece in this.Alignment)
+            {
+                if (piece is SequenceMatch.Match ma)
+                {
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                    if (pos > templatePosition) return 0;
+                }
+                else if (piece is SequenceMatch.Deletion)
+                {
+                    pos += piece.Length;
+                    if (pos > templatePosition) return 0;
+                }
+                else if (piece is SequenceMatch.Insertion)
+                {
+                    q_pos += piece.Length;
+                    if (pos == templatePosition) return piece.Length;
+                }
+            }
+
+            return 0;
         }
 
 
@@ -397,9 +431,9 @@ namespace AssemblyNameSpace
         /// `TEMPLATETEMPLATE`
         /// `QUERY......QUERY`
         /// </summary>
-        public class GapInTemplate : MatchPiece
+        public class Deletion : MatchPiece
         {
-            public GapInTemplate(int c) : base(c) { }
+            public Deletion(int c) : base(c) { }
             override protected string Identifier() { return "D"; }
         }
 
@@ -409,9 +443,9 @@ namespace AssemblyNameSpace
         /// `TEM....TEMPLATE`
         /// `QUERYQUERYQUERY`
         /// </summary>
-        public class GapInQuery : MatchPiece
+        public class Insertion : MatchPiece
         {
-            public GapInQuery(int c) : base(c) { }
+            public Insertion(int c) : base(c) { }
             override protected string Identifier() { return "I"; }
         }
     }

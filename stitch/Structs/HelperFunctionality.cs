@@ -216,11 +216,11 @@ namespace AssemblyNameSpace
                         max_index_q--;
                         break;
                     case (int)Direction.GapInTemplate:
-                        match_list.Add(new SequenceMatch.GapInTemplate(1));
+                        match_list.Add(new SequenceMatch.Deletion(1));
                         max_index_t--;
                         break;
                     case (int)Direction.GapInQuery:
-                        match_list.Add(new SequenceMatch.GapInQuery(1));
+                        match_list.Add(new SequenceMatch.Insertion(1));
                         max_index_q--;
                         break;
                     case (int)Direction.NoMatch:

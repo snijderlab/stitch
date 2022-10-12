@@ -66,11 +66,10 @@ The target name should then be a valid 'RID' for the platform you choose. But if
 
 ### Testing
 
-There are some unit tests provided. These can be found in the 'tests' file. To run the unit tests run (from the root folder):
+There are some unit tests provided. These can be found in the 'tests' folder. To run the unit tests run (from the root folder):
 
 ```
-dotnet test tests\small_tests
-dotnet test tests\batchfiles
+dotnet test tests
 ```
 
 

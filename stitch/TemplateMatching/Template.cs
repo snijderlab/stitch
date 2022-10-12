@@ -333,7 +333,7 @@ namespace AssemblyNameSpace
                             gap = false;
                         }
                     }
-                    else if (piece is SequenceMatch.GapInQuery gc)
+                    else if (piece is SequenceMatch.Insertion gc)
                     {
                         // Try to add this sequence or update the count
                         gap = true;
@@ -350,7 +350,7 @@ namespace AssemblyNameSpace
                         int pos = Math.Max(Math.Min(template_pos - 1, output.Count - 1), 0);
                         output[pos].Gaps[level] = (match_index, sub_seq, cov, contigid, inseq);
                     }
-                    else if (piece is SequenceMatch.GapInTemplate gt)
+                    else if (piece is SequenceMatch.Deletion gt)
                     {
                         // Skip to the next section
                         for (int i = 0; i < gt.Length && template_pos < output.Count; i++)
@@ -603,14 +603,14 @@ namespace AssemblyNameSpace
                             template_pos++;
                         }
                         break;
-                    case SequenceMatch.GapInQuery q:
+                    case SequenceMatch.Insertion q:
                         for (int i = 0; i < q.Length; i++)
                         {
                             annotation.Add(GetClasses(query_pos));
                             query_pos++;
                         }
                         break;
-                    case SequenceMatch.GapInTemplate t:
+                    case SequenceMatch.Deletion t:
                         template_pos += t.Length;
                         break;
                     default:
