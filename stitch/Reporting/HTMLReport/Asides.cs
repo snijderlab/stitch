@@ -1,14 +1,7 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using System.Diagnostics;
-using System.Text.RegularExpressions;
-using System.Threading.Tasks;
-using System.Globalization;
-using System.ComponentModel;
-using System.Reflection;
 using AssemblyNameSpace;
 using static HTMLNameSpace.CommonPieces;
 using static AssemblyNameSpace.HelperFunctionality;
@@ -280,53 +273,6 @@ namespace HTMLNameSpace
             var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
             html.Content($"Consensus  {c}\nGermline   {g}\nDifference {d}");
             html.Close(HtmlTag.textarea);
-            html.Close(HtmlTag.div);
-            return html;
-        }
-
-        static HtmlBuilder CreateTemplateGraphs(Template template, List<double> DepthOfCoverage)
-        {
-            var html = new HtmlBuilder();
-            if (template.Matches.Count == 0) return html;
-            html.OpenAndClose(HtmlTag.h3, "", "Graphs");
-            html.Open(HtmlTag.div, "class='template-graphs'");
-            html.Open(HtmlTag.div, "class='doc-plot'");
-            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage), new HtmlBuilder("Depth of Coverage (including gaps)")));
-            html.Close(HtmlTag.div);
-            html.Open(HtmlTag.div, "class='doc-plot'");
-            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(DepthOfCoverage.Select(a => a == 0 ? 0 : Math.Log10(a)).ToList()), new HtmlBuilder("Log10 Depth of Coverage (including gaps)")));
-            html.Close(HtmlTag.div);
-
-            if (template.ForcedOnSingleTemplate && template.UniqueMatches > 0)
-            {
-                // Histogram of Scores
-                html.Open(HtmlTag.div);
-                html.Add(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.Score).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.Score).ToList(), "Unique") }, "Score Distribution"));
-
-                // Histogram of Length On Template
-                html.Close(HtmlTag.div);
-                html.Open(HtmlTag.div);
-                html.Add(HTMLGraph.GroupedHistogram(new List<(List<double>, string)> { (template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), "Normal"), (template.Matches.FindAll(a => a.Unique).Select(a => (double)a.LengthOnTemplate).ToList(), "Unique") }, "Length on Template Distribution"));
-            }
-            else
-            {
-                // Histogram of Scores
-                html.Open(HtmlTag.div);
-                html.Add(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.Score).ToList(), new HtmlBuilder("Score Distribution")));
-
-                // Histogram of Length On Template
-                html.Close(HtmlTag.div);
-                html.Open(HtmlTag.div);
-                html.Add(HTMLGraph.Histogram(template.Matches.Select(a => (double)a.LengthOnTemplate).ToList(), new HtmlBuilder("Length on Template Distribution")));
-            }
-
-            // Histogram of coverage, coverage per position excluding gaps
-            html.Close(HtmlTag.div);
-            html.Open(HtmlTag.div);
-            html.Add(HTMLGraph.Histogram(template.CombinedSequence().Select(a => a.AminoAcids.Values.Sum()).ToList(), new HtmlBuilder("Coverage Distribution")));
-
-            html.OpenAndClose(HtmlTag.i, "", "Excludes gaps in reference to the template sequence");
-            html.Close(HtmlTag.div);
             html.Close(HtmlTag.div);
             return html;
         }

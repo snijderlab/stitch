@@ -21,45 +21,6 @@ namespace HTMLNameSpace
 
             return annotated;
         }
-        public static HtmlBuilder GroupedHistogram(List<(List<double> Data, string Label)> data, string title, int bins = 10)
-        {
-            if (data.Count == 0 || data.Any(a => a.Item1.Count == 0))
-            {
-                var html = new HtmlBuilder();
-                html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
-                return html;
-            }
-
-            double min = data.Select(a => a.Data.Min()).Min();
-            double max = data.Select(a => a.Data.Max()).Max();
-
-            if (max == min) bins = 1;
-            double step = (max - min) / bins;
-
-            var labelled = new (string, List<double>)[bins];
-
-            double low = min;
-            for (int i = 0; i < bins; i++)
-            {
-                labelled[i] = ($"{low:G3}-{low + step:G3}", Enumerable.Repeat(0.0, data.Count).ToList());
-                low += step;
-            }
-
-            for (int set_index = 0; set_index < data.Count; set_index++)
-            {
-                foreach (var item in data[set_index].Data)
-                {
-                    int bin = (int)Math.Floor((item - min) / step);
-
-                    if (bin > bins - 1) bin = bins - 1;
-                    else if (bin < 0) bin = 0;
-
-                    labelled[bin].Item2[set_index]++;
-                }
-            }
-
-            return GroupedBargraph(labelled.ToList(), data.Select(a => (a.Label, (uint)0)).ToList(), title); ;
-        }
 
         public static HtmlBuilder Histogram(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null, int bins = 10)
         {
