@@ -9,10 +9,10 @@ using System.ComponentModel;
 using System.Reflection;
 using HTMLNameSpace;
 using static HTMLNameSpace.CommonPieces;
-using static AssemblyNameSpace.HelperFunctionality;
+using static Stitch.HelperFunctionality;
 using HtmlGenerator;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// An HTML report.

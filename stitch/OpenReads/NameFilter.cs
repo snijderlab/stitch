@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// Contains the logic to filter all the identifiers for all input reads to enforce unique names.

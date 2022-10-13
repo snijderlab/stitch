@@ -1,11 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static AssemblyNameSpace.HelperFunctionality;
+using static Stitch.HelperFunctionality;
 using System.Text.Json.Serialization;
 
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// Saves a template and its alignment with the given matches.

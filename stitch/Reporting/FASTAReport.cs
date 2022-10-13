@@ -3,7 +3,7 @@ using System.Text;
 using System.Linq;
 using static System.Math;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// A FASTA report.

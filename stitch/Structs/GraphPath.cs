@@ -1,7 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary> Paths in the graph, consisting of multiple CondensedNodes. </summary>
     public class GraphPath

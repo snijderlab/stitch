@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace RunParameters
     {
@@ -96,7 +96,7 @@ namespace AssemblyNameSpace
                 /// <summary>
                 /// The file format of the PEAKS file.
                 /// </summary>
-                public FileFormat.Peaks FileFormat = AssemblyNameSpace.FileFormat.Peaks.PeaksX();
+                public FileFormat.Peaks FileFormat = Stitch.FileFormat.Peaks.PeaksX();
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
 

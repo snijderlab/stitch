@@ -3,9 +3,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using static AssemblyNameSpace.HelperFunctionality;
+using static Stitch.HelperFunctionality;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// To contain all logic for the reading of reads out of files.

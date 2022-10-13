@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     public class Segment
     {

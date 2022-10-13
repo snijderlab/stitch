@@ -8,7 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Http;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary> The main class which is the entry point from the command line. </summary>
     public class ToRunWithCommandLine

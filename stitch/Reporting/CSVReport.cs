@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// A FASTA report.

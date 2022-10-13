@@ -2,10 +2,10 @@ using System;
 using System.IO;
 using System.Collections.Generic;
 using System.Linq;
-using AssemblyNameSpace.InputNameSpace;
-using AssemblyNameSpace.RunParameters;
+using Stitch.InputNameSpace;
+using Stitch.RunParameters;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// A class with options to parse a batch file.

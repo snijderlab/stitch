@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>A class to save a match of two sequences in a space efficient way, based on CIGAR strings.</summary>
     public class SequenceMatch

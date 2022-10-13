@@ -7,7 +7,7 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public readonly struct ReportInputParameters

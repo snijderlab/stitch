@@ -4,7 +4,7 @@ using System.Text.Json.Serialization;
 using System;
 
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// A JSON report.

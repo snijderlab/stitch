@@ -7,7 +7,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace RunParameters
     {
@@ -362,7 +362,7 @@ namespace AssemblyNameSpace
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<AssemblyNameSpace.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter)
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter)
             {
                 var recombined_templates = new List<Template>();
                 var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
@@ -405,7 +405,7 @@ namespace AssemblyNameSpace
                                 else
                                 {
                                     // When no good overlap is found just paste them one after the other
-                                    s.Add(new AminoAcid(alphabet, AssemblyNameSpace.Alphabet.GapChar));
+                                    s.Add(new AminoAcid(alphabet, Stitch.Alphabet.GapChar));
                                     s.AddRange(seq);
                                     sequence.ElementAt(index).Overlap = 0;
                                 }

@@ -10,7 +10,7 @@ using System.Collections.Generic;
 using System.Text;
 using System;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     public static class Fragmentation
     {

@@ -1,6 +1,6 @@
 using System.Collections.Generic;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace InputNameSpace
     {

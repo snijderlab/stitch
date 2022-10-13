@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using AssemblyNameSpace;
-using AssemblyNameSpace.RunParameters;
+using Stitch;
+using Stitch.RunParameters;
 
 namespace StitchTest
 {

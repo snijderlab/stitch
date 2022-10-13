@@ -1,4 +1,4 @@
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// To contain definitions for file formats.

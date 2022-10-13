@@ -2,7 +2,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary> Functions to handle and create phylogenetic trees. </summary>
     public class PhylogeneticTree

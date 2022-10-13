@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary> A class to store extension methods to help in the process of coding. </summary>
     public static class HelperFunctionality

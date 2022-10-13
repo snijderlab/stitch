@@ -4,9 +4,9 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using AssemblyNameSpace;
-using AssemblyNameSpace.RunParameters;
-using static AssemblyNameSpace.SequenceMatch;
+using Stitch;
+using Stitch.RunParameters;
+using static Stitch.SequenceMatch;
 
 namespace StitchTest
 {

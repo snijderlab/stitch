@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// To contain an alphabet with scoring matrix to score pairs of amino acids

@@ -4,8 +4,8 @@ using System.Linq;
 using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
-using AssemblyNameSpace;
-using AssemblyNameSpace.RunParameters;
+using Stitch;
+using Stitch.RunParameters;
 
 namespace StitchTest
 {
@@ -23,11 +23,11 @@ namespace StitchTest
         {
             try
             {
-                AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new RunVariables());
+                Stitch.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new RunVariables());
             }
             catch (Exception e)
             {
-                AssemblyNameSpace.InputNameSpace.ErrorMessage.PrintException(e);
+                Stitch.InputNameSpace.ErrorMessage.PrintException(e);
                 Console.WriteLine($"At file {file}");
                 throw;
             }
@@ -45,7 +45,7 @@ namespace StitchTest
                 try
                 {
                     if (file.EndsWith(".txt"))
-                        AssemblyNameSpace.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
+                        Stitch.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
                 }
                 catch
                 {

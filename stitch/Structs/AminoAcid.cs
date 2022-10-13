@@ -3,7 +3,7 @@ using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can
     /// be used in an efficient way. </summary>

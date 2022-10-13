@@ -2,7 +2,7 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     public class ProgressBar : IDisposable
     {

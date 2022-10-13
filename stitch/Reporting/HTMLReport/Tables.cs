@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Globalization;
-using AssemblyNameSpace;
+using Stitch;
 using static HTMLNameSpace.CommonPieces;
 using System.Collections.ObjectModel;
 using HtmlGenerator;

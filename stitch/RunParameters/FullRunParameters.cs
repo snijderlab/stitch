@@ -1,6 +1,6 @@
 using System;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace RunParameters
     {

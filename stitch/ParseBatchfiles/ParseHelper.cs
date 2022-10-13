@@ -4,9 +4,9 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
-using AssemblyNameSpace.RunParameters;
+using Stitch.RunParameters;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// To contain all input functionality

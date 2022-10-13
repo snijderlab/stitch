@@ -1,6 +1,6 @@
 using System;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// To keep track of a location in a file, for example for error messages.

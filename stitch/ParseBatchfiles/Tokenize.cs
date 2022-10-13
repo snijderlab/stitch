@@ -2,7 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Text;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace InputNameSpace
     {

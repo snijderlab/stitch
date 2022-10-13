@@ -4,7 +4,7 @@ using System.Linq;
 using System.Globalization;
 using HtmlGenerator;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     /// <summary>
     /// A class to hold all metadata handling in one place.

@@ -5,7 +5,7 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
     namespace InputNameSpace
     {

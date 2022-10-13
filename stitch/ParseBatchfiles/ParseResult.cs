@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
-using AssemblyNameSpace.InputNameSpace;
+using Stitch.InputNameSpace;
 
-namespace AssemblyNameSpace
+namespace Stitch
 {
 
     /// <summary>To save a result of a parse action, the value or a error message. </summary>
