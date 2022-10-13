@@ -284,7 +284,8 @@ namespace Stitch
             html.Empty(HtmlTag.meta, "name='viewport' content='width=device-width, initial-scale=1.0'");
             html.Empty(HtmlTag.link, $"rel='icon' href='{assets_folder}favicon.ico' type='image/x-icon'");
             html.OpenAndClose(HtmlTag.title, "", title + " | Stitch");
-            html.OpenAndClose(HtmlTag.style, "", $@"@font-face {{
+            html.Open(HtmlTag.style);
+            html.UnsafeContent($@"@font-face {{
   font-family: Roboto;
   src: url({link}Roboto-Regular.ttf);
   font-weight: normal;
@@ -304,7 +305,10 @@ namespace Stitch
   src: url({link}RobotoMono-Medium.ttf);
   font-weight: 500;
 }}");
-            html.OpenAndClose(HtmlTag.script, "", $"assets_folder = '{AssetsFolderName}';");
+            html.Close(HtmlTag.style);
+            html.Open(HtmlTag.script);
+            html.UnsafeContent($"assets_folder = '{AssetsFolderName}';");
+            html.Close(HtmlTag.script);
             html.OpenAndClose(HtmlTag.script, $"src='{link}script.js'", "");
             html.Empty(HtmlTag.link, $"rel='stylesheet' href='{link}styles.css'");
             html.Close(HtmlTag.head);
@@ -457,7 +461,7 @@ namespace Stitch
             html.UnsafeContent("<!DOCTYPE html>");
             html.Open(HtmlTag.html, "lang='en-GB'");
             html.Add(CreateHeader(Parameters.Runname, new List<string>()));
-            html.Open(HtmlTag.body, "onload='Setup()'");
+            html.Open(HtmlTag.body, "onload='Setup()' class='report'");
             html.Open(HtmlTag.div, "class='report'");
             html.OpenAndClose(HtmlTag.h1, "", "Stitch Interactive Report Run: " + Parameters.Runname);
             html.OpenAndClose(HtmlTag.p, "", "Generated at " + timestamp);
