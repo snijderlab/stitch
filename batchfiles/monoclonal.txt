@@ -1,7 +1,7 @@
 -Run Info---------------
 Version         : 1.1
 Runname         : Monoclonal Herceptin
--RawDataDirectory: R:\F1\peng0013\201912
+RawDataDirectory: R:\F1\peng0013\201912
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
