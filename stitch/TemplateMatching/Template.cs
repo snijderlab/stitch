@@ -652,36 +652,74 @@ namespace AssemblyNameSpace
                     var this_aa = peptide.GetAtTemplateIndex(position);
                     var next_aa = peptide.GetAtTemplateIndex(next_position);
                     if ((this_aa != null && next_aa != null))
-                        ambiguous[i].UpdateSupport(this_aa.Value, next_aa.Value, peptide.MetaData.Intensity);
+                        ambiguous[i].UpdateSupport(this_aa.Value, next_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier);
                 }
             }
 
-            SequenceAmbiguityAnalysisCache = (threshold, ambiguous);
+            var backtracked = new AmbiguityNode[ambiguous.Length];
+            backtracked[0] = ambiguous[0];
+
+            for (int i = 1; i < ambiguous.Length; i++)
+                backtracked[i] = ambiguous[i].BacktrackSupport(ambiguous[i - 1]);
+
+            SequenceAmbiguityAnalysisCache = (threshold, backtracked);
             return ambiguous;
         }
 
         public struct AmbiguityNode
         {
-            public int Position;
-            public Dictionary<(AminoAcid, AminoAcid), double> Support;
+            /// <summary> The position in the consensus sequence for this ambiguity node. </summary>
+            public int Position { get; private set; }
 
+            /// <summary> All support to the next node. </summary>
+            public Dictionary<(AminoAcid, AminoAcid), double> Support { get; private set; }
+
+            /// <summary> All Identifiers of reads that support this ambiguous node. </summary>
+            public HashSet<string> SupportingReads { get; private set; }
+
+            /// <summary>
+            /// Create a new ambiguity node on the given position.
+            /// </summary>
+            /// <param name="position">The consensus sequence position for this node.</param>
             public AmbiguityNode(int position)
             {
-                Position = position;
-                Support = new();
+                this.Position = position;
+                this.Support = new();
+                this.SupportingReads = new();
             }
 
-            public void UpdateSupport(AminoAcid here, AminoAcid next, double Intensity)
+            /// <summary>
+            /// Add new support to this node. THis will not overwrite any previously added support.
+            /// </summary>
+            /// <param name="here">The aminoacid at this location.</param>
+            /// <param name="next">The aminoacid at the next node.</param>
+            /// <param name="Intensity">The Intensity of the supporting read.</param>
+            /// <param name="Identifier">The Identifier of the supporting read.</param>
+            public void UpdateSupport(AminoAcid here, AminoAcid next, double Intensity, string Identifier)
             {
                 var key = (here, next);
-                if (Support.ContainsKey(key))
+                if (this.Support.ContainsKey(key))
                 {
-                    Support[key] += Intensity;
+                    this.Support[key] += Intensity;
                 }
                 else
                 {
-                    Support[key] = Intensity;
+                    this.Support[key] = Intensity;
                 }
+                this.SupportingReads.Add(Identifier);
+            }
+
+            /// <summary>
+            /// Update the support for this node based on the previous node. And return the updated node as the result.
+            /// </summary>
+            /// <param name="previous">The previous node.</param>
+            /// <returns>A new node with the information from this node plus the backtracked information from the previous node.</returns>
+            public AmbiguityNode BacktrackSupport(AmbiguityNode previous)
+            {
+                var output = new AmbiguityNode(this.Position);
+                output.Support = new Dictionary<(AminoAcid, AminoAcid), double>(this.Support);
+                output.SupportingReads = this.SupportingReads.Union(previous.SupportingReads).ToHashSet();
+                return output;
             }
         }
     }

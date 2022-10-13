@@ -145,8 +145,8 @@ namespace HTMLNameSpace
             html.Add(CreateAnnotatedSequence(human_id, template));
 
             html.Add(SequenceConsensusOverview(template, ambiguity_threshold, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
-
-            html.Add(SequenceAmbiguityOverview(template, ambiguity_threshold));
+            (var alignment, var gaps) = CreateTemplateAlignment(template, id, location, AssetsFolderName, ambiguity_threshold);
+            html.Add(SequenceAmbiguityOverview(template, ambiguity_threshold, gaps));
 
             html.Open(HtmlTag.div, "class='doc-plot'");
             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()));
@@ -176,7 +176,7 @@ namespace HTMLNameSpace
 
             html.Add(based);
 
-            html.Add(CreateTemplateAlignment(template, id, location, AssetsFolderName));
+            html.Add(alignment);
             html.TagWithHelp(HtmlTag.h2, "Template Sequence", new HtmlBuilder(template.Recombination != null ? HTMLHelp.RecombinedSequence.ToString() : HTMLHelp.TemplateSequence.ToString()));
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(template.Sequence));
 
@@ -277,16 +277,17 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static public HtmlBuilder CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName)
+        static public (HtmlBuilder, int[]) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName, double ambiguity_threshold)
         {
             //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
             const char gap_char = '-';
             const char non_breaking_space = '\u00A0'; // &nbsp; in html
+            var gaps = new int[template.Sequence.Length];
 
             if (template.Matches.Count == 0)
-                return html;
+                return (html, gaps);
 
             html.Open(HtmlTag.div, "class='alignment'");
             html.OpenAndClose(HtmlTag.h2, "", "Alignment");
@@ -302,7 +303,6 @@ namespace HTMLNameSpace
             localMatches.Sort((a, b) => b.LengthOnTemplate.CompareTo(a.LengthOnTemplate)); // Try to keep the longest matches at the top.
 
             // Find the longest gaps for each position.
-            var gaps = new int[template.Sequence.Length];
             foreach (var match in localMatches)
             {
                 var pos = match.StartTemplatePosition;
@@ -343,7 +343,7 @@ namespace HTMLNameSpace
                     }
                     else if (piece is SequenceMatch.Insertion)
                     {
-                        sequence.AddRange(match.QuerySequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
+                        sequence.Add(AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + pos, piece.Length)));
                         pos += piece.Length;
                     }
                 }
@@ -352,14 +352,23 @@ namespace HTMLNameSpace
                 var node = sequence_list.First;
                 var start_pad = 0;
                 bool first = true;
+                var insertion_length = 0;
                 foreach (var piece in match.Alignment)
                 {
-                    if (!(piece is SequenceMatch.Insertion))
+                    if (piece is SequenceMatch.Insertion)
+                    {
+                        if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - piece.Length - insertion_length));
+                        insertion_length = piece.Length;
+                        node = node.Next;
+                        first = false;
+                    }
+                    else
                     {
                         for (int i = 0; i < piece.Length; i++, pos++)
                         {
                             if (first) start_pad = gaps[pos];
-                            if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos]));
+                            if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - insertion_length));
+                            insertion_length = 0;
                             node = node.Next;
                             first = false;
                         }
@@ -422,6 +431,8 @@ namespace HTMLNameSpace
             html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({total_length}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
             html.OpenAndClose(HtmlTag.div, $"class='numbering' style='grid-column-end:{total_length}'", numbering.ToString());
             html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", template_sequence);
+
+            var ambiguous = template.SequenceAmbiguityAnalysis(ambiguity_threshold);
             foreach (var read in localMatches)
             {
                 var start = 1 + gaps.Take(read.StartTemplatePosition).Sum() + read.StartTemplatePosition;
@@ -430,16 +441,27 @@ namespace HTMLNameSpace
                 var end = start + seq.Length + 1; // Add padding between reads
                 if (start + seq.Length == total_length)
                     end -= 1;
+
+                // Determine classes for this read
                 var classes = new List<string>();
                 if (read.Unique) classes.Add("unique");
+
+                // Detect it this read is part of any CDR
                 for (int i = 0; i < seq.Length && start - 1 + i < annotatedSequence.Count; i++)
                     if (annotatedSequence[start - 1 + i].IsAnyCDR())
                     {
                         classes.Add("cdr");
                         break;
                     }
+
+                foreach (var a in ambiguous)
+                    if (a.SupportingReads.Contains(read.MetaData.Identifier))
+                        classes.Add($"a{a.Position}");
+
                 var classes_string = string.Join(' ', classes);
                 classes_string = string.IsNullOrEmpty(classes_string) ? "" : $"class='{classes_string}' ";
+
+                // Generate the actual HTMl and Fasta lines
                 html.OpenAndClose(
                     HtmlTag.a,
                     $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.MetaData, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
@@ -459,7 +481,7 @@ namespace HTMLNameSpace
             html.Close(HtmlTag.div);
             html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close(HtmlTag.div);
-            return html;
+            return (html, gaps);
         }
 
         /// <summary>
@@ -492,21 +514,24 @@ namespace HTMLNameSpace
                     grouped.Add((annotated[i], 1));
                 }
             }
-            var output1 = "background-image:";
-            var output2 = "background-size:";
-            var output3 = "background-position:";
+            var output1 = new StringBuilder("background-image:");
+            var output2 = new StringBuilder("background-size:");
+            var output3 = new StringBuilder("background-position:");
             uint len = 0;
             foreach (var piece in grouped)
             {
                 if (piece.Item1 != Annotation.None)
                 {
-                    output1 += "linear-gradient(to right, " + Color(piece.Item1) + ", " + Color(piece.Item1) + "),";
-                    output2 += $"{piece.Item2}ch,";
-                    output3 += $"{len}ch,";
+                    output1.Append("linear-gradient(to right, " + Color(piece.Item1) + ", " + Color(piece.Item1) + "),");
+                    output2.Append($"{piece.Item2}ch,");
+                    output3.Append($"{len}ch,");
                 }
                 len += piece.Item2;
             }
-            return output1.TrimEnd(',') + ";" + output2.TrimEnd(',') + ";" + output3.TrimEnd(',') + ";background-repeat:no-repeat;";
+            output1.Append("linear-gradient(to right, var(--color-primary-o), var(--color-primary-o))");
+            output2.Append("1ch");
+            output3.Append("var(--highlight-pos)");
+            return output1 + ";" + output2 + ";" + output3 + ";background-repeat:no-repeat;";
         }
 
         static HtmlBuilder AlignmentDetails(SequenceMatch match, Template template)
@@ -609,7 +634,7 @@ namespace HTMLNameSpace
             return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis(ambiguity_threshold).Select(a => a.Position).ToArray());
         }
 
-        static HtmlBuilder SequenceAmbiguityOverview(Template template, double threshold)
+        static HtmlBuilder SequenceAmbiguityOverview(Template template, double threshold, int[] gaps)
         {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='ambiguity-overview'");
@@ -667,7 +692,9 @@ namespace HTMLNameSpace
 
                 for (var node_pos = 0; node_pos < placed.Length; node_pos++)
                 {
-                    svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{height_option}px' class='position'", (ambiguous[node_pos].Position + 1).ToString());
+                    var position = ambiguous[node_pos].Position;
+                    svg.OpenAndClose(SvgTag.rect, $"class='node a{position}' onclick='HighlightAmbiguous(\"a{position}\", {gaps.Take(position + 1).Sum() + position})' x='{pad + node_pos * width_option - clearing}px' y='{clearing}px' width='{width_option}px' height='{h - clearing * 2}px'");
+                    svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{height_option}px' class='position'", (position + 1).ToString());
                     var max_local = ambiguous[node_pos].Support.Count > 0 ? ambiguous[node_pos].Support.Values.Max() : 0;
 
                     for (var option_pos = 0; option_pos < placed[node_pos].Count; option_pos++)
