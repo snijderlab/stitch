@@ -528,7 +528,7 @@ namespace Stitch
                 if (Area >= 0)
                 {
                     html.OpenAndClose(HtmlTag.h3, "", "Area");
-                    html.OpenAndClose(HtmlTag.p, "", Area.ToString());
+                    html.OpenAndClose(HtmlTag.p, "", Area.ToString("G4"));
                 }
 
                 if (Parts_per_million >= 0)
@@ -610,9 +610,9 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.h3, "", "Number of combined reads");
                 html.OpenAndClose(HtmlTag.p, "", Children.Count().ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Intensity");
-                html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G6"));
+                html.OpenAndClose(HtmlTag.p, "", Intensity.ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
-                html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G6"));
+                html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "PositionalScore");
                 html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
                 foreach (var child in Children)

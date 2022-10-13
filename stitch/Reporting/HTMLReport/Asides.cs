@@ -164,13 +164,13 @@ namespace HTMLNameSpace
             html.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HTMLHelp.TemplateUniqueArea.ToString()), "small-cell");
             html.Close(HtmlTag.tr);
             html.Open(HtmlTag.tr);
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.Sequence.Length.ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.Score.ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count().ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueScore.ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueMatches.ToString());
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString());
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Sequence.Length.ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Score.ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count().ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueScore.ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueMatches.ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString("G4"));
             html.Close(HtmlTag.tr);
             html.Close(HtmlTag.table);
 
@@ -553,7 +553,7 @@ namespace HTMLNameSpace
             html.Open(HtmlTag.table);
             Row("Type", type);
             Row("Score", match.Score.ToString());
-            Row("Total area", match.MetaData.TotalArea.ToString());
+            Row("Total area", match.MetaData.TotalArea.ToString("G4"));
             Row("Length on Template", match.LengthOnTemplate.ToString());
             Row("Position on Template", match.StartTemplatePosition.ToString());
             Row($"Start on {type}", match.StartQueryPosition.ToString());

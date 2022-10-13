@@ -93,8 +93,8 @@ namespace HTMLNameSpace
                 html.Open(HtmlTag.span, "class='y-axis'");
                 html.OpenAndClose(HtmlTag.span, "class='max'", max.ToString("G3"));
                 html.OpenAndClose(HtmlTag.span, "class='min'", min.ToString("G3"));
-                html.OpenAndClose(HtmlTag.span, "class='empty'");
                 html.Close(HtmlTag.span);
+                html.OpenAndClose(HtmlTag.span, "class='empty'");
 
                 // Data
                 for (int i = 0; i < data.Count; i++)
@@ -299,7 +299,7 @@ namespace HTMLNameSpace
             {
                 var check = i < 3 ? " checked " : "";
                 html.Empty(HtmlTag.input, $"type='checkbox' class='show-data-{i}' id='{identifier}-show-data-{i}'{check}");
-                html.OpenAndClose(HtmlTag.label, $"for='{identifier}-show-data-{i}'>", header[i]);
+                html.OpenAndClose(HtmlTag.label, $"for='{identifier}-show-data-{i}'", header[i]);
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 

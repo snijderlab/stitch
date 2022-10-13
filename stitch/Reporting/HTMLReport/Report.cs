@@ -318,27 +318,28 @@ namespace Stitch
                 string Render(string line)
                 {
                     if (line.Trim().StartsWith('-'))
-                        return $"<span class='comment'>{line}</span>";
+                        return $"<span class='comment'>{line}</span><br>";
 
                     var open = Regex.Match(line, @"^(\s*)([\w ]+)(\s*)->$");
                     if (open.Success)
-                        return $"{open.Groups[1]}<span class='id'>{open.Groups[2]}</span>{open.Groups[3]}<span class='op'>-&gt;</span>";
+                        return $"{open.Groups[1]}<span class='id'>{open.Groups[2]}</span>{open.Groups[3]}<span class='op'>-&gt;</span><br>";
 
                     var single = Regex.Match(line, @"^(\s*)([\w ]+)(\s*):(.+)$");
                     if (single.Success)
-                        return $"{single.Groups[1]}<span class='id'>{single.Groups[2]}</span>{single.Groups[3]}<span class='op'>:</span><span class='value'>{single.Groups[4]}</span>";
+                        return $"{single.Groups[1]}<span class='id'>{single.Groups[2]}</span>{single.Groups[3]}<span class='op'>:</span><span class='value'>{single.Groups[4]}</span><br>";
 
                     var close = Regex.Match(line, @"^(\s*)<-$");
                     if (close.Success)
-                        return $"{close.Groups[1]}<span class='op'>&lt;-</span>";
+                        return $"{close.Groups[1]}<span class='op'>&lt;-</span><br>";
 
-                    return line;
+                    return line + "<br>";
                 }
 
                 var html = new HtmlBuilder();
                 var bf = BatchFile;
                 html.Open(HtmlTag.code);
                 html.OpenAndClose(HtmlTag.i, "", bf.Filename);
+                html.Empty(HtmlTag.br);
                 foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                 html.Close(HtmlTag.code);
                 return html;
@@ -464,6 +465,7 @@ namespace Stitch
             html.OpenAndClose(HtmlTag.div, "class='overview'", CreateOverview());
             html.Add(inner_html);
             html.Add(Docs());
+            html.Close(HtmlTag.div);
             html.Open(HtmlTag.footer);
             html.Open(HtmlTag.p);
             html.Content("Made by the Snijderlab in 2019-2022, the project is open source at ");
@@ -478,7 +480,6 @@ namespace Stitch
             html.Content(" please mention this if you send in a bug report.");
             html.Close(HtmlTag.p);
             html.Close(HtmlTag.footer);
-            html.Close(HtmlTag.div);
             html.Close(HtmlTag.body);
             html.Close(HtmlTag.html);
             return html;
@@ -548,7 +549,7 @@ namespace Stitch
               It is best to turn on the background graphics and turn off any headers, besides this setting the margins smaller
               and using landscape or portrait could enhance the results. See the below picture for the options.");
             export.OpenAndClose(HtmlTag.span, "onclick='window.print()' class='info-link' style='font-size:120%;margin-bottom:1em;'", "Or click here to print");
-            export.Empty(HtmlTag.img, "src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome with some extra options that could be beneficial.'");
+            export.Empty(HtmlTag.img, $"src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome with some extra options that could be beneficial.'");
             html.Collapsible("docs-export-svg", new HtmlBuilder("Export Graphs to Vector Graphics"), export);
             html.Collapsible("docs-share", new HtmlBuilder("Sharing this report"),
             new HtmlBuilder(HtmlTag.p, @$"To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
