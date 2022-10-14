@@ -666,11 +666,15 @@ namespace Stitch
 
         public struct AmbiguityTreeNode
         {
+            private static int counter = 0;
+            private int id;
             public AminoAcid Variant;
             public List<(double Intensity, AmbiguityTreeNode Next)> Connections;
 
             public AmbiguityTreeNode(AminoAcid variant)
             {
+                this.id = counter;
+                counter++;
                 this.Variant = variant;
                 this.Connections = new();
             }
@@ -680,20 +684,44 @@ namespace Stitch
             /// </summary>
             /// <param name="Path">The path still to be added.</param>
             /// <param name="Intensity">The intensity of the path.</param>
-            public void AddPath(IEnumerable<AminoAcid> Path, double Intensity)
+            public void AddPath(bool perfect, IEnumerable<AminoAcid> Path, double Intensity)
             {
                 if (Path.Count() == 0) return;
-                var tail = this.Tail();
-                if (tail != null) tail.Reverse();
-                if (tail != null && Path == tail)
+                if (Connections.Count() == 0)
                 {
-                    this.Connections[0].Next.AddPath(Path.Skip(1), Intensity);
-                    this.Connections[0] = (this.Connections[0].Intensity + Intensity, this.Connections[0].Next);
+                    var next = new AmbiguityTreeNode(Path.First());
+                    next.AddPath(perfect, Path.Skip(1), Intensity);
+                    Connections.Add((Intensity, next));
+                    return;
+                }
+
+                var tail = this.Tail();
+                if (tail != null)
+                {
+                    tail.Reverse();
+                    if (Path.Zip(tail).All(a => a.First == a.Second))
+                    {
+                        this.Connections[0].Next.AddPath(perfect, Path.Skip(1), Intensity);
+                        this.Connections[0] = (this.Connections[0].Intensity + Intensity, this.Connections[0].Next);
+                        return;
+                    }
+                }
+                if (perfect && this.Connections.Select(a => a.Next.Variant).Contains(Path.First()))
+                {
+                    foreach (var connection in Connections)
+                    {
+                        if (connection.Next.Variant == Path.First())
+                        {
+                            connection.Next.AddPath(true, Path.Skip(1), Intensity);
+                            return;
+                        }
+
+                    }
                 }
                 else
                 {
                     var next = new AmbiguityTreeNode(Path.First());
-                    next.AddPath(Path.Skip(1), Intensity);
+                    next.AddPath(false, Path.Skip(1), Intensity);
                     this.Connections.Add((Intensity, next));
                 }
             }
@@ -719,13 +747,13 @@ namespace Stitch
 
             }
 
-            public string Mermaid(int level = 0)
+            public string Mermaid()
             {
                 var buffer = "";
                 foreach (var connection in Connections)
                 {
-                    buffer += $"{level}{Variant} --> {level + 1}{connection.Next.Variant};\n";
-                    buffer += connection.Next.Mermaid(level + 1);
+                    buffer += $"{this.id}{Variant} --> {connection.Next.id}{connection.Next.Variant};\n";
+                    buffer += connection.Next.Mermaid();
                 }
                 return buffer;
             }
@@ -767,11 +795,11 @@ namespace Stitch
             public void UpdateHigherOrderSupport(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
             {
                 if (this.SupportTrees.ContainsKey(here))
-                    this.SupportTrees[here].AddPath(Path, Intensity);
+                    this.SupportTrees[here].AddPath(true, Path, Intensity);
                 else
                 {
                     var next = new AmbiguityTreeNode(here);
-                    next.AddPath(Path, Intensity);
+                    next.AddPath(true, Path, Intensity);
                     this.SupportTrees.Add(here, next);
                 }
                 this.SupportingReads.Add(Identifier);
