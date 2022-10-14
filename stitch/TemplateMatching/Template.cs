@@ -624,31 +624,33 @@ namespace Stitch
             if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
             var consensus = this.CombinedSequence();
             AmbiguityNode[] ambiguous;
-            try
+            var a = consensus.Select((position, index) =>
             {
-                ambiguous = consensus.Select((position, index) =>
-                {
-                    if (position.AminoAcids.Count() == 0) return -1;
-                    else if (position.AminoAcids.Values.Max() < Template.AmbiguityThreshold * position.AminoAcids.Values.Sum()) return index;
-                    else return -1;
-                }).Where(p => p != -1).Select(i => new AmbiguityNode(i)).ToArray();
-            }
-            catch (System.InvalidOperationException)
-            {
-                return new AmbiguityNode[0]; // For some stupid reason the .ToArray() throws an exception when no elements are present, while an empty array is totally valid.
-            }
+                if (position.AminoAcids.Count() == 0) return -1;
+                else if (position.AminoAcids.Values.Max() < Template.AmbiguityThreshold * position.AminoAcids.Values.Sum()) return index;
+                else return -1;
+            }).Where(p => p != -1).Select(i => new AmbiguityNode(i));
+            if (a.Count() == 0)
+                return new AmbiguityNode[0];
+            else
+                ambiguous = a.ToArray();
 
             for (int i = 0; i < ambiguous.Length - 1; i++)
             {
-                var position = ambiguous[i].Position;
-                var next_position = ambiguous[i + 1].Position;
-
                 foreach (var peptide in this.Matches)
                 {
-                    var this_aa = peptide.GetAtTemplateIndex(position);
-                    var next_aa = peptide.GetAtTemplateIndex(next_position);
-                    if ((this_aa != null && next_aa != null))
-                        ambiguous[i].UpdateSupport(this_aa.Value, next_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier);
+                    var this_aa = peptide.GetAtTemplateIndex(ambiguous[i].Position);
+                    if (this_aa == null) continue;
+                    var path = new List<AminoAcid>();
+                    for (int offset = 1; i + offset < ambiguous.Length; offset++)
+                    {
+                        var position = ambiguous[i + offset].Position;
+                        var next_aa = peptide.GetAtTemplateIndex(position);
+                        if (next_aa != null)
+                            path.Add(next_aa.Value);
+                    }
+                    if (path.Count > 0)
+                        ambiguous[i].UpdateHigherOrderSupport(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
                 }
             }
 
@@ -662,6 +664,73 @@ namespace Stitch
             return ambiguous;
         }
 
+        public struct AmbiguityTreeNode
+        {
+            public AminoAcid Variant;
+            public List<(double Intensity, AmbiguityTreeNode Next)> Connections;
+
+            public AmbiguityTreeNode(AminoAcid variant)
+            {
+                this.Variant = variant;
+                this.Connections = new();
+            }
+
+            /// <summary>
+            /// Add a path to this tree, while squishing the tails to create tidy graphs.
+            /// </summary>
+            /// <param name="Path">The path still to be added.</param>
+            /// <param name="Intensity">The intensity of the path.</param>
+            public void AddPath(IEnumerable<AminoAcid> Path, double Intensity)
+            {
+                if (Path.Count() == 0) return;
+                var tail = this.Tail();
+                if (tail != null) tail.Reverse();
+                if (tail != null && Path == tail)
+                {
+                    this.Connections[0].Next.AddPath(Path.Skip(1), Intensity);
+                    this.Connections[0] = (this.Connections[0].Intensity + Intensity, this.Connections[0].Next);
+                }
+                else
+                {
+                    var next = new AmbiguityTreeNode(Path.First());
+                    next.AddPath(Path.Skip(1), Intensity);
+                    this.Connections.Add((Intensity, next));
+                }
+            }
+
+            /// <returns>null or the tail in the reverse order.</returns>
+            private List<AminoAcid> Tail()
+            {
+                if (this.Connections.Count() > 1) return null;
+                else if (this.Connections.Count() == 0) return new List<AminoAcid> { this.Variant };
+                else
+                {
+                    var tail = this.Connections[0].Next.Tail();
+                    if (tail != null)
+                    {
+                        tail.Add(this.Variant);
+                        return tail;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+                }
+
+            }
+
+            public string Mermaid(int level = 0)
+            {
+                var buffer = "";
+                foreach (var connection in Connections)
+                {
+                    buffer += $"{level}{Variant} --> {level + 1}{connection.Next.Variant};\n";
+                    buffer += connection.Next.Mermaid(level + 1);
+                }
+                return buffer;
+            }
+        }
+
         public struct AmbiguityNode
         {
             /// <summary> The position in the consensus sequence for this ambiguity node. </summary>
@@ -669,6 +738,9 @@ namespace Stitch
 
             /// <summary> All support to the next node. </summary>
             public Dictionary<(AminoAcid, AminoAcid), double> Support { get; private set; }
+
+            /// <summary> Higher order support. </summary>
+            public Dictionary<AminoAcid, AmbiguityTreeNode> SupportTrees;
 
             /// <summary> All Identifiers of reads that support this ambiguous node. </summary>
             public HashSet<string> SupportingReads { get; private set; }
@@ -681,28 +753,35 @@ namespace Stitch
             {
                 this.Position = position;
                 this.Support = new();
+                this.SupportTrees = new();
                 this.SupportingReads = new();
             }
 
             /// <summary>
-            /// Add new support to this node. THis will not overwrite any previously added support.
+            /// Add new higher order support to this node. THis will not overwrite any previously added support.
             /// </summary>
             /// <param name="here">The aminoacid at this location.</param>
-            /// <param name="next">The aminoacid at the next node.</param>
             /// <param name="Intensity">The Intensity of the supporting read.</param>
             /// <param name="Identifier">The Identifier of the supporting read.</param>
-            public void UpdateSupport(AminoAcid here, AminoAcid next, double Intensity, string Identifier)
+            /// <param name="Path">The path flowing from this node.</param>
+            public void UpdateHigherOrderSupport(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
             {
-                var key = (here, next);
-                if (this.Support.ContainsKey(key))
-                {
-                    this.Support[key] += Intensity;
-                }
+                if (this.SupportTrees.ContainsKey(here))
+                    this.SupportTrees[here].AddPath(Path, Intensity);
                 else
                 {
-                    this.Support[key] = Intensity;
+                    var next = new AmbiguityTreeNode(here);
+                    next.AddPath(Path, Intensity);
+                    this.SupportTrees.Add(here, next);
                 }
                 this.SupportingReads.Add(Identifier);
+
+                // Update single order support
+                var key = (here, Path[0]);
+                if (this.Support.ContainsKey(key))
+                    this.Support[key] += Intensity;
+                else
+                    this.Support[key] = Intensity;
             }
 
             /// <summary>
@@ -717,6 +796,21 @@ namespace Stitch
                 output.SupportingReads = this.SupportingReads.Union(previous.SupportingReads).ToHashSet();
                 return output;
             }
+
+            // /public AmbiguityTreeNode[] CreateSupportTree()
+            // /{
+            // /    var output = new AmbiguityTreeNode[HigherOrderSupport.Count];
+            // /    foreach (var option in HigherOrderSupport.GroupBy(a => a.Variant))
+            // /    {
+            // /        var root = new AmbiguityTreeNode();
+            // /        root.Variant = option.Key;
+            // /        foreach (var path in option)
+            // /        {
+            // /            root.AddPath(path.Path, path.Intensity);
+            // /        }
+            // /    }
+            // /    return output;
+            // /}
         }
     }
 

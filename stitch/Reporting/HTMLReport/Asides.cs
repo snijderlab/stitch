@@ -721,6 +721,13 @@ namespace HTMLNameSpace
                 html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
                 html.Add(svg);
                 html.Close(HtmlTag.div);
+                foreach (var position in ambiguous)
+                {
+                    html.Open(HtmlTag.pre, $"class='a{position.Position}'");
+                    foreach (var variant in position.SupportTrees)
+                        html.Content($"flowchart LR;\n{variant.Value.Mermaid()}\n\n");
+                    html.Close(HtmlTag.pre);
+                }
             }
 
             html.Close(HtmlTag.div);
