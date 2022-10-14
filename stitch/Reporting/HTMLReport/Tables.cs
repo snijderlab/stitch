@@ -254,7 +254,7 @@ namespace HTMLNameSpace
             for (int i = 0; i < diversity.Count; i++)
             {
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? " ambiguous" : "";
+                var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? $" ambiguous a{i}" : "";
                 html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'");
 
                 double sum = diversity[i].Values.Sum();
