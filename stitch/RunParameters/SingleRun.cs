@@ -84,6 +84,7 @@ namespace Stitch
             /// </summary>
             public void Calculate()
             {
+                Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
                 // Template Matching
                 var stopWatch = new Stopwatch();
                 stopWatch.Start();
@@ -113,7 +114,7 @@ namespace Stitch
                     progressBar.Update();
                 }
 
-                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments, this.TemplateMatching.AmbiguityThreshold);
+                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here
                 if (runVariables.ExpectedResult.Count > 0)

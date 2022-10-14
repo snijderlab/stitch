@@ -28,7 +28,7 @@ namespace Stitch
             var options = new JsonSerializerOptions
             {
                 IncludeFields = true,
-                ReferenceHandler = ReferenceHandler.IgnoreCycles,
+                ReferenceHandler = ReferenceHandler.Preserve,
                 Converters = {
                     new AminoAcidArrayConverter(),
                     new AminoAcidListConverter()

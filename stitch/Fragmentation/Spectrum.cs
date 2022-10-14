@@ -35,24 +35,23 @@ namespace Stitch
                 {
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     // Get the information to find this peptide
-                    int scan_number = int.Parse(scan.Scan.Split(":").Last());
 
                     double[] mzs;
                     float[] intensities;
 
                     // check whether we have an ms2 scan to identify
-                    var filter = raw_file.GetFilterForScanNum(scan_number);
+                    var filter = raw_file.GetFilterForScanNum(scan.Scan);
 
                     // retrieve the precursor; this doesn't always work because thermo doesn't store the m/z or charge info in some cases
-                    var precursor = raw_file.GetPrecursorScanInfoForScan(scan_number);
+                    var precursor = raw_file.GetPrecursorScanInfoForScan(scan.Scan);
                     if (precursor.MonoIsotopicMass < 100 || precursor.ChargeState < 2)
                         continue;
 
-                    var tic = raw_file.GetScanHeaderInfoForScanNum(scan_number).Tic;
+                    var tic = raw_file.GetScanHeaderInfoForScanNum(scan.Scan).Tic;
 
                     // determine the type of fragmentation used
                     var model = PeptideFragment.GetFragmentModel(filter.Fragmentation);
-                    raw_file.GetMassListFromScanNum(scan_number, false, out mzs, out intensities);
+                    raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
                     // Default set to 20, should be lower for BU
                     model.tolerance.Value = 5;
@@ -64,7 +63,7 @@ namespace Stitch
                     else
                     {
                         // Retrieve the noise function for signal-to-noise calculations
-                        spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan_number), new CentroidDetection.Settings());
+                        spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
                     }
 
                     // Deisotope: not strictly necessary
@@ -90,7 +89,7 @@ namespace Stitch
                         Fragmentation = filter.Fragmentation,
                         FragmentationEnergy = filter.FragmentationEnergy,
                         RawFile = raw_file.GetFilename(),
-                        ScanNumber = scan_number,
+                        ScanNumber = scan.Scan,
                     };
                     var asm = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: 20), peptide, matchedFragments);
 

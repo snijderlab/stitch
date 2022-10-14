@@ -59,7 +59,7 @@ namespace Stitch
             /// <summary>
             /// Contains the information needed to find this metadata in a raw file.
             /// </summary>
-            public virtual List<(string RawFile, string Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, string, string)>();
+            public virtual List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, int, string)>();
 
             /// <summary>
             /// To generate a HTML representation of this metadata for use in the HTML report.
@@ -222,11 +222,14 @@ namespace Stitch
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string, string, string)> ScanNumbers
+            public override List<(string, int, string)> ScanNumbers
             {
                 get
                 {
-                    return new List<(string, string, string)> { (Source_File, ScanID, Original_tag) };
+                    var output = new List<(string, int, string)>();
+                    foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
+                        output.Add((Source_File, scan, Original_tag));
+                    return output;
                 }
             }
 
@@ -592,7 +595,7 @@ namespace Stitch
             /// and help him/her get a better picture of the validity of the data.
             /// </summary>
             public new double TotalArea { get => Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, string Scan, string OriginalTag)> ScanNumbers
+            public override List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers
             {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }

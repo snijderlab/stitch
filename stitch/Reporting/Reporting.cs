@@ -20,8 +20,7 @@ namespace Stitch
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public readonly double AmbiguityThreshold;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments, double ambiguityThreshold)
+        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
         {
             Input = input.AsReadOnly();
             Segments = segments.AsReadOnly();
@@ -30,7 +29,6 @@ namespace Stitch
             runVariables = variables;
             Runname = runname;
             Fragments = fragments;
-            AmbiguityThreshold = ambiguityThreshold;
         }
     }
     /// <summary>

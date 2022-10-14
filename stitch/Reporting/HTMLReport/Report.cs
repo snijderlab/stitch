@@ -94,12 +94,12 @@ namespace Stitch
                         break;
                     case AsideType.Template:
                         var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
-                        inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count, Parameters.AmbiguityThreshold);
+                        inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
                         metadata = template.MetaData;
                         break;
                     case AsideType.RecombinedTemplate:
                         var rTemplate = Parameters.RecombinedSegment[index3].Templates[index1];
-                        inner_html = HTMLAsides.CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count, Parameters.AmbiguityThreshold);
+                        inner_html = HTMLAsides.CreateTemplateAside(rTemplate, AsideType.RecombinedTemplate, AssetsFolderName, Parameters.Input.Count);
                         metadata = rTemplate.MetaData;
                         break;
                     default:

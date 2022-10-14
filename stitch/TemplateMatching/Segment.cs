@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Text.Json.Serialization;
 
 namespace Stitch
 {
@@ -11,8 +12,10 @@ namespace Stitch
         public readonly Alphabet Alphabet;
         public List<Template> Templates;
         public readonly double CutoffScore;
+        [JsonIgnore]
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
         public List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores) Score, AminoAcid[] SeqA, AminoAcid[] SeqB)> SegmentJoiningScores = new();
+        [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
         /// <summary>

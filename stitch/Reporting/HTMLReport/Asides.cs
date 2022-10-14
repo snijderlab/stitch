@@ -102,7 +102,7 @@ namespace HTMLNameSpace
         }
 
         /// <summary> Returns an aside for details viewing of a template. </summary>
-        public static HtmlBuilder CreateTemplateAside(Template template, AsideType type, string AssetsFolderName, int totalReads, double ambiguity_threshold)
+        public static HtmlBuilder CreateTemplateAside(Template template, AsideType type, string AssetsFolderName, int totalReads)
         {
             var html = new HtmlBuilder();
             string id = GetAsideIdentifier(template.MetaData);
@@ -144,9 +144,9 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(consensus_sequence));
             html.Add(CreateAnnotatedSequence(human_id, template));
 
-            html.Add(SequenceConsensusOverview(template, ambiguity_threshold, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
-            (var alignment, var gaps) = CreateTemplateAlignment(template, id, location, AssetsFolderName, ambiguity_threshold);
-            html.Add(SequenceAmbiguityOverview(template, ambiguity_threshold, gaps));
+            html.Add(SequenceConsensusOverview(template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
+            (var alignment, var gaps) = CreateTemplateAlignment(template, id, location, AssetsFolderName);
+            html.Add(SequenceAmbiguityOverview(template, gaps));
 
             html.Open(HtmlTag.div, "class='doc-plot'");
             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(consensus_doc), new HtmlBuilder("Depth of Coverage of the Consensus Sequence"), new HtmlBuilder(HtmlTag.p, HTMLHelp.DOCGraph), null, 10, template.ConsensusSequenceAnnotation()));
@@ -277,7 +277,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static public (HtmlBuilder, int[]) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName, double ambiguity_threshold)
+        static public (HtmlBuilder, int[]) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName)
         {
             //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
@@ -432,7 +432,7 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.div, $"class='numbering' style='grid-column-end:{total_length}'", numbering.ToString());
             html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", template_sequence);
 
-            var ambiguous = template.SequenceAmbiguityAnalysis(ambiguity_threshold);
+            var ambiguous = template.SequenceAmbiguityAnalysis();
             foreach (var read in localMatches)
             {
                 var start = 1 + gaps.Take(read.StartTemplatePosition).Sum() + read.StartTemplatePosition;
@@ -605,7 +605,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static HtmlBuilder SequenceConsensusOverview(Template template, double ambiguity_threshold, string title = null, HtmlBuilder help = null)
+        static HtmlBuilder SequenceConsensusOverview(Template template, string title = null, HtmlBuilder help = null)
         {
             var consensus_sequence = template.CombinedSequence();
             var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
@@ -631,16 +631,16 @@ namespace HTMLNameSpace
                     }
                 }
             }
-            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis(ambiguity_threshold).Select(a => a.Position).ToArray());
+            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray());
         }
 
-        static HtmlBuilder SequenceAmbiguityOverview(Template template, double threshold, int[] gaps)
+        static HtmlBuilder SequenceAmbiguityOverview(Template template, int[] gaps)
         {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='ambiguity-overview'");
-            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", threshold.ToString("P0"))));
+            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", Template.AmbiguityThreshold.ToString("P0"))));
 
-            var ambiguous = template.SequenceAmbiguityAnalysis(threshold);
+            var ambiguous = template.SequenceAmbiguityAnalysis();
 
             if (ambiguous.Length == 0 || ambiguous.All(n => n.Support.Count == 0))
             {

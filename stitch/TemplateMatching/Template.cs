@@ -617,24 +617,20 @@ namespace Stitch
         /// Only searches for support one node at a time.
         /// </summary>
         /// <returns>A list of AmbiguityNodes containing the Position and Support for the connection to the next node.</returns>
-        (double, AmbiguityNode[]) SequenceAmbiguityAnalysisCache = (-1, null);
-        public AmbiguityNode[] SequenceAmbiguityAnalysis(double threshold)
+        public static double AmbiguityThreshold = -1;
+        AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
+        public AmbiguityNode[] SequenceAmbiguityAnalysis()
         {
-            if (SequenceAmbiguityAnalysisCache.Item1 == threshold) return SequenceAmbiguityAnalysisCache.Item2;
+            if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
             var consensus = this.CombinedSequence();
             AmbiguityNode[] ambiguous;
             try
             {
                 ambiguous = consensus.Select((position, index) =>
                 {
-                    if (position.AminoAcids.Values.Max() < threshold * position.AminoAcids.Values.Sum())
-                    {
-                        return index;
-                    }
-                    else
-                    {
-                        return -1;
-                    }
+                    if (position.AminoAcids.Count() == 0) return -1;
+                    else if (position.AminoAcids.Values.Max() < Template.AmbiguityThreshold * position.AminoAcids.Values.Sum()) return index;
+                    else return -1;
                 }).Where(p => p != -1).Select(i => new AmbiguityNode(i)).ToArray();
             }
             catch (System.InvalidOperationException)
@@ -657,12 +653,12 @@ namespace Stitch
             }
 
             var backtracked = new AmbiguityNode[ambiguous.Length];
-            backtracked[0] = ambiguous[0];
+            if (ambiguous.Length > 0) backtracked[0] = ambiguous[0];
 
             for (int i = 1; i < ambiguous.Length; i++)
                 backtracked[i] = ambiguous[i].BacktrackSupport(ambiguous[i - 1]);
 
-            SequenceAmbiguityAnalysisCache = (threshold, backtracked);
+            SequenceAmbiguityAnalysisCache = backtracked;
             return ambiguous;
         }
 
