@@ -815,7 +815,7 @@ namespace Stitch
             private List<AminoAcid> Tail()
             {
                 var tail = this.ReverseTail();
-                tail.Reverse();
+                if (tail != null) tail.Reverse();
                 return tail;
             }
 
@@ -885,6 +885,29 @@ namespace Stitch
                     }
                 }
                 return string.Join('-', levels.Skip(1));
+            }
+
+            /// <summary>
+            /// The total intensity of all connections in the whole DAG.
+            /// </summary>
+            public double TotalIntensity()
+            {
+                double total = 0.0;
+                var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
+                var already_scanned = new HashSet<(int, int)>();
+                to_scan.Push((0, this));
+                while (to_scan.Count > 0)
+                {
+                    var element = to_scan.Pop();
+                    foreach (var child in element.Node.Connections)
+                    {
+                        if (already_scanned.Contains((element.Node.id, child.Next.id))) continue;
+                        already_scanned.Add((element.Node.id, child.Next.id));
+                        to_scan.Push((element.Level + 1, child.Next));
+                        total += child.Intensity;
+                    }
+                }
+                return total;
             }
 
             public bool Equals(AmbiguityTreeNode other)

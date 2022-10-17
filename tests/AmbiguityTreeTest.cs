@@ -12,10 +12,10 @@ namespace StitchTest
     [TestClass]
     public class AmbiguityTree_Test
     {
-        static Alphabet alp = new Alphabet("*;A;B;C;.\nA;1;0;0;-1\nB;0;1;0;-1\nC;0;0;1,-1\n.;-1;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
-        static AminoAcid a = new AminoAcid(alp, 'A');
-        static AminoAcid b = new AminoAcid(alp, 'B');
-        static AminoAcid c = new AminoAcid(alp, 'C');
+        readonly static Alphabet alp = new Alphabet("*;A;B;C;.\nA;1;0;0;-1\nB;0;1;0;-1\nC;0;0;1,-1\n.;-1;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
+        readonly static AminoAcid a = new AminoAcid(alp, 'A');
+        readonly static AminoAcid b = new AminoAcid(alp, 'B');
+        readonly static AminoAcid c = new AminoAcid(alp, 'C');
 
         [TestMethod]
         public void SimplePath()
@@ -28,9 +28,11 @@ namespace StitchTest
             root.AddPath(new List<AminoAcid>() { a, b, b, b }, 2.0);
             Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("1-2-2-2", root.Topology());
+            var intensity = root.TotalIntensity();
             root.Simplify();
             Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("1-2-2-1", root.Topology());
+            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -46,9 +48,11 @@ namespace StitchTest
             root.AddPath(new List<AminoAcid>() { c, a, a }, 1.0);
             Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-3", root.Topology());
+            var intensity = root.TotalIntensity();
             root.Simplify();
             Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-1", root.Topology());
+            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -67,9 +71,11 @@ namespace StitchTest
             root.AddPath(new List<AminoAcid>() { b }, 1.0);
             Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-4-3-3", root.Topology());
+            var intensity = root.TotalIntensity();
             root.Simplify();
             Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-4-2-1", root.Topology());
+            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -85,9 +91,11 @@ namespace StitchTest
             root.AddPath(new List<AminoAcid>() { c, a, b, c, a, a, a }, 1.0);
             Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-3-3-3-3-3", root.Topology());
+            var intensity = root.TotalIntensity();
             root.Simplify();
             Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-3-3-3-2-1", root.Topology());
+            Assert.AreEqual(intensity, root.TotalIntensity());
         }
     }
 }

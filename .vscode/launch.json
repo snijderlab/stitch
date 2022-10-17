@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
                 "batchfiles/monoclonal.txt"
             ],
@@ -19,7 +19,12 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false,
-            "justMyCode": false
+            "justMyCode": false,
+            "logging": {
+                "exceptions": true,
+                "programOutput": true,
+                "moduleLoad": false
+            }
         },
         {
             "name": "Launch polyclonal.txt",
@@ -28,7 +33,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
                 "batchfiles/polyclonal.txt"
             ],
@@ -36,7 +41,12 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false,
-            "justMyCode": false
+            "justMyCode": false,
+            "logging": {
+                "exceptions": true,
+                "programOutput": true,
+                "moduleLoad": false
+            }
         },
         {
             "name": "Launch basic.txt",
@@ -45,7 +55,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/win-x64/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
                 "batchfiles/basic.txt"
             ],
@@ -53,13 +63,23 @@
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
             "console": "internalConsole",
             "stopAtEntry": false,
-            "justMyCode": false
+            "justMyCode": false,
+            "logging": {
+                "exceptions": true,
+                "programOutput": true,
+                "moduleLoad": false
+            }
         },
         {
             "name": ".NET Core Attach",
             "type": "coreclr",
             "request": "attach",
-            "processId": "${command:pickProcess}"
+            "processId": "${command:pickProcess}",
+            "logging": {
+                "exceptions": true,
+                "programOutput": true,
+                "moduleLoad": false
+            }
         }
     ]
 }
