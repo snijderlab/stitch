@@ -646,6 +646,7 @@ namespace Stitch
                 {
                     var this_aa = peptide.GetAtTemplateIndex(ambiguous[i].Position);
                     if (this_aa == null) continue;
+
                     var path = new List<AminoAcid>();
                     for (int offset = 1; i + offset < ambiguous.Length; offset++)
                     {
@@ -655,24 +656,28 @@ namespace Stitch
                             path.Add(next_aa.Value);
                     }
                     if (path.Count > 0)
-                        ambiguous[i].UpdateHigherOrderSupport(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
+                    {
+                        var reverse_path = new List<AminoAcid>(path);
+                        reverse_path.Reverse();
+                        for (int j = 0; j < reverse_path.Count; j++)
+                        {
+                            ambiguous[i + reverse_path.Count - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.MetaData.Intensity, peptide.MetaData.Identifier, reverse_path.Skip(j).ToArray());
+                        }
+                        ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
+                    }
                 }
             }
 
             // Simplify all trees
             foreach (var position in ambiguous)
                 foreach (var tree in position.SupportTrees)
-                    tree.Value.Simplify();
-
-            // Backtrack all support
-            var backtracked = new AmbiguityNode[ambiguous.Length];
-            if (ambiguous.Length > 0) backtracked[0] = ambiguous[0];
-
-            for (int i = 1; i < ambiguous.Length; i++)
-                backtracked[i] = ambiguous[i].BacktrackSupport(ambiguous[i - 1]);
+                {
+                    tree.Value.Backward.Simplify();
+                    tree.Value.Forward.Simplify();
+                }
 
             // Set the cache
-            SequenceAmbiguityAnalysisCache = backtracked;
+            SequenceAmbiguityAnalysisCache = ambiguous;
             return ambiguous;
         }
     }
@@ -900,7 +905,7 @@ namespace Stitch
         public Dictionary<(AminoAcid, AminoAcid), double> Support { get; private set; }
 
         /// <summary> Higher order support. </summary>
-        public Dictionary<AminoAcid, AmbiguityTreeNode> SupportTrees;
+        public Dictionary<AminoAcid, (AmbiguityTreeNode Backward, AmbiguityTreeNode Forward)> SupportTrees;
 
         /// <summary> All Identifiers of reads that support this ambiguous node. </summary>
         public HashSet<string> SupportingReads { get; private set; }
@@ -918,21 +923,22 @@ namespace Stitch
         }
 
         /// <summary>
-        /// Add new higher order support to this node. THis will not overwrite any previously added support.
+        /// Add new higher order support to this node. This will not overwrite any previously added support.
         /// </summary>
         /// <param name="here">The aminoacid at this location.</param>
         /// <param name="Intensity">The Intensity of the supporting read.</param>
         /// <param name="Identifier">The Identifier of the supporting read.</param>
         /// <param name="Path">The path flowing from this node.</param>
-        public void UpdateHigherOrderSupport(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
+        public void UpdateHigherOrderSupportForward(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
         {
             if (this.SupportTrees.ContainsKey(here))
-                this.SupportTrees[here].AddPath(Path, Intensity);
+                this.SupportTrees[here].Forward.AddPath(Path, Intensity);
             else
             {
                 var next = new AmbiguityTreeNode(here);
+                var back = new AmbiguityTreeNode(here);
                 next.AddPath(Path, Intensity);
-                this.SupportTrees.Add(here, next);
+                this.SupportTrees.Add(here, (back, next));
             }
             this.SupportingReads.Add(Identifier);
 
@@ -945,17 +951,24 @@ namespace Stitch
         }
 
         /// <summary>
-        /// Update the support for this node based on the previous node. And return the updated node as the result.
+        /// Add new higher order support to this node. This will not overwrite any previously added support.
         /// </summary>
-        /// <param name="previous">The previous node.</param>
-        /// <returns>A new node with the information from this node plus the backtracked information from the previous node.</returns>
-        public AmbiguityNode BacktrackSupport(AmbiguityNode previous)
+        /// <param name="here">The aminoacid at this location.</param>
+        /// <param name="Intensity">The Intensity of the supporting read.</param>
+        /// <param name="Identifier">The Identifier of the supporting read.</param>
+        /// <param name="Path">The path flowing from this node.</param>
+        public void UpdateHigherOrderSupportBackward(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
         {
-            var output = new AmbiguityNode(this.Position);
-            output.Support = new Dictionary<(AminoAcid, AminoAcid), double>(this.Support);
-            output.SupportTrees = this.SupportTrees;
-            output.SupportingReads = this.SupportingReads.Union(previous.SupportingReads).ToHashSet();
-            return output;
+            if (this.SupportTrees.ContainsKey(here))
+                this.SupportTrees[here].Backward.AddPath(Path, Intensity);
+            else
+            {
+                var next = new AmbiguityTreeNode(here);
+                var fore = new AmbiguityTreeNode(here);
+                next.AddPath(Path, Intensity);
+                this.SupportTrees.Add(here, (next, fore));
+            }
+            this.SupportingReads.Add(Identifier);
         }
     }
 

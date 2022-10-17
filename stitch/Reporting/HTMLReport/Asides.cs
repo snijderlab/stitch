@@ -723,11 +723,12 @@ namespace HTMLNameSpace
                 html.Close(HtmlTag.div);
                 foreach (var position in ambiguous)
                 {
-                    html.Open(HtmlTag.div, $"class='higher-order-graphs a{position.Position}'");
-                    foreach (var variant in position.SupportTrees)
-                    {
-                        html.Add(RenderAmbiguityTree(variant.Value));
-                    }
+                    var graphs = position.SupportTrees.Select(t => RenderAmbiguityTree(t.Value));
+                    var max_backward_length = graphs.Count() > 0 ? graphs.Max(g => g.BackwardLength) : 0;
+
+                    html.Open(HtmlTag.div, $"class='higher-order-graphs a{position.Position}' style='--max-backward-length:{max_backward_length};'");
+                    foreach (var graph in graphs)
+                        html.Add(graph.Graph);
                     html.Close(HtmlTag.div);
                 }
             }
@@ -736,70 +737,94 @@ namespace HTMLNameSpace
             return html;
         }
 
-        private static SvgBuilder RenderAmbiguityTree(AmbiguityTreeNode root)
+        private static (SvgBuilder Graph, int BackwardLength) RenderAmbiguityTree((AmbiguityTreeNode Backward, AmbiguityTreeNode Forward) root)
         {
             var svg = new SvgBuilder();
 
-            var levels = new List<List<(AmbiguityTreeNode Node, double Ordering)>>() { new List<(AmbiguityTreeNode, double)>() { (root, root.TotalIntensity()) } };
-            var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_placed = new HashSet<AmbiguityTreeNode>();
-            to_scan.Push((0, root));
-
-            while (to_scan.Count > 0)
+            AmbiguityTreeNode[][] GetLevels(AmbiguityTreeNode root)
             {
-                var element = to_scan.Pop();
-                foreach (var child in element.Node.Connections)
-                {
-                    if (already_placed.Contains(child.Next)) continue;
-                    already_placed.Add(child.Next);
+                var levels = new List<List<(AmbiguityTreeNode Node, double Ordering)>>() { new List<(AmbiguityTreeNode, double)>() { (root, root.TotalIntensity()) } };
+                var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
+                var already_placed = new HashSet<AmbiguityTreeNode>();
+                to_scan.Push((0, root));
 
-                    while (levels.Count() < element.Level + 2)
+                while (to_scan.Count > 0)
+                {
+                    var element = to_scan.Pop();
+                    foreach (var child in element.Node.Connections)
                     {
-                        levels.Add(new List<(AmbiguityTreeNode, double)>());
+                        if (already_placed.Contains(child.Next)) continue;
+                        already_placed.Add(child.Next);
+
+                        while (levels.Count() < element.Level + 2)
+                        {
+                            levels.Add(new List<(AmbiguityTreeNode, double)>());
+                        }
+                        to_scan.Push((element.Level + 1, child.Next));
+                        levels[element.Level + 1].Add((child.Next, element.Node.TotalIntensity() + child.Next.TotalIntensity()));
                     }
-                    to_scan.Push((element.Level + 1, child.Next));
-                    levels[element.Level + 1].Add((child.Next, element.Node.TotalIntensity() + child.Next.TotalIntensity()));
                 }
+
+                foreach (var level in levels)
+                    level.Sort((a, b) => b.Ordering.CompareTo(a.Ordering));
+
+                return levels.Select(level => level.Select(node => node.Node).ToArray()).ToArray();
             }
 
-            foreach (var level in levels)
-                level.Sort((a, b) => b.Ordering.CompareTo(a.Ordering));
+            var backward_levels = GetLevels(root.Backward);
+            var forward_levels = GetLevels(root.Forward);
+            backward_levels = backward_levels.Reverse().ToArray();
+            var levels = backward_levels.Concat(forward_levels.Skip(1)).ToArray(); // Skip the first level of the forward_levels because it contains the same node (from a human perspective) as the last from backwards_levels (the root).
 
             const int item_width = 80; // Total width of a level (option + arrow)
             const int item_height = 20; // Height of an option
             const int padding = 10; // Padding top and option char width
             const int clearing = 2; // Clearing around the option
-            var max_options = levels.Max(l => l.Count);
-            var w = levels.Count * item_width + padding * 2;
-            var h = max_options * item_height;
-            var max_intensity = levels.Max(level => level.Max((node) => node.Item1.Connections.Count > 0 ? node.Item1.Connections.Max(connection => connection.Intensity) : 0));
-            svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px'");
+            var max_options = levels.Max(l => l.Length);
+            var w = levels.Length * item_width + padding * 2;
+            var h = max_options * item_height + padding;
+            var max_intensity = levels.Max(level => level.Max((node) => node.Connections.Count > 0 ? node.Connections.Max(connection => connection.Intensity) : 0));
+            svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px' style='--backward-length:{backward_levels.Count()};'");
 
             // Save the position of all nodes
             var position = new Dictionary<AmbiguityTreeNode, (int X, int Y)>();
-            for (int level = 0; level < levels.Count; level++)
+            for (int level = 0; level < levels.Length; level++)
             {
-                var vertical_padding = (max_options - levels[level].Count) / 2;
-                for (int node = 0; node < levels[level].Count; node++)
+                var vertical_padding = (max_options - levels[level].Length) / 2;
+                for (int node = 0; node < levels[level].Length; node++)
                 {
                     var x = level * item_width;
                     var y = node * item_height + padding + padding / 2 + vertical_padding * item_height;
-                    if (!position.ContainsKey(levels[level][node].Item1)) position.Add(levels[level][node].Item1, (x, y));
-                    svg.OpenAndClose(SvgTag.text, $"class='option' x='{x}px' y='{y}px'", levels[level][node].Item1.Variant.Character.ToString());
+                    if (!position.ContainsKey(levels[level][node])) position.Add(levels[level][node], (x, y));
+                    var classes = "";
+                    if (levels[level][node].Equals(root.Backward))
+                    {
+                        classes = " root";
+                        position.Add(root.Forward, (x, y)); // Forward is skipped but is at the same position as backward
+                        svg.OpenAndClose(SvgTag.rect, $"class='root' x='{x - clearing * 2}px' y='{y - padding - padding / 2}px' width='{item_height}px' height='{item_height}px'");
+                    }
+                    svg.OpenAndClose(SvgTag.text, $"class='option{classes}' x='{x}px' y='{y}px'", levels[level][node].Variant.Character.ToString());
                 }
             }
 
-            levels.ForEach(level => level.ForEach((node) =>
-            node.Item1.Connections.ForEach(connection =>
+            // Go over all connections and draw the arrows. Add the first level of the forward_levels back in to keep those connections (it does not matter in which order these arrows are generated).
+            Array.ForEach(levels.Concat(forward_levels.Take(1)).ToArray(), level => Array.ForEach(level, (node) =>
+            node.Connections.ForEach(connection =>
             {
-                var pos1 = position[node.Node];
+                var pos1 = position[node];
                 var pos2 = position[connection.Next];
+                if (pos2.X < pos1.X)
+                {
+                    var c = pos1;
+                    pos1 = pos2;
+                    pos2 = c;
+                }
                 svg.OpenAndClose(SvgTag.line, $"class='support-arrow' x1='{pos1.X + padding + clearing}px' y1='{pos1.Y - padding / 2}px' x2='{pos2.X - clearing}px' y2='{pos2.Y - padding / 2}px' style='stroke-width:{connection.Intensity / max_intensity * 10}px'");
             })));
 
             svg.Close(SvgTag.svg);
 
-            return svg;
+            return (svg, backward_levels.Count());
         }
     }
 }
