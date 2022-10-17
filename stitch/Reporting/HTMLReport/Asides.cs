@@ -723,15 +723,83 @@ namespace HTMLNameSpace
                 html.Close(HtmlTag.div);
                 foreach (var position in ambiguous)
                 {
-                    html.Open(HtmlTag.pre, $"class='a{position.Position}'");
+                    html.Open(HtmlTag.div, $"class='higher-order-graphs a{position.Position}'");
                     foreach (var variant in position.SupportTrees)
-                        html.Content($"flowchart LR;\n{variant.Value.Mermaid()}\n\n");
-                    html.Close(HtmlTag.pre);
+                    {
+                        html.Add(RenderAmbiguityTree(variant.Value));
+                    }
+                    html.Close(HtmlTag.div);
                 }
             }
 
             html.Close(HtmlTag.div);
             return html;
+        }
+
+        private static SvgBuilder RenderAmbiguityTree(AmbiguityTreeNode root)
+        {
+            var svg = new SvgBuilder();
+
+            var levels = new List<List<(AmbiguityTreeNode Node, double Ordering)>>() { new List<(AmbiguityTreeNode, double)>() { (root, root.TotalIntensity()) } };
+            var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
+            var already_placed = new HashSet<AmbiguityTreeNode>();
+            to_scan.Push((0, root));
+
+            while (to_scan.Count > 0)
+            {
+                var element = to_scan.Pop();
+                foreach (var child in element.Node.Connections)
+                {
+                    if (already_placed.Contains(child.Next)) continue;
+                    already_placed.Add(child.Next);
+
+                    while (levels.Count() < element.Level + 2)
+                    {
+                        levels.Add(new List<(AmbiguityTreeNode, double)>());
+                    }
+                    to_scan.Push((element.Level + 1, child.Next));
+                    levels[element.Level + 1].Add((child.Next, element.Node.TotalIntensity() + child.Next.TotalIntensity()));
+                }
+            }
+
+            foreach (var level in levels)
+                level.Sort((a, b) => b.Ordering.CompareTo(a.Ordering));
+
+            const int item_width = 80; // Total width of a level (option + arrow)
+            const int item_height = 20; // Height of an option
+            const int padding = 10; // Padding top and option char width
+            const int clearing = 2; // Clearing around the option
+            var max_options = levels.Max(l => l.Count);
+            var w = levels.Count * item_width + padding * 2;
+            var h = max_options * item_height;
+            var max_intensity = levels.Max(level => level.Max((node) => node.Item1.Connections.Count > 0 ? node.Item1.Connections.Max(connection => connection.Intensity) : 0));
+            svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px'");
+
+            // Save the position of all nodes
+            var position = new Dictionary<AmbiguityTreeNode, (int X, int Y)>();
+            for (int level = 0; level < levels.Count; level++)
+            {
+                var vertical_padding = (max_options - levels[level].Count) / 2;
+                for (int node = 0; node < levels[level].Count; node++)
+                {
+                    var x = level * item_width;
+                    var y = node * item_height + padding + padding / 2 + vertical_padding * item_height;
+                    if (!position.ContainsKey(levels[level][node].Item1)) position.Add(levels[level][node].Item1, (x, y));
+                    svg.OpenAndClose(SvgTag.text, $"class='option' x='{x}px' y='{y}px'", levels[level][node].Item1.Variant.Character.ToString());
+                }
+            }
+
+            levels.ForEach(level => level.ForEach((node) =>
+            node.Item1.Connections.ForEach(connection =>
+            {
+                var pos1 = position[node.Node];
+                var pos2 = position[connection.Next];
+                svg.OpenAndClose(SvgTag.line, $"class='support-arrow' x1='{pos1.X + padding + clearing}px' y1='{pos1.Y - padding / 2}px' x2='{pos2.X - clearing}px' y2='{pos2.Y - padding / 2}px' style='stroke-width:{connection.Intensity / max_intensity * 10}px'");
+            })));
+
+            svg.Close(SvgTag.svg);
+
+            return svg;
         }
     }
 }

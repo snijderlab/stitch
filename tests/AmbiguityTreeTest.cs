@@ -5,7 +5,6 @@ using System.Text;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Stitch;
-using static Stitch.Template;
 
 namespace StitchTest
 {
@@ -13,9 +12,9 @@ namespace StitchTest
     public class AmbiguityTree_Test
     {
         readonly static Alphabet alp = new Alphabet("*;A;B;C;.\nA;1;0;0;-1\nB;0;1;0;-1\nC;0;0;1,-1\n.;-1;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
-        readonly static AminoAcid a = new AminoAcid(alp, 'A');
-        readonly static AminoAcid b = new AminoAcid(alp, 'B');
-        readonly static AminoAcid c = new AminoAcid(alp, 'C');
+        readonly static AminoAcid A = new AminoAcid(alp, 'A');
+        readonly static AminoAcid B = new AminoAcid(alp, 'B');
+        readonly static AminoAcid C = new AminoAcid(alp, 'C');
 
         [TestMethod]
         public void SimplePath()
@@ -23,14 +22,12 @@ namespace StitchTest
             // A → A → A → A → A
             //       ↘ B ↗
 
-            var root = new AmbiguityTreeNode(a);
-            root.AddPath(new List<AminoAcid>() { a, a, b, b }, 1.0);
-            root.AddPath(new List<AminoAcid>() { a, b, b, b }, 2.0);
-            Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
+            var root = new AmbiguityTreeNode(A);
+            root.AddPath(new List<AminoAcid>() { A, A, B, B }, 1.0);
+            root.AddPath(new List<AminoAcid>() { A, B, B, B }, 2.0);
             Assert.AreEqual("1-2-2-2", root.Topology());
             var intensity = root.TotalIntensity();
             root.Simplify();
-            Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("1-2-2-1", root.Topology());
             Assert.AreEqual(intensity, root.TotalIntensity());
         }
@@ -42,15 +39,13 @@ namespace StitchTest
             // B → A → A
             // C ↗
 
-            var root = new AmbiguityTreeNode(a);
-            root.AddPath(new List<AminoAcid>() { a, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { b, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { c, a, a }, 1.0);
-            Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
+            var root = new AmbiguityTreeNode(A);
+            root.AddPath(new List<AminoAcid>() { A, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { B, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { C, A, A }, 1.0);
             Assert.AreEqual("3-3-3", root.Topology());
             var intensity = root.TotalIntensity();
             root.Simplify();
-            Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-1", root.Topology());
             Assert.AreEqual(intensity, root.TotalIntensity());
         }
@@ -63,17 +58,15 @@ namespace StitchTest
             //   ↗
             // B → B → A → A
 
-            var root = new AmbiguityTreeNode(a);
-            root.AddPath(new List<AminoAcid>() { a, a, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { b, b, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { c, a, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { b, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { b }, 1.0);
-            Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
+            var root = new AmbiguityTreeNode(A);
+            root.AddPath(new List<AminoAcid>() { A, A, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { B, B, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { C, A, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { B, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { B }, 1.0);
             Assert.AreEqual("3-4-3-3", root.Topology());
             var intensity = root.TotalIntensity();
             root.Simplify();
-            Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-4-2-1", root.Topology());
             Assert.AreEqual(intensity, root.TotalIntensity());
         }
@@ -85,15 +78,13 @@ namespace StitchTest
             // * → * → * → A → A ↘
             // * → * → * → B → B → A → A
 
-            var root = new AmbiguityTreeNode(a);
-            root.AddPath(new List<AminoAcid>() { a, b, c, a, a, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { b, c, a, b, b, a, a }, 1.0);
-            root.AddPath(new List<AminoAcid>() { c, a, b, c, a, a, a }, 1.0);
-            Console.WriteLine($"BEFORE\nflowchart LR;\n{root.Mermaid()}");
+            var root = new AmbiguityTreeNode(A);
+            root.AddPath(new List<AminoAcid>() { A, B, C, A, A, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { B, C, A, B, B, A, A }, 1.0);
+            root.AddPath(new List<AminoAcid>() { C, A, B, C, A, A, A }, 1.0);
             Assert.AreEqual("3-3-3-3-3-3-3", root.Topology());
             var intensity = root.TotalIntensity();
             root.Simplify();
-            Console.WriteLine($"AFTER\nflowchart LR;\n{root.Mermaid()}");
             Assert.AreEqual("3-3-3-3-3-2-1", root.Topology());
             Assert.AreEqual(intensity, root.TotalIntensity());
         }
