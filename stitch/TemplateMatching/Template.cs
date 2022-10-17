@@ -621,9 +621,13 @@ namespace Stitch
         AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
         public AmbiguityNode[] SequenceAmbiguityAnalysis()
         {
+            // Check the cache
             if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
+
             var consensus = this.CombinedSequence();
             AmbiguityNode[] ambiguous;
+
+            // Find all ambiguous positions
             var a = consensus.Select((position, index) =>
             {
                 if (position.AminoAcids.Count() == 0) return -1;
@@ -635,6 +639,7 @@ namespace Stitch
             else
                 ambiguous = a.ToArray();
 
+            // Add all reads that support ambiguous positions
             for (int i = 0; i < ambiguous.Length - 1; i++)
             {
                 foreach (var peptide in this.Matches)
@@ -654,17 +659,24 @@ namespace Stitch
                 }
             }
 
+            // Simplify all trees
+            foreach (var position in ambiguous)
+                foreach (var tree in position.SupportTrees)
+                    tree.Value.Simplify();
+
+            // Backtrack all support
             var backtracked = new AmbiguityNode[ambiguous.Length];
             if (ambiguous.Length > 0) backtracked[0] = ambiguous[0];
 
             for (int i = 1; i < ambiguous.Length; i++)
                 backtracked[i] = ambiguous[i].BacktrackSupport(ambiguous[i - 1]);
 
+            // Set the cache
             SequenceAmbiguityAnalysisCache = backtracked;
             return ambiguous;
         }
 
-        public struct AmbiguityTreeNode
+        public struct AmbiguityTreeNode : IEquatable<AmbiguityTreeNode>
         {
             private static int counter = 0;
             private int id;
@@ -684,13 +696,13 @@ namespace Stitch
             /// </summary>
             /// <param name="Path">The path still to be added.</param>
             /// <param name="Intensity">The intensity of the path.</param>
-            public void AddPath(bool perfect, IEnumerable<AminoAcid> Path, double Intensity)
+            public void AddPath(IEnumerable<AminoAcid> Path, double Intensity, bool perfect = true)
             {
                 if (Path.Count() == 0) return;
                 if (Connections.Count() == 0)
                 {
                     var next = new AmbiguityTreeNode(Path.First());
-                    next.AddPath(perfect, Path.Skip(1), Intensity);
+                    next.AddPath(Path.Skip(1), Intensity, perfect);
                     Connections.Add((Intensity, next));
                     return;
                 }
@@ -698,10 +710,9 @@ namespace Stitch
                 var tail = this.Tail();
                 if (tail != null)
                 {
-                    tail.Reverse();
                     if (Path.Zip(tail).All(a => a.First == a.Second))
                     {
-                        this.Connections[0].Next.AddPath(perfect, Path.Skip(1), Intensity);
+                        this.Connections[0].Next.AddPath(Path.Skip(1), Intensity, perfect);
                         this.Connections[0] = (this.Connections[0].Intensity + Intensity, this.Connections[0].Next);
                         return;
                     }
@@ -712,7 +723,7 @@ namespace Stitch
                     {
                         if (connection.Next.Variant == Path.First())
                         {
-                            connection.Next.AddPath(true, Path.Skip(1), Intensity);
+                            connection.Next.AddPath(Path.Skip(1), Intensity, true);
                             return;
                         }
 
@@ -721,19 +732,101 @@ namespace Stitch
                 else
                 {
                     var next = new AmbiguityTreeNode(Path.First());
-                    next.AddPath(false, Path.Skip(1), Intensity);
+                    next.AddPath(Path.Skip(1), Intensity, false);
                     this.Connections.Add((Intensity, next));
                 }
             }
 
-            /// <returns>null or the tail in the reverse order.</returns>
+            /// <summary>
+            /// Simplify the tree by joining ends with this node as the root node. The function assumes the tree is not simplified yet.
+            /// </summary>
+            public void Simplify()
+            {
+                var levels = new List<List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>>() { new List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>() { (this, this) } };
+                var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
+                to_scan.Push((0, this));
+
+                while (to_scan.Count > 0)
+                {
+                    var element = to_scan.Pop();
+                    foreach (var child in element.Node.Connections)
+                    {
+                        while (levels.Count() < element.Level + 2)
+                        {
+                            levels.Add(new List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>());
+                        }
+                        to_scan.Push((element.Level + 1, child.Next));
+                        levels[element.Level + 1].Add((element.Node, child.Next));
+                    }
+                }
+
+                // Start from the end, go over all levels one by one and try to join the ends of paths.
+                // Paths can be joined if the variant they are pointing at is the same, and either they
+                // end at that position or they continue in a straight and equal tail.
+                levels.Reverse();
+                foreach (var level in levels.SkipLast(1))
+                {
+                    foreach (var variant_group in level.GroupBy(l => l.Node.Variant))
+                    {
+                        if (variant_group.Count() == 1) continue;
+                        var seen_before = new List<(AmbiguityTreeNode Node, AminoAcid[] Tail)>();
+                        var sorted_variant_group = variant_group.Select(n => (n.Parent, n.Node, n.Node.ReverseTail())).Select(i => (i.Parent, i.Node, i.Item3 == null ? 0 : i.Item3.Count())).ToList();
+                        sorted_variant_group.Sort((a, b) => b.Item3.CompareTo(a.Item3));
+
+                        // See if some of these can be joined, with the longest tail first to prevent throwing away tail information.
+                        foreach (var item in sorted_variant_group)
+                        {
+                            var tail_list = item.Node.Tail();
+                            if (tail_list == null) continue;
+                            var tail = tail_list.ToArray();
+                            var placed = false;
+
+                            foreach (var other in seen_before)
+                            {
+                                // Checks if the full overlap of the tail is equal (ignoring any overhang)
+                                if (tail.Zip(other.Tail).All(a => a.First == a.Second))
+                                {
+                                    // Combine the intensity for the remaining children if applicable.
+                                    if (item.Node.Connections.Count() == 1 && other.Node.Connections.Count() == 1)
+                                    {
+                                        other.Node.Connections[0] = (other.Node.Connections[0].Intensity + item.Node.Connections[0].Intensity, other.Node.Connections[0].Next);
+                                    }
+
+                                    // Set the correct connection for the parent
+                                    var index = item.Parent.Connections.FindIndex(n => n.Next.Variant == variant_group.Key);
+                                    item.Parent.Connections[index] = (item.Parent.Connections[index].Intensity, other.Node);
+                                    placed = true;
+
+                                    break;
+                                }
+                            }
+                            if (!placed)
+                            {
+                                seen_before.Add((item.Node, tail));
+                            }
+                        }
+                    }
+                }
+            }
+
+            /// <summary> The tail is the longest single connection path from this node. If any of the nodes 
+            /// in the path has multiple connections the tail is null. </summary>
+            /// <returns> null or the tail in the order. </returns>
             private List<AminoAcid> Tail()
+            {
+                var tail = this.ReverseTail();
+                tail.Reverse();
+                return tail;
+            }
+
+            /// <returns> null or the tail in the reverse order.</returns>
+            private List<AminoAcid> ReverseTail()
             {
                 if (this.Connections.Count() > 1) return null;
                 else if (this.Connections.Count() == 0) return new List<AminoAcid> { this.Variant };
                 else
                 {
-                    var tail = this.Connections[0].Next.Tail();
+                    var tail = this.Connections[0].Next.ReverseTail();
                     if (tail != null)
                     {
                         tail.Add(this.Variant);
@@ -747,15 +840,76 @@ namespace Stitch
 
             }
 
-            public string Mermaid()
+            /// <summary>
+            /// A mermaid representation of this DAG (without the 'flowchart LR;' bit).
+            /// </summary>
+            /// <param name="already_drawn">The set of reads that is already drawn, only for internal use.</param>
+            /// <returns>A string representation of this DAG.</returns>
+            public string Mermaid(HashSet<(int, int)> already_drawn = null)
             {
+                already_drawn = already_drawn ?? new HashSet<(int, int)>();
                 var buffer = "";
                 foreach (var connection in Connections)
                 {
+                    if (already_drawn.Contains((this.id, connection.Next.id))) continue;
+                    already_drawn.Add((this.id, connection.Next.id));
                     buffer += $"{this.id}{Variant} --> {connection.Next.id}{connection.Next.Variant};\n";
-                    buffer += connection.Next.Mermaid();
+                    buffer += connection.Next.Mermaid(already_drawn);
                 }
                 return buffer;
+            }
+
+            /// <summary>
+            /// A method to ease testing of a whole network.
+            /// </summary>
+            /// <returns>An array with the number of arrows on each level joined with '-'.</returns>
+            public string Topology()
+            {
+                var levels = new List<int>() { 0 };
+                var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
+                var already_scanned = new HashSet<(int, int)>();
+                to_scan.Push((0, this));
+                while (to_scan.Count > 0)
+                {
+                    var element = to_scan.Pop();
+                    foreach (var child in element.Node.Connections)
+                    {
+                        if (already_scanned.Contains((element.Node.id, child.Next.id))) continue;
+                        already_scanned.Add((element.Node.id, child.Next.id));
+                        while (levels.Count() < element.Level + 2)
+                        {
+                            levels.Add(0);
+                        }
+                        to_scan.Push((element.Level + 1, child.Next));
+                        levels[element.Level + 1] += 1;
+                    }
+                }
+                return string.Join('-', levels.Skip(1));
+            }
+
+            public bool Equals(AmbiguityTreeNode other)
+            {
+                return this.id == other.id;
+            }
+
+            public override bool Equals(object obj)
+            {
+                return base.Equals(obj);
+            }
+
+            public static bool operator ==(AmbiguityTreeNode first, AmbiguityTreeNode second)
+            {
+                return first.Equals(second);
+            }
+
+            public static bool operator !=(AmbiguityTreeNode first, AmbiguityTreeNode second)
+            {
+                return !first.Equals(second);
+            }
+
+            public override int GetHashCode()
+            {
+                return base.GetHashCode();
             }
         }
 
@@ -795,11 +949,11 @@ namespace Stitch
             public void UpdateHigherOrderSupport(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
             {
                 if (this.SupportTrees.ContainsKey(here))
-                    this.SupportTrees[here].AddPath(true, Path, Intensity);
+                    this.SupportTrees[here].AddPath(Path, Intensity);
                 else
                 {
                     var next = new AmbiguityTreeNode(here);
-                    next.AddPath(true, Path, Intensity);
+                    next.AddPath(Path, Intensity);
                     this.SupportTrees.Add(here, next);
                 }
                 this.SupportingReads.Add(Identifier);
@@ -824,21 +978,6 @@ namespace Stitch
                 output.SupportingReads = this.SupportingReads.Union(previous.SupportingReads).ToHashSet();
                 return output;
             }
-
-            // /public AmbiguityTreeNode[] CreateSupportTree()
-            // /{
-            // /    var output = new AmbiguityTreeNode[HigherOrderSupport.Count];
-            // /    foreach (var option in HigherOrderSupport.GroupBy(a => a.Variant))
-            // /    {
-            // /        var root = new AmbiguityTreeNode();
-            // /        root.Variant = option.Key;
-            // /        foreach (var path in option)
-            // /        {
-            // /            root.AddPath(path.Path, path.Intensity);
-            // /        }
-            // /    }
-            // /    return output;
-            // /}
         }
     }
 
