@@ -852,15 +852,15 @@ namespace Stitch
         {
             var levels = new List<int>() { 0 };
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<AmbiguityTreeNode>();
+            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
             to_scan.Push((0, this));
             while (to_scan.Count > 0)
             {
                 var element = to_scan.Pop();
                 foreach (var child in element.Node.Connections)
                 {
-                    if (already_scanned.Contains(child.Next)) continue;
-                    already_scanned.Add(child.Next);
+                    if (already_scanned.Contains((element.Node, child.Next))) continue;
+                    already_scanned.Add((element.Node, child.Next));
                     while (levels.Count() < element.Level + 2)
                     {
                         levels.Add(0);
@@ -879,15 +879,15 @@ namespace Stitch
         {
             double total = 0.0;
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<AmbiguityTreeNode>();
+            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
             to_scan.Push((0, this));
             while (to_scan.Count > 0)
             {
                 var element = to_scan.Pop();
                 foreach (var child in element.Node.Connections)
                 {
-                    if (already_scanned.Contains(child.Next)) continue;
-                    already_scanned.Add(child.Next);
+                    if (already_scanned.Contains((element.Node, child.Next))) continue;
+                    already_scanned.Add((element.Node, child.Next));
                     to_scan.Push((element.Level + 1, child.Next));
                     total += child.Intensity;
                 }
