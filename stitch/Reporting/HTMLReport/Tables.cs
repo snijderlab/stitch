@@ -148,7 +148,7 @@ namespace HTMLNameSpace
                 table_buffer.Close(HtmlTag.tr);
 
                 doc_buffer.Open(HtmlTag.div, "class='doc-plot'");
-                doc_buffer.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLinkHtml(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation()));
+                doc_buffer.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(templates[i].ConsensusSequence().Item2), GetAsideLinkHtml(templates[i].MetaData, type, AssetsFolderName), null, null, 10, templates[i].ConsensusSequenceAnnotation(), templates[i].MetaData.Identifier));
                 doc_buffer.Close(HtmlTag.div);
             }
 
@@ -219,7 +219,7 @@ namespace HTMLNameSpace
                 html.Open(HtmlTag.tr, $"id='{table_id}-{id}'");
                 html.Open(HtmlTag.td, "class='center'");
                 foreach (var g in group.Select(item => item.MetaData).Distinct())
-                    html.Add(GetAsideLinkHtml(g, AsideType.Template, AssetsFolderName));
+                    html.Add(GetAsideLinkHtml(g, AsideType.Read, AssetsFolderName));
                 html.Close(HtmlTag.td);
                 html.OpenAndClose(HtmlTag.td, "class='seq'", row.Sequence.Replace('~', Alphabet.GapChar));
                 html.Open(HtmlTag.td, "class='center'");

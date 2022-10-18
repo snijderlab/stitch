@@ -721,16 +721,19 @@ namespace HTMLNameSpace
                 html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
                 html.Add(svg);
                 html.Close(HtmlTag.div);
+                html.Open(HtmlTag.div, $"class='higher-order-graphs'");
+                html.TagWithHelp(HtmlTag.h2, "Higher order ambiguity graph", new HtmlBuilder(HTMLHelp.HigherOrderAmbiguityGraph));
                 foreach (var position in ambiguous)
                 {
                     var graphs = position.SupportTrees.Select(t => RenderAmbiguityTree(t.Value));
                     var max_backward_length = graphs.Count() > 0 ? graphs.Max(g => g.BackwardLength) : 0;
 
-                    html.Open(HtmlTag.div, $"class='higher-order-graphs a{position.Position}' style='--max-backward-length:{max_backward_length};'");
+                    html.Open(HtmlTag.div, $"class='position a{position.Position}' style='--max-backward-length:{max_backward_length};'");
                     foreach (var graph in graphs)
                         html.Add(graph.Graph);
                     html.Close(HtmlTag.div);
                 }
+                html.Close(HtmlTag.div);
             }
 
             html.Close(HtmlTag.div);

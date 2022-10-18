@@ -57,7 +57,7 @@ namespace HTMLNameSpace
             return Bargraph(labelled.ToList(), title, help, data_help);
         }
 
-        public static HtmlBuilder Bargraph(List<(string Label, double Value)> data, HtmlBuilder title = null, HtmlBuilder help = null, HtmlBuilder data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null)
+        public static HtmlBuilder Bargraph(List<(string Label, double Value)> data, HtmlBuilder title = null, HtmlBuilder help = null, HtmlBuilder data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null, string title_string = null)
         {
             var html = new HtmlBuilder();
             if (data.Count == 0)
@@ -80,7 +80,7 @@ namespace HTMLNameSpace
                     html.OpenAndClose(HtmlTag.h2, "class='title'", title);
 
             if (title != null) // Copy data should not appear in the alignment read detail index menus
-                html.CopyData(title + " (TSV)", data_help);
+                html.CopyData((title_string ?? title.ToString()) + " (TSV)", data_help);
 
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
