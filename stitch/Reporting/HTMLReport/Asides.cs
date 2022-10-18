@@ -681,14 +681,11 @@ namespace HTMLNameSpace
                 const int pad = 10; // Padding in front of and after everything in the X axis
                 const int text_pad = 12; // Approximate size of text (cube)
                 const int clearing = 2; // Extra clearing in front of options
+                const int bar_size = 5; // The width of the support bar
                 var w = (placed.Length - 1) * width_option + width_option / 2 + pad * 2;
                 var h = (max_nodes + 1) * height_option + pad;
                 svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px'");
-                svg.Open(SvgTag.defs);
-                svg.Open(SvgTag.marker, "id='marker' viewBox='0 0 10 10' refX='1' refY='5' markerUnits='strokeWidth' markerWidth='1.5' markerHeight='1.5' orient='auto'");
-                svg.OpenAndClose(SvgTag.path, "d='M 0 0 L 10 5 L 0 10 z'");
-                svg.Close(SvgTag.marker);
-                svg.Close(SvgTag.defs);
+                var max_higher_order_support = 0.0;
 
                 for (var node_pos = 0; node_pos < placed.Length; node_pos++)
                 {
@@ -699,6 +696,10 @@ namespace HTMLNameSpace
 
                     for (var option_pos = 0; option_pos < placed[node_pos].Count; option_pos++)
                     {
+                        var higher_order_trees = ambiguous[node_pos].SupportTrees[placed[node_pos][option_pos].Item1];
+                        var support = higher_order_trees.Backward.TotalIntensity() + higher_order_trees.Forward.TotalIntensity();
+                        max_higher_order_support = Math.Max(max_higher_order_support, support);
+                        svg.OpenAndClose(SvgTag.rect, $"x='{pad + node_pos * width_option + text_pad}px' y='{(option_pos + 2) * height_option}px' width='{bar_size}px' height='{text_pad}px' class='support-bar' style='--support:{support}'", placed[node_pos][option_pos].Item1.Character.ToString());
                         svg.OpenAndClose(SvgTag.text, $"x='{pad + node_pos * width_option}px' y='{(option_pos + 2) * height_option}px' class='option'", placed[node_pos][option_pos].Item1.Character.ToString());
                     }
 
@@ -706,10 +707,10 @@ namespace HTMLNameSpace
                     {
                         var y1 = placed[node_pos].FindIndex(p => p.Item1 == set.Key.Item1);
                         var y2 = placed[node_pos + 1].FindIndex(p => p.Item1 == set.Key.Item2);
-                        svg.OpenAndClose(SvgTag.line, $"x1={pad + node_pos * width_option + text_pad}px y1={(y1 + 2) * height_option - text_pad / 2}px x2={pad + (node_pos + 1) * width_option - clearing}px y2={(y2 + 2) * height_option - text_pad / 2}px class='support-arrow' style='--support-global:{set.Value / max_support};--support-local:{set.Value / max_local}'");
+                        svg.OpenAndClose(SvgTag.line, $"x1={pad + node_pos * width_option + text_pad + bar_size + clearing}px y1={(y1 + 2) * height_option - text_pad / 2}px x2={pad + (node_pos + 1) * width_option - clearing}px y2={(y2 + 2) * height_option - text_pad / 2}px class='support-arrow' style='--support-global:{set.Value / max_support};--support-local:{set.Value / max_local}'");
                     }
                 }
-                svg.OpenAndClose(SvgTag.line, $"x1='0px' y1='{height_option + 4}px' x2='{w}px' y2='{height_option + 4}px' class='baseline'");
+                svg.OpenAndClose(SvgTag.line, $"x1='0px' y1='{height_option + clearing * 2}px' x2='{w}px' y2='{height_option + clearing * 2}px' class='baseline'");
                 svg.Close(SvgTag.svg);
 
                 html.OpenAndClose(HtmlTag.p, "", "Determine stroke width:");
@@ -718,19 +719,43 @@ namespace HTMLNameSpace
                 html.OpenAndClose(HtmlTag.span, "", "Local");
                 html.OpenAndClose(HtmlTag.span, "", "Global");
                 html.Close(HtmlTag.label);
-                html.Open(HtmlTag.div, "id='ambiguity-wrapper'");
+                html.Open(HtmlTag.div, $"id='ambiguity-wrapper' style='--max-support:{max_higher_order_support}'");
                 html.Add(svg);
                 html.Close(HtmlTag.div);
                 html.Open(HtmlTag.div, $"class='higher-order-graphs'");
-                html.TagWithHelp(HtmlTag.h2, "Higher order ambiguity graph", new HtmlBuilder(HTMLHelp.HigherOrderAmbiguityGraph));
-                foreach (var position in ambiguous)
+                html.TagWithHelp(HtmlTag.h2, "Higher Order Ambiguity Graph", new HtmlBuilder(HTMLHelp.HigherOrderAmbiguityGraph));
+                for (int ambiguous_position = 0; ambiguous_position < ambiguous.Length; ambiguous_position++)
                 {
-                    var graphs = position.SupportTrees.Select(t => RenderAmbiguityTree(t.Value));
-                    var max_backward_length = graphs.Count() > 0 ? graphs.Max(g => g.BackwardLength) : 0;
+                    var position = ambiguous[ambiguous_position];
+                    var graphs = position.SupportTrees.Select(t => (RenderAmbiguityTree(t.Value), t.Value.Forward.Variant)).Select((a) => (a.Item1.Graph, a.Item1.BackwardLength, a.Variant)).ToList();
+                    var max_backward_length = graphs.Count() == 0 ? 0 : graphs.Max(g => g.BackwardLength);
 
                     html.Open(HtmlTag.div, $"class='position a{position.Position}' style='--max-backward-length:{max_backward_length};'");
-                    foreach (var graph in graphs)
+                    if (graphs.Count() == 0)
+                    {
+                        html.OpenAndClose(HtmlTag.p, "class='error'", "No higher order graphs found.");
+                        html.Close(HtmlTag.div);
+                        continue;
+                    }
+
+                    // Find the support for all graphs on this position
+                    var order = graphs.Select(i => (i.Variant, 0.0)); // All graphs that were drawn (sometimes one of these has no 1st order support but it has to be included anyway)
+                    if (position.Support.Count() > 0) order = order.Concat(position.Support.Select(a => (a.Key.Item1, a.Value))); // Forward 1st order support
+                    if (ambiguous_position > 0) order = order.Concat(ambiguous[ambiguous_position - 1].Support.Select(a => (a.Key.Item2, a.Value))); // backward 1st order support
+
+                    // Deduplicate order
+                    var sorted_order = order.GroupBy(a => a.Item1).Select(a => (a.Key, a.Select(i => i.Item2).Sum())).ToList();
+                    sorted_order.Sort((a, b) => b.Item2.CompareTo(a.Item2));
+                    var local_max_support = Math.Max(1, sorted_order.Select(i => i.Item2).Max());
+
+                    html.OpenAndClose(HtmlTag.p, "class='title'", "1st order support");
+                    html.OpenAndClose(HtmlTag.p, "class='title'", "Higher order graph");
+                    foreach (var variant in sorted_order)
+                    {
+                        var graph = graphs.Find(a => a.Variant == variant.Item1);
+                        html.OpenAndClose(HtmlTag.div, $"class='bar' style='width:{variant.Item2 / local_max_support:P}'");
                         html.Add(graph.Graph);
+                    }
                     html.Close(HtmlTag.div);
                 }
                 html.Close(HtmlTag.div);
@@ -784,7 +809,7 @@ namespace HTMLNameSpace
             const int padding = 10; // Padding top and option char width
             const int clearing = 2; // Clearing around the option
             var max_options = levels.Max(l => l.Length);
-            var w = levels.Length * item_width + padding * 2;
+            var w = (levels.Length - 1) * item_width + padding * 2;
             var h = max_options * item_height + padding;
             var max_intensity = levels.Max(level => level.Max((node) => node.Connections.Count > 0 ? node.Connections.Max(connection => connection.Intensity) : 0));
             svg.Open(SvgTag.svg, $"viewBox='0 0 {w} {h}' width='{w}px' height='{h}px' style='--backward-length:{backward_levels.Count()};'");
@@ -793,11 +818,11 @@ namespace HTMLNameSpace
             var position = new Dictionary<AmbiguityTreeNode, (int X, int Y)>();
             for (int level = 0; level < levels.Length; level++)
             {
-                var vertical_padding = (max_options - levels[level].Length) / 2;
+                var vertical_padding = max_options - levels[level].Length;
                 for (int node = 0; node < levels[level].Length; node++)
                 {
                     var x = level * item_width;
-                    var y = node * item_height + padding + padding / 2 + vertical_padding * item_height;
+                    var y = node * item_height + padding + padding / 2 + vertical_padding * item_height / 2;
                     if (!position.ContainsKey(levels[level][node])) position.Add(levels[level][node], (x, y));
                     var classes = "";
                     if (levels[level][node].Equals(root.Backward))

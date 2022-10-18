@@ -659,9 +659,10 @@ namespace Stitch
                     {
                         var reverse_path = new List<AminoAcid>(path);
                         reverse_path.Reverse();
-                        for (int j = 0; j < reverse_path.Count; j++)
+                        reverse_path.Add(this_aa.Value);
+                        for (int j = 0; j < reverse_path.Count - 1; j++)
                         {
-                            ambiguous[i + reverse_path.Count - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.MetaData.Intensity, peptide.MetaData.Identifier, reverse_path.Skip(j).ToArray());
+                            ambiguous[i + reverse_path.Count - 1 - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.MetaData.Intensity, peptide.MetaData.Identifier, reverse_path.Skip(j + 1).ToArray());
                         }
                         ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
                     }
@@ -935,10 +936,10 @@ namespace Stitch
                 this.SupportTrees[here].Forward.AddPath(Path, Intensity);
             else
             {
-                var next = new AmbiguityTreeNode(here);
                 var back = new AmbiguityTreeNode(here);
-                next.AddPath(Path, Intensity);
-                this.SupportTrees.Add(here, (back, next));
+                var fore = new AmbiguityTreeNode(here);
+                fore.AddPath(Path, Intensity);
+                this.SupportTrees.Add(here, (back, fore));
             }
             this.SupportingReads.Add(Identifier);
 
@@ -963,10 +964,10 @@ namespace Stitch
                 this.SupportTrees[here].Backward.AddPath(Path, Intensity);
             else
             {
-                var next = new AmbiguityTreeNode(here);
+                var back = new AmbiguityTreeNode(here);
                 var fore = new AmbiguityTreeNode(here);
-                next.AddPath(Path, Intensity);
-                this.SupportTrees.Add(here, (next, fore));
+                back.AddPath(Path, Intensity);
+                this.SupportTrees.Add(here, (back, fore));
             }
             this.SupportingReads.Add(Identifier);
         }
