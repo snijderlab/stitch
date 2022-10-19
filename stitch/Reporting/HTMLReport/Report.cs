@@ -14,14 +14,10 @@ using HtmlGenerator;
 
 namespace Stitch
 {
-    /// <summary>
-    /// An HTML report.
-    /// </summary>
+    /// <summary> An HTML report. </summary> 
     public class HTMLReport : Report
     {
-        /// <summary>
-        /// The name of the assets folder
-        /// </summary>
+        /// <summary> The name of the assets folder </summary>
         public string AssetsFolderName;
         string FullAssetsFolderName;
         public RunParameters.Report.HTML ReportParameter;

@@ -8,19 +8,13 @@ using Stitch.RunParameters;
 
 namespace Stitch
 {
-    /// <summary>
-    /// To contain all input functionality
-    /// </summary>
+    /// <summary> To contain all input functionality </summary> 
     namespace InputNameSpace
     {
-        /// <summary>
-        /// A class with helper functionality for parsing
-        /// </summary>
+        /// <summary> A class with helper functionality for parsing </summary>
         static class ParseHelper
         {
-            /// <summary>
-            /// Split a line by a separator and return the trimmed pieces and their position as a FileRange.
-            /// </summary>
+            /// <summary> Split a line by a separator and return the trimmed pieces and their position as a FileRange. </summary> 
             /// <param name="separator">The separator to use.</param>
             /// <param name="linenumber">The linenumber.</param>
             /// <param name="parse_file">The file where the line should be taken from.</param>
@@ -49,16 +43,14 @@ namespace Stitch
                 ));
                 return results;
             }
-            /// <summary>
-            /// Converts a string to an int, while it generates meaningful error messages for the end user.
-            /// </summary>
-            /// <param name="input">The string to be converted to an int.</param>
+
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
             /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<int> ConvertToInt(string input, FileRange pos)
             {
                 try
                 {
-                    return new ParseResult<int>(Convert.ToInt32(input));
+                    return new ParseResult<int>(Convert.ToInt32(input, new System.Globalization.CultureInfo("en-US")));
                 }
                 catch (FormatException)
                 {
@@ -75,9 +67,24 @@ namespace Stitch
                     return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
-            /// <summary>
-            /// Converts a string to a double, while it generates meaningful error messages for the end user.
-            /// </summary>
+
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
+            /// <returns>If successfull: the number (int32)</returns>
+            public static ParseResult<int> ConvertToInt(KeyValue item)
+            {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<int>(input.Messages);
+                return ConvertToInt(input.Unwrap(), item.ValueRange);
+            }
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
+            /// <returns>If successfull: the number (int32)</returns>
+            public static ParseResult<double> ConvertToDouble(KeyValue item)
+            {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<double>(input.Messages);
+                return ConvertToDouble(input.Unwrap(), item.ValueRange);
+            }
+            /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary> 
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
             public static ParseResult<double> ConvertToDouble(string input, FileRange pos)
@@ -94,7 +101,7 @@ namespace Stitch
                 }
                 catch (OverflowException)
                 {
-                    return new ParseResult<double>(new ErrorMessage(pos, "Outside bounds"));
+                    return new ParseResult<double>(new ErrorMessage(pos, "Outside bounds for the underlying datatype"));
                 }
                 catch
                 {
@@ -106,14 +113,14 @@ namespace Stitch
                 var outEither = new ParseResult<InputData.InputParameters>();
                 var output = new InputData.InputParameters();
 
-                foreach (var pair in key.GetValues())
+                foreach (var pair in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (pair.Name)
                     {
                         case "peaks":
                             var settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
@@ -123,7 +130,7 @@ namespace Stitch
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        settings.File.Name = setting.GetValue();
+                                        settings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
@@ -145,7 +152,7 @@ namespace Stitch
                         case "reads":
                             var rsettings = new InputData.Reads();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
@@ -155,7 +162,7 @@ namespace Stitch
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        rsettings.File.Name = setting.GetValue();
+                                        rsettings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
@@ -172,7 +179,7 @@ namespace Stitch
                         case "novor":
                             var novor_settings = new InputData.Novor();
                             string name = null;
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
@@ -186,16 +193,17 @@ namespace Stitch
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        name = setting.GetValue();
+                                        name = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     case "separator":
-                                        if (setting.GetValue().Length != 1)
+                                        var value = setting.GetValue().GetValueOrDefault(outEither, ",");
+                                        if (value.Length != 1)
                                             outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
                                         else
-                                            novor_settings.Separator = setting.GetValue().First();
+                                            novor_settings.Separator = value.First();
                                         break;
                                     case "cutoff":
-                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
@@ -213,7 +221,7 @@ namespace Stitch
                         case "fasta":
                             var fastasettings = new InputData.FASTA();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
@@ -223,7 +231,7 @@ namespace Stitch
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fastasettings.File.Name = setting.GetValue();
+                                        fastasettings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     case "identifier":
                                         fastasettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
@@ -249,7 +257,7 @@ namespace Stitch
 
                             var peaks_settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
@@ -260,7 +268,7 @@ namespace Stitch
                                         break;
                                     case "startswith":
                                         if (!string.IsNullOrWhiteSpace(starts_with)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        starts_with = setting.GetValue();
+                                        starts_with = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     case "identifier":
                                         identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
@@ -350,7 +358,7 @@ namespace Stitch
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
-                    if (!reads.HasFailed()) Input.Data.Raw.Add(reads.ReturnOrFail());
+                    if (!reads.IsErr()) Input.Data.Raw.Add(reads.Unwrap());
                 }
 
                 Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp, name_filter).GetValue(result);
@@ -362,20 +370,20 @@ namespace Stitch
                 var outEither = new ParseResult<TemplateMatchingParameter>();
                 var output = new TemplateMatchingParameter();
 
-                foreach (var setting in key.GetValues())
+                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "ambiguitythreshold":
-                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, 1.0, "0..1", setting.ValueRange).GetValue(outEither);
+                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, 1.0, "0..1", setting.ValueRange).GetValue(outEither);
                             break;
                         case "segments":
                             if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var outer_children = new List<SegmentValue>();
-                            foreach (var segment in setting.GetValues())
+                            foreach (var segment in setting.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 if (segment.Name == "segment")
                                 {
@@ -391,7 +399,7 @@ namespace Stitch
                                 else
                                 {
                                     var children = new List<SegmentValue>();
-                                    foreach (var sub_segment in segment.GetValues())
+                                    foreach (var sub_segment in segment.GetValues().GetValueOrDefault(outEither, new()))
                                     {
                                         var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).GetValue(outEither);
 
@@ -445,22 +453,22 @@ namespace Stitch
                 var order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
-                foreach (var setting in key.GetValues())
+                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "n":
-                            output.N = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.N = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "order":
                             if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (setting.IsSingle()) order.Add(setting);
                             else
-                                foreach (var group in setting.GetValues())
+                                foreach (var group in setting.GetValues().GetValueOrDefault(outEither, new()))
                                     order.Add(group);
                             break;
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -493,24 +501,24 @@ namespace Stitch
                 var outEither = new ParseResult<ReportParameter>();
                 var output = new ReportParameter();
 
-                foreach (var pair in key.GetValues())
+                foreach (var pair in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (pair.Name)
                     {
                         case "folder":
                             if (output.Folder != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Folder = Path.GetFullPath(pair.GetValue());
+                            output.Folder = Path.GetFullPath(pair.GetValue().GetValueOrDefault(outEither, null));
                             break;
                         case "html":
                             var h_settings = new RunParameters.Report.HTML();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        h_settings.Path = setting.GetValue();
+                                        h_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path'"));
@@ -523,13 +531,13 @@ namespace Stitch
                         case "json":
                             var j_settings = new RunParameters.Report.JSON();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        j_settings.Path = setting.GetValue();
+                                        j_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "JSON", "'Path'"));
@@ -542,29 +550,33 @@ namespace Stitch
                         case "fasta":
                             var f_settings = new RunParameters.Report.FASTA();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        f_settings.Path = setting.GetValue();
+                                        f_settings.Path = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     case "minimalscore":
-                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "outputtype":
-                                        switch (setting.GetValue().ToLower())
+                                        var res = setting.GetValue();
+                                        if (res.IsOk(outEither))
                                         {
-                                            case "templatematching":
-                                                f_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
-                                                break;
-                                            case "recombine":
-                                                f_settings.OutputType = RunParameters.Report.OutputType.Recombine;
-                                                break;
-                                            default:
-                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
-                                                break;
+                                            switch (res.Unwrap().ToLower())
+                                            {
+                                                case "templatematching":
+                                                    f_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
+                                                    break;
+                                                case "recombine":
+                                                    f_settings.OutputType = RunParameters.Report.OutputType.Recombine;
+                                                    break;
+                                                default:
+                                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
+                                                    break;
+                                            }
                                         }
                                         break;
                                     default:
@@ -578,26 +590,30 @@ namespace Stitch
                         case "csv":
                             var c_settings = new RunParameters.Report.CSV();
 
-                            foreach (var setting in pair.GetValues())
+                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        c_settings.Path = setting.GetValue();
+                                        c_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
                                         break;
                                     case "outputtype":
-                                        switch (setting.GetValue().ToLower())
+                                        var res = setting.GetValue();
+                                        if (res.IsOk(outEither))
                                         {
-                                            case "templatematching":
-                                                c_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
-                                                break;
-                                            case "recombine":
-                                                c_settings.OutputType = RunParameters.Report.OutputType.Recombine;
-                                                break;
-                                            default:
-                                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "CSV OutputType", "'TemplateMatching' and 'Recombine'"));
-                                                break;
+                                            switch (res.Unwrap().ToLower())
+                                            {
+                                                case "templatematching":
+                                                    c_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
+                                                    break;
+                                                case "recombine":
+                                                    c_settings.OutputType = RunParameters.Report.OutputType.Recombine;
+                                                    break;
+                                                default:
+                                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "CSV OutputType", "'TemplateMatching' and 'Recombine'"));
+                                                    break;
+                                            }
                                         }
                                         break;
                                     default:
@@ -623,7 +639,7 @@ namespace Stitch
                 var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<AlphabetParameter>(asettings);
 
-                if (key.GetValues().Count == 0)
+                if (key.GetValues().IsErr())
                 {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
                     return outEither;
@@ -631,7 +647,7 @@ namespace Stitch
 
                 (char[], int[,]) result;
 
-                foreach (var setting in key.GetValues())
+                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
@@ -639,7 +655,7 @@ namespace Stitch
                             if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var all_text = GetAllText(setting);
 
-                            if (all_text.HasFailed())
+                            if (all_text.IsErr())
                             {
                                 all_text.GetValue(outEither);
                                 return outEither;
@@ -654,21 +670,25 @@ namespace Stitch
                             break;
                         case "data":
                             if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var data_content = setting.GetValue().Split("\n");
-                            var data_counter = new Tokenizer.Counter(setting.ValueRange.Start);
-                            result = ParseAlphabetData(data_content, data_counter).GetValue(outEither);
-                            asettings.Alphabet = result.Item1;
-                            asettings.ScoringMatrix = result.Item2;
+                            var res = setting.GetValue();
+                            if (res.IsOk(outEither))
+                            {
+                                var data_content = res.Unwrap().Split("\n");
+                                var data_counter = new Tokenizer.Counter(setting.ValueRange.Start);
+                                result = ParseAlphabetData(data_content, data_counter).GetValue(outEither);
+                                asettings.Alphabet = result.Item1;
+                                asettings.ScoringMatrix = result.Item2;
+                            }
                             break;
                         case "name":
                             if (!string.IsNullOrEmpty(asettings.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            asettings.Name = setting.GetValue();
+                            asettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         case "gapextendpenalty":
-                            asettings.GapExtendPenalty = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
@@ -687,11 +707,11 @@ namespace Stitch
                 var file = new ParsedFile("Inline alphabet", lines);
                 if (type == Alphabet.AlphabetParamType.Path)
                 {
-                    lines = GetAllText(data).ReturnOrFail().Split('\n');
+                    lines = GetAllText(data).Unwrap().Split('\n');
                     file = new ParsedFile(data, lines);
                 }
                 var counter = new Tokenizer.Counter(file);
-                return ParseAlphabetData(lines, counter).ReturnOrFail();
+                return ParseAlphabetData(lines, counter).Unwrap();
             }
             public static ParseResult<(char[], int[,])> ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
             {
@@ -778,15 +798,19 @@ namespace Stitch
                 var outEither = new ParseResult<Regex>();
                 try
                 {
-                    outEither.Value = new Regex(node.GetValue().Trim());
+                    var res = node.GetValue();
+                    if (res.IsOk(outEither))
+                    {
+                        outEither.Value = new Regex(res.Unwrap().Trim());
 
-                    if (outEither.Value.GetGroupNumbers().Length <= 1)
-                    {
-                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no capturing groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
-                    }
-                    else if (outEither.Value.GetGroupNumbers().Length > 3)
-                    {
-                        outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first two will be used.", "", true));
+                        if (outEither.Value.GetGroupNumbers().Length <= 1)
+                        {
+                            outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no capturing groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
+                        }
+                        else if (outEither.Value.GetGroupNumbers().Length > 3)
+                        {
+                            outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first two will be used.", "", true));
+                        }
                     }
                 }
                 catch (ArgumentException)
@@ -795,9 +819,7 @@ namespace Stitch
                 }
                 return outEither;
             }
-            /// <summary>
-            /// Parses a Template
-            /// </summary>
+            /// <summary> Parses a Template </summary> 
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
             public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, bool extended)
@@ -811,7 +833,7 @@ namespace Stitch
                 var tsettings = new SegmentValue();
                 var outEither = new ParseResult<SegmentValue>(tsettings);
 
-                foreach (var setting in node.GetValues())
+                foreach (var setting in node.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
@@ -822,10 +844,10 @@ namespace Stitch
                             break;
                         case "name":
                             if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            tsettings.Name = setting.GetValue();
+                            tsettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                             break;
                         case "cutoffscore":
-                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting.GetValue(), setting.ValueRange).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                             else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
                             break;
                         case "alphabet":
@@ -843,18 +865,22 @@ namespace Stitch
                             tsettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
                             break;
                         case "scoring":
-                            var scoring = setting.GetValue().ToLower();
-                            if (scoring == "absolute")
+                            var res = setting.GetValue();
+                            if (res.IsOk(outEither))
                             {
-                                tsettings.Scoring = ScoringParameter.Absolute;
-                            }
-                            else if (scoring == "relative")
-                            {
-                                tsettings.Scoring = ScoringParameter.Relative;
-                            }
-                            else
-                            {
-                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
+                                var scoring = res.Unwrap().ToLower();
+                                if (scoring == "absolute")
+                                {
+                                    tsettings.Scoring = ScoringParameter.Absolute;
+                                }
+                                else if (scoring == "relative")
+                                {
+                                    tsettings.Scoring = ScoringParameter.Relative;
+                                }
+                                else
+                                {
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
+                                }
                             }
                             break;
                         case "gaphead":
@@ -899,7 +925,7 @@ namespace Stitch
                     outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
 
                 outEither.Messages.AddRange(folder_reads.Messages);
-                if (!folder_reads.HasFailed()) tsettings.Templates = folder_reads.ReturnOrFail();
+                if (!folder_reads.IsErr()) tsettings.Templates = folder_reads.Unwrap();
 
                 return outEither;
             }
@@ -919,33 +945,45 @@ namespace Stitch
                 switch (name)
                 {
                     case "format":
-                        switch (setting.GetValue().ToLower())
+                        var res = setting.GetValue();
+                        if (res.IsOk(outEither))
                         {
-                            case "old":
-                                peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
-                                break;
-                            case "x":
-                                peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
-                                break;
-                            case "x+":
-                                peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
-                                break;
-                            default:
-                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
-                                break;
+                            switch (res.Unwrap().ToLower())
+                            {
+                                case "old":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                    break;
+                                case "x":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                    break;
+                                case "x+":
+                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                    break;
+                                default:
+                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
+                                    break;
+                            }
                         }
                         break;
                     case "separator":
-                        if (setting.GetValue().Length != 1)
-                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                        else
-                            peaks_settings.Separator = setting.GetValue().First();
+                        var res0 = setting.GetValue();
+                        if (res0.IsOk(outEither))
+                        {
+                            if (res0.Unwrap().Length != 1)
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                            else
+                                peaks_settings.Separator = res0.Unwrap().First();
+                        }
                         break;
                     case "decimalseparator":
-                        if (setting.GetValue().Length != 1)
-                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                        else
-                            peaks_settings.DecimalSeparator = setting.GetValue().First();
+                        var res1 = setting.GetValue();
+                        if (res1.IsOk(outEither))
+                        {
+                            if (res1.Unwrap().Length != 1)
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                            else
+                                peaks_settings.DecimalSeparator = res1.Unwrap().First();
+                        }
                         break;
                     default:
                         var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).GetValue(outEither);
@@ -975,13 +1013,13 @@ namespace Stitch
                 switch (name)
                 {
                     case "cutoffalc":
-                        parameters.CutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                        parameters.CutoffALC = ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                        parameters.LocalCutoffALC = ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
                         break;
                     case "minlengthpatch":
-                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting.GetValue(), setting.ValueRange).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
                         break;
                     default:
                         outEither.Value = (parameters, false);
@@ -993,17 +1031,21 @@ namespace Stitch
             public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false)
             {
                 var output = new ParseResult<bool>(def);
-                switch (setting.GetValue().ToLower())
+                var res = setting.GetValue();
+                if (res.IsOk(output))
                 {
-                    case "true":
-                        output.Value = true;
-                        break;
-                    case "false":
-                        output.Value = false;
-                        break;
-                    default:
-                        output.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, context, "'True' or 'False'"));
-                        break;
+                    switch (res.Unwrap().ToLower())
+                    {
+                        case "true":
+                            output.Value = true;
+                            break;
+                        case "false":
+                            output.Value = false;
+                            break;
+                        default:
+                            output.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, context, "'True' or 'False'"));
+                            break;
+                    }
                 }
                 return output;
             }
@@ -1023,15 +1065,19 @@ namespace Stitch
             public static ParseResult<string> GetFullPath(KeyValue setting)
             {
                 var outEither = new ParseResult<string>();
-                var res = GetFullPathPrivate(setting.GetValue());
+                var res = setting.GetValue();
+                if (res.IsOk(outEither))
+                {
+                    var path = GetFullPathPrivate(res.Unwrap());
 
-                if (string.IsNullOrEmpty(res.Item2))
-                {
-                    outEither.Value = Path.GetFullPath(res.Item1);
-                }
-                else
-                {
-                    outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2));
+                    if (string.IsNullOrEmpty(path.Item2))
+                    {
+                        outEither.Value = Path.GetFullPath(path.Item1);
+                    }
+                    else
+                    {
+                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, path.Item1, path.Item2));
+                    }
                 }
                 return outEither;
             }
@@ -1178,12 +1224,14 @@ namespace Stitch
             public static ParseResult<string> GetAllText(KeyValue setting)
             {
                 var outEither = new ParseResult<string>();
+                var item = setting.GetValue();
+                if (item.IsOk(outEither))
+                {
+                    var res = GetAllTextPrivate(item.Unwrap());
 
-                var res = GetAllTextPrivate(setting.GetValue());
-
-                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
-                else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
-
+                    if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
+                    else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
+                }
                 return outEither;
             }
             public static ParseResult<string> GetAllText(ReadMetaData.FileIdentifier file)

@@ -5,9 +5,7 @@ using System.Text.Json.Serialization;
 
 namespace Stitch
 {
-    /// <summary>
-    /// To contain an alphabet with scoring matrix to score pairs of amino acids
-    /// </summary>
+    /// <summary> To contain an alphabet with scoring matrix to score pairs of amino acids </summary> 
     public class Alphabet
     {
         [JsonIgnore]
@@ -15,29 +13,19 @@ namespace Stitch
         /// As such this matrix is rectangular. </summary>
         public readonly int[,] ScoringMatrix;
 
-        /// <summary>
-        /// The position for each possible amino acid in the ScoringMatrix for fast lookups.
-        /// </summary>
+        /// <summary> The position for each possible amino acid in the ScoringMatrix for fast lookups. </summary>
         public readonly Dictionary<char, int> PositionInScoringMatrix;
 
-        /// <summary>
-        /// The penalty for opening a gap in an alignment
-        /// </summary>
+        /// <summary> The penalty for opening a gap in an alignment </summary>
         public readonly int GapStartPenalty;
 
-        /// <summary>
-        /// The penalty for extending a gap in an alignment
-        /// </summary>
+        /// <summary> The penalty for extending a gap in an alignment </summary>
         public readonly int GapExtendPenalty;
 
-        /// <summary>
-        /// The char that represents a gap
-        /// </summary>
+        /// <summary> The char that represents a gap </summary>
         public const char GapChar = '.';
 
-        /// <summary>
-        /// The char that represents a stop codon, where translation will stop.
-        /// </summary>
+        /// <summary> The char that represents a stop codon, where translation will stop. </summary>
         public const char StopCodon = '*';
 
         /// <summary> Find the index of the given character in the alphabet. </summary>
@@ -55,9 +43,7 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// To indicate if the given string is data or a path to the data
-        /// </summary>
+        /// <summary> To indicate if the given string is data or a path to the data </summary>
         public enum AlphabetParamType
         {
             /// <summary> It is the data itself. </summary>
@@ -66,9 +52,7 @@ namespace Stitch
             Path
         }
 
-        /// <summary>
-        /// Create a new Alphabet
-        /// </summary>
+        /// <summary> Create a new Alphabet </summary>
         /// <param name="alphabetValue">The RunParameter to use</param>
         /// <returns></returns>
         public Alphabet(RunParameters.AlphabetParameter alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }

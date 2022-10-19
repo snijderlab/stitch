@@ -23,13 +23,26 @@ namespace Stitch
             Messages.AddRange(errors);
         }
         public ParseResult() { }
-        public bool HasFailed()
+        public bool IsErr()
         {
             foreach (var msg in Messages)
             {
                 if (!msg.Warning) return true;
             }
             return false;
+        }
+        /// <summary> See if this ParseResult is ok and store its messages in the given Result. </summary>
+        /// <param name="other"> Another ParseResult to store this ParseResults messages in. </param>
+        /// <typeparam name="TOut"> Any Type. </typeparam>
+        /// <returns> A bool to indicate if this Result is Ok. </returns>
+        public bool IsOk<TOut>(ParseResult<TOut> other)
+        {
+            other.Messages.AddRange(this.Messages);
+            foreach (var msg in Messages)
+            {
+                if (!msg.Warning) return false;
+            }
+            return true;
         }
         public bool HasOnlyWarnings()
         {
@@ -40,9 +53,9 @@ namespace Stitch
             }
             return true;
         }
-        public T ReturnOrFail()
+        public T Unwrap()
         {
-            if (this.HasFailed())
+            if (this.IsErr())
             {
                 PrintMessages();
 
@@ -58,9 +71,9 @@ namespace Stitch
                 return Value;
             }
         }
-        public T ReturnOrDefault(T def)
+        public T UnwrapOrDefault(T def)
         {
-            if (this.HasFailed()) return def;
+            if (this.IsErr()) return def;
             else return this.Value;
         }
         public T GetValue<TOut>(ParseResult<TOut> fail)
@@ -68,10 +81,16 @@ namespace Stitch
             fail.Messages.AddRange(Messages);
             return Value;
         }
+
+        public T GetValueOrDefault<TOut>(ParseResult<TOut> fail, T def)
+        {
+            fail.Messages.AddRange(Messages);
+            return UnwrapOrDefault(def);
+        }
         public bool TryGetValue(out T output)
         {
             output = this.Value;
-            return !this.HasFailed();
+            return !this.IsErr();
         }
         public void AddMessage(ErrorMessage failMessage)
         {
@@ -80,7 +99,7 @@ namespace Stitch
 
         public void PrintMessages()
         {
-            if (this.HasFailed())
+            if (this.IsErr())
             {
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;

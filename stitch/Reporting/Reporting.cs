@@ -31,17 +31,13 @@ namespace Stitch
             Fragments = fragments;
         }
     }
-    /// <summary>
-    /// To be a base point for any reporting options, handling all the metadata.
-    /// </summary>
+    /// <summary> To be a base point for any reporting options, handling all the metadata. </summary> 
     public abstract class Report
     {
         protected readonly int MaxThreads;
         public readonly ParsedFile BatchFile;
         public readonly ReportInputParameters Parameters;
-        /// <summary>
-        /// To create a report, gets all metadata.
-        /// </summary>
+        /// <summary> To create a report, gets all metadata. </summary>
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int maxThreads)
         {
@@ -49,14 +45,10 @@ namespace Stitch
             BatchFile = parameters.BatchFile;
             Parameters = parameters;
         }
-        /// <summary>
-        /// Creates a report, has to be implemented by all reports.
-        /// </summary>
+        /// <summary> Creates a report, has to be implemented by all reports. </summary>
         /// <returns>A string containing the report.</returns>
         public abstract string Create();
-        /// <summary>
-        /// Saves the Report created with Create to a file.
-        /// </summary>
+        /// <summary> Saves the Report created with Create to a file. </summary>
         /// <param name="filename">The path to save the to.</param>
         public void Save(string filename)
         {

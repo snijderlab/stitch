@@ -484,9 +484,7 @@ namespace HTMLNameSpace
             return (html, gaps);
         }
 
-        /// <summary>
-        /// Create the background colour annotation for the reads alignment blocks.
-        /// </summary>
+        /// <summary> Create the background colour annotation for the reads alignment blocks. </summary>
         /// <param name="annotated">The annotation, a list of all Types for each position as finally aligned.</param>
         /// <returns>The colour as a style element to directly put in a HTML element.</returns>
         static string TemplateAlignmentAnnotation(List<Annotation> annotated)

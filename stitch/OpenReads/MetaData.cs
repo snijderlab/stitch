@@ -6,72 +6,48 @@ using HtmlGenerator;
 
 namespace Stitch
 {
-    /// <summary>
-    /// A class to hold all metadata handling in one place.
-    /// </summary>
+    /// <summary> A class to hold all metadata handling in one place. </summary> 
     public static class ReadMetaData
     {
-        /// <summary>
-        /// To save metadata of a read/path of which could be used in calculations to determine the likelihood
-        ///  of certain assignments or for quality control or ease of use for humans.
-        /// </summary>
+        /// <summary> To save metadata of a read/path of which could be used in calculations to determine the likelihood
+        ///  of certain assignments or for quality control or ease of use for humans. </summary>
         public abstract class IMetaData
         {
-            /// <summary>
-            /// The Identifier of the originating file.
-            /// </summary>
+            /// <summary> The Identifier of the originating file. </summary> 
             public readonly FileIdentifier File;
 
-            /// <summary>
-            /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
-            /// </summary>
+            /// <summary> The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier. </summary> 
             public string Identifier { get; protected set; }
 
-            /// <summary>
-            /// The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier.
-            /// </summary>
+            /// <summary> The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier. </summary> 
             public string ClassIdentifier { get; protected set; }
 
-            /// <summary>
-            /// The Identifier of the read escaped for use in filenames.
-            /// </summary>
+            /// <summary> The Identifier of the read escaped for use in filenames. </summary> 
             public string EscapedIdentifier { get; protected set; }
 
-            /// <summary>
-            /// Returns the positional score for this read, so for every position the confidence.
-            /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations.
-            /// </summary>
+            /// <summary> Returns the positional score for this read, so for every position the confidence.
+            /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary> 
             public virtual double[] PositionalScore { get { return new double[0]; } }
 
-            /// <summary>
-            /// Returns the overall intensity for this read. It is used to determine which read to 
-            /// choose if multiple reads exist at the same spot.
-            /// </summary>
+            /// <summary> Returns the overall intensity for this read. It is used to determine which read to 
+            /// choose if multiple reads exist at the same spot. </summary> 
             public virtual double Intensity { get { return intensity; } set { intensity = value; } }
             double intensity = 1.0;
 
-            /// <summary>
-            /// Contains the total area as measured by mass spectrometry to be able to report this back to the user 
-            /// and help him/her get a better picture of the validity of the data.
-            /// </summary>
+            /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user 
+            /// and help him/her get a better picture of the validity of the data. </summary> 
             public double TotalArea = 0;
 
-            /// <summary>
-            /// Contains the information needed to find this metadata in a raw file.
-            /// </summary>
+            /// <summary> Contains the information needed to find this metadata in a raw file. </summary> 
             public virtual List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, int, string)>();
 
-            /// <summary>
-            /// To generate a HTML representation of this metadata for use in the HTML report.
-            /// </summary>
+            /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary> 
             /// <returns>An HtmlBuilder containing the MetaData.</returns>
             public abstract HtmlBuilder ToHTML();
 
             protected NameFilter nameFilter;
 
-            /// <summary>
-            /// To create the base metadata for a read.
-            /// </summary>
+            /// <summary> To create the base metadata for a read. </summary> 
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
@@ -98,22 +74,16 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// A metadata instance to contain no metadata so reads without metadata can also be handled.
-        /// </summary>
+        /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
         public class Simple : IMetaData
         {
-            /// <summary>
-            /// Create a new Simple MetaData.
-            /// </summary>
+            /// <summary> Create a new Simple MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
             public Simple(FileIdentifier file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
 
-            /// <summary>
-            /// Returns Simple MetaData to HTML.
-            /// </summary>
+            /// <summary> Returns Simple MetaData to HTML. </summary> 
             public override HtmlBuilder ToHTML()
             {
                 return File.ToHTML();
@@ -123,15 +93,11 @@ namespace Stitch
         /// <summary> A class to hold meta information from fasta data. </summary>
         public class Fasta : IMetaData
         {
-            /// <summary>
-            /// The identifier from the fasta file.
-            /// </summary>
+            /// <summary> The identifier from the fasta file. </summary> 
             public readonly string FastaHeader;
             public List<(HelperFunctionality.Annotation Type, string Sequence)> AnnotatedSequence = null;
 
-            /// <summary>
-            /// To create a new metadata instance with this metadata.
-            /// </summary>
+            /// <summary> To create a new metadata instance with this metadata. </summary> 
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="fastaHeader">The header for this read as in the fasta file, without the '>'.</param>
             /// <param name="file">The originating file.</param>
@@ -205,9 +171,7 @@ namespace Stitch
             /// <summary> PPM of the peptide. </summary>
             public double Parts_per_million = -1;
 
-            /// <summary>
-            /// The intensity of this read, find out how it should be handled if it if later updated. #TODO
-            /// </summary>
+            /// <summary> The intensity of this read, find out how it should be handled if it if later updated. </summary> 
             double intensity = 1;
             public override double Intensity
             {
@@ -243,9 +207,7 @@ namespace Stitch
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
 
-            /// <summary>
-            /// To create a new metadata instance with this metadata.
-            /// </summary>
+            /// <summary> To create a new metadata instance with this metadata. </summary> 
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
@@ -283,12 +245,12 @@ namespace Stitch
                 // Some helper functions
                 int ConvertToInt(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).ReturnOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(-1);
                 }
 
                 double ConvertToDouble(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).ReturnOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(-1);
                 }
 
                 bool CheckFieldExists(int pos)
@@ -555,10 +517,8 @@ namespace Stitch
         public class Combined : IMetaData
         {
 
-            /// <summary>
-            /// Returns the positional score for this read, so for every position the confidence.
-            /// In this case it is defined as the average positional score for all children reads.
-            /// </summary>
+            /// <summary> Returns the positional score for this read, so for every position the confidence.
+            /// In this case it is defined as the average positional score for all children reads. </summary> 
             public override double[] PositionalScore
             {
                 get
@@ -584,16 +544,12 @@ namespace Stitch
                 }
             }
 
-            /// <summary>
-            /// Returns the overall intensity for this read. It is used to determine which read to 
-            /// choose if multiple reads exist at the same spot.
-            /// </summary>
+            /// <summary> Returns the overall intensity for this read. It is used to determine which read to 
+            /// choose if multiple reads exist at the same spot. </summary> 
             public override double Intensity { get => Children.Average(m => m.Intensity); }
 
-            /// <summary>
-            /// Contains the total area as measured by mass spectrometry to be able to report this back to the user 
-            /// and help him/her get a better picture of the validity of the data.
-            /// </summary>
+            /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user 
+            /// and help him/her get a better picture of the validity of the data. </summary> 
             public new double TotalArea { get => Children.Sum(m => m.TotalArea); }
             public override List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers
             {
@@ -602,9 +558,7 @@ namespace Stitch
 
             public List<IMetaData> Children = new List<IMetaData>();
 
-            /// <summary>
-            /// To generate a HTML representation of this metadata for use in the HTML report.
-            /// </summary>
+            /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary> 
             /// <returns>A string containing the MetaData.</returns>
             public override HtmlBuilder ToHTML()
             {
@@ -631,47 +585,27 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// A metadata instance to contain no metadata so reads without metadata can also be handled.
-        /// </summary>
+        /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
         public abstract class Novor : IMetaData
         {
-            /// <summary>
-            /// The fraction where this peptide was found.
-            /// </summary>
+            /// <summary> The fraction where this peptide was found. </summary> 
             public string Fraction;
-            /// <summary>
-            /// The scan number of this peptide.
-            /// </summary>
+            /// <summary> The scan number of this peptide. </summary> 
             public int Scan;
-            /// <summary>
-            /// The M over Z value of this peptide.
-            /// </summary>
+            /// <summary> The M over Z value of this peptide. </summary> 
             public double MZ;
-            /// <summary>
-            /// The Z (or charge) of this peptide.
-            /// </summary>
+            /// <summary> The Z (or charge) of this peptide. </summary> 
             public int Z;
-            /// <summary>
-            /// The Novor score of this peptide (0-100)
-            /// </summary>
+            /// <summary> The Novor score of this peptide (0-100) </summary> 
             public double Score;
-            /// <summary>
-            /// The mass of this peptide.
-            /// </summary>
+            /// <summary> The mass of this peptide. </summary> 
             public double Mass;
-            /// <summary>
-            /// The error for this peptide in ppm.
-            /// </summary>
+            /// <summary> The error for this peptide in ppm. </summary> 
             public double Error;
-            /// <summary>
-            /// The original sequence with possible modifications.
-            /// </summary>
+            /// <summary> The original sequence with possible modifications. </summary> 
             public string Sequence;
 
-            /// <summary>
-            /// The intensity of this read
-            /// </summary>
+            /// <summary> The intensity of this read </summary> 
             double intensity = 1;
             public override double Intensity
             {
@@ -679,9 +613,7 @@ namespace Stitch
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            /// <summary>
-            /// Create a new Novor MetaData.
-            /// </summary>
+            /// <summary> Create a new Novor MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
@@ -696,9 +628,7 @@ namespace Stitch
                 this.Sequence = sequence;
             }
 
-            /// <summary>
-            /// Returns Simple MetaData to HTML.
-            /// </summary>
+            /// <summary> Returns Simple MetaData to HTML. </summary> 
             public override HtmlBuilder ToHTML()
             {
                 var html = new HtmlBuilder();
@@ -726,9 +656,7 @@ namespace Stitch
 
         public class NovorDeNovo : Novor
         {
-            /// <summary>
-            /// The database sequence with possible modifications.
-            /// </summary>
+            /// <summary> The database sequence with possible modifications. </summary> 
             public string DBSequence;
             public NovorDeNovo(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence)
             : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
@@ -747,13 +675,9 @@ namespace Stitch
 
         public class NovorPSMS : Novor
         {
-            /// <summary>
-            /// The read ID.
-            /// </summary>
+            /// <summary> The read ID. </summary> 
             public string ID;
-            /// <summary>
-            /// The read ID.
-            /// </summary>
+            /// <summary> The read ID. </summary> 
             public int Proteins;
             public NovorPSMS(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string id, int proteins)
             : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
@@ -773,9 +697,7 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// A identifier for a file, to hold information about where reads originate from.
-        /// </summary>
+        /// <summary> A identifier for a file, to hold information about where reads originate from. </summary>
         public class FileIdentifier
         {
             /// <summary>The absolute path to the file.</summary>
@@ -790,9 +712,7 @@ namespace Stitch
 
             public InputNameSpace.KeyValue Origin;
 
-            /// <summary>
-            /// Creating a new FileIdentifier.
-            /// </summary>
+            /// <summary> Creating a new FileIdentifier. </summary> 
             /// <param name="pathInput">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
             /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
@@ -804,9 +724,7 @@ namespace Stitch
                 Origin = origin;
             }
 
-            /// <summary>
-            /// To create a blank instance of FileIdentifier.
-            /// </summary>
+            /// <summary> To create a blank instance of FileIdentifier. </summary> 
             public FileIdentifier()
             {
                 path = "";
@@ -814,9 +732,7 @@ namespace Stitch
                 RefersToFile = false;
             }
 
-            /// <summary>
-            /// To generate HTML for use in the metadata sidebar in the HTML report.
-            /// </summary>
+            /// <summary> To generate HTML for use in the metadata sidebar in the HTML report. </summary> 
             /// <returns>A string containing the HTML.</returns>
             public HtmlBuilder ToHTML()
             {

@@ -4,36 +4,24 @@ using System.Collections.Generic;
 
 namespace Stitch
 {
-    /// <summary>
-    /// Contains the logic to filter all the identifiers for all input reads to enforce unique names.
-    /// </summary>
+    /// <summary> Contains the logic to filter all the identifiers for all input reads to enforce unique names. </summary> 
     public class NameFilter
     {
         // SideNote: If the lookup in the BST at one point becomes a bottleneck please consider implementing a way of reorganising the BST (splay tree?)
 
-        /// <summary>
-        /// The Binary Search Tree containing the names of each identifier.
-        /// </summary>
+        /// <summary> The Binary Search Tree containing the names of each identifier. </summary>
         BST Names;
 
-        /// <summary>
-        /// The minimal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads.
-        /// </summary>
+        /// <summary> The minimal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads. </summary>
         public double MinimalPeaksArea = Double.MaxValue;
 
-        /// <summary>
-        /// The maximal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads.
-        /// </summary>
+        /// <summary> The maximal Peaks Area (Log10) encountered in the dataset, used to scale the intensity of the peaks reads. </summary>
         public double MaximalPeaksArea = Double.MinValue;
 
-        /// <summary>
-        /// The invalid chars in a file path
-        /// </summary>
+        /// <summary> The invalid chars in a file path </summary>
         readonly HashSet<char> invalid_chars;
 
-        /// <summary>
-        /// Create a new NameFilter
-        /// </summary>
+        /// <summary> Create a new NameFilter </summary>
         public NameFilter()
         {
             invalid_chars = new HashSet<char>(Path.GetInvalidFileNameChars());
@@ -46,12 +34,10 @@ namespace Stitch
             invalid_chars.Add(' ');
         }
 
-        /// <summary>
-        /// Escapes the given identifier and returns the amount of read with exactly the same identifer
+        /// <summary> Escapes the given identifier and returns the amount of read with exactly the same identifer
         /// that were already Escaped by this name filter plus one. So it can be seen as the index 
         /// (1-based) of this identifier in the list of identical identifiers. The total number of 
-        /// duplicates can be found by using the 'Count' member of the IdenticalIdentifiersNode (BST).
-        /// </summary>
+        /// duplicates can be found by using the 'Count' member of the IdenticalIdentifiersNode (BST). </summary>
         /// <param name="identifier">The identifier to escape.</param>
         public (string EscapedIdentifier, BST IdenticalIdentifiersNode, int Index) EscapeIdentifier(string identifier)
         {
@@ -83,9 +69,7 @@ namespace Stitch
 
     }
 
-    /// <summary>
-    /// Binary Search Tree a single node
-    /// </summary>
+    /// <summary> Binary Search Tree a single node </summary> 
     public class BST
     {
         /// <summary> The identifier of this node. </summary>
@@ -96,9 +80,7 @@ namespace Stitch
         public BST Left;
         public BST Right;
 
-        /// <summary>
-        /// Creates a new BST node
-        /// </summary>
+        /// <summary> Creates a new BST node </summary>
         /// <param name="name"> The identifier to be the name of this node. </param>
         public BST(string name)
         {
@@ -108,10 +90,8 @@ namespace Stitch
             Right = null;
         }
 
-        /// <summary>
-        /// Add an extra identifier to the tree. Append if it does not exist yet. 
-        /// Increment the Count if this identifier was already found.
-        /// </summary>
+        /// <summary> Add an extra identifier to the tree. Append if it does not exist yet. 
+        /// Increment the Count if this identifier was already found. </summary>
         /// <param name="name"> The identifier to add. </param>
         public (BST IdenticalIdentifiersNode, int Index) Append(string name)
         {

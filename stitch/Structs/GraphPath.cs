@@ -12,9 +12,7 @@ namespace Stitch
         public readonly double Score;
         public int Index;
         public readonly ReadMetaData.IMetaData MetaData;
-        /// <summary>
-        /// Creates a basic graph path
-        /// </summary>
+        /// <summary> Creates a basic graph path </summary>
         /// <param name="Sequence"></param>
         public GraphPath(List<AminoAcid> sequence, ReadMetaData.IMetaData metaData, int index = -1)
         {

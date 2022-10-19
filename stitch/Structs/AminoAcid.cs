@@ -15,9 +15,7 @@ namespace Stitch
         public readonly char Character;
 
         [JsonIgnore]
-        /// <summary>
-        /// The alphabet used.
-        /// </summary>
+        /// <summary> The alphabet used. </summary>
         public Alphabet alphabet;
 
         /// <summary> The creator of AminoAcids. </summary>

@@ -6,22 +6,16 @@ using System;
 
 namespace Stitch
 {
-    /// <summary>
-    /// A JSON report.
-    /// </summary>
+    /// <summary> A JSON report. </summary> 
     public class JSONReport : Report
     {
 
-        /// <summary>
-        /// To retrieve all metadata.
-        /// </summary>
+        /// <summary> To retrieve all metadata. </summary>
         public JSONReport(ReportInputParameters parameters, int maxThreads) : base(parameters, maxThreads)
         {
         }
 
-        /// <summary>
-        /// Creates a JSON file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
-        /// </summary>
+        /// <summary> Creates a JSON file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score. </summary>
         /// <returns>A string containing the file.</returns>
         public override string Create()
         {

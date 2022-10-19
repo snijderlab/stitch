@@ -278,9 +278,7 @@ namespace Stitch
             return max_value;
         }
 
-        /// <summary>
-        /// End align two sequences
-        /// </summary>
+        /// <summary> End align two sequences </summary>
         /// <param name="template">The front sequence</param>
         /// <param name="query">The tail sequence</param>
         /// <param name="alphabet">The alphabet to use</param>

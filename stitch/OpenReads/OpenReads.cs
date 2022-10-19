@@ -7,9 +7,7 @@ using static Stitch.HelperFunctionality;
 
 namespace Stitch
 {
-    /// <summary>
-    /// To contain all logic for the reading of reads out of files.
-    /// </summary>
+    /// <summary> To contain all logic for the reading of reads out of files. </summary> 
     public static class OpenReads
     {
         /// <summary> To open a file with reads. It assumes a very basic format,
@@ -26,7 +24,7 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
-            if (possible_content.HasFailed())
+            if (possible_content.IsErr())
             {
                 out_either.Messages.AddRange(possible_content.Messages);
                 return out_either;
@@ -35,7 +33,7 @@ namespace Stitch
             var reads = new List<(string, ReadMetaData.IMetaData)>();
             out_either.Value = reads;
 
-            var lines = possible_content.ReturnOrFail().Split('\n');
+            var lines = possible_content.Unwrap().Split('\n');
 
             foreach (var line in lines)
             {
@@ -61,7 +59,7 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
-            if (possible_content.HasFailed())
+            if (possible_content.IsErr())
             {
                 out_either.Messages.AddRange(possible_content.Messages);
                 return out_either;
@@ -70,7 +68,7 @@ namespace Stitch
             var reads = new List<(string, ReadMetaData.IMetaData)>();
             out_either.Value = reads;
 
-            var lines = possible_content.ReturnOrFail().Split('\n').ToArray();
+            var lines = possible_content.Unwrap().Split('\n').ToArray();
             var parse_file = new ParsedFile(inputFile.Path, lines);
 
             string identifierLine = "";
@@ -274,13 +272,13 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(peaks.File);
 
-            if (possible_content.HasFailed())
+            if (possible_content.IsErr())
             {
                 out_either.Messages.AddRange(possible_content.Messages);
                 return out_either;
             }
 
-            List<string> lines = possible_content.ReturnOrFail().Split('\n').ToList();
+            List<string> lines = possible_content.Unwrap().Split('\n').ToList();
             var reads = new List<(string, ReadMetaData.IMetaData)>();
             var parse_file = new ParsedFile(peaks.File.Name, lines.ToArray());
 
@@ -295,7 +293,7 @@ namespace Stitch
 
                 out_either.Messages.AddRange(parsed.Messages);
 
-                if (parsed.HasFailed())
+                if (parsed.IsErr())
                 {
                     if (linenumber < 3)
                     {
@@ -308,7 +306,7 @@ namespace Stitch
                     continue;
                 }
 
-                var meta = parsed.ReturnOrFail();
+                var meta = parsed.Unwrap();
 
                 if (meta.Confidence >= peaks_parameters.CutoffALC)
                 {
@@ -373,9 +371,7 @@ namespace Stitch
             return out_either;
         }
 
-        /// <summary>
-        /// Read a Novor.cloud `denovo.csv` file.
-        /// </summary>
+        /// <summary> Read a Novor.cloud `denovo.csv` file. </summary>
         /// <param name="filter">The name filter.</param>
         /// <param name="file">The file to open.</param>
         /// <param name="separator">The separator to use.</param>
@@ -387,7 +383,7 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
-            if (possible_content.HasFailed())
+            if (possible_content.IsErr())
             {
                 out_either.Messages.AddRange(possible_content.Messages);
                 return out_either;
@@ -396,7 +392,7 @@ namespace Stitch
             var reads = new List<(string, ReadMetaData.IMetaData)>();
             out_either.Value = reads;
 
-            var lines = possible_content.ReturnOrFail().Split('\n');
+            var lines = possible_content.Unwrap().Split('\n');
             var parse_file = new ParsedFile(file.Path, lines);
             var linenumber = -1;
 
@@ -414,11 +410,11 @@ namespace Stitch
 
                 var fraction = split[0].Text;
                 var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).GetValue(out_either);
-                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).ReturnOrDefault(-1);
-                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).ReturnOrDefault(-1);
-                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).ReturnOrDefault(0);
-                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).ReturnOrDefault(0);
-                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).ReturnOrDefault(0);
+                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(-1);
+                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).UnwrapOrDefault(-1);
+                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).UnwrapOrDefault(0);
+                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(0);
+                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(0);
                 var original_peptide = split[8].Text;
                 var db_sequence = split[9].Text;
                 var peptide = (string)original_peptide.Clone();
@@ -444,9 +440,7 @@ namespace Stitch
             return out_either;
         }
 
-        /// <summary>
-        /// Read a Novor.cloud `psms.csv` file.
-        /// </summary>
+        /// <summary> Read a Novor.cloud `psms.csv` file. </summary>
         /// <param name="filter">The name filter.</param>
         /// <param name="file">The file to open.</param>
         /// <param name="separator">The separator to use.</param>
@@ -458,7 +452,7 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
-            if (possible_content.HasFailed())
+            if (possible_content.IsErr())
             {
                 out_either.Messages.AddRange(possible_content.Messages);
                 return out_either;
@@ -467,7 +461,7 @@ namespace Stitch
             var reads = new List<(string, ReadMetaData.IMetaData)>();
             out_either.Value = reads;
 
-            var lines = possible_content.ReturnOrFail().Split('\n');
+            var lines = possible_content.Unwrap().Split('\n');
             var parse_file = new ParsedFile(file.Path, lines);
             var linenumber = -1;
 
@@ -516,18 +510,14 @@ namespace Stitch
             return out_either;
         }
 
-        /// <summary>
-        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
-        /// </summary>
+        /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
         public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads, Alphabet alp, NameFilter filter)
         {
             return CleanUpInput(new List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> { reads }, alp, filter);
         }
 
-        /// <summary>
-        /// Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list.
-        /// </summary>
+        /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
         public static ParseResult<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> CleanUpInput(List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> reads, Alphabet alp, NameFilter filter)
         {

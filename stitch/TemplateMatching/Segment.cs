@@ -18,9 +18,7 @@ namespace Stitch
         [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
-        /// <summary>
-        /// Create a new Segment based on the reads found in the given file.
-        /// </summary>
+        /// <summary> Create a new Segment based on the reads found in the given file. </summary>
         /// <param name="sequences">The reads to generate templates from</param>
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this segment</param>
@@ -53,9 +51,7 @@ namespace Stitch
                 InputNameSpace.ErrorMessage.PrintException(e);
             }
         }
-        /// <summary>
-        /// Create a new Segment based on the templates provided.
-        /// </summary>
+        /// <summary> Create a new Segment based on the templates provided. </summary>
         /// <param name="templates">The templates</param>
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this segment</param>
@@ -68,9 +64,7 @@ namespace Stitch
             Templates = templates.ToList();
         }
 
-        /// <summary>
-        /// Gets the sequence in AminoAcids from a string
-        /// </summary>
+        /// <summary> Gets the sequence in AminoAcids from a string </summary>
         /// <param name="input">The input string</param>
         /// <returns>The sequence in AminoAcids</returns>
         AminoAcid[] StringToSequence(string input)
@@ -82,9 +76,7 @@ namespace Stitch
             }
             return output;
         }
-        /// <summary>
-        /// Match the given sequences to the segment. Saves the results in this instance of the segment.
-        /// </summary>
+        /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
         public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, ReadMetaData.IMetaData)> sequences)
         {
@@ -96,9 +88,7 @@ namespace Stitch
             return Match(paths);
         }
 
-        /// <summary>
-        /// Match the given sequences to the segment. Saves the results in this instance of the segment.
-        /// </summary>
+        /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
         List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
         {
@@ -115,9 +105,7 @@ namespace Stitch
             return output;
         }
 
-        /// <summary>
-        /// Create a string summary of a template segment.
-        /// </summary>
+        /// <summary> Create a string summary of a template segment. </summary>
         public override string ToString()
         {
             return $"Segment {Name} with {Templates.Count} templates in total";

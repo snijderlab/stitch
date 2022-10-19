@@ -14,9 +14,7 @@ namespace Stitch
 {
     public static class Fragmentation
     {
-        /// <summary>
-        /// Create a dictionary of all spectra with the escaped identifier of the top level metadata construct as key.
-        /// </summary>
+        /// <summary> Create a dictionary of all spectra with the escaped identifier of the top level metadata construct as key. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         /// <returns></returns>

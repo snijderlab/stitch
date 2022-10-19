@@ -7,24 +7,20 @@ using Stitch.RunParameters;
 
 namespace Stitch
 {
-    /// <summary>
-    /// A class with options to parse a batch file.
-    /// </summary>
+    /// <summary> A class with options to parse a batch file. </summary> 
     public static class ParseCommandFile
     {
-        /// <summary>
-        /// Parses a batch file and retrieves the 
-        /// </summary>
-        /// <param name="path">The path to the batch file.</param>
-        /// <returns>The run parameters as specified in the file.</returns>
-        public static FullRunParameters Batch(string path, bool languageServer = false)
+        /// <summary> Parses a batch file and retrieves the run parameters or fails with an exception. </summary>
+        /// <param name="path"> The path to the batch file. </param>
+        /// <returns> The run parameters as specified in the file. </returns>
+        public static FullRunParameters Batch(string path)
         {
             var output = new FullRunParameters();
             var outEither = new ParseResult<FullRunParameters>(output);
             var name_filter = new NameFilter();
 
             // Get the contents
-            string batchfile_content = ParseHelper.GetAllText(path).ReturnOrFail().Replace("\t", "    "); // Remove tabs
+            string batchfile_content = ParseHelper.GetAllText(path).Unwrap().Replace("\t", "    "); // Remove tabs, in tabs vs spaces obviously go for spaces ;-)
 
             // Set the working directory to the directory of the batchfile
             var original_working_directory = Directory.GetCurrentDirectory();
@@ -53,7 +49,7 @@ namespace Stitch
                 switch (pair.Name)
                 {
                     case "runname":
-                        output.Runname = pair.GetValue();
+                        output.Runname = pair.GetValue().GetValueOrDefault(outEither, "");
                         break;
                     case "rawdatadirectory":
                         if (output.RawDataDirectory != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -65,7 +61,7 @@ namespace Stitch
                         }
                         break;
                     case "version":
-                        var version = ParseHelper.ConvertToDouble(pair.GetValue(), pair.ValueRange).GetValue(outEither);
+                        var version = ParseHelper.ConvertToDouble(pair).GetValue(outEither);
                         if (version < 1.0)
                         {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please change to version '1.x'."));
@@ -77,7 +73,7 @@ namespace Stitch
                         version_specified = true;
                         break;
                     case "maxcores":
-                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair.GetValue(), pair.ValueRange).RestrictRange(0, int.MaxValue, "0..", pair.ValueRange).GetValue(outEither);
+                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(0, int.MaxValue, "0..", pair.ValueRange).GetValue(outEither);
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -135,13 +131,14 @@ namespace Stitch
                     else
                     {
                         var order = order_groups.Find(o => o.OriginalName == group.Name);
-                        var order_string = order.GetValue();
+                        var order_res = order.GetValue();
                         // Create a new counter
                         var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
                         var order_output = new List<RunParameters.RecombineOrder.OrderPiece>();
 
-                        while (!string.IsNullOrEmpty(order_string))
+                        while (order_res.IsOk(outEither) && !string.IsNullOrEmpty(order_res.Unwrap()))
                         {
+                            var order_string = order_res.Unwrap();
                             InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
 
                             var match = false;
@@ -269,26 +266,13 @@ namespace Stitch
                     }
                 }
             }
-
-            if (languageServer)
-            {
-                foreach (var msg in outEither.Messages)
-                {
-                    msg.OutputForLanguageServer();
-                }
-                return null;
-            }
-            return outEither.ReturnOrFail();
+            return outEither.Unwrap();
         }
     }
-    /// <summary>
-    /// An exception to indicate some error while parsing the batch file
-    /// </summary>
+    /// <summary> An exception to indicate some error while parsing the batch file </summary> 
     public class ParseException : Exception
     {
-        /// <summary>
-        /// To create a ParseException
-        /// </summary>
+        /// <summary> To create a ParseException </summary>
         /// <param name="msg">The message for this Exception</param>
         public ParseException(string msg)
             : base(msg) { }

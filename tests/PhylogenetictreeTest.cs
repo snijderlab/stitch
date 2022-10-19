@@ -15,9 +15,7 @@ namespace StitchTest
     {
         //VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK
 
-        /// <summary>
-        /// Test a small sample tree to see it out group rooting works
-        /// </summary>
+        /// <summary> Test a small sample tree to see it out group rooting works </summary>
         [TestMethod]
         public void TestSmall()
         {

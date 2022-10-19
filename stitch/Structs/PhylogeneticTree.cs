@@ -7,10 +7,8 @@ namespace Stitch
     /// <summary> Functions to handle and create phylogenetic trees. </summary>
     public class PhylogeneticTree
     {
-        /// <summary>
-        /// Use the Neighbour Joining algorithm to construct a phylogenetic tree from the given sequences.
-        /// The runtime is O(n^3).
-        /// </summary>
+        /// <summary> Use the Neighbour Joining algorithm to construct a phylogenetic tree from the given sequences.
+        /// The runtime is O(n^3). </summary>
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>

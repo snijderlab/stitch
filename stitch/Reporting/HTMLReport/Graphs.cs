@@ -153,12 +153,10 @@ namespace HTMLNameSpace
             return html;
         }
 
-        /// <summary>
-        /// Creates a grouped bargraph
+        /// <summary> Creates a grouped bargraph
         /// a = la, b = lb, c = lc
         /// (a,b,c) (a,b,c) (a,b,c)
-        /// A lA    B lB    C lC
-        /// </summary>
+        /// A lA    B lB    C lC </summary>
         /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
         /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
         /// <returns></returns>
@@ -254,9 +252,7 @@ namespace HTMLNameSpace
         }
 
         static int graph_counter = 0;
-        /// <summary>
-        /// Generates a grouped point graph, with a multiple values per point which will be linearly normalised to fit the same range.
-        /// </summary>
+        /// <summary> Generates a grouped point graph, with a multiple values per point which will be linearly normalised to fit the same range. </summary>
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
@@ -347,9 +343,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        /// <summary>
-        /// Render the given tree into a cladogram representation with circles with fill representing the scoring for each node.
-        /// </summary>
+        /// <summary> Render the given tree into a cladogram representation with circles with fill representing the scoring for each node. </summary>
         /// <param name="id"> Unique ID. </param>
         /// <param name="tree"> The tree to render. </param>
         /// <param name="templates"> The list of templates at the basis of this tree. </param>

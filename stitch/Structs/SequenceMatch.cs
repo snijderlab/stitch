@@ -11,47 +11,29 @@ namespace Stitch
         /// <summary>The position on the template where the match begins.</summary>
         public readonly int StartTemplatePosition;
 
-        /// <summary>
-        /// The position on the query sequence where the match begins
-        /// </summary>
+        /// <summary> The position on the query sequence where the match begins </summary>
         public readonly int StartQueryPosition;
 
-        /// <summary>
-        /// The score of the match
-        /// </summary>
+        /// <summary> The score of the match </summary>
         public readonly int Score;
 
-        /// <summary>
-        /// The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>.
-        /// </summary>
+        /// <summary> The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>. </summary>
         public readonly List<MatchPiece> Alignment;
 
-        /// <summary>
-        /// The sequence of the template
-        /// </summary>
+        /// <summary> The sequence of the template </summary>
         public AminoAcid[] TemplateSequence;
 
-        /// <summary>
-        /// The sequence of the query
-        /// </summary>
+        /// <summary> The sequence of the query </summary>
         public AminoAcid[] QuerySequence;
 
-        /// <summary>
-        /// If provided the path that is aligned.
-        /// </summary>
+        /// <summary> If provided the path that is aligned. </summary>
         public ReadMetaData.IMetaData MetaData;
 
-        /// <summary>
-        /// The total amount of (mis)matching aminoacids in the alignment
-        /// </summary>
+        /// <summary> The total amount of (mis)matching aminoacids in the alignment </summary>
         public readonly int TotalMatches;
-        /// <summary>
-        /// The total length on the template (matches + gaps in query)
-        /// </summary>
+        /// <summary> The total length on the template (matches + gaps in query) </summary>
         public readonly int LengthOnTemplate;
-        /// <summary>
-        /// The total length on the query (matches + gaps in template)
-        /// </summary>
+        /// <summary> The total length on the query (matches + gaps in template) </summary>
         public readonly int LengthOnQuery;
 
         public readonly int Index;
@@ -89,9 +71,7 @@ namespace Stitch
             LengthOnQuery = sum1 + sum3;
         }
 
-        /// <summary>
-        /// Visualises this SequenceMatch, with a very simple visualisation of the alignment
-        /// </summary>
+        /// <summary> Visualises this SequenceMatch, with a very simple visualisation of the alignment </summary>
         public override string ToString()
         {
             var buffer = new StringBuilder();
@@ -164,9 +144,7 @@ namespace Stitch
             return buffer.ToString();
         }
 
-        /// <summary>
-        /// Finds if the whole match is only based on Xs in the template
-        /// </summary>
+        /// <summary> Finds if the whole match is only based on Xs in the template </summary>
         /// <returns></returns>
         public bool AllGap()
         {
@@ -194,9 +172,7 @@ namespace Stitch
             return true;
         }
 
-        /// <summary>
-        /// Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other
-        /// </summary>
+        /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
         void Simplify()
         {
             MatchPiece lastElement = null;
@@ -216,9 +192,7 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// Get a part of the query sequence as indicated by positions on the template sequence.
-        /// </summary>
+        /// <summary> Get a part of the query sequence as indicated by positions on the template sequence. </summary>
         /// <param name="startTemplatePosition">The start position on the template.</param>
         /// <param name="lengthOnTemplate">The length on the template of the part of the query sequence needed.</param>
         /// <returns></returns>
@@ -314,9 +288,7 @@ namespace Stitch
             return output;
         }
 
-        /// <summary>
-        /// Get the aminoacid of the query sequence at the given template sequence position.
-        /// </summary>
+        /// <summary> Get the aminoacid of the query sequence at the given template sequence position. </summary>
         /// <param name="templatePosition">The position to get the AminoAcid from.</param>
         /// <returns>The AminoAcid or null if it could not be found.</returns>
         public AminoAcid? GetAtTemplateIndex(int templatePosition)
@@ -347,9 +319,7 @@ namespace Stitch
 
             return null;
         }
-        /// <summary>
-        /// Get the aminoacid of the query sequence at the given template sequence position.
-        /// </summary>
+        /// <summary> Get the aminoacid of the query sequence at the given template sequence position. </summary>
         /// <param name="templatePosition">The position to get the AminoAcid from.</param>
         /// <returns>The AminoAcid or null if it could not be found.</returns>
         public int GetGapAtTemplateIndex(int templatePosition)
@@ -383,66 +353,50 @@ namespace Stitch
         }
 
 
-        /// <summary>
-        /// Represents a piece of a match between two sequences
-        /// </summary>
+        /// <summary> Represents a piece of a match between two sequences </summary>
         public abstract class MatchPiece
         {
-            /// <summary>
-            /// The length of this piece (amount of AminoAcids)
-            /// </summary>
+            /// <summary> The length of this piece (amount of AminoAcids) </summary> 
             public int Length;
 
-            /// <summary>
-            /// Creates a new piece
-            /// </summary>
+            /// <summary> Creates a new piece </summary> 
             /// <param name="length">The length</param>
             public MatchPiece(int length)
             {
                 Length = length;
             }
 
-            /// <summary>
-            /// The Identifier to put in the string representation
-            /// </summary>
+            /// <summary> The Identifier to put in the string representation </summary> 
             abstract protected string Identifier();
 
-            /// <summary>
-            /// The CIGAR representation of this piece
-            /// </summary>
+            /// <summary> The CIGAR representation of this piece </summary> 
             public override string ToString()
             {
                 return $"{Length}{Identifier()}";
             }
         }
 
-        /// <summary>
-        /// A (mis)match
-        /// </summary>
+        /// <summary> A (mis)match </summary>
         public class Match : MatchPiece
         {
             public Match(int c) : base(c) { }
             override protected string Identifier() { return "M"; }
         }
 
-        /// <summary>
-        /// A gap in respect to the Template. 
+        /// <summary> A gap in respect to the Template. 
         /// Can be seen as a deletion in respect to the template sequence.
         /// `TEMPLATETEMPLATE`
-        /// `QUERY......QUERY`
-        /// </summary>
+        /// `QUERY......QUERY` </summary>
         public class Deletion : MatchPiece
         {
             public Deletion(int c) : base(c) { }
             override protected string Identifier() { return "D"; }
         }
 
-        /// <summary>
-        /// A gap in respect to the Query.
+        /// <summary> A gap in respect to the Query.
         /// Can be seen as an insertion in respect to the template sequence.
         /// `TEM....TEMPLATE`
-        /// `QUERYQUERYQUERY`
-        /// </summary>
+        /// `QUERYQUERYQUERY` </summary>
         public class Insertion : MatchPiece
         {
             public Insertion(int c) : base(c) { }

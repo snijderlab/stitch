@@ -2,29 +2,19 @@ using System;
 
 namespace Stitch
 {
-    /// <summary>
-    /// To keep track of a location in a file, for example for error messages.
-    /// </summary>
+    /// <summary> To keep track of a location in a file, for example for error messages. </summary> 
     public struct Position
     {
-        /// <summary>
-        /// The file this position is in
-        /// </summary>
+        /// <summary> The file this position is in </summary>
         public readonly ParsedFile File;
 
-        /// <summary>
-        /// The Line number (0 based) in the file
-        /// </summary>
+        /// <summary> The Line number (0 based) in the file </summary>
         public readonly int Line;
 
-        /// <summary>
-        /// The column number (1-based) on the line
-        /// </summary>
+        /// <summary> The column number (1-based) on the line </summary>
         public readonly int Column;
 
-        /// <summary>
-        /// Creates a new location with the given parameters
-        /// </summary>
+        /// <summary> Creates a new location with the given parameters </summary>
         /// <param name="line">The line (0-based)</param>
         /// <param name="column">The column (1-based)</param>
         /// <param name="file">The file</param>
@@ -35,9 +25,7 @@ namespace Stitch
             File = file;
         }
 
-        /// <summary>
-        /// Summarises this location into a string for human readability
-        /// </summary>
+        /// <summary> Summarises this location into a string for human readability </summary>
         public override string ToString()
         {
             return $"{File}:{Line + 1},{Column}";
@@ -62,29 +50,19 @@ namespace Stitch
         }
     }
 
-    /// <summary>
-    /// Tracks a range in a file, for example the range of a keyword
-    /// </summary>
+    /// <summary> Tracks a range in a file, for example the range of a keyword </summary> 
     public struct FileRange
     {
-        /// <summary>
-        /// The file this positions are in
-        /// </summary>
+        /// <summary> The file this positions are in </summary>
         public readonly ParsedFile File;
 
-        /// <summary>
-        /// The start position
-        /// </summary>
+        /// <summary> The start position </summary>
         public readonly Position Start;
 
-        /// <summary>
-        /// The end position
-        /// </summary>
+        /// <summary> The end position </summary>
         public readonly Position End;
 
-        /// <summary>
-        /// Creates a new range
-        /// </summary>
+        /// <summary> Creates a new range </summary>
         /// <param name="start">The start position</param>
         /// <param name="end">The end position</param>
         /// <exception cref="ArgumentException">If the two positions are not in the same file, or if the start position is after the end position.</exception>
@@ -103,43 +81,29 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// Summarises this range into a string for human readability
-        /// </summary>
+        /// <summary> Summarises this range into a string for human readability </summary>
         public override string ToString()
         {
             return $"{Start} to {End}";
         }
     }
 
-    /// <summary>
-    /// Tracks a range of a key in a keyvalue element in a file, |Key| :&gt; &lt;:|
-    /// </summary>
+    /// <summary> Tracks a range of a key in a keyvalue element in a file, |Key| :&gt; &lt;:| </summary> 
     public struct KeyRange
     {
-        /// <summary>
-        /// The file of the range
-        /// </summary>
+        /// <summary> The file of the range </summary>
         public readonly ParsedFile File;
 
-        /// <summary>
-        /// The start of the range, |Key :&gt; &lt;:
-        /// </summary>
+        /// <summary> The start of the range, |Key :&gt; &lt;: </summary>
         public readonly Position Start;
 
-        /// <summary>
-        /// The end of the key, Key| :&gt; &lt;:
-        /// </summary>
+        /// <summary> The end of the key, Key| :&gt; &lt;: </summary>
         public readonly Position NameEnd;
 
-        /// <summary>
-        /// The end of the field, Key :&gt; &lt;:|
-        /// </summary>
+        /// <summary> The end of the field, Key :&gt; &lt;:| </summary>
         public readonly Position FieldEnd;
 
-        /// <summary>
-        /// The full range, from <see cref="Start"/> to <see cref="FieldEnd"/>, |Key :&gt; &lt;:|
-        /// </summary>
+        /// <summary> The full range, from <see cref="Start"/> to <see cref="FieldEnd"/>, |Key :&gt; &lt;:| </summary>
         public FileRange Full
         {
             get
@@ -148,9 +112,7 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// The range of the name, from <see cref="Start"/> to <see cref="NameEnd"/>, |Key| :&gt; &lt;:
-        /// </summary>
+        /// <summary> The range of the name, from <see cref="Start"/> to <see cref="NameEnd"/>, |Key| :&gt; &lt;: </summary>
         public FileRange Name
         {
             get
@@ -159,9 +121,7 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// Creates a KeyRange
-        /// </summary>
+        /// <summary> Creates a KeyRange </summary>
         /// <param name="name">Name range, from <see cref="Start"/> to <see cref="NameEnd"/></param>
         /// <param name="fieldEnd">FieldEnd position, <see cref="FieldEnd"/></param>
         /// <exception member="ArgumentException">If the positions are not in the same file or if positions are not in the right order.</exception>
@@ -189,33 +149,23 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// Summarises this range into a string for human readability
-        /// </summary>
+        /// <summary> Summarises this range into a string for human readability </summary>
         public override string ToString()
         {
             return $"{Start} to {NameEnd} to {FieldEnd}";
         }
     }
 
-    /// <summary>
-    /// Saves a file to use with positions
-    /// </summary>
+    /// <summary> Saves a file to use with positions </summary> 
     public class ParsedFile
     {
-        /// <summary>
-        /// The filename
-        /// </summary>
+        /// <summary> The filename </summary>
         public readonly string Filename;
 
-        /// <summary>
-        /// The content of this file, as an array of all lines
-        /// </summary>
+        /// <summary> The content of this file, as an array of all lines </summary>
         public readonly string[] Lines;
 
-        /// <summary>
-        /// Creates a new ParsedFile
-        /// </summary>
+        /// <summary> Creates a new ParsedFile </summary>
         /// <param name="name">The filename (will be resolved to full path)</param>
         /// <param name="content">The file content, as an array of all lines</param>
         public ParsedFile(string name, string[] content)
@@ -224,9 +174,7 @@ namespace Stitch
             Lines = content;
         }
 
-        /// <summary>
-        /// Creates an empty ParsedFile
-        /// </summary>
+        /// <summary> Creates an empty ParsedFile </summary>
         public ParsedFile()
         {
             Filename = "";

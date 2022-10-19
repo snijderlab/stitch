@@ -112,10 +112,8 @@ namespace HTMLNameSpace
 </ul>");
         }
 
-        /// <summary>
-        /// Generate help for the user, to provide insight in the inner workings of the program. It generates a button
-        /// which can be used (hovered/selected) by the user to show the accompanying help text.
-        /// </summary>
+        /// <summary> Generate help for the user, to provide insight in the inner workings of the program. It generates a button
+        /// which can be used (hovered/selected) by the user to show the accompanying help text. </summary>
         /// <param name="title">The title for the help message.</param>
         /// <param name="content">The inner content to show, can be any valid HTML.</param>
         /// <returns>The HTMl needed for this help.</returns>
@@ -124,9 +122,7 @@ namespace HTMLNameSpace
             return $"<button type='button' class='user-help'><span class='mark'>?</span><div class='content'><h3>{title}</h3><p>{content}</p></div></button>";
         }
 
-        /// <summary>
-        /// Generate a tag, eg a title, with a built in help message.
-        /// </summary>
+        /// <summary> Generate a tag, eg a title, with a built in help message. </summary>
         /// <param name="title">The title for the tag, and the help message.</param>
         /// <param name="help">The help content, can be any valid HTML but will be placed in paragraph tags.</param>
         /// <param name="tag">The tag level (`h1` for `<h1>` etc).</param>
@@ -140,10 +136,8 @@ namespace HTMLNameSpace
             return $"<{tag}{classes}{extra}>{title}{UserHelp(title, help)}</{tag}>";
         }
 
-        /// <summary>
-        /// Generate a Copy Data button for the user, while giving help about the data structure. It generates a button
-        /// which can be used (hovered/selected) by the user to show the accompanying help text.
-        /// </summary>
+        /// <summary> Generate a Copy Data button for the user, while giving help about the data structure. It generates a button
+        /// which can be used (hovered/selected) by the user to show the accompanying help text. </summary>
         /// <param name="title">The title for the help message.</param>
         /// <param name="content">The inner content to show, can be any valid HTML. (it will be enclosed in `<p>` tags)</param>
         /// <returns>The HTMl needed for this button.</returns>

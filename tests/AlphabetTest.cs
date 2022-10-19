@@ -75,9 +75,7 @@ namespace StitchTest
                 Assert.AreEqual(alp.GetIndexInAlphabet(c), alp2.GetIndexInAlphabet(c));
             }
         }
-        /// <summary>
-        /// All alphabets given as examples should be valid
-        /// </summary>
+        /// <summary> All alphabets given as examples should be valid </summary>
         [TestMethod]
         public void TestExamples()
         {

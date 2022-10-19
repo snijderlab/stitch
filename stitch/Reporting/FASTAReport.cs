@@ -5,17 +5,13 @@ using static System.Math;
 
 namespace Stitch
 {
-    /// <summary>
-    /// A FASTA report.
-    /// </summary>
+    /// <summary> A FASTA report. </summary> 
     public class FASTAReport : Report
     {
         readonly int MinScore;
         readonly RunParameters.Report.OutputType OutputType;
 
-        /// <summary>
-        /// To retrieve all metadata.
-        /// </summary>
+        /// <summary> To retrieve all metadata. </summary>
         /// <param name="parameters">The parameters.</param>
         /// <param name="min_score">The minimal score needed to be included in the file.</param>
         public FASTAReport(ReportInputParameters parameters, int min_score, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
@@ -24,9 +20,7 @@ namespace Stitch
             OutputType = outputType;
         }
 
-        /// <summary>
-        /// Creates a FASTA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
-        /// </summary>
+        /// <summary> Creates a FASTA file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score. </summary>
         /// <returns>A string containing the file.</returns>
         public override string Create()
         {

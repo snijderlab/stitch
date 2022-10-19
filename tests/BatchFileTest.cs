@@ -12,9 +12,7 @@ namespace StitchTest
     [TestClass]
     public class BatchFile_Test
     {
-        /// <summary>
-        /// All batchfiles given as examples should be valid
-        /// </summary>
+        /// <summary> All batchfiles given as examples should be valid </summary>
         [DataTestMethod]
         [DataRow("basic.txt")]
         [DataRow("monoclonal.txt")]
@@ -33,9 +31,7 @@ namespace StitchTest
             }
         }
 
-        /// <summary>
-        /// All batchfiles given as examples should be valid
-        /// </summary>
+        /// <summary> All batchfiles given as examples should be valid </summary>
         [TestMethod]
         public void TestSmallExamples()
         {

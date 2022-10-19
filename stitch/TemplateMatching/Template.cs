@@ -7,16 +7,13 @@ using System.Text.Json.Serialization;
 
 namespace Stitch
 {
-    /// <summary>
-    /// Saves a template and its alignment with the given matches.
-    /// </summary>
+    /// <summary> Saves a template and its alignment with the given matches. </summary> 
     public class Template
     {
-        /// <summary>
-        /// The name of the containing Segment. <see cref="Segment.Name"/>
-        /// </summary>
+        /// <summary> The name of the containing Segment. <see cref="Segment.Name"/> </summary>
         public readonly string Name;
 
+        /// <summary> The class of the Template, eg "IGHV3" for "IGHV3-66". <see cref="IMetaData.ClassIdentifier"/> </summary>
         public string Class
         {
             get
@@ -25,19 +22,13 @@ namespace Stitch
             }
         }
 
-        /// <summary>
-        /// The sequence of this template
-        /// </summary>
+        /// <summary> The sequence of this template </summary>
         public readonly AminoAcid[] Sequence;
 
-        /// <summary>
-        /// Metadata for this template
-        /// </summary>
+        /// <summary> Metadata for this template </summary>
         public readonly ReadMetaData.IMetaData MetaData;
 
-        /// <summary>
-        /// The score for this template
-        /// </summary>
+        /// <summary> The score for this template </summary>
         public int Score
         {
             get
@@ -48,18 +39,13 @@ namespace Stitch
         }
         int score;
 
-        /// <summary>
-        /// To signify if this template was used in a match run which used EnforceUnique.
-        /// </summary>
+        /// <summary> To signify if this template was used in a match run which used EnforceUnique. </summary>
         public bool ForcedOnSingleTemplate;
-        /// <summary>
-        /// To signify if the germline Isoleucines should be copied to the consensus sequence.
-        /// </summary>
+
+        /// <summary> To signify if the germline Isoleucines should be copied to the consensus sequence. </summary>
         public bool ForceGermlineIsoleucine;
 
-        /// <summary>
-        /// The unique score for this template
-        /// </summary>
+        /// <summary> The unique score for this template. </summary>
         public int UniqueScore
         {
             get
@@ -70,40 +56,31 @@ namespace Stitch
         }
         int uniqueScore;
 
+        /// <summary> The total area for this template. </summary>
         public double TotalArea = 0;
+        /// <summary> The total area for uniquely placed reads for this template. </summary>
         public double TotalUniqueArea = 0;
+        /// <summary> The total uniquely placed reads on this template. </summary>
         public int UniqueMatches = 0;
 
-        /// <summary>
-        /// The list of matches on this template
-        /// </summary>
+        /// <summary> The list of matches on this template. </summary>
         public List<SequenceMatch> Matches;
 
-        /// <summary>
-        /// If this template is recombinated these are the templates it consists of.
-        /// </summary>
+        /// <summary> If this template is recombinated these are the templates it consists of. </summary>
         public readonly List<Template> Recombination;
 
-        /// <summary>
-        /// The location this template resides (index in the containing Segment and its location)
-        /// </summary>
+        /// <summary> The location this template resides (index in the containing Segment and its location). </summary>
         public readonly TemplateLocation Location;
 
         [JsonIgnore]
-        /// <summary>
-        /// The parent segment, needed to get the settings for scoring, alphabet etc
-        /// </summary>
+        /// <summary> The parent segment, needed to get the settings for scoring, alphabet etc. </summary>
         public readonly Segment Parent;
 
-        /// <summary>
-        /// To keep track on how this template was segment joined, this number is the number of characters to remove from the front after all 'X's have been trimmed.
-        /// Only makes sense in recombined templates.
-        /// </summary>
+        /// <summary> To keep track on how this template was segment joined, this number is the number of characters to remove from the front after all 'X's have been trimmed.
+        /// Only makes sense in recombined templates. </summary>
         public int Overlap = 0;
 
-        /// <summary>
-        /// Creates a new template
-        /// </summary>
+        /// <summary> Creates a new template. </summary>
         /// <param name="name">The name of the enclosing Segment, <see cref="Name"/>.</param>
         /// <param name="seq">The sequence, <see cref="Sequence"/>.</param>
         /// <param name="meta">The metadata, <see cref="MetaData"/>.</param>
@@ -123,9 +100,7 @@ namespace Stitch
             ForceGermlineIsoleucine = forceGermlineIsoleucine;
         }
 
-        /// <summary>
-        /// Adds a new match to the list of matches, if the score is above the cutoff
-        /// </summary>
+        /// <summary> Adds a new match to the list of matches, if the score is above the cutoff. </summary>
         /// <param name="match">The match to add</param>
         /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
         public void AddMatch(SequenceMatch match, bool unique = false)
@@ -149,14 +124,10 @@ namespace Stitch
                 }
             }
         }
-        /// <summary>
-        /// Contains possibilities for a gap.
-        /// </summary>
+        /// <summary> Contains possibilities for a gap. </summary>
         public interface IGap { }
 
-        /// <summary>
-        /// No gap
-        /// </summary>
+        /// <summary> No gap </summary>
         public struct None : IGap
         {
             public override string ToString() { return ""; }
@@ -166,27 +137,20 @@ namespace Stitch
             public static bool operator !=(None a, object obj) { return !a.Equals(obj); }
         }
 
-        /// <summary>
-        /// A gap
-        /// </summary>
+        /// <summary> A gap </summary>
         public struct Gap : IGap
         {
-            /// <summary>
-            /// The sequence of this gap
-            /// </summary>
+            /// <summary> The sequence of this gap </summary> 
             public readonly AminoAcid[] Sequence;
             int hashCode;
 
-            /// <summary>
-            /// Creates a new Gap
-            /// </summary>
+            /// <summary> Creates a new Gap </summary> 
             /// <param name="sequence">The sequence of this gap, <see cref="Sequence"/>.</param>
             public Gap(AminoAcid[] sequence)
             {
                 Sequence = sequence;
 
                 // Pre computes a hash code based on the actual sequence of the gap
-                // TODO: Find out if a full sequence based hash is necessary
                 int hash = 1217;
                 int pos = 0;
                 for (int i = 0; i < 5; i++)
@@ -211,9 +175,9 @@ namespace Stitch
             // Equality is defined by the equality of the sequences
             public override bool Equals(object obj)
             {
-                if (obj is Gap aa && this.Sequence.Length == aa.Sequence.Length)
+                if (obj is Gap other && this.Sequence.Length == other.Sequence.Length)
                 {
-                    return AminoAcid.ArrayEquals(this.Sequence, aa.Sequence);
+                    return AminoAcid.ArrayEquals(this.Sequence, other.Sequence);
                 }
                 else
                 {
@@ -224,10 +188,8 @@ namespace Stitch
             public static bool operator !=(Gap a, object obj) { return !a.Equals(obj); }
         }
 
-        /// <summary>
-        /// Gets the placement of the sequences associated with this template.
-        /// </summary>
-        /// <returns>A list with tuples for each position in the original sequence. </returns>
+        /// <summary> Gets the placement of the sequences associated with this template. </summary>
+        /// <returns> A list with tuples for each position in the original sequence. </returns>
         private List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> alignedSequencesCache = null;
         public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences()
         {
@@ -235,54 +197,12 @@ namespace Stitch
 
             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
 
-            var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
-
-            // Get levels (compress into somewhat lower amount of lines)
-            var levels = new List<List<(int Start, int Length)>>(Matches.Count);
-            var level_lookup = new int[Matches.Count];
-            int start, length;
-            bool placed, could_be_placed;
-
-            for (int match_index = 0; match_index < Matches.Count; match_index++)
-            {
-                start = Matches[match_index].StartTemplatePosition;
-                length = Matches[match_index].LengthOnTemplate;
-                placed = false;
-
-                for (int l = 0; l < levels.Count; l++)
-                {
-                    could_be_placed = true;
-                    // Try to determine if it clashes
-                    foreach ((var str, var len) in levels[l])
-                    {
-                        if ((start < str && start + length + 1 > str) || (start < str + len + 1 && start + length + 1 > str))
-                        {
-                            could_be_placed = false;
-                            break;
-                        }
-                    }
-
-                    if (could_be_placed)
-                    {
-                        levels[l].Add((start, length));
-                        level_lookup[match_index] = l;
-                        placed = true;
-                        break;
-                    }
-                }
-
-                if (!placed)
-                {
-                    levels.Add(new List<(int Start, int Length)> { (start, length) });
-                    level_lookup[match_index] = levels.Count - 1;
-                }
-            }
-
             // Add all the positions
+            var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
             for (int i = 0; i < Sequence.Length; i++)
             {
-                output.Add((new (int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[levels.Count], new (int, IGap, double[], int, bool)[levels.Count]));
-                for (int j = 0; j < levels.Count; j++)
+                output.Add((new (int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[Matches.Count], new (int, IGap, double[], int, bool)[Matches.Count]));
+                for (int j = 0; j < Matches.Count; j++)
                 {
                     output[i].Sequences[j] = (-2, 0, 0, -1);
                     output[i].Gaps[j] = (-2, new None(), new double[0], -1, false);
@@ -299,7 +219,6 @@ namespace Stitch
                 int template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
-                int level = level_lookup[match_index];
 
                 for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++)
                 {
@@ -316,8 +235,8 @@ namespace Stitch
                                            || (i < m.Length - 1) // Not the last AA
                                            || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[level] = (match_index, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
-                            if (!gap) output[template_pos].Gaps[level] = (match_index, new None(), new double[0], contigid, in_sequence);
+                            output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
+                            if (!gap) output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
                             seq_pos++;
@@ -339,15 +258,15 @@ namespace Stitch
 
                         seq_pos += len;
                         int pos = Math.Max(Math.Min(template_pos - 1, output.Count - 1), 0);
-                        output[pos].Gaps[level] = (match_index, sub_seq, cov, contigid, inseq);
+                        output[pos].Gaps[match_index] = (match_index, sub_seq, cov, contigid, inseq);
                     }
                     else if (piece is SequenceMatch.Deletion gt)
                     {
                         // Skip to the next section
                         for (int i = 0; i < gt.Length && template_pos < output.Count; i++)
                         {
-                            output[template_pos].Sequences[level] = (match_index, -1, 1, -1); //TODO: figure out the best score for a gap in a path
-                            output[template_pos].Gaps[level] = (match_index, new None(), new double[0], -1, true);
+                            output[template_pos].Sequences[match_index] = (match_index, -1, 1, -1);
+                            output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], -1, true);
                             template_pos++;
                         }
                         gap = false;
@@ -358,9 +277,7 @@ namespace Stitch
             return output;
         }
 
-        /// <summary>
-        /// Returns the combined sequence or aminoacid variety per position in the alignment.
-        /// </summary>
+        /// <summary> Returns the combined sequence or aminoacid variety per position in the alignment. </summary>
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
         private List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)> combinedSequenceCache = null;
         public List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)> CombinedSequence()
@@ -524,9 +441,7 @@ namespace Stitch
             return ConsensusSequenceCache;
         }
 
-        /// <summary>
-        /// Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates.
-        /// </summary>
+        /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
         public SequenceMatch AlignConsensusWithTemplate()
         {
@@ -536,9 +451,7 @@ namespace Stitch
                 return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
         }
 
-        /// <summary>
-        /// The annotated consensus sequence given as an array with the length of the consensus sequence.
-        /// </summary>
+        /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>
         private Annotation[] ConsensusSequenceAnnotationCache = null;
         public Annotation[] ConsensusSequenceAnnotation()
         {
@@ -612,10 +525,8 @@ namespace Stitch
             return ConsensusSequenceAnnotationCache;
         }
 
-        /// <summary>
-        /// Find the ambiguous positions in this sequence an the support for the connections between these positions in the placed reads.
-        /// Only searches for support one node at a time.
-        /// </summary>
+        /// <summary> Find the ambiguous positions in this sequence an the support for the connections between these positions in the placed reads.
+        /// Only searches for support one node at a time. </summary>
         /// <returns>A list of AmbiguityNodes containing the Position and Support for the connection to the next node.</returns>
         public static double AmbiguityThreshold = -1;
         AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
@@ -683,314 +594,16 @@ namespace Stitch
         }
     }
 
-    public struct AmbiguityTreeNode
-    {
-        /// <summary> The Amino Acid variant of this node. </summary>
-        public AminoAcid Variant;
-        /// <summary> All connections from this node. </summary>
-        public List<(double Intensity, AmbiguityTreeNode Next)> Connections;
-
-        public AmbiguityTreeNode(AminoAcid variant)
-        {
-            this.Variant = variant;
-            this.Connections = new();
-        }
-
-        /// <summary>
-        /// Add a path to this tree, while squishing the tails to create tidy graphs.
-        /// </summary>
-        /// <param name="Path">The path still to be added.</param>
-        /// <param name="Intensity">The intensity of the path.</param>
-        public void AddPath(IEnumerable<AminoAcid> Path, double Intensity, bool perfect = true)
-        {
-            if (Path.Count() == 0) return;
-            if (Connections.Count() == 0)
-            {
-                var next = new AmbiguityTreeNode(Path.First());
-                next.AddPath(Path.Skip(1), Intensity, perfect);
-                Connections.Add((Intensity, next));
-                return;
-            }
-
-            var tail = this.Tail();
-            if (tail != null)
-            {
-                if (Path.Zip(tail).All(a => a.First == a.Second))
-                {
-                    this.Connections[0].Next.AddPath(Path.Skip(1), Intensity, perfect);
-                    this.Connections[0] = (this.Connections[0].Intensity + Intensity, this.Connections[0].Next);
-                    return;
-                }
-            }
-            if (perfect && this.Connections.Select(a => a.Next.Variant).Contains(Path.First()))
-            {
-                foreach (var connection in Connections)
-                {
-                    if (connection.Next.Variant == Path.First())
-                    {
-                        connection.Next.AddPath(Path.Skip(1), Intensity, true);
-                        return;
-                    }
-
-                }
-            }
-            else
-            {
-                var next = new AmbiguityTreeNode(Path.First());
-                next.AddPath(Path.Skip(1), Intensity, false);
-                this.Connections.Add((Intensity, next));
-            }
-        }
-
-        /// <summary>
-        /// Simplify the tree by joining ends with this node as the root node. The function assumes the tree is not simplified yet.
-        /// </summary>
-        public void Simplify()
-        {
-            var levels = new List<List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>>() { new List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>() { (this, this) } };
-            var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            to_scan.Push((0, this));
-
-            while (to_scan.Count > 0)
-            {
-                var element = to_scan.Pop();
-                foreach (var child in element.Node.Connections)
-                {
-                    while (levels.Count() < element.Level + 2)
-                    {
-                        levels.Add(new List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>());
-                    }
-                    to_scan.Push((element.Level + 1, child.Next));
-                    levels[element.Level + 1].Add((element.Node, child.Next));
-                }
-            }
-
-            // Start from the end, go over all levels one by one and try to join the ends of paths.
-            // Paths can be joined if the variant they are pointing at is the same, and either they
-            // end at that position or they continue in a straight and equal tail.
-            levels.Reverse();
-            foreach (var level in levels.SkipLast(1))
-            {
-                foreach (var variant_group in level.GroupBy(l => l.Node.Variant))
-                {
-                    if (variant_group.Count() == 1) continue;
-                    var seen_before = new List<(AmbiguityTreeNode Node, AminoAcid[] Tail)>();
-                    var sorted_variant_group = variant_group.Select(n => (n.Parent, n.Node, n.Node.ReverseTail())).Select(i => (i.Parent, i.Node, i.Item3 == null ? 0 : i.Item3.Count())).ToList();
-                    sorted_variant_group.Sort((a, b) => b.Item3.CompareTo(a.Item3));
-
-                    // See if some of these can be joined, with the longest tail first to prevent throwing away tail information.
-                    foreach (var item in sorted_variant_group)
-                    {
-                        var tail_list = item.Node.Tail();
-                        if (tail_list == null) continue;
-                        var tail = tail_list.ToArray();
-                        var placed = false;
-
-                        foreach (var other in seen_before)
-                        {
-                            // Checks if the full overlap of the tail is equal (ignoring any overhang)
-                            if (tail.Zip(other.Tail).All(a => a.First == a.Second))
-                            {
-                                // Combine the intensity for the remaining children if applicable.
-                                if (item.Node.Connections.Count() == 1 && other.Node.Connections.Count() == 1)
-                                {
-                                    other.Node.Connections[0] = (other.Node.Connections[0].Intensity + item.Node.Connections[0].Intensity, other.Node.Connections[0].Next);
-                                }
-
-                                // Set the correct connection for the parent
-                                var index = item.Parent.Connections.FindIndex(n => n.Next.Variant == variant_group.Key);
-                                item.Parent.Connections[index] = (item.Parent.Connections[index].Intensity, other.Node);
-                                placed = true;
-
-                                break;
-                            }
-                        }
-                        if (!placed)
-                        {
-                            seen_before.Add((item.Node, tail));
-                        }
-                    }
-                }
-            }
-        }
-
-        /// <summary> The tail is the longest single connection path from this node. If any of the nodes 
-        /// in the path has multiple connections the tail is null. </summary>
-        /// <returns> null or the tail in the order. </returns>
-        private List<AminoAcid> Tail()
-        {
-            var tail = this.ReverseTail();
-            if (tail != null) tail.Reverse();
-            return tail;
-        }
-
-        /// <returns> null or the tail in the reverse order.</returns>
-        private List<AminoAcid> ReverseTail()
-        {
-            if (this.Connections.Count() > 1) return null;
-            else if (this.Connections.Count() == 0) return new List<AminoAcid> { this.Variant };
-            else
-            {
-                var tail = this.Connections[0].Next.ReverseTail();
-                if (tail != null)
-                {
-                    tail.Add(this.Variant);
-                    return tail;
-                }
-                else
-                {
-                    return null;
-                }
-            }
-
-        }
-
-        /// <summary>
-        /// A method to ease testing of a whole network.
-        /// </summary>
-        /// <returns>An array with the number of arrows on each level joined with '-'.</returns>
-        public string Topology()
-        {
-            var levels = new List<int>() { 0 };
-            var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
-            to_scan.Push((0, this));
-            while (to_scan.Count > 0)
-            {
-                var element = to_scan.Pop();
-                foreach (var child in element.Node.Connections)
-                {
-                    if (already_scanned.Contains((element.Node, child.Next))) continue;
-                    already_scanned.Add((element.Node, child.Next));
-                    while (levels.Count() < element.Level + 2)
-                    {
-                        levels.Add(0);
-                    }
-                    to_scan.Push((element.Level + 1, child.Next));
-                    levels[element.Level + 1] += 1;
-                }
-            }
-            return string.Join('-', levels.Skip(1));
-        }
-
-        /// <summary>
-        /// The total intensity of all connections in the whole DAG.
-        /// </summary>
-        public double TotalIntensity()
-        {
-            double total = 0.0;
-            var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
-            to_scan.Push((0, this));
-            while (to_scan.Count > 0)
-            {
-                var element = to_scan.Pop();
-                foreach (var child in element.Node.Connections)
-                {
-                    if (already_scanned.Contains((element.Node, child.Next))) continue;
-                    already_scanned.Add((element.Node, child.Next));
-                    to_scan.Push((element.Level + 1, child.Next));
-                    total += child.Intensity;
-                }
-            }
-            return total;
-        }
-    }
-
-    public struct AmbiguityNode
-    {
-        /// <summary> The position in the consensus sequence for this ambiguity node. </summary>
-        public int Position { get; private set; }
-
-        /// <summary> All support to the next node. </summary>
-        public Dictionary<(AminoAcid, AminoAcid), double> Support { get; private set; }
-
-        /// <summary> Higher order support. </summary>
-        public Dictionary<AminoAcid, (AmbiguityTreeNode Backward, AmbiguityTreeNode Forward)> SupportTrees;
-
-        /// <summary> All Identifiers of reads that support this ambiguous node. </summary>
-        public HashSet<string> SupportingReads { get; private set; }
-
-        /// <summary>
-        /// Create a new ambiguity node on the given position.
-        /// </summary>
-        /// <param name="position">The consensus sequence position for this node.</param>
-        public AmbiguityNode(int position)
-        {
-            this.Position = position;
-            this.Support = new();
-            this.SupportTrees = new();
-            this.SupportingReads = new();
-        }
-
-        /// <summary>
-        /// Add new higher order support to this node. This will not overwrite any previously added support.
-        /// </summary>
-        /// <param name="here">The aminoacid at this location.</param>
-        /// <param name="Intensity">The Intensity of the supporting read.</param>
-        /// <param name="Identifier">The Identifier of the supporting read.</param>
-        /// <param name="Path">The path flowing from this node.</param>
-        public void UpdateHigherOrderSupportForward(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
-        {
-            if (this.SupportTrees.ContainsKey(here))
-                this.SupportTrees[here].Forward.AddPath(Path, Intensity);
-            else
-            {
-                var back = new AmbiguityTreeNode(here);
-                var fore = new AmbiguityTreeNode(here);
-                fore.AddPath(Path, Intensity);
-                this.SupportTrees.Add(here, (back, fore));
-            }
-            this.SupportingReads.Add(Identifier);
-
-            // Update single order support
-            var key = (here, Path[0]);
-            if (this.Support.ContainsKey(key))
-                this.Support[key] += Intensity;
-            else
-                this.Support[key] = Intensity;
-        }
-
-        /// <summary>
-        /// Add new higher order support to this node. This will not overwrite any previously added support.
-        /// </summary>
-        /// <param name="here">The aminoacid at this location.</param>
-        /// <param name="Intensity">The Intensity of the supporting read.</param>
-        /// <param name="Identifier">The Identifier of the supporting read.</param>
-        /// <param name="Path">The path flowing from this node.</param>
-        public void UpdateHigherOrderSupportBackward(AminoAcid here, double Intensity, string Identifier, AminoAcid[] Path)
-        {
-            if (this.SupportTrees.ContainsKey(here))
-                this.SupportTrees[here].Backward.AddPath(Path, Intensity);
-            else
-            {
-                var back = new AmbiguityTreeNode(here);
-                var fore = new AmbiguityTreeNode(here);
-                back.AddPath(Path, Intensity);
-                this.SupportTrees.Add(here, (back, fore));
-            }
-            this.SupportingReads.Add(Identifier);
-        }
-    }
-
-    /// <summary>
-    /// The location of a template, in its Segment and its location
-    /// </summary>
+    /// <summary> The location of a template, in its Segment and its location </summary> 
     public class TemplateLocation
     {
-        /// <summary>
-        /// The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>.
-        /// </summary>
+        /// <summary> The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>. </summary>
         public readonly int SegmentIndex;
 
-        /// <summary>
-        /// The index of the <see cref="Template"/>, defined as the index in the containing Segment list of Templates, see <see cref="Segment.Templates"/>.
-        /// </summary>
+        /// <summary> The index of the <see cref="Template"/>, defined as the index in the containing Segment list of Templates, see <see cref="Segment.Templates"/>. </summary>
         public readonly int TemplateIndex;
 
-        /// <summary>
-        /// Creates a new TemplateLocation
-        /// </summary>
+        /// <summary> Creates a new TemplateLocation </summary>
         /// <param name="segmentIndex"> The Segment index, see <see cref="SegmentIndex"/>.</param>
         /// <param name="templateIndex"> The Template index, see <see cref="TemplateIndex"/>.</param>
         public TemplateLocation(int segmentIndex, int templateIndex)
@@ -1000,9 +613,7 @@ namespace Stitch
         }
     }
 
-    /// <summary>
-    /// The location of a recombined template, as there is only one list of recombined templates only one index has to be saved.
-    /// </summary>
+    /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary> 
     public class RecombinedTemplateLocation : TemplateLocation
     {
         public RecombinedTemplateLocation(int templateIndex) : base(-1, templateIndex) { }

@@ -4,9 +4,7 @@ using System.Text;
 
 namespace HTMLNameSpace
 {
-    /// <summary>
-    /// Helper interface to provide the option to build and stringify Json.
-    /// </summary>
+    /// <summary> Helper interface to provide the option to build and stringify Json. </summary> 
     public interface IJsonNode
     {
         public void ToString(StringBuilder buffer)

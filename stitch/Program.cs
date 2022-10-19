@@ -117,7 +117,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     else
                         output_filename = filename;
 
-                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail()).ReturnOrFail();
+                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap()).Unwrap();
                     GenerateAnnotatedTemplate(content, output_filename);
                 }
                 else if (filename == "download")
@@ -156,9 +156,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             return 0;
         }
 
-        /// <summary>
-        /// Run the given batch file
-        /// </summary>
+        /// <summary> Run the given batch file </summary>
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename, RunVariables runVariables)
         {
@@ -169,7 +167,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bar.Start(5); // Max steps, can be turned down if no Recombination is done
             }
 
-            var input_params = ParseCommandFile.Batch(filename, false);
+            var input_params = ParseCommandFile.Batch(filename);
             if (runVariables.ExpectedResult.Count == 0)
             {
                 bar.Update();
@@ -179,9 +177,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             input_params.CreateRun(runVariables, bar).Calculate();
         }
 
-        /// <summary>
-        /// Gracefully handles user abort by printing a final message and the total time the program ran, after that it aborts.
-        /// </summary>
+        /// <summary> Gracefully handles user abort by printing a final message and the total time the program ran, after that it aborts. </summary>
         static void HandleUserAbort(object sender, ConsoleCancelEventArgs e)
         {
             e.Cancel = true;
@@ -197,15 +193,13 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
         static void CleanFasta(string filename, string output)
         {
-            var path = InputNameSpace.ParseHelper.GetFullPath(filename).ReturnOrFail();
+            var path = InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap();
             var name_filter = new NameFilter();
-            var reads = OpenReads.Fasta(name_filter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).ReturnOrFail();
+            var reads = OpenReads.Fasta(name_filter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).Unwrap();
             SaveAndCleanFasta(output, reads);
         }
 
-        /// <summary>
-        /// Do common deduplication and clean up steps. Take note: Assumes all MetaData to be of type ReadMetaData.Fasta.
-        /// </summary>
+        /// <summary> Do common deduplication and clean up steps. Take note: Assumes all MetaData to be of type ReadMetaData.Fasta. </summary>
         /// <param name="output">The file to save the fasta sequences in.</param>
         /// <param name="reads">The reads/sequences itself.</param>
         private static void SaveAndCleanFasta(string output, List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads)
@@ -252,7 +246,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 }
             }
 
-            File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).ReturnOrFail(), sb.ToString());
+            File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).Unwrap(), sb.ToString());
         }
 
         static List<(String CommonName, String ShortName, String ShortHand, String ScientificName)> predefined_species = new List<(String, String, String, String)> {
@@ -292,9 +286,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
         }
 
-        /// <summary>
-        /// Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens.
-        /// </summary>
+        /// <summary> Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens. </summary>
         /// <param name="name"> The name of the species, it will be matched to all predefined names. It can 
         /// be scientific name, common name, shorthand or short name (matched in that order). </param>
         static void DownloadSingleSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC")
@@ -373,9 +365,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             File.Delete("temp.html");
         }
 
-        /// <summary>
-        /// Create an annotated fasta file from a HTML page from IMGT in the old format, based on &lt;pre&gt; or pre rendered text.
-        /// </summary>
+        /// <summary> Create an annotated fasta file from a HTML page from IMGT in the old format, based on &lt;pre&gt; or pre rendered text. </summary>
         /// <param name="filename">The HTML file</param>
         /// <param name="output">The file name for the Fasta file</param>
         static void CreateAnnotatedTemplatePre(string content, string output)

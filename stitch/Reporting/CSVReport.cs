@@ -4,25 +4,19 @@ using System.Linq;
 
 namespace Stitch
 {
-    /// <summary>
-    /// A FASTA report.
-    /// </summary>
+    /// <summary> A FASTA report. </summary> 
     public class CSVReport : Report
     {
         readonly RunParameters.Report.OutputType OutputType;
 
-        /// <summary>
-        /// To retrieve all metadata.
-        /// </summary>
+        /// <summary> To retrieve all metadata. </summary>
         /// <param name="parameters">The parameters.</param>
         public CSVReport(ReportInputParameters parameters, RunParameters.Report.OutputType outputType, int maxThreads) : base(parameters, maxThreads)
         {
             OutputType = outputType;
         }
 
-        /// <summary>
-        /// Creates a CSV file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score.
-        /// </summary>
+        /// <summary> Creates a CSV file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score. </summary>
         /// <returns>A string containing the file.</returns>
         public override string Create()
         {

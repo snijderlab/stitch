@@ -256,9 +256,7 @@ namespace Stitch
                 Console.WriteLine("");
             }
 
-            /// <summary>
-            /// Print an exception in a nice way.
-            /// </summary>
+            /// <summary> Print an exception in a nice way. </summary> 
             /// <param name="e">The exception</param>
             public static void PrintException(Exception e)
             {
@@ -339,35 +337,6 @@ namespace Stitch
                 Console.ForegroundColor = ConsoleColor.Blue;
                 Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
                 Console.ForegroundColor = defaultColour;
-            }
-
-            public void OutputForLanguageServer()
-            {
-                var buffer = new StringBuilder();
-                var name = Warning ? "Warning" : "Error";
-                buffer.Append($"{name}");
-
-                // Location
-                if (!string.IsNullOrEmpty(subject) || string.IsNullOrEmpty(File.Filename) || !start_position.HasValue) // Only a file
-                {
-                    buffer.Append($"\t1 1");
-                }
-                else if (!end_position.HasValue || start_position.Value.Line > end_position.Value.Line) // Single position
-                {
-                    buffer.Append($"\t{start_position.Value.Line + 1} {start_position.Value.Column}");
-                }
-                else if (start_position.Value.Line == end_position.Value.Line) // Single line
-                {
-                    buffer.Append($"\t{start_position.Value.Line + 1} {start_position.Value.Column} {end_position.Value.Column}");
-                }
-                else // Multiline
-                {
-                    buffer.Append($"\t{start_position.Value.Line + 1} {start_position.Value.Column} {end_position.Value.Line + 1} {end_position.Value.Column}");
-                }
-
-                buffer.Append($"\t{shortDescription}\t{longDescription.Replace('\n', ' ')}\t{helpDescription.Replace('\n', ' ')}");
-
-                Console.WriteLine(buffer);
             }
         }
     }
