@@ -1,4 +1,5 @@
 using System;
+using System.Text.Json.Serialization;
 
 namespace Stitch
 {
@@ -165,9 +166,11 @@ namespace Stitch
         /// <summary> The filename </summary>
         public readonly string Name;
 
+        [JsonIgnore]
         /// <summary> The filename </summary>
         public readonly InputNameSpace.KeyValue Origin;
 
+        [JsonIgnore]
         /// <summary> The content of this file, as an array of all lines </summary>
         public readonly string[] Lines;
 
