@@ -67,7 +67,12 @@ namespace Stitch
             GapStartPenalty = gapStartPenalty;
             GapExtendPenalty = gapExtendPenalty;
 
-            var file = new ParsedFile(".", data.Split("\n"), "Alphabet data", null);
+            ParsedFile file;
+            if (type == AlphabetParamType.Data)
+                file = new ParsedFile(".", data.Split("\n"), "Alphabet data", null);
+            else
+                file = new ParsedFile(data, System.IO.File.ReadAllLines(data), "Alphabet data", null);
+
             var counter = new InputNameSpace.Tokenizer.Counter(file);
             var result = InputNameSpace.ParseHelper.ParseAlphabetData(file, counter).Unwrap();
             var alphabet = result.Item1;
