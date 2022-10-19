@@ -73,7 +73,7 @@ namespace Stitch
                         version_specified = true;
                         break;
                     case "maxcores":
-                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(0, int.MaxValue, "0..", pair.ValueRange).GetValue(outEither);
+                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(ParseHelper.NumberRange<int>.Open(0), pair.ValueRange).GetValue(outEither);
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));

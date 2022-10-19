@@ -108,6 +108,74 @@ namespace Stitch
                     return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
+            /// <summary> A number range which can be open ended or closed. </summary>
+            public readonly struct NumberRange<T> where T : IComparable<T>
+            {
+                readonly T Min;
+                readonly T Max;
+                readonly bool OpenRange;
+
+                private NumberRange(T min, T max, bool open)
+                {
+                    Min = min;
+                    Max = max;
+                    OpenRange = open;
+                }
+
+                /// <summary> Create an open ended number range, essentially placing the maximum number at the boundaries of the underlying type. </summary>
+                /// <param name="min">The minimal value.</param>
+                /// <returns>The new range struct.</returns>
+                public static NumberRange<T> Open(T min)
+                {
+                    return new NumberRange<T>(min, min, true);
+                }
+                /// <summary> Create an closed number range. </summary>
+                /// <param name="min">The minimal value.</param>
+                /// <param name="max">The maximal value.</param>
+                /// <returns>The new range struct.</returns>
+                public static NumberRange<T> Closed(T min, T max)
+                {
+                    return new NumberRange<T>(min, max, false);
+                }
+
+                /// <summary> Check if the given number is in this range. </summary>
+                /// <param name="num"> The number to check. </param>
+                /// <returns> An int in the same way as CompareTo. </returns>
+                public int InRange(T num)
+                {
+                    if (num.CompareTo(Min) < 0) return -1;
+                    if (!OpenRange && num.CompareTo(Max) > 0) return 1;
+                    return 0;
+                }
+
+                public override string ToString()
+                {
+                    if (OpenRange)
+                        return $"{Min}..";
+                    else
+                        return $"{Min}..{Max}";
+                }
+            }
+            /// <summary> Restrict the given result to within a certain range. Works for any IComparable. </summary>
+            /// <param name="value">The value to restrict.</param>
+            /// <param name="range">The range to restrict the variable to.</param>
+            /// <param name="position">The fileRange to generate nice errors.</param>
+            /// <typeparam name="T">The type of the value, has to be IComparable.</typeparam>
+            /// <returns>The same result, possible with more error messages.</returns>
+            public static ParseResult<T> RestrictRange<T>(this ParseResult<T> value, NumberRange<T> range, FileRange position) where T : IComparable<T>
+            {
+                T v;
+                if (value.TryGetValue(out v))
+                {
+                    var res = range.InRange(v);
+                    if (res < 0)
+                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was below the minimal value. The valid range is [{range}]"));
+                    else if (res > 0)
+                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was above the maximal value. The valid range is [{range}]"));
+                }
+
+                return value;
+            }
             public static ParseResult<InputData.InputParameters> ParseInputParameters(KeyValue key)
             {
                 var outEither = new ParseResult<InputData.InputParameters>();
@@ -203,7 +271,7 @@ namespace Stitch
                                             novor_settings.Separator = value.First();
                                         break;
                                     case "cutoff":
-                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
@@ -375,10 +443,10 @@ namespace Stitch
                     switch (setting.Name)
                     {
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
                             break;
                         case "ambiguitythreshold":
-                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, 1.0, "0..1", setting.ValueRange).GetValue(outEither);
+                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).GetValue(outEither);
                             break;
                         case "segments":
                             if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -458,7 +526,7 @@ namespace Stitch
                     switch (setting.Name)
                     {
                         case "n":
-                            output.N = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.N = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
                             break;
                         case "order":
                             if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -468,7 +536,7 @@ namespace Stitch
                                     order.Add(group);
                             break;
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -559,7 +627,7 @@ namespace Stitch
                                         f_settings.Path = setting.GetValue().GetValueOrDefault(outEither, "");
                                         break;
                                     case "minimalscore":
-                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
                                         break;
                                     case "outputtype":
                                         var res = setting.GetValue();
@@ -685,10 +753,10 @@ namespace Stitch
                             asettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
                             break;
                         case "gapextendpenalty":
-                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
@@ -847,7 +915,7 @@ namespace Stitch
                             tsettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
                             break;
                         case "cutoffscore":
-                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(0.0, double.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
                             else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
                             break;
                         case "alphabet":
@@ -1013,13 +1081,13 @@ namespace Stitch
                 switch (name)
                 {
                     case "cutoffalc":
-                        parameters.CutoffALC = ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                        parameters.CutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ConvertToInt(setting).RestrictRange(0, 100, "0..100", setting.ValueRange).GetValue(outEither);
+                        parameters.LocalCutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
                         break;
                     case "minlengthpatch":
-                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting).RestrictRange(0, int.MaxValue, "0..", setting.ValueRange).GetValue(outEither);
+                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
                         break;
                     default:
                         outEither.Value = (parameters, false);
@@ -1048,19 +1116,6 @@ namespace Stitch
                     }
                 }
                 return output;
-            }
-            public static ParseResult<T> RestrictRange<T>(this ParseResult<T> value, T min, T max, string range, FileRange position) where T : IComparable<T>
-            {
-                T v;
-                if (value.TryGetValue(out v))
-                {
-                    if (v.CompareTo(min) < 0)
-                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was below the minimal value. The valid range is [{range}]"));
-                    else if (v.CompareTo(max) > 0)
-                        value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was above the maximal value. The valid range is [{range}]"));
-                }
-
-                return value;
             }
             public static ParseResult<string> GetFullPath(KeyValue setting)
             {
