@@ -135,40 +135,42 @@ namespace Stitch
                         // Create a new counter
                         var order_counter = new InputNameSpace.Tokenizer.Counter(order.ValueRange.Start);
                         var order_output = new List<RunParameters.RecombineOrder.OrderPiece>();
-
-                        while (order_res.IsOk(outEither) && !string.IsNullOrEmpty(order_res.Unwrap()))
+                        if (order_res.IsOk(outEither))
                         {
                             var order_string = order_res.Unwrap();
-                            InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
-
-                            var match = false;
-
-                            for (int j = 0; j < group.Segments.Count; j++)
+                            while (!string.IsNullOrEmpty(order_string))
                             {
-                                var template = group.Segments[j];
-                                var len = template.Name.Length;
-                                if (order_string.StartsWith(template.Name) && (order_string.Length == len || Char.IsWhiteSpace(order_string[len]) || order_string[len] == '*'))
+                                InputNameSpace.Tokenizer.ParseHelper.Trim(ref order_string, order_counter);
+
+                                var match = false;
+
+                                for (int j = 0; j < group.Segments.Count; j++)
                                 {
-                                    order_string = order_string.Remove(0, template.Name.Length);
-                                    order_counter.NextColumn(template.Name.Length);
-                                    order_output.Add(new RunParameters.RecombineOrder.Template(j));
-                                    match = true;
+                                    var template = group.Segments[j];
+                                    var len = template.Name.Length;
+                                    if (order_string.StartsWith(template.Name) && (order_string.Length == len || Char.IsWhiteSpace(order_string[len]) || order_string[len] == '*'))
+                                    {
+                                        order_string = order_string.Remove(0, template.Name.Length);
+                                        order_counter.NextColumn(template.Name.Length);
+                                        order_output.Add(new RunParameters.RecombineOrder.Template(j));
+                                        match = true;
+                                        break;
+                                    }
+
+                                }
+                                if (match) continue;
+
+                                if (order_string.StartsWith('*'))
+                                {
+                                    order_string = order_string.Remove(0, 1);
+                                    order_counter.NextColumn();
+                                    order_output.Add(new RunParameters.RecombineOrder.Gap());
+                                }
+                                else
+                                {
+                                    outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
                                     break;
                                 }
-
-                            }
-                            if (match) continue;
-
-                            if (order_string.StartsWith('*'))
-                            {
-                                order_string = order_string.Remove(0, 1);
-                                order_counter.NextColumn();
-                                order_output.Add(new RunParameters.RecombineOrder.Gap());
-                            }
-                            else
-                            {
-                                outEither.AddMessage(new ErrorMessage(new FileRange(order_counter.GetPosition(), order.ValueRange.End), "Invalid order", "Valid options are a name of a template, a gap ('*') or whitespace."));
-                                break;
                             }
                         }
 
