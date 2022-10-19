@@ -30,7 +30,7 @@ namespace Stitch
             }
 
             // Save the batchfile for use in the construction of error messages
-            var batchfile = new ParsedFile(path, batchfile_content.Split('\n'));
+            var batchfile = new ParsedFile(path, batchfile_content.Split('\n'), "Batchfile", null);
             output.BatchFile = batchfile;
 
             // Tokenize the file, into a key value pair tree

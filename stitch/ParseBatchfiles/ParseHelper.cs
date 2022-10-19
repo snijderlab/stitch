@@ -714,36 +714,25 @@ namespace Stitch
                 }
 
                 (char[], int[,]) result;
+                KeyValue path_Setting = null;
 
                 foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "path":
-                            if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var all_text = GetAllText(setting);
-
-                            if (all_text.IsErr())
-                            {
-                                all_text.GetValue(outEither);
-                                return outEither;
-                            }
-
-                            var content = all_text.GetValue(outEither).Split("\n");
-                            var counter = new Tokenizer.Counter(new ParsedFile(GetFullPath(setting).GetValue(outEither), content));
-                            result = ParseAlphabetData(content, counter).GetValue(outEither);
-                            asettings.Alphabet = result.Item1;
-                            asettings.ScoringMatrix = result.Item2;
+                            if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            path_Setting = setting;
 
                             break;
                         case "data":
-                            if (asettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var res = setting.GetValue();
                             if (res.IsOk(outEither))
                             {
                                 var data_content = res.Unwrap().Split("\n");
-                                var data_counter = new Tokenizer.Counter(setting.ValueRange.Start);
-                                result = ParseAlphabetData(data_content, data_counter).GetValue(outEither);
+                                var counter = new Tokenizer.Counter(setting.ValueRange.Start);
+                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", setting), counter).GetValue(outEither);
                                 asettings.Alphabet = result.Item1;
                                 asettings.ScoringMatrix = result.Item2;
                             }
@@ -764,35 +753,38 @@ namespace Stitch
                     }
                 }
 
+                if (path_Setting != null)
+                {
+                    var all_text = GetAllText(path_Setting);
+
+                    if (all_text.IsOk(outEither))
+                    {
+                        var content = all_text.GetValue(outEither).Split("\n");
+                        var id = new ParsedFile(GetFullPath(path_Setting).GetValue(outEither), content, asettings.Name, key);
+                        var counter = new Tokenizer.Counter(id);
+                        result = ParseAlphabetData(id, counter).GetValue(outEither);
+                        asettings.Alphabet = result.Item1;
+                        asettings.ScoringMatrix = result.Item2;
+                    }
+                }
+
                 if (asettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
                 if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
 
                 return outEither;
             }
-            public static (char[], int[,]) ParseAlphabetData(string data, Alphabet.AlphabetParamType type)
-            {
-                var lines = data.Split('\n');
-                var file = new ParsedFile("Inline alphabet", lines);
-                if (type == Alphabet.AlphabetParamType.Path)
-                {
-                    lines = GetAllText(data).Unwrap().Split('\n');
-                    file = new ParsedFile(data, lines);
-                }
-                var counter = new Tokenizer.Counter(file);
-                return ParseAlphabetData(lines, counter).Unwrap();
-            }
-            public static ParseResult<(char[], int[,])> ParseAlphabetData(string[] lines, Tokenizer.Counter counter)
+            public static ParseResult<(char[], int[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter)
             {
                 var outEither = new ParseResult<(char[], int[,])>();
 
-                int rows = lines.Length;
+                int rows = file.Lines.Length;
                 var cells = new List<(Position, List<(string, FileRange)>)>();
 
-                for (int i = 0; i < lines.Length; i++)
+                for (int i = 0; i < file.Lines.Length; i++)
                 {
                     var start_line = counter.GetPosition();
                     var split_line = new List<(string, FileRange)>();
-                    var line = lines[i];
+                    var line = file.Lines[i];
                     Tokenizer.ParseHelper.Trim(ref line, counter);
 
                     while (!string.IsNullOrEmpty(line))

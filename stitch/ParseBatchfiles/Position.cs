@@ -160,24 +160,34 @@ namespace Stitch
     public class ParsedFile
     {
         /// <summary> The filename </summary>
-        public readonly string Filename;
+        public readonly string Path;
+
+        /// <summary> The filename </summary>
+        public readonly string Name;
+
+        /// <summary> The filename </summary>
+        public readonly InputNameSpace.KeyValue Origin;
 
         /// <summary> The content of this file, as an array of all lines </summary>
         public readonly string[] Lines;
 
+        public ReadMetaData.FileIdentifier Identifier { get => new ReadMetaData.FileIdentifier(Path, Name, Origin); }
+
         /// <summary> Creates a new ParsedFile </summary>
-        /// <param name="name">The filename (will be resolved to full path)</param>
+        /// <param name="path">The filename (will be resolved to full path)</param>
         /// <param name="content">The file content, as an array of all lines</param>
-        public ParsedFile(string name, string[] content)
+        public ParsedFile(string path, string[] content, string name, InputNameSpace.KeyValue origin)
         {
-            Filename = name;
+            Path = path;
             Lines = content;
+            Name = name;
+            Origin = origin;
         }
 
         /// <summary> Creates an empty ParsedFile </summary>
         public ParsedFile()
         {
-            Filename = "";
+            Path = "";
             Lines = new string[0];
         }
 
@@ -190,19 +200,19 @@ namespace Stitch
             else
             {
                 var that = (ParsedFile)obj;
-                if (this.Filename == that.Filename) return true;
+                if (this.Path == that.Path) return true;
                 else return false;
             }
         }
 
         public override int GetHashCode()
         {
-            return 23 + 17 * Filename.GetHashCode();
+            return 23 + 17 * Path.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Filename;
+            return Path;
         }
     }
 }

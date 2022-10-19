@@ -78,19 +78,7 @@ namespace Stitch
         }
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string, ReadMetaData.IMetaData)> sequences)
-        {
-            var paths = new List<GraphPath>(sequences.Count);
-            for (int i = 0; i < sequences.Count; i++)
-            {
-                paths.Add(new GraphPath(StringToSequence(sequences[i].Item1).ToList(), sequences[i].Item2, i));
-            }
-            return Match(paths);
-        }
-
-        /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
-        /// <param name="sequences">The sequences to match with</param>
-        List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<GraphPath> sequences)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string Sequence, ReadMetaData.IMetaData MetaData)> sequences)
         {
             var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++)
@@ -98,7 +86,7 @@ namespace Stitch
                 var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count);
                 for (int i = 0; i < Templates.Count; i++)
                 {
-                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j].MetaData, sequences[j].Index, i)));
+                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, AminoAcid.FromString(sequences[j].Sequence, Alphabet), Alphabet, sequences[j].MetaData, j, i)));
                 }
                 output.Add(row);
             }

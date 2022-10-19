@@ -18,8 +18,8 @@ namespace StitchTest
         [DataTestMethod]
         public void EqualFiles(string a, string b)
         {
-            var fa = new ParsedFile(a, new string[0]);
-            var fb = new ParsedFile(b, new string[0]);
+            var fa = new ParsedFile(a, new string[0], "A", null);
+            var fb = new ParsedFile(b, new string[0], "A", null);
             Assert.AreEqual(fa, fb);
         }
         [DataRow("", " ")]
@@ -28,8 +28,8 @@ namespace StitchTest
         [DataTestMethod]
         public void NotEqualFiles(string a, string b)
         {
-            var fa = new ParsedFile(a, new string[0]);
-            var fb = new ParsedFile(b, new string[0]);
+            var fa = new ParsedFile(a, new string[0], "A", null);
+            var fb = new ParsedFile(b, new string[0], "A", null);
             Assert.AreNotEqual(fa, fb);
         }
         [TestMethod]

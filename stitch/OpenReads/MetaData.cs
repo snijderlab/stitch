@@ -14,7 +14,8 @@ namespace Stitch
         public abstract class IMetaData
         {
             /// <summary> The Identifier of the originating file. </summary> 
-            public readonly FileIdentifier File;
+            public FileIdentifier File { get => FileRange != null ? FileRange.Value.File.Identifier : new FileIdentifier(); }
+            public readonly FileRange? FileRange;
 
             /// <summary> The Identifier of the read as the original, with possibly a number at the end if multiple reads had this same identifier. </summary> 
             public string Identifier { get; protected set; }
@@ -51,10 +52,10 @@ namespace Stitch
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(FileIdentifier file, string id, NameFilter filter, string classId = null)
+            public IMetaData(FileRange? file, string id, NameFilter filter, string classId = null)
             {
                 nameFilter = filter;
-                File = file;
+                FileRange = file;
                 Identifier = id;
                 ClassIdentifier = classId ?? Identifier;
 
@@ -81,7 +82,7 @@ namespace Stitch
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
-            public Simple(FileIdentifier file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
+            public Simple(FileRange? file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
             public override HtmlBuilder ToHTML()
@@ -102,7 +103,7 @@ namespace Stitch
             /// <param name="fastaHeader">The header for this read as in the fasta file, without the '>'.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            public Fasta(string identifier, string fastaHeader, FileIdentifier file, NameFilter filter, string classIdentifier = null)
+            public Fasta(string identifier, string fastaHeader, FileRange? file, NameFilter filter, string classIdentifier = null)
                 : base(file, identifier, filter, classIdentifier)
             {
                 this.FastaHeader = fastaHeader;
@@ -211,7 +212,7 @@ namespace Stitch
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            private Peaks(FileIdentifier file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
+            private Peaks(FileRange? file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
 
             /// <summary> Tries to create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
@@ -222,7 +223,7 @@ namespace Stitch
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, FileIdentifier file, NameFilter filter)
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter)
             {
                 var result = new ParseResult<Peaks>();
 
@@ -268,7 +269,8 @@ namespace Stitch
                     result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return result;
                 }
-                var peaks = new Peaks(file, fields[pf.scan].Text, filter);
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
+                var peaks = new Peaks(range, fields[pf.scan].Text, filter);
                 result.Value = peaks;
 
                 // Get all the properties of this peptide and save them in the MetaData 
@@ -352,7 +354,7 @@ namespace Stitch
 
             public ReadMetaData.Peaks Clone()
             {
-                var meta = new ReadMetaData.Peaks(this.File, this.Identifier, this.nameFilter);
+                var meta = new ReadMetaData.Peaks(this.FileRange, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Cleaned_sequence = new string(this.Cleaned_sequence);
@@ -579,7 +581,7 @@ namespace Stitch
                 return html;
             }
 
-            public Combined(NameFilter filter, List<IMetaData> children) : base(new FileIdentifier(), "Combined", filter)
+            public Combined(NameFilter filter, List<IMetaData> children) : base(null, "Combined", filter)
             {
                 Children = children;
             }
@@ -616,7 +618,7 @@ namespace Stitch
             /// <summary> Create a new Novor MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Novor(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
+            public Novor(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
             {
                 this.Fraction = fraction;
                 this.Scan = scan;
@@ -658,7 +660,7 @@ namespace Stitch
         {
             /// <summary> The database sequence with possible modifications. </summary> 
             public string DBSequence;
-            public NovorDeNovo(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence)
+            public NovorDeNovo(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence)
             : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
             {
                 this.DBSequence = databaseSequence;
@@ -679,7 +681,7 @@ namespace Stitch
             public string ID;
             /// <summary> The read ID. </summary> 
             public int Proteins;
-            public NovorPSMS(FileIdentifier file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string id, int proteins)
+            public NovorPSMS(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string id, int proteins)
             : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
             {
                 this.ID = id;

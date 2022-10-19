@@ -24,24 +24,20 @@ namespace Stitch
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
-            if (possible_content.IsErr())
+            if (possible_content.IsOk(out_either))
             {
-                out_either.Messages.AddRange(possible_content.Messages);
-                return out_either;
+                var parsed = new ParsedFile(inputFile.Name, possible_content.Unwrap().Split('\n'), inputFile.Name, inputFile.Origin);
+                var reads = new List<(string, ReadMetaData.IMetaData)>();
+                out_either.Value = reads;
+
+                for (int line = 0; line < parsed.Lines.Length; line++)
+                {
+                    var content = parsed.Lines[line];
+                    if (content.Length == 0) continue;
+                    if (content[0] != commentChar)
+                        reads.Add((content.Trim(), new ReadMetaData.Simple(new FileRange(new Position(line, 0, parsed), new Position(line, 0, parsed)), filter)));
+                }
             }
-
-            var reads = new List<(string, ReadMetaData.IMetaData)>();
-            out_either.Value = reads;
-
-            var lines = possible_content.Unwrap().Split('\n');
-
-            foreach (var line in lines)
-            {
-                if (line.Length == 0) continue;
-                if (line[0] != commentChar)
-                    reads.Add((line.Trim(), new ReadMetaData.Simple(inputFile, filter)));
-            }
-
             return out_either;
         }
 
@@ -69,15 +65,18 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n').ToArray();
-            var parse_file = new ParsedFile(inputFile.Path, lines);
+            var parse_file = new ParsedFile(inputFile.Path, lines, inputFile.Name, inputFile.Origin);
 
             string identifierLine = "";
             int identifierLineNumber = 1;
             var sequence = new StringBuilder();
             int linenumber = 0;
+            var start_pos = new Position(linenumber, 0, parse_file);
 
             foreach (var line in lines)
             {
+                var end_pos = new Position(linenumber, line.Length, parse_file);
+                var range = new FileRange(start_pos, end_pos);
                 if (line.Length == 0) continue;
                 if (line[0] == '>')
                 {
@@ -88,11 +87,11 @@ namespace Stitch
                         {
                             if (match.Groups.Count == 3)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
                             }
                             else if (match.Groups.Count == 2)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parse_file).GetValue(out_either));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).GetValue(out_either));
                             }
                             else
                             {
@@ -118,6 +117,7 @@ namespace Stitch
                     identifierLine = line.Substring(1).Trim();
                     sequence = new StringBuilder();
                     identifierLineNumber = linenumber;
+                    start_pos = end_pos;
                 }
                 else
                 {
@@ -127,6 +127,8 @@ namespace Stitch
             }
             if (!string.IsNullOrEmpty(identifierLine))
             {
+                var end_pos = new Position(linenumber, identifierLine.Length, parse_file);
+                var range = new FileRange(start_pos, end_pos);
                 // Flush last sequence to list
                 var match = parseIdentifier.Match(identifierLine);
 
@@ -134,11 +136,11 @@ namespace Stitch
                 {
                     if (match.Groups.Count == 3)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
                     }
                     else if (match.Groups.Count == 2)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, inputFile, filter), identifierLineNumber, parse_file).GetValue(out_either));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).GetValue(out_either));
                     }
                     else
                     {
@@ -280,14 +282,14 @@ namespace Stitch
 
             List<string> lines = possible_content.Unwrap().Split('\n').ToList();
             var reads = new List<(string, ReadMetaData.IMetaData)>();
-            var parse_file = new ParsedFile(peaks.File.Name, lines.ToArray());
+            var parse_file = new ParsedFile(peaks.File.Name, lines.ToArray(), peaks.File.Name, peaks.File.Origin);
 
             out_either.Value = reads;
 
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parse_file.Lines.Length; linenumber++)
             {
-                var parsed = ReadMetaData.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, peaks.File, filter);
+                var parsed = ReadMetaData.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter);
 
                 if (parsed.HasOnlyWarnings()) continue;
 
@@ -393,7 +395,7 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file.Path, lines);
+            var parse_file = new ParsedFile(file.Path, lines, file.Name, file.Origin);
             var linenumber = -1;
 
             foreach (var line in lines)
@@ -408,6 +410,7 @@ namespace Stitch
                     continue;
                 }
 
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
                 var fraction = split[0].Text;
                 var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).GetValue(out_either);
                 var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(-1);
@@ -434,7 +437,7 @@ namespace Stitch
                     }
                 }
                 if (score >= cutoff)
-                    reads.Add((final_peptide, new ReadMetaData.NovorDeNovo(file, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence)));
+                    reads.Add((final_peptide, new ReadMetaData.NovorDeNovo(range, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence)));
             }
 
             return out_either;
@@ -462,7 +465,7 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file.Path, lines);
+            var parse_file = new ParsedFile(file.Path, lines, file.Name, file.Origin);
             var linenumber = -1;
 
             foreach (var line in lines)
@@ -477,6 +480,7 @@ namespace Stitch
                     continue;
                 }
 
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
                 var id = split[0].Text;
                 var fraction = split[1].Text;
                 var scan = InputNameSpace.ParseHelper.ConvertToInt(split[2].Text, split[2].Pos).GetValue(out_either);
@@ -504,7 +508,7 @@ namespace Stitch
                     }
                 }
                 if (score >= cutoff)
-                    reads.Add((final_peptide, new ReadMetaData.NovorPSMS(file, filter, fraction, scan, mz, z, score, mass, error, peptide, id, proteins)));
+                    reads.Add((final_peptide, new ReadMetaData.NovorPSMS(range, filter, fraction, scan, mz, z, score, mass, error, peptide, id, proteins)));
             }
 
             return out_either;
@@ -541,11 +545,10 @@ namespace Stitch
                     }
                     else
                     {
-                        var parse = new ParsedFile(read.MetaData.File.Path, new string[1] { read.Sequence });
                         for (int i = 0; i < read.Sequence.Length; i++)
                         {
-                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i])) // TODO: Get the right linenumber of the definition of the read, save it somewhere in the MetaData object 
-                                out_either.AddMessage(new InputNameSpace.ErrorMessage(new Position(0, i, parse), "Invalid sequence", "This sequence contains an invalid aminoacid."));
+                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i]))
+                                out_either.AddMessage(new InputNameSpace.ErrorMessage(read.MetaData.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
                         }
 
                         filtered.Add(read.Sequence, read.MetaData);

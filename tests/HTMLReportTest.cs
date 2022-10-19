@@ -18,7 +18,7 @@ namespace StitchTest
         public void SingleMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
@@ -40,7 +40,7 @@ namespace StitchTest
         public void MultiMatchTemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGG", meta) },
@@ -62,7 +62,7 @@ namespace StitchTest
         public void SingleAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, ReadMetaData.IMetaData)> { ("E", meta) },
@@ -84,7 +84,7 @@ namespace StitchTest
         public void NoAATemplateAlignment()
         {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(new ReadMetaData.FileIdentifier("empty", "empty", null), new NameFilter());
+            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<(string, ReadMetaData.IMetaData)> { ("", meta) },

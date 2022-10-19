@@ -404,7 +404,7 @@ namespace Stitch
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new ReadMetaData.Simple(new ReadMetaData.FileIdentifier(), name_filter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadMetaData.Simple(null, name_filter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

@@ -437,11 +437,10 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
 
             var name_filter = new NameFilter();
-            var file = new ReadMetaData.FileIdentifier();
             var list = new List<(string, ReadMetaData.IMetaData)>(results.Count);
             foreach (var (isotype, sequence) in results)
             {
-                list.Add((sequence, new ReadMetaData.Fasta(isotype, isotype, file, name_filter)));
+                list.Add((sequence, new ReadMetaData.Fasta(isotype, isotype, null, name_filter)));
             }
 
             SaveAndCleanFasta(output, list);
@@ -452,7 +451,6 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         {
             var sequences = new List<(string Sequence, ReadMetaData.IMetaData)>();
             var name_filter = new NameFilter();
-            var file = new ReadMetaData.FileIdentifier();
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
             content = content.Substring(0, content.IndexOf("</table>"));
@@ -609,7 +607,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     else
                         encoded_sequence.Append($"({piece.Type} {piece.Sequence})");
                 }
-                sequences.Add((encoded_sequence.ToString(), new ReadMetaData.Fasta(pieces[2], pieces[2], file, name_filter)));
+                sequences.Add((encoded_sequence.ToString(), new ReadMetaData.Fasta(pieces[2], pieces[2], null, name_filter)));
             }
             SaveAndCleanFasta(output, sequences);
         }
