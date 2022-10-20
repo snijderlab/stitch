@@ -140,7 +140,6 @@ namespace Stitch
         {
             int score = 0;
             if (left.Length != right.Length)
-                // Throw exception?
                 return 0;
             for (int i = 0; i < left.Length; i++)
             {

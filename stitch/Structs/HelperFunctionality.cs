@@ -142,11 +142,11 @@ namespace Stitch
 
                     bpos = row_size * tem_pos + query_pos - 1;
 
-                    b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.GapInQuery || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.Insertion || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     cpos = row_size * (tem_pos - 1) + query_pos;
 
-                    c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.GapInTemplate || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
+                    c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.Deletion || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
 
                     if (a > b && a > c && a > 0)
                     {
@@ -164,12 +164,12 @@ namespace Stitch
                     else if (!gap && b > c && b > 0)
                     {
                         value = b;
-                        direction = Direction.GapInQuery;
+                        direction = Direction.Insertion;
                     }
                     else if (!gap && c > 0)
                     {
                         value = c;
-                        direction = Direction.GapInTemplate;
+                        direction = Direction.Deletion;
                     }
                     else
                     {
@@ -191,7 +191,6 @@ namespace Stitch
             }
 
             // Trace back
-            // TODO: Adjust the score on each position based on the DOC, to create a fairer score
             var match_list = new List<SequenceMatch.MatchPiece>();
 
             while (true)
@@ -204,15 +203,15 @@ namespace Stitch
                         max_index_q--;
                         break;
                     case (int)Direction.MatchGap:
-                        match_list.Add(new SequenceMatch.Match(1)); // TODO: Maybe Introduce the right gap?
+                        match_list.Add(new SequenceMatch.Match(1));
                         max_index_t--;
                         max_index_q--;
                         break;
-                    case (int)Direction.GapInTemplate:
+                    case (int)Direction.Deletion:
                         match_list.Add(new SequenceMatch.Deletion(1));
                         max_index_t--;
                         break;
-                    case (int)Direction.GapInQuery:
+                    case (int)Direction.Insertion:
                         match_list.Add(new SequenceMatch.Insertion(1));
                         max_index_q--;
                         break;
@@ -257,8 +256,8 @@ namespace Stitch
                     score = indices_template[tem_pos - 1] == indices_query[query_pos - 1] ? 1 : 0;
                     a = score_matrix[tem_pos - 1, query_pos - 1].Item1 + score; // Match
 
-                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.GapInQuery || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? 1 : 4);
-                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.GapInTemplate || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? 1 : 4);
+                    b = score_matrix[tem_pos, query_pos - 1].Item1 - ((score_matrix[tem_pos, query_pos - 1].Item2 == Direction.Insertion || score_matrix[tem_pos, query_pos - 1].Item2 == Direction.MatchGap) ? 1 : 4);
+                    c = score_matrix[tem_pos - 1, query_pos].Item1 - ((score_matrix[tem_pos - 1, query_pos].Item2 == Direction.Deletion || score_matrix[tem_pos - 1, query_pos].Item2 == Direction.MatchGap) ? 1 : 4);
 
                     if (a > b && a > c && a > 0)
                     {
@@ -331,7 +330,7 @@ namespace Stitch
             }
         }
 
-        enum Direction { NoMatch, GapInTemplate, GapInQuery, Match, MatchGap }
+        enum Direction { NoMatch, Deletion, Insertion, Match, MatchGap }
 
         public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match)
         {

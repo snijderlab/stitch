@@ -64,7 +64,6 @@ namespace HTMLNameSpace
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(metadata);
-            if (id == null) throw new Exception("ID is null");
             string class_name = GetAsideName(type);
             return GetLinkToFolder(new List<string>() { AssetsFolderName, class_name + "s" }, location) + id.Replace(':', '-') + ".html";
         }
