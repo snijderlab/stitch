@@ -198,7 +198,7 @@ namespace Stitch
         {
             if (obj is ParsedFile that)
             {
-                return this.Identifier == that.Identifier;
+                return this.Identifier.Equals(that.Identifier);
             }
             return false;
         }

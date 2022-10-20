@@ -34,7 +34,7 @@ namespace Stitch
             output.BatchFile = batchfile;
 
             // Tokenize the file, into a key value pair tree
-            var parsed = InputNameSpace.Tokenizer.Tokenize(batchfile);
+            var parsed = InputNameSpace.Tokenizer.Tokenize(batchfile).Unwrap();
 
             // Now all key value pairs are saved in 'parsed'
             // Now parse the key value pairs into RunParameters

@@ -12,7 +12,6 @@ namespace StitchTest
     [TestClass]
     public class Position_Test
     {
-        [DataRow("", "")]
         [DataRow("A", "A")]
         [DataRow("KAOSPJPJKklksadjoijdlkjaslkdj", "KAOSPJPJKklksadjoijdlkjaslkdj")]
         [DataTestMethod]
@@ -22,7 +21,6 @@ namespace StitchTest
             var fb = new ParsedFile(b, new string[0], "A", null);
             Assert.AreEqual(fa, fb);
         }
-        [DataRow("", " ")]
         [DataRow("A", "a")]
         [DataRow("KAOSPJPJKklksadjoijdlkjaslkdj", "KAOSPJPJKklksadjoijdlkjaslkdj_")]
         [DataTestMethod]

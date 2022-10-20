@@ -752,6 +752,20 @@ namespace Stitch
             {
                 return $"Path: {path}\nName: {Name}";
             }
+
+            public override bool Equals(object obj)
+            {
+                if (obj is FileIdentifier that)
+                {
+                    return this.Path == that.Path && this.Name == that.Name && this.Origin == that.Origin;
+                }
+                return false;
+            }
+
+            public override int GetHashCode()
+            {
+                return 23 + 397 * this.Path.GetHashCode() + 17 * 397 * this.Name.GetHashCode() + 17 * 17 * 397 * this.Origin.GetHashCode();
+            }
         }
     }
 }

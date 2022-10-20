@@ -8,28 +8,43 @@ namespace Stitch
     {
         public static class Tokenizer
         {
-            public static List<KeyValue> Tokenize(ParsedFile file)
+            /// <summary> Tokenize the given file into the custom key value file format. </summary>
+            /// <param name="file">The file to tokenize. </param>
+            /// <returns> If everything went smoothly a list with all top level key value pairs, otherwise a list of error messages. </returns>
+            public static ParseResult<List<KeyValue>> Tokenize(ParsedFile file)
             {
+                var output = new ParseResult<List<KeyValue>>();
                 var parsed = new List<KeyValue>();
+                output.Value = parsed;
                 var counter = new Counter(file);
                 var content = string.Join("\n", file.Lines);
 
                 while (content.Length > 0)
                 {
                     var outcome = TokenizeHelper.MainArgument(content, counter);
-                    if (outcome.Item1 != null) parsed.Add(outcome.Item1);
-                    content = outcome.Item2;
+                    if (outcome.IsOk(output))
+                    {
+                        if (outcome.Unwrap().Item1 != null) parsed.Add(outcome.Unwrap().Item1);
+                        content = outcome.Unwrap().Item2;
+                    }
                 }
-                return parsed;
+                return output;
             }
 
             /// <summary> To keep track of the location of the parse head. </summary> 
             public class Counter
             {
+                /// <summary> The current line number (0-based). </summary>
                 public int Line;
+
+                /// <summary> The current column number (1-based). </summary>
                 public int Column;
+
+                /// <summary> The file the parse head is located at. </summary>
                 public ParsedFile File;
 
+                /// <summary> Create a new counter at the start of the given file. </summary>
+                /// <param name="file"> The file to keep track of the position in. </param>
                 public Counter(ParsedFile file)
                 {
                     Line = 0;
@@ -37,6 +52,8 @@ namespace Stitch
                     File = file;
                 }
 
+                /// <summary> Create a new counter at the given position. </summary>
+                /// <param name="pos"> The starting position and file for this counter. </param>
                 public Counter(Position pos)
                 {
                     Line = pos.Line;
@@ -44,17 +61,22 @@ namespace Stitch
                     File = pos.File;
                 }
 
+                /// <summary> Go to the next line, set all numbers correctly. </summary>
                 public void NextLine()
                 {
                     Line += 1;
                     Column = 1;
                 }
 
+                /// <summary> Go forward the given number of characters. </summary>
+                /// <param name="steps"> The number of character to go forward, defaults to 1. </param>
                 public void NextColumn(int steps = 1)
                 {
                     Column += steps;
                 }
 
+                /// <summary> Get the current position of the counter. </summary>
+                /// <returns> The position as a Position. </returns>
                 public Position GetPosition()
                 {
                     return new Position(Line, Column, File);
@@ -66,7 +88,7 @@ namespace Stitch
             {
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines. </summary> 
                 /// <returns>The status.</returns>
-                public static (KeyValue, string) MainArgument(string content, Counter counter)
+                public static ParseResult<(KeyValue, string)> MainArgument(string content, Counter counter)
                 {
                     ParseHelper.Trim(ref content, counter);
 
@@ -74,7 +96,7 @@ namespace Stitch
                     {
                         // This line is a comment, skip it
                         ParseHelper.SkipLine(ref content, counter);
-                        return (null, content);
+                        return new ParseResult<(KeyValue, string)>((null, content));
                     }
                     else
                     {
@@ -84,30 +106,31 @@ namespace Stitch
 
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines. </summary> 
                 /// <returns>The status.</returns>
-                static (KeyValue, string) Argument(string content, Counter counter)
+                static ParseResult<(KeyValue, string)> Argument(string content, Counter counter)
                 {
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
-                    (string name, FileRange range) = ParseHelper.Name(ref content, counter);
+                    var outEither = new ParseResult<(KeyValue, string)>();
+                    (string name, FileRange range) = ParseHelper.Name(ref content, counter).GetValue(outEither);
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
                     {
-                        return MultilineSingleParameter(content, name, counter, range);
+                        outEither.Value = MultilineSingleParameter(content, name, counter, range);
                     }
                     else if (content[0] == ':')
                     {
-                        return SingleParameter(content, name, counter, range);
+                        outEither.Value = SingleParameter(content, name, counter, range);
                     }
                     else if (content[0] == '-' && content[1] == '>')
                     {
-                        return MultiParameter(content, name, counter, range);
+                        outEither.Value = MultiParameter(content, name, counter, range).GetValue(outEither);
                     }
                     else
                     {
-                        new ErrorMessage(range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line.").Print();
-                        throw new ParseException("");
+                        outEither.AddMessage(new ErrorMessage(range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line."));
                     }
+                    return outEither;
                 }
 
                 /// <summary> Single parameter on a single line. </summary> 
@@ -145,7 +168,7 @@ namespace Stitch
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static (KeyValue, string) MultiParameter(string content, string name, Counter counter, FileRange name_range)
+                static ParseResult<(KeyValue, string)> MultiParameter(string content, string name, Counter counter, FileRange name_range)
                 {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
@@ -153,14 +176,14 @@ namespace Stitch
                     Position start_value = counter.GetPosition();
                     Position end_value = counter.GetPosition();
                     // Now get the multiple values
+                    var outEither = new ParseResult<(KeyValue, string)>();
                     var values = new List<KeyValue>();
 
                     while (true)
                     {
                         if (content.Length == 0)
                         {
-                            new ErrorMessage(new FileRange(name_range.Start, counter.GetPosition()), "Could not find the end of the multi parameter", "", "Make sure to end the parameter with '<-'.").Print();
-                            throw new ParseException("");
+                            return new ParseResult<(KeyValue, string)>(new ErrorMessage(new FileRange(name_range.Start, counter.GetPosition()), "Could not find the end of the multi parameter", "", "Make sure to end the parameter with '<-'."));
                         }
                         if (content[0] == '<' && content[1] == '-')
                         {
@@ -169,7 +192,8 @@ namespace Stitch
                             counter.NextColumn(2);
                             Position end_key = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
-                            return (new KeyValue(name, values, new KeyRange(name_range, end_key), new FileRange(start_value, end_value)), content);
+                            outEither.Value = (new KeyValue(name, values, new KeyRange(name_range, end_key), new FileRange(start_value, end_value)), content);
+                            return outEither;
                         }
                         else
                         {
@@ -181,7 +205,7 @@ namespace Stitch
                             }
 
                             // Match the inner parameter
-                            (string inner_name, FileRange inner_range) = ParseHelper.Name(ref content, counter);
+                            (string inner_name, FileRange inner_range) = ParseHelper.Name(ref content, counter).GetValue(outEither);
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')
@@ -199,8 +223,15 @@ namespace Stitch
                             else if (content[0] == '-' && content[1] == '>')
                             {
                                 var outcome = MultiParameter(content, inner_name, counter, inner_range);
-                                values.Add(outcome.Item1);
-                                content = outcome.Item2;
+                                if (outcome.IsOk(outEither))
+                                {
+                                    values.Add(outcome.Unwrap().Item1);
+                                    content = outcome.Unwrap().Item2;
+                                }
+                                else
+                                {
+                                    return outEither;
+                                }
                             }
                             else if (content[0] == '-')
                             {
@@ -208,8 +239,7 @@ namespace Stitch
                             }
                             else
                             {
-                                new ErrorMessage(inner_range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line.").Print();
-                                throw new ParseException("");
+                                return new ParseResult<(KeyValue, string)>(new ErrorMessage(inner_range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line."));
                             }
                             end_value = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
@@ -256,11 +286,12 @@ namespace Stitch
                 /// <summary> Consumes a name from the start of the string. </summary> 
                 /// <param name="content">The string.</param>
                 /// <returns>The name.</returns>
-                public static (string, FileRange) Name(ref string content, Counter counter)
+                public static ParseResult<(string, FileRange)> Name(ref string content, Counter counter)
                 {
                     ParseHelper.Trim(ref content, counter);
                     Position start = counter.GetPosition();
                     var name = new StringBuilder();
+                    var output = new ParseResult<(string, FileRange)>();
 
                     int count = 0;
                     while (count < content.Length && (Char.IsLetterOrDigit(content[count]) || content[count] == ' ' || content[count] == '\t'))
@@ -283,11 +314,11 @@ namespace Stitch
 
                     if (string.IsNullOrEmpty(name_str))
                     {
-                        new ErrorMessage(name_range, "Empty name", "").Print();
-                        //    throw new ParseException("");
+                        output.AddMessage(new ErrorMessage(name_range, "Empty name", "", "", true));
                     }
+                    output.Value = (name_str, name_range);
 
-                    return (name_str, name_range);
+                    return output;
                 }
 
                 /// <summary> Consumes a value from the start of the string. </summary> 

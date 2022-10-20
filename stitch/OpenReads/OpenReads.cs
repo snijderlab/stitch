@@ -293,11 +293,7 @@ namespace Stitch
             {
                 var parsed = ReadMetaData.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter);
 
-                if (parsed.HasOnlyWarnings()) continue;
-
-                out_either.Messages.AddRange(parsed.Messages);
-
-                if (parsed.IsErr())
+                if (!parsed.IsOk(out_either))
                 {
                     if (linenumber < 3)
                     {
