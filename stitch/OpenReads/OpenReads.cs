@@ -26,7 +26,7 @@ namespace Stitch
 
             if (possible_content.IsOk(out_either))
             {
-                var parsed = new ParsedFile(inputFile.Name, possible_content.Unwrap().Split('\n'), inputFile.Name, inputFile.Origin);
+                var parsed = new ParsedFile(inputFile, possible_content.Unwrap().Split('\n'));
                 var reads = new List<(string, ReadMetaData.IMetaData)>();
                 out_either.Value = reads;
 
@@ -65,7 +65,7 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n').ToArray();
-            var parse_file = new ParsedFile(inputFile.Path, lines, inputFile.Name, inputFile.Origin);
+            var parse_file = new ParsedFile(inputFile, lines);
 
             string identifierLine = "";
             int identifierLineNumber = 1;
@@ -83,6 +83,7 @@ namespace Stitch
                     if (!string.IsNullOrEmpty(identifierLine))
                     {
                         var match = parseIdentifier.Match(identifierLine);
+                        var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
                         if (match.Success)
                         {
                             if (match.Groups.Count == 3)
@@ -96,7 +97,7 @@ namespace Stitch
                             else
                             {
                                 out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                                    parseIdentifier.ToString(),
+                                    identifier_line_range,
                                     "Identifier Regex has invalid number of capturing groups",
                                     "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
                                     )
@@ -107,7 +108,7 @@ namespace Stitch
                         else
                         {
                             out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                                new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file)),
+                                identifier_line_range,
                                 "Header line does not match RegEx",
                                 "This header line does not match the RegEx given to parse the identifier."
                                 )
@@ -131,6 +132,7 @@ namespace Stitch
                 var range = new FileRange(start_pos, end_pos);
                 // Flush last sequence to list
                 var match = parseIdentifier.Match(identifierLine);
+                var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
 
                 if (match.Success)
                 {
@@ -145,7 +147,7 @@ namespace Stitch
                     else
                     {
                         out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                            parseIdentifier.ToString(),
+                            identifier_line_range,
                             "Identifier Regex has invalid number of capturing groups",
                             "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
                             )
@@ -156,7 +158,7 @@ namespace Stitch
                 else
                 {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                        new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file)),
+                        identifier_line_range,
                         "Header line does not match RegEx",
                         "This header line does not match the RegEx given to parse the identifier."
                         )
@@ -282,7 +284,7 @@ namespace Stitch
 
             List<string> lines = possible_content.Unwrap().Split('\n').ToList();
             var reads = new List<(string, ReadMetaData.IMetaData)>();
-            var parse_file = new ParsedFile(peaks.File.Name, lines.ToArray(), peaks.File.Name, peaks.File.Origin);
+            var parse_file = new ParsedFile(peaks.File, lines.ToArray());
 
             out_either.Value = reads;
 
@@ -395,7 +397,7 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file.Path, lines, file.Name, file.Origin);
+            var parse_file = new ParsedFile(file, lines);
             var linenumber = -1;
 
             foreach (var line in lines)
@@ -465,7 +467,7 @@ namespace Stitch
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file.Path, lines, file.Name, file.Origin);
+            var parse_file = new ParsedFile(file, lines);
             var linenumber = -1;
 
             foreach (var line in lines)

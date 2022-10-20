@@ -85,13 +85,13 @@ namespace Stitch
                 {
                     location = $"\n   | {subject}\n\n";
                 }
-                else if (string.IsNullOrEmpty(File.Path))
+                else if (string.IsNullOrEmpty(File.Identifier.Path))
                 {
                     location = "";
                 }
                 else if (!start_position.HasValue)
                 {
-                    location = $"File: {File.Path}\n";
+                    location = $"File: {File.Identifier.Path}\n";
                 }
                 else if (!end_position.HasValue)
                 {
@@ -102,7 +102,7 @@ namespace Stitch
                     var pos = new string(' ', start_position.Value.Column - 1) + "^^^";
                     var context1 = start_position.Value.Line > 1 ? $"{start}{File.Lines[start_position.Value.Line - 1]}\n" : "";
                     var context2 = start_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[start_position.Value.Line + 1]}\n" : "";
-                    location = $"File: {File.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
+                    location = $"File: {File.Identifier.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
                 else if (start_position.Value.Line == end_position.Value.Line)
                 {
@@ -113,7 +113,7 @@ namespace Stitch
                     var pos = new string(' ', Math.Max(0, start_position.Value.Column - 1)) + new string('^', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
                     var context1 = start_position.Value.Line > 1 ? $"{start}{File.Lines[start_position.Value.Line - 1]}\n" : "";
                     var context2 = end_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[end_position.Value.Line + 1]}\n" : "";
-                    location = $"File: {File.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
+                    location = $"File: {File.Identifier.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
                 }
                 else
                 {
@@ -122,7 +122,7 @@ namespace Stitch
                     var start = $"{spacing}| ";
                     var context1 = start_position.Value.Line > 1 ? $"{start}{File.Lines[start_position.Value.Line - 1]}\n" : "";
                     var context2 = end_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[end_position.Value.Line + 1]}\n" : "";
-                    location = $"File: {File.Path}\n\n{context1}";
+                    location = $"File: {File.Identifier.Path}\n\n{context1}";
 
                     for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++)
                     {
@@ -159,7 +159,7 @@ namespace Stitch
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
                 }
-                else if (string.IsNullOrEmpty(File.Path)) // No location
+                else if (string.IsNullOrEmpty(File.Identifier.Path)) // No location
                 {
                 }
                 else if (!start_position.HasValue) // Only a file
@@ -167,7 +167,7 @@ namespace Stitch
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  --> ");
                     Console.ForegroundColor = defaultColour;
-                    Console.Write($"{File.Path}\n");
+                    Console.Write($"{File.Identifier.Path}\n");
                 }
                 else // A location in a file
                 {
@@ -200,7 +200,7 @@ namespace Stitch
                     Console.Write(new string(' ', number_width + 1));
                     Console.Write("╭── ");
                     Console.ForegroundColor = defaultColour;
-                    Console.Write($"{File.Path}:{start_position.Value.Line + 1}:{start_position.Value.Column + 1}\n");
+                    Console.Write($"{File.Identifier.Path}:{start_position.Value.Line + 1}:{start_position.Value.Column + 1}\n");
                     print_empty(true);
 
                     for (int i = (int)contextLines; i > 0; i--)

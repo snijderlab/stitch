@@ -160,62 +160,57 @@ namespace Stitch
     /// <summary> Saves a file to use with positions </summary> 
     public class ParsedFile
     {
-        /// <summary> The filename </summary>
-        public readonly string Path;
-
-        /// <summary> The filename </summary>
-        public readonly string Name;
-
-        [JsonIgnore]
-        /// <summary> The filename </summary>
-        public readonly InputNameSpace.KeyValue Origin;
-
         [JsonIgnore]
         /// <summary> The content of this file, as an array of all lines </summary>
         public readonly string[] Lines;
 
-        public ReadMetaData.FileIdentifier Identifier { get => new ReadMetaData.FileIdentifier(Path, Name, Origin); }
+        [JsonIgnore]
+        public readonly ReadMetaData.FileIdentifier Identifier;
 
         /// <summary> Creates a new ParsedFile </summary>
         /// <param name="path">The filename (will be resolved to full path)</param>
         /// <param name="content">The file content, as an array of all lines</param>
+        /// <param name="name">The given name to the file so it is easier for users to track where the file comes from.</param>
+        /// <param name="content">The original definition of this file, if given in the batchfile or derivatives.</param>
         public ParsedFile(string path, string[] content, string name, InputNameSpace.KeyValue origin)
         {
-            Path = path;
+            Identifier = new ReadMetaData.FileIdentifier(path, name, origin);
             Lines = content;
-            Name = name;
-            Origin = origin;
+        }
+
+        /// <summary> Creates a new ParsedFile </summary>
+        /// <param name="file"> The identifier for the file. </param>
+        /// <param name="content"> The file content, as an array of all lines. </param>
+        public ParsedFile(ReadMetaData.FileIdentifier file, string[] content)
+        {
+            Identifier = file;
+            Lines = content;
         }
 
         /// <summary> Creates an empty ParsedFile </summary>
         public ParsedFile()
         {
-            Path = "";
+            Identifier = new ReadMetaData.FileIdentifier();
             Lines = new string[0];
         }
 
         public override bool Equals(object obj)
         {
-            if (obj.GetType() != this.GetType())
+            if (obj is ParsedFile that)
             {
-                return false;
+                return this.Identifier == that.Identifier;
             }
-            else
-            {
-                var that = (ParsedFile)obj;
-                if (this.Path == that.Path) return true;
-                else return false;
-            }
+            return false;
         }
 
         public override int GetHashCode()
         {
-            return 23 + 17 * Path.GetHashCode();
+            return 23 + 397 * Identifier.GetHashCode();
         }
 
         public override string ToString()
         {
-            return Path;
+            return Identifier.ToString();
         }
     }
 }

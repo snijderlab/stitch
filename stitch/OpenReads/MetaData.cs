@@ -226,6 +226,7 @@ namespace Stitch
             public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter)
             {
                 var result = new ParseResult<Peaks>();
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
@@ -239,7 +240,7 @@ namespace Stitch
 
                 if (fields.Count < 5)
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
                     return result;
                 }
 
@@ -258,7 +259,7 @@ namespace Stitch
                 {
                     if (pos > fields.Count - 1)
                     {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(range, "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
                     }
                     return true;
@@ -266,10 +267,9 @@ namespace Stitch
 
                 if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return result;
                 }
-                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
                 var peaks = new Peaks(range, fields[pf.scan].Text, filter);
                 result.Value = peaks;
 

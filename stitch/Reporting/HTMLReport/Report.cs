@@ -338,7 +338,7 @@ namespace Stitch
                 var html = new HtmlBuilder();
                 var bf = BatchFile;
                 html.Open(HtmlTag.code);
-                html.OpenAndClose(HtmlTag.i, "", bf.Path);
+                html.OpenAndClose(HtmlTag.i, "", bf.Identifier.Path);
                 html.Empty(HtmlTag.br);
                 foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                 html.Close(HtmlTag.code);
