@@ -4,15 +4,14 @@ using Stitch.InputNameSpace;
 
 namespace Stitch
 {
-
     /// <summary>To save a result of a parse action, the value or a error message. </summary>
-    public class ParseResult<T>
+    public struct ParseResult<T>
     {
         /// <summary> The inner value of this ParseResult, it is UB to use this value if `this.IsErr()`. </summary>
-        public T Value;
+        public T Value = default(T);
 
         /// <summary> All contained error and warning messages. </summary>
-        public List<ErrorMessage> Messages = new();
+        public readonly List<ErrorMessage> Messages = new();
 
         /// <summary> Create a ParseResult with the given value. </summary>
         public ParseResult(T t)
@@ -81,34 +80,16 @@ namespace Stitch
             }
         }
 
-        /// <summary> Unwrap or use the provided default, does not print any contained error messages. </summary>
-        /// <param name="def"> The default value to se if `this.IsErr()`. </param>
-        /// <returns> The contained value or the default. </returns>
-        public T UnwrapOrDefault(T def)
-        {
-            if (this.IsErr()) return def;
-            else return this.Value;
-        }
-
         /// <summary> Get the contained value while adding all contained error messages to the given other result. </summary>
         /// <param name="fail"> The result to give all contained error messages. </param>
-        /// <typeparam name="TOut"> Any type. </typeparam>
-        /// <returns> The value, it is UB to use this if `this.IsErr()`. </returns>
-        public T GetValue<TOut>(ParseResult<TOut> fail)
-        {
-            fail.Messages.AddRange(Messages);
-            return Value;
-        }
-
-        /// <summary> Get the contained value while adding all contained error messages to the given other result. </summary>
-        /// <param name="fail"> The result to give all contained error messages. </param>
-        /// <param name="df"> The default value to use if `this.IsErr()`. </param>
+        /// <param name="def"> The default value to use if `this.IsErr()`. </param>
         /// <typeparam name="TOut"> Any type. </typeparam>
         /// <returns> The value or default. </returns>
-        public T GetValueOrDefault<TOut>(ParseResult<TOut> fail, T def)
+        public T UnwrapOrDefault<TOut>(ParseResult<TOut> fail, T def)
         {
             fail.Messages.AddRange(Messages);
-            return UnwrapOrDefault(def);
+            if (this.IsErr()) return def;
+            else return this.Value;
         }
 
         /// <summary> Try to get the contained value, if it returns false the value is not set properly. </summary>

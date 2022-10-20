@@ -27,6 +27,10 @@ namespace Stitch
                         if (outcome.Unwrap().Item1 != null) parsed.Add(outcome.Unwrap().Item1);
                         content = outcome.Unwrap().Item2;
                     }
+                    else
+                    {
+                        return output;
+                    }
                 }
                 return output;
             }
@@ -111,7 +115,7 @@ namespace Stitch
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
                     var outEither = new ParseResult<(KeyValue, string)>();
-                    (string name, FileRange range) = ParseHelper.Name(ref content, counter).GetValue(outEither);
+                    (string name, FileRange range) = ParseHelper.Name(ref content, counter).UnwrapOrDefault(outEither, ("", new FileRange(counter.GetPosition(), counter.GetPosition())));
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>')
@@ -124,7 +128,11 @@ namespace Stitch
                     }
                     else if (content[0] == '-' && content[1] == '>')
                     {
-                        outEither.Value = MultiParameter(content, name, counter, range).GetValue(outEither);
+                        outEither.Value = MultiParameter(content, name, counter, range).UnwrapOrDefault(outEither, new());
+                    }
+                    else if (content[0] == '<' && content[1] == '-')
+                    {
+                        return new ParseResult<(KeyValue, string)>(new ErrorMessage(range, "Unmatched closing delimiter", "There is a closing delimiter detected that was not expected.", "Make sure the number of closing delimiters is correct and your groups are opened correctly."));
                     }
                     else
                     {
@@ -205,7 +213,7 @@ namespace Stitch
                             }
 
                             // Match the inner parameter
-                            (string inner_name, FileRange inner_range) = ParseHelper.Name(ref content, counter).GetValue(outEither);
+                            (string inner_name, FileRange inner_range) = ParseHelper.Name(ref content, counter).UnwrapOrDefault(outEither, new());
 
                             // Find if it is a single line or multiple line valued inner parameter
                             if (content[0] == ':' && content[1] == '>')

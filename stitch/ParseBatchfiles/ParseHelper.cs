@@ -181,31 +181,31 @@ namespace Stitch
                 var outEither = new ParseResult<InputData.InputParameters>();
                 var output = new InputData.InputParameters();
 
-                foreach (var pair in key.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (pair.Name)
                     {
                         case "peaks":
                             var settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        settings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        settings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
                                         outEither.Messages.AddRange(peaks.Messages);
 
                                         if (peaks.Value == false)
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffScore', 'LocalCutoffscore', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
+                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffALC', 'LocalCutoffALC', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
 
                                         break;
                                 }
@@ -220,17 +220,17 @@ namespace Stitch
                         case "reads":
                             var rsettings = new InputData.Reads();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        rsettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        rsettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        rsettings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        rsettings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
@@ -247,31 +247,31 @@ namespace Stitch
                         case "novor":
                             var novor_settings = new InputData.Novor();
                             string name = null;
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "denovo path":
                                         if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.DeNovoFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).GetValue(outEither), "", setting);
+                                        novor_settings.DeNovoFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "psms path":
                                         if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.PSMSFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).GetValue(outEither), "", setting);
+                                        novor_settings.PSMSFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        name = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "separator":
-                                        var value = setting.GetValue().GetValueOrDefault(outEither, ",");
+                                        var value = setting.GetValue().UnwrapOrDefault(outEither, ",");
                                         if (value.Length != 1)
                                             outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
                                         else
                                             novor_settings.Separator = value.First();
                                         break;
                                     case "cutoff":
-                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
+                                        novor_settings.Cutoff = (uint)ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
@@ -289,20 +289,20 @@ namespace Stitch
                         case "fasta":
                             var fastasettings = new InputData.FASTA();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fastasettings.File.Path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        fastasettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fastasettings.File.Name = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        fastasettings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "identifier":
-                                        fastasettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                                        fastasettings.Identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
@@ -325,24 +325,24 @@ namespace Stitch
 
                             var peaks_settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        folder_path = ParseHelper.GetFullPath(setting).GetValue(outEither);
+                                        folder_path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         folder_range = setting.ValueRange;
                                         break;
                                     case "startswith":
                                         if (!string.IsNullOrWhiteSpace(starts_with)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        starts_with = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        starts_with = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "identifier":
-                                        identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                                        identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
                                         break;
                                     case "recursive":
-                                        recursive = ParseHelper.ParseBool(setting, "Recursive").GetValue(outEither);
+                                        recursive = ParseHelper.ParseBool(setting, "Recursive").UnwrapOrDefault(outEither, false);
                                         break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
@@ -369,7 +369,7 @@ namespace Stitch
                                 {
                                     if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
-                                    var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).GetValue(outEither) };
+                                    var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
 
                                     if (file.EndsWith(".fasta"))
                                         output.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
@@ -429,7 +429,7 @@ namespace Stitch
                     if (!reads.IsErr()) Input.Data.Raw.Add(reads.Unwrap());
                 }
 
-                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp, name_filter).GetValue(result);
+                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp, name_filter).UnwrapOrDefault(result, new());
 
                 return result;
             }
@@ -438,24 +438,24 @@ namespace Stitch
                 var outEither = new ParseResult<TemplateMatchingParameter>();
                 var output = new TemplateMatchingParameter();
 
-                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "ambiguitythreshold":
-                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).GetValue(outEither);
+                            output.AmbiguityThreshold = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 0.5);
                             break;
                         case "segments":
                             if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var outer_children = new List<SegmentValue>();
-                            foreach (var segment in setting.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var segment in setting.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 if (segment.Name == "segment")
                                 {
-                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, false).GetValue(outEither);
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, false).UnwrapOrDefault(outEither, new());
 
                                     // Check to see if the name is valid
                                     if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
@@ -467,9 +467,9 @@ namespace Stitch
                                 else
                                 {
                                     var children = new List<SegmentValue>();
-                                    foreach (var sub_segment in segment.GetValues().GetValueOrDefault(outEither, new()))
+                                    foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new()))
                                     {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).GetValue(outEither);
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).UnwrapOrDefault(outEither, new());
 
                                         // Check to see if the name is valid
                                         if (children.Select(db => db.Name).Contains(segment_value.Name))
@@ -485,13 +485,13 @@ namespace Stitch
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
+                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
                             break;
                         case "enforceunique":
-                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither);
+                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").UnwrapOrDefault(outEither, true);
                             break;
                         case "forcegermlineisoleucine":
-                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").GetValue(outEither);
+                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', 'AmbiguityThreshold', and 'ForceGermlineIsoleucine'"));
@@ -521,35 +521,35 @@ namespace Stitch
                 var order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
-                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "n":
-                            output.N = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
+                            output.N = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "order":
                             if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             if (setting.IsSingle()) order.Add(setting);
                             else
-                                foreach (var group in setting.GetValues().GetValueOrDefault(outEither, new()))
+                                foreach (var group in setting.GetValues().UnwrapOrDefault(outEither, new()))
                                     order.Add(group);
                             break;
                         case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
+                            output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
+                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
                             break;
                         case "enforceunique":
-                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").GetValue(outEither) ? Trilean.True : Trilean.False;
+                            output.EnforceUnique = ParseBool(setting, "EnforceUnique").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;
                             break;
                         case "forcegermlineisoleucine":
-                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").GetValue(outEither) ? Trilean.True : Trilean.False;
+                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;
                             break;
                         case "decoy":
-                            output.Decoy = ParseBool(setting, "Decoy").GetValue(outEither);
+                            output.Decoy = ParseBool(setting, "Decoy").UnwrapOrDefault(outEither, false);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', 'EnforceUnique', and 'ForceGermlineIsoleucine'"));
@@ -569,24 +569,24 @@ namespace Stitch
                 var outEither = new ParseResult<ReportParameter>();
                 var output = new ReportParameter();
 
-                foreach (var pair in key.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (pair.Name)
                     {
                         case "folder":
                             if (output.Folder != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Folder = Path.GetFullPath(pair.GetValue().GetValueOrDefault(outEither, null));
+                            output.Folder = Path.GetFullPath(pair.GetValue().UnwrapOrDefault(outEither, null));
                             break;
                         case "html":
                             var h_settings = new RunParameters.Report.HTML();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        h_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
+                                        h_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path'"));
@@ -599,13 +599,13 @@ namespace Stitch
                         case "json":
                             var j_settings = new RunParameters.Report.JSON();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        j_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
+                                        j_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "JSON", "'Path'"));
@@ -618,16 +618,16 @@ namespace Stitch
                         case "fasta":
                             var f_settings = new RunParameters.Report.FASTA();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        f_settings.Path = setting.GetValue().GetValueOrDefault(outEither, "");
+                                        f_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "minimalscore":
-                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
+                                        f_settings.MinimalScore = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "outputtype":
                                         var res = setting.GetValue();
@@ -658,13 +658,13 @@ namespace Stitch
                         case "csv":
                             var c_settings = new RunParameters.Report.CSV();
 
-                            foreach (var setting in pair.GetValues().GetValueOrDefault(outEither, new()))
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
                             {
                                 switch (setting.Name)
                                 {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        c_settings.Path = setting.GetValue().GetValueOrDefault(outEither, null);
+                                        c_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
                                         break;
                                     case "outputtype":
                                         var res = setting.GetValue();
@@ -716,7 +716,7 @@ namespace Stitch
                 (char[], int[,]) result;
                 KeyValue path_Setting = null;
 
-                foreach (var setting in key.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
@@ -732,20 +732,20 @@ namespace Stitch
                             {
                                 var data_content = res.Unwrap().Split("\n");
                                 var counter = new Tokenizer.Counter(setting.ValueRange.Start);
-                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", setting), counter).GetValue(outEither);
+                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", setting), counter).UnwrapOrDefault(outEither, new());
                                 asettings.Alphabet = result.Item1;
                                 asettings.ScoringMatrix = result.Item2;
                             }
                             break;
                         case "name":
                             if (!string.IsNullOrEmpty(asettings.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            asettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
+                            asettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
+                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "gapextendpenalty":
-                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
+                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
@@ -759,10 +759,10 @@ namespace Stitch
 
                     if (all_text.IsOk(outEither))
                     {
-                        var content = all_text.GetValue(outEither).Split("\n");
-                        var id = new ParsedFile(GetFullPath(path_Setting).GetValue(outEither), content, asettings.Name, key);
+                        var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
+                        var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, asettings.Name, key);
                         var counter = new Tokenizer.Counter(id);
-                        result = ParseAlphabetData(id, counter).GetValue(outEither);
+                        result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
                         asettings.Alphabet = result.Item1;
                         asettings.ScoringMatrix = result.Item2;
                     }
@@ -841,7 +841,7 @@ namespace Stitch
                     {
                         try
                         {
-                            scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).GetValue(outEither);
+                            scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).UnwrapOrDefault(outEither, 0);
                         }
                         catch (ArgumentOutOfRangeException)
                         {
@@ -893,21 +893,21 @@ namespace Stitch
                 var tsettings = new SegmentValue();
                 var outEither = new ParseResult<SegmentValue>(tsettings);
 
-                foreach (var setting in node.GetValues().GetValueOrDefault(outEither, new()))
+                foreach (var setting in node.GetValues().UnwrapOrDefault(outEither, new()))
                 {
                     switch (setting.Name)
                     {
                         case "path":
                             if (!string.IsNullOrEmpty(file_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            file_path = GetFullPath(setting).GetValue(outEither);
+                            file_path = GetFullPath(setting).UnwrapOrDefault(outEither, "");
                             file_pos = setting;
                             break;
                         case "name":
                             if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            tsettings.Name = setting.GetValue().GetValueOrDefault(outEither, "");
+                            tsettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                             break;
                         case "cutoffscore":
-                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).GetValue(outEither);
+                            if (extended) tsettings.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
                             break;
                         case "alphabet":
@@ -918,11 +918,11 @@ namespace Stitch
                             }
                             else
                             {
-                                tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).GetValue(outEither);
+                                tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
                             }
                             break;
                         case "identifier":
-                            tsettings.Identifier = ParseHelper.ParseRegex(setting).GetValue(outEither);
+                            tsettings.Identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
                             break;
                         case "scoring":
                             var res = setting.GetValue();
@@ -944,10 +944,10 @@ namespace Stitch
                             }
                             break;
                         case "gaphead":
-                            tsettings.GapHead = ParseBool(setting, "GapHead").GetValue(outEither);
+                            tsettings.GapHead = ParseBool(setting, "GapHead").UnwrapOrDefault(outEither, false);
                             break;
                         case "gaptail":
-                            tsettings.GapTail = ParseBool(setting, "GapTail").GetValue(outEither);
+                            tsettings.GapTail = ParseBool(setting, "GapTail").UnwrapOrDefault(outEither, false);
                             break;
                         default:
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
@@ -968,7 +968,7 @@ namespace Stitch
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).GetValue(outEither), tsettings.Name, file_pos);
+                var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
                 var folder_reads = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
 
@@ -1046,7 +1046,7 @@ namespace Stitch
                         }
                         break;
                     default:
-                        var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).GetValue(outEither);
+                        var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).UnwrapOrDefault(outEither, new());
                         peaks_settings.Parameter = parameters;
 
                         if (success == false)
@@ -1073,13 +1073,13 @@ namespace Stitch
                 switch (name)
                 {
                     case "cutoffalc":
-                        parameters.CutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
+                        parameters.CutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).GetValue(outEither);
+                        parameters.LocalCutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                         break;
                     case "minlengthpatch":
-                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).GetValue(outEither);
+                        parameters.MinLengthPatch = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                         break;
                     default:
                         outEither.Value = (parameters, false);

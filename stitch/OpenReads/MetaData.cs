@@ -243,12 +243,12 @@ namespace Stitch
                 // Some helper functions
                 int ConvertToInt(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(result, -1);
                 }
 
                 double ConvertToDouble(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(-1);
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(result, -1);
                 }
 
                 bool CheckFieldExists(int pos)

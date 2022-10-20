@@ -88,11 +88,11 @@ namespace Stitch
                         {
                             if (match.Groups.Count == 3)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).UnwrapOrDefault(out_either, new()));
                             }
                             else if (match.Groups.Count == 2)
                             {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).GetValue(out_either));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).UnwrapOrDefault(out_either, new()));
                             }
                             else
                             {
@@ -138,11 +138,11 @@ namespace Stitch
                 {
                     if (match.Groups.Count == 3)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).GetValue(out_either));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file).UnwrapOrDefault(out_either, new()));
                     }
                     else if (match.Groups.Count == 2)
                     {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).GetValue(out_either));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadMetaData.Fasta(match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file).UnwrapOrDefault(out_either, new()));
                     }
                     else
                     {
@@ -358,11 +358,11 @@ namespace Stitch
 
             if (novor.DeNovoFile != null)
             {
-                output.AddRange(ParseNovorDeNovo(filter, novor.DeNovoFile, novor.Separator, novor.Cutoff).GetValue(out_either));
+                output.AddRange(ParseNovorDeNovo(filter, novor.DeNovoFile, novor.Separator, novor.Cutoff).UnwrapOrDefault(out_either, new()));
             }
             if (novor.PSMSFile != null)
             {
-                output.AddRange(ParseNovorPSMS(filter, novor.PSMSFile, novor.Separator, novor.Cutoff).GetValue(out_either));
+                output.AddRange(ParseNovorPSMS(filter, novor.PSMSFile, novor.Separator, novor.Cutoff).UnwrapOrDefault(out_either, new()));
             }
 
             return out_either;
@@ -407,12 +407,12 @@ namespace Stitch
 
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
                 var fraction = split[0].Text;
-                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).GetValue(out_either);
-                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(-1);
-                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).UnwrapOrDefault(-1);
-                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).UnwrapOrDefault(0);
-                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(0);
-                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(0);
+                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).UnwrapOrDefault(out_either, -1);
+                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(out_either, -1);
+                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).UnwrapOrDefault(out_either, -1);
+                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).UnwrapOrDefault(out_either, -1);
+                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(out_either, -1);
+                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(out_either, -1);
                 var original_peptide = split[8].Text;
                 var db_sequence = split[9].Text;
                 var peptide = (string)original_peptide.Clone();
@@ -478,13 +478,13 @@ namespace Stitch
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
                 var id = split[0].Text;
                 var fraction = split[1].Text;
-                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[2].Text, split[2].Pos).GetValue(out_either);
-                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[3].Text, split[3].Pos).GetValue(out_either);
-                var z = InputNameSpace.ParseHelper.ConvertToInt(split[4].Text, split[4].Pos).GetValue(out_either);
-                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).GetValue(out_either);
-                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).GetValue(out_either);
-                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[7].Text, split[7].Pos).GetValue(out_either);
-                var proteins = InputNameSpace.ParseHelper.ConvertToInt(split[8].Text, split[8].Pos).GetValue(out_either);
+                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[2].Text, split[2].Pos).UnwrapOrDefault(out_either, -1);
+                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[3].Text, split[3].Pos).UnwrapOrDefault(out_either, -1);
+                var z = InputNameSpace.ParseHelper.ConvertToInt(split[4].Text, split[4].Pos).UnwrapOrDefault(out_either, -1);
+                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(out_either, -1);
+                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(out_either, -1);
+                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[7].Text, split[7].Pos).UnwrapOrDefault(out_either, -1);
+                var proteins = InputNameSpace.ParseHelper.ConvertToInt(split[8].Text, split[8].Pos).UnwrapOrDefault(out_either, -1);
                 var original_peptide = split[9].Text;
                 var peptide = (string)original_peptide.Clone();
                 var final_peptide = "";

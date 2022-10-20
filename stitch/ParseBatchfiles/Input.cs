@@ -49,11 +49,11 @@ namespace Stitch
                 switch (pair.Name)
                 {
                     case "runname":
-                        output.Runname = pair.GetValue().GetValueOrDefault(outEither, "");
+                        output.Runname = pair.GetValue().UnwrapOrDefault(outEither, "");
                         break;
                     case "rawdatadirectory":
                         if (output.RawDataDirectory != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.RawDataDirectory = ParseHelper.GetFullPath(pair).GetValue(outEither);
+                        output.RawDataDirectory = ParseHelper.GetFullPath(pair).UnwrapOrDefault(outEither, "");
                         if (!Directory.Exists(output.RawDataDirectory))
                         {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Could not find RawDataDirectory.", "Execution will continue, but the spectra will be missing from all reports.", "", true));
@@ -61,7 +61,7 @@ namespace Stitch
                         }
                         break;
                     case "version":
-                        var version = ParseHelper.ConvertToDouble(pair).GetValue(outEither);
+                        var version = ParseHelper.ConvertToDouble(pair).UnwrapOrDefault(outEither, 1.0);
                         if (version < 1.0)
                         {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please change to version '1.x'."));
@@ -73,23 +73,23 @@ namespace Stitch
                         version_specified = true;
                         break;
                     case "maxcores":
-                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(ParseHelper.NumberRange<int>.Open(0), pair.ValueRange).GetValue(outEither);
+                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(ParseHelper.NumberRange<int>.Open(0), pair.ValueRange).UnwrapOrDefault(outEither, new());
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Input.Parameters = ParseHelper.ParseInputParameters(pair).GetValue(outEither);
+                        output.Input.Parameters = ParseHelper.ParseInputParameters(pair).UnwrapOrDefault(outEither, new());
                         break;
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.TemplateMatching = ParseHelper.ParseTemplateMatching(name_filter, pair).GetValue(outEither);
+                        output.TemplateMatching = ParseHelper.ParseTemplateMatching(name_filter, pair).UnwrapOrDefault(outEither, new());
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(pair).GetValue(outEither);
+                        (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(pair).UnwrapOrDefault(outEither, new());
                         break;
                     case "report":
                         if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Report = ParseHelper.ParseReport(pair).GetValue(outEither);
+                        output.Report = ParseHelper.ParseReport(pair).UnwrapOrDefault(outEither, new());
                         break;
                     default:
                         outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "batchfile", "'Runname', 'Version', 'MaxCores', 'Input', 'TemplateMatching', 'Recombine' or 'Report'"));
