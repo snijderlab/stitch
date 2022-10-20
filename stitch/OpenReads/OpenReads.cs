@@ -293,56 +293,53 @@ namespace Stitch
             {
                 var parsed = ReadMetaData.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter);
 
-                if (!parsed.IsOk(out_either))
+                if (parsed.IsOk(out_either))
                 {
-                    if (linenumber < 3)
+                    var meta = parsed.Unwrap();
+                    if (meta == null) continue; // Ignore empty lines
+
+                    if (meta.Confidence >= peaks_parameters.CutoffALC)
                     {
-                        // If the first real line already has errors it is very likely that the peaks format is chosen wrong so it should not overload the user with errors
-                        out_either.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Parsing stopped", "See above error messages for errors.", "Maybe try another version of the PEAKS format.", true));
-                        out_either.PrintMessages();
-                        Environment.Exit(1);
-                        break;
+                        reads.Add((meta.Cleaned_sequence, meta));
                     }
-                    continue;
-                }
-
-                var meta = parsed.Unwrap();
-
-                if (meta.Confidence >= peaks_parameters.CutoffALC)
-                {
-                    reads.Add((meta.Cleaned_sequence, meta));
-                }
-                // Find local patches of high enough confidence
-                else if (peaks_parameters.LocalCutoffALC != -1 && peaks_parameters.MinLengthPatch != -1)
-                {
-                    bool patch = false;
-                    int start_pos = 0;
-                    for (int i = 0; i < meta.Local_confidence.Length; i++)
+                    // Find local patches of high enough confidence
+                    else if (peaks_parameters.LocalCutoffALC != -1 && peaks_parameters.MinLengthPatch != -1)
                     {
-                        if (!patch && meta.Local_confidence[i] >= peaks_parameters.LocalCutoffALC)
+                        bool patch = false;
+                        int start_pos = 0;
+                        for (int i = 0; i < meta.Local_confidence.Length; i++)
                         {
-                            // Found a potential starting position
-                            start_pos = i;
-                            patch = true;
-                        }
-                        else if (patch && meta.Local_confidence[i] < peaks_parameters.LocalCutoffALC)
-                        {
-                            // Ends a patch
-                            patch = false;
-                            if (i - start_pos >= peaks_parameters.MinLengthPatch)
+                            if (!patch && meta.Local_confidence[i] >= peaks_parameters.LocalCutoffALC)
                             {
-                                // Long enough use it for assembly
-                                char[] chunk = new char[i - start_pos];
-
-                                for (int j = start_pos; j < i; j++)
+                                // Found a potential starting position
+                                start_pos = i;
+                                patch = true;
+                            }
+                            else if (patch && meta.Local_confidence[i] < peaks_parameters.LocalCutoffALC)
+                            {
+                                // Ends a patch
+                                patch = false;
+                                if (i - start_pos >= peaks_parameters.MinLengthPatch)
                                 {
-                                    chunk[j - start_pos] = meta.Cleaned_sequence[j];
-                                }
+                                    // Long enough use it for assembly
+                                    char[] chunk = new char[i - start_pos];
 
-                                reads.Add((new string(chunk), meta.Clone()));
+                                    for (int j = start_pos; j < i; j++)
+                                    {
+                                        chunk[j - start_pos] = meta.Cleaned_sequence[j];
+                                    }
+
+                                    reads.Add((new string(chunk), meta.Clone()));
+                                }
                             }
                         }
                     }
+                }
+                else if (linenumber < 3)
+                {
+                    // If the first real line already has errors it is very likely that the peaks format is chosen wrong so it should not overload the user with errors
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Parsing stopped", "See above error messages for errors.", "Maybe try another version of the PEAKS format.", true));
+                    return out_either;
                 }
             }
             return out_either;

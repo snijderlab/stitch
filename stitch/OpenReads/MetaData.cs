@@ -232,11 +232,7 @@ namespace Stitch
 
                 var fields = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parse_file);
 
-                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber]))
-                {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Line is empty", "", "", true));
-                    return result;
-                }
+                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return result; // Ignore empty lines
 
                 if (fields.Count < 5)
                 {
