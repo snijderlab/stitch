@@ -1,5 +1,5 @@
 -Run Info---------------
-Version         : 1.1
+Version         : 1.3
 Runname         : Monoclonal Herceptin
 RawDataDirectory: R:\F1\peng0013\201912
 

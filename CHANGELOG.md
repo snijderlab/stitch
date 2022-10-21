@@ -1,5 +1,14 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# v1.3.0
+_2022-10-21_
+
+* Added graphs that show how ambiguous positions in the final sequence are connected (#176)
+* Updated the reads alignment to be able to dynamically show reads, with options to only show CDR reads and show an overview (#162, #196)
+* Updated overview of the main report to work better with large numbers of segments and groups (#135)
+* Fixed a lot of bugs 
+* Worked on the error messages to have a more helpful context in many cases
+
 # v1.2.1
 _2022-10-07_
 
