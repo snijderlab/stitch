@@ -592,6 +592,49 @@ namespace Stitch
             SequenceAmbiguityAnalysisCache = ambiguous;
             return ambiguous;
         }
+
+        void FixCommonMassSpecErrors()
+        {
+            var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
+            foreach (var match in this.Matches)
+            {
+                int pos = match.StartTemplatePosition;
+                int q_pos = match.StartQueryPosition;
+
+                foreach (var piece in match.Alignment)
+                {
+                    if (piece is SequenceMatch.Match ma)
+                    {
+                        for (int offset = 0; offset < piece.Length; offset++)
+                        {
+                            if (this.Sequence[pos + offset] != match.QuerySequence[q_pos + offset])
+                            {
+                                for (int size = MassSpecErrors.MaxLength; size > 0; size--)
+                                {
+                                    var key = match.QuerySequence.SubArray(pos + offset, size).Sort();
+                                    if (equal_mass.ContainsKey(key))
+                                    {
+
+                                    }
+                                }
+                            }
+                        }
+                        pos += piece.Length;
+                        q_pos += piece.Length;
+                    }
+                    else if (piece is SequenceMatch.Deletion)
+                    {
+                        pos += piece.Length;
+
+                    }
+                    else if (piece is SequenceMatch.Insertion)
+                    {
+                        q_pos += piece.Length;
+
+                    }
+                }
+            }
+        }
     }
 
     /// <summary> The location of a template, in its Segment and its location </summary> 

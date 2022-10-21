@@ -27,6 +27,17 @@ namespace Stitch
                 throw new ArgumentException($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
+
+        /// <summary> Sort an array and return the new sorted array. </summary>
+        /// <param name="data"> The old array. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns a new array which is the sorted variant of the input array. </returns>
+        public static T[] Sort<T>(this T[] data)
+        {
+            var temp = data.ToList();
+            temp.Sort();
+            return temp.ToArray();
+        }
         /// <summary> To copy a sub array to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
