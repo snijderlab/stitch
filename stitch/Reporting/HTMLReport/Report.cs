@@ -43,11 +43,11 @@ namespace Stitch
                 job_buffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
-            if (Parameters.Segments != null)
+            if (Parameters.Groups != null)
             {
-                for (int i = 0; i < Parameters.Segments.Count; i++)
-                    for (int j = 0; j < Parameters.Segments[i].Item2.Count; j++)
-                        for (int k = 0; k < Parameters.Segments[i].Item2[j].Templates.Count; k++)
+                for (int i = 0; i < Parameters.Groups.Count; i++)
+                    for (int j = 0; j < Parameters.Groups[i].Item2.Count; j++)
+                        for (int k = 0; k < Parameters.Groups[i].Item2[j].Templates.Count; k++)
                             job_buffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
@@ -85,11 +85,11 @@ namespace Stitch
                 switch (aside)
                 {
                     case AsideType.Read:
-                        inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Segments, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
+                        inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
                         metadata = Parameters.Input[index1].MetaData;
                         break;
                     case AsideType.Template:
-                        var template = Parameters.Segments[index3].Item2[index2].Templates[index1];
+                        var template = Parameters.Groups[index3].Item2[index2].Templates[index1];
                         inner_html = HTMLAsides.CreateTemplateAside(template, AsideType.Template, AssetsFolderName, Parameters.Input.Count);
                         metadata = template.MetaData;
                         break;
@@ -350,46 +350,141 @@ namespace Stitch
             }
         }
 
+        /// <summary> Create the overview section of the main page. </summary>
         private HtmlBuilder CreateOverview()
         {
             var html = new HtmlBuilder();
             if (Parameters.RecombinedSegment.Count != 0)
             {
-                for (int group = 0; group < Parameters.Segments.Count && group < Parameters.RecombinedSegment.Count; group++)
+                if (Parameters.RecombinedSegment.Count <= 3)
                 {
-                    if (Parameters.Segments[group].Item1.ToLower() == "decoy") continue;
-                    var template = Parameters.RecombinedSegment[group].Templates[0];
-                    var (seq, doc) = template.ConsensusSequence();
-                    html.Open(HtmlTag.h2);
-                    html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'", Parameters.Segments[group].Item1);
-                    html.Close(HtmlTag.h2);
-                    html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
-                    html.Open(HtmlTag.div, "class='doc-plot'");
-                    html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
-                    html.Close(HtmlTag.div);
-                    html.OpenAndClose(HtmlTag.h3, "", "Best scoring segments");
-                    html.Open(HtmlTag.p);
-
-                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
+                    // If the number of groups is small show details about the best scoring recombined template for each group
+                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++)
                     {
-                        var seg = Parameters.Segments[group].Item2[segment];
-                        if (seg.Templates.Count > 0)
-                            html.Add(GetAsideLinkHtml(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
+                        if (Parameters.Groups[group].Item1.ToLower() == "decoy") continue;
+                        var template = Parameters.RecombinedSegment[group].Templates[0];
+                        var (seq, doc) = template.ConsensusSequence();
+                        html.Open(HtmlTag.h2);
+                        html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'", Parameters.Groups[group].Item1);
+                        html.Close(HtmlTag.h2);
+                        html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
+                        html.Open(HtmlTag.div, "class='doc-plot'");
+                        html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
+                        html.Close(HtmlTag.div);
+                        html.OpenAndClose(HtmlTag.h3, "", "Best scoring segments");
+                        html.Open(HtmlTag.p);
+
+                        for (int segment = 0; segment < Parameters.Groups[group].Item2.Count; segment++)
+                        {
+                            var seg = Parameters.Groups[group].Item2[segment];
+                            if (seg.Templates.Count > 0)
+                                html.Add(GetAsideLinkHtml(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
+                        }
+                        html.Close(HtmlTag.p);
                     }
-                    html.Close(HtmlTag.p);
+                }
+                else
+                {
+                    // If the number of groups is large show a table with each highest scoring and highest area recombined template
+                    html.OpenAndClose(HtmlTag.h2, "", "Overview of all recombined segments");
+                    html.Open(HtmlTag.table, "class='wide-table'");
+                    html.Open(HtmlTag.tr);
+                    html.OpenAndClose(HtmlTag.th, "", "Segment");
+                    html.OpenAndClose(HtmlTag.th, "", "Highest Score");
+                    html.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateScore));
+                    html.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HtmlTag.p, HTMLHelp.Order));
+                    html.OpenAndClose(HtmlTag.th, "", "Highest Area");
+                    html.TagWithHelp(HtmlTag.th, "Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea));
+                    html.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HtmlTag.p, HTMLHelp.Order));
+                    html.Close(HtmlTag.tr);
+                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++)
+                    {
+                        if (Parameters.Groups[group].Item1.ToLower() == "decoy") continue;
+                        var highest_score = Parameters.RecombinedSegment[group].Templates.MaxBy(t => t.Score);
+                        var highest_area = Parameters.RecombinedSegment[group].Templates.MaxBy(t => t.TotalArea);
+                        html.Open(HtmlTag.tr);
+                        html.OpenAndClose(HtmlTag.td, "class='center'", Parameters.Groups[group].Item1);
+                        html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_score.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                        html.OpenAndClose(HtmlTag.td, "class='center'", highest_score.Score.ToString("G4"));
+                        html.Open(HtmlTag.td);
+                        var first = true;
+                        foreach (var seg in highest_score.Recombination)
+                        {
+                            if (!first) html.Content(" → ");
+                            first = false;
+                            html.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
+                        }
+                        html.Close(HtmlTag.td);
+
+                        html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_area.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                        html.OpenAndClose(HtmlTag.td, "class='center'", highest_area.TotalArea.ToString("G4"));
+                        html.Open(HtmlTag.td);
+                        first = true;
+                        foreach (var seg in highest_score.Recombination)
+                        {
+                            if (!first) html.Content(" → ");
+                            first = false;
+                            html.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
+                        }
+                        html.Close(HtmlTag.td);
+                        html.Close(HtmlTag.tr);
+                    }
+                    html.Close(HtmlTag.table);
                 }
             }
             else
             {
-                for (int group = 0; group < Parameters.Segments.Count; group++)
+                html.OpenAndClose(HtmlTag.h2, "", "Overview of all segments");
+                if (Parameters.Groups.Count <= 3)
                 {
-                    html.OpenAndClose(HtmlTag.h2, "", Parameters.Segments[group].Item1);
-
-                    for (int segment = 0; segment < Parameters.Segments[group].Item2.Count; segment++)
+                    // If the number of groups is small show details about the highest scoring template for each segment
+                    for (int group = 0; group < Parameters.Groups.Count; group++)
                     {
-                        var seg = Parameters.Segments[group].Item2[segment];
-                        html.OpenAndClose(HtmlTag.h3, "", seg.Name);
-                        html.Add(HTMLTables.TableHeader(seg.Templates, Parameters.Input.Count));
+                        html.OpenAndClose(HtmlTag.h3, "", Parameters.Groups[group].Name);
+
+                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++)
+                        {
+                            var template = Parameters.Groups[group].Segments[segment].Templates[0];
+                            var (seq, doc) = template.ConsensusSequence();
+                            html.Open(HtmlTag.h3);
+                            html.OpenAndClose(HtmlTag.a, "", CommonPieces.GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName));
+                            html.Close(HtmlTag.h3);
+                            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
+                            html.Open(HtmlTag.div, "class='doc-plot'");
+                            html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
+                            html.Close(HtmlTag.div);
+                        }
+                    }
+                }
+                else
+                {
+                    // If the number of groups is large show a table with each highest scoring and highest area template
+                    for (int group = 0; group < Parameters.Groups.Count; group++)
+                    {
+                        if (Parameters.Groups[group].Name.ToLower() == "decoy") continue;
+                        html.OpenAndClose(HtmlTag.h3, "", Parameters.Groups[group].Name);
+                        html.Open(HtmlTag.table, "class='wide-table'");
+                        html.Open(HtmlTag.tr);
+                        html.OpenAndClose(HtmlTag.th, "", "Segment");
+                        html.OpenAndClose(HtmlTag.th, "", "Highest Score");
+                        html.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateScore));
+                        html.OpenAndClose(HtmlTag.th, "", "Highest Area");
+                        html.TagWithHelp(HtmlTag.th, "Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea));
+                        html.Close(HtmlTag.tr);
+                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++)
+                        {
+                            var highest_score = Parameters.Groups[group].Segments[segment].Templates.MaxBy(t => t.Score);
+                            var highest_area = Parameters.Groups[group].Segments[segment].Templates.MaxBy(t => t.TotalArea);
+                            html.Open(HtmlTag.tr);
+                            html.OpenAndClose(HtmlTag.td, "class='center'", Parameters.Groups[group].Segments[segment].Name);
+                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_score.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                            html.OpenAndClose(HtmlTag.td, "class='center'", highest_score.Score.ToString("G4"));
+
+                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_area.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                            html.OpenAndClose(HtmlTag.td, "class='center'", highest_area.TotalArea.ToString("G4"));
+                            html.Close(HtmlTag.tr);
+                        }
+                        html.Close(HtmlTag.table);
                     }
                 }
             }
@@ -401,8 +496,8 @@ namespace Stitch
             var html = new HtmlBuilder();
             foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
             {
-                var A = Parameters.Segments[group].Item2[set.Index - 1];
-                var B = Parameters.Segments[group].Item2[set.Index];
+                var A = Parameters.Groups[group].Item2[set.Index - 1];
+                var B = Parameters.Groups[group].Item2[set.Index];
                 html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
                 var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3 + set.Score.Best.Position));
                 var seqB = AminoAcid.ArrayToString(set.SeqB.Take(3 + set.Score.Best.Position).ToArray());
@@ -420,15 +515,15 @@ namespace Stitch
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
-            if (Parameters.Segments != null)
-                for (int group = 0; group < Parameters.Segments.Count; group++)
+            if (Parameters.Groups != null)
+                for (int group = 0; group < Parameters.Groups.Count; group++)
                 {
                     var group_html = new HtmlBuilder();
-                    var id = Parameters.Segments[group].Item1.ToLower().Replace(' ', '-');
+                    var id = Parameters.Groups[group].Item1.ToLower().Replace(' ', '-');
 
                     if (Parameters.RecombinedSegment.Count != 0)
                     {
-                        if (id == "decoy" && Parameters.Segments.Count > Parameters.RecombinedSegment.Count) continue;
+                        if (id == "decoy" && Parameters.Groups.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
                         group_html.Collapsible(id + "-recombination", new HtmlBuilder("Recombination Table"), HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true));
@@ -439,14 +534,14 @@ namespace Stitch
                             group_html.Collapsible(id + "-segment-joining", new HtmlBuilder("Segment joining"), CreateSegmentJoining(group));
                     }
 
-                    group_html.Add(HTMLTables.CreateTemplateTables(Parameters.Segments[group].Item2, AssetFolderName, Parameters.Input.Count));
+                    group_html.Add(HTMLTables.CreateTemplateTables(Parameters.Groups[group].Item2, AssetFolderName, Parameters.Input.Count));
 
-                    group_html.Add(CreateCDROverview(id + "-cdr", Parameters.Segments[group].Item2));
+                    group_html.Add(CreateCDROverview(id + "-cdr", Parameters.Groups[group].Item2));
 
-                    if (Parameters.Segments.Count == 1)
+                    if (Parameters.Groups.Count == 1)
                         inner_html.Add(group_html);
                     else
-                        inner_html.Collapsible(id, new HtmlBuilder(Parameters.Segments[group].Item1), group_html);
+                        inner_html.Collapsible(id, new HtmlBuilder(Parameters.Groups[group].Item1), group_html);
                 }
 
             inner_html.Collapsible("reads", new HtmlBuilder("Reads Table"), HTMLTables.CreateReadsTable(Parameters.Input, AssetFolderName));
@@ -488,19 +583,19 @@ namespace Stitch
         HtmlBuilder GetWarnings()
         {
             var html = new HtmlBuilder();
-            if (Parameters.Segments == null) return html;
+            if (Parameters.Groups == null) return html;
             // High decoy scores
             int max_decoy_score = 0;
             int max_normal_score = 0;
-            for (int group = 0; group < Parameters.Segments.Count; group++)
+            for (int group = 0; group < Parameters.Groups.Count; group++)
             {
-                if (Parameters.Segments[group].Item1.ToLower() == "decoy")
+                if (Parameters.Groups[group].Item1.ToLower() == "decoy")
                 {
-                    max_decoy_score = Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
+                    max_decoy_score = Parameters.Groups[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
                 }
                 else
                 {
-                    max_normal_score = Math.Max(max_normal_score, Parameters.Segments[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
+                    max_normal_score = Math.Max(max_normal_score, Parameters.Groups[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
 
                     if (Parameters.RecombinedSegment.Count != 0)
                     {
@@ -512,7 +607,7 @@ namespace Stitch
 
                             // Generate specific warnings
                             if (decoy > normal * 0.5)
-                                html.UnsafeContent(CommonPieces.RecombineHighDecoyWarning(Parameters.Segments[group].Item1));
+                                html.UnsafeContent(CommonPieces.RecombineHighDecoyWarning(Parameters.Groups[group].Item1));
                         }
                     }
                 }
@@ -524,12 +619,12 @@ namespace Stitch
 
             // Segment joining
             if (Parameters.RecombinedSegment.Count != 0)
-                for (int group = 0; group < Parameters.Segments.Count; group++)
+                for (int group = 0; group < Parameters.Groups.Count; group++)
                     foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
                         if (set.Score.Best.Position == 0)
                         {
-                            var A = Parameters.Segments[group].Item2[set.Index - 1];
-                            var B = Parameters.Segments[group].Item2[set.Index];
+                            var A = Parameters.Groups[group].Item2[set.Index - 1];
+                            var B = Parameters.Groups[group].Item2[set.Index];
                             html.UnsafeContent(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
                         }
             return html;

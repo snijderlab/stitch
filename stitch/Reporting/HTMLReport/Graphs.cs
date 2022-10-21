@@ -291,6 +291,8 @@ namespace HTMLNameSpace
 
             html.Open(HtmlTag.div, $"class='graph point-graph' oncontextmenu='CopyGraphData()' aria-hidden='true'");
             html.TagWithHelp(HtmlTag.h2, title, help);
+            html.CopyData(title + " (TSV)", data_help);
+
             for (int i = 0; i < dimensions; i++)
             {
                 var check = i < 3 ? " checked " : "";
@@ -299,7 +301,6 @@ namespace HTMLNameSpace
                 dataBuffer.Append($"\t\"{header[i]}\"");
             }
 
-            html.CopyData(title + " (TSV)", data_help);
             html.Open(HtmlTag.div, "class='plot'");
             html.Open(HtmlTag.div, "class='y-axis'");
             html.OpenAndClose(HtmlTag.span, "class='max'", "100%");

@@ -148,9 +148,9 @@ namespace Stitch
                 var buffer = new StringBuilder();
                 IEnumerable<(string, Template)> templates = null;
                 if (parameters.RecombinedSegment != null)
-                    templates = parameters.Segments.Zip(parameters.RecombinedSegment).Where(s => s.First.Item1.ToLower() != "decoy").SelectMany(s => s.Second.Templates.Where(t => t.Recombination != null).Select(t => (s.First.Item1, t)));
+                    templates = parameters.Groups.Zip(parameters.RecombinedSegment).Where(s => s.First.Item1.ToLower() != "decoy").SelectMany(s => s.Second.Templates.Where(t => t.Recombination != null).Select(t => (s.First.Item1, t)));
                 else
-                    templates = parameters.Segments.Where(s => s.Item1.ToLower() != "decoy").SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
+                    templates = parameters.Groups.Where(s => s.Item1.ToLower() != "decoy").SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
 
                 // See if the number of results match up
                 if (templates.Count() != runVariables.ExpectedResult.Count)

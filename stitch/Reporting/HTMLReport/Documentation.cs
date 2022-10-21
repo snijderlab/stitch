@@ -17,15 +17,15 @@ namespace HTMLNameSpace
         public const string SequenceConsensusOverview = "This displays the found diversity of amino acids for each position. The amino acids are linearly scaled to the respective score. The score is calculated as the sum of all positional scores (if present otherwise the general scores) for this position in all aligned reads. Any positions where no reads where mapped are displayed as dots '.'. Ambiguous positions (see next section) are underlined.";
         public const string SequenceConsensusOverviewData = "A TSV file with for each position in the consensus sequence all found amino acids with its score. This par is saved as two consecutive columns filled with first the amino acid and second the score.";
         public const string Spectrum = "The raw spectrum of this peptide. The fragments are coloured according to ion type (see legend). Any peaks with a star '*' as text can be hovered over to see the full details, first the ion type second the mass shift type. By hovering over the amino acids in the peptide or ions in the legend the corresponding peaks are highlighted. By toggling the 'Unassigned' label you can turn the background (unassigned) peaks on or off in the plot. By updating the slider in the Ion legend you can update the spectrum to only show the top X% of the peaks with labels. The top X% means any peak that is within X% of the highest intensity. By dragging in the spectrum you can zoom in to a specific part of the spectrum and use 'Zoom Out' to get back to the original zoom level.";
-        public const string TemplateIdentifier = "The identifier for this template.";
+        public const string TemplateIdentifier = "The identifier for the template.";
         public const string TemplateLength = "The length of the sequence in amino acids, excluding any 'X's added by 'GapHead' or 'GapTail'.";
-        public const string TemplateMatches = "The total number of placed reads on this template.";
-        public const string TemplateScore = "The total score calculated by summing all sums for all placed reads on this template.";
+        public const string TemplateMatches = "The total number of placed reads on the template.";
+        public const string TemplateScore = "The total score calculated by summing all sums for all placed reads on the template.";
         public const string TemplateSequence = "The template sequence as read from the original file (without any annotations).";
-        public const string TemplateTotalArea = "The sum of the area of all amino acids placed on this template.";
-        public const string TemplateUniqueArea = "The sum of the area of all amino acids uniquely placed on this templates.";
-        public const string TemplateUniqueMatches = "The total number of reads uniquely placed on this template.";
-        public const string TemplateUniqueScore = "The total score calculated by summing all sums for all reads uniquely placed on this template.";
+        public const string TemplateTotalArea = "The sum of the area of all amino acids placed on the template.";
+        public const string TemplateUniqueArea = "The sum of the area of all amino acids uniquely placed on the template.";
+        public const string TemplateUniqueMatches = "The total number of reads uniquely placed on the template.";
+        public const string TemplateUniqueScore = "The total score calculated by summing all sums for all reads uniquely placed on the template.";
         public const string Tree = "This tree is made on the fly based on the original sequences of all templates in this segment. The tree is made using the Neighbour Joining algorithm and rooted using a generated random protein sequence. To find the score for each node all reads are placed on the tree at the highest node where they are placed at every child template. If a read is only placed on a single template (placed uniquely) it is shown in the left half of the circle on that template. You can change the displayed score to the total matches or total area using the buttons above the tree.";
         public const string TreeData = "The tree is saved in JSON format with an object for each node with 'left' and 'right' members for the corresponding branches in the tree. The nodes also contain the calculated distances for both branches and the score, matches, and area for each node. The leaf nodes contain all scores including their unique counterparts and the name of the leaf.";
     }

@@ -81,7 +81,7 @@ namespace Stitch
             }
             else // TemplateMatching
             {
-                foreach (var (group, dbs) in Parameters.Segments)
+                foreach (var (group, dbs) in Parameters.Groups)
                 {
                     foreach (var template in dbs.SelectMany(a => a.Templates))
                     {

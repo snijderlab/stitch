@@ -37,8 +37,8 @@ namespace Stitch
             }
             else // TemplateMatching
             {
-                sequences.Capacity = Max(sequences.Capacity, Parameters.Segments.Select(a => a.Item2.Count).Sum());
-                foreach (var (group, dbs) in Parameters.Segments)
+                sequences.Capacity = Max(sequences.Capacity, Parameters.Groups.Select(a => a.Item2.Count).Sum());
+                foreach (var (group, dbs) in Parameters.Groups)
                 {
                     foreach (var template in dbs.SelectMany(a => a.Templates))
                     {

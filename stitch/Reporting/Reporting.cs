@@ -13,7 +13,7 @@ namespace Stitch
     public readonly struct ReportInputParameters
     {
         public readonly ReadOnlyCollection<(string Sequence, ReadMetaData.IMetaData MetaData)> Input;
-        public readonly ReadOnlyCollection<(string, List<Segment>)> Segments;
+        public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
         public readonly RunVariables runVariables;
@@ -23,7 +23,7 @@ namespace Stitch
         public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
         {
             Input = input.AsReadOnly();
-            Segments = segments.AsReadOnly();
+            Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();
             BatchFile = batchFile;
             runVariables = variables;
