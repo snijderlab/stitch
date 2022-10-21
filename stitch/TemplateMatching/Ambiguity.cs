@@ -93,11 +93,11 @@ namespace Stitch
         public void AddPath(IEnumerable<AminoAcid> Path, double Intensity, bool perfect = true)
         {
             if (Path.Count() == 0) return;
-            if (Connections.Count() == 0)
+            if (this.Connections.Count() == 0)
             {
                 var next = new AmbiguityTreeNode(Path.First());
                 next.AddPath(Path.Skip(1), Intensity, perfect);
-                Connections.Add((Intensity, next));
+                this.Connections.Add((Intensity, next));
                 return;
             }
 
@@ -113,15 +113,10 @@ namespace Stitch
             }
             if (perfect && this.Connections.Select(a => a.Next.Variant).Contains(Path.First()))
             {
-                foreach (var connection in Connections)
-                {
-                    if (connection.Next.Variant == Path.First())
-                    {
-                        connection.Next.AddPath(Path.Skip(1), Intensity, true);
-                        return;
-                    }
-
-                }
+                var i = this.Connections.FindIndex(a => a.Next.Variant == Path.First());
+                this.Connections[i] = (this.Connections[i].Intensity + Intensity, this.Connections[i].Next);
+                this.Connections[i].Next.AddPath(Path.Skip(1), Intensity, true);
+                return;
             }
             else
             {
