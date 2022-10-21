@@ -426,6 +426,7 @@ namespace HTMLNameSpace
             }
             html.Open(HtmlTag.div, "class='buttons'");
             html.OpenAndClose(HtmlTag.button, "onclick='ToggleCDRReads()'", "Only show CDR reads");
+            html.OpenAndClose(HtmlTag.button, "onclick='ToggleAlignmentComic()'", "Show as comic");
             html.Close(HtmlTag.div);
             html.Open(HtmlTag.div, "class='alignment-wrapper'");
             html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({total_length}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
