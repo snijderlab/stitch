@@ -340,6 +340,8 @@ namespace Stitch
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                 }
 
+                recombined_segment.ForEach(s => s.Templates.ForEach(t => t.FixCommonMassSpecErrors()));
+
                 // Did recombination
                 if (progressBar != null) progressBar.Update();
             }

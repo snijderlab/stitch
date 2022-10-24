@@ -2,12 +2,13 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
+using System;
 
 namespace Stitch
 {
     /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can
     /// be used in an efficient way. </summary>
-    public struct AminoAcid
+    public struct AminoAcid : IComparable
     {
         /// <summary> The code (index of the char in the alphabet array of the parent).
         /// The only way to change it is in the creator. </summary>
@@ -17,6 +18,8 @@ namespace Stitch
         [JsonIgnore]
         /// <summary> The alphabet used. </summary>
         public Alphabet alphabet;
+
+        public uint Index { get => (uint)alphabet.GetIndexInAlphabet(Character); }
 
         /// <summary> The creator of AminoAcids. </summary>
         /// <param name="alphabetInput"> The alphabet used. </param>
@@ -56,6 +59,14 @@ namespace Stitch
                 output[i] = new AminoAcid(alp, input[i]);
             }
             return output;
+        }
+
+        /// <summary> Implement sorting for aminoacids, sort on alphabetical order of the used characters. </summary>
+        /// <param name="obj"> The object to compare against. </param>
+        /// <returns> Th alphabetical sort order for this AA vs the other AA, otherwise 0. </returns>
+        public int CompareTo(object obj)
+        {
+            return obj != null && obj is AminoAcid aa ? this.Character.CompareTo(aa.Character) : 0;
         }
 
         /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>

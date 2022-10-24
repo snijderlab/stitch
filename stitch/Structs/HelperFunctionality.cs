@@ -28,16 +28,20 @@ namespace Stitch
             }
         }
 
-        /// <summary> Sort an array and return the new sorted array. </summary>
-        /// <param name="data"> The old array. </param>
+        /// <summary> Create a hash set from data with a given comparer. </summary>
+        /// <param name="data"> The data. </param>
+        /// <param name="comparer"> The comparer function, should return true when two element are equal. </param>
         /// <typeparam name="T"> The type of the elements in the array. </typeparam>
-        /// <returns> Returns a new array which is the sorted variant of the input array. </returns>
-        public static T[] Sort<T>(this T[] data)
+        /// <returns> Returns a new hash set with only the unique elements from the data as determined by the comparer function. </returns>
+        public static HashSet<T> Unique<T>(this IEnumerable<T> data, Func<T, T, bool> comparer)
         {
-            var temp = data.ToList();
-            temp.Sort();
-            return temp.ToArray();
+            var temp = new HashSet<T>();
+            foreach (var element in data)
+                if (temp.Count() == 0 || temp.All(e => !comparer(element, e)))
+                    temp.Add(element);
+            return temp;
         }
+
         /// <summary> To copy a sub array to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>

@@ -593,13 +593,19 @@ namespace Stitch
             return ambiguous;
         }
 
-        void FixCommonMassSpecErrors()
+        public void FixCommonMassSpecErrors()
         {
+            var n = 0;
+            if (this.Recombination != null)
+                n = 10;
             var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
             foreach (var match in this.Matches)
             {
                 int pos = match.StartTemplatePosition;
                 int q_pos = match.StartQueryPosition;
+
+                if (match.QuerySequence[0].Character == 'D' && match.QuerySequence[1].Character == 'L' && pos == 0)
+                    n = 20;
 
                 foreach (var piece in match.Alignment)
                 {
@@ -607,17 +613,30 @@ namespace Stitch
                     {
                         for (int offset = 0; offset < piece.Length; offset++)
                         {
+                            var skip = 0;
                             if (this.Sequence[pos + offset] != match.QuerySequence[q_pos + offset])
                             {
-                                for (int size = MassSpecErrors.MaxLength; size > 0; size--)
+                                for (int size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); size > 0; size--)
                                 {
-                                    var key = match.QuerySequence.SubArray(pos + offset, size).Sort();
+                                    var key = match.QuerySequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
                                     if (equal_mass.ContainsKey(key))
                                     {
-
+                                        var set = equal_mass[key];
+                                        var template_key = this.Sequence.SubArray(pos + offset, size).ToSortedAminoAcidSet();
+                                        if (set.Contains(template_key))
+                                        {
+                                            // Force template
+                                            for (int i = 0; i < size; i++)
+                                            {
+                                                match.QuerySequence[q_pos + offset + i] = this.Sequence[pos + offset + i];
+                                            }
+                                            skip = size;
+                                            break; // Goes to next position
+                                        }
                                     }
                                 }
                             }
+                            offset += skip;
                         }
                         pos += piece.Length;
                         q_pos += piece.Length;
@@ -634,6 +653,7 @@ namespace Stitch
                     }
                 }
             }
+            Console.Write(n);
         }
     }
 
