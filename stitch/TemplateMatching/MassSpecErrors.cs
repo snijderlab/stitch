@@ -127,7 +127,7 @@ namespace Stitch
             string output = "";
             for (int i = 0; i < 10; i++)
             {
-                var index = (this.Value >> (i * width)) & (width - 1);
+                var index = (this.Value >> (i * width)) & ((1 >> width) - 1);
                 output += ' ';
                 output += index.ToString();
             }
