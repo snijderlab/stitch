@@ -14,21 +14,31 @@ namespace StitchTest
     [TestClass]
     public class HTMLReport_Test
     {
+        Alphabet alp;
+
+        HTMLReport_Test()
+        {
+            alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+        }
+
+        ReadMetaData.IMetaData Read(string sequence)
+        {
+            return (ReadMetaData.IMetaData)new ReadMetaData.Simple(AminoAcid.FromString(sequence, alp), null, new NameFilter());
+        }
+
         [TestMethod]
         public void SingleMatchTemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) },
+                new List<ReadMetaData.IMetaData> { Read("EVQLVESGGGLVQPGGSLRL") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGGLVQPGGSLRL", meta) });
+            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("EVQLVESGGGLVQPGGSLRL") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -39,18 +49,16 @@ namespace StitchTest
         [TestMethod]
         public void MultiMatchTemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, ReadMetaData.IMetaData)> { ("EVQLVESGGG", meta) },
+                new List<ReadMetaData.IMetaData> { Read("EVQLVESGGG") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("EVQLV", meta), ("ESGGG", meta), ("EVQ", meta), ("LVES", meta), ("GGG", meta) });
+            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("EVQLV"), Read("ESGGG"), Read("EVQ"), Read("LVES"), Read("GGG") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -61,18 +69,16 @@ namespace StitchTest
         [TestMethod]
         public void SingleAATemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, ReadMetaData.IMetaData)> { ("E", meta) },
+                new List<ReadMetaData.IMetaData> { Read("E") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<(string, ReadMetaData.IMetaData)> { ("E", meta) });
+            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("E") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -83,11 +89,9 @@ namespace StitchTest
         [TestMethod]
         public void NoAATemplateAlignment()
         {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
-            var meta = (ReadMetaData.IMetaData)new ReadMetaData.Simple(null, new NameFilter());
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<(string, ReadMetaData.IMetaData)> { ("", meta) },
+                new List<ReadMetaData.IMetaData> { Read("") },
                 alp,
                 "segment",
                 1.0, // CutoffScore

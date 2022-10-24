@@ -22,8 +22,8 @@ namespace Stitch
             public class ActualData
             {
                 /// <summary> The inputs for this run. </summary> 
-                public List<List<(string Sequence, ReadMetaData.IMetaData MetaData)>> Raw = new List<List<(string, ReadMetaData.IMetaData)>>();
-                public List<(string Sequence, ReadMetaData.IMetaData MetaData)> Cleaned = new List<(string, ReadMetaData.IMetaData)>();
+                public List<List<ReadMetaData.IMetaData>> Raw = new();
+                public List<ReadMetaData.IMetaData> Cleaned = new();
             }
 
             public class InputParameters
@@ -200,7 +200,7 @@ namespace Stitch
             public string Name = null;
 
             /// <summary> The templates of this segment </summary> 
-            public List<(string, ReadMetaData.IMetaData)> Templates = new List<(string, ReadMetaData.IMetaData)>();
+            public List<ReadMetaData.IMetaData> Templates = new();
             /// <summary> The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template). </summary> 
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 

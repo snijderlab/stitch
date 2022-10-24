@@ -14,19 +14,19 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static HtmlBuilder CreateReadAside((string Sequence, ReadMetaData.IMetaData MetaData) read, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
+        public static HtmlBuilder CreateReadAside(ReadMetaData.IMetaData MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
         {
             var html = new HtmlBuilder();
-            html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(read.MetaData)}' class='info-block read-info'");
-            html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(read.MetaData, true));
+            html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
+            html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
             html.OpenAndClose(HtmlTag.h2, "", "Sequence");
-            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", read.Sequence);
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence));
             html.OpenAndClose(HtmlTag.h2, "", "Sequence Length");
-            html.OpenAndClose(HtmlTag.p, "", read.Sequence.Length.ToString());
+            html.OpenAndClose(HtmlTag.p, "", MetaData.Sequence.Length.ToString());
 
-            if (Fragments != null && Fragments.ContainsKey(read.MetaData.EscapedIdentifier))
+            if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier))
             {
-                foreach (var spectrum in Fragments[read.MetaData.EscapedIdentifier])
+                foreach (var spectrum in Fragments[MetaData.EscapedIdentifier])
                 {
                     html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
                 }
@@ -50,12 +50,12 @@ namespace HTMLNameSpace
                     {
                         foreach (var match in template.Matches.ToList())
                         {
-                            if (match.MetaData.Identifier == read.MetaData.Identifier)
+                            if (match.MetaData.Identifier == MetaData.Identifier)
                             {
                                 html.Open(HtmlTag.tr);
                                 html.OpenAndClose(HtmlTag.td, "class='center'", group.Item1);
                                 html.OpenAndClose(HtmlTag.td, "class='center'", segment.Name);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData)));
+                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.StartTemplatePosition.ToString());
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
@@ -81,10 +81,10 @@ namespace HTMLNameSpace
                     {
                         foreach (var match in template.Matches)
                         {
-                            if (match.MetaData.Identifier == read.MetaData.Identifier)
+                            if (match.MetaData.Identifier == MetaData.Identifier)
                             {
                                 html.Open(HtmlTag.tr);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(read.MetaData)));
+                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.StartTemplatePosition.ToString());
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
                                 html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
@@ -96,7 +96,7 @@ namespace HTMLNameSpace
             }
 
             html.Close(HtmlTag.table);
-            html.Add(read.MetaData.ToHTML());
+            html.Add(MetaData.ToHTML());
             html.Close(HtmlTag.div);
             return html;
         }

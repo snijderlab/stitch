@@ -419,10 +419,10 @@ namespace Stitch
                 {
                     var reads = file switch
                     {
-                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, Input.LocalParameters),
-                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier),
-                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File),
-                        InputData.Novor novor => OpenReads.Novor(name_filter, novor),
+                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alp, Input.LocalParameters),
+                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alp),
+                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alp),
+                        InputData.Novor novor => OpenReads.Novor(name_filter, novor, alp),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
@@ -970,16 +970,17 @@ namespace Stitch
                 // Open the file
                 var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
+                var folder_reads = new ParseResult<List<ReadMetaData.IMetaData>>();
+                var alphabet = new Alphabet(tsettings.Alphabet);
 
                 if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier);
+                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier, alphabet);
                 else if (file_path.EndsWith(".txt"))
-                    folder_reads = OpenReads.Simple(name_filter, fileId);
+                    folder_reads = OpenReads.Simple(name_filter, fileId, alphabet);
                 else if (file_path.EndsWith(".csv"))
                 {
                     peaks_settings.File = fileId;
-                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings);
+                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings, alphabet);
                 }
                 else
                     outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));

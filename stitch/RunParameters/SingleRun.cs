@@ -20,7 +20,7 @@ namespace Stitch
             public readonly int MaxNumberOfCPUCores;
 
             /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary> 
-            public List<(string, ReadMetaData.IMetaData)> Input;
+            public List<ReadMetaData.IMetaData> Input;
 
             /// <summary> The alphabet used in this run. </summary> 
             public AlphabetParameter Alphabet;
@@ -42,7 +42,7 @@ namespace Stitch
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<(string, ReadMetaData.IMetaData)> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
+            public SingleRun(string runname, List<ReadMetaData.IMetaData> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -92,7 +92,7 @@ namespace Stitch
                 Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
                 if (this.RawDataDirectory != null)
                 {
-                    fragments = Fragmentation.GetSpectra(Input.Select(item => item.Item2).Where(i => i != null), this.RawDataDirectory);
+                    fragments = Fragmentation.GetSpectra(Input, this.RawDataDirectory);
                     progressBar.Update();
                 }
 
@@ -406,7 +406,7 @@ namespace Stitch
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new ReadMetaData.Simple(null, name_filter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadMetaData.Simple(s.ToArray(), null, name_filter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

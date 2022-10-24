@@ -244,6 +244,7 @@ namespace Stitch
 
             if (output.TemplateMatching != null)
             {
+                var alphabet = new Alphabet(output.TemplateMatching.Alphabet);
                 foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Segments))
                 {
                     if (db.Templates != null)
@@ -253,14 +254,14 @@ namespace Stitch
                             var read = db.Templates[i];
                             if (db.GapTail)
                             {
-                                read.Item1 += "XXXXXXXXXXXXXXXXXXXX";
-                                if (read.Item2 is ReadMetaData.Fasta meta)
+                                read.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapTail");
+                                if (read is ReadMetaData.Fasta meta)
                                     meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXXXXXXXXXXXX");
                             }
                             if (db.GapHead)
                             {
-                                read.Item1 = $"XXXXXXXXXXXXXXXXXXXX{read.Item1}";
-                                if (read.Item2 is ReadMetaData.Fasta meta)
+                                read.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapHead");
+                                if (read is ReadMetaData.Fasta meta)
                                     meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
                             }
                             db.Templates[i] = read;

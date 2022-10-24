@@ -25,7 +25,7 @@ namespace Stitch
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<(string, ReadMetaData.IMetaData)> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public Segment(List<ReadMetaData.IMetaData> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -36,9 +36,8 @@ namespace Stitch
 
             for (int i = 0; i < sequences.Count; i++)
             {
-                var pair = sequences[i];
-                var parsed = StringToSequence(pair.Item1);
-                Templates.Add(new Template(name, parsed, pair.Item2, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
+                var meta = sequences[i];
+                Templates.Add(new Template(name, meta.Sequence, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
 
             try
@@ -78,7 +77,7 @@ namespace Stitch
         }
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<(string Sequence, ReadMetaData.IMetaData MetaData)> sequences)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<ReadMetaData.IMetaData> sequences)
         {
             var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++)
@@ -86,7 +85,7 @@ namespace Stitch
                 var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count);
                 for (int i = 0; i < Templates.Count; i++)
                 {
-                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, AminoAcid.FromString(sequences[j].Sequence, Alphabet), Alphabet, sequences[j].MetaData, j, i)));
+                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j], j, i)));
                 }
                 output.Add(row);
             }

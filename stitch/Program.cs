@@ -195,14 +195,15 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap();
             var name_filter = new NameFilter();
-            var reads = OpenReads.Fasta(name_filter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|")).Unwrap();
+            var alphabet = new Alphabet("alphabets/default_alphabet.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var reads = OpenReads.Fasta(name_filter, new ReadMetaData.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|"), alphabet).Unwrap();
             SaveAndCleanFasta(output, reads);
         }
 
         /// <summary> Do common deduplication and clean up steps. Take note: Assumes all MetaData to be of type ReadMetaData.Fasta. </summary>
         /// <param name="output">The file to save the fasta sequences in.</param>
         /// <param name="reads">The reads/sequences itself.</param>
-        private static void SaveAndCleanFasta(string output, List<(string Sequence, ReadMetaData.IMetaData MetaData)> reads)
+        private static void SaveAndCleanFasta(string output, List<ReadMetaData.IMetaData> reads)
         {
             // Two dictionaries to ensure both unique ids (to join isoforms) and unique sequences.
             var id_dict = new Dictionary<string, (string, string)>();
@@ -211,26 +212,26 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             // Condense all isoforms
             foreach (var read in reads)
             {
-                var long_id = ((ReadMetaData.Fasta)read.MetaData).FastaHeader;
+                var long_id = ((ReadMetaData.Fasta)read).FastaHeader;
                 if (!long_id.Contains("partial") && !long_id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
                     // Join all isoforms
-                    if (id_dict.ContainsKey(read.MetaData.Identifier))
+                    if (id_dict.ContainsKey(read.Identifier))
                     {
-                        id_dict[read.MetaData.Identifier] = (id_dict[read.MetaData.Identifier].Item1 + " " + long_id, read.Sequence);
+                        id_dict[read.Identifier] = (id_dict[read.Identifier].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence));
                     }
                     else
                     {
                         // Join all equal sequences
-                        if (sequence_dict.ContainsKey(read.Sequence))
+                        if (sequence_dict.ContainsKey(AminoAcid.ArrayToString(read.Sequence)))
                         {
-                            var deduplicated_id = sequence_dict[read.Sequence];
-                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, read.Sequence);
+                            var deduplicated_id = sequence_dict[AminoAcid.ArrayToString(read.Sequence)];
+                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence));
                         }
                         else
                         {
-                            id_dict[read.MetaData.Identifier] = (long_id, read.Sequence);
-                            sequence_dict[read.Sequence] = read.MetaData.Identifier;
+                            id_dict[read.Identifier] = (long_id, AminoAcid.ArrayToString(read.Sequence));
+                            sequence_dict[AminoAcid.ArrayToString(read.Sequence)] = read.Identifier;
                         }
                     }
                 }
@@ -437,10 +438,11 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
 
             var name_filter = new NameFilter();
-            var list = new List<(string, ReadMetaData.IMetaData)>(results.Count);
+            var list = new List<ReadMetaData.IMetaData>(results.Count);
+            var alphabet = new Alphabet("alphabets/default_alphabet.csv", Alphabet.AlphabetParamType.Path, 12, 2);
             foreach (var (isotype, sequence) in results)
             {
-                list.Add((sequence, new ReadMetaData.Fasta(isotype, isotype, null, name_filter)));
+                list.Add(new ReadMetaData.Fasta(AminoAcid.FromString(sequence, alphabet), isotype, isotype, null, name_filter));
             }
 
             SaveAndCleanFasta(output, list);
@@ -449,8 +451,9 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
         static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true)
         {
-            var sequences = new List<(string Sequence, ReadMetaData.IMetaData)>();
+            var sequences = new List<ReadMetaData.IMetaData>();
             var name_filter = new NameFilter();
+            var alphabet = new Alphabet("alphabets/default_alphabet.csv", Alphabet.AlphabetParamType.Path, 12, 2);
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
             content = content.Substring(0, content.IndexOf("</table>"));
@@ -607,7 +610,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     else
                         encoded_sequence.Append($"({piece.Type} {piece.Sequence})");
                 }
-                sequences.Add((encoded_sequence.ToString(), new ReadMetaData.Fasta(pieces[2], pieces[2], null, name_filter)));
+                sequences.Add(new ReadMetaData.Fasta(AminoAcid.FromString(encoded_sequence.ToString(), alphabet), pieces[2], pieces[2], null, name_filter));
             }
             SaveAndCleanFasta(output, sequences);
         }

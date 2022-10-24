@@ -16,11 +16,11 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
+        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<ReadMetaData.IMetaData> reads, string AssetsFolderName)
         {
             var html = new HtmlBuilder();
 
-            html.Add(TableHeader("reads", reads.Select(a => (double)a.Item1.Length)));
+            html.Add(TableHeader("reads", reads.Select(a => (double)a.Sequence.Length)));
             html.Open(HtmlTag.table, "id='reads-table' class='wide-table'");
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 0, \"string\")' class='small-cell'", "Identifier");
@@ -32,11 +32,11 @@ namespace HTMLNameSpace
 
             for (int i = 0; i < reads.Count; i++)
             {
-                id = GetAsideIdentifier(reads[i].Item2);
+                id = GetAsideIdentifier(reads[i]);
                 html.Open(HtmlTag.tr, $"id='reads-{id}'");
-                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i].Item2, AsideType.Read, AssetsFolderName));
-                html.OpenAndClose(HtmlTag.td, "class='seq'", reads[i].Item1);
-                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Item1.Length.ToString());
+                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i], AsideType.Read, AssetsFolderName));
+                html.OpenAndClose(HtmlTag.td, "class='seq'", AminoAcid.ArrayToString(reads[i].Sequence));
+                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Sequence.Length.ToString());
                 html.Close(HtmlTag.tr);
             }
 

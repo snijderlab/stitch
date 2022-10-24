@@ -86,7 +86,7 @@ namespace Stitch
                 {
                     case AsideType.Read:
                         inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
-                        metadata = Parameters.Input[index1].MetaData;
+                        metadata = Parameters.Input[index1];
                         break;
                     case AsideType.Template:
                         var template = Parameters.Groups[index3].Item2[index2].Templates[index1];

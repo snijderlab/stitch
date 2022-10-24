@@ -13,6 +13,12 @@ namespace Stitch
         ///  of certain assignments or for quality control or ease of use for humans. </summary>
         public abstract class IMetaData
         {
+            /// <summary> The sequence of this read. </summary>
+            public AminoAcid[] Sequence { get; set; }
+
+            /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
+            public List<(int Offset, int Delete, AminoAcid[] Change, string Reason)> SequenceChanges = new();
+
             /// <summary> The Identifier of the originating file. </summary> 
             public FileIdentifier File { get => FileRange != null ? FileRange.Value.File.Identifier : new FileIdentifier(); }
             public readonly FileRange? FileRange;
@@ -43,7 +49,7 @@ namespace Stitch
             public virtual List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, int, string)>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary> 
-            /// <returns>An HtmlBuilder containing the MetaData.</returns>
+            /// <returns> An HtmlBuilder containing the MetaData. </returns>
             public abstract HtmlBuilder ToHTML();
 
             protected NameFilter nameFilter;
@@ -52,8 +58,9 @@ namespace Stitch
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(FileRange? file, string id, NameFilter filter, string classId = null)
+            public IMetaData(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null)
             {
+                Sequence = sequence;
                 nameFilter = filter;
                 FileRange = file;
                 Identifier = id;
@@ -73,6 +80,17 @@ namespace Stitch
                     }
                 }
             }
+
+            /// <summary> Update the sequence. </summary>
+            /// <param name="offset"> The start of the change. </param>
+            /// <param name="delete"> The number of aminoacids to remove (use the same number as the changed amino acids to do a direct modification). </param>
+            /// <param name="change"> The new aminoacids to introduce. </param>
+            /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
+            public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason)
+            {
+                this.SequenceChanges.Add((offset, delete, change, reason));
+                this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
+            }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
@@ -82,7 +100,7 @@ namespace Stitch
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
-            public Simple(FileRange? file, NameFilter filter, string identifier = "R") : base(file, identifier, filter) { }
+            public Simple(AminoAcid[] sequence, FileRange? file, NameFilter filter, string identifier = "R") : base(sequence, file, identifier, filter) { }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
             public override HtmlBuilder ToHTML()
@@ -103,8 +121,8 @@ namespace Stitch
             /// <param name="fastaHeader">The header for this read as in the fasta file, without the '>'.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            public Fasta(string identifier, string fastaHeader, FileRange? file, NameFilter filter, string classIdentifier = null)
-                : base(file, identifier, filter, classIdentifier)
+            public Fasta(AminoAcid[] sequence, string identifier, string fastaHeader, FileRange? file, NameFilter filter, string classIdentifier = null)
+                : base(sequence, file, identifier, filter, classIdentifier)
             {
                 this.FastaHeader = fastaHeader;
             }
@@ -141,9 +159,6 @@ namespace Stitch
 
             /// <summary> The sequence with modifications of the peptide. </summary>
             public string Original_tag = null;
-
-            /// <summary> The sequence without modifications of the peptide. </summary>
-            public string Cleaned_sequence = null;
 
             /// <summary> The DeNovoScore as reported by PEAKS 10.5 </summary>
             public int DeNovoScore = -1;
@@ -212,7 +227,7 @@ namespace Stitch
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            private Peaks(FileRange? file, string identifier, NameFilter filter) : base(file, identifier, filter) { }
+            private Peaks(AminoAcid[] sequence, FileRange? file, string identifier, NameFilter filter) : base(sequence, file, identifier, filter) { }
 
             /// <summary> Tries to create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
@@ -223,7 +238,7 @@ namespace Stitch
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter)
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, Alphabet alphabet)
             {
                 var result = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
@@ -266,8 +281,22 @@ namespace Stitch
                     result.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return result;
                 }
-                var peaks = new Peaks(range, fields[pf.scan].Text, filter);
+                string original_peptide;
+                AminoAcid[] sequence;
+                if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
+                {
+                    original_peptide = fields[pf.peptide].Text;
+                    sequence = AminoAcid.FromString(new string(original_peptide.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray()), alphabet);
+                }
+                else
+                {
+                    result.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a Peptide to use as an identifier"));
+                    return result;
+                }
+
+                var peaks = new Peaks(sequence, range, fields[pf.scan].Text, filter);
                 result.Value = peaks;
+                peaks.Original_tag = original_peptide;
 
                 // Get all the properties of this peptide and save them in the MetaData 
                 if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))
@@ -281,12 +310,6 @@ namespace Stitch
 
                 if (pf.scan >= 0 && CheckFieldExists(pf.scan))
                     peaks.ScanID = fields[pf.scan].Text;
-
-                if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
-                {
-                    peaks.Original_tag = fields[pf.peptide].Text;
-                    peaks.Cleaned_sequence = new string(peaks.Original_tag.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray());
-                }
 
                 if (pf.de_novo_score >= 0 && CheckFieldExists(pf.de_novo_score))
                     peaks.DeNovoScore = ConvertToInt(pf.de_novo_score);
@@ -323,7 +346,7 @@ namespace Stitch
                     try
                     {
                         peaks.Local_confidence = fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                        if (peaks.Local_confidence.Length != peaks.Cleaned_sequence.Length)
+                        if (peaks.Local_confidence.Length != peaks.Sequence.Length)
                             result.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
                     }
                     catch
@@ -350,10 +373,9 @@ namespace Stitch
 
             public ReadMetaData.Peaks Clone()
             {
-                var meta = new ReadMetaData.Peaks(this.FileRange, this.Identifier, this.nameFilter);
+                var meta = new ReadMetaData.Peaks((AminoAcid[])this.Sequence.Clone(), this.FileRange, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
-                meta.Cleaned_sequence = new string(this.Cleaned_sequence);
                 meta.Confidence = this.Confidence;
                 meta.DeNovoScore = this.DeNovoScore;
                 meta.Feature = new string(this.Feature);
@@ -393,13 +415,13 @@ namespace Stitch
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                     int original_offset = 0;
 
-                    for (int i = 0; i < Cleaned_sequence.Length; i++)
+                    for (int i = 0; i < this.Sequence.Length; i++)
                     {
                         html.Open(HtmlTag.div);
                         html.Open(HtmlTag.div, "class='coverage-depth-wrapper'");
                         html.OpenAndClose(HtmlTag.span, $"class='coverage-depth-bar' style='--value:{Local_confidence[i]}'", "");
                         html.Close(HtmlTag.div);
-                        html.OpenAndClose(HtmlTag.p, "", Cleaned_sequence[i].ToString());
+                        html.OpenAndClose(HtmlTag.p, "", this.Sequence[i].ToString());
 
                         if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
                         {
@@ -577,7 +599,7 @@ namespace Stitch
                 return html;
             }
 
-            public Combined(NameFilter filter, List<IMetaData> children) : base(null, "Combined", filter)
+            public Combined(AminoAcid[] sequence, NameFilter filter, List<IMetaData> children) : base(sequence, null, "Combined", filter)
             {
                 Children = children;
             }
@@ -601,7 +623,7 @@ namespace Stitch
             /// <summary> The error for this peptide in ppm. </summary> 
             public double Error;
             /// <summary> The original sequence with possible modifications. </summary> 
-            public string Sequence;
+            public string OriginalSequence;
 
             /// <summary> The intensity of this read </summary> 
             double intensity = 1;
@@ -614,7 +636,7 @@ namespace Stitch
             /// <summary> Create a new Novor MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Novor(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence) : base(file, "N", filter)
+            public Novor(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence) : base(sequence, file, "N", filter)
             {
                 this.Fraction = fraction;
                 this.Scan = scan;
@@ -623,7 +645,7 @@ namespace Stitch
                 this.Score = score;
                 this.Mass = mass;
                 this.Error = error;
-                this.Sequence = sequence;
+                this.OriginalSequence = original_sequence;
             }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
@@ -646,7 +668,7 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.h3, "", "Error");
                 html.OpenAndClose(HtmlTag.p, "", Error.ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Original Sequence");
-                html.OpenAndClose(HtmlTag.p, "", Sequence);
+                html.OpenAndClose(HtmlTag.p, "", OriginalSequence);
                 html.Add(File.ToHTML());
                 return html;
             }
@@ -656,8 +678,8 @@ namespace Stitch
         {
             /// <summary> The database sequence with possible modifications. </summary> 
             public string DBSequence;
-            public NovorDeNovo(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string databaseSequence)
-            : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
+            public NovorDeNovo(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string databaseSequence)
+            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence)
             {
                 this.DBSequence = databaseSequence;
             }
@@ -677,8 +699,8 @@ namespace Stitch
             public string ID;
             /// <summary> The read ID. </summary> 
             public int Proteins;
-            public NovorPSMS(FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string sequence, string id, int proteins)
-            : base(file, filter, fraction, scan, mz, z, score, mass, error, sequence)
+            public NovorPSMS(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string id, int proteins)
+            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence)
             {
                 this.ID = id;
                 this.Proteins = proteins;

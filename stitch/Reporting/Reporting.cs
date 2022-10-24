@@ -12,7 +12,7 @@ namespace Stitch
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public readonly struct ReportInputParameters
     {
-        public readonly ReadOnlyCollection<(string Sequence, ReadMetaData.IMetaData MetaData)> Input;
+        public readonly ReadOnlyCollection<ReadMetaData.IMetaData> Input;
         public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
@@ -20,7 +20,7 @@ namespace Stitch
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<(string, ReadMetaData.IMetaData)> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
+        public ReportInputParameters(List<ReadMetaData.IMetaData> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
         {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
