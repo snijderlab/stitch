@@ -14,7 +14,7 @@ namespace HTMLNameSpace
     public static class HTMLAsides
     {
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static HtmlBuilder CreateReadAside(ReadMetaData.IMetaData MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
+        public static HtmlBuilder CreateReadAside(Read.IRead MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments)
         {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
@@ -50,7 +50,7 @@ namespace HTMLNameSpace
                     {
                         foreach (var match in template.Matches.ToList())
                         {
-                            if (match.MetaData.Identifier == MetaData.Identifier)
+                            if (match.Query.Identifier == MetaData.Identifier)
                             {
                                 html.Open(HtmlTag.tr);
                                 html.OpenAndClose(HtmlTag.td, "class='center'", group.Item1);
@@ -81,7 +81,7 @@ namespace HTMLNameSpace
                     {
                         foreach (var match in template.Matches)
                         {
-                            if (match.MetaData.Identifier == MetaData.Identifier)
+                            if (match.Query.Identifier == MetaData.Identifier)
                             {
                                 html.Open(HtmlTag.tr);
                                 html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
@@ -211,8 +211,8 @@ namespace HTMLNameSpace
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++)
                         {
-                            var t = match.TemplateSequence[template_pos].Character;
-                            var q = match.QuerySequence[query_pos].Character;
+                            var t = match.Template.Sequence[template_pos].Character;
+                            var q = match.Query.Sequence[query_pos].Character;
                             columns.Add((t, q, t == q ? ' ' : q, annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                             query_pos++;
@@ -221,7 +221,7 @@ namespace HTMLNameSpace
                     case SequenceMatch.Deletion q:
                         for (int i = 0; i < q.Length; i++)
                         {
-                            var t = match.TemplateSequence[template_pos].Character;
+                            var t = match.Template.Sequence[template_pos].Character;
                             columns.Add((t, '.', ' ', annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                         }
@@ -229,7 +229,7 @@ namespace HTMLNameSpace
                     case SequenceMatch.Insertion t:
                         for (int i = 0; i < t.Length; i++)
                         {
-                            var q = match.QuerySequence[query_pos].Character;
+                            var q = match.Query.Sequence[query_pos].Character;
                             columns.Add(('.', q, q, annotated[query_pos - match.StartQueryPosition]));
                             query_pos++;
                         }
@@ -334,7 +334,7 @@ namespace HTMLNameSpace
                 {
                     if (piece is SequenceMatch.Match ma)
                     {
-                        sequence.AddRange(match.QuerySequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
+                        sequence.AddRange(match.Query.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
                         pos += piece.Length;
                     }
                     else if (piece is SequenceMatch.Deletion)
@@ -343,7 +343,7 @@ namespace HTMLNameSpace
                     }
                     else if (piece is SequenceMatch.Insertion)
                     {
-                        sequence.Add(AminoAcid.ArrayToString(match.QuerySequence.SubArray(match.StartQueryPosition + pos, piece.Length)));
+                        sequence.Add(AminoAcid.ArrayToString(match.Query.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length)));
                         pos += piece.Length;
                     }
                 }
@@ -456,7 +456,7 @@ namespace HTMLNameSpace
                     }
 
                 foreach (var a in ambiguous)
-                    if (a.SupportingReads.Contains(read.MetaData.Identifier))
+                    if (a.SupportingReads.Contains(read.Query.Identifier))
                         classes.Add($"a{a.Position}");
 
                 var classes_string = string.Join(' ', classes);
@@ -465,9 +465,9 @@ namespace HTMLNameSpace
                 // Generate the actual HTMl and Fasta lines
                 html.OpenAndClose(
                     HtmlTag.a,
-                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.MetaData, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
+                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
                     seq);
-                data_buffer.AppendLine($">{read.MetaData.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', total_length - end)}");
+                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', total_length - end)}");
             }
 
             html.Close(HtmlTag.div);
@@ -548,30 +548,30 @@ namespace HTMLNameSpace
             }
 
             html.Open(HtmlTag.div, $"class='alignment-details' id='alignment-details-{match.Index}'");
-            html.OpenAndClose(HtmlTag.h4, "", match.MetaData.Identifier);
+            html.OpenAndClose(HtmlTag.h4, "", match.Query.Identifier);
             html.Open(HtmlTag.table);
             Row("Type", type);
             Row("Score", match.Score.ToString());
-            Row("Total area", match.MetaData.TotalArea.ToString("G4"));
+            Row("Total area", match.Query.TotalArea.ToString("G4"));
             Row("Length on Template", match.LengthOnTemplate.ToString());
             Row("Position on Template", match.StartTemplatePosition.ToString());
             Row($"Start on {type}", match.StartQueryPosition.ToString());
-            Row($"Length of {type}", match.QuerySequence.Length.ToString());
+            Row($"Length of {type}", match.Query.Sequence.Length.ToString());
 
             if (template.ForcedOnSingleTemplate)
             {
                 Row("Unique", match.Unique ? "Yes" : "No");
             }
-            if (match.MetaData is ReadMetaData.Peaks p)
+            if (match.Query is Read.Peaks p)
             {
                 Row("Peaks ALC", p.DeNovoScore.ToString());
             }
-            if (match.MetaData.PositionalScore.Length != 0)
+            if (match.Query.PositionalScore.Length != 0)
             {
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.td, "", doc_title);
                 html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.MetaData.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.Query.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
                 html.Close(HtmlTag.td);
                 html.Close(HtmlTag.tr);
             }

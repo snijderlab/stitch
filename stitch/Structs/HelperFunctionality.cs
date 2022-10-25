@@ -110,23 +110,23 @@ namespace Stitch
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(AminoAcid[] template, AminoAcid[] query, Alphabet alphabet, ReadMetaData.IMetaData metadata = null, int index = 0, int templateIndex = -1)
+        public static SequenceMatch SmithWaterman(Read.IRead template, Read.IRead query, Alphabet alphabet, int index = 0, int templateIndex = -1)
         {
-            int[] score_matrix = new int[(template.Length + 1) * (query.Length + 1)];
-            int[] direction_matrix = new int[(template.Length + 1) * (query.Length + 1)];
-            Span<int> indices_template = template.Length <= 1024 ? stackalloc int[template.Length] : new int[template.Length];
-            Span<int> indices_query = query.Length <= 1024 ? stackalloc int[query.Length] : new int[query.Length];
+            int[] score_matrix = new int[(template.Sequence.Length + 1) * (query.Sequence.Length + 1)];
+            int[] direction_matrix = new int[(template.Sequence.Length + 1) * (query.Sequence.Length + 1)];
+            Span<int> indices_template = template.Sequence.Length <= 1024 ? stackalloc int[template.Sequence.Length] : new int[template.Sequence.Length];
+            Span<int> indices_query = query.Sequence.Length <= 1024 ? stackalloc int[query.Sequence.Length] : new int[query.Sequence.Length];
 
-            int row_size = query.Length + 1;
+            int row_size = query.Sequence.Length + 1;
 
             // Cache the indices as otherwise even dictionary lookups will become costly
-            for (int i = 0; i < template.Length; i++)
+            for (int i = 0; i < template.Sequence.Length; i++)
             {
-                indices_template[i] = alphabet.PositionInScoringMatrix[template[i].Character];
+                indices_template[i] = alphabet.PositionInScoringMatrix[template.Sequence[i].Character];
             }
-            for (int i = 0; i < query.Length; i++)
+            for (int i = 0; i < query.Sequence.Length; i++)
             {
-                indices_query[i] = alphabet.PositionInScoringMatrix[query[i].Character];
+                indices_query[i] = alphabet.PositionInScoringMatrix[query.Sequence[i].Character];
             }
 
             int max_value = 0;
@@ -139,11 +139,11 @@ namespace Stitch
             bool gap;
             char gap_char = Alphabet.GapChar;
 
-            for (tem_pos = 1; tem_pos <= template.Length; tem_pos++)
+            for (tem_pos = 1; tem_pos <= template.Sequence.Length; tem_pos++)
             {
-                for (query_pos = 1; query_pos <= query.Length; query_pos++)
+                for (query_pos = 1; query_pos <= query.Sequence.Length; query_pos++)
                 {
-                    gap = template[tem_pos - 1].Character == gap_char || query[query_pos - 1].Character == gap_char;
+                    gap = template.Sequence[tem_pos - 1].Character == gap_char || query.Sequence[query_pos - 1].Character == gap_char;
 
                     // Calculate the score for the current position
                     if (gap)
@@ -239,7 +239,7 @@ namespace Stitch
         END_OF_CRAWL:
             match_list.Reverse();
 
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, metadata, index, templateIndex);
+            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, index, templateIndex);
             return match;
         }
 

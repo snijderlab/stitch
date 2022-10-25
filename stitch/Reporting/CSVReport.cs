@@ -30,11 +30,11 @@ namespace Stitch
             void AddLine(string group, Template template, SequenceMatch read)
             {
                 var row = new List<string> {
-                    read.MetaData.Identifier,
+                    read.Query.Identifier,
                     template.MetaData.Identifier,
                     template.Name,
                     group,
-                    AminoAcid.ArrayToString(read.QuerySequence),
+                    AminoAcid.ArrayToString(read.Query.Sequence),
                     read.Score.ToString(),
                     read.Unique.ToString(),
                     read.StartTemplatePosition.ToString(),
@@ -42,10 +42,10 @@ namespace Stitch
                     read.LengthOnTemplate.ToString(),
                     HelperFunctionality.CIGAR(read.Alignment)
                     };
-                if (read.MetaData is ReadMetaData.Peaks)
+                if (read.Query is Read.Peaks)
                 {
                     peaks = true;
-                    var meta = (ReadMetaData.Peaks)read.MetaData;
+                    var meta = (Read.Peaks)read.Query;
                     row.AddRange(new List<string>
                         {
                             meta.Fraction,

@@ -22,8 +22,8 @@ namespace Stitch
             public class ActualData
             {
                 /// <summary> The inputs for this run. </summary> 
-                public List<List<ReadMetaData.IMetaData>> Raw = new();
-                public List<ReadMetaData.IMetaData> Cleaned = new();
+                public List<List<Read.IRead>> Raw = new();
+                public List<Read.IRead> Cleaned = new();
             }
 
             public class InputParameters
@@ -67,7 +67,7 @@ namespace Stitch
             public abstract class Parameter
             {
                 /// <summary> The identifier of the file. </summary> 
-                public ReadMetaData.FileIdentifier File = new ReadMetaData.FileIdentifier();
+                public Read.FileIdentifier File = new Read.FileIdentifier();
 
                 public abstract string Display();
             }
@@ -114,8 +114,8 @@ namespace Stitch
             {
                 /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public char Separator = ',';
-                public ReadMetaData.FileIdentifier DeNovoFile = null;
-                public ReadMetaData.FileIdentifier PSMSFile = null;
+                public Read.FileIdentifier DeNovoFile = null;
+                public Read.FileIdentifier PSMSFile = null;
                 public uint Cutoff = 0;
 
                 public override string Display()
@@ -200,7 +200,7 @@ namespace Stitch
             public string Name = null;
 
             /// <summary> The templates of this segment </summary> 
-            public List<ReadMetaData.IMetaData> Templates = new();
+            public List<Read.IRead> Templates = new();
             /// <summary> The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template). </summary> 
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 

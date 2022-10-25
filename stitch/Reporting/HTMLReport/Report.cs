@@ -81,7 +81,7 @@ namespace Stitch
             {
                 HtmlBuilder inner_html;
 
-                ReadMetaData.IMetaData metadata;
+                Read.IRead metadata;
                 switch (aside)
                 {
                     case AsideType.Read:
@@ -129,9 +129,9 @@ namespace Stitch
 
         HtmlBuilder CreateCDROverview(string id, List<Segment> segments)
         {
-            var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+            var cdr1_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
             int total_templates = 0;
             bool found_cdr_region = false;
 
@@ -140,7 +140,7 @@ namespace Stitch
                 var positions = new Dictionary<Annotation, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
-                if (template.MetaData is ReadMetaData.Fasta fasta && fasta != null)
+                if (template.MetaData is Read.Fasta fasta && fasta != null)
                 {
                     foreach (var piece in fasta.AnnotatedSequence)
                     {
@@ -175,7 +175,7 @@ namespace Stitch
                         {
                             if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
                             {
-                                var piece = (read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
+                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
                                 switch (group)
                                 {
                                     case Annotation.CDR1:
@@ -201,7 +201,7 @@ namespace Stitch
                     {
                         if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
                         {
-                            cdr3_reads.Add((read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
+                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
                         }
                     }
                 }

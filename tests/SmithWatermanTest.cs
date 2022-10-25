@@ -23,8 +23,8 @@ namespace StitchTest
         [DataTestMethod]
         public void SingleGap(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(10, r.Score);
@@ -37,8 +37,8 @@ namespace StitchTest
         [DataTestMethod]
         public void TwoGaps(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(8, r.Score);
@@ -51,8 +51,8 @@ namespace StitchTest
         [DataTestMethod]
         public void LongGap_Double(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(9, r.Score);
@@ -65,8 +65,8 @@ namespace StitchTest
         [DataTestMethod]
         public void LongGap_Triple(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(11, r.Score);
@@ -79,8 +79,8 @@ namespace StitchTest
         [DataTestMethod]
         public void Mismatch(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(6, r.Score);
@@ -95,8 +95,8 @@ namespace StitchTest
         [DataTestMethod]
         public void EqualSequences(string x)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(x);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(x, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(x.Length, r.Score);
@@ -109,8 +109,8 @@ namespace StitchTest
         [DataTestMethod]
         public void EqualPart(string x, string y)
         {
-            var a = StringToSequence(x);
-            var b = StringToSequence(y);
+            var a = StringToSequence(x, alp);
+            var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(5, r.Score);
@@ -123,8 +123,8 @@ namespace StitchTest
         {
             //ABBAABBCB ABAACCBBAAB
             //     BBCBDABCACC
-            var a = StringToSequence("ABBAABBCBABAACCBBAAB");
-            var b = StringToSequence("BBCBDABCACC");
+            var a = StringToSequence("ABBAABBCBABAACCBBAAB", alp);
+            var b = StringToSequence("BBCBDABCACC", alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(7, r.Score);
@@ -166,10 +166,10 @@ namespace StitchTest
         public void LongerSequence()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
-            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVSPVYWNSLFLLKGNYKAQMRGRTVNARVLKIGQKTRCMLLLWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
+            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVSPVYWNSLFLLKGNYKAQMRGRTVNARVLKIGQKTRCMLLLWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(361, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -180,10 +180,10 @@ namespace StitchTest
         public void AlreadyAddedGap()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
-            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP.VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
+            var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP.VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
+            var b = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPGLEWIGSIYKSGSTYHNPSLKSRVTISVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(454, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -194,7 +194,7 @@ namespace StitchTest
         public void GFPAlignment()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             Console.WriteLine($"GapChar '{Alphabet.GapChar}'");
             //Uniprot - P42212
             var gfp = "MSKGEELFTGVVPILVELDGDVNGHKFSVSGEGEGDATYGKLTLKFICTTGKLPVPWPTLVTTFSYGVQCFSRYPDHMKQHDFFKSAMPEGYVQERTIFFKDDGNYKTRAEVKFEGDTLVNRIELKGIDFKEDGNILGHKLEYNYNSHNVYIMADKQKNGIKVNFKIRHNIEDGSVQLADHYQQNTPIGDGPVLLPDNHYLSTQSALSKDPNEKRDHMVLLEFVTAAGITHGMDELYK";
@@ -202,9 +202,9 @@ namespace StitchTest
             //var bfp = "MFKGNVQGVGTVENIDKGAKFQSLHGVSLLPIDADLQSHDIIFPEDILEGVTSGELIAINGVRLTVVHTDKSIVRFDINDALELTTLGQLKVGDKVNIEKSFKFGDMTGGRSLSGIVTGVADIVEFIEKENNRQIWIEAPEHLTEFLVEKKYIGVDGVYLVIDAIENNRFCINLLLETDMRWYKKGSKVNIEIPDIAGNW";
             //Uniprot - X5DSL3
             var mCherry = "MVSKGEEDNMAIIKEFMRFKVHMEGSVNGHEFEIEGEGEGRPYEGTQTAKLKVTKGGPLPFAWDILSPQFMYGSKAYVKHPADIPDYLKLSFPEGFKWERVMNFEDGGVVTVTQDSSLQDGEFIYKVKLRGTNFPSDGPVMQKKTMGWEASSERMYPEDGALKGEIKQRLKLKDGGHYDAEVKTTYKAKKPVQLPGAYNVNIKLDITSHNEDYTIVEQYERAEGRHSTGGMDELYK";
-            var a = StringToSequence(gfp, alp);
-            var b = StringToSequence(mCherry, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var a = StringToSequence(gfp, alp2);
+            var b = StringToSequence(mCherry, alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(283, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -215,14 +215,14 @@ namespace StitchTest
         public void IgGAlignment()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //IgG4-K-002
             var igg4 = "QLQLQESGPGLLKPSETLSLTCTVSGGSISSPGYYGGWIRQPPGKGLEWIGSIYKSGSTYHNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCTRPVVRYFGWFDPWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTKTYTCNVDHKPSNTKVDKRVESKYGPPCPPCPAPEFEGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSQEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTYRVVSVLTVLHQDWLNGKEYKCKVSNKGLPSSIEKTISKAKGQPREPQVYTLPPSQEEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPVLDSDGSFFLYSRLTVDKSRWQEGNVFSCSVMHEALHNHYTQKSLSLSLGKAIQLTQSPSSLSASVGDRVTITCRASQGISSALAWYQQKPGKAPKLLIYDASNLESGVPSRFSGSGSGTDFTLTISSLQPEDFATYYCQQFNSYPTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
             //IgG2-K-002
             var igg2 = "QVQLQESGPGLVKPSQTLSLTCTVSGGSISSGEYYWNWIRQHPGKGLEWIGYIYYSGSTYYNPSLKSRVTISVDTSKNQFSLKLSSVTAADTAVYYCARESVAGFDYWGQGTLVTVSSASTKGPSVFPLAPCSRSTSESTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSNFGTQTYTCNVDHKPSNTKVDKTVERKCCVECPPCPAPPVAGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFNWYVDGVEVHNAKTKPREEQFNSTFRVVSVLTVVHQDWLNGKEYKCKVSNKGLPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESNGQPENNYKTTPPMLDSDGSFFLYSKLTVDKSRWQQGNVFSCSVMHEALHNHYTQKSLSLSPGKEIVLTQSPGTLSLSPGERATLSCRASQSVSSSYLAWYQQKPGQAPRLLIYGTSSRATGIPDRFSGSGSGTDFTLTISRLEPEDFAVYYCQQYGSSPITFGQGTRLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
-            var a = StringToSequence(igg2, alp);
-            var b = StringToSequence(igg4, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var a = StringToSequence(igg2, alp2);
+            var b = StringToSequence(igg4, alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(3070, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
@@ -235,12 +235,12 @@ namespace StitchTest
         public void RealWorldFullTemplate()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR.YYYYYGMDVWGQGTTVTVSSASTKGPSVFPLAPCSRSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYTCNVNHKPSNTKVDKRVELKTPLGDTTHTCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFKWYVDGVEVHNAKTKPREEQYNSTFRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESSGQPENNYNTTPPMLDSDGSFFLYSKLTVDKSRWQQGNIFSCSVMHEALHNRFTQKSLSLSPGKDILLTQTPLSLSITPGEPASISCRSSRSLLHSNGNTYLHWLQKPGQPPQCLICKVSNRFSGVPDRFSGSGSGIDFTLKISPVEAADVGVYITACKLHTGPCTFGQGTKLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSNTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
-            var a = StringToSequence(template, alp);
-            var b = StringToSequence(path, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var a = StringToSequence(template, alp2);
+            var b = StringToSequence(path, alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(241, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
@@ -251,35 +251,21 @@ namespace StitchTest
         public void RealWorldIGHV()
         {
             // Shuffled the sequence a bit
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
             var path = "TISRDNSKNTLYLQMNSLRAEDTAVYYCARWGMVRGVIDVFDIWGQGTVVTVSSASTKGPSVF";
-            var a = StringToSequence(template, alp);
-            var b = StringToSequence(path, alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
+            var a = StringToSequence(template, alp2);
+            var b = StringToSequence(path, alp2);
+            var r = HelperFunctionality.SmithWaterman(a, b, alp2);
             Console.WriteLine(r.ToString());
             Assert.AreEqual(147, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
-        AminoAcid[] StringToSequence(string input)
+        Read.IRead StringToSequence(string input, Alphabet alp)
         {
-            AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++)
-            {
-                output[i] = new AminoAcid(alp, input[i]);
-            }
-            return output;
-        }
-        AminoAcid[] StringToSequence(string input, Alphabet alp)
-        {
-            AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++)
-            {
-                output[i] = new AminoAcid(alp, input[i]);
-            }
-            return output;
+            return new Read.Simple(AminoAcid.FromString(input, alp).Unwrap());
         }
     }
 }

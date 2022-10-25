@@ -16,7 +16,7 @@ namespace HTMLNameSpace
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<ReadMetaData.IMetaData> reads, string AssetsFolderName)
+        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<Read.IRead> reads, string AssetsFolderName)
         {
             var html = new HtmlBuilder();
 
@@ -160,7 +160,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder CDRTable(List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
+        public static HtmlBuilder CDRTable(List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
         {
             table_counter++;
             var table_id = $"table-{table_counter}";
@@ -418,8 +418,8 @@ namespace HTMLNameSpace
             var unique_set = new HashSet<string>();
             foreach (var template in templates)
             {
-                set.UnionWith(template.Matches.Select(a => a.MetaData.EscapedIdentifier));
-                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier));
+                set.UnionWith(template.Matches.Select(a => a.Query.EscapedIdentifier));
+                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.Query.EscapedIdentifier));
             }
             var html = new HtmlBuilder();
             html.OpenAndClose(HtmlTag.p, "class='text-header'", $"Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.");

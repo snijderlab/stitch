@@ -165,7 +165,7 @@ namespace Stitch
         public readonly string[] Lines;
 
         [JsonIgnore]
-        public readonly ReadMetaData.FileIdentifier Identifier;
+        public readonly Read.FileIdentifier Identifier;
 
         /// <summary> Creates a new ParsedFile </summary>
         /// <param name="path">The filename (will be resolved to full path)</param>
@@ -174,14 +174,14 @@ namespace Stitch
         /// <param name="content">The original definition of this file, if given in the batchfile or derivatives.</param>
         public ParsedFile(string path, string[] content, string name, InputNameSpace.KeyValue origin)
         {
-            Identifier = new ReadMetaData.FileIdentifier(path, name, origin);
+            Identifier = new Read.FileIdentifier(path, name, origin);
             Lines = content;
         }
 
         /// <summary> Creates a new ParsedFile </summary>
         /// <param name="file"> The identifier for the file. </param>
         /// <param name="content"> The file content, as an array of all lines. </param>
-        public ParsedFile(ReadMetaData.FileIdentifier file, string[] content)
+        public ParsedFile(Read.FileIdentifier file, string[] content)
         {
             Identifier = file;
             Lines = content;
@@ -190,7 +190,7 @@ namespace Stitch
         /// <summary> Creates an empty ParsedFile </summary>
         public ParsedFile()
         {
-            Identifier = new ReadMetaData.FileIdentifier();
+            Identifier = new Read.FileIdentifier();
             Lines = new string[0];
         }
 

@@ -7,17 +7,17 @@ using HtmlGenerator;
 namespace Stitch
 {
     /// <summary> A class to hold all metadata handling in one place. </summary> 
-    public static class ReadMetaData
+    public static class Read
     {
         /// <summary> To save metadata of a read/path of which could be used in calculations to determine the likelihood
         ///  of certain assignments or for quality control or ease of use for humans. </summary>
-        public abstract class IMetaData
+        public abstract class IRead
         {
             /// <summary> The sequence of this read. </summary>
             public AminoAcid[] Sequence { get; set; }
 
             /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
-            public List<(int Offset, int Delete, AminoAcid[] Change, string Reason)> SequenceChanges = new();
+            public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> SequenceChanges = new();
 
             /// <summary> The Identifier of the originating file. </summary> 
             public FileIdentifier File { get => FileRange != null ? FileRange.Value.File.Identifier : new FileIdentifier(); }
@@ -58,7 +58,7 @@ namespace Stitch
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IMetaData(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null)
+            public IRead(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null)
             {
                 Sequence = sequence;
                 nameFilter = filter;
@@ -88,29 +88,52 @@ namespace Stitch
             /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
             public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason)
             {
-                this.SequenceChanges.Add((offset, delete, change, reason));
+                this.SequenceChanges.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
                 this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
+            }
+
+            protected HtmlBuilder RenderChangedSequence()
+            {
+                var html = new HtmlBuilder();
+                if (SequenceChanges.Count == 0) return html;
+                html.OpenAndClose(HtmlTag.h3, "", "Changes to the peptide sequence");
+                var rev = SequenceChanges.ToList();
+                rev.Reverse();
+                foreach (var change in rev)
+                {
+                    html.Open(HtmlTag.p, "class='changed-sequence'");
+                    html.OpenAndClose(HtmlTag.span, "class='seq old'", AminoAcid.ArrayToString(change.Old));
+                    html.Content("→");
+                    html.OpenAndClose(HtmlTag.span, "class='seq new'", AminoAcid.ArrayToString(change.New));
+                    html.OpenAndClose(HtmlTag.span, "class='reason'", change.Reason);
+                    html.OpenAndClose(HtmlTag.span, "class='offset'", $" (Position: {change.Offset + 1})");
+                    html.Close(HtmlTag.p);
+                }
+                return html;
             }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public class Simple : IMetaData
+        public class Simple : IRead
         {
             /// <summary> Create a new Simple MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
-            public Simple(AminoAcid[] sequence, FileRange? file, NameFilter filter, string identifier = "R") : base(sequence, file, identifier, filter) { }
+            public Simple(AminoAcid[] sequence, FileRange? file = null, NameFilter filter = null, string identifier = "R") : base(sequence, file, identifier, filter) { }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
             public override HtmlBuilder ToHTML()
             {
-                return File.ToHTML();
+                var html = new HtmlBuilder();
+                html.Add(this.RenderChangedSequence());
+                html.Add(File.ToHTML());
+                return html;
             }
         }
 
         /// <summary> A class to hold meta information from fasta data. </summary>
-        public class Fasta : IMetaData
+        public class Fasta : IRead
         {
             /// <summary> The identifier from the fasta file. </summary> 
             public readonly string FastaHeader;
@@ -137,13 +160,14 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.p, "", Identifier);
                 html.OpenAndClose(HtmlTag.h3, "", "Fasta header");
                 html.OpenAndClose(HtmlTag.p, "", FastaHeader);
+                html.Add(this.RenderChangedSequence());
                 html.Add(File.ToHTML());
                 return html;
             }
         }
 
         /// <summary> A struct to hold meta information from PEAKS data. </summary>
-        public class Peaks : IMetaData
+        public class Peaks : IRead
         {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
@@ -240,37 +264,37 @@ namespace Stitch
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
             public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, Alphabet alphabet)
             {
-                var result = new ParseResult<Peaks>();
+                var out_either = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
                 char current_decimal_separator = NumberFormatInfo.CurrentInfo.NumberDecimalSeparator.ToCharArray()[0];
 
                 var fields = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parse_file);
 
-                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return result; // Ignore empty lines
+                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
 
                 if (fields.Count < 5)
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
-                    return result;
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
+                    return out_either;
                 }
 
                 // Some helper functions
                 int ConvertToInt(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(result, -1);
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
                 double ConvertToDouble(int pos)
                 {
-                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(result, -1);
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
                 bool CheckFieldExists(int pos)
                 {
                     if (pos > fields.Count - 1)
                     {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(range, "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
+                        out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
                     }
                     return true;
@@ -278,24 +302,24 @@ namespace Stitch
 
                 if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
-                    return result;
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
+                    return out_either;
                 }
                 string original_peptide;
                 AminoAcid[] sequence;
                 if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
                 {
                     original_peptide = fields[pf.peptide].Text;
-                    sequence = AminoAcid.FromString(new string(original_peptide.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray()), alphabet);
+                    sequence = AminoAcid.FromString(new string(original_peptide.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray()), alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]);
                 }
                 else
                 {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a Peptide to use as an identifier"));
-                    return result;
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a Peptide to use as an identifier"));
+                    return out_either;
                 }
 
                 var peaks = new Peaks(sequence, range, fields[pf.scan].Text, filter);
-                result.Value = peaks;
+                out_either.Value = peaks;
                 peaks.Original_tag = original_peptide;
 
                 // Get all the properties of this peptide and save them in the MetaData 
@@ -347,11 +371,11 @@ namespace Stitch
                     {
                         peaks.Local_confidence = fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
                         if (peaks.Local_confidence.Length != peaks.Sequence.Length)
-                            result.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                            out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
                     }
                     catch
                     {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "One of the confidences is not a number"));
+                        out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "One of the confidences is not a number"));
                     }
                 }
 
@@ -368,12 +392,12 @@ namespace Stitch
 
                 peaks.TotalArea = peaks.Area;
 
-                return result;
+                return out_either;
             }
 
-            public ReadMetaData.Peaks Clone()
+            public Read.Peaks Clone()
             {
-                var meta = new ReadMetaData.Peaks((AminoAcid[])this.Sequence.Clone(), this.FileRange, this.Identifier, this.nameFilter);
+                var meta = new Read.Peaks((AminoAcid[])this.Sequence.Clone(), this.FileRange, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Confidence = this.Confidence;
@@ -528,13 +552,14 @@ namespace Stitch
                     html.OpenAndClose(HtmlTag.p, "", Fragmentation_mode);
                 }
 
+                html.Add(this.RenderChangedSequence());
                 html.Add(File.ToHTML());
 
                 return html;
             }
         }
 
-        public class Combined : IMetaData
+        public class Combined : IRead
         {
 
             /// <summary> Returns the positional score for this read, so for every position the confidence.
@@ -576,7 +601,7 @@ namespace Stitch
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 
-            public List<IMetaData> Children = new List<IMetaData>();
+            public List<IRead> Children = new List<IRead>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary> 
             /// <returns>A string containing the MetaData.</returns>
@@ -592,6 +617,7 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "PositionalScore");
                 html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
+                html.Add(this.RenderChangedSequence());
                 foreach (var child in Children)
                 {
                     html.Add(child.ToHTML());
@@ -599,14 +625,14 @@ namespace Stitch
                 return html;
             }
 
-            public Combined(AminoAcid[] sequence, NameFilter filter, List<IMetaData> children) : base(sequence, null, "Combined", filter)
+            public Combined(AminoAcid[] sequence, NameFilter filter, List<IRead> children) : base(sequence, null, "Combined", filter)
             {
                 Children = children;
             }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public abstract class Novor : IMetaData
+        public abstract class Novor : IRead
         {
             /// <summary> The fraction where this peptide was found. </summary> 
             public string Fraction;
@@ -669,6 +695,7 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.p, "", Error.ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Original Sequence");
                 html.OpenAndClose(HtmlTag.p, "", OriginalSequence);
+                html.Add(this.RenderChangedSequence());
                 html.Add(File.ToHTML());
                 return html;
             }

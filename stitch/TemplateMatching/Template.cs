@@ -26,7 +26,7 @@ namespace Stitch
         public readonly AminoAcid[] Sequence;
 
         /// <summary> Metadata for this template </summary>
-        public readonly ReadMetaData.IMetaData MetaData;
+        public readonly Read.IRead MetaData;
 
         /// <summary> The score for this template </summary>
         public int Score
@@ -87,7 +87,7 @@ namespace Stitch
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, ReadMetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
+        public Template(string name, AminoAcid[] seq, Read.IRead meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
         {
             Name = name;
             Sequence = seq;
@@ -107,10 +107,10 @@ namespace Stitch
         {
             lock (Matches)
             {
-                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length) && !match.AllGap())
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.Query.Sequence.Length) && !match.AllGap())
                 {
                     score += match.Score;
-                    TotalArea += match.MetaData.TotalArea;
+                    TotalArea += match.Query.TotalArea;
                     Matches.Add(match);
 
                     if (unique)
@@ -118,7 +118,7 @@ namespace Stitch
                         this.ForcedOnSingleTemplate = true;
                         match.Unique = true;
                         uniqueScore += match.Score;
-                        TotalUniqueArea += match.MetaData.TotalArea;
+                        TotalUniqueArea += match.Query.TotalArea;
                         UniqueMatches++;
                     }
                 }
@@ -227,7 +227,7 @@ namespace Stitch
 
                     if (piece is SequenceMatch.Match m)
                     {
-                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
+                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.Query.Sequence.Length; i++)
                         {
                             var contigid = match.Index;
                             // Add this ID to the list
@@ -235,7 +235,7 @@ namespace Stitch
                                            || (i < m.Length - 1) // Not the last AA
                                            || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
+                            output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.Query.PositionalScore.Length > 0 ? match.Query.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
@@ -247,12 +247,12 @@ namespace Stitch
                     {
                         // Try to add this sequence or update the count
                         gap = true;
-                        int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
+                        int len = Math.Min(gc.Length, match.Query.Sequence.Length - seq_pos - 1);
 
-                        IGap sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos, len));
+                        IGap sub_seq = new Gap(match.Query.Sequence.SubArray(seq_pos, len));
                         double[] cov = new double[len];
-                        if (match.MetaData.PositionalScore.Length >= seq_pos + len)
-                            cov = match.MetaData.PositionalScore.SubArray(seq_pos, len);
+                        if (match.Query.PositionalScore.Length >= seq_pos + len)
+                            cov = match.Query.PositionalScore.SubArray(seq_pos, len);
 
                         var contigid = match.Index;
 
@@ -304,7 +304,7 @@ namespace Stitch
                         if (option.SequencePosition == -1) // If there is a deletion in the placed read in respect to the template
                             aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
                         else
-                            aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
+                            aa = Matches[option.MatchIndex].Query.Sequence[option.SequencePosition - 1];
 
                         if (position.AminoAcids.ContainsKey(aa))
                             position.AminoAcids[aa] += option.CoverageDepth;
@@ -445,10 +445,11 @@ namespace Stitch
         /// <returns>The sequence match containing the result</returns>
         public SequenceMatch AlignConsensusWithTemplate()
         {
+            var consensus = new Read.Simple(this.ConsensusSequence().Item1.ToArray());
             if (Recombination != null)
-                return HelperFunctionality.SmithWaterman(this.Recombination.SelectMany(a => a.Sequence).ToArray(), this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+                return HelperFunctionality.SmithWaterman(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet);
             else
-                return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+                return HelperFunctionality.SmithWaterman(this.MetaData, consensus, Parent.Alphabet);
         }
 
         /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>
@@ -474,7 +475,7 @@ namespace Stitch
             }
             else
             {
-                if (this.MetaData is ReadMetaData.Fasta meta)
+                if (this.MetaData is Read.Fasta meta)
                     if (meta.AnnotatedSequence != null)
                         annotated = meta.AnnotatedSequence;
             }
@@ -573,9 +574,9 @@ namespace Stitch
                         reverse_path.Add(this_aa.Value);
                         for (int j = 0; j < reverse_path.Count - 1; j++)
                         {
-                            ambiguous[i + reverse_path.Count - 1 - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.MetaData.Intensity, peptide.MetaData.Identifier, reverse_path.Skip(j + 1).ToArray());
+                            ambiguous[i + reverse_path.Count - 1 - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.Query.Intensity, peptide.Query.Identifier, reverse_path.Skip(j + 1).ToArray());
                         }
-                        ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
+                        ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.Query.Intensity, peptide.Query.Identifier, path.ToArray());
                     }
                 }
             }
@@ -595,17 +596,11 @@ namespace Stitch
 
         public void FixCommonMassSpecErrors()
         {
-            var n = 0;
-            if (this.Recombination != null)
-                n = 10;
             var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
             foreach (var match in this.Matches)
             {
                 int pos = match.StartTemplatePosition;
                 int q_pos = match.StartQueryPosition;
-
-                if (match.QuerySequence[0].Character == 'D' && match.QuerySequence[1].Character == 'L' && pos == 0)
-                    n = 20;
 
                 foreach (var piece in match.Alignment)
                 {
@@ -614,11 +609,11 @@ namespace Stitch
                         for (int offset = 0; offset < piece.Length; offset++)
                         {
                             var skip = 0;
-                            if (this.Sequence[pos + offset] != match.QuerySequence[q_pos + offset])
+                            if (this.Sequence[pos + offset] != match.Query.Sequence[q_pos + offset])
                             {
                                 for (int size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); size > 0; size--)
                                 {
-                                    var key = match.QuerySequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
+                                    var key = match.Query.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
                                     if (equal_mass.ContainsKey(key))
                                     {
                                         var set = equal_mass[key];
@@ -626,10 +621,7 @@ namespace Stitch
                                         if (set.Contains(template_key))
                                         {
                                             // Force template
-                                            for (int i = 0; i < size; i++)
-                                            {
-                                                match.QuerySequence[q_pos + offset + i] = this.Sequence[pos + offset + i];
-                                            }
+                                            match.Query.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
                                             skip = size;
                                             break; // Goes to next position
                                         }
@@ -653,7 +645,6 @@ namespace Stitch
                     }
                 }
             }
-            Console.Write(n);
         }
     }
 

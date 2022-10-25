@@ -26,7 +26,7 @@ namespace StitchTest
                 try
                 {
                     Console.WriteLine(file);
-                    OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(file, "", null), new Regex("(.*)"), alp);
+                    OpenReads.Fasta(namefilter, new Read.FileIdentifier(file, "", null), new Regex("(.*)"), alp);
                 }
                 catch (Exception e)
                 {
@@ -43,8 +43,8 @@ namespace StitchTest
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var file = Globals.Root + @"templates/Homo_sapiens_IGHV.fasta";
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new ReadMetaData.FileIdentifier(file, "", null), new Regex("(.*)"), alp).Unwrap();
-            var meta = (ReadMetaData.Fasta)reads[0];
+            var reads = OpenReads.Fasta(namefilter, new Read.FileIdentifier(file, "", null), new Regex("(.*)"), alp).Unwrap();
+            var meta = (Read.Fasta)reads[0];
             Assert.AreEqual("IGHV1-2", meta.Identifier);
             foreach (var part in meta.AnnotatedSequence)
             {

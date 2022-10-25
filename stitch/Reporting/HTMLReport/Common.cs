@@ -29,7 +29,7 @@ namespace HTMLNameSpace
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <param name="human_visible">Determines if the returned id should be escaped for use as a file (false) or displayed as original for human viewing (true).</param>
         /// <returns>A ready for use identifier.</returns>
-        public static string GetAsideIdentifier(ReadMetaData.IMetaData metadata, bool human_visible = false)
+        public static string GetAsideIdentifier(Read.IRead metadata, bool human_visible = false)
         {
             if (human_visible) return metadata.Identifier;
             else return metadata.EscapedIdentifier;
@@ -38,7 +38,7 @@ namespace HTMLNameSpace
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <returns>A ready for use identifier.</returns>
-        public static string GetAsideLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
+        public static string GetAsideLink(Read.IRead metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
         {
             string class_name = GetAsideName(type);
             target = String.IsNullOrEmpty(target) ? "" : "#" + target;
@@ -48,7 +48,7 @@ namespace HTMLNameSpace
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <returns>A ready for use identifier.</returns>
-        public static HtmlBuilder GetAsideLinkHtml(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
+        public static HtmlBuilder GetAsideLinkHtml(Read.IRead metadata, AsideType type, string AssetsFolderName, List<string> location = null, string target = "")
         {
             string class_name = GetAsideName(type);
             target = String.IsNullOrEmpty(target) ? "" : "#" + target;
@@ -60,7 +60,7 @@ namespace HTMLNameSpace
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
         /// <returns>The link that can be used as href attribute in a link.</returns>
-        public static string GetAsideRawLink(ReadMetaData.IMetaData metadata, AsideType type, string AssetsFolderName, List<string> location = null)
+        public static string GetAsideRawLink(Read.IRead metadata, AsideType type, string AssetsFolderName, List<string> location = null)
         {
             if (location == null) location = new List<string>();
             string id = GetAsideIdentifier(metadata);

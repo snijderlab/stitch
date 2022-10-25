@@ -8,7 +8,7 @@ namespace Stitch
 {
     /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can
     /// be used in an efficient way. </summary>
-    public struct AminoAcid : IComparable
+    public struct AminoAcid : IComparable, IEquatable<AminoAcid>
     {
         /// <summary> The code (index of the char in the alphabet array of the parent).
         /// The only way to change it is in the creator. </summary>
@@ -17,17 +17,34 @@ namespace Stitch
 
         [JsonIgnore]
         /// <summary> The alphabet used. </summary>
-        public Alphabet alphabet;
+        public Alphabet Alphabet;
 
-        public uint Index { get => (uint)alphabet.GetIndexInAlphabet(Character); }
+        public uint Index { get => (uint)Alphabet.GetIndexInAlphabet(Character); }
 
         /// <summary> The creator of AminoAcids. </summary>
-        /// <param name="alphabetInput"> The alphabet used. </param>
+        /// <param name="alphabet"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
-        public AminoAcid(Alphabet alphabetInput, char input)
+        public AminoAcid(Alphabet alphabet, char input)
         {
-            alphabet = alphabetInput;
+            Alphabet = alphabet;
             Character = input;
+        }
+
+        /// <summary> Create a new aminoacid while creating nice error messages if this was not possible. </summary>
+        /// <param name="alphabet"> The alphabet to use. </param>
+        /// <param name="input"> The amino acid as a char. </param>
+        /// <param name="position"> If possible the location where this amino acids was defined to create nicer error messages. </param>
+        /// <param name="fallback_context"> If possible a fallback to the above position to use if the position could not be given. </param>
+        /// <returns> The aminoacid or an error message. </returns>
+        public static ParseResult<AminoAcid> TryCreate(Alphabet alphabet, char input, FileRange? position = null, string fallback_context = null)
+        {
+            if (alphabet.GetIndexInAlphabet(input) == -1)
+                if (position is FileRange fr)
+                    return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fr, "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
+                else
+                    return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fallback_context ?? input.ToString(), "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
+            else
+                return new ParseResult<AminoAcid>(new AminoAcid(alphabet, input));
         }
 
         /// <summary> Will create a string of this AminoAcid. Consisting of the character used to
@@ -51,14 +68,21 @@ namespace Stitch
             return builder.ToString();
         }
 
-        public static AminoAcid[] FromString(string input, Alphabet alp)
+        /// <summary> Create an array of aminoacids from the given string. </summary>
+        /// <param name="input"> The string to parse. </param>
+        /// <param name="alphabet"> The alphabet to use. </param>
+        /// <param name="position"> If possible the position where this sequence was defined to provide nicer error messages. </param>
+        /// <returns> The array or a nice error message. </returns>
+        public static ParseResult<AminoAcid[]> FromString(string input, Alphabet alphabet, FileRange? position = null)
         {
+            var outEither = new ParseResult<AminoAcid[]>();
             AminoAcid[] output = new AminoAcid[input.Length];
+            outEither.Value = output;
             for (int i = 0; i < input.Length; i++)
             {
-                output[i] = new AminoAcid(alp, input[i]);
+                output[i] = TryCreate(alphabet, input[i], position, input).UnwrapOrDefault(outEither, new AminoAcid(alphabet, Stitch.Alphabet.GapChar));
             }
-            return output;
+            return outEither;
         }
 
         /// <summary> Implement sorting for aminoacids, sort on alphabetical order of the used characters. </summary>
@@ -70,11 +94,19 @@ namespace Stitch
         }
 
         /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
-        /// <param name="obj"> The object to check equality with. </param>
+        /// <param name="other"> The object to check equality with. </param>
         /// <returns> Returns true when the Amino Acids are equal. </returns>
         public override bool Equals(object obj)
         {
-            return obj is AminoAcid aa && this.Character == aa.Character;
+            return obj is AminoAcid aa && this.Equals(aa);
+        }
+
+        /// <summary> To check for equality of the AminoAcids. Will return false if the object is not an AminoAcid. </summary>
+        /// <param name="other"> The object to check equality with. </param>
+        /// <returns> Returns true when the Amino Acids are equal. </returns>
+        public bool Equals(AminoAcid other)
+        {
+            return this.Character == other.Character;
         }
 
         public static bool operator ==(AminoAcid a, object obj) { return a.Equals(obj); }
@@ -121,7 +153,7 @@ namespace Stitch
         }
 
         /// <summary> Calculates homology between this and another AminoAcid, using the given alphabet.
-        /// See <see cref="alphabet"/>. </summary>
+        /// See <see cref="Alphabet"/>. </summary>
         /// <remarks> Depending on which rules are put into the scoring matrix the order in which this
         /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to
         /// <c>b.Homology(a)</c>. </remarks>
@@ -131,7 +163,7 @@ namespace Stitch
         {
             try
             {
-                return (otherAlphabet ?? alphabet).ScoringMatrix[alphabet.PositionInScoringMatrix[this.Character], alphabet.PositionInScoringMatrix[right.Character]];
+                return (otherAlphabet ?? Alphabet).ScoringMatrix[Alphabet.PositionInScoringMatrix[this.Character], Alphabet.PositionInScoringMatrix[right.Character]];
             }
             catch
             {

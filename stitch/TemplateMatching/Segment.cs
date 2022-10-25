@@ -25,7 +25,7 @@ namespace Stitch
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<ReadMetaData.IMetaData> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
+        public Segment(List<Read.IRead> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute)
         {
             Name = name;
             Index = index;
@@ -42,7 +42,7 @@ namespace Stitch
 
             try
             {
-                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.Sequence)).ToList(), Alphabet);
+                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList(), Alphabet);
             }
             catch (Exception e)
             {
@@ -77,7 +77,7 @@ namespace Stitch
         }
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<ReadMetaData.IMetaData> sequences)
+        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<Read.IRead> sequences)
         {
             var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++)
@@ -85,7 +85,7 @@ namespace Stitch
                 var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count);
                 for (int i = 0; i < Templates.Count; i++)
                 {
-                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].Sequence, sequences[j].Sequence, Alphabet, sequences[j], j, i)));
+                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].MetaData, sequences[j], Alphabet, j, i)));
                 }
                 output.Add(row);
             }

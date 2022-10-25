@@ -253,11 +253,11 @@ namespace Stitch
                                 {
                                     case "denovo path":
                                         if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.DeNovoFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.DeNovoFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "psms path":
                                         if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.PSMSFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.PSMSFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -369,7 +369,7 @@ namespace Stitch
                                 {
                                     if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
-                                    var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
+                                    var fileId = new Read.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
 
                                     if (file.EndsWith(".fasta"))
                                         output.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
@@ -455,7 +455,7 @@ namespace Stitch
                             {
                                 if (segment.Name == "segment")
                                 {
-                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, false).UnwrapOrDefault(outEither, new());
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
 
                                     // Check to see if the name is valid
                                     if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
@@ -469,7 +469,7 @@ namespace Stitch
                                     var children = new List<SegmentValue>();
                                     foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new()))
                                     {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).UnwrapOrDefault(outEither, new());
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
 
                                         // Check to see if the name is valid
                                         if (children.Select(db => db.Name).Contains(segment_value.Name))
@@ -882,7 +882,7 @@ namespace Stitch
             /// <summary> Parses a Template </summary> 
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, bool extended)
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, AlphabetParameter backup_alphabet, bool extended)
             {
                 // Parse files one by one
                 var file_path = "";
@@ -968,10 +968,10 @@ namespace Stitch
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
+                var fileId = new Read.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<ReadMetaData.IMetaData>>();
-                var alphabet = new Alphabet(tsettings.Alphabet);
+                var folder_reads = new ParseResult<List<Read.IRead>>();
+                var alphabet = new Alphabet(tsettings.Alphabet ?? backup_alphabet);
 
                 if (file_path.EndsWith(".fasta"))
                     folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier, alphabet);
@@ -1282,7 +1282,7 @@ namespace Stitch
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetAllText(ReadMetaData.FileIdentifier file)
+            public static ParseResult<string> GetAllText(Read.FileIdentifier file)
             {
                 if (file.Origin != null) return GetAllText(file.Origin);
                 else return GetAllText(file.Path);

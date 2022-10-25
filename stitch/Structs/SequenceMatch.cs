@@ -20,14 +20,11 @@ namespace Stitch
         /// <summary> The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>. </summary>
         public readonly List<MatchPiece> Alignment;
 
-        /// <summary> The sequence of the template </summary>
-        public AminoAcid[] TemplateSequence;
+        /// <summary> The query to align. </summary>
+        public Read.IRead Query;
 
-        /// <summary> The sequence of the query </summary>
-        public AminoAcid[] QuerySequence;
-
-        /// <summary> If provided the path that is aligned. </summary>
-        public ReadMetaData.IMetaData MetaData;
+        /// <summary> The template to align. </summary>
+        public Read.IRead Template;
 
         /// <summary> The total amount of (mis)matching aminoacids in the alignment </summary>
         public readonly int TotalMatches;
@@ -41,15 +38,14 @@ namespace Stitch
         public readonly int TemplateIndex;
         public bool Unique;
 
-        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, AminoAcid[] templateSequence, AminoAcid[] querySequence, ReadMetaData.IMetaData metadata, int index, int templateIndex = -1)
+        public SequenceMatch(int startTemplatePosition, int startQueryPosition, int score, List<MatchPiece> alignment, Read.IRead template, Read.IRead query, int index, int templateIndex = -1)
         {
             StartTemplatePosition = startTemplatePosition;
             StartQueryPosition = startQueryPosition;
             Score = score;
             Alignment = alignment;
-            TemplateSequence = templateSequence;
-            QuerySequence = querySequence;
-            MetaData = metadata;
+            Template = template;
+            Query = query;
             Index = index;
             TemplateIndex = templateIndex;
             Simplify();
@@ -80,8 +76,8 @@ namespace Stitch
             buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tMatch: {Alignment.CIGAR()}\n\n");
             int tem_pos = StartTemplatePosition;
             int query_pos = StartQueryPosition;
-            string tSeq = AminoAcid.ArrayToString(TemplateSequence);
-            string qSeq = AminoAcid.ArrayToString(QuerySequence);
+            string tSeq = AminoAcid.ArrayToString(Template.Sequence);
+            string qSeq = AminoAcid.ArrayToString(Query.Sequence);
 
             if (tem_pos != 0 || query_pos != 0)
             {
@@ -156,7 +152,7 @@ namespace Stitch
                 switch (element)
                 {
                     case Match match:
-                        if (!TemplateSequence.SubArray(tem_pos, match.Length).All(a => a.Character == 'X')) return false;
+                        if (!Template.Sequence.SubArray(tem_pos, match.Length).All(a => a.Character == 'X')) return false;
                         tem_pos += match.Length;
                         query_pos += match.Length;
                         break;
@@ -212,8 +208,8 @@ namespace Stitch
                     if (pos < startTemplatePosition + lengthOnTemplate && pos + piece.Length > startTemplatePosition)
                     {
                         int dif = pos < startTemplatePosition ? startTemplatePosition - pos : 0; // Skip all AA before the interesting sequence
-                        int length = Math.Min(Math.Min(Math.Min(startTemplatePosition + lengthOnTemplate - pos, lengthOnTemplate), this.QuerySequence.Length - q_pos - dif), piece.Length - dif);
-                        buf.Append(AminoAcid.ArrayToString(this.QuerySequence.SubArray(q_pos + dif, length)));
+                        int length = Math.Min(Math.Min(Math.Min(startTemplatePosition + lengthOnTemplate - pos, lengthOnTemplate), this.Query.Sequence.Length - q_pos - dif), piece.Length - dif);
+                        buf.Append(AminoAcid.ArrayToString(this.Query.Sequence.SubArray(q_pos + dif, length)));
                     }
 
                     pos += piece.Length;
@@ -233,7 +229,7 @@ namespace Stitch
                 {
                     if (pos < startTemplatePosition + lengthOnTemplate && pos > startTemplatePosition)
                     {
-                        buf.Append(AminoAcid.ArrayToString(this.QuerySequence.SubArray(q_pos, piece.Length)));
+                        buf.Append(AminoAcid.ArrayToString(this.Query.Sequence.SubArray(q_pos, piece.Length)));
                     }
 
                     q_pos += piece.Length;
@@ -263,7 +259,7 @@ namespace Stitch
                 {
                     for (int i = 0; i < ma.Length; i++)
                     {
-                        if (TemplateSequence[pos + i] == QuerySequence[q_pos + i])
+                        if (Template.Sequence[pos + i] == Query.Sequence[q_pos + i])
                             output.Matches += 1;
                         else
                             output.MisMatches += 1;
@@ -304,12 +300,12 @@ namespace Stitch
                 {
                     pos += piece.Length;
                     q_pos += piece.Length;
-                    if (pos > templatePosition) return this.QuerySequence[q_pos - (pos - templatePosition)];
+                    if (pos > templatePosition) return this.Query.Sequence[q_pos - (pos - templatePosition)];
                 }
                 else if (piece is SequenceMatch.Deletion)
                 {
                     pos += piece.Length;
-                    if (pos > templatePosition) return this.QuerySequence[q_pos];
+                    if (pos > templatePosition) return this.Query.Sequence[q_pos];
                 }
                 else if (piece is SequenceMatch.Insertion)
                 {

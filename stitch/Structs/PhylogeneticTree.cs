@@ -12,12 +12,12 @@ namespace Stitch
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, AminoAcid[] Sequence)> Sequences, Alphabet alphabet, bool addOutGroup = true)
+        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, Alphabet alphabet, bool addOutGroup = true)
         {
             if (addOutGroup)
             {
-                var avg = Sequences.Select(e => e.Sequence.Length).Average();
-                Sequences.Add(("OutGroup", HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg))));
+                var avg = Sequences.Select(e => e.MetaData.Sequence.Length).Average();
+                Sequences.Add(("OutGroup", new Read.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));
             }
             var length = Sequences.Count;
             var distance = new double[length, length];
@@ -25,7 +25,7 @@ namespace Stitch
             // Get all the scores in the matrix
             distance.IndexMap((i, j) =>
             {
-                var scores = HelperFunctionality.SmithWaterman(Sequences[i].Sequence, Sequences[j].Sequence, alphabet).GetDetailedScores();
+                var scores = HelperFunctionality.SmithWaterman(Sequences[i].MetaData, Sequences[j].MetaData, alphabet).GetDetailedScores();
                 return scores.MisMatches + (scores.GapInQuery + scores.GapInTemplate) * 12;
             });
 
@@ -164,7 +164,7 @@ namespace Stitch
                         (left, right) => (left.Item1.Union(right.Item1).ToList(), ""),
                         (index, _) => (new List<int> { index }, branch.Value)));
 
-                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.MetaData.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().MetaData.TotalArea)).ToList();
+                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.Query.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().Query.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all 

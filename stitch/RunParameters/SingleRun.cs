@@ -20,7 +20,7 @@ namespace Stitch
             public readonly int MaxNumberOfCPUCores;
 
             /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary> 
-            public List<ReadMetaData.IMetaData> Input;
+            public List<Read.IRead> Input;
 
             /// <summary> The alphabet used in this run. </summary> 
             public AlphabetParameter Alphabet;
@@ -42,7 +42,7 @@ namespace Stitch
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<ReadMetaData.IMetaData> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
+            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
             {
                 Runname = runname;
                 Input = input;
@@ -163,7 +163,9 @@ namespace Stitch
                     // Give the scoring result for each result
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates))
                     {
-                        var match = HelperFunctionality.SmithWaterman(AminoAcid.FromString(expected, result.Parent.Alphabet), result.ConsensusSequence().Item1.ToArray(), result.Parent.Alphabet);
+                        var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
+                        var query = new Read.Simple(result.ConsensusSequence().Item1.ToArray());
+                        var match = HelperFunctionality.SmithWaterman(template, query, result.Parent.Alphabet);
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
@@ -406,7 +408,7 @@ namespace Stitch
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new ReadMetaData.Simple(s.ToArray(), null, name_filter, $"REC-{parent.Index}-{i + 1}"),
+                            new Read.Simple(s.ToArray(), null, name_filter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

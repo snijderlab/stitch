@@ -16,14 +16,14 @@ namespace StitchTest
     {
         Alphabet alp;
 
-        HTMLReport_Test()
+        public HTMLReport_Test()
         {
             alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
         }
 
-        ReadMetaData.IMetaData Read(string sequence)
+        Read.IRead Read(string sequence)
         {
-            return (ReadMetaData.IMetaData)new ReadMetaData.Simple(AminoAcid.FromString(sequence, alp), null, new NameFilter());
+            return (Read.IRead)new Read.Simple(AminoAcid.FromString(sequence, alp).Unwrap(), null, new NameFilter());
         }
 
         [TestMethod]
@@ -31,14 +31,14 @@ namespace StitchTest
         {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadMetaData.IMetaData> { Read("EVQLVESGGGLVQPGGSLRL") },
+                new List<Read.IRead> { Read("EVQLVESGGGLVQPGGSLRL") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("EVQLVESGGGLVQPGGSLRL") });
+            var matches = segment.Match(new List<Read.IRead> { Read("EVQLVESGGGLVQPGGSLRL") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -51,14 +51,14 @@ namespace StitchTest
         {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadMetaData.IMetaData> { Read("EVQLVESGGG") },
+                new List<Read.IRead> { Read("EVQLVESGGG") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("EVQLV"), Read("ESGGG"), Read("EVQ"), Read("LVES"), Read("GGG") });
+            var matches = segment.Match(new List<Read.IRead> { Read("EVQLV"), Read("ESGGG"), Read("EVQ"), Read("LVES"), Read("GGG") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -71,14 +71,14 @@ namespace StitchTest
         {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadMetaData.IMetaData> { Read("E") },
+                new List<Read.IRead> { Read("E") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadMetaData.IMetaData> { Read("E") });
+            var matches = segment.Match(new List<Read.IRead> { Read("E") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -91,7 +91,7 @@ namespace StitchTest
         {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadMetaData.IMetaData> { Read("") },
+                new List<Read.IRead> { Read("") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
