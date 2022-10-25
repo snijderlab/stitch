@@ -9,48 +9,48 @@ namespace Stitch
 {
     public static class MassSpecErrors
     {
-        public const int MaxLength = 2;
+        readonly static string[] Preset = new string[]{
+            "I,L",
+            "N,GG",
+            "Q,AG",
+            "AV,GL,GI",
+            "AN,QG,AGG",
+            "LS,TV",
+            "AM,CV",
+            "NV,AAA,GGV",
+            "NT,QS,AGS,GGT",
+            "NC,CGG",
+            "NL,NI,QV,AGV,GGL,GGI",
+            "DL,DI,EV",
+            "QT,AAS,AGT",
+            "AY,FS",
+            "QL,QI,AAV,AGL,AGI",
+            "NQ,ANG,QGG,AGGG",
+            "NK,GGK",
+            "NE,DQ,ADG,EGG",
+            "DK,AAT,GSV",
+            "NM,AAC,GGM",
+            "ASS,GST",
+            "AS,GT",
+            "AAL,AAI,GVV",
+            "QQ,AAN,AQG",
+            "EQ,AAD,AEG",
+            "EK,ASV,GLS,GIS,GTV",
+            "QM,AGM,CGV",
+            "AAQ,NGV,AAAG,GGGV"};
+
+        public const int MaxLength = 4;
         public static Dictionary<AminoAcidSet, HashSet<AminoAcidSet>> EqualMasses(Alphabet alphabet)
         {
             var output = new Dictionary<AminoAcidSet, HashSet<AminoAcidSet>>();
 
-            for (int size = 1; size <= MaxLength; size++)
+            var combinations = Preset.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap())));
+
+            foreach (var group in combinations)
             {
-                // Create all AA combinations within MaxLength options
-                // https://rosettacode.org/wiki/Cartesian_product_of_two_or_more_lists#C.23
-                IEnumerable<IEnumerable<(AminoAcid, double)>> empty = new[] { Enumerable.Empty<(AminoAcid, double)>() };
-                double LookupAA(char a)
+                foreach (var element in group)
                 {
-                    if (!HeckLib.chemistry.AminoAcid.Exists(a)) return -1;
-                    return Math.Round(HeckLib.chemistry.AminoAcid.Get(a).MonoIsotopicWeight, 4);
-                }
-
-                var all_amino_acids = alphabet.PositionInScoringMatrix.Keys.Select(a => (new AminoAcid(alphabet, a), LookupAA(a))).Where(a => a.Item2 != -1);
-
-                var combinations = Enumerable.Repeat(all_amino_acids, size).Aggregate(
-                    empty,
-                    (accumulator, sequence) =>
-                    from acc in accumulator
-                    from item in sequence
-                    select acc.Concat(new[] { item })).Select(c =>
-                {
-                    return (c.Select(a => a.Item1).Sort(), c.Select(a => a.Item2).Sum());
-                }
-                    ).GroupBy(a => a.Item2);
-
-                foreach (var group in combinations)
-                {
-                    var unique = group.Unique((a, b) => AminoAcid.ArrayEquals(a.Item1, b.Item1));
-
-                    if (unique.Count() > 1)
-                        foreach (var element in unique)
-                        {
-                            var key = new AminoAcidSet(element.Item1);
-                            var set = unique.Where(e => !AminoAcid.ArrayEquals(e.Item1, element.Item1)).Select(e => new AminoAcidSet(e.Item1)).ToHashSet();
-                            var set_str = string.Join(", ", set.Select(e => e.Value));
-                            Console.WriteLine($"{AminoAcid.ArrayToString(element.Item1)} {key} -> ({set_str})");
-                            output.Add(key, set);
-                        }
+                    output.Add(element, group.Where(e => e != element).ToHashSet());
                 }
             }
 
@@ -87,7 +87,7 @@ namespace Stitch
             if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more then 10 elements.");
             for (int i = 0; i < set.Length; i++)
             {
-                var element = set[i].Index << (i * width);
+                uint element = (set[i].Index + 1u) << (i * width);
                 Value = Value | element;
             }
         }
@@ -127,7 +127,7 @@ namespace Stitch
             string output = "";
             for (int i = 0; i < 10; i++)
             {
-                var index = (this.Value >> (i * width)) & ((1 >> width) - 1);
+                var index = (this.Value >> (i * width)) & ((1 << width) - 1);
                 output += ' ';
                 output += index.ToString();
             }
