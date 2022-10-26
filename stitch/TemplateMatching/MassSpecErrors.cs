@@ -15,28 +15,26 @@ namespace Stitch
             "Q,AG",
             "AV,GL,GI",
             "AN,QG,AGG",
-            "LS,TV",
+            "LS,IS,TV",
             "AM,CV",
             "NV,AAA,GGV",
             "NT,QS,AGS,GGT",
-            "NC,CGG",
-            "NL,NI,QV,AGV,GGL,GGI",
+            "LN,IN,QV,AGV,GGL,GGI",
             "DL,DI,EV",
             "QT,AAS,AGT",
             "AY,FS",
-            "QL,QI,AAV,AGL,AGI",
+            "LQ,IQ,AAV,AGL,AGI",
             "NQ,ANG,QGG,AGGG",
-            "NK,GGK",
-            "NE,DQ,ADG,EGG",
+            "KN,GGK",
+            "EN,DQ,ADG,EGG",
             "DK,AAT,GSV",
-            "NM,AAC,GGM",
-            "ASS,GST",
+            "MN,AAC,GGM",
             "AS,GT",
             "AAL,AAI,GVV",
             "QQ,AAN,AQG",
             "EQ,AAD,AEG",
             "EK,ASV,GLS,GIS,GTV",
-            "QM,AGM,CGV",
+            "MQ,AGM,CGV",
             "AAQ,NGV,AAAG,GGGV"};
 
         public const int MaxLength = 4;
@@ -87,7 +85,8 @@ namespace Stitch
             if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more then 10 elements.");
             for (int i = 0; i < set.Length; i++)
             {
-                uint element = (set[i].Index + 1u) << (i * width);
+                uint index = set[i].Alphabet.GetIndexInAlphabet(set[i].Character) < 0 ? 0 : (uint)set[i].Alphabet.GetIndexInAlphabet(set[i].Character) + 1u;
+                uint element = index << (i * width);
                 Value = Value | element;
             }
         }

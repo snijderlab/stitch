@@ -19,8 +19,6 @@ namespace Stitch
         /// <summary> The alphabet used. </summary>
         public Alphabet Alphabet;
 
-        public uint Index { get => (uint)Alphabet.GetIndexInAlphabet(Character); }
-
         /// <summary> The creator of AminoAcids. </summary>
         /// <param name="alphabet"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
