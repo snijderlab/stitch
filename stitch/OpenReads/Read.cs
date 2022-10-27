@@ -435,16 +435,13 @@ namespace Stitch
                 // Create a display of the sequence with local confidence and modifications (if present)
                 if (Original_tag != null && Local_confidence != null)
                 {
-                    html.OpenAndClose(HtmlTag.h3, "", $"Original sequence (length={Original_tag.Length})");
+                    html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                     int original_offset = 0;
 
                     for (int i = 0; i < this.Sequence.Length; i++)
                     {
-                        html.Open(HtmlTag.div);
-                        html.Open(HtmlTag.div, "class='coverage-depth-wrapper'");
-                        html.OpenAndClose(HtmlTag.span, $"class='coverage-depth-bar' style='--value:{Local_confidence[i]}'", "");
-                        html.Close(HtmlTag.div);
+                        html.Open(HtmlTag.div, $"style='--value:{Local_confidence[i]}'");
                         html.OpenAndClose(HtmlTag.p, "", this.Sequence[i].ToString());
 
                         if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
@@ -612,10 +609,9 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.h3, "", "Number of combined reads");
                 html.OpenAndClose(HtmlTag.p, "", Children.Count().ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Intensity");
-                html.OpenAndClose(HtmlTag.p, "", Intensity.ToString());
+                html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
                 html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G4"));
-                html.OpenAndClose(HtmlTag.h3, "", "PositionalScore");
                 html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
                 html.Add(this.RenderChangedSequence());
                 foreach (var child in Children)

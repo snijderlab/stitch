@@ -103,19 +103,15 @@ namespace HTMLNameSpace
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                     if (set.Value >= 0)
                     {
-                        html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
-                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                        html.Close(HtmlTag.span);
+                        html.OpenAndClose(HtmlTag.span, $"class='b{Class}' style='height:{set.Value / max:P2}'");
                         html.OpenAndClose(HtmlTag.span, "class='empty'");
-                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                        html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
                     }
                     else
                     {
                         html.OpenAndClose(HtmlTag.span, "class='empty'");
-                        html.Open(HtmlTag.span, $"class='bar negative' style='height:{set.Value / min:P2}'");
-                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                        html.Close(HtmlTag.span);
-                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                        html.OpenAndClose(HtmlTag.span, $"class='b negative' style='height:{set.Value / min:P2}'");
+                        html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
                     }
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
@@ -137,10 +133,8 @@ namespace HTMLNameSpace
                 {
                     var set = data[i];
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                    html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
-                    html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                    html.Close(HtmlTag.span);
-                    html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                    html.OpenAndClose(HtmlTag.span, $"class='b{Class}' style='height:{set.Value / max:P2}'");
+                    html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
 
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }

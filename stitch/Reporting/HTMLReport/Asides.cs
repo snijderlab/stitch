@@ -19,10 +19,8 @@ namespace HTMLNameSpace
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
             html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
-            html.OpenAndClose(HtmlTag.h2, "", "Sequence");
+            html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Length})");
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence));
-            html.OpenAndClose(HtmlTag.h2, "", "Sequence Length");
-            html.OpenAndClose(HtmlTag.p, "", MetaData.Sequence.Length.ToString());
 
             if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier))
             {
@@ -467,7 +465,7 @@ namespace HTMLNameSpace
                     HtmlTag.a,
                     $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
                     seq);
-                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', total_length - end)}");
+                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
             }
 
             html.Close(HtmlTag.div);
