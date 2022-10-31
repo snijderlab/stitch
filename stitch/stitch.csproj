@@ -6,14 +6,13 @@
     <CodeAnalysisRuleSet>StandardRuleset.ruleset</CodeAnalysisRuleSet>
     <PublishSingleFile>true</PublishSingleFile>
     <PublishTrimmed>true</PublishTrimmed>
-    <Optimize>true</Optimize>
     <Version>1.3.0</Version>
   </PropertyGroup>
 
   <ItemGroup>
       <PackageReference Include="hecklib.core" Version="2.5.*" />
       <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.*" />
-      <PackageReference Include="hecklib.html_generator" Version="0.0.10" />
+      <PackageReference Include="hecklib.html_generator" Version="0.0.11" />
   </ItemGroup>
   
   <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
