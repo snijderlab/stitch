@@ -20,7 +20,7 @@ namespace HTMLNameSpace
         {
             var html = new HtmlBuilder();
 
-            html.Add(TableHeader("reads", reads.Select(a => (double)a.Sequence.Length)));
+            html.Add(TableHeader("reads", reads.Select(a => (double)a.Sequence.Sequence.Length)));
             html.Open(HtmlTag.table, "id='reads-table' class='wide-table'");
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 0, \"string\")' class='small-cell'", "Identifier");
@@ -35,8 +35,8 @@ namespace HTMLNameSpace
                 id = GetAsideIdentifier(reads[i]);
                 html.Open(HtmlTag.tr, $"id='reads-{id}'");
                 html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i], AsideType.Read, AssetsFolderName));
-                html.OpenAndClose(HtmlTag.td, "class='seq'", AminoAcid.ArrayToString(reads[i].Sequence));
-                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Sequence.Length.ToString());
+                html.OpenAndClose(HtmlTag.td, "class='seq'", AminoAcid.ArrayToString(reads[i].Sequence.Sequence));
+                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Sequence.Sequence.Length.ToString());
                 html.Close(HtmlTag.tr);
             }
 

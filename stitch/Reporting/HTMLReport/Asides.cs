@@ -19,8 +19,8 @@ namespace HTMLNameSpace
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
             html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
-            html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Length})");
-            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence));
+            html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Sequence.Length})");
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence.Sequence));
 
             if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier))
             {
@@ -209,8 +209,8 @@ namespace HTMLNameSpace
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++)
                         {
-                            var t = match.Template.Sequence[template_pos].Character;
-                            var q = match.Query.Sequence[query_pos].Character;
+                            var t = match.Template.Sequence.Sequence[template_pos].Character;
+                            var q = match.QuerySequence.Sequence[query_pos].Character;
                             columns.Add((t, q, t == q ? ' ' : q, annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                             query_pos++;
@@ -219,7 +219,7 @@ namespace HTMLNameSpace
                     case SequenceMatch.Deletion q:
                         for (int i = 0; i < q.Length; i++)
                         {
-                            var t = match.Template.Sequence[template_pos].Character;
+                            var t = match.Template.Sequence.Sequence[template_pos].Character;
                             columns.Add((t, '.', ' ', annotated[query_pos - match.StartQueryPosition]));
                             template_pos++;
                         }
@@ -227,7 +227,7 @@ namespace HTMLNameSpace
                     case SequenceMatch.Insertion t:
                         for (int i = 0; i < t.Length; i++)
                         {
-                            var q = match.Query.Sequence[query_pos].Character;
+                            var q = match.QuerySequence.Sequence[query_pos].Character;
                             columns.Add(('.', q, q, annotated[query_pos - match.StartQueryPosition]));
                             query_pos++;
                         }
@@ -332,7 +332,7 @@ namespace HTMLNameSpace
                 {
                     if (piece is SequenceMatch.Match ma)
                     {
-                        sequence.AddRange(match.Query.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
+                        sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
                         pos += piece.Length;
                     }
                     else if (piece is SequenceMatch.Deletion)
@@ -341,7 +341,7 @@ namespace HTMLNameSpace
                     }
                     else if (piece is SequenceMatch.Insertion)
                     {
-                        sequence.Add(AminoAcid.ArrayToString(match.Query.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length)));
+                        sequence.Add(AminoAcid.ArrayToString(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length)));
                         pos += piece.Length;
                     }
                 }
@@ -554,7 +554,7 @@ namespace HTMLNameSpace
             Row("Length on Template", match.LengthOnTemplate.ToString());
             Row("Position on Template", match.StartTemplatePosition.ToString());
             Row($"Start on {type}", match.StartQueryPosition.ToString());
-            Row($"Length of {type}", match.Query.Sequence.Length.ToString());
+            Row($"Length of {type}", match.QuerySequence.Sequence.Length.ToString());
 
             if (template.ForcedOnSingleTemplate)
             {

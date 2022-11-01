@@ -122,11 +122,11 @@ namespace Stitch
             // Cache the indices as otherwise even dictionary lookups will become costly
             for (int i = 0; i < template.Sequence.Length; i++)
             {
-                indices_template[i] = alphabet.PositionInScoringMatrix[template.Sequence[i].Character];
+                indices_template[i] = alphabet.PositionInScoringMatrix[template.Sequence.Sequence[i].Character];
             }
             for (int i = 0; i < query.Sequence.Length; i++)
             {
-                indices_query[i] = alphabet.PositionInScoringMatrix[query.Sequence[i].Character];
+                indices_query[i] = alphabet.PositionInScoringMatrix[query.Sequence.Sequence[i].Character];
             }
 
             int max_value = 0;
@@ -143,7 +143,7 @@ namespace Stitch
             {
                 for (query_pos = 1; query_pos <= query.Sequence.Length; query_pos++)
                 {
-                    gap = template.Sequence[tem_pos - 1].Character == gap_char || query.Sequence[query_pos - 1].Character == gap_char;
+                    gap = template.Sequence.Sequence[tem_pos - 1].Character == gap_char || query.Sequence.Sequence[query_pos - 1].Character == gap_char;
 
                     // Calculate the score for the current position
                     if (gap)

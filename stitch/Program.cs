@@ -218,20 +218,20 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     // Join all isoforms
                     if (id_dict.ContainsKey(read.Identifier))
                     {
-                        id_dict[read.Identifier] = (id_dict[read.Identifier].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence));
+                        id_dict[read.Identifier] = (id_dict[read.Identifier].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
                     }
                     else
                     {
                         // Join all equal sequences
-                        if (sequence_dict.ContainsKey(AminoAcid.ArrayToString(read.Sequence)))
+                        if (sequence_dict.ContainsKey(AminoAcid.ArrayToString(read.Sequence.Sequence)))
                         {
-                            var deduplicated_id = sequence_dict[AminoAcid.ArrayToString(read.Sequence)];
-                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence));
+                            var deduplicated_id = sequence_dict[AminoAcid.ArrayToString(read.Sequence.Sequence)];
+                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
                         }
                         else
                         {
-                            id_dict[read.Identifier] = (long_id, AminoAcid.ArrayToString(read.Sequence));
-                            sequence_dict[AminoAcid.ArrayToString(read.Sequence)] = read.Identifier;
+                            id_dict[read.Identifier] = (long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
+                            sequence_dict[AminoAcid.ArrayToString(read.Sequence.Sequence)] = read.Identifier;
                         }
                     }
                 }

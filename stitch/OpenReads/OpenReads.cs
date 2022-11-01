@@ -259,7 +259,7 @@ namespace Stitch
             }
 
             ((Read.Fasta)metaData).AnnotatedSequence = annotated;
-            metaData.Sequence = AminoAcid.FromString(sequence, alphabet).UnwrapOrDefault(out_either, new AminoAcid[0]);
+            metaData.Sequence = new LocalSequence(AminoAcid.FromString(sequence, alphabet).UnwrapOrDefault(out_either, new AminoAcid[0]));
             out_either.Value = metaData;
             return out_either;
         }
@@ -329,11 +329,11 @@ namespace Stitch
 
                                     for (int j = start_pos; j < i; j++)
                                     {
-                                        chunk[j - start_pos] = meta.Sequence[j].Character;
+                                        chunk[j - start_pos] = meta.Sequence.Sequence[j].Character;
                                     }
 
                                     var clone = meta.Clone();
-                                    clone.Sequence = AminoAcid.FromString(new string(chunk), alphabet, meta.FileRange).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                                    clone.Sequence = new LocalSequence(AminoAcid.FromString(new string(chunk), alphabet, meta.FileRange).UnwrapOrDefault(out_either, new AminoAcid[0]));
                                     reads.Add(clone);
                                 }
                             }
@@ -532,26 +532,26 @@ namespace Stitch
             {
                 foreach (var read in set)
                 {
-                    if (filtered.ContainsKey(AminoAcid.ArrayToString(read.Sequence)))
+                    if (filtered.ContainsKey(AminoAcid.ArrayToString(read.Sequence.Sequence)))
                     {
-                        if (filtered[AminoAcid.ArrayToString(read.Sequence)] is Read.Combined c)
+                        if (filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)] is Read.Combined c)
                         {
                             c.Children.Add(read);
                         }
                         else
                         {
-                            filtered[AminoAcid.ArrayToString(read.Sequence)] = new Read.Combined(read.Sequence, filter, new List<Read.IRead> { filtered[AminoAcid.ArrayToString(read.Sequence)], read });
+                            filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)] = new Read.Combined(read.Sequence.Sequence, filter, new List<Read.IRead> { filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)], read });
                         }
                     }
                     else
                     {
-                        for (int i = 0; i < read.Sequence.Length; i++)
+                        for (int i = 0; i < read.Sequence.Sequence.Length; i++)
                         {
-                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence[i].Character))
+                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence.Sequence[i].Character))
                                 out_either.AddMessage(new InputNameSpace.ErrorMessage(read.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
                         }
 
-                        filtered.Add(AminoAcid.ArrayToString(read.Sequence), read);
+                        filtered.Add(AminoAcid.ArrayToString(read.Sequence.Sequence), read);
                     }
                 }
             }

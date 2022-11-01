@@ -37,7 +37,7 @@ namespace Stitch
             for (int i = 0; i < sequences.Count; i++)
             {
                 var meta = sequences[i];
-                Templates.Add(new Template(name, meta.Sequence, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
+                Templates.Add(new Template(name, meta.Sequence.Sequence, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
 
             try

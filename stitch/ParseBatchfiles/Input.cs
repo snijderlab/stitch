@@ -254,13 +254,13 @@ namespace Stitch
                             var read = db.Templates[i];
                             if (db.GapTail)
                             {
-                                read.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapTail");
+                                read.Sequence.UpdateSequence(read.Sequence.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapTail");
                                 if (read is Read.Fasta meta)
                                     meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXXXXXXXXXXXX");
                             }
                             if (db.GapHead)
                             {
-                                read.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapHead");
+                                read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapHead");
                                 if (read is Read.Fasta meta)
                                     meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
                             }

@@ -34,7 +34,7 @@ namespace Stitch
                     template.MetaData.Identifier,
                     template.Name,
                     group,
-                    AminoAcid.ArrayToString(read.Query.Sequence),
+                    AminoAcid.ArrayToString(read.QuerySequence.Sequence),
                     read.Score.ToString(),
                     read.Unique.ToString(),
                     read.StartTemplatePosition.ToString(),

@@ -107,7 +107,7 @@ namespace Stitch
         {
             lock (Matches)
             {
-                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.Query.Sequence.Length) && !match.AllGap())
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Sequence.Length) && !match.AllGap())
                 {
                     score += match.Score;
                     TotalArea += match.Query.TotalArea;
@@ -227,7 +227,7 @@ namespace Stitch
 
                     if (piece is SequenceMatch.Match m)
                     {
-                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.Query.Sequence.Length; i++)
+                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Sequence.Length; i++)
                         {
                             var contigid = match.Index;
                             // Add this ID to the list
@@ -247,9 +247,9 @@ namespace Stitch
                     {
                         // Try to add this sequence or update the count
                         gap = true;
-                        int len = Math.Min(gc.Length, match.Query.Sequence.Length - seq_pos - 1);
+                        int len = Math.Min(gc.Length, match.QuerySequence.Sequence.Length - seq_pos - 1);
 
-                        IGap sub_seq = new Gap(match.Query.Sequence.SubArray(seq_pos, len));
+                        IGap sub_seq = new Gap(match.QuerySequence.Sequence.SubArray(seq_pos, len));
                         double[] cov = new double[len];
                         if (match.Query.PositionalScore.Length >= seq_pos + len)
                             cov = match.Query.PositionalScore.SubArray(seq_pos, len);
@@ -304,7 +304,7 @@ namespace Stitch
                         if (option.SequencePosition == -1) // If there is a deletion in the placed read in respect to the template
                             aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
                         else
-                            aa = Matches[option.MatchIndex].Query.Sequence[option.SequencePosition - 1];
+                            aa = Matches[option.MatchIndex].QuerySequence.Sequence[option.SequencePosition - 1];
 
                         if (position.AminoAcids.ContainsKey(aa))
                             position.AminoAcids[aa] += option.CoverageDepth;
@@ -609,11 +609,11 @@ namespace Stitch
                         for (int offset = 0; offset < piece.Length; offset++)
                         {
                             var skip = 0;
-                            if (this.Sequence[pos + offset] != match.Query.Sequence[q_pos + offset])
+                            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset])
                             {
                                 for (int size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); size > 0; size--)
                                 {
-                                    var key = match.Query.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
+                                    var key = match.QuerySequence.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
                                     if (equal_mass.ContainsKey(key))
                                     {
                                         var set = equal_mass[key];
@@ -621,7 +621,7 @@ namespace Stitch
                                         if (set.Contains(template_key))
                                         {
                                             // Force template
-                                            match.Query.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
+                                            match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
                                             skip = size;
                                             break; // Goes to next position
                                         }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Globalization;
 using HtmlGenerator;
+using System.Text.Json.Serialization;
 
 namespace Stitch
 {
@@ -14,10 +15,11 @@ namespace Stitch
         public abstract class IRead
         {
             /// <summary> The sequence of this read. </summary>
-            public AminoAcid[] Sequence { get; set; }
+            public LocalSequence Sequence { get; set; }
 
+            [JsonIgnore]
             /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
-            public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> SequenceChanges = new();
+            public List<(IRead Template, LocalSequence Sequence)> SequenceChanges = new();
 
             /// <summary> The Identifier of the originating file. </summary> 
             public FileIdentifier File { get => FileRange != null ? FileRange.Value.File.Identifier : new FileIdentifier(); }
@@ -60,7 +62,7 @@ namespace Stitch
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             public IRead(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null)
             {
-                Sequence = sequence;
+                Sequence = sequence == null ? new LocalSequence(new AminoAcid[0]) : new LocalSequence(sequence);
                 nameFilter = filter;
                 FileRange = file;
                 Identifier = id;
@@ -81,33 +83,15 @@ namespace Stitch
                 }
             }
 
-            /// <summary> Update the sequence. </summary>
-            /// <param name="offset"> The start of the change. </param>
-            /// <param name="delete"> The number of aminoacids to remove (use the same number as the changed amino acids to do a direct modification). </param>
-            /// <param name="change"> The new aminoacids to introduce. </param>
-            /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
-            public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason)
-            {
-                this.SequenceChanges.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
-                this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
-            }
-
             protected HtmlBuilder RenderChangedSequence()
             {
                 var html = new HtmlBuilder();
                 if (SequenceChanges.Count == 0) return html;
-                html.OpenAndClose(HtmlTag.h3, "", "Changes to the peptide sequence");
-                var rev = SequenceChanges.ToList();
-                rev.Reverse();
-                foreach (var change in rev)
+                foreach (var set in SequenceChanges)
                 {
-                    html.Open(HtmlTag.p, "class='changed-sequence'");
-                    html.OpenAndClose(HtmlTag.span, "class='seq old'", AminoAcid.ArrayToString(change.Old));
-                    html.Content("→");
-                    html.OpenAndClose(HtmlTag.span, "class='seq new'", AminoAcid.ArrayToString(change.New));
-                    html.OpenAndClose(HtmlTag.span, "class='reason'", change.Reason);
-                    html.OpenAndClose(HtmlTag.span, "class='offset'", $" (Position: {change.Offset + 1})");
-                    html.Close(HtmlTag.p);
+                    if (set.Sequence.SequenceChanges.Count == 0) continue;
+                    html.OpenAndClose(HtmlTag.h2, "", "Changed in context of: " + set.Template.Identifier);
+                    html.Add(set.Sequence.RenderChangedSequence());
                 }
                 return html;
             }
@@ -370,7 +354,7 @@ namespace Stitch
                     try
                     {
                         peaks.Local_confidence = fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                        if (peaks.Local_confidence.Length != peaks.Sequence.Length)
+                        if (peaks.Local_confidence.Length != peaks.Sequence.Sequence.Length)
                             out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
                     }
                     catch
@@ -397,7 +381,7 @@ namespace Stitch
 
             public Read.Peaks Clone()
             {
-                var meta = new Read.Peaks((AminoAcid[])this.Sequence.Clone(), this.FileRange, this.Identifier, this.nameFilter);
+                var meta = new Read.Peaks(this.Sequence.Sequence, this.FileRange, this.Identifier, this.nameFilter);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Confidence = this.Confidence;
@@ -439,10 +423,10 @@ namespace Stitch
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                     int original_offset = 0;
 
-                    for (int i = 0; i < this.Sequence.Length; i++)
+                    for (int i = 0; i < this.Sequence.Sequence.Length; i++)
                     {
                         html.Open(HtmlTag.div, $"style='--value:{Local_confidence[i]}'");
-                        html.OpenAndClose(HtmlTag.p, "", this.Sequence[i].ToString());
+                        html.OpenAndClose(HtmlTag.p, "", this.Sequence.Sequence[i].ToString());
 
                         if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
                         {
