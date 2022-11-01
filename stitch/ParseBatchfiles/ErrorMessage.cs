@@ -5,12 +5,9 @@ using System.Reflection;
 using System.IO;
 using System.Linq;
 
-namespace Stitch
-{
-    namespace InputNameSpace
-    {
-        public class ErrorMessage
-        {
+namespace Stitch {
+    namespace InputNameSpace {
+        public class ErrorMessage {
             readonly Position? start_position;
             readonly Position? end_position;
             readonly ParsedFile File;
@@ -20,8 +17,7 @@ namespace Stitch
             readonly string subject = "";
             readonly uint contextLines = 0;
             public bool Warning { get; private set; }
-            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
-            {
+            public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 subject = sub;
                 shortDescription = shortD;
                 longDescription = longD;
@@ -30,8 +26,7 @@ namespace Stitch
                 File = new ParsedFile();
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
-            {
+            public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 shortDescription = shortD;
                 longDescription = longD;
                 helpDescription = help;
@@ -39,8 +34,7 @@ namespace Stitch
                 File = file;
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
-            {
+            public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 start_position = pos;
                 shortDescription = shortD;
                 longDescription = longD;
@@ -49,8 +43,7 @@ namespace Stitch
                 File = pos.File;
                 this.contextLines = contextLines;
             }
-            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2)
-            {
+            public ErrorMessage(FileRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 start_position = range.Start;
                 end_position = range.End;
                 shortDescription = shortD;
@@ -60,41 +53,30 @@ namespace Stitch
                 File = range.File;
                 this.contextLines = contextLines;
             }
-            public static ErrorMessage DuplicateValue(FileRange range)
-            {
+            public static ErrorMessage DuplicateValue(FileRange range) {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;
             }
-            public static ErrorMessage MissingParameter(FileRange range, string parameter)
-            {
+            public static ErrorMessage MissingParameter(FileRange range, string parameter) {
                 return new ErrorMessage(range, $"Missing parameter: {parameter}", "", "", false);
             }
-            public static ErrorMessage UnknownKey(FileRange range, string context, string options)
-            {
+            public static ErrorMessage UnknownKey(FileRange range, string context, string options) {
                 return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", true);
             }
-            public override string ToString()
-            {
+            public override string ToString() {
                 // Header
                 var name = Warning ? "Warning" : "Error";
                 var header = $">> {name}: {shortDescription}\n";
 
                 // Location
                 string location;
-                if (!string.IsNullOrEmpty(subject))
-                {
+                if (!string.IsNullOrEmpty(subject)) {
                     location = $"\n   | {subject}\n\n";
-                }
-                else if (string.IsNullOrEmpty(File.Identifier.Path))
-                {
+                } else if (string.IsNullOrEmpty(File.Identifier.Path)) {
                     location = "";
-                }
-                else if (!start_position.HasValue)
-                {
+                } else if (!start_position.HasValue) {
                     location = $"File: {File.Identifier.Path}\n";
-                }
-                else if (!end_position.HasValue)
-                {
+                } else if (!end_position.HasValue) {
                     var line_number = (start_position.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -103,9 +85,7 @@ namespace Stitch
                     var context1 = start_position.Value.Line > 1 ? $"{start}{File.Lines[start_position.Value.Line - 1]}\n" : "";
                     var context2 = start_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[start_position.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Identifier.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
-                }
-                else if (start_position.Value.Line == end_position.Value.Line)
-                {
+                } else if (start_position.Value.Line == end_position.Value.Line) {
                     var line_number = (start_position.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -114,9 +94,7 @@ namespace Stitch
                     var context1 = start_position.Value.Line > 1 ? $"{start}{File.Lines[start_position.Value.Line - 1]}\n" : "";
                     var context2 = end_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[end_position.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Identifier.Path}\n\n{context1}{line_number} | {line}\n{start}{pos}\n{context2}\n";
-                }
-                else
-                {
+                } else {
                     var line_number = (end_position.Value.Line + 1).ToString();
                     var spacing = new string(' ', line_number.Length + 1);
                     var start = $"{spacing}| ";
@@ -124,8 +102,7 @@ namespace Stitch
                     var context2 = end_position.Value.Line < File.Lines.Length - 1 ? $"{start}{File.Lines[end_position.Value.Line + 1]}\n" : "";
                     location = $"File: {File.Identifier.Path}\n\n{context1}";
 
-                    for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++)
-                    {
+                    for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++) {
                         var line = File.Lines[i];
                         var number = (i + 1).ToString().PadRight(line_number.Length + 1);
                         location += $"{number}| {line}\n";
@@ -140,8 +117,7 @@ namespace Stitch
 
                 return header + location + body;
             }
-            public void Print()
-            {
+            public void Print() {
                 var defaultColour = Console.ForegroundColor;
 
                 // Header
@@ -158,27 +134,23 @@ namespace Stitch
                     Console.Write("\n   │ ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
-                }
-                else if (string.IsNullOrEmpty(File.Identifier.Path)) // No location
-                {
-                }
-                else if (!start_position.HasValue) // Only a file
-                {
+                } else if (string.IsNullOrEmpty(File.Identifier.Path)) // No location
+                  {
+                } else if (!start_position.HasValue) // Only a file
+                  {
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  --> ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"{File.Identifier.Path}\n");
-                }
-                else // A location in a file
-                {
+                } else // A location in a file
+                  {
                     var endline = !end_position.HasValue ? start_position.Value.Line : end_position.Value.Line;
                     var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (start_position.Value.Line + 1).ToString().Length;
                     var line_number = (start_position.Value.Line + 1).ToString().PadRight(number_width + 1, ' ');
                     var spacing = new string(' ', number_width + 3);
                     var line = File.Lines[start_position.Value.Line];
 
-                    void print_line(int line_index)
-                    {
+                    void print_line(int line_index) {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write((line_index + 1).ToString().PadRight(number_width + 1, ' '));
                         Console.Write("│ ");
@@ -187,8 +159,7 @@ namespace Stitch
                         Console.Write("\n");
                     }
 
-                    void print_empty(bool newline, char border = '│')
-                    {
+                    void print_empty(bool newline, char border = '│') {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write(new string(' ', number_width + 1));
                         Console.Write(border);
@@ -214,20 +185,17 @@ namespace Stitch
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
-                    }
-                    else if (start_position.Value.Line == end_position.Value.Line) // Single line
-                    {
+                    } else if (start_position.Value.Line == end_position.Value.Line) // Single line
+                      {
                         var pos = new string(' ', Math.Max(0, start_position.Value.Column)) + new string('─', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
                         print_line(start_position.Value.Line);
                         print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
-                    }
-                    else // Multiline
-                    {
-                        for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++)
-                        {
+                    } else // Multiline
+                      {
+                        for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++) {
                             line = File.Lines[i];
                             var number = (i + 1).ToString().PadRight(number_width + 1, ' ');
                             Console.Write($"{number}│ {line}\n");
@@ -239,15 +207,13 @@ namespace Stitch
                 }
 
                 // Body
-                if (!string.IsNullOrEmpty(longDescription))
-                {
+                if (!string.IsNullOrEmpty(longDescription)) {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write("note");
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(": " + longDescription);
                 }
-                if (!string.IsNullOrEmpty(helpDescription))
-                {
+                if (!string.IsNullOrEmpty(helpDescription)) {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("help");
                     Console.ForegroundColor = defaultColour;
@@ -258,8 +224,7 @@ namespace Stitch
 
             /// <summary> Print an exception in a nice way. </summary> 
             /// <param name="e">The exception</param>
-            public static void PrintException(Exception e)
-            {
+            public static void PrintException(Exception e) {
                 ProgressBar.Off = true;
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -269,21 +234,18 @@ namespace Stitch
                 Console.WriteLine(" --> Stacktrace:");
                 Console.ForegroundColor = defaultColour;
 
-                foreach (var l in e.StackTrace.Split(" at "))
-                {
+                foreach (var l in e.StackTrace.Split(" at ")) {
                     var line = l.Trim();
                     if (String.IsNullOrWhiteSpace(line)) continue;
                     // Regex to match stacktrace lines. path.<name>?function[generic]?(arguments) in path\name:line number
                     var full_pieces = Regex.Match(line, @"^\s*(.+\.)((?:<.+>)?)([_\w\d]+)((?:\[.+\])?)\((.*)\)(?: in (.+\\)([^\\]+):line (.+))?\s*$");
-                    if (full_pieces.Success)
-                    {
+                    if (full_pieces.Success) {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
                         Console.ForegroundColor = defaultColour;
                         Console.Write(full_pieces.Groups[1]);
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
-                        if (full_pieces.Groups[2].Length > 0)
-                        {
+                        if (full_pieces.Groups[2].Length > 0) {
                             Console.Write("<");
                             Console.ForegroundColor = ConsoleColor.Yellow;
                             Console.Write(full_pieces.Groups[2].Value.Substring(1, full_pieces.Groups[2].Length - 2));
@@ -300,8 +262,7 @@ namespace Stitch
                         Console.Write(full_pieces.Groups[5]);
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                         Console.Write(")");
-                        if (full_pieces.Groups[6].Length > 0)
-                        {
+                        if (full_pieces.Groups[6].Length > 0) {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Write(" in ");
                             var path_pieces = full_pieces.Groups[6].Value.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).ToList();
@@ -317,9 +278,7 @@ namespace Stitch
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Write(full_pieces.Groups[8]);
                         }
-                    }
-                    else
-                    {
+                    } else {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
                         Console.ForegroundColor = defaultColour;

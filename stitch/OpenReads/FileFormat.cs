@@ -1,13 +1,10 @@
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> To contain definitions for file formats. </summary> 
-    public class FileFormat
-    {
+    public class FileFormat {
         /// <summary> To contain the positions of a piece of information in the CSV export file. 
         /// The position signifies the column in the CSV file and a value of -1 signifies 
         /// that that piece of information is not included in this particular format. </summary>
-        public class Peaks
-        {
+        public class Peaks {
             public int fraction = -1;
             public int source_file = -1;
             public int feature = -1;
@@ -32,10 +29,8 @@ namespace Stitch
 
             /// <summary> An older version of a PEAKS export. </summary> 
             /// <returns>The file format.</returns>
-            public static FileFormat.Peaks OldFormat()
-            {
-                return new FileFormat.Peaks
-                {
+            public static FileFormat.Peaks OldFormat() {
+                return new FileFormat.Peaks {
                     scan = 0,
                     peptide = 1,
                     tag_length = 2,
@@ -57,10 +52,8 @@ namespace Stitch
 
             /// <summary> Version X of PEAKS export. (made for build 31 january 2019) </summary> 
             /// <returns>The file format.</returns>
-            public static FileFormat.Peaks PeaksX()
-            {
-                return new FileFormat.Peaks
-                {
+            public static FileFormat.Peaks PeaksX() {
+                return new FileFormat.Peaks {
                     fraction = 0,
                     source_file = 1,
                     feature = 2,
@@ -85,10 +78,8 @@ namespace Stitch
 
             /// <summary> Version X+ of PEAKS export. (made for build 20 november 2019) </summary> 
             /// <returns>The file format.</returns>
-            public static FileFormat.Peaks PeaksXPlus()
-            {
-                return new FileFormat.Peaks
-                {
+            public static FileFormat.Peaks PeaksXPlus() {
+                return new FileFormat.Peaks {
                     fraction = 0,
                     source_file = 1,
                     feature = 2,
@@ -115,10 +106,8 @@ namespace Stitch
 
             /// <summary> A custom version of a PEAKS file format. </summary> 
             /// <returns>The file format.</returns>
-            public static FileFormat.Peaks CustomFormat(int fraction, int sourceFile, int feature, int scan, int peptide, int tagLength, int deNovoScore, int alc, int length, int mz, int z, int rt, int predictedRT, int area, int mass, int ppm, int ptm, int localConfidence, int tag, int mode)
-            {
-                return new FileFormat.Peaks
-                {
+            public static FileFormat.Peaks CustomFormat(int fraction, int sourceFile, int feature, int scan, int peptide, int tagLength, int deNovoScore, int alc, int length, int mz, int z, int rt, int predictedRT, int area, int mass, int ppm, int ptm, int localConfidence, int tag, int mode) {
+                return new FileFormat.Peaks {
                     fraction = fraction,
                     source_file = sourceFile,
                     feature = feature,

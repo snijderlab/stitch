@@ -9,26 +9,21 @@ using System.Collections.Generic;
 using Stitch;
 using Stitch.RunParameters;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class HTMLReport_Test
-    {
+    public class HTMLReport_Test {
         Alphabet alp;
 
-        public HTMLReport_Test()
-        {
+        public HTMLReport_Test() {
             alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
         }
 
-        Read.IRead Read(string sequence)
-        {
+        Read.IRead Read(string sequence) {
             return (Read.IRead)new Read.Simple(AminoAcid.FromString(sequence, alp).Unwrap(), null, new NameFilter());
         }
 
         [TestMethod]
-        public void SingleMatchTemplateAlignment()
-        {
+        public void SingleMatchTemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<Read.IRead> { Read("EVQLVESGGGLVQPGGSLRL") },
@@ -47,8 +42,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void MultiMatchTemplateAlignment()
-        {
+        public void MultiMatchTemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<Read.IRead> { Read("EVQLVESGGG") },
@@ -67,8 +61,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void SingleAATemplateAlignment()
-        {
+        public void SingleAATemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<Read.IRead> { Read("E") },
@@ -87,8 +80,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void NoAATemplateAlignment()
-        {
+        public void NoAATemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
                 new List<Read.IRead> { Read("") },
@@ -103,8 +95,7 @@ namespace StitchTest
             CompareDOC(doc, doc_expected);
         }
 
-        void CompareDOC(List<double> actual, List<double> expected)
-        {
+        void CompareDOC(List<double> actual, List<double> expected) {
             Assert.IsNotNull(actual);
             Assert.IsNotNull(expected);
             Assert.AreEqual(actual.Count, expected.Count);
@@ -118,11 +109,9 @@ namespace StitchTest
                 Assert.AreEqual(actual[index], expected[index]);
         }
 
-        AminoAcid[] StringToSequence(string input, Alphabet alp)
-        {
+        AminoAcid[] StringToSequence(string input, Alphabet alp) {
             AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++)
-            {
+            for (int i = 0; i < input.Length; i++) {
                 output[i] = new AminoAcid(alp, input[i]);
             }
             return output;

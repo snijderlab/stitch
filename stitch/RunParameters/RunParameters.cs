@@ -3,13 +3,10 @@ using System.Collections.Generic;
 using System.Text;
 using System.Text.RegularExpressions;
 
-namespace Stitch
-{
-    namespace RunParameters
-    {
+namespace Stitch {
+    namespace RunParameters {
         /// <summary> To contain parameters for the input of data. </summary>
-        public class InputData
-        {
+        public class InputData {
             /// <summary> To contain overrules of the global input parameters </summary> 
             public InputLocalParameters LocalParameters = null;
 
@@ -19,23 +16,19 @@ namespace Stitch
             /// <summary> To contain the input data itself </summary> 
             public ActualData Data = new ActualData();
 
-            public class ActualData
-            {
+            public class ActualData {
                 /// <summary> The inputs for this run. </summary> 
                 public List<List<Read.IRead>> Raw = new();
                 public List<Read.IRead> Cleaned = new();
             }
 
-            public class InputParameters
-            {
+            public class InputParameters {
                 public List<RunParameters.InputData.Parameter> Files = new List<Parameter>();
 
-                public string Display()
-                {
+                public string Display() {
                     var buf = new StringBuilder();
                     buf.AppendLine("InputParameters ->");
-                    foreach (var file in Files)
-                    {
+                    foreach (var file in Files) {
                         buf.AppendLine(file.Display());
                     }
                     buf.Append("<-");
@@ -43,19 +36,16 @@ namespace Stitch
                 }
             }
 
-            public class InputLocalParameters
-            {
+            public class InputLocalParameters {
                 public PeaksParameters Peaks = null;
 
-                public string Display()
-                {
+                public string Display() {
                     if (Peaks == null) return "";
                     return $"InputLocalParameters ->\n{Peaks.Display()}\n<-";
                 }
             }
 
-            public string Display()
-            {
+            public string Display() {
                 var output = "Input ->\n";
                 if (LocalParameters != null) output += LocalParameters.Display();
                 if (Parameters != null) output += Parameters.Display();
@@ -64,8 +54,7 @@ namespace Stitch
             }
 
             /// <summary> A parameter to save an input file. </summary> 
-            public abstract class Parameter
-            {
+            public abstract class Parameter {
                 /// <summary> The identifier of the file. </summary> 
                 public Read.FileIdentifier File = new Read.FileIdentifier();
 
@@ -73,8 +62,7 @@ namespace Stitch
             }
 
             /// <summary> A data parameter for PEAKS input files. </summary> 
-            public class Peaks : Parameter
-            {
+            public class Peaks : Parameter {
                 public PeaksParameters Parameter = new PeaksParameters(true);
 
                 /// <summary> The file format of the PEAKS file. </summary> 
@@ -82,54 +70,45 @@ namespace Stitch
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
 
-                public override string Display()
-                {
+                public override string Display() {
                     return $"Peaks ->\n{File.Display()}\n{Parameter.Display()}\nFileFormat: {FileFormat.name}\nSeparator: {Separator}\nDecimalSeparator: {DecimalSeparator}\n<-";
                 }
             }
 
             /// <summary> A parameter for simple reads files. </summary> 
-            public class Reads : Parameter
-            {
-                public override string Display()
-                {
+            public class Reads : Parameter {
+                public override string Display() {
                     return $"Simple ->\n{File.Display()}\n<-";
                 }
             }
 
             /// <summary> A parameter for FASTA reads files. </summary> 
-            public class FASTA : Parameter
-            {
+            public class FASTA : Parameter {
                 /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public Regex Identifier = new Regex("(.*)");
 
-                public override string Display()
-                {
+                public override string Display() {
                     return $"FASTA ->\n{File.Display()}\nIdentifier: {Identifier}\n<-";
                 }
             }
 
             /// <summary> A parameter for Novor reads files. </summary> 
-            public class Novor : Parameter
-            {
+            public class Novor : Parameter {
                 /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public char Separator = ',';
                 public Read.FileIdentifier DeNovoFile = null;
                 public Read.FileIdentifier PSMSFile = null;
                 public uint Cutoff = 0;
 
-                public override string Display()
-                {
+                public override string Display() {
                     var db = new StringBuilder();
                     db.AppendLine("Novor ->");
                     var name = "";
-                    if (DeNovoFile != null)
-                    {
+                    if (DeNovoFile != null) {
                         db.AppendLine($"DeNovo Path:{DeNovoFile.Path}");
                         name = DeNovoFile.Name;
                     }
-                    if (PSMSFile != null)
-                    {
+                    if (PSMSFile != null) {
                         db.AppendLine($"PSMS Path:{PSMSFile.Path}");
                         name = PSMSFile.Name;
                     }
@@ -140,21 +119,18 @@ namespace Stitch
                 }
             }
 
-            public class PeaksParameters
-            {
+            public class PeaksParameters {
                 public int CutoffALC;
                 public int LocalCutoffALC;
                 public int MinLengthPatch;
 
-                public PeaksParameters(bool defaultValues)
-                {
+                public PeaksParameters(bool defaultValues) {
                     CutoffALC = defaultValues ? 90 : -1;
                     LocalCutoffALC = -1;
                     MinLengthPatch = -1;
                 }
 
-                public string Display()
-                {
+                public string Display() {
                     return $"Peaks ->\n\tCutoffALC: {CutoffALC}\n\tLocalCutoffALC: {LocalCutoffALC}\n\tMinLengthPatch: {MinLengthPatch}\n<-";
                 }
             }
@@ -166,8 +142,7 @@ namespace Stitch
         public enum ScoringParameter { Absolute, Relative }
 
         /// <summary> An input for an alphabet. </summary>
-        public class AlphabetParameter
-        {
+        public class AlphabetParameter {
             /// <summary> The data, Paths should be looked up to find the data. </summary> 
             public int[,] ScoringMatrix;
 
@@ -181,15 +156,13 @@ namespace Stitch
             public int GapExtendPenalty = 1;
             public string Name = "";
 
-            public string Display()
-            {
+            public string Display() {
                 return $"Alphabet ->\nName: {Name}\nGapStartPenalty: {GapStartPenalty}\nGapExtendPenalty: {GapExtendPenalty}\n<-";
             }
         }
 
         /// <summary> An input for a template. </summary>
-        public class SegmentValue
-        {
+        public class SegmentValue {
             /// <summary> The alphabet to be used for all templates. </summary> 
             public AlphabetParameter Alphabet = null;
 
@@ -210,8 +183,7 @@ namespace Stitch
             public bool GapHead = false;
         }
 
-        public class TemplateMatchingParameter
-        {
+        public class TemplateMatchingParameter {
             /// <summary> The alphabet to be used for all templates. </summary> 
             public AlphabetParameter Alphabet = null;
 
@@ -232,8 +204,7 @@ namespace Stitch
         }
 
         /// <summary> To contain all parameters for recombination of Segments. </summary>
-        public class RecombineParameter
-        {
+        public class RecombineParameter {
             /// <summary> The alphabet to be used for all templates. </summary> 
             public AlphabetParameter Alphabet = null;
 
@@ -256,55 +227,45 @@ namespace Stitch
             public bool Decoy = false;
         }
 
-        namespace RecombineOrder
-        {
+        namespace RecombineOrder {
             /// <summary> An abstract class to contain the order of templates. </summary> 
-            public abstract class OrderPiece
-            {
+            public abstract class OrderPiece {
                 public abstract bool IsGap();
                 public abstract string Display();
             }
 
             /// <summary> Introduce a gap in the recombined templates. </summary> 
-            public class Gap : OrderPiece
-            {
+            public class Gap : OrderPiece {
                 public Gap() { }
 
-                public override string Display()
-                {
+                public override string Display() {
                     return Alphabet.GapChar.ToString();
                 }
 
-                public override bool IsGap()
-                {
+                public override bool IsGap() {
                     return true;
                 }
             }
 
             /// <summary> Introduce a template in the recombined templates. </summary> 
-            public class Template : OrderPiece
-            {
+            public class Template : OrderPiece {
                 /// <summary> The index in the Templates list of the enclosing RecombineValue. </summary> 
                 public int Index;
-                public Template(int i)
-                {
+                public Template(int i) {
                     Index = i;
                 }
 
-                public override string Display()
-                {
+                public override string Display() {
                     return Index.ToString();
                 }
 
-                public override bool IsGap()
-                {
+                public override bool IsGap() {
                     return false;
                 }
             }
         }
 
-        public class ReportParameter
-        {
+        public class ReportParameter {
             /// <summary> The report(s) to be generated for this run. </summary> 
             public List<Report.Parameter> Files = new List<Report.Parameter>();
             /// <summary> The base folder where all generated reports will be stored (or at least relative to) 
@@ -315,8 +276,7 @@ namespace Stitch
             /// <param name="r">The values for the parameters.</param>
             /// <param name="input">The path template.</param>
             /// <returns>A name.</returns>
-            public static string CreateName(SingleRun r, String input)
-            {
+            public static string CreateName(SingleRun r, String input) {
                 var output = new StringBuilder(input);
 
                 output.Replace("{alph}", r.Alphabet != null ? r.Alphabet.Name : "NoAlphabet");
@@ -330,19 +290,16 @@ namespace Stitch
         }
 
         /// <summary> To contain parameters for reporting. </summary>
-        public class Report
-        {
+        public class Report {
             /// <summary> A parameter to define how to report the results. </summary> 
-            public abstract class Parameter
-            {
+            public abstract class Parameter {
                 /// <summary> The path to save the result to. </summary> 
                 public string Path = null;
 
                 /// <summary> Generates a (unique) name based on the given template. </summary> 
                 /// <param name="r">The values for the parameters.</param>
                 /// <returns>A name.</returns>
-                public string CreateName(String folder, SingleRun r)
-                {
+                public string CreateName(String folder, SingleRun r) {
                     if (folder != null)
                         return System.IO.Path.GetFullPath(ReportParameter.CreateName(r, Path), folder);
                     else
@@ -351,21 +308,18 @@ namespace Stitch
             }
 
             /// <summary> To indicate to return an HTML report. </summary> 
-            public class HTML : Parameter
-            {
+            public class HTML : Parameter {
             }
 
             /// <summary> To indicate to return an JSON report. </summary> 
-            public class JSON : Parameter
-            {
+            public class JSON : Parameter {
             }
 
             /// <summary> The type sequences in the fasta to give as output </summary> 
             public enum OutputType { TemplateMatches, Recombine }
 
             /// <summary> To indicate to return a FASTA report. </summary> 
-            public class FASTA : Parameter
-            {
+            public class FASTA : Parameter {
                 /// <summary> The minimal score needed to be included. </summary> 
                 public int MinimalScore = 0;
 
@@ -374,8 +328,7 @@ namespace Stitch
             }
 
             /// <summary> To indicate to return a CSV report. </summary> 
-            public class CSV : Parameter
-            {
+            public class CSV : Parameter {
                 /// <summary> The output type of the sequences </summary> 
                 public OutputType OutputType = OutputType.TemplateMatches;
             }

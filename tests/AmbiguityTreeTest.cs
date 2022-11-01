@@ -6,19 +6,16 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Stitch;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class AmbiguityTree_Test
-    {
+    public class AmbiguityTree_Test {
         readonly static Alphabet alp = new Alphabet("*;A;B;C;.\nA;1;0;0;-1\nB;0;1;0;-1\nC;0;0;1,-1\n.;-1;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
         readonly static AminoAcid A = new AminoAcid(alp, 'A');
         readonly static AminoAcid B = new AminoAcid(alp, 'B');
         readonly static AminoAcid C = new AminoAcid(alp, 'C');
 
         [TestMethod]
-        public void SimplePath()
-        {
+        public void SimplePath() {
             // A → A → A → A → A
             //       ↘ B ↗
 
@@ -33,8 +30,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void JoinWithMultiple()
-        {
+        public void JoinWithMultiple() {
             // A ↘
             // B → A → A
             // C ↗
@@ -51,8 +47,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void JoinWithComplexPath()
-        {
+        public void JoinWithComplexPath() {
             // C ↘
             // A → A ↘
             //   ↗
@@ -72,8 +67,7 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void JoinWithComplexPathWithPreamble()
-        {
+        public void JoinWithComplexPathWithPreamble() {
             // * → * → * → C ↘
             // * → * → * → A → A ↘
             // * → * → * → B → B → A → A

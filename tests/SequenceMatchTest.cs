@@ -3,13 +3,10 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using System;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class SequenceMatchTest
-    {
-        SequenceMatch CreateTestData()
-        {
+    public class SequenceMatchTest {
+        SequenceMatch CreateTestData() {
             var alp = new Alphabet("*;A;B;.\nA;1;0;-1\nB;0;1;-1\n.;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
             // 012345 6789012  3456
             // AAAABA-ABABBAA--AAAA
@@ -36,12 +33,10 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void GetGapAtTemplateIndexTest()
-        {
+        public void GetGapAtTemplateIndexTest() {
             var sm = CreateTestData();
             var gaps = "";
-            for (int i = 0; i < sm.LengthOnTemplate; i++)
-            {
+            for (int i = 0; i < sm.LengthOnTemplate; i++) {
                 gaps += $", {i}: {sm.GetGapAtTemplateIndex(i)}";
             }
             Console.WriteLine(gaps);
@@ -53,12 +48,10 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void GetAtTemplateIndexTest()
-        {
+        public void GetAtTemplateIndexTest() {
             var sm = CreateTestData();
             var gaps = "";
-            for (int i = 0; i < sm.LengthOnTemplate; i++)
-            {
+            for (int i = 0; i < sm.LengthOnTemplate; i++) {
                 gaps += $", {i}: {sm.GetAtTemplateIndex(i)}";
             }
             Console.WriteLine(gaps);

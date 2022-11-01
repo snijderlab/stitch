@@ -7,13 +7,10 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
-namespace Stitch
-{
-    namespace RunParameters
-    {
+namespace Stitch {
+    namespace RunParameters {
         /// <summary> All parameters for a single run. </summary>
-        public class SingleRun
-        {
+        public class SingleRun {
             /// <summary> THe name of this run. </summary> 
             public string Runname;
             public string RawDataDirectory;
@@ -42,8 +39,7 @@ namespace Stitch
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null)
-            {
+            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null) {
                 Runname = runname;
                 Input = input;
                 TemplateMatching = templateMatching;
@@ -58,14 +54,12 @@ namespace Stitch
 
             /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary> 
             /// <returns>The main parameters.</returns>
-            public string Display()
-            {
+            public string Display() {
                 return $"\tRunname\t\t: {Runname}";
             }
 
             /// <summary> Runs this run. Runs the assembly, and generates the reports. </summary> 
-            public void Calculate()
-            {
+            public void Calculate() {
                 Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
                 // Template Matching
                 var stopWatch = new Stopwatch();
@@ -78,8 +72,7 @@ namespace Stitch
                 var recombined_segment = new List<Segment>();
 
                 // Recombine
-                if (Recombine != null)
-                {
+                if (Recombine != null) {
                     var recombine_sw = new Stopwatch();
                     recombine_sw.Start();
 
@@ -90,8 +83,7 @@ namespace Stitch
 
                 // Raw data
                 Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
-                if (this.RawDataDirectory != null)
-                {
+                if (this.RawDataDirectory != null) {
                     fragments = Fragmentation.GetSpectra(Input, this.RawDataDirectory);
                     progressBar.Update();
                 }
@@ -99,19 +91,14 @@ namespace Stitch
                 var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here
-                if (runVariables.ExpectedResult.Count > 0)
-                {
+                if (runVariables.ExpectedResult.Count > 0) {
                     GenerateBenchmarkOutput(parameters);
-                }
-                else
-                {
+                } else {
                     // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
                     var folder = Report.Folder != null ? ReportParameter.CreateName(this, Report.Folder) : null;
                     // Generate the report(s)
-                    foreach (var report in Report.Files)
-                    {
-                        switch (report)
-                        {
+                    foreach (var report in Report.Files) {
+                        switch (report) {
                             case Report.HTML h:
                                 var html_report = new HTMLReport(parameters, MaxNumberOfCPUCores, h);
                                 html_report.Save(h.CreateName(folder, this));
@@ -136,10 +123,8 @@ namespace Stitch
                 if (progressBar != null) progressBar.Update();
             }
 
-            void GenerateBenchmarkOutput(ReportInputParameters parameters)
-            {
-                string JSONBlock(string name, string unit, string value, string extra = null)
-                {
+            void GenerateBenchmarkOutput(ReportInputParameters parameters) {
+                string JSONBlock(string name, string unit, string value, string extra = null) {
                     if (extra != null)
                         return $",{{\"name\":\"{name}\",\"unit\":\"{unit}\",\"value\":{value},\"extra\":\"{extra}\"}}";
                     else
@@ -153,16 +138,12 @@ namespace Stitch
                     templates = parameters.Groups.Where(s => s.Item1.ToLower() != "decoy").SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
 
                 // See if the number of results match up
-                if (templates.Count() != runVariables.ExpectedResult.Count)
-                {
+                if (templates.Count() != runVariables.ExpectedResult.Count) {
                     Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
                     return;
-                }
-                else
-                {
+                } else {
                     // Give the scoring result for each result
-                    foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates))
-                    {
+                    foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
                         var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
                         var query = new Read.Simple(result.ConsensusSequence().Item1.ToArray());
                         var match = HelperFunctionality.SmithWaterman(template, query, result.Parent.Alphabet);
@@ -181,18 +162,15 @@ namespace Stitch
                 }
             }
 
-            List<(string, List<Segment>)> RunTemplateMatching()
-            {
+            List<(string, List<Segment>)> RunTemplateMatching() {
                 // Initialise the matches list with empty lists for every input read
                 var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, SequenceMatch Match)>>(Input.Count);
                 for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
                 var segments = new List<(string, List<Segment>)>();
-                for (int i = 0; i < TemplateMatching.Segments.Count; i++)
-                {
+                for (int i = 0; i < TemplateMatching.Segments.Count; i++) {
                     var current_group = new List<Segment>();
-                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++)
-                    {
+                    for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++) {
                         var segment = TemplateMatching.Segments[i].Segments[j];
                         var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
                         current_group.Add(new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, TemplateMatching.ForceGermlineIsoleucine, segment.Scoring));
@@ -206,8 +184,7 @@ namespace Stitch
                     for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++)
                         jobs.Add((i, j));
 
-                void ExecuteJob((int, int) job)
-                {
+                void ExecuteJob((int, int) job) {
                     var (i, j) = job;
                     var segment1 = segments[i].Item2[j];
 
@@ -228,19 +205,15 @@ namespace Stitch
                     EnforceUnique(matches);
 
                 // Add all matches to the right templates
-                foreach (var row in matches)
-                {
+                foreach (var row in matches) {
                     var unique = row.Count == 1;
-                    foreach (var match in row)
-                    {
+                    foreach (var match in row) {
                         segments[match.GroupIndex].Item2[match.SegmentIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                     }
                 }
 
-                foreach (var group in segments)
-                {
-                    foreach (var segment in group.Item2)
-                    {
+                foreach (var group in segments) {
+                    foreach (var segment in group.Item2) {
                         if (segment.Hierarchy == null) continue;
                         segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
                     }
@@ -249,8 +222,7 @@ namespace Stitch
                 return segments;
             }
 
-            void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment)
-            {
+            void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment) {
                 var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count);
                 for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
@@ -259,8 +231,7 @@ namespace Stitch
                 bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
                 int offset = 0;
-                for (int segment_group_index = 0; segment_group_index < segments.Count; segment_group_index++)
-                {
+                for (int segment_group_index = 0; segment_group_index < segments.Count; segment_group_index++) {
                     var segment_group = segments[segment_group_index];
                     if (segment_group.Item1.ToLower() == "decoy") { offset += 1; continue; };
                     // Create a list for every segment with the top n highest scoring templates.
@@ -269,8 +240,7 @@ namespace Stitch
                     // approximately O(n) in respect to the segment. Worst case O(top_n * l_segment)
                     var top = new List<List<Template>>();
                     var decoy = new List<Template>();
-                    foreach (var db in segment_group.Item2)
-                    {
+                    foreach (var db in segment_group.Item2) {
                         db.Templates.Sort((a, b) => b.Score.CompareTo(a.Score));
                         top.Add(db.Templates.Take(Recombine.N).ToList());
                         // Add all missed templates (score too low) to the decoy set if the Decoy option is turned on
@@ -304,8 +274,7 @@ namespace Stitch
 
                 // Aggregate all decoy sets from template matching
                 var general_decoy = new List<Template>();
-                foreach (var seg_group in segments)
-                {
+                foreach (var seg_group in segments) {
                     // Groups called "Decoy" will be added in full
                     if (seg_group.Item1.ToLower() == "decoy")
                         foreach (var segment in seg_group.Item2)
@@ -319,8 +288,7 @@ namespace Stitch
                                 foreach (var template in segment.Templates)
                                     general_decoy.Add(new Template(template.Name, template.Sequence, template.MetaData, segment, forceGermlineIsoleucine, new TemplateLocation(-1, general_decoy.Count)));
                 }
-                if (general_decoy.Count > 0)
-                {
+                if (general_decoy.Count > 0) {
                     var segment = new Segment(general_decoy, alph, "General Decoy Segment", Recombine.CutoffScore);
                     var local_matches = segment.Match(Input);
 
@@ -335,8 +303,7 @@ namespace Stitch
                     EnforceUnique(matches);
 
                 // Add all matches to the right templates
-                foreach (var row in matches)
-                {
+                foreach (var row in matches) {
                     var unique = row.Count == 1;
                     foreach (var match in row)
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
@@ -349,31 +316,24 @@ namespace Stitch
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter)
-            {
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
                 var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
 
-                for (int i = 0; i < combinations.Count(); i++)
-                {
+                for (int i = 0; i < combinations.Count(); i++) {
                     var sequence = combinations.ElementAt(i);
                     var s = new List<AminoAcid>();
                     var t = new List<Template>();
                     var join = false;
-                    foreach (var element in order)
-                    {
-                        if (element.GetType() == typeof(RecombineOrder.Gap))
-                        {
+                    foreach (var element in order) {
+                        if (element.GetType() == typeof(RecombineOrder.Gap)) {
                             // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
                             // and removed from the Template sequence for the recombine round.
                             join = true;
-                        }
-                        else
-                        {
+                        } else {
                             var index = ((RecombineOrder.Template)element).Index;
                             var seq = sequence.ElementAt(index).ConsensusSequence().Item1;
-                            if (join)
-                            {
+                            if (join) {
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
@@ -384,21 +344,16 @@ namespace Stitch
                                 var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
 
-                                if (aligned_template.Best.Score > 0)
-                                {
+                                if (aligned_template.Best.Score > 0) {
                                     s.AddRange(seq.Skip(aligned_template.Best.Position));
                                     sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
-                                }
-                                else
-                                {
+                                } else {
                                     // When no good overlap is found just paste them one after the other
                                     s.Add(new AminoAcid(alphabet, Stitch.Alphabet.GapChar));
                                     s.AddRange(seq);
                                     sequence.ElementAt(index).Overlap = 0;
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 s.AddRange(seq);
                             }
                             t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
@@ -417,25 +372,19 @@ namespace Stitch
                 return scores;
             }
 
-            static void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches)
-            {
+            static void EnforceUnique(List<List<(int, int, int, SequenceMatch Match)>> matches) {
                 if (matches == null) return;
-                for (int read_index = 0; read_index < matches.Count; read_index++)
-                {
+                for (int read_index = 0; read_index < matches.Count; read_index++) {
                     var best = new List<(int, int, int, SequenceMatch)>();
                     var best_score = 0;
                     if (matches[read_index] == null) continue;
-                    for (int template_index = 0; template_index < matches[read_index].Count; template_index++)
-                    {
+                    for (int template_index = 0; template_index < matches[read_index].Count; template_index++) {
                         var match = matches[read_index][template_index];
-                        if (match.Match.Score > best_score)
-                        {
+                        if (match.Match.Score > best_score) {
                             best.Clear();
                             best.Add(match);
                             best_score = match.Match.Score;
-                        }
-                        else if (match.Match.Score == best_score)
-                        {
+                        } else if (match.Match.Score == best_score) {
                             best.Add(match);
                         }
                     }

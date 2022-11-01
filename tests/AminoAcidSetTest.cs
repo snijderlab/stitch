@@ -7,20 +7,16 @@ using System.Collections.Generic;
 using Stitch;
 using Stitch.RunParameters;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class AminoAcidSet_Test
-    {
+    public class AminoAcidSet_Test {
         readonly Alphabet alp;
-        public AminoAcidSet_Test()
-        {
+        public AminoAcidSet_Test() {
             alp = new Alphabet("*;A;B\nA;1;0\nB;0;1", Alphabet.AlphabetParamType.Data, 12, 1);
         }
 
         [TestMethod]
-        public void Creation()
-        {
+        public void Creation() {
             var aa = new AminoAcid[] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'A') };
             var set = new AminoAcidSet(aa);
             Console.WriteLine(set);
@@ -33,16 +29,14 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void Sort()
-        {
+        public void Sort() {
             var ab = new AminoAcid[] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B') };
             var ba = new AminoAcid[] { new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A') };
             Assert.AreEqual(ab.ToSortedAminoAcidSet(), ba.ToSortedAminoAcidSet());
         }
 
         [TestMethod]
-        public void TooBig()
-        {
+        public void TooBig() {
             var perfect = new AminoAcid[10] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B') };
             var too_big = new AminoAcid[11] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A') };
             perfect.ToSortedAminoAcidSet();

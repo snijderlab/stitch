@@ -2,20 +2,16 @@ using System.Collections.Generic;
 using System.Linq;
 using System;
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> Functions to handle and create phylogenetic trees. </summary>
-    public class PhylogeneticTree
-    {
+    public class PhylogeneticTree {
         /// <summary> Use the Neighbour Joining algorithm to construct a phylogenetic tree from the given sequences.
         /// The runtime is O(n^3). </summary>
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, Alphabet alphabet, bool addOutGroup = true)
-        {
-            if (addOutGroup)
-            {
+        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, Alphabet alphabet, bool addOutGroup = true) {
+            if (addOutGroup) {
                 var avg = Sequences.Select(e => e.MetaData.Sequence.Length).Average();
                 Sequences.Add(("OutGroup", new Read.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));
             }
@@ -23,17 +19,14 @@ namespace Stitch
             var distance = new double[length, length];
 
             // Get all the scores in the matrix
-            distance.IndexMap((i, j) =>
-            {
+            distance.IndexMap((i, j) => {
                 var scores = HelperFunctionality.SmithWaterman(Sequences[i].MetaData, Sequences[j].MetaData, alphabet).GetDetailedScores();
                 return scores.MisMatches + (scores.GapInQuery + scores.GapInTemplate) * 12;
             });
 
             var max_distance = (double.MinValue, 0, 0);
-            for (int r = 0; r < length; r++)
-            {
-                for (int c = 0; c < length; c++)
-                {
+            for (int r = 0; r < length; r++) {
+                for (int c = 0; c < length; c++) {
                     if (distance[r, c] > max_distance.Item1)
                         max_distance = (distance[r, c], r, c);
                 }
@@ -51,8 +44,7 @@ namespace Stitch
             leaves.IndexMap(i => new Tree<string>(i, Sequences[i].Name));
 
             // Repeat until only two trees remain
-            while (length > 2)
-            {
+            while (length > 2) {
                 // Calculate the Q matrix 
                 var q = new double[length, length];
                 var rows = new double[length];
@@ -77,15 +69,12 @@ namespace Stitch
                 var new_distance = new double[length, length];
                 var new_leaves = new Tree<string>[length];
                 int skip_row = 0;
-                for (int i = 0; i < length + 1; i++)
-                {
-                    if (i == min.Item3) { skip_row = 1; continue; }
-                    else if (i == min.Item2) new_leaves[i - skip_row] = node;
+                for (int i = 0; i < length + 1; i++) {
+                    if (i == min.Item3) { skip_row = 1; continue; } else if (i == min.Item2) new_leaves[i - skip_row] = node;
                     else new_leaves[i - skip_row] = leaves[i];
 
                     int skip_column = 0;
-                    for (int j = 0; j < length + 1; j++)
-                    {
+                    for (int j = 0; j < length + 1; j++) {
                         if (j == min.Item3)
                             skip_column = 1;
                         else if (i == min.Item2)
@@ -103,11 +92,9 @@ namespace Stitch
             // Join the last two trees
             var output = new Tree<string>((distance[0, 1] / 2, leaves[0]), (distance[0, 1] / 2, leaves[1]));
 
-            if (addOutGroup)
-            {
+            if (addOutGroup) {
                 var path = new List<(Tree<string>, double)>();
-                output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) =>
-                {
+                output.Fold(new List<(Tree<string>, double)>(), (acc, item, dis) => {
                     acc.Add((item, dis));
                     if (item.Value == "OutGroup")
                         path = new List<(Tree<string>, double)>(acc);
@@ -118,22 +105,17 @@ namespace Stitch
                 // Rebuild the branches leading to the middle node
                 (double, Tree<string>) new_branch = (-1, new Tree<string>(0, ""));
                 var index = 1;
-                while (true)
-                {
-                    if (index == path.Count)
-                    {
+                while (true) {
+                    if (index == path.Count) {
                         break;
                     }
-                    if (output.Left.Value.Item2.id == path[index].Item1.id)
-                    {
+                    if (output.Left.Value.Item2.id == path[index].Item1.id) {
                         if (index == 1)
                             new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Right.Value.Item2);
                         else
                             new_branch = (output.Left.Value.Item1, new Tree<string>(new_branch, output.Right.Value));
                         output = output.Left.Value.Item2;
-                    }
-                    else if (output.Right.Value.Item2.id == path[index].Item1.id)
-                    {
+                    } else if (output.Right.Value.Item2.id == path[index].Item1.id) {
                         if (index == 1)
                             new_branch = (output.Right.Value.Item1 + output.Left.Value.Item1, output.Left.Value.Item2);
                         else
@@ -151,13 +133,11 @@ namespace Stitch
             return output;
         }
 
-        public class ProteinHierarchyTree
-        {
+        public class ProteinHierarchyTree {
             public readonly Tree<string> OriginalTree;
             public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea, string Name)> DataTree;
 
-            public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches)
-            {
+            public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches) {
                 OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(
@@ -171,35 +151,28 @@ namespace Stitch
                 // elements in the tree set are in the MatchSet) remove the matched indices. Now add whatever 
                 // data is required to the node. 
 
-                DataTree = SetTree.Remodel(branch =>
-                {
+                DataTree = SetTree.Remodel(branch => {
                     var score = 0;
                     var unique_score = 0;
                     var matches = 0;
                     var unique_matches = 0;
                     var area = 0.0;
                     var unique_area = 0.0;
-                    for (int i = 0; i < MatchSets.Count; i++)
-                    {
+                    for (int i = 0; i < MatchSets.Count; i++) {
                         var set = MatchSets[i].Set;
-                        if (set.IsSupersetOf(branch.Value.Item1))
-                        {
-                            if (MatchSets[i].Unique)
-                            {
+                        if (set.IsSupersetOf(branch.Value.Item1)) {
+                            if (MatchSets[i].Unique) {
                                 unique_score += MatchSets[i].Score;
                                 unique_matches += MatchSets[i].Matches;
                                 unique_area += MatchSets[i].Area;
-                            }
-                            else
-                            {
+                            } else {
                                 score += MatchSets[i].Score;
                                 matches += MatchSets[i].Matches;
                                 area += MatchSets[i].Area;
                             }
 
                             branch.Value.Item1.ForEach(i => set.Remove(i));
-                            if (set.Count == 0)
-                            {
+                            if (set.Count == 0) {
                                 MatchSets.RemoveAt(i);
                                 i--;
                             }
@@ -212,8 +185,7 @@ namespace Stitch
 
         }
 
-        public class Tree<TValue>
-        {
+        public class Tree<TValue> {
             /// <summary> The index of this leaf in the list as presented to the CreateTree function.</summary>
             public readonly int Index = 0;
             public readonly int id;
@@ -224,16 +196,13 @@ namespace Stitch
             public (double, Tree<TValue>)? Left { get; private set; }
             /// <summary> The right tree. Including the distance to this node. </summary>
             public (double, Tree<TValue>)? Right { get; private set; }
-            public int Leaves
-            {
-                get
-                {
+            public int Leaves {
+                get {
                     return this.Fold((a, b) => a + b, (i, v) => 1);
                 }
             }
 
-            public (int, TValue) Get(int index)
-            {
+            public (int, TValue) Get(int index) {
                 if (IsLeaf)
                     return Index == index ? (id, Value) : (-1, default(TValue));
 
@@ -243,8 +212,7 @@ namespace Stitch
                 return left;
             }
 
-            public (int, TValue) Get(TValue value)
-            {
+            public (int, TValue) Get(TValue value) {
                 if (IsLeaf)
                     return EqualityComparer<TValue>.Default.Equals(Value, value) ? (id, Value) : (-1, default(TValue));
 
@@ -259,8 +227,7 @@ namespace Stitch
             /// <summary> Create a leaf node.</summary>
             /// <param name="index"> The index of this leaf in the list as presented to the CreateTree function. </param>
             /// <param name="value"> The value of this leaf. </param>
-            public Tree(int index, TValue value)
-            {
+            public Tree(int index, TValue value) {
                 id = counter;
                 counter++;
                 Index = index;
@@ -270,16 +237,14 @@ namespace Stitch
             /// <summary> Create a treeing node. </summary>
             /// <param name="left"> The left tree. Consisting of the distance and node for this tree. </param>
             /// <param name="right"> The right tree. Consisting of the distance and node for this tree. </param>
-            public Tree((double, Tree<TValue>) left, (double, Tree<TValue>) right)
-            {
+            public Tree((double, Tree<TValue>) left, (double, Tree<TValue>) right) {
                 id = counter;
                 counter++;
                 Left = left;
                 Right = right;
             }
 
-            private Tree(int index, TValue value, (double, Tree<TValue>)? left, (double, Tree<TValue>)? right)
-            {
+            private Tree(int index, TValue value, (double, Tree<TValue>)? left, (double, Tree<TValue>)? right) {
                 id = counter;
                 counter++;
                 Index = index;
@@ -292,15 +257,11 @@ namespace Stitch
             /// <param name="own"> Any trees already present on the main stem of the tree (on this line). </param>
             /// <param name="other"> Any trees already present on the side tree(es) of the tree (on secondary lines). </param>
             /// <returns> A fully rendered tree, using UTF-8 and characters from the Box drawing set. </returns>
-            string Render(string own, string other, bool showValue, bool showLength, bool showID)
-            {
-                if (Left == null && Right == null)
-                {
+            string Render(string own, string other, bool showValue, bool showLength, bool showID) {
+                if (Left == null && Right == null) {
                     // Leaf just print the info
                     return $"{own}> {Value} ({Index}) " + (showID ? id : "");
-                }
-                else
-                {
+                } else {
                     // A split at the current depth
                     var value = showValue ? Value.ToString() : "";
                     var spacing = new string(' ', value.Length);
@@ -320,18 +281,15 @@ namespace Stitch
             }
 
             /// <summary> Create a string representation of the tree. </summary>
-            public override string ToString()
-            {
+            public override string ToString() {
                 return Render("", "", false, false, false);
             }
 
-            public string ToString(bool showValue, bool showLength, bool showID)
-            {
+            public string ToString(bool showValue, bool showLength, bool showID) {
                 return Render("", "", showValue, showLength, showID);
             }
 
-            public string BracketsNotation()
-            {
+            public string BracketsNotation() {
                 if (Left == null && Right == null)
                     return Value.ToString();
                 else
@@ -343,8 +301,7 @@ namespace Stitch
             /// <param name="f"> The function to apply to every node. </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public TAcc Fold<TAcc>(TAcc seed, Func<TAcc, TValue, TAcc> f)
-            {
+            public TAcc Fold<TAcc>(TAcc seed, Func<TAcc, TValue, TAcc> f) {
                 var output = f(seed, this.Value);
                 if (Left != null) output = Left.Value.Item2.Fold(output, f);
                 if (Right != null) output = Right.Value.Item2.Fold(output, f);
@@ -356,8 +313,7 @@ namespace Stitch
             /// <param name="f"> The function to apply to every node. </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public List<TAcc> Fold<TAcc>(List<TAcc> seed, Func<List<TAcc>, Tree<TValue>, double, List<TAcc>> f, double distance)
-            {
+            public List<TAcc> Fold<TAcc>(List<TAcc> seed, Func<List<TAcc>, Tree<TValue>, double, List<TAcc>> f, double distance) {
                 var output = f(seed, this, distance);
                 if (Left == null && Right == null) return new List<TAcc>();
                 var left = Left.Value.Item2.Fold(new List<TAcc>(output), f, Left.Value.Item1);
@@ -370,8 +326,7 @@ namespace Stitch
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<int, TValue, TAcc> leaf)
-            {
+            public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<int, TValue, TAcc> leaf) {
                 if (Left == null && Right == null)
                     return leaf(this.Index, this.Value);
                 else
@@ -383,8 +338,7 @@ namespace Stitch
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<Tree<TValue>, TAcc> leaf)
-            {
+            public TAcc Fold<TAcc>(Func<TAcc, TAcc, TAcc> tree, Func<Tree<TValue>, TAcc> leaf) {
                 if (IsLeaf)
                     return leaf(this);
                 else
@@ -396,8 +350,7 @@ namespace Stitch
             /// <param name="leaf"> The function to apply to every leaf (a node which has no Left or Right node). </param>
             /// <typeparam name="TAcc"> The type of the accumulator structure. </typeparam>
             /// <returns> The accumulator. </returns>
-            public TAcc Fold<TAcc>(Func<TValue, double, TAcc, double, TAcc, TAcc> tree, Func<TValue, TAcc> leaf)
-            {
+            public TAcc Fold<TAcc>(Func<TValue, double, TAcc, double, TAcc, TAcc> tree, Func<TValue, TAcc> leaf) {
                 if (IsLeaf)
                     return leaf(this.Value);
                 else
@@ -406,8 +359,7 @@ namespace Stitch
 
             /// <summary> Apply a function to every branch in the tree. </summary>
             /// <param name="f"> The function to apply. </param>
-            public void Apply(Action<Tree<TValue>> f)
-            {
+            public void Apply(Action<Tree<TValue>> f) {
                 f(this);
                 if (Left != null) Left.Value.Item2.Apply(f);
                 if (Right != null) Right.Value.Item2.Apply(f);
@@ -415,14 +367,10 @@ namespace Stitch
 
             /// <summary> Apply a function to every branch in the tree. </summary>
             /// <param name="f"> The function to apply. </param>
-            public void Apply(Action<Tree<TValue>> tree, Action<TValue> leaf)
-            {
-                if (IsLeaf)
-                {
+            public void Apply(Action<Tree<TValue>> tree, Action<TValue> leaf) {
+                if (IsLeaf) {
                     leaf(this.Value);
-                }
-                else
-                {
+                } else {
                     tree(this);
                     if (Left != null) Left.Value.Item2.Apply(tree, leaf);
                     if (Right != null) Right.Value.Item2.Apply(tree, leaf);
@@ -431,14 +379,10 @@ namespace Stitch
 
             /// <summary> Apply a function to every branch in the tree. First do all calculations on all leaves before calculating on the nodes from the bottom up.</summary>
             /// <param name="f"> The function to apply. </param>
-            public void ReverseApply(Action<Tree<TValue>> tree, Action<TValue> leaf)
-            {
-                if (IsLeaf)
-                {
+            public void ReverseApply(Action<Tree<TValue>> tree, Action<TValue> leaf) {
+                if (IsLeaf) {
                     leaf(this.Value);
-                }
-                else
-                {
+                } else {
                     if (Left != null) Left.Value.Item2.ReverseApply(tree, leaf);
                     if (Right != null) Right.Value.Item2.ReverseApply(tree, leaf);
                     tree(this);
@@ -446,8 +390,7 @@ namespace Stitch
             }
 
 
-            public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, TOut> f)
-            {
+            public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, TOut> f) {
                 return new Tree<TOut>(
                     this.Index,
                     f(this),
@@ -455,8 +398,7 @@ namespace Stitch
                     Right == null ? null : (Right.Value.Item1, Right.Value.Item2.Remodel(f)));
             }
 
-            public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, int, TOut> f, int depth = 0)
-            {
+            public Tree<TOut> Remodel<TOut>(Func<Tree<TValue>, int, TOut> f, int depth = 0) {
                 return new Tree<TOut>(
                     this.Index,
                     f(this, depth),
@@ -464,14 +406,10 @@ namespace Stitch
                     Right == null ? null : (Right.Value.Item1, Right.Value.Item2.Remodel(f, depth + 1)));
             }
 
-            public Tree<TOut> ReverseRemodel<TOut>(Func<Tree<TOut>, TValue, TOut> tree, Func<TValue, TOut> leaf)
-            {
-                if (IsLeaf)
-                {
+            public Tree<TOut> ReverseRemodel<TOut>(Func<Tree<TOut>, TValue, TOut> tree, Func<TValue, TOut> leaf) {
+                if (IsLeaf) {
                     return new Tree<TOut>(this.Index, leaf(this.Value));
-                }
-                else
-                {
+                } else {
                     (double, Tree<TOut>)? left = Left == null ? null : (Left.Value.Item1, Left.Value.Item2.ReverseRemodel(tree, leaf));
                     (double, Tree<TOut>)? right = Right == null ? null : (Right.Value.Item1, Right.Value.Item2.ReverseRemodel(tree, leaf));
                     return new Tree<TOut>(
@@ -482,21 +420,16 @@ namespace Stitch
                 }
             }
 
-            public void RemoveNegativeDistances()
-            {
-                static (double, Tree<TValue>) CheckSide((double, Tree<TValue>) node)
-                {
+            public void RemoveNegativeDistances() {
+                static (double, Tree<TValue>) CheckSide((double, Tree<TValue>) node) {
                     var node_branch = node.Item2;
-                    if (node_branch.Left != null && node_branch.Right != null)
-                    {
-                        if (node_branch.Left.Value.Item1 < 0)
-                        {
+                    if (node_branch.Left != null && node_branch.Right != null) {
+                        if (node_branch.Left.Value.Item1 < 0) {
                             node_branch.Right = (node_branch.Right.Value.Item1 - node_branch.Left.Value.Item1, node_branch.Right.Value.Item2);
                             node_branch.Left = (0, node_branch.Left.Value.Item2);
                             return (node.Item1 - node_branch.Left.Value.Item1, node_branch);
                         }
-                        if (node_branch.Right.Value.Item1 < 0)
-                        {
+                        if (node_branch.Right.Value.Item1 < 0) {
                             node_branch.Left = (node_branch.Left.Value.Item1 - node_branch.Right.Value.Item1, node_branch.Left.Value.Item2);
                             node_branch.Right = (0, node_branch.Right.Value.Item2);
                             return (node.Item1 - node_branch.Right.Value.Item1, node_branch);
@@ -504,13 +437,11 @@ namespace Stitch
                     }
                     return node;
                 }
-                if (Left != null)
-                {
+                if (Left != null) {
                     Left = CheckSide(Left.Value);
                     Left.Value.Item2.RemoveNegativeDistances();
                 }
-                if (Right != null)
-                {
+                if (Right != null) {
                     Right = CheckSide(Right.Value);
                     Right.Value.Item2.RemoveNegativeDistances();
                 }

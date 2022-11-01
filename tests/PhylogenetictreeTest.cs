@@ -8,17 +8,14 @@ using Stitch;
 using Stitch.RunParameters;
 using System.Text.RegularExpressions;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class PhylogeneticTreeTest
-    {
+    public class PhylogeneticTreeTest {
         //VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK
 
         /// <summary> Test a small sample tree to see it out group rooting works </summary>
         [TestMethod]
-        public void TestSmall()
-        {
+        public void TestSmall() {
             var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var sequences = new List<(string, Read.IRead)> { ("A", new Read.Simple(AminoAcid.FromString("VKAFEALQ", alp).Unwrap())), ("B", new Read.Simple(AminoAcid.FromString("VKAWWALQ", alp).Unwrap())), ("C", new Read.Simple(AminoAcid.FromString("VKAWVALQ", alp).Unwrap())) };
             var tree = PhylogeneticTree.CreateTree(sequences, alp, false);

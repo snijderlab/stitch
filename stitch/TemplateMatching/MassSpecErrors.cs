@@ -5,10 +5,8 @@ using HeckLib.chemistry;
 using Stitch;
 
 
-namespace Stitch
-{
-    public static class MassSpecErrors
-    {
+namespace Stitch {
+    public static class MassSpecErrors {
         readonly static string[] Preset = new string[]{
             "I,L",
             "N,GG",
@@ -38,16 +36,13 @@ namespace Stitch
             "AAQ,NGV,AAAG,GGGV"};
 
         public const int MaxLength = 4;
-        public static Dictionary<AminoAcidSet, HashSet<AminoAcidSet>> EqualMasses(Alphabet alphabet)
-        {
+        public static Dictionary<AminoAcidSet, HashSet<AminoAcidSet>> EqualMasses(Alphabet alphabet) {
             var output = new Dictionary<AminoAcidSet, HashSet<AminoAcidSet>>();
 
             var combinations = Preset.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap())));
 
-            foreach (var group in combinations)
-            {
-                foreach (var element in group)
-                {
+            foreach (var group in combinations) {
+                foreach (var element in group) {
                     output.Add(element, group.Where(e => e != element).ToHashSet());
                 }
             }
@@ -59,8 +54,7 @@ namespace Stitch
         /// <param name="data"> The old array. </param>
         /// <typeparam name="T"> The type of the elements in the array. </typeparam>
         /// <returns> Returns a new array which is the sorted variant of the input array. </returns>
-        public static T[] Sort<T>(this IEnumerable<T> data)
-        {
+        public static T[] Sort<T>(this IEnumerable<T> data) {
             var temp = data.ToList();
             temp.Sort();
             return temp.ToArray();
@@ -69,63 +63,51 @@ namespace Stitch
         /// <summary> Create a sorted amino acid set from data. </summary>
         /// <param name="data"> The old array. </param>
         /// <returns> Returns an amino acid set which contains the data sorted. </returns>
-        public static AminoAcidSet ToSortedAminoAcidSet(this IEnumerable<AminoAcid> data)
-        {
+        public static AminoAcidSet ToSortedAminoAcidSet(this IEnumerable<AminoAcid> data) {
             return new AminoAcidSet(data.Sort());
         }
     }
 
-    public struct AminoAcidSet : IComparable, IEquatable<AminoAcidSet>
-    {
+    public struct AminoAcidSet : IComparable, IEquatable<AminoAcidSet> {
         public readonly uint Value = 0;
         const int width = 6;
 
-        public AminoAcidSet(AminoAcid[] set)
-        {
+        public AminoAcidSet(AminoAcid[] set) {
             if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more then 10 elements.");
-            for (int i = 0; i < set.Length; i++)
-            {
+            for (int i = 0; i < set.Length; i++) {
                 uint index = set[i].Alphabet.GetIndexInAlphabet(set[i].Character) < 0 ? 0 : (uint)set[i].Alphabet.GetIndexInAlphabet(set[i].Character) + 1u;
                 uint element = index << (i * width);
                 Value = Value | element;
             }
         }
 
-        public int CompareTo(object obj)
-        {
+        public int CompareTo(object obj) {
             return obj != null && obj is AminoAcidSet set ? this.Value.CompareTo(set.Value) : 0;
         }
 
-        public bool Equals(AminoAcidSet other)
-        {
+        public bool Equals(AminoAcidSet other) {
             return this.Value == other.Value;
         }
 
-        public static bool operator ==(AminoAcidSet left, AminoAcidSet right)
-        {
+        public static bool operator ==(AminoAcidSet left, AminoAcidSet right) {
             return left.Equals(right);
         }
 
-        public static bool operator !=(AminoAcidSet left, AminoAcidSet right)
-        {
+        public static bool operator !=(AminoAcidSet left, AminoAcidSet right) {
             return !left.Equals(right);
         }
 
-        public override bool Equals(object obj)
-        {
+        public override bool Equals(object obj) {
             return obj != null && obj is AminoAcidSet set && this.Equals(set);
         }
 
-        public override int GetHashCode()
-        {
+        public override int GetHashCode() {
             return this.Value.GetHashCode();
         }
 
-        public override string ToString()
-        {
+        public override string ToString() {
             string output = "";
-            for (int i = 0; i < 10; i++)
-            {
+            for (int i = 0; i < 10; i++) {
                 var index = (this.Value >> (i * width)) & ((1 << width) - 1);
                 output += ' ';
                 output += index.ToString();

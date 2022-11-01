@@ -8,21 +8,17 @@ using Stitch;
 using Stitch.RunParameters;
 using static Stitch.SequenceMatch;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class SmithWaterman_Test
-    {
+    public class SmithWaterman_Test {
         readonly Alphabet alp;
-        public SmithWaterman_Test()
-        {
+        public SmithWaterman_Test() {
             alp = new Alphabet("*;A;B;C;D\nA;1;0;0;0\nB;0;1;0;0\nC;0;0;1;0\nD;0;0;0;1", Alphabet.AlphabetParamType.Data, 2, 1);
         }
         [DataRow("CAAAACCCABBC", "CAAAACDCCABBC")]
         [DataRow("CCCBAAACACBB", "CCCBAADACACBB")]
         [DataTestMethod]
-        public void SingleGap(string x, string y)
-        {
+        public void SingleGap(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -35,8 +31,7 @@ namespace StitchTest
         [DataRow("ACACCACCACCA", "ACACDCACCDACCA")]
         [DataRow("ABBCABAAABCA", "ABBCDABAADABCA")]
         [DataTestMethod]
-        public void TwoGaps(string x, string y)
-        {
+        public void TwoGaps(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -49,8 +44,7 @@ namespace StitchTest
         [DataRow("ACBCCACBABCA", "ACBCDDCACBABCA")]
         [DataRow("ABBCABAAABCA", "ABBCDDABAAABCA")]
         [DataTestMethod]
-        public void LongGap_Double(string x, string y)
-        {
+        public void LongGap_Double(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -63,8 +57,7 @@ namespace StitchTest
         [DataRow("ACACCACACCAABCA", "ACACCACDDDACCAABCA")]
         [DataRow("ABBCABAABCAACCA", "ABBCABADDDABCAACCA")]
         [DataTestMethod]
-        public void LongGap_Triple(string x, string y)
-        {
+        public void LongGap_Triple(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -77,8 +70,7 @@ namespace StitchTest
         [DataRow("ACACACA", "ACABACA")]
         [DataRow("ACACACA", "ACACBCA")]
         [DataTestMethod]
-        public void Mismatch(string x, string y)
-        {
+        public void Mismatch(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -93,8 +85,7 @@ namespace StitchTest
         [DataRow("AAAAAAAAA")]
         [DataRow("AAABBAAAABBA")]
         [DataTestMethod]
-        public void EqualSequences(string x)
-        {
+        public void EqualSequences(string x) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(x, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -107,8 +98,7 @@ namespace StitchTest
         [DataRow("BABACBAAABCB", "CBAAA")]
         [DataRow("CBABABACCBCA", "ABACC")]
         [DataTestMethod]
-        public void EqualPart(string x, string y)
-        {
+        public void EqualPart(string x, string y) {
             var a = StringToSequence(x, alp);
             var b = StringToSequence(y, alp);
             var r = HelperFunctionality.SmithWaterman(a, b, alp);
@@ -119,8 +109,7 @@ namespace StitchTest
             Assert.AreEqual("5M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void MismatchAndGap()
-        {
+        public void MismatchAndGap() {
             //ABBAABBCB ABAACCBBAAB
             //     BBCBDABCACC
             var a = StringToSequence("ABBAABBCBABAACCBBAAB", alp);
@@ -133,8 +122,7 @@ namespace StitchTest
             Assert.AreEqual("4M1I6M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GenomicTest01()
-        {
+        public void GenomicTest01() {
             // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
@@ -148,8 +136,7 @@ namespace StitchTest
             Assert.AreEqual("6M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GenomicTest02()
-        {
+        public void GenomicTest02() {
             // I have not found the right value yet
             // Random sequences
             var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
@@ -163,8 +150,7 @@ namespace StitchTest
             Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void LongerSequence()
-        {
+        public void LongerSequence() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSPVYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
@@ -177,8 +163,7 @@ namespace StitchTest
             Assert.AreEqual("26M17D24M17I29M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void AlreadyAddedGap()
-        {
+        public void AlreadyAddedGap() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 2, 1);
             var a = StringToSequence("VKAFEALQITSNLYGKCLPRIIMAKVNARVLKIGQKTRCMLLLSP.VYWNSLFLLKGNYKAQMRGRTVWALRVVLGIRVSEVRQRFIVGAVQEALTK", alp2);
@@ -191,8 +176,7 @@ namespace StitchTest
             Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void GFPAlignment()
-        {
+        public void GFPAlignment() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             Console.WriteLine($"GapChar '{Alphabet.GapChar}'");
@@ -212,8 +196,7 @@ namespace StitchTest
             Assert.AreEqual("13M4I22M1D3M1I12M1I28M2D59M1I11M4D20M5D2M2I6M1I22M1D2M2D13M2I10M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void IgGAlignment()
-        {
+        public void IgGAlignment() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             //IgG4-K-002
@@ -232,8 +215,7 @@ namespace StitchTest
         // The following tests are written based on paths that were misaligned by the full program
         // The testcases should only pass if the alignment is what should be expected as a good alignment, so not the one given by the full program
         [TestMethod]
-        public void RealWorldFullTemplate()
-        {
+        public void RealWorldFullTemplate() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR.YYYYYGMDVWGQGTTVTVSSASTKGPSVFPLAPCSRSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYTCNVNHKPSNTKVDKRVELKTPLGDTTHTCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPEPKSCDTPPPCPRCPAPELLGGPSVFLFPPKPKDTLMISRTPEVTCVVVDVSHEDPEVQFKWYVDGVEVHNAKTKPREEQYNSTFRVVSVLTVLHQDWLNGKEYKCKVSNKALPAPIEKTISKTKGQPREPQVYTLPPSREEMTKNQVSLTCLVKGFYPSDIAVEWESSGQPENNYNTTPPMLDSDGSFFLYSKLTVDKSRWQQGNIFSCSVMHEALHNRFTQKSLSLSPGKDILLTQTPLSLSITPGEPASISCRSSRSLLHSNGNTYLHWLQKPGQPPQCLICKVSNRFSGVPDRFSGSGSGIDFTLKISPVEAADVGVYITACKLHTGPCTFGQGTKLEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSNTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC";
@@ -248,8 +230,7 @@ namespace StitchTest
             Assert.AreEqual("31M1D6M4I22M", r.Alignment.CIGAR());
         }
         [TestMethod]
-        public void RealWorldIGHV()
-        {
+        public void RealWorldIGHV() {
             // Shuffled the sequence a bit
             var alp2 = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
             var template = "EVQLVESGGGLVQPGGSLRLSCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR";
@@ -263,8 +244,7 @@ namespace StitchTest
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("30M", r.Alignment.CIGAR());
         }
-        Read.IRead StringToSequence(string input, Alphabet alp)
-        {
+        Read.IRead StringToSequence(string input, Alphabet alp) {
             return new Read.Simple(AminoAcid.FromString(input, alp).Unwrap());
         }
     }

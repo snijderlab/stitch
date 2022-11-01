@@ -7,11 +7,9 @@ using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
-    public readonly struct ReportInputParameters
-    {
+    public readonly struct ReportInputParameters {
         public readonly ReadOnlyCollection<Read.IRead> Input;
         public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
@@ -20,8 +18,7 @@ namespace Stitch
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<Read.IRead> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments)
-        {
+        public ReportInputParameters(List<Read.IRead> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();
@@ -32,15 +29,13 @@ namespace Stitch
         }
     }
     /// <summary> To be a base point for any reporting options, handling all the metadata. </summary> 
-    public abstract class Report
-    {
+    public abstract class Report {
         protected readonly int MaxThreads;
         public readonly ParsedFile BatchFile;
         public readonly ReportInputParameters Parameters;
         /// <summary> To create a report, gets all metadata. </summary>
         /// /// <param name="parameters">The parameters for this report.</param>
-        public Report(ReportInputParameters parameters, int maxThreads)
-        {
+        public Report(ReportInputParameters parameters, int maxThreads) {
             MaxThreads = maxThreads;
             BatchFile = parameters.BatchFile;
             Parameters = parameters;
@@ -50,8 +45,7 @@ namespace Stitch
         public abstract string Create();
         /// <summary> Saves the Report created with Create to a file. </summary>
         /// <param name="filename">The path to save the to.</param>
-        public void Save(string filename)
-        {
+        public void Save(string filename) {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
             var buffer = Create();
@@ -60,14 +54,10 @@ namespace Stitch
             SaveAndCreateDirectories(filename, buffer);
         }
 
-        protected void SaveAndCreateDirectories(string filename, string buffer)
-        {
-            try
-            {
+        protected void SaveAndCreateDirectories(string filename, string buffer) {
+            try {
                 Directory.CreateDirectory(Directory.GetParent(filename).FullName);
-            }
-            catch
-            {
+            } catch {
                 new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
                 throw new Exception("Could not save file, see error message above");
             }
@@ -75,20 +65,15 @@ namespace Stitch
             File.WriteAllText(filename, buffer);
         }
 
-        protected Task SaveAndCreateDirectoriesAsync(string filename, string buffer)
-        {
-            try
-            {
+        protected Task SaveAndCreateDirectoriesAsync(string filename, string buffer) {
+            try {
                 Directory.CreateDirectory(Directory.GetParent(filename).FullName);
-            }
-            catch
-            {
+            } catch {
                 new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
                 throw new Exception("Could not save file, see error message above");
             }
 
-            if (File.Exists(filename))
-            {
+            if (File.Exists(filename)) {
                 new InputNameSpace.ErrorMessage(filename, "File already exists", "All filenames are supposed to be unique to prevent data races.").Print();
                 throw new Exception("Could not save file, see error message above");
             }

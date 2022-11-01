@@ -1,12 +1,9 @@
 using System.Collections.Generic;
 
-namespace Stitch
-{
-    namespace InputNameSpace
-    {
+namespace Stitch {
+    namespace InputNameSpace {
         /// <summary> A class to save key value trees. </summary>
-        public class KeyValue
-        {
+        public class KeyValue {
             /// <summary> The name of a key. </summary> 
             public string Name;
 
@@ -21,8 +18,7 @@ namespace Stitch
             /// <summary> Create a new single valued key. </summary> 
             /// <param name="name">The name of the key.</param>
             /// <param name="value">The value of the key.</param>
-            public KeyValue(string name, string value, KeyRange keyRange, FileRange valueRange)
-            {
+            public KeyValue(string name, string value, KeyRange keyRange, FileRange valueRange) {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new Single(value);
@@ -33,8 +29,7 @@ namespace Stitch
             /// <summary> Create a new multiple valued key. </summary> 
             /// <param name="name">The name of the key.</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
-            public KeyValue(string name, List<KeyValue> values, KeyRange keyRange, FileRange valueRange)
-            {
+            public KeyValue(string name, List<KeyValue> values, KeyRange keyRange, FileRange valueRange) {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
@@ -44,14 +39,10 @@ namespace Stitch
 
             /// <summary> Tries to get a single value from this key, otherwise fails with an error message for the end user. </summary> 
             /// <returns>The value of the KeyValue.</returns>
-            public ParseResult<string> GetValue()
-            {
-                if (Value is Single value)
-                {
+            public ParseResult<string> GetValue() {
+                if (Value is Single value) {
                     return new ParseResult<string>(value.Value);
-                }
-                else
-                {
+                } else {
                     var res = new ParseResult<string>();
                     res.AddMessage(new ErrorMessage(this.ValueRange, "Incorrect value type", "This parameter should have a single value but has multiple values."));
                     return res;
@@ -60,14 +51,10 @@ namespace Stitch
 
             /// <summary> Tries to get the values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user. </summary> 
             /// <returns>The values of this KeyValue.</returns>
-            public ParseResult<List<KeyValue>> GetValues()
-            {
-                if (Value is Multiple multiple)
-                {
+            public ParseResult<List<KeyValue>> GetValues() {
+                if (Value is Multiple multiple) {
                     return new ParseResult<List<KeyValue>>(multiple.Values);
-                }
-                else
-                {
+                } else {
                     var res = new ParseResult<List<KeyValue>>();
                     res.AddMessage(new ErrorMessage(this.ValueRange, "Incorrect value type", "This parameter should have multiple values but has a single value."));
                     return res;
@@ -76,8 +63,7 @@ namespace Stitch
 
             /// <summary> To test if this is a single valued KeyValue. </summary>
             /// <returns> A bool indicating that. </returns>
-            public bool IsSingle()
-            {
+            public bool IsSingle() {
                 return Value is Single;
             }
 
@@ -85,29 +71,25 @@ namespace Stitch
             abstract class ValueType { }
 
             /// <summary> A ValueType for a single valued KeyValue. </summary>
-            class Single : ValueType
-            {
+            class Single : ValueType {
                 /// <summary> The value. </summary> 
                 public string Value;
 
                 /// <summary> To create a single value. </summary> 
                 /// <param name="value">The value.</param>
-                public Single(string value)
-                {
+                public Single(string value) {
                     Value = value.Trim();
                 }
             }
 
             /// <summary> A ValueType to contain multiple values. </summary> 
-            class Multiple : ValueType
-            {
+            class Multiple : ValueType {
                 /// <summary> The list of values. </summary> 
                 public List<KeyValue> Values;
 
                 /// <summary> To create a multiple value. </summary> 
                 /// <param name="values">The values.</param>
-                public Multiple(List<KeyValue> values)
-                {
+                public Multiple(List<KeyValue> values) {
                     Values = values;
                 }
             }
