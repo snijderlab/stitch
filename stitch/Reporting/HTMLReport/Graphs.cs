@@ -7,12 +7,9 @@ using HeckLib.chemistry;
 using System.Text.Json;
 using HtmlGenerator;
 
-namespace HTMLNameSpace
-{
-    static class HTMLGraph
-    {
-        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, bool skipOnMagnitude = false)
-        {
+namespace HTMLNameSpace {
+    static class HTMLGraph {
+        public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, bool skipOnMagnitude = false) {
             int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
             if (label == 0) label = 1;
             var annotated = new List<(string, double)>();
@@ -22,11 +19,9 @@ namespace HTMLNameSpace
             return annotated;
         }
 
-        public static HtmlBuilder Histogram(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null, int bins = 10)
-        {
+        public static HtmlBuilder Histogram(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null, int bins = 10) {
             var html = new HtmlBuilder();
-            if (data.Count == 0)
-            {
+            if (data.Count == 0) {
                 html.OpenAndClose(HtmlTag.em, "", "No data.");
                 return html;
             }
@@ -38,14 +33,12 @@ namespace HTMLNameSpace
             var labelled = new (string, double)[bins];
 
             double low = min;
-            for (int i = 0; i < bins; i++)
-            {
+            for (int i = 0; i < bins; i++) {
                 labelled[i] = ($"{low:G3}-{low + step:G3}", 0);
                 low += step;
             }
 
-            foreach (var item in data)
-            {
+            foreach (var item in data) {
                 int bin = (int)Math.Floor((item - min) / step);
 
                 if (bin > bins - 1) bin = bins - 1;
@@ -57,11 +50,9 @@ namespace HTMLNameSpace
             return Bargraph(labelled.ToList(), title, help, data_help);
         }
 
-        public static HtmlBuilder Bargraph(List<(string Label, double Value)> data, HtmlBuilder title = null, HtmlBuilder help = null, HtmlBuilder data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null, string title_string = null)
-        {
+        public static HtmlBuilder Bargraph(List<(string Label, double Value)> data, HtmlBuilder title = null, HtmlBuilder help = null, HtmlBuilder data_help = null, int factor = 2, HelperFunctionality.Annotation[] annotation = null, string title_string = null) {
             var html = new HtmlBuilder();
-            if (data.Count == 0)
-            {
+            if (data.Count == 0) {
                 html.OpenAndClose(HtmlTag.em, "", "No data.");
                 return html;
             }
@@ -69,14 +60,12 @@ namespace HTMLNameSpace
 
             html.Open(HtmlTag.div, "class='graph'");
             if (title != null)
-                if (help != null)
-                {
+                if (help != null) {
                     html.Open(HtmlTag.h2);
                     html.Add(title);
                     html.UserHelp("Bargraph", help);
                     html.Close(HtmlTag.h2);
-                }
-                else
+                } else
                     html.OpenAndClose(HtmlTag.h2, "class='title'", title);
 
             if (title != null) // Copy data should not appear in the alignment read detail index menus
@@ -85,8 +74,7 @@ namespace HTMLNameSpace
             double max = Math.Ceiling(data.Select(a => a.Value).Max() / factor) * factor;
             double min = Math.Ceiling(data.Select(a => a.Value).Min() / factor) * factor;
 
-            if (min < 0)
-            {
+            if (min < 0) {
                 max = Math.Max(max, 0); // Make sure to not start graphs below zero as this breaks the layout
                 html.Open(HtmlTag.div, $"class='histogram negative' oncontextmenu='CopyGraphData()' aria-hidden='true' style='grid-template-rows:{max / (max - min) * 150}px {min / (min - max) * 150}px 1fr'");
                 // Y axis
@@ -97,31 +85,21 @@ namespace HTMLNameSpace
                 html.OpenAndClose(HtmlTag.span, "class='empty'");
 
                 // Data
-                for (int i = 0; i < data.Count; i++)
-                {
+                for (int i = 0; i < data.Count; i++) {
                     var set = data[i];
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                    if (set.Value >= 0)
-                    {
-                        html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
-                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                        html.Close(HtmlTag.span);
+                    if (set.Value >= 0) {
+                        html.OpenAndClose(HtmlTag.span, $"class='b{Class}' style='height:{set.Value / max:P2}'");
                         html.OpenAndClose(HtmlTag.span, "class='empty'");
-                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
-                    }
-                    else
-                    {
+                        html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
+                    } else {
                         html.OpenAndClose(HtmlTag.span, "class='empty'");
-                        html.Open(HtmlTag.span, $"class='bar negative' style='height:{set.Value / min:P2}'");
-                        html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                        html.Close(HtmlTag.span);
-                        html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                        html.OpenAndClose(HtmlTag.span, $"class='b negative' style='height:{set.Value / min:P2}'");
+                        html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
                     }
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
-            }
-            else
-            {
+            } else {
                 min = 0; // always start graphs at 0 
                 html.Open(HtmlTag.div, "class='histogram' oncontextmenu='CopyGraphData()' aria-hidden='true'");
 
@@ -133,14 +111,11 @@ namespace HTMLNameSpace
                 html.OpenAndClose(HtmlTag.span, "class='empty'");
 
                 // Data
-                for (int i = 0; i < data.Count; i++)
-                {
+                for (int i = 0; i < data.Count; i++) {
                     var set = data[i];
                     var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                    html.Open(HtmlTag.span, $"class='bar{Class}' style='height:{set.Value / max:P2}'");
-                    html.OpenAndClose(HtmlTag.span, "", set.Value.ToString("G3"));
-                    html.Close(HtmlTag.span);
-                    html.OpenAndClose(HtmlTag.span, "class='label'", set.Label);
+                    html.OpenAndClose(HtmlTag.span, $"class='b{Class}' style='height:{set.Value / max:P2}'");
+                    html.OpenAndClose(HtmlTag.span, "class='l'", set.Label);
 
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
@@ -160,11 +135,9 @@ namespace HTMLNameSpace
         /// <param name="data">The data plus label per point on the x axis. ((lA, (a,b,c)), ...)</param>
         /// <param name="header">The labels for each group on each point. ((la, d), ...)</param>
         /// <returns></returns>
-        public static HtmlBuilder GroupedBargraph(List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, string title, int factor = 2, bool baseYMinOnData = false)
-        {
+        public static HtmlBuilder GroupedBargraph(List<(string Label, List<double> Dimensions)> data, List<(string Label, uint Dimension)> header, string title, int factor = 2, bool baseYMinOnData = false) {
             var html = new HtmlBuilder();
-            if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0))
-            {
+            if (data.Count == 0 || data.Any(a => a.Dimensions.Count == 0)) {
                 html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
                 return html;
             }
@@ -176,11 +149,9 @@ namespace HTMLNameSpace
             Array.Fill(max_values, Double.MinValue);
             Array.Fill(min_values, Double.MaxValue);
 
-            foreach ((_, var dims) in data)
-            {
+            foreach ((_, var dims) in data) {
                 if (dims.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({dims.Count}) as the rest ({dimensions}).");
-                for (int i = 0; i < dimensions; i++)
-                {
+                for (int i = 0; i < dimensions; i++) {
                     if (dims[i] > max_values[i]) max_values[i] = dims[i];
                     if (dims[i] < min_values[i]) min_values[i] = dims[i];
                 }
@@ -190,8 +161,7 @@ namespace HTMLNameSpace
             double[] dimensionMax = new double[dimensionDimensions + 1];
             double[] dimensionMin = new double[dimensionDimensions + 1];
 
-            for (int i = 0; i < dimensions; i++)
-            {
+            for (int i = 0; i < dimensions; i++) {
                 var dimensionIndex = header[i].Dimension;
 
                 if (max_values[i] > dimensionMax[dimensionIndex]) dimensionMax[dimensionIndex] = max_values[i];
@@ -209,8 +179,7 @@ namespace HTMLNameSpace
             html.OpenAndClose(HtmlTag.h2, "class='title'", title);
             html.Open(HtmlTag.div, "class='histogram-header'");
 
-            for (int i = 0; i < dimensions; i++)
-            {
+            for (int i = 0; i < dimensions; i++) {
                 html.OpenAndClose(HtmlTag.span, "", header[i].Label);
                 dataBuffer.Append($"\t\"{header[i].Label}\"");
             }
@@ -219,14 +188,12 @@ namespace HTMLNameSpace
             html.Close(HtmlTag.div);
             html.CopyData(title + " (TSV)");
             html.Open(HtmlTag.div, "class='histogram grouped' aria-hidden='true' oncontextmenu='CopyGraphData()'");
-            foreach (var set in data)
-            {
+            foreach (var set in data) {
                 html.Open(HtmlTag.span, "class='group'");
                 dataBuffer.Append($"\n\"{set.Label}\"");
 
                 // Create Bars
-                for (int i = 0; i < dimensions; i++)
-                {
+                for (int i = 0; i < dimensions; i++) {
                     var dimensionIndex = header[i].Dimension;
                     string height = ((set.Dimensions[i] - dimensionMin[dimensionIndex]) / (dimensionMax[dimensionIndex] - dimensionMin[dimensionIndex]) * 100).ToString();
                     html.OpenAndClose(HtmlTag.span, $"class='bar' style='height:{height}%'");
@@ -256,11 +223,9 @@ namespace HTMLNameSpace
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static HtmlBuilder GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, HtmlBuilder help, HtmlBuilder data_help)
-        {
+        public static HtmlBuilder GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, HtmlBuilder help, HtmlBuilder data_help) {
             var html = new HtmlBuilder();
-            if (data.Count == 0 || data.Any(a => a.Points.Count == 0))
-            {
+            if (data.Count == 0 || data.Any(a => a.Points.Count == 0)) {
                 html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
                 return html;
             }
@@ -273,13 +238,10 @@ namespace HTMLNameSpace
             Array.Fill(max_values, Double.MinValue);
             Array.Fill(min_values, Double.MaxValue);
 
-            foreach ((_, var group) in data)
-            {
-                foreach ((_, var values) in group)
-                {
+            foreach ((_, var group) in data) {
+                foreach ((_, var values) in group) {
                     if (values.Count != dimensions) throw new ArgumentException($"Row does not have the correct amount of dimensions ({values.Count}) as the rest ({dimensions}).");
-                    for (int i = 0; i < dimensions; i++)
-                    {
+                    for (int i = 0; i < dimensions; i++) {
                         if (values[i] > max_values[i]) max_values[i] = values[i];
                         if (values[i] < min_values[i]) min_values[i] = values[i];
                     }
@@ -293,8 +255,7 @@ namespace HTMLNameSpace
             html.TagWithHelp(HtmlTag.h2, title, help);
             html.CopyData(title + " (TSV)", data_help);
 
-            for (int i = 0; i < dimensions; i++)
-            {
+            for (int i = 0; i < dimensions; i++) {
                 var check = i < 3 ? " checked " : "";
                 html.Empty(HtmlTag.input, $"type='checkbox' class='show-data-{i}' id='{identifier}-show-data-{i}'{check}");
                 html.OpenAndClose(HtmlTag.label, $"for='{identifier}-show-data-{i}'", header[i]);
@@ -309,17 +270,14 @@ namespace HTMLNameSpace
             html.Close(HtmlTag.div);
 
             // Create Graph
-            foreach (var group in data)
-            {
+            foreach (var group in data) {
                 html.Open(HtmlTag.div, $"class='group' style='flex-grow:{group.Points.Count}'");
 
-                foreach (var point in group.Points)
-                {
+                foreach (var point in group.Points) {
                     dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label}");
                     html.Open(HtmlTag.a, $"href='#{identifier}_{point.Label}' class='values'");
                     // Create Points
-                    for (int i = 0; i < dimensions; i++)
-                    {
+                    for (int i = 0; i < dimensions; i++) {
                         html.OpenAndClose(HtmlTag.span, $"class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[1])}'");
                         dataBuffer.Append($"\t{point.Values[i]}");
                     }
@@ -351,8 +309,7 @@ namespace HTMLNameSpace
         /// <param name="type"> The type of the leaf nodes. </param>
         /// <param name="AssetsFolderName"> The path to the assets folder from the current HTML. </param>
         /// <returns></returns>
-        public static HtmlBuilder RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName)
-        {
+        public static HtmlBuilder RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName) {
             var html = new HtmlBuilder();
             const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
             const double yf = 22;   // Height of the labels
@@ -360,23 +317,20 @@ namespace HTMLNameSpace
             const double stroke = 2;  // Stroke of the circles and tree lines, do not forget to update the CSS when updating this value.
             const double text_width = 100; // The width of the border around the leaf text
 
-            (int, int, int, int, double, double) unpack((int, int, int, int, double, double, string) data)
-            {
+            (int, int, int, int, double, double) unpack((int, int, int, int, double, double, string) data) {
                 return (data.Item1, data.Item2, data.Item3, data.Item4, data.Item5, data.Item6);
             }
 
             var pos = 0.0;
-            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadMetaData.IMetaData MetaData)>(
+            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, Read.IRead MetaData)>(
                 (t, value) => ((t.Left.Value.Item2.Value.Y + t.Right.Value.Item2.Value.Y) / 2, unpack(value), null),
-                leaf =>
-                {
+                leaf => {
                     pos += 1.0;
                     return (pos, unpack(leaf), templates.Find(t => t.MetaData.Identifier == leaf.Name).MetaData);
                 });
 
             var columns = 0;
-            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadMetaData.IMetaData MetaData)>((t, depth) =>
-            {
+            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, Read.IRead MetaData)>((t, depth) => {
                 if (depth > columns) columns = depth;
                 return ((double)depth, t.Value.Y, t.Value.Scores, t.Value.MetaData);
             });
@@ -388,8 +342,7 @@ namespace HTMLNameSpace
             html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree.ToString()));
 
             var button_names = new string[] { "Score", "Matches", "Area" };
-            for (int i = 0; i < button_names.Length; i++)
-            {
+            for (int i = 0; i < button_names.Length; i++) {
                 var check = i == 0 ? " checked " : "";
                 html.Empty(HtmlTag.input, $"type='radio' class='show-data-{i}' name='{id}' id='{id}-{i}'{check}");
                 html.OpenAndClose(HtmlTag.label, $"for='{id}-{i}'", button_names[i]);
@@ -402,10 +355,8 @@ namespace HTMLNameSpace
             var svg = new SvgBuilder();
             svg.Open(SvgTag.svg, $"viewBox='0 0 {max_x + radius + text_width} {((int)pos + 1) * yf}' width='100%' height='{((int)pos + 1) * yf}px' preserveAspectRatio='none'");
 
-            string GetScores((int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) value, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) max, bool unique)
-            {
-                double Normalise(double value)
-                {
+            string GetScores((int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) value, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) max, bool unique) {
+                double Normalise(double value) {
                     return double.IsNaN(value) ? 0.0 : value;
                 }
 
@@ -418,8 +369,7 @@ namespace HTMLNameSpace
                 return $"--score:{values.Item1};--matches:{values.Item2};--area:{values.Item3};";
             }
 
-            pos_tree.Apply(t =>
-            {
+            pos_tree.Apply(t => {
                 var x = t.Value.X * xf + radius + stroke;
                 var x1 = (t.Value.X + 1) * xf + stroke / 2;
                 if (t.Value.X == columns - 1) x1 += xf - radius * 2 - stroke;
@@ -436,8 +386,7 @@ namespace HTMLNameSpace
                 svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-1'", $"Matches: {t.Value.Scores.Matches} ({(double)t.Value.Scores.Matches / max.Item3:P})");
                 svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-2'", $"Area: {t.Value.Scores.Area:G3} ({(double)t.Value.Scores.Area / max.Item5:P})");
                 svg.Close(SvgTag.g);
-            }, leaf =>
-            {
+            }, leaf => {
                 var x = leaf.X * xf;
                 var y = leaf.Y * yf;
                 var end = max_x - radius - stroke;
@@ -455,8 +404,7 @@ namespace HTMLNameSpace
                 svg.Close(SvgTag.g);
             });
 
-            var json = tree.DataTree.Fold((value, ad, a, bd, b) =>
-            {
+            var json = tree.DataTree.Fold((value, ad, a, bd, b) => {
                 var obj = new JsonObject();
                 obj.Keys.Add("left", a);
                 obj.Keys.Add("leftDistance", new JsonNumber(ad));
@@ -466,8 +414,7 @@ namespace HTMLNameSpace
                 obj.Keys.Add("matches", new JsonNumber(value.Matches));
                 obj.Keys.Add("area", new JsonNumber(value.Area));
                 return obj;
-            }, value =>
-            {
+            }, value => {
                 var obj = new JsonObject();
                 obj.Keys.Add("name", new JsonString(value.Name));
                 obj.Keys.Add("score", new JsonNumber(value.Score));

@@ -1,12 +1,9 @@
 using System;
 
-namespace Stitch
-{
-    namespace RunParameters
-    {
+namespace Stitch {
+    namespace RunParameters {
         /// <summary> To give an 'api' for calling the program. </summary>
-        public class FullRunParameters
-        {
+        public class FullRunParameters {
             /// <summary> The name of this run. </summary> 
             public string Runname = "";
             /// <summary> The directory which contains all raw files. </summary> 
@@ -31,8 +28,7 @@ namespace Stitch
             public ParsedFile BatchFile = null;
 
             /// <summary> Creates the run </summary> 
-            public SingleRun CreateRun(RunVariables variables, ProgressBar bar = null)
-            {
+            public SingleRun CreateRun(RunVariables variables, ProgressBar bar = null) {
                 return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, variables, RawDataDirectory, bar);
             }
         }

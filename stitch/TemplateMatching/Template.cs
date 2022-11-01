@@ -5,19 +5,15 @@ using static Stitch.HelperFunctionality;
 using System.Text.Json.Serialization;
 
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> Saves a template and its alignment with the given matches. </summary> 
-    public class Template
-    {
+    public class Template {
         /// <summary> The name of the containing Segment. <see cref="Segment.Name"/> </summary>
         public readonly string Name;
 
         /// <summary> The class of the Template, eg "IGHV3" for "IGHV3-66". <see cref="IMetaData.ClassIdentifier"/> </summary>
-        public string Class
-        {
-            get
-            {
+        public string Class {
+            get {
                 return MetaData.ClassIdentifier;
             }
         }
@@ -26,13 +22,11 @@ namespace Stitch
         public readonly AminoAcid[] Sequence;
 
         /// <summary> Metadata for this template </summary>
-        public readonly ReadMetaData.IMetaData MetaData;
+        public readonly Read.IRead MetaData;
 
         /// <summary> The score for this template </summary>
-        public int Score
-        {
-            get
-            {
+        public int Score {
+            get {
                 if (Parent.Scoring == RunParameters.ScoringParameter.Absolute) return score;
                 else return (int)Math.Round((double)score / Sequence.Length);
             }
@@ -46,10 +40,8 @@ namespace Stitch
         public bool ForceGermlineIsoleucine;
 
         /// <summary> The unique score for this template. </summary>
-        public int UniqueScore
-        {
-            get
-            {
+        public int UniqueScore {
+            get {
                 if (Parent.Scoring == RunParameters.ScoringParameter.Absolute) return uniqueScore;
                 else return (int)Math.Round((double)uniqueScore / Sequence.Length);
             }
@@ -87,8 +79,7 @@ namespace Stitch
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, ReadMetaData.IMetaData meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null)
-        {
+        public Template(string name, AminoAcid[] seq, Read.IRead meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null) {
             Name = name;
             Sequence = seq;
             MetaData = meta;
@@ -103,22 +94,18 @@ namespace Stitch
         /// <summary> Adds a new match to the list of matches, if the score is above the cutoff. </summary>
         /// <param name="match">The match to add</param>
         /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
-        public void AddMatch(SequenceMatch match, bool unique = false)
-        {
-            lock (Matches)
-            {
-                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Length) && !match.AllGap())
-                {
+        public void AddMatch(SequenceMatch match, bool unique = false) {
+            lock (Matches) {
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Sequence.Length) && !match.AllGap()) {
                     score += match.Score;
-                    TotalArea += match.MetaData.TotalArea;
+                    TotalArea += match.Query.TotalArea;
                     Matches.Add(match);
 
-                    if (unique)
-                    {
+                    if (unique) {
                         this.ForcedOnSingleTemplate = true;
                         match.Unique = true;
                         uniqueScore += match.Score;
-                        TotalUniqueArea += match.MetaData.TotalArea;
+                        TotalUniqueArea += match.Query.TotalArea;
                         UniqueMatches++;
                     }
                 }
@@ -128,8 +115,7 @@ namespace Stitch
         public interface IGap { }
 
         /// <summary> No gap </summary>
-        public struct None : IGap
-        {
+        public struct None : IGap {
             public override string ToString() { return ""; }
             public override int GetHashCode() { return 397; }
             public override bool Equals(object obj) { return obj is None; }
@@ -138,23 +124,20 @@ namespace Stitch
         }
 
         /// <summary> A gap </summary>
-        public struct Gap : IGap
-        {
+        public struct Gap : IGap {
             /// <summary> The sequence of this gap </summary> 
             public readonly AminoAcid[] Sequence;
             int hashCode;
 
             /// <summary> Creates a new Gap </summary> 
             /// <param name="sequence">The sequence of this gap, <see cref="Sequence"/>.</param>
-            public Gap(AminoAcid[] sequence)
-            {
+            public Gap(AminoAcid[] sequence) {
                 Sequence = sequence;
 
                 // Pre computes a hash code based on the actual sequence of the gap
                 int hash = 1217;
                 int pos = 0;
-                for (int i = 0; i < 5; i++)
-                {
+                for (int i = 0; i < 5; i++) {
                     hash ^= Sequence[pos].GetHashCode();
                     hash += 11;
                     pos = ((pos + i) * 653) % Sequence.Length;
@@ -162,25 +145,19 @@ namespace Stitch
                 hashCode = hash;
             }
 
-            public override string ToString()
-            {
+            public override string ToString() {
                 return AminoAcid.ArrayToString(Sequence);
             }
 
-            public override int GetHashCode()
-            {
+            public override int GetHashCode() {
                 return hashCode;
             }
 
             // Equality is defined by the equality of the sequences
-            public override bool Equals(object obj)
-            {
-                if (obj is Gap other && this.Sequence.Length == other.Sequence.Length)
-                {
+            public override bool Equals(object obj) {
+                if (obj is Gap other && this.Sequence.Length == other.Sequence.Length) {
                     return AminoAcid.ArrayEquals(this.Sequence, other.Sequence);
-                }
-                else
-                {
+                } else {
                     return false;
                 }
             }
@@ -191,19 +168,16 @@ namespace Stitch
         /// <summary> Gets the placement of the sequences associated with this template. </summary>
         /// <returns> A list with tuples for each position in the original sequence. </returns>
         private List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> alignedSequencesCache = null;
-        public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences()
-        {
+        public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences() {
             if (alignedSequencesCache != null) return alignedSequencesCache;
 
             Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
 
             // Add all the positions
             var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
-            for (int i = 0; i < Sequence.Length; i++)
-            {
+            for (int i = 0; i < Sequence.Length; i++) {
                 output.Add((new (int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[Matches.Count], new (int, IGap, double[], int, bool)[Matches.Count]));
-                for (int j = 0; j < Matches.Count; j++)
-                {
+                for (int j = 0; j < Matches.Count; j++) {
                     output[i].Sequences[j] = (-2, 0, 0, -1);
                     output[i].Gaps[j] = (-2, new None(), new double[0], -1, false);
                 }
@@ -212,59 +186,50 @@ namespace Stitch
             SequenceMatch match;
             SequenceMatch.MatchPiece piece;
 
-            for (int match_index = 0; match_index < Matches.Count; match_index++)
-            {
+            for (int match_index = 0; match_index < Matches.Count; match_index++) {
                 match = Matches[match_index];
                 // Start at StartTemplatePosition and StartQueryPosition
                 int template_pos = match.StartTemplatePosition;
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
 
-                for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++)
-                {
+                for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++) {
                     piece = match.Alignment[piece_index];
                     var inseq = piece_index < match.Alignment.Count - 1 && piece_index > 0;
 
-                    if (piece is SequenceMatch.Match m)
-                    {
-                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Length; i++)
-                        {
+                    if (piece is SequenceMatch.Match m) {
+                        for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Sequence.Length; i++) {
                             var contigid = match.Index;
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
                                            || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
-                            output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.MetaData.PositionalScore.Length > 0 ? match.MetaData.PositionalScore[seq_pos] : 1.0, contigid);
+                            output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.QuerySequence.PositionalScore.Length > 0 ? match.QuerySequence.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], contigid, in_sequence);
 
                             template_pos++;
                             seq_pos++;
                             gap = false;
                         }
-                    }
-                    else if (piece is SequenceMatch.Insertion gc)
-                    {
+                    } else if (piece is SequenceMatch.Insertion gc) {
                         // Try to add this sequence or update the count
                         gap = true;
-                        int len = Math.Min(gc.Length, match.QuerySequence.Length - seq_pos - 1);
+                        int len = Math.Min(gc.Length, match.QuerySequence.Sequence.Length - seq_pos - 1);
 
-                        IGap sub_seq = new Gap(match.QuerySequence.SubArray(seq_pos, len));
+                        IGap sub_seq = new Gap(match.QuerySequence.Sequence.SubArray(seq_pos, len));
                         double[] cov = new double[len];
-                        if (match.MetaData.PositionalScore.Length >= seq_pos + len)
-                            cov = match.MetaData.PositionalScore.SubArray(seq_pos, len);
+                        if (match.Query.Sequence.PositionalScore.Length >= seq_pos + len)
+                            cov = match.Query.Sequence.PositionalScore.SubArray(seq_pos, len);
 
                         var contigid = match.Index;
 
                         seq_pos += len;
                         int pos = Math.Max(Math.Min(template_pos - 1, output.Count - 1), 0);
                         output[pos].Gaps[match_index] = (match_index, sub_seq, cov, contigid, inseq);
-                    }
-                    else if (piece is SequenceMatch.Deletion gt)
-                    {
+                    } else if (piece is SequenceMatch.Deletion gt) {
                         // Skip to the next section
-                        for (int i = 0; i < gt.Length && template_pos < output.Count; i++)
-                        {
+                        for (int i = 0; i < gt.Length && template_pos < output.Count; i++) {
                             output[template_pos].Sequences[match_index] = (match_index, -1, 1, -1);
                             output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], -1, true);
                             template_pos++;
@@ -280,12 +245,10 @@ namespace Stitch
         /// <summary> Returns the combined sequence or aminoacid variety per position in the alignment. </summary>
         /// <returns>A list of tuples. The first item is a dictionary with the aminoacid variance for this position, with counts. The second item contains a dictionary with the gap variety, with counts.</returns>
         private List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)> combinedSequenceCache = null;
-        public List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)> CombinedSequence()
-        {
+        public List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)> CombinedSequence() {
             if (combinedSequenceCache != null) return combinedSequenceCache;
 
-            var output = new List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)>()
-            {
+            var output = new List<(AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)>() {
                 Capacity = Sequence.Length
             };
 
@@ -293,18 +256,15 @@ namespace Stitch
             AminoAcid aa;
             IGap key;
 
-            for (int i = 0; i < Sequence.Length; i++)
-            {
+            for (int i = 0; i < Sequence.Length; i++) {
                 (AminoAcid Template, Dictionary<AminoAcid, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps) position = (Sequence[i], new Dictionary<AminoAcid, double>(), new Dictionary<IGap, (int, double[])>());
                 // Create the aminoacid dictionary
-                foreach (var option in alignedSequences[i].Sequences)
-                {
-                    if (option.SequencePosition != 0)
-                    {
+                foreach (var option in alignedSequences[i].Sequences) {
+                    if (option.SequencePosition != 0) {
                         if (option.SequencePosition == -1) // If there is a deletion in the placed read in respect to the template
                             aa = new AminoAcid(Parent.Alphabet, Alphabet.GapChar);
                         else
-                            aa = Matches[option.MatchIndex].QuerySequence[option.SequencePosition - 1];
+                            aa = Matches[option.MatchIndex].QuerySequence.Sequence[option.SequencePosition - 1];
 
                         if (position.AminoAcids.ContainsKey(aa))
                             position.AminoAcids[aa] += option.CoverageDepth;
@@ -314,23 +274,18 @@ namespace Stitch
                 }
 
                 // Create the gap dictionary
-                foreach (var option in alignedSequences[i].Gaps)
-                {
+                foreach (var option in alignedSequences[i].Gaps) {
                     if (option.Gap == null || !option.InSequence) continue;
 
-                    if (option.Gap == (IGap)new None())
-                    {
+                    if (option.Gap == (IGap)new None()) {
                         if (position.Gaps.ContainsKey(new None()))
                             position.Gaps[new None()] = (position.Gaps[new None()].Count + 1, new double[0]);
                         else
                             position.Gaps.Add(new None(), (1, new double[0]));
-                    }
-                    else
-                    {
+                    } else {
                         key = option.Gap;
 
-                        if (position.Gaps.ContainsKey(key))
-                        {
+                        if (position.Gaps.ContainsKey(key)) {
                             double[] cov;
                             if (position.Gaps[key].CoverageDepth == null)
                                 cov = option.CoverageDepth;
@@ -338,9 +293,7 @@ namespace Stitch
                                 cov = position.Gaps[key].CoverageDepth.ElementwiseAdd(option.CoverageDepth);
 
                             position.Gaps[key] = (position.Gaps[key].Count + 1, cov);
-                        }
-                        else
-                        {
+                        } else {
                             position.Gaps.Add(key, (1, option.CoverageDepth));
                         }
                     }
@@ -351,8 +304,7 @@ namespace Stitch
             return output;
         }
         (List<AminoAcid>, List<double>) ConsensusSequenceCache = (null, null);
-        public (List<AminoAcid>, List<double>) ConsensusSequence()
-        {
+        public (List<AminoAcid>, List<double>) ConsensusSequence() {
             if (ConsensusSequenceCache != (null, null)) return ConsensusSequenceCache;
 
             var consensus = new List<AminoAcid>();
@@ -363,49 +315,35 @@ namespace Stitch
             double coverage;
             List<Template.IGap> max_gap = new List<IGap>();
 
-            for (int i = 0; i < combinedSequence.Count; i++)
-            {
+            for (int i = 0; i < combinedSequence.Count; i++) {
                 // Get the highest chars
                 options.Clear();
                 max = 0;
                 coverage = 0;
 
-                foreach (var item in combinedSequence[i].AminoAcids)
-                {
+                foreach (var item in combinedSequence[i].AminoAcids) {
                     coverage += item.Value;
-                    if (item.Value > max)
-                    {
+                    if (item.Value > max) {
                         options.Clear();
                         options.Add(item.Key);
                         max = item.Value;
-                    }
-                    else if (item.Value == max)
-                    {
+                    } else if (item.Value == max) {
                         options.Add(item.Key);
                     }
                 }
 
-                if (options.Count == 1 && options[0].Character == Alphabet.GapChar)
-                {
+                if (options.Count == 1 && options[0].Character == Alphabet.GapChar) {
                     // Do not add gaps, as those are not part of the final sequence
-                }
-                else if (options.Count > 1 && options.Contains(combinedSequence[i].Template))
-                {
+                } else if (options.Count > 1 && options.Contains(combinedSequence[i].Template)) {
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);
-                }
-                else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Character == 'L' && combinedSequence[i].Template.Character == 'I')
-                {
+                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Character == 'L' && combinedSequence[i].Template.Character == 'I') {
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);
-                }
-                else if (options.Count > 0)
-                {
+                } else if (options.Count > 0) {
                     consensus.Add(options[0]);
                     doc.Add(coverage);
-                }
-                else
-                {
+                } else {
                     // There is no data from reads so take the template sequence
                     consensus.Add(combinedSequence[i].Template);
                     doc.Add(coverage);
@@ -416,23 +354,18 @@ namespace Stitch
                 max = 0;
                 var gap_coverage = new double[0];
 
-                foreach (var item in combinedSequence[i].Gaps)
-                {
-                    if (item.Value.Count > max)
-                    {
+                foreach (var item in combinedSequence[i].Gaps) {
+                    if (item.Value.Count > max) {
                         max_gap.Clear();
                         max_gap.Add(item.Key);
                         max = item.Value.Count;
                         gap_coverage = item.Value.CoverageDepth;
-                    }
-                    else if (item.Value.Count == max)
-                    {
+                    } else if (item.Value.Count == max) {
                         max_gap.Add(item.Key);
                     }
                 }
 
-                if (max_gap.Count >= 1 && max_gap[0].GetType() != typeof(Template.None))
-                {
+                if (max_gap.Count >= 1 && max_gap[0].GetType() != typeof(Template.None)) {
                     consensus.AddRange(((Template.Gap)max_gap[0]).Sequence);
                     doc.AddRange(gap_coverage);
                 }
@@ -443,48 +376,41 @@ namespace Stitch
 
         /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
-        public SequenceMatch AlignConsensusWithTemplate()
-        {
+        public SequenceMatch AlignConsensusWithTemplate() {
+            var consensus = new Read.Simple(this.ConsensusSequence().Item1.ToArray());
             if (Recombination != null)
-                return HelperFunctionality.SmithWaterman(this.Recombination.SelectMany(a => a.Sequence).ToArray(), this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+                return HelperFunctionality.SmithWaterman(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet);
             else
-                return HelperFunctionality.SmithWaterman(this.Sequence, this.ConsensusSequence().Item1.ToArray(), Parent.Alphabet);
+                return HelperFunctionality.SmithWaterman(this.MetaData, consensus, Parent.Alphabet);
         }
 
         /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>
         private Annotation[] ConsensusSequenceAnnotationCache = null;
-        public Annotation[] ConsensusSequenceAnnotation()
-        {
+        public Annotation[] ConsensusSequenceAnnotation() {
             if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
 
             var match = this.AlignConsensusWithTemplate();
             var annotation = new List<Annotation>(match.LengthOnQuery);
 
             List<(Annotation, string)> annotated = null;
-            if (this.Recombination != null)
-            {
-                annotated = this.Recombination.Aggregate(new List<(Annotation, string)>(), (acc, item) =>
-            {
-                var x_start = item.ConsensusSequence().Item1.TakeWhile(a => a.Character == 'X').Count();
-                var main_sequence = item.ConsensusSequence().Item1.Skip(x_start).TakeWhile(a => a.Character != 'X').Count();
-                var sequence = AminoAcid.ArrayToString(item.ConsensusSequence().Item1.Skip(x_start).Take(main_sequence).ToArray());
-                acc.AddRange(item.ConsensusSequenceAnnotation().Skip(x_start).Take(main_sequence).Skip(item.Overlap).Zip(sequence).Select((a) => (a.First, a.Second.ToString())));
-                return acc;
-            });
-            }
-            else
-            {
-                if (this.MetaData is ReadMetaData.Fasta meta)
+            if (this.Recombination != null) {
+                annotated = this.Recombination.Aggregate(new List<(Annotation, string)>(), (acc, item) => {
+                    var x_start = item.ConsensusSequence().Item1.TakeWhile(a => a.Character == 'X').Count();
+                    var main_sequence = item.ConsensusSequence().Item1.Skip(x_start).TakeWhile(a => a.Character != 'X').Count();
+                    var sequence = AminoAcid.ArrayToString(item.ConsensusSequence().Item1.Skip(x_start).Take(main_sequence).ToArray());
+                    acc.AddRange(item.ConsensusSequenceAnnotation().Skip(x_start).Take(main_sequence).Skip(item.Overlap).Zip(sequence).Select((a) => (a.First, a.Second.ToString())));
+                    return acc;
+                });
+            } else {
+                if (this.MetaData is Read.Fasta meta)
                     if (meta.AnnotatedSequence != null)
                         annotated = meta.AnnotatedSequence;
             }
 
-            Annotation GetClasses(int position)
-            {
+            Annotation GetClasses(int position) {
                 if (annotated == null) return Annotation.None;
                 int pos = -1;
-                for (int i = 0; i < annotated.Count; i++)
-                {
+                for (int i = 0; i < annotated.Count; i++) {
                     pos += annotated[i].Item2.Length;
                     if (pos >= position + match.StartTemplatePosition)
                         return annotated[i].Item1;
@@ -495,21 +421,17 @@ namespace Stitch
             var columns = new List<(char Template, char Query, char Difference, string Class)>();
             int query_pos = 0;
             int template_pos = 0;
-            foreach (var piece in match.Alignment)
-            {
-                switch (piece)
-                {
+            foreach (var piece in match.Alignment) {
+                switch (piece) {
                     case SequenceMatch.Match m:
-                        for (int i = 0; i < m.Length; i++)
-                        {
+                        for (int i = 0; i < m.Length; i++) {
                             annotation.Add(GetClasses(query_pos));
                             query_pos++;
                             template_pos++;
                         }
                         break;
                     case SequenceMatch.Insertion q:
-                        for (int i = 0; i < q.Length; i++)
-                        {
+                        for (int i = 0; i < q.Length; i++) {
                             annotation.Add(GetClasses(query_pos));
                             query_pos++;
                         }
@@ -530,8 +452,7 @@ namespace Stitch
         /// <returns>A list of AmbiguityNodes containing the Position and Support for the connection to the next node.</returns>
         public static double AmbiguityThreshold = -1;
         AmbiguityNode[] SequenceAmbiguityAnalysisCache = null;
-        public AmbiguityNode[] SequenceAmbiguityAnalysis()
-        {
+        public AmbiguityNode[] SequenceAmbiguityAnalysis() {
             // Check the cache
             if (SequenceAmbiguityAnalysisCache != null) return SequenceAmbiguityAnalysisCache;
 
@@ -539,8 +460,7 @@ namespace Stitch
             AmbiguityNode[] ambiguous;
 
             // Find all ambiguous positions
-            var a = consensus.Select((position, index) =>
-            {
+            var a = consensus.Select((position, index) => {
                 if (position.AminoAcids.Count() == 0) return -1;
                 else if (position.AminoAcids.Values.Max() < Template.AmbiguityThreshold * position.AminoAcids.Values.Sum()) return index;
                 else return -1;
@@ -551,39 +471,33 @@ namespace Stitch
                 ambiguous = a.ToArray();
 
             // Add all reads that support ambiguous positions
-            for (int i = 0; i < ambiguous.Length - 1; i++)
-            {
-                foreach (var peptide in this.Matches)
-                {
+            for (int i = 0; i < ambiguous.Length - 1; i++) {
+                foreach (var peptide in this.Matches) {
                     var this_aa = peptide.GetAtTemplateIndex(ambiguous[i].Position);
                     if (this_aa == null) continue;
 
                     var path = new List<AminoAcid>();
-                    for (int offset = 1; i + offset < ambiguous.Length; offset++)
-                    {
+                    for (int offset = 1; i + offset < ambiguous.Length; offset++) {
                         var position = ambiguous[i + offset].Position;
                         var next_aa = peptide.GetAtTemplateIndex(position);
                         if (next_aa != null)
                             path.Add(next_aa.Value);
                     }
-                    if (path.Count > 0)
-                    {
+                    if (path.Count > 0) {
                         var reverse_path = new List<AminoAcid>(path);
                         reverse_path.Reverse();
                         reverse_path.Add(this_aa.Value);
-                        for (int j = 0; j < reverse_path.Count - 1; j++)
-                        {
-                            ambiguous[i + reverse_path.Count - 1 - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.MetaData.Intensity, peptide.MetaData.Identifier, reverse_path.Skip(j + 1).ToArray());
+                        for (int j = 0; j < reverse_path.Count - 1; j++) {
+                            ambiguous[i + reverse_path.Count - 1 - j].UpdateHigherOrderSupportBackward(reverse_path[j], peptide.Query.Intensity, peptide.Query.Identifier, reverse_path.Skip(j + 1).ToArray());
                         }
-                        ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.MetaData.Intensity, peptide.MetaData.Identifier, path.ToArray());
+                        ambiguous[i].UpdateHigherOrderSupportForward(this_aa.Value, peptide.Query.Intensity, peptide.Query.Identifier, path.ToArray());
                     }
                 }
             }
 
             // Simplify all trees
             foreach (var position in ambiguous)
-                foreach (var tree in position.SupportTrees)
-                {
+                foreach (var tree in position.SupportTrees) {
                     tree.Value.Backward.Simplify();
                     tree.Value.Forward.Simplify();
                 }
@@ -592,11 +506,56 @@ namespace Stitch
             SequenceAmbiguityAnalysisCache = ambiguous;
             return ambiguous;
         }
+
+        public void FixCommonMassSpecErrors() {
+            var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
+            foreach (var match in this.Matches) {
+                int pos = match.StartTemplatePosition;
+                int q_pos = match.StartQueryPosition;
+
+                foreach (var piece in match.Alignment) {
+                    if (piece is SequenceMatch.Match ma) {
+                        for (int offset = 0; offset < piece.Length; offset++) {
+                            var skip = 0;
+                            var found = false;
+                            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
+                                for (int size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); size > 0 && !found; size--) {
+                                    var key = match.QuerySequence.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
+                                    if (equal_mass.ContainsKey(key)) {
+                                        var set = equal_mass[key];
+
+                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); template_size > 0; template_size--) {
+                                            var template_key = this.Sequence.SubArray(pos + offset, template_size).ToSortedAminoAcidSet();
+                                            if (set.Contains(template_key)) {
+                                                // Force template
+                                                match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
+                                                ma.Length = ma.Length - size + template_size; // Update SequenceMatch
+                                                skip = size;
+                                                found = true;
+                                                break; // Goes to next position
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                            offset += skip;
+                        }
+                        pos += piece.Length;
+                        q_pos += piece.Length;
+                    } else if (piece is SequenceMatch.Deletion) {
+                        pos += piece.Length;
+
+                    } else if (piece is SequenceMatch.Insertion) {
+                        q_pos += piece.Length;
+
+                    }
+                }
+            }
+        }
     }
 
     /// <summary> The location of a template, in its Segment and its location </summary> 
-    public class TemplateLocation
-    {
+    public class TemplateLocation {
         /// <summary> The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>. </summary>
         public readonly int SegmentIndex;
 
@@ -606,16 +565,14 @@ namespace Stitch
         /// <summary> Creates a new TemplateLocation </summary>
         /// <param name="segmentIndex"> The Segment index, see <see cref="SegmentIndex"/>.</param>
         /// <param name="templateIndex"> The Template index, see <see cref="TemplateIndex"/>.</param>
-        public TemplateLocation(int segmentIndex, int templateIndex)
-        {
+        public TemplateLocation(int segmentIndex, int templateIndex) {
             SegmentIndex = segmentIndex;
             TemplateIndex = templateIndex;
         }
     }
 
     /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary> 
-    public class RecombinedTemplateLocation : TemplateLocation
-    {
+    public class RecombinedTemplateLocation : TemplateLocation {
         public RecombinedTemplateLocation(int templateIndex) : base(-1, templateIndex) { }
     }
 }

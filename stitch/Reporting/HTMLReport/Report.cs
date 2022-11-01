@@ -12,81 +12,66 @@ using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
 using HtmlGenerator;
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> An HTML report. </summary> 
-    public class HTMLReport : Report
-    {
+    public class HTMLReport : Report {
         /// <summary> The name of the assets folder </summary>
         public string AssetsFolderName;
         string FullAssetsFolderName;
         public RunParameters.Report.HTML ReportParameter;
 
-        public HTMLReport(ReportInputParameters Parameters, int maxThreads, RunParameters.Report.HTML reportParameter) : base(Parameters, maxThreads)
-        {
+        public HTMLReport(ReportInputParameters Parameters, int maxThreads, RunParameters.Report.HTML reportParameter) : base(Parameters, maxThreads) {
             ReportParameter = reportParameter;
         }
 
-        public override string Create()
-        {
+        public override string Create() {
             throw new Exception("HTML reports should be generated using the 'Save' function.");
         }
 
         /// <summary> Generates a list of asides for details viewing. </summary>
-        public void CreateAsides()
-        {
+        public void CreateAsides() {
             var job_buffer = new List<(AsideType, int, int, int)>();
 
             // Read Asides
-            for (int i = 0; i < Parameters.Input.Count; i++)
-            {
+            for (int i = 0; i < Parameters.Input.Count; i++) {
                 job_buffer.Add((AsideType.Read, -1, -1, i));
             }
             // Template Tables Asides
-            if (Parameters.Groups != null)
-            {
+            if (Parameters.Groups != null) {
                 for (int i = 0; i < Parameters.Groups.Count; i++)
                     for (int j = 0; j < Parameters.Groups[i].Item2.Count; j++)
                         for (int k = 0; k < Parameters.Groups[i].Item2[j].Templates.Count; k++)
                             job_buffer.Add((AsideType.Template, i, j, k));
             }
             // Recombination Table Asides
-            if (Parameters.RecombinedSegment != null)
-            {
+            if (Parameters.RecombinedSegment != null) {
                 for (int i = 0; i < Parameters.RecombinedSegment.Count; i++)
                     for (int j = 0; j < Parameters.RecombinedSegment[i].Templates.Count; j++)
                         job_buffer.Add((AsideType.RecombinedTemplate, i, -1, j));
             }
 
-            if (MaxThreads > 1)
-            {
+            if (MaxThreads > 1) {
                 Parallel.ForEach(
                     job_buffer,
                     new ParallelOptions { MaxDegreeOfParallelism = MaxThreads },
                     (a, _) => CreateAndSaveAside(a.Item1, a.Item2, a.Item3, a.Item4)
                 );
-            }
-            else
-            {
-                foreach (var (t, i3, i2, i1) in job_buffer)
-                {
+            } else {
+                foreach (var (t, i3, i2, i1) in job_buffer) {
                     CreateAndSaveAside(t, i3, i2, i1);
                 }
             }
         }
 
-        void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1)
-        {
-            try
-            {
+        void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1) {
+            try {
                 HtmlBuilder inner_html;
 
-                ReadMetaData.IMetaData metadata;
-                switch (aside)
-                {
+                Read.IRead metadata;
+                switch (aside) {
                     case AsideType.Read:
                         inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
-                        metadata = Parameters.Input[index1].MetaData;
+                        metadata = Parameters.Input[index1];
                         break;
                     case AsideType.Template:
                         var template = Parameters.Groups[index3].Item2[index2].Templates[index1];
@@ -119,65 +104,48 @@ namespace Stitch
                 html.Close(HtmlTag.html);
 
                 SaveAndCreateDirectories(full_path, html.ToString());
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 InputNameSpace.ErrorMessage.PrintException(e);
                 throw new Exception("Exception raised in creation of aside. See above message for more details.");
             }
         }
 
-        HtmlBuilder CreateCDROverview(string id, List<Segment> segments)
-        {
-            var cdr1_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)>();
+        HtmlBuilder CreateCDROverview(string id, List<Segment> segments) {
+            var cdr1_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
             int total_templates = 0;
             bool found_cdr_region = false;
 
-            foreach (var template in segments.SelectMany(a => a.Templates))
-            {
+            foreach (var template in segments.SelectMany(a => a.Templates)) {
                 var positions = new Dictionary<Annotation, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
-                if (template.MetaData is ReadMetaData.Fasta fasta && fasta != null)
-                {
-                    foreach (var piece in fasta.AnnotatedSequence)
-                    {
-                        if (piece.Type.IsAnyCDR())
-                        {
-                            if (positions.ContainsKey(piece.Type))
-                            {
+                if (template.MetaData is Read.Fasta fasta && fasta != null) {
+                    foreach (var piece in fasta.AnnotatedSequence) {
+                        if (piece.Type.IsAnyCDR()) {
+                            if (positions.ContainsKey(piece.Type)) {
                                 var values = positions[piece.Type];
                                 positions[piece.Type] = (values.Item1, values.Item2 + cumulative + piece.Sequence.Length);
-                            }
-                            else
-                            {
+                            } else {
                                 positions.Add(piece.Type, (position, piece.Sequence.Length));
                             }
                             cumulative = 0;
                             total_templates++;
-                        }
-                        else
-                        {
+                        } else {
                             cumulative += piece.Sequence.Length;
                         }
                         position += piece.Sequence.Length;
                     }
                 }
 
-                if (positions.ContainsKey(Annotation.CDR1))
-                { // V-segment
+                if (positions.ContainsKey(Annotation.CDR1)) { // V-segment
                     found_cdr_region = true;
-                    foreach (var read in template.Matches)
-                    {
-                        foreach (var (group, cdr) in positions)
-                        {
-                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
-                            {
-                                var piece = (read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
-                                switch (group)
-                                {
+                    foreach (var read in template.Matches) {
+                        foreach (var (group, cdr) in positions) {
+                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
+                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
+                                switch (group) {
                                     case Annotation.CDR1:
                                         cdr1_reads.Add(piece);
                                         break;
@@ -191,17 +159,13 @@ namespace Stitch
                             }
                         }
                     }
-                }
-                else if (positions.ContainsKey(Annotation.CDR3))
-                { // J-segment
+                } else if (positions.ContainsKey(Annotation.CDR3)) { // J-segment
                     found_cdr_region = true;
                     var cdr = positions[Annotation.CDR3];
 
-                    foreach (var read in template.Matches)
-                    {
-                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start)
-                        {
-                            cdr3_reads.Add((read.MetaData, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
+                    foreach (var read in template.Matches) {
+                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
+                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
                         }
                     }
                 }
@@ -209,15 +173,11 @@ namespace Stitch
 
             if (!found_cdr_region) return new HtmlBuilder(); // Do not create a collapsable segment if no CDR region could be found in the templates
 
-            string extend(string sequence, int size)
-            {
-                if (sequence.Length < size)
-                {
+            string extend(string sequence, int size) {
+                if (sequence.Length < size) {
                     int pos = (int)Math.Ceiling((double)sequence.Length / 2);
                     return sequence.Substring(0, pos) + new string('~', size - sequence.Length) + sequence.Substring(pos);
-                }
-                else if (sequence.Length > size)
-                {
+                } else if (sequence.Length > size) {
                     if (sequence.StartsWith('.'))
                         return sequence.Substring(sequence.Length - size);
                     else if (sequence.EndsWith('.'))
@@ -226,27 +186,21 @@ namespace Stitch
                 return sequence;
             }
 
-            if (cdr1_reads.Count > 0)
-            {
+            if (cdr1_reads.Count > 0) {
                 int cdr1_length = Math.Min(11, cdr1_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr1_reads.Count; i++)
-                {
+                for (int i = 0; i < cdr1_reads.Count; i++) {
                     cdr1_reads[i] = (cdr1_reads[i].MetaData, cdr1_reads[i].Template, extend(cdr1_reads[i].Sequence, cdr1_length), cdr1_reads[i].Unique);
                 }
             }
-            if (cdr2_reads.Count > 0)
-            {
+            if (cdr2_reads.Count > 0) {
                 int cdr2_length = Math.Min(11, cdr2_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr2_reads.Count; i++)
-                {
+                for (int i = 0; i < cdr2_reads.Count; i++) {
                     cdr2_reads[i] = (cdr2_reads[i].MetaData, cdr2_reads[i].Template, extend(cdr2_reads[i].Sequence, cdr2_length), cdr2_reads[i].Unique);
                 }
             }
-            if (cdr3_reads.Count > 0)
-            {
+            if (cdr3_reads.Count > 0) {
                 int cdr3_length = Math.Min(13, cdr3_reads.Select(a => a.Sequence.Length).Max());
-                for (int i = 0; i < cdr3_reads.Count; i++)
-                {
+                for (int i = 0; i < cdr3_reads.Count; i++) {
                     cdr3_reads[i] = (cdr3_reads[i].MetaData, cdr3_reads[i].Template, extend(cdr3_reads[i].Sequence, cdr3_length), cdr3_reads[i].Unique);
                 }
             }
@@ -255,8 +209,7 @@ namespace Stitch
             html.OpenAndClose(HtmlTag.p, "", "All reads matching any Template within the CDR regions are listed here. These all stem from the alignments made in the TemplateMatching step.");
             if (cdr1_reads.Count == 0 && cdr2_reads.Count == 0 && cdr3_reads.Count == 0)
                 html.OpenAndClose(HtmlTag.p, "", "No CDR reads could be placed.");
-            else
-            {
+            else {
                 html.Open(HtmlTag.div, "class='cdr-tables'");
                 if (cdr1_reads.Count > 0) html.Add(HTMLTables.CDRTable(cdr1_reads, AssetsFolderName, "CDR1", Parameters.Input.Count, total_templates));
                 if (cdr2_reads.Count > 0) html.Add(HTMLTables.CDRTable(cdr2_reads, AssetsFolderName, "CDR2", Parameters.Input.Count, total_templates));
@@ -268,8 +221,7 @@ namespace Stitch
             return outer;
         }
 
-        private HtmlBuilder CreateHeader(string title, List<string> location)
-        {
+        private HtmlBuilder CreateHeader(string title, List<string> location) {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
             var assets_folder = link;
             if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer))
@@ -311,12 +263,9 @@ namespace Stitch
             return html;
         }
 
-        private HtmlBuilder BatchFileHTML()
-        {
-            if (BatchFile != null)
-            {
-                string Render(string line)
-                {
+        private HtmlBuilder BatchFileHTML() {
+            if (BatchFile != null) {
+                string Render(string line) {
                     if (line.Trim().StartsWith('-'))
                         return $"<span class='comment'>{line}</span><br>";
 
@@ -343,24 +292,18 @@ namespace Stitch
                 foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                 html.Close(HtmlTag.code);
                 return html;
-            }
-            else
-            {
+            } else {
                 return new HtmlBuilder(HtmlTag.em, "No BatchFile");
             }
         }
 
         /// <summary> Create the overview section of the main page. </summary>
-        private HtmlBuilder CreateOverview()
-        {
+        private HtmlBuilder CreateOverview() {
             var html = new HtmlBuilder();
-            if (Parameters.RecombinedSegment.Count != 0)
-            {
-                if (Parameters.RecombinedSegment.Count <= 3)
-                {
+            if (Parameters.RecombinedSegment.Count != 0) {
+                if (Parameters.RecombinedSegment.Count <= 3) {
                     // If the number of groups is small show details about the best scoring recombined template for each group
-                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++)
-                    {
+                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++) {
                         if (Parameters.Groups[group].Item1.ToLower() == "decoy") continue;
                         var template = Parameters.RecombinedSegment[group].Templates[0];
                         var (seq, doc) = template.ConsensusSequence();
@@ -374,17 +317,14 @@ namespace Stitch
                         html.OpenAndClose(HtmlTag.h3, "", "Best scoring segments");
                         html.Open(HtmlTag.p);
 
-                        for (int segment = 0; segment < Parameters.Groups[group].Item2.Count; segment++)
-                        {
+                        for (int segment = 0; segment < Parameters.Groups[group].Item2.Count; segment++) {
                             var seg = Parameters.Groups[group].Item2[segment];
                             if (seg.Templates.Count > 0)
                                 html.Add(GetAsideLinkHtml(seg.Templates[0].MetaData, AsideType.Template, AssetsFolderName));
                         }
                         html.Close(HtmlTag.p);
                     }
-                }
-                else
-                {
+                } else {
                     // If the number of groups is large show a table with each highest scoring and highest area recombined template
                     html.OpenAndClose(HtmlTag.h2, "", "Overview of all recombined segments");
                     html.Open(HtmlTag.table, "class='wide-table'");
@@ -397,8 +337,7 @@ namespace Stitch
                     html.TagWithHelp(HtmlTag.th, "Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea));
                     html.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HtmlTag.p, HTMLHelp.Order));
                     html.Close(HtmlTag.tr);
-                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++)
-                    {
+                    for (int group = 0; group < Parameters.Groups.Count && group < Parameters.RecombinedSegment.Count; group++) {
                         if (Parameters.Groups[group].Item1.ToLower() == "decoy") continue;
                         var highest_score = Parameters.RecombinedSegment[group].Templates.MaxBy(t => t.Score);
                         var highest_area = Parameters.RecombinedSegment[group].Templates.MaxBy(t => t.TotalArea);
@@ -408,8 +347,7 @@ namespace Stitch
                         html.OpenAndClose(HtmlTag.td, "class='center'", highest_score.Score.ToString("G4"));
                         html.Open(HtmlTag.td);
                         var first = true;
-                        foreach (var seg in highest_score.Recombination)
-                        {
+                        foreach (var seg in highest_score.Recombination) {
                             if (!first) html.Content(" → ");
                             first = false;
                             html.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
@@ -420,8 +358,7 @@ namespace Stitch
                         html.OpenAndClose(HtmlTag.td, "class='center'", highest_area.TotalArea.ToString("G4"));
                         html.Open(HtmlTag.td);
                         first = true;
-                        foreach (var seg in highest_score.Recombination)
-                        {
+                        foreach (var seg in highest_score.Recombination) {
                             if (!first) html.Content(" → ");
                             first = false;
                             html.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
@@ -431,19 +368,14 @@ namespace Stitch
                     }
                     html.Close(HtmlTag.table);
                 }
-            }
-            else
-            {
+            } else {
                 html.OpenAndClose(HtmlTag.h2, "", "Overview of all segments");
-                if (Parameters.Groups.Count <= 3)
-                {
+                if (Parameters.Groups.Count <= 3) {
                     // If the number of groups is small show details about the highest scoring template for each segment
-                    for (int group = 0; group < Parameters.Groups.Count; group++)
-                    {
+                    for (int group = 0; group < Parameters.Groups.Count; group++) {
                         html.OpenAndClose(HtmlTag.h3, "", Parameters.Groups[group].Name);
 
-                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++)
-                        {
+                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++) {
                             var template = Parameters.Groups[group].Segments[segment].Templates[0];
                             var (seq, doc) = template.ConsensusSequence();
                             html.Open(HtmlTag.h3);
@@ -455,12 +387,9 @@ namespace Stitch
                             html.Close(HtmlTag.div);
                         }
                     }
-                }
-                else
-                {
+                } else {
                     // If the number of groups is large show a table with each highest scoring and highest area template
-                    for (int group = 0; group < Parameters.Groups.Count; group++)
-                    {
+                    for (int group = 0; group < Parameters.Groups.Count; group++) {
                         if (Parameters.Groups[group].Name.ToLower() == "decoy") continue;
                         html.OpenAndClose(HtmlTag.h3, "", Parameters.Groups[group].Name);
                         html.Open(HtmlTag.table, "class='wide-table'");
@@ -471,8 +400,7 @@ namespace Stitch
                         html.OpenAndClose(HtmlTag.th, "", "Highest Area");
                         html.TagWithHelp(HtmlTag.th, "Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea));
                         html.Close(HtmlTag.tr);
-                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++)
-                        {
+                        for (int segment = 0; segment < Parameters.Groups[group].Segments.Count; segment++) {
                             var highest_score = Parameters.Groups[group].Segments[segment].Templates.MaxBy(t => t.Score);
                             var highest_area = Parameters.Groups[group].Segments[segment].Templates.MaxBy(t => t.TotalArea);
                             html.Open(HtmlTag.tr);
@@ -491,11 +419,9 @@ namespace Stitch
             return html;
         }
 
-        private HtmlBuilder CreateSegmentJoining(int group)
-        {
+        private HtmlBuilder CreateSegmentJoining(int group) {
             var html = new HtmlBuilder();
-            foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
-            {
+            foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores) {
                 var A = Parameters.Groups[group].Item2[set.Index - 1];
                 var B = Parameters.Groups[group].Item2[set.Index];
                 html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
@@ -509,20 +435,17 @@ namespace Stitch
             return html;
         }
 
-        private HtmlBuilder CreateMain()
-        {
+        private HtmlBuilder CreateMain() {
             var inner_html = new HtmlBuilder();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
 
             if (Parameters.Groups != null)
-                for (int group = 0; group < Parameters.Groups.Count; group++)
-                {
+                for (int group = 0; group < Parameters.Groups.Count; group++) {
                     var group_html = new HtmlBuilder();
                     var id = Parameters.Groups[group].Item1.ToLower().Replace(' ', '-');
 
-                    if (Parameters.RecombinedSegment.Count != 0)
-                    {
+                    if (Parameters.RecombinedSegment.Count != 0) {
                         if (id == "decoy" && Parameters.Groups.Count > Parameters.RecombinedSegment.Count) continue;
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
@@ -580,28 +503,21 @@ namespace Stitch
             return html;
         }
 
-        HtmlBuilder GetWarnings()
-        {
+        HtmlBuilder GetWarnings() {
             var html = new HtmlBuilder();
             if (Parameters.Groups == null) return html;
             // High decoy scores
             int max_decoy_score = 0;
             int max_normal_score = 0;
-            for (int group = 0; group < Parameters.Groups.Count; group++)
-            {
-                if (Parameters.Groups[group].Item1.ToLower() == "decoy")
-                {
+            for (int group = 0; group < Parameters.Groups.Count; group++) {
+                if (Parameters.Groups[group].Item1.ToLower() == "decoy") {
                     max_decoy_score = Parameters.Groups[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max();
-                }
-                else
-                {
+                } else {
                     max_normal_score = Math.Max(max_normal_score, Parameters.Groups[group].Item2.Select(s => s.Templates.Select(t => t.Score).Max()).Max());
 
-                    if (Parameters.RecombinedSegment.Count != 0)
-                    {
+                    if (Parameters.RecombinedSegment.Count != 0) {
                         var decoy_scores = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).Select(t => t.Score);
-                        if (decoy_scores.Count() > 0)
-                        {
+                        if (decoy_scores.Count() > 0) {
                             var decoy = decoy_scores.Max();
                             var normal = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).Select(t => t.Score).Max();
 
@@ -621,8 +537,7 @@ namespace Stitch
             if (Parameters.RecombinedSegment.Count != 0)
                 for (int group = 0; group < Parameters.Groups.Count; group++)
                     foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
-                        if (set.Score.Best.Position == 0)
-                        {
+                        if (set.Score.Best.Position == 0) {
                             var A = Parameters.Groups[group].Item2[set.Index - 1];
                             var B = Parameters.Groups[group].Item2[set.Index];
                             html.UnsafeContent(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
@@ -630,8 +545,7 @@ namespace Stitch
             return html;
         }
 
-        HtmlBuilder Docs()
-        {
+        HtmlBuilder Docs() {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.p, "");
             html.Content("Answers to common questions can be found here. If anything is unclear, or you miss any features please reach out to the authors, all information can be found on the ");
@@ -659,25 +573,18 @@ namespace Stitch
             return outer;
         }
 
-        void CopyAssets()
-        {
+        void CopyAssets() {
             var executable_folder = Path.GetDirectoryName(Process.GetCurrentProcess().MainModule.FileName);
 
-            void CopyAssetsFile(string name, string directory = "assets")
-            {
+            void CopyAssetsFile(string name, string directory = "assets") {
                 var source = Path.Join(executable_folder, directory, name);
-                if (File.Exists(source))
-                {
-                    try
-                    {
+                if (File.Exists(source)) {
+                    try {
                         File.Copy(source, Path.Join(FullAssetsFolderName, name), true);
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         new InputNameSpace.ErrorMessage(source, "Could not copy asset", e.Message, "", true).Print();
                     }
-                }
-                else
+                } else
                     new InputNameSpace.ErrorMessage(source, "Could not find asset", "Please make sure the file exists. The HTML will be generated but may be less useful", "", true).Print();
             }
 
@@ -693,8 +600,7 @@ namespace Stitch
         }
 
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
-        public async new void Save(string filename)
-        {
+        public async new void Save(string filename) {
             var stopwatch = new Stopwatch();
             stopwatch.Start();
 
@@ -705,8 +611,7 @@ namespace Stitch
 
             Task t = Task.Run(() => CopyAssets());
 
-            try
-            {
+            try {
                 var culture = System.Globalization.CultureInfo.CurrentCulture;
                 System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
                 var html = CreateMain().ToString();
@@ -716,20 +621,16 @@ namespace Stitch
                 html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
                 SaveAndCreateDirectories(filename, html);
                 System.Globalization.CultureInfo.CurrentCulture = culture;
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 InputNameSpace.ErrorMessage.PrintException(e);
                 return;
             }
 
             await t;
 
-            if (Parameters.runVariables.AutomaticallyOpen)
-            {
+            if (Parameters.runVariables.AutomaticallyOpen) {
                 var p = new Process();
-                p.StartInfo = new ProcessStartInfo(!String.IsNullOrEmpty(Parameters.runVariables.LiveServer) ? $"http://localhost:{Parameters.runVariables.LiveServer}/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename)
-                {
+                p.StartInfo = new ProcessStartInfo(!String.IsNullOrEmpty(Parameters.runVariables.LiveServer) ? $"http://localhost:{Parameters.runVariables.LiveServer}/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename) {
                     UseShellExecute = true
                 };
                 p.Start();

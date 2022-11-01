@@ -8,19 +8,16 @@ using static HTMLNameSpace.CommonPieces;
 using System.Collections.ObjectModel;
 using HtmlGenerator;
 
-namespace HTMLNameSpace
-{
-    static class HTMLTables
-    {
+namespace HTMLNameSpace {
+    static class HTMLTables {
         static int table_counter = 0;
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<(string, ReadMetaData.IMetaData)> reads, string AssetsFolderName)
-        {
+        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<Read.IRead> reads, string AssetsFolderName) {
             var html = new HtmlBuilder();
 
-            html.Add(TableHeader("reads", reads.Select(a => (double)a.Item1.Length)));
+            html.Add(TableHeader("reads", reads.Select(a => (double)a.Sequence.Sequence.Length)));
             html.Open(HtmlTag.table, "id='reads-table' class='wide-table'");
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 0, \"string\")' class='small-cell'", "Identifier");
@@ -30,13 +27,12 @@ namespace HTMLNameSpace
 
             string id;
 
-            for (int i = 0; i < reads.Count; i++)
-            {
-                id = GetAsideIdentifier(reads[i].Item2);
+            for (int i = 0; i < reads.Count; i++) {
+                id = GetAsideIdentifier(reads[i]);
                 html.Open(HtmlTag.tr, $"id='reads-{id}'");
-                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i].Item2, AsideType.Read, AssetsFolderName));
-                html.OpenAndClose(HtmlTag.td, "class='seq'", reads[i].Item1);
-                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Item1.Length.ToString());
+                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i], AsideType.Read, AssetsFolderName));
+                html.OpenAndClose(HtmlTag.td, "class='seq'", AminoAcid.ArrayToString(reads[i].Sequence.Sequence));
+                html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Sequence.Sequence.Length.ToString());
                 html.Close(HtmlTag.tr);
             }
 
@@ -45,12 +41,10 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads)
-        {
+        public static HtmlBuilder CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads) {
             var html = new HtmlBuilder();
 
-            for (var i = 0; i < segments.Count; i++)
-            {
+            for (var i = 0; i < segments.Count; i++) {
                 var item = segments[i];
                 html.Collapsible(item.Name, new HtmlBuilder($"Segment {item.Name}"), CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true));
             }
@@ -58,8 +52,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false)
-        {
+        public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false) {
             table_counter++;
             var html = new HtmlBuilder();
             var culture = CultureInfo.CurrentCulture;
@@ -71,8 +64,7 @@ namespace HTMLNameSpace
 
             templates.Sort((a, b) => b.Score.CompareTo(a.Score));
 
-            string SortOn(int column, string type)
-            {
+            string SortOn(int column, string type) {
                 if (templates.Count > 1)
                     return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\" ";
                 else
@@ -94,8 +86,7 @@ namespace HTMLNameSpace
             table_buffer.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateScore), "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'");
             table_buffer.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateMatches), "small-cell", SortOn(3 + order_factor, "number"));
             table_buffer.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea), "small-cell", SortOn(4 + order_factor, "number"));
-            if (displayUnique)
-            {
+            if (displayUnique) {
                 table_buffer.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueScore), "small-cell", SortOn(5 + order_factor, "number"));
                 table_buffer.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueMatches), "small-cell", SortOn(6 + order_factor, "number"));
                 table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueArea), "small-cell", SortOn(7 + order_factor, "number"));
@@ -103,8 +94,7 @@ namespace HTMLNameSpace
             table_buffer.Close(HtmlTag.tr);
 
             (double, double, double, double, double, double) max_values = (Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue, Double.MinValue);
-            foreach (var template in templates)
-            {
+            foreach (var template in templates) {
                 max_values = (
                     Math.Max(max_values.Item1, template.Score),
                     Math.Max(max_values.Item2, template.Matches.Count),
@@ -117,19 +107,16 @@ namespace HTMLNameSpace
 
             string id;
             var doc_buffer = new HtmlBuilder();
-            for (int i = 0; i < templates.Count; i++)
-            {
+            for (int i = 0; i < templates.Count; i++) {
                 id = GetAsideIdentifier(templates[i].MetaData);
 
                 table_buffer.Open(HtmlTag.tr, $"id='{table_id}-{id}'");
                 table_buffer.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(templates[i].MetaData, type, AssetsFolderName));
                 table_buffer.OpenAndClose(HtmlTag.td, "class='center'", templates[i].Sequence.Length.ToString());
-                if (displayOrder)
-                {
+                if (displayOrder) {
                     table_buffer.Open(HtmlTag.td);
                     var first = true;
-                    foreach (var seg in templates[i].Recombination)
-                    {
+                    foreach (var seg in templates[i].Recombination) {
                         if (!first) table_buffer.Content(" → ");
                         first = false;
                         table_buffer.Add(GetAsideLinkHtml(seg.MetaData, AsideType.Template, AssetsFolderName));
@@ -139,8 +126,7 @@ namespace HTMLNameSpace
                 table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Score / max_values.Item1}'", templates[i].Score.ToString("G4"));
                 table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Matches.Count / max_values.Item2}'", templates[i].Matches.Count.ToString("G4"));
                 table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'", templates[i].TotalArea.ToString("G4"));
-                if (displayUnique)
-                {
+                if (displayUnique) {
                     table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueScore / max_values.Item4}'", templates[i].UniqueScore.ToString("G4"));
                     table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueMatches / max_values.Item5}'", templates[i].UniqueMatches.ToString("G4"));
                     table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}'", templates[i].TotalUniqueArea.ToString("G4"));
@@ -160,8 +146,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder CDRTable(List<(ReadMetaData.IMetaData MetaData, ReadMetaData.IMetaData Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates)
-        {
+        public static HtmlBuilder CDRTable(List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates) {
             table_counter++;
             var table_id = $"table-{table_counter}";
 
@@ -179,13 +164,10 @@ namespace HTMLNameSpace
 
             var diversity = new List<Dictionary<string, double>>();
 
-            foreach (var row in CDRs)
-            {
-                for (int i = 0; i < row.Sequence.Length; i++)
-                {
+            foreach (var row in CDRs) {
+                for (int i = 0; i < row.Sequence.Length; i++) {
                     if (i >= diversity.Count) diversity.Add(new Dictionary<string, double>());
-                    if (row.Sequence[i] != Alphabet.GapChar)
-                    {
+                    if (row.Sequence[i] != Alphabet.GapChar) {
                         if (diversity[i].ContainsKey(row.Sequence[i].ToString()))
                             diversity[i][row.Sequence[i].ToString()] += 1;
                         else
@@ -196,8 +178,7 @@ namespace HTMLNameSpace
 
             html.Add(SequenceConsensusOverview(diversity));
 
-            string SortOn(int column, string type)
-            {
+            string SortOn(int column, string type) {
                 return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
             }
             html.Close(HtmlTag.p);
@@ -211,8 +192,7 @@ namespace HTMLNameSpace
 
             var CDRs_deduplicated = CDRs.GroupBy(cdr => cdr.Sequence).OrderBy(group => group.Key);
 
-            foreach (var group in CDRs_deduplicated)
-            {
+            foreach (var group in CDRs_deduplicated) {
                 var row = group.First();
                 var id = GetAsideIdentifier(row.MetaData);
 
@@ -234,8 +214,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null)
-        {
+        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null) {
             const double threshold = 0.05;
             const int height = 35;
             const int font_size = 30;
@@ -251,8 +230,7 @@ namespace HTMLNameSpace
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
                 html.CopyData(title + " (TSV)", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverviewData));
             html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
-            for (int i = 0; i < diversity.Count; i++)
-            {
+            for (int i = 0; i < diversity.Count; i++) {
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                 var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? $" ambiguous a{i}" : "";
                 html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'");
@@ -263,10 +241,8 @@ namespace HTMLNameSpace
                 data_buffer.Append($"{i}");
 
                 bool placed = false;
-                foreach (var item in sorted)
-                {
-                    if (item.Key != "~" && (double)item.Value / sum > threshold)
-                    {
+                foreach (var item in sorted) {
+                    if (item.Key != "~" && (double)item.Value / sum > threshold) {
                         var size = (item.Value / sum * font_size).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'", item.Key);
@@ -288,8 +264,7 @@ namespace HTMLNameSpace
             return html;
         }
 
-        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads)
-        {
+        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='table-header'");
             if (templates.Count > 15) html.Add(PointsTableHeader(templates));
@@ -299,13 +274,11 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static HtmlBuilder TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null)
-        {
+        static HtmlBuilder TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"class='table-header-{identifier}'");
             html.Add(HTMLGraph.Histogram(lengths.ToList(), new HtmlBuilder("Length distribution")));
-            if (area != null)
-            {
+            if (area != null) {
                 html.Close(HtmlTag.div);
                 html.Open(HtmlTag.div);
                 html.Add(HTMLGraph.Histogram(area.ToList(), new HtmlBuilder("Area distribution")));
@@ -314,19 +287,16 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static HtmlBuilder PointsTableHeader(List<Template> templates)
-        {
+        static HtmlBuilder PointsTableHeader(List<Template> templates) {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return new HtmlBuilder();
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             var data = new List<(string, List<(string, List<double>)>)>();
 
-            foreach (var template in templates)
-            {
+            foreach (var template in templates) {
                 var group = data.FindIndex(a => a.Item1 == template.MetaData.ClassIdentifier);
-                if (group == -1)
-                {
+                if (group == -1) {
                     data.Add((template.MetaData.ClassIdentifier, new List<(string, List<double>)>()));
                     group = data.Count - 1;
                 }
@@ -345,8 +315,7 @@ namespace HTMLNameSpace
             return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", new HtmlBuilder(HtmlTag.p, HTMLHelp.OverviewOfScores), null);
         }
 
-        static HtmlBuilder BarTableHeader(List<Template> templates)
-        {
+        static HtmlBuilder BarTableHeader(List<Template> templates) {
             var html = new HtmlBuilder();
             if (templates.Select(a => a.Score).Sum() == 0)
                 return html;
@@ -354,10 +323,8 @@ namespace HTMLNameSpace
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
 
             var type_data = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
-            foreach (var item in templates)
-            {
-                if (type_data.ContainsKey(item.Class))
-                {
+            foreach (var item in templates) {
+                if (type_data.ContainsKey(item.Class)) {
                     var data = type_data[item.Class];
                     if (data.MaxScore < item.Score) data.MaxScore = item.Score;
                     data.TotalScore += item.Score;
@@ -369,21 +336,17 @@ namespace HTMLNameSpace
                     data.Area += item.TotalArea;
                     data.UniqueArea += item.TotalUniqueArea;
                     type_data[item.Class] = data;
-                }
-                else
-                {
+                } else {
                     type_data.Add(item.Class, (item.Score, item.Score, item.UniqueScore, item.UniqueScore, 1, item.Matches.Count, item.UniqueMatches, item.TotalArea, item.TotalUniqueArea));
                 }
             }
 
             var scoreData = new List<(string, List<double>)>(type_data.Count);
             var areaData = new List<(string, List<double>)>(type_data.Count);
-            foreach (var (type, data) in type_data)
-            {
+            foreach (var (type, data) in type_data) {
                 var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
                 var areaList = new List<double> { data.Matches, data.Area };
-                if (displayUnique)
-                {
+                if (displayUnique) {
                     scoreList.Add(data.UniqueMaxScore);
                     scoreList.Add(data.UniqueTotalScore / data.Num);
                     areaList.Add(data.UniqueMatches);
@@ -395,8 +358,7 @@ namespace HTMLNameSpace
 
             var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
             var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
-            if (displayUnique)
-            {
+            if (displayUnique) {
                 scoreLabels.Add(("Unique Max Score", 0));
                 scoreLabels.Add(("Unique Average Score", 0));
                 areaLabels.Add(("Unique Matches", 0));
@@ -412,14 +374,12 @@ namespace HTMLNameSpace
             return html;
         }
 
-        static HtmlBuilder TextTableHeader(List<Template> templates, int total_reads)
-        {
+        static HtmlBuilder TextTableHeader(List<Template> templates, int total_reads) {
             var set = new HashSet<string>();
             var unique_set = new HashSet<string>();
-            foreach (var template in templates)
-            {
-                set.UnionWith(template.Matches.Select(a => a.MetaData.EscapedIdentifier));
-                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.MetaData.EscapedIdentifier));
+            foreach (var template in templates) {
+                set.UnionWith(template.Matches.Select(a => a.Query.EscapedIdentifier));
+                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.Query.EscapedIdentifier));
             }
             var html = new HtmlBuilder();
             html.OpenAndClose(HtmlTag.p, "class='text-header'", $"Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.");

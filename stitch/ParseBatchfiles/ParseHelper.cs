@@ -6,29 +6,23 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Stitch.RunParameters;
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> To contain all input functionality </summary> 
-    namespace InputNameSpace
-    {
+    namespace InputNameSpace {
         /// <summary> A class with helper functionality for parsing </summary>
-        static class ParseHelper
-        {
+        static class ParseHelper {
             /// <summary> Split a line by a separator and return the trimmed pieces and their position as a FileRange. </summary> 
             /// <param name="separator">The separator to use.</param>
             /// <param name="linenumber">The linenumber.</param>
             /// <param name="parse_file">The file where the line should be taken from.</param>
-            public static List<(string Text, FileRange Pos)> SplitLine(char separator, int linenumber, ParsedFile parse_file)
-            {
+            public static List<(string Text, FileRange Pos)> SplitLine(char separator, int linenumber, ParsedFile parse_file) {
                 var results = new List<(string, FileRange)>();
                 var last_pos = 0;
                 var line = parse_file.Lines[linenumber];
 
                 // Find the fields on this line
-                for (int pos = 0; pos < line.Length; pos++)
-                {
-                    if (line[pos] == separator)
-                    {
+                for (int pos = 0; pos < line.Length; pos++) {
+                    if (line[pos] == separator) {
                         results.Add((
                             line.Substring(last_pos, pos - last_pos).Trim(),
                             new FileRange(new Position(linenumber, last_pos + 1, parse_file), new Position(linenumber, pos + 1, parse_file))
@@ -46,40 +40,30 @@ namespace Stitch
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
             /// <returns>If successfull: the number (int32)</returns>
-            public static ParseResult<int> ConvertToInt(string input, FileRange pos)
-            {
-                try
-                {
+            public static ParseResult<int> ConvertToInt(string input, FileRange pos) {
+                try {
                     return new ParseResult<int>(Convert.ToInt32(input, new System.Globalization.CultureInfo("en-US")));
-                }
-                catch (FormatException)
-                {
+                } catch (FormatException) {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
                     return new ParseResult<int>(new ErrorMessage(pos, "Not a valid number", msg));
-                }
-                catch (OverflowException)
-                {
+                } catch (OverflowException) {
                     return new ParseResult<int>(new ErrorMessage(pos, "Outside bounds"));
-                }
-                catch
-                {
+                } catch {
                     return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
             /// <returns>If successfull: the number (int32)</returns>
-            public static ParseResult<int> ConvertToInt(KeyValue item)
-            {
+            public static ParseResult<int> ConvertToInt(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
                 return ConvertToInt(input.Unwrap(), item.ValueRange);
             }
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
             /// <returns>If successfull: the number (int32)</returns>
-            public static ParseResult<double> ConvertToDouble(KeyValue item)
-            {
+            public static ParseResult<double> ConvertToDouble(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
                 return ConvertToDouble(input.Unwrap(), item.ValueRange);
@@ -87,36 +71,26 @@ namespace Stitch
             /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary> 
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
-            public static ParseResult<double> ConvertToDouble(string input, FileRange pos)
-            {
-                try
-                {
+            public static ParseResult<double> ConvertToDouble(string input, FileRange pos) {
+                try {
                     return new ParseResult<double>(Convert.ToDouble(input, new System.Globalization.CultureInfo("en-US")));
-                }
-                catch (FormatException)
-                {
+                } catch (FormatException) {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
                     return new ParseResult<double>(new ErrorMessage(pos, "Not a valid number", msg));
-                }
-                catch (OverflowException)
-                {
+                } catch (OverflowException) {
                     return new ParseResult<double>(new ErrorMessage(pos, "Outside bounds for the underlying datatype"));
-                }
-                catch
-                {
+                } catch {
                     return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
             /// <summary> A number range which can be open ended or closed. </summary>
-            public readonly struct NumberRange<T> where T : IComparable<T>
-            {
+            public readonly struct NumberRange<T> where T : IComparable<T> {
                 readonly T Min;
                 readonly T Max;
                 readonly bool OpenRange;
 
-                private NumberRange(T min, T max, bool open)
-                {
+                private NumberRange(T min, T max, bool open) {
                     Min = min;
                     Max = max;
                     OpenRange = open;
@@ -125,31 +99,27 @@ namespace Stitch
                 /// <summary> Create an open ended number range, essentially placing the maximum number at the boundaries of the underlying type. </summary>
                 /// <param name="min">The minimal value.</param>
                 /// <returns>The new range struct.</returns>
-                public static NumberRange<T> Open(T min)
-                {
+                public static NumberRange<T> Open(T min) {
                     return new NumberRange<T>(min, min, true);
                 }
                 /// <summary> Create an closed number range. </summary>
                 /// <param name="min">The minimal value.</param>
                 /// <param name="max">The maximal value.</param>
                 /// <returns>The new range struct.</returns>
-                public static NumberRange<T> Closed(T min, T max)
-                {
+                public static NumberRange<T> Closed(T min, T max) {
                     return new NumberRange<T>(min, max, false);
                 }
 
                 /// <summary> Check if the given number is in this range. </summary>
                 /// <param name="num"> The number to check. </param>
                 /// <returns> An int in the same way as CompareTo. </returns>
-                public int InRange(T num)
-                {
+                public int InRange(T num) {
                     if (num.CompareTo(Min) < 0) return -1;
                     if (!OpenRange && num.CompareTo(Max) > 0) return 1;
                     return 0;
                 }
 
-                public override string ToString()
-                {
+                public override string ToString() {
                     if (OpenRange)
                         return $"{Min}..";
                     else
@@ -162,11 +132,9 @@ namespace Stitch
             /// <param name="position">The fileRange to generate nice errors.</param>
             /// <typeparam name="T">The type of the value, has to be IComparable.</typeparam>
             /// <returns>The same result, possible with more error messages.</returns>
-            public static ParseResult<T> RestrictRange<T>(this ParseResult<T> value, NumberRange<T> range, FileRange position) where T : IComparable<T>
-            {
+            public static ParseResult<T> RestrictRange<T>(this ParseResult<T> value, NumberRange<T> range, FileRange position) where T : IComparable<T> {
                 T v;
-                if (value.TryGetValue(out v))
-                {
+                if (value.TryGetValue(out v)) {
                     var res = range.InRange(v);
                     if (res < 0)
                         value.AddMessage(new ErrorMessage(position, "Value outside range", $"The value was below the minimal value. The valid range is [{range}]"));
@@ -176,22 +144,17 @@ namespace Stitch
 
                 return value;
             }
-            public static ParseResult<InputData.InputParameters> ParseInputParameters(KeyValue key)
-            {
+            public static ParseResult<InputData.InputParameters> ParseInputParameters(KeyValue key) {
                 var outEither = new ParseResult<InputData.InputParameters>();
                 var output = new InputData.InputParameters();
 
-                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (pair.Name)
-                    {
+                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (pair.Name) {
                         case "peaks":
                             var settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
@@ -220,10 +183,8 @@ namespace Stitch
                         case "reads":
                             var rsettings = new InputData.Reads();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         rsettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
@@ -247,17 +208,15 @@ namespace Stitch
                         case "novor":
                             var novor_settings = new InputData.Novor();
                             string name = null;
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "denovo path":
                                         if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.DeNovoFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.DeNovoFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "psms path":
                                         if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.PSMSFile = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.PSMSFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -289,10 +248,8 @@ namespace Stitch
                         case "fasta":
                             var fastasettings = new InputData.FASTA();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         fastasettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
@@ -325,10 +282,8 @@ namespace Stitch
 
                             var peaks_settings = new InputData.Peaks();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         folder_path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
@@ -355,21 +310,18 @@ namespace Stitch
                                 }
                             }
 
-                            if (!folder_range.HasValue)
-                            {
+                            if (!folder_range.HasValue) {
                                 outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                                 break;
                             }
 
                             var files = GetAllFilesPrivate(folder_path, recursive);
 
-                            if (files.Item1.Length != 0)
-                            {
-                                foreach (var file in files.Item1)
-                                {
+                            if (files.Item1.Length != 0) {
+                                foreach (var file in files.Item1) {
                                     if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
-                                    var fileId = new ReadMetaData.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
+                                    var fileId = new Read.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
 
                                     if (file.EndsWith(".fasta"))
                                         output.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
@@ -380,9 +332,7 @@ namespace Stitch
                                     else
                                         continue;
                                 }
-                            }
-                            else
-                            {
+                            } else {
                                 outEither.AddMessage(new ErrorMessage(folder_range.Value, files.Item2, files.Item3, files.Item4));
                             }
 
@@ -397,32 +347,27 @@ namespace Stitch
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp)
-            {
+            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp) {
                 var result = new ParseResult<bool>();
                 result.Value = true;
 
-                if (GlobalInput == null && Input.Parameters == null)
-                {
+                if (GlobalInput == null && Input.Parameters == null) {
                     result.AddMessage(new ErrorMessage(key.KeyRange.Name, "Missing Input", "No Input is provided either local or global.", "Please provide local input, using the 'Input' parameter, or provide global input, using the 'Input' parameter in the global scope."));
                     return result;
                 }
-                if (GlobalInput != null && Input.Parameters != null)
-                {
+                if (GlobalInput != null && Input.Parameters != null) {
                     result.AddMessage(new ErrorMessage(key.KeyRange.Name, "Duplicate Input", "Both local and global input is provided.", "Please provide only local or only global input."));
                     return result;
                 }
 
                 var input = GlobalInput ?? Input.Parameters;
 
-                foreach (var file in input.Files)
-                {
-                    var reads = file switch
-                    {
-                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, Input.LocalParameters),
-                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier),
-                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File),
-                        InputData.Novor novor => OpenReads.Novor(name_filter, novor),
+                foreach (var file in input.Files) {
+                    var reads = file switch {
+                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alp, Input.LocalParameters),
+                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alp),
+                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alp),
+                        InputData.Novor novor => OpenReads.Novor(name_filter, novor, alp),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
@@ -433,15 +378,12 @@ namespace Stitch
 
                 return result;
             }
-            public static ParseResult<TemplateMatchingParameter> ParseTemplateMatching(NameFilter nameFilter, KeyValue key)
-            {
+            public static ParseResult<TemplateMatchingParameter> ParseTemplateMatching(NameFilter nameFilter, KeyValue key) {
                 var outEither = new ParseResult<TemplateMatchingParameter>();
                 var output = new TemplateMatchingParameter();
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (setting.Name)
-                    {
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (setting.Name) {
                         case "cutoffscore":
                             output.CutoffScore = ParseHelper.ConvertToDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
@@ -451,11 +393,9 @@ namespace Stitch
                         case "segments":
                             if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var outer_children = new List<SegmentValue>();
-                            foreach (var segment in setting.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                if (segment.Name == "segment")
-                                {
-                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, false).UnwrapOrDefault(outEither, new());
+                            foreach (var segment in setting.GetValues().UnwrapOrDefault(outEither, new())) {
+                                if (segment.Name == "segment") {
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
 
                                     // Check to see if the name is valid
                                     if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
@@ -463,13 +403,10 @@ namespace Stitch
                                     if (segment_value.Name.Contains('*'))
                                         outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
                                     outer_children.Add(segment_value);
-                                }
-                                else
-                                {
+                                } else {
                                     var children = new List<SegmentValue>();
-                                    foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new()))
-                                    {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, false).UnwrapOrDefault(outEither, new());
+                                    foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new())) {
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
 
                                         // Check to see if the name is valid
                                         if (children.Select(db => db.Name).Contains(segment_value.Name))
@@ -513,18 +450,15 @@ namespace Stitch
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(KeyValue key)
-            {
+            public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(KeyValue key) {
                 var outEither = new ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)>();
                 var output = new RecombineParameter();
 
                 var order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (setting.Name)
-                    {
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (setting.Name) {
                         case "n":
                             output.N = ParseHelper.ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
@@ -564,15 +498,12 @@ namespace Stitch
                 return outEither;
             }
 
-            public static ParseResult<ReportParameter> ParseReport(KeyValue key)
-            {
+            public static ParseResult<ReportParameter> ParseReport(KeyValue key) {
                 var outEither = new ParseResult<ReportParameter>();
                 var output = new ReportParameter();
 
-                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (pair.Name)
-                    {
+                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (pair.Name) {
                         case "folder":
                             if (output.Folder != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                             output.Folder = Path.GetFullPath(pair.GetValue().UnwrapOrDefault(outEither, null));
@@ -580,10 +511,8 @@ namespace Stitch
                         case "html":
                             var h_settings = new RunParameters.Report.HTML();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         h_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
@@ -599,10 +528,8 @@ namespace Stitch
                         case "json":
                             var j_settings = new RunParameters.Report.JSON();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         j_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
@@ -618,10 +545,8 @@ namespace Stitch
                         case "fasta":
                             var f_settings = new RunParameters.Report.FASTA();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         f_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, "");
@@ -631,10 +556,8 @@ namespace Stitch
                                         break;
                                     case "outputtype":
                                         var res = setting.GetValue();
-                                        if (res.IsOk(outEither))
-                                        {
-                                            switch (res.Unwrap().ToLower())
-                                            {
+                                        if (res.IsOk(outEither)) {
+                                            switch (res.Unwrap().ToLower()) {
                                                 case "templatematching":
                                                     f_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
                                                     break;
@@ -658,20 +581,16 @@ namespace Stitch
                         case "csv":
                             var c_settings = new RunParameters.Report.CSV();
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new()))
-                            {
-                                switch (setting.Name)
-                                {
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
                                     case "path":
                                         if (!string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         c_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
                                         break;
                                     case "outputtype":
                                         var res = setting.GetValue();
-                                        if (res.IsOk(outEither))
-                                        {
-                                            switch (res.Unwrap().ToLower())
-                                            {
+                                        if (res.IsOk(outEither)) {
+                                            switch (res.Unwrap().ToLower()) {
                                                 case "templatematching":
                                                     c_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
                                                     break;
@@ -702,13 +621,11 @@ namespace Stitch
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<AlphabetParameter> ParseAlphabet(KeyValue key)
-            {
+            public static ParseResult<AlphabetParameter> ParseAlphabet(KeyValue key) {
                 var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<AlphabetParameter>(asettings);
 
-                if (key.GetValues().IsErr())
-                {
+                if (key.GetValues().IsErr()) {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
                     return outEither;
                 }
@@ -716,10 +633,8 @@ namespace Stitch
                 (char[], int[,]) result;
                 KeyValue path_Setting = null;
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (setting.Name)
-                    {
+                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (setting.Name) {
                         case "path":
                             if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             path_Setting = setting;
@@ -728,8 +643,7 @@ namespace Stitch
                         case "data":
                             if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             var res = setting.GetValue();
-                            if (res.IsOk(outEither))
-                            {
+                            if (res.IsOk(outEither)) {
                                 var data_content = res.Unwrap().Split("\n");
                                 var counter = new Tokenizer.Counter(setting.ValueRange.Start);
                                 result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", setting), counter).UnwrapOrDefault(outEither, new());
@@ -753,12 +667,10 @@ namespace Stitch
                     }
                 }
 
-                if (path_Setting != null)
-                {
+                if (path_Setting != null) {
                     var all_text = GetAllText(path_Setting);
 
-                    if (all_text.IsOk(outEither))
-                    {
+                    if (all_text.IsOk(outEither)) {
                         var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
                         var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, asettings.Name, key);
                         var counter = new Tokenizer.Counter(id);
@@ -773,29 +685,23 @@ namespace Stitch
 
                 return outEither;
             }
-            public static ParseResult<(char[], int[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter)
-            {
+            public static ParseResult<(char[], int[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter) {
                 var outEither = new ParseResult<(char[], int[,])>();
 
                 int rows = file.Lines.Length;
                 var cells = new List<(Position, List<(string, FileRange)>)>();
 
-                for (int i = 0; i < file.Lines.Length; i++)
-                {
+                for (int i = 0; i < file.Lines.Length; i++) {
                     var start_line = counter.GetPosition();
                     var split_line = new List<(string, FileRange)>();
                     var line = file.Lines[i];
                     Tokenizer.ParseHelper.Trim(ref line, counter);
 
-                    while (!string.IsNullOrEmpty(line))
-                    {
-                        if (line[0] == ';' || line[0] == ',')
-                        {
+                    while (!string.IsNullOrEmpty(line)) {
+                        if (line[0] == ';' || line[0] == ',') {
                             line = line.Remove(0, 1);
                             counter.NextColumn();
-                        }
-                        else
-                        {
+                        } else {
                             var start = counter.GetPosition();
                             var cell = Tokenizer.ParseHelper.UntilOneOf(ref line, new char[] { ';', ',' }, counter);
                             var range = new FileRange(start, counter.GetPosition());
@@ -809,42 +715,31 @@ namespace Stitch
 
                 int columns = cells[0].Item2.Count;
 
-                for (int line = 0; line < rows; line++)
-                {
-                    if (rows > cells[line].Item2.Count)
-                    {
+                for (int line = 0; line < rows; line++) {
+                    if (rows > cells[line].Item2.Count) {
                         outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {rows - cells[line].Item2.Count} column(s) missing on this row."));
-                    }
-                    else if (rows < cells[line].Item2.Count)
-                    {
+                    } else if (rows < cells[line].Item2.Count) {
                         outEither.AddMessage(new ErrorMessage(cells[line].Item1, "Invalid amount of columns", $"There are {cells[line].Item2.Count - rows} additional column(s) on this row."));
                     }
                 }
 
                 var alphabetBuilder = new StringBuilder();
-                foreach (var element in cells[0].Item2.Skip(1))
-                {
+                foreach (var element in cells[0].Item2.Skip(1)) {
                     alphabetBuilder.Append(element.Item1);
                 }
                 var alphabet = alphabetBuilder.ToString().Trim().ToCharArray();
 
-                if (!alphabet.Contains(Alphabet.GapChar))
-                {
+                if (!alphabet.Contains(Alphabet.GapChar)) {
                     outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{Alphabet.GapChar}' is missing in the alphabet definition.", "", true));
                 }
 
                 var scoring_matrix = new int[columns - 1, columns - 1];
 
-                for (int i = 0; i < columns - 1; i++)
-                {
-                    for (int j = 0; j < columns - 1; j++)
-                    {
-                        try
-                        {
+                for (int i = 0; i < columns - 1; i++) {
+                    for (int j = 0; j < columns - 1; j++) {
+                        try {
                             scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).UnwrapOrDefault(outEither, 0);
-                        }
-                        catch (ArgumentOutOfRangeException)
-                        {
+                        } catch (ArgumentOutOfRangeException) {
                             // Invalid amount of cells will already be pointed out
                             //outEither.AddMessage(new ErrorMessage(cells[i + 1].Item1, "Cell out of range", $"Cell {i},{j} out of range."));
                         }
@@ -853,28 +748,20 @@ namespace Stitch
                 outEither.Value = (alphabet, scoring_matrix);
                 return outEither;
             }
-            public static ParseResult<Regex> ParseRegex(KeyValue node)
-            {
+            public static ParseResult<Regex> ParseRegex(KeyValue node) {
                 var outEither = new ParseResult<Regex>();
-                try
-                {
+                try {
                     var res = node.GetValue();
-                    if (res.IsOk(outEither))
-                    {
+                    if (res.IsOk(outEither)) {
                         outEither.Value = new Regex(res.Unwrap().Trim());
 
-                        if (outEither.Value.GetGroupNumbers().Length <= 1)
-                        {
+                        if (outEither.Value.GetGroupNumbers().Length <= 1) {
                             outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given RegEx has no capturing groups.", "To parse an identifier from the fasta header a capturing group (enclosed in parentheses '()') should be present enclosing the identifier. Example: '\\s*(\\w*)'"));
-                        }
-                        else if (outEither.Value.GetGroupNumbers().Length > 3)
-                        {
+                        } else if (outEither.Value.GetGroupNumbers().Length > 3) {
                             outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx could be wrong", "The given RegEx has a lot of capturing groups, only the first two will be used.", "", true));
                         }
                     }
-                }
-                catch (ArgumentException)
-                {
+                } catch (ArgumentException) {
                     outEither.AddMessage(new ErrorMessage(node.ValueRange, "RegEx is invalid", "The given Regex could not be parsed.", "See https://docs.microsoft.com/en-us/dotnet/standard/base-types/regular-expression-language-quick-reference for a reference."));
                 }
                 return outEither;
@@ -882,8 +769,7 @@ namespace Stitch
             /// <summary> Parses a Template </summary> 
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, bool extended)
-            {
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, AlphabetParameter backup_alphabet, bool extended) {
                 // Parse files one by one
                 var file_path = "";
                 KeyValue file_pos = node;
@@ -893,10 +779,8 @@ namespace Stitch
                 var tsettings = new SegmentValue();
                 var outEither = new ParseResult<SegmentValue>(tsettings);
 
-                foreach (var setting in node.GetValues().UnwrapOrDefault(outEither, new()))
-                {
-                    switch (setting.Name)
-                    {
+                foreach (var setting in node.GetValues().UnwrapOrDefault(outEither, new())) {
+                    switch (setting.Name) {
                         case "path":
                             if (!string.IsNullOrEmpty(file_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                             file_path = GetFullPath(setting).UnwrapOrDefault(outEither, "");
@@ -912,12 +796,9 @@ namespace Stitch
                             break;
                         case "alphabet":
                             if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            if (!extended)
-                            {
+                            if (!extended) {
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
-                            }
-                            else
-                            {
+                            } else {
                                 tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
                             }
                             break;
@@ -926,19 +807,13 @@ namespace Stitch
                             break;
                         case "scoring":
                             var res = setting.GetValue();
-                            if (res.IsOk(outEither))
-                            {
+                            if (res.IsOk(outEither)) {
                                 var scoring = res.Unwrap().ToLower();
-                                if (scoring == "absolute")
-                                {
+                                if (scoring == "absolute") {
                                     tsettings.Scoring = ScoringParameter.Absolute;
-                                }
-                                else if (scoring == "relative")
-                                {
+                                } else if (scoring == "relative") {
                                     tsettings.Scoring = ScoringParameter.Relative;
-                                }
-                                else
-                                {
+                                } else {
                                     outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
                                 }
                             }
@@ -953,8 +828,7 @@ namespace Stitch
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
 
-                            if (peaks.Value == false)
-                            {
+                            if (peaks.Value == false) {
                                 var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', and all PEAKS format parameters";
                                 if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
@@ -968,20 +842,19 @@ namespace Stitch
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
 
                 // Open the file
-                var fileId = new ReadMetaData.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
+                var fileId = new Read.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<(string, ReadMetaData.IMetaData)>>();
+                var folder_reads = new ParseResult<List<Read.IRead>>();
+                var alphabet = new Alphabet(tsettings.Alphabet ?? backup_alphabet);
 
                 if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier);
+                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier, alphabet);
                 else if (file_path.EndsWith(".txt"))
-                    folder_reads = OpenReads.Simple(name_filter, fileId);
-                else if (file_path.EndsWith(".csv"))
-                {
+                    folder_reads = OpenReads.Simple(name_filter, fileId, alphabet);
+                else if (file_path.EndsWith(".csv")) {
                     peaks_settings.File = fileId;
-                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings);
-                }
-                else
+                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings, alphabet);
+                } else
                     outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
 
                 outEither.Messages.AddRange(folder_reads.Messages);
@@ -989,27 +862,22 @@ namespace Stitch
 
                 return outEither;
             }
-            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool with_prefix, InputData.Peaks peaks_settings)
-            {
+            public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool with_prefix, InputData.Peaks peaks_settings) {
                 var outEither = new ParseResult<bool>(true);
                 var name = setting.Name;
 
-                if (with_prefix && !name.StartsWith("peaks"))
-                {
+                if (with_prefix && !name.StartsWith("peaks")) {
                     outEither.Value = false;
                     return outEither;
                 }
 
                 if (with_prefix) name = name.Substring(5);
 
-                switch (name)
-                {
+                switch (name) {
                     case "format":
                         var res = setting.GetValue();
-                        if (res.IsOk(outEither))
-                        {
-                            switch (res.Unwrap().ToLower())
-                            {
+                        if (res.IsOk(outEither)) {
+                            switch (res.Unwrap().ToLower()) {
                                 case "old":
                                     peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
                                     break;
@@ -1027,8 +895,7 @@ namespace Stitch
                         break;
                     case "separator":
                         var res0 = setting.GetValue();
-                        if (res0.IsOk(outEither))
-                        {
+                        if (res0.IsOk(outEither)) {
                             if (res0.Unwrap().Length != 1)
                                 outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
                             else
@@ -1037,8 +904,7 @@ namespace Stitch
                         break;
                     case "decimalseparator":
                         var res1 = setting.GetValue();
-                        if (res1.IsOk(outEither))
-                        {
+                        if (res1.IsOk(outEither)) {
                             if (res1.Unwrap().Length != 1)
                                 outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
                             else
@@ -1056,22 +922,19 @@ namespace Stitch
 
                 return outEither;
             }
-            public static ParseResult<(InputData.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool with_prefix, InputData.PeaksParameters parameters)
-            {
+            public static ParseResult<(InputData.PeaksParameters, bool)> GetLocalPeaksParameters(KeyValue setting, bool with_prefix, InputData.PeaksParameters parameters) {
                 var outEither = new ParseResult<(InputData.PeaksParameters, bool)>();
                 outEither.Value = (parameters, true);
                 var name = setting.Name;
 
-                if (with_prefix && !name.StartsWith("peaks"))
-                {
+                if (with_prefix && !name.StartsWith("peaks")) {
                     outEither.Value = (parameters, false);
                     return outEither;
                 }
 
                 if (with_prefix) name = name.Substring(5);
 
-                switch (name)
-                {
+                switch (name) {
                     case "cutoffalc":
                         parameters.CutoffALC = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                         break;
@@ -1088,14 +951,11 @@ namespace Stitch
 
                 return outEither;
             }
-            public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false)
-            {
+            public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false) {
                 var output = new ParseResult<bool>(def);
                 var res = setting.GetValue();
-                if (res.IsOk(output))
-                {
-                    switch (res.Unwrap().ToLower())
-                    {
+                if (res.IsOk(output)) {
+                    switch (res.Unwrap().ToLower()) {
                         case "true":
                             output.Value = true;
                             break;
@@ -1109,132 +969,90 @@ namespace Stitch
                 }
                 return output;
             }
-            public static ParseResult<string> GetFullPath(KeyValue setting)
-            {
+            public static ParseResult<string> GetFullPath(KeyValue setting) {
                 var outEither = new ParseResult<string>();
                 var res = setting.GetValue();
-                if (res.IsOk(outEither))
-                {
+                if (res.IsOk(outEither)) {
                     var path = GetFullPathPrivate(res.Unwrap());
 
-                    if (string.IsNullOrEmpty(path.Item2))
-                    {
+                    if (string.IsNullOrEmpty(path.Item2)) {
                         outEither.Value = Path.GetFullPath(path.Item1);
-                    }
-                    else
-                    {
+                    } else {
                         outEither.AddMessage(new ErrorMessage(setting.ValueRange, path.Item1, path.Item2));
                     }
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetFullPath(string path)
-            {
+            public static ParseResult<string> GetFullPath(string path) {
                 var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(path);
 
-                if (string.IsNullOrEmpty(res.Item2))
-                {
+                if (string.IsNullOrEmpty(res.Item2)) {
                     outEither.Value = Path.GetFullPath(res.Item1);
-                }
-                else
-                {
+                } else {
                     outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
                 }
                 return outEither;
             }
-            static (string, string) GetFullPathPrivate(string path)
-            {
-                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1)
-                {
+            static (string, string) GetFullPathPrivate(string path) {
+                if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
                     return ("Invalid path", "The path contains invalid characters.");
-                }
-                else if (string.IsNullOrWhiteSpace(path))
-                {
+                } else if (string.IsNullOrWhiteSpace(path)) {
                     return ("Invalid path", "The path is empty.");
                 }
                 {
-                    try
-                    {
-                        if (path.StartsWith("\"") && path.EndsWith("\""))
-                        {
+                    try {
+                        if (path.StartsWith("\"") && path.EndsWith("\"")) {
                             path = path.Substring(1, path.Length - 2);
                         }
                         return (Path.GetFullPath(path), "");
-                    }
-                    catch (ArgumentException)
-                    {
+                    } catch (ArgumentException) {
                         return ("Invalid path", "The path cannot be found.");
-                    }
-                    catch (System.Security.SecurityException)
-                    {
+                    } catch (System.Security.SecurityException) {
                         return ("Invalid path", "The file could not be opened because of a lack of required permissions.");
-                    }
-                    catch (NotSupportedException)
-                    {
+                    } catch (NotSupportedException) {
                         return ("Invalid path", "The path contains a colon ':' not part of a volume identifier.");
-                    }
-                    catch (PathTooLongException)
-                    {
+                    } catch (PathTooLongException) {
                         return ("Invalid path", "The path length exceeds the system defined width.");
-                    }
-                    catch (Exception e)
-                    {
+                    } catch (Exception e) {
                         return ("Invalid path", $"Unknown exception occurred when reading path: {e.Message}.");
                     }
                 }
             }
-            static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive)
-            {
+            static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive) {
                 var try_path = GetFullPathPrivate(path);
 
-                try
-                {
+                try {
                     var option = SearchOption.TopDirectoryOnly;
                     if (recursive) option = SearchOption.AllDirectories;
                     return (Directory.GetFiles(try_path.Item1, "*", option), "", "", "");
-                }
-                catch (ArgumentException)
-                {
+                } catch (ArgumentException) {
                     return (Array.Empty<string>(), "Invalid path", "The path contains invalid characters.", "");
-                }
-                catch (UnauthorizedAccessException)
-                {
+                } catch (UnauthorizedAccessException) {
                     return (Array.Empty<string>(), "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
-                }
-                catch (PathTooLongException)
-                {
+                } catch (PathTooLongException) {
                     return (Array.Empty<string>(), "Invalid path", "The path length exceeds the system defined width.", "");
-                }
-                catch (DirectoryNotFoundException)
-                {
-                    try
-                    {
+                } catch (DirectoryNotFoundException) {
+                    try {
                         var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
                         var drive = pieces[0].Split(':')[0];
-                        if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
-                        {
+                        if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
                             string current_path = $"{drive}:\\";
-                            for (int i = 1; i < pieces.Length - 1; i++)
-                            {
+                            for (int i = 1; i < pieces.Length - 1; i++) {
                                 string next_path = current_path + pieces[i] + "\\";
 
-                                if (!Directory.Exists(next_path))
-                                {
+                                if (!Directory.Exists(next_path)) {
                                     var directories = Directory.GetDirectories(current_path);
                                     var extra = "";
 
                                     if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
                                     else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
-                                    else
-                                    {
+                                    else {
                                         int max_value = 0;
                                         string max_name = "";
-                                        foreach (var dir in directories)
-                                        {
+                                        foreach (var dir in directories) {
                                             int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                            if (score > max_value)
-                                            {
+                                            if (score > max_value) {
                                                 max_name = Path.GetFileName(dir);
                                                 max_value = score;
                                             }
@@ -1248,32 +1066,22 @@ namespace Stitch
                             }
                             // Will likely be never used because that would raise a FileNotFoundException
                             return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
-                        }
-                        else
-                        {
+                        } else {
                             return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
                         }
-                    }
-                    catch
-                    {
+                    } catch {
                         return (Array.Empty<string>(), "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
                     }
-                }
-                catch (IOException)
-                {
+                } catch (IOException) {
                     return (Array.Empty<string>(), "Invalid path", "The path is a file name or a network error has occurred.", "");
-                }
-                catch (Exception e)
-                {
+                } catch (Exception e) {
                     return (Array.Empty<string>(), "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
                 }
             }
-            public static ParseResult<string> GetAllText(KeyValue setting)
-            {
+            public static ParseResult<string> GetAllText(KeyValue setting) {
                 var outEither = new ParseResult<string>();
                 var item = setting.GetValue();
-                if (item.IsOk(outEither))
-                {
+                if (item.IsOk(outEither)) {
                     var res = GetAllTextPrivate(item.Unwrap());
 
                     if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
@@ -1281,13 +1089,11 @@ namespace Stitch
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetAllText(ReadMetaData.FileIdentifier file)
-            {
+            public static ParseResult<string> GetAllText(Read.FileIdentifier file) {
                 if (file.Origin != null) return GetAllText(file.Origin);
                 else return GetAllText(file.Path);
             }
-            public static ParseResult<string> GetAllText(string path)
-            {
+            public static ParseResult<string> GetAllText(string path) {
                 var outEither = new ParseResult<string>();
 
                 var res = GetAllTextPrivate(path);
@@ -1297,51 +1103,36 @@ namespace Stitch
 
                 return outEither;
             }
-            static (string, string, string) GetAllTextPrivate(string path)
-            {
+            static (string, string, string) GetAllTextPrivate(string path) {
                 var try_path = GetFullPathPrivate(path);
 
-                if (string.IsNullOrEmpty(try_path.Item2))
-                {
-                    if (Directory.Exists(try_path.Item1))
-                    {
+                if (string.IsNullOrEmpty(try_path.Item2)) {
+                    if (Directory.Exists(try_path.Item1)) {
                         return ("Could not open file", "The file given is a directory.", "");
-                    }
-                    else
-                    {
-                        try
-                        {
+                    } else {
+                        try {
                             return (File.ReadAllText(try_path.Item1), "", "");
-                        }
-                        catch (DirectoryNotFoundException)
-                        {
-                            try
-                            {
+                        } catch (DirectoryNotFoundException) {
+                            try {
                                 var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
                                 var drive = pieces[0].Split(':')[0];
-                                if (Directory.GetLogicalDrives().Contains($"{drive}:\\"))
-                                {
+                                if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
                                     string current_path = $"{drive}:\\";
-                                    for (int i = 1; i < pieces.Length - 1; i++)
-                                    {
+                                    for (int i = 1; i < pieces.Length - 1; i++) {
                                         string next_path = current_path + pieces[i] + "\\";
 
-                                        if (!Directory.Exists(next_path))
-                                        {
+                                        if (!Directory.Exists(next_path)) {
                                             var directories = Directory.GetDirectories(current_path);
                                             var extra = "";
 
                                             if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
                                             else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
-                                            else
-                                            {
+                                            else {
                                                 int max_value = 0;
                                                 string max_name = "";
-                                                foreach (var dir in directories)
-                                                {
+                                                foreach (var dir in directories) {
                                                     int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                                    if (score > max_value)
-                                                    {
+                                                    if (score > max_value) {
                                                         max_name = Path.GetFileName(dir);
                                                         max_value = score;
                                                     }
@@ -1355,51 +1146,35 @@ namespace Stitch
                                     }
                                     // Will likely be never used because that would raise a FileNotFoundException
                                     return ("Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
-                                }
-                                else
-                                {
+                                } else {
                                     return ("Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
                                 }
-                            }
-                            catch
-                            {
+                            } catch {
                                 return ("Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
                             }
-                        }
-                        catch (FileNotFoundException)
-                        {
+                        } catch (FileNotFoundException) {
                             int max_value = 0;
                             string max_name = "";
                             string name = Path.GetFileName(try_path.Item1);
 
-                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(try_path.Item1)))
-                            {
+                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(try_path.Item1))) {
                                 int score = HelperFunctionality.SmithWatermanStrings(file, name);
-                                if (score > max_value)
-                                {
+                                if (score > max_value) {
                                     max_name = Path.GetFileName(file);
                                     max_value = score;
                                 }
                             }
 
                             return ("Could not open file", "The specified file could not be found.", $"Did you mean '{max_name}'?");
-                        }
-                        catch (IOException)
-                        {
+                        } catch (IOException) {
                             return ("Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program, like Excel.");
-                        }
-                        catch (UnauthorizedAccessException)
-                        {
+                        } catch (UnauthorizedAccessException) {
                             return ("Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file.");
-                        }
-                        catch (System.Security.SecurityException)
-                        {
+                        } catch (System.Security.SecurityException) {
                             return ("Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file.");
                         }
                     }
-                }
-                else
-                {
+                } else {
                     return (try_path.Item1, try_path.Item2, "");
                 }
             }

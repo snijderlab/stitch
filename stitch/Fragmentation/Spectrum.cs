@@ -10,27 +10,22 @@ using System.Collections.Generic;
 using System.Text;
 using System;
 
-namespace Stitch
-{
-    public static class Fragmentation
-    {
+namespace Stitch {
+    public static class Fragmentation {
         /// <summary> Create a dictionary of all spectra with the escaped identifier of the top level metadata construct as key. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         /// <returns></returns>
-        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadMetaData.IMetaData> peptides, string directory)
-        {
+        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<Read.IRead> peptides, string directory) {
             var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
             var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag)));
 
-            foreach (var group in scans.GroupBy(m => m.RawFile))
-            {
+            foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
                 raw_file.Open(directory + Path.DirectorySeparatorChar + group.Key);
                 raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
 
-                foreach (var scan in group)
-                {
+                foreach (var scan in group) {
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     // Get the information to find this peptide
 
@@ -58,8 +53,7 @@ namespace Stitch
                     Centroid[] spectrum;
                     if (filter.Format == Spectrum.ScanModeType.Centroid)
                         spectrum = CentroidDetection.ConvertCentroids(mzs, intensities, Orbitrap.ToleranceForResolution(17500));
-                    else
-                    {
+                    else {
                         // Retrieve the noise function for signal-to-noise calculations
                         spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
                     }
@@ -81,8 +75,7 @@ namespace Stitch
                     PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
                     var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
 
-                    var hl_precursor = new PrecursorInfo
-                    {
+                    var hl_precursor = new PrecursorInfo {
                         Mz = filter.ParentMass,
                         Fragmentation = filter.Fragmentation,
                         FragmentationEnergy = filter.FragmentationEnergy,
@@ -91,12 +84,9 @@ namespace Stitch
                     };
                     var asm = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: 20), peptide, matchedFragments);
 
-                    if (fragments.ContainsKey(scan.EscapedIdentifier))
-                    {
+                    if (fragments.ContainsKey(scan.EscapedIdentifier)) {
                         fragments[scan.EscapedIdentifier].Add(asm);
-                    }
-                    else
-                    {
+                    } else {
                         fragments[scan.EscapedIdentifier] = new List<AnnotatedSpectrumMatch> { asm };
                     }
                 }

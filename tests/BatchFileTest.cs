@@ -7,24 +7,18 @@ using System.Collections.Generic;
 using Stitch;
 using Stitch.RunParameters;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class BatchFile_Test
-    {
+    public class BatchFile_Test {
         /// <summary> All batchfiles given as examples should be valid </summary>
         [DataTestMethod]
         [DataRow("basic.txt")]
         [DataRow("monoclonal.txt")]
         [DataRow("polyclonal.txt")]
-        public void TestPublicExamples(string file)
-        {
-            try
-            {
+        public void TestPublicExamples(string file) {
+            try {
                 Stitch.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new RunVariables());
-            }
-            catch (Exception e)
-            {
+            } catch (Exception e) {
                 Stitch.InputNameSpace.ErrorMessage.PrintException(e);
                 Console.WriteLine($"At file {file}");
                 throw;
@@ -33,18 +27,13 @@ namespace StitchTest
 
         /// <summary> All batchfiles given as examples should be valid </summary>
         [TestMethod]
-        public void TestSmallExamples()
-        {
+        public void TestSmallExamples() {
             Console.WriteLine($"Root folder: {Path.GetFullPath(Globals.Root)}");
-            foreach (var file in Directory.GetFiles(Globals.Root + "tests/test_files"))
-            {
-                try
-                {
+            foreach (var file in Directory.GetFiles(Globals.Root + "tests/test_files")) {
+                try {
                     if (file.EndsWith(".txt"))
                         Stitch.ToRunWithCommandLine.RunBatchFile(file, new RunVariables());
-                }
-                catch
-                {
+                } catch {
                     Console.WriteLine($"At file {file}");
                     throw;
                 }

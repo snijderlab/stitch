@@ -2,10 +2,8 @@ using System;
 using System.Diagnostics;
 using System.Threading;
 
-namespace Stitch
-{
-    public class ProgressBar : IDisposable
-    {
+namespace Stitch {
+    public class ProgressBar : IDisposable {
         /// <summary> This turns off the entire progress bar, used to make sure it does not print any more after an error has been printed. </summary>
         public static bool Off = false;
 
@@ -37,31 +35,26 @@ namespace Stitch
         bool started = false;
 
         /// <summary> Create a new ProgressBar, it will have to be started with Start.</summary>
-        public ProgressBar()
-        {
+        public ProgressBar() {
             stopwatch = new Stopwatch();
         }
 
         /// <summary> Properly dispose of the timer. </summary>
-        protected virtual void Dispose(bool dispose)
-        {
+        protected virtual void Dispose(bool dispose) {
             if (dispose)
                 timer.Dispose();
         }
 
         /// <summary> Properly dispose of the timer. </summary>
-        public void Dispose()
-        {
+        public void Dispose() {
             this.Dispose(true);
         }
 
         /// <summary> Start the ProgressBar. </summary>
         /// <param name="max"> The number of ticks on this progress bar. </param>
-        public void Start(int max)
-        {
+        public void Start(int max) {
             max_value = max;
-            if (!started)
-            {
+            if (!started) {
                 stopwatch.Start();
                 Draw(false);
                 timer = new Timer(Tick, null, interval, Timeout.Infinite);
@@ -71,14 +64,11 @@ namespace Stitch
 
         /// <summary> Update the ProgressBar with the given number of ticks. It will be redrawn immediately afterwards. </summary>
         /// <param name="add"> The number of ticks to go forward, defaults to 1. </param>
-        public void Update(int add = 1)
-        {
-            lock (ValueKey)
-            {
+        public void Update(int add = 1) {
+            lock (ValueKey) {
                 current_value += add;
 
-                if (current_value == max_value)
-                {
+                if (current_value == max_value) {
                     stopwatch.Stop();
                 }
             }
@@ -86,53 +76,38 @@ namespace Stitch
         }
 
         /// <summary> Update the drawn progress bar with the elapsed time and schedule the calling of this function after the current interval. </summary>
-        private void Tick(object state)
-        {
-            try
-            {
+        private void Tick(object state) {
+            try {
                 Draw();
-            }
-            finally
-            {
+            } finally {
                 interval = (int)(interval * 1.05); // Slowly increase the interval to not overwhelm the console with updates.
                 timer?.Change(interval, Timeout.Infinite);
             }
         }
 
-        void Draw(bool clear = true)
-        {
-            if (free && !Off)
-            {
+        void Draw(bool clear = true) {
+            if (free && !Off) {
                 free = false;
 
-                if (clear && terminalContact)
-                {
-                    try
-                    { // Set the console back to the start of the line, to overwrite the last update.
+                if (clear && terminalContact) {
+                    try { // Set the console back to the start of the line, to overwrite the last update.
                         Console.SetCursorPosition(0, Console.CursorTop);
-                    }
-                    catch
-                    {
+                    } catch {
                         terminalContact = false;
                     }
                 }
 
                 int width = 30;
-                if (terminalContact)
-                {
-                    try
-                    { // get the width of the console to make the progress bar fit the console snugly
+                if (terminalContact) {
+                    try { // get the width of the console to make the progress bar fit the console snugly
                         width = Console.BufferWidth;
-                    }
-                    catch
-                    {
+                    } catch {
                         terminalContact = false;
                     }
                 }
 
                 int value;
-                lock (ValueKey)
-                {
+                lock (ValueKey) {
                     value = current_value;
                 }
 

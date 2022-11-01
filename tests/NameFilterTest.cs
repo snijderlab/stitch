@@ -7,11 +7,9 @@ using System.Collections.Generic;
 using Stitch;
 using Stitch.RunParameters;
 
-namespace StitchTest
-{
+namespace StitchTest {
     [TestClass]
-    public class NameFilter_Test
-    {
+    public class NameFilter_Test {
         [DataRow("abcd")]
         [DataRow("dfgh")]
         [DataRow("yuop")]
@@ -43,8 +41,7 @@ namespace StitchTest
         [DataRow(",")]
         [DataRow("`")]
         [DataTestMethod]
-        public void PreservesNormalName(string name)
-        {
+        public void PreservesNormalName(string name) {
             var filter = new NameFilter();
             var result = filter.EscapeIdentifier(name);
             Assert.AreEqual(name, result.Item1);
@@ -56,12 +53,10 @@ namespace StitchTest
         }
 
         [TestMethod]
-        public void HandlesDuplicates()
-        {
+        public void HandlesDuplicates() {
             var filter = new NameFilter();
             var names = new List<(string, int)> { ("abcd", 1), ("hello", 1), ("abcd", 2), ("world", 1), ("abcd", 3) };
-            foreach (var (name, count) in names)
-            {
+            foreach (var (name, count) in names) {
                 var result = filter.EscapeIdentifier(name);
                 Assert.AreEqual(count, result.Item3);
             }
@@ -71,8 +66,7 @@ namespace StitchTest
         [DataRow("F3*8900%67", "F3_8900_67")]
         [DataRow("F3?8900\"67!", "F3_8900_67_")]
         [DataTestMethod]
-        public void MakesSafeName(string name, string safe_variant)
-        {
+        public void MakesSafeName(string name, string safe_variant) {
             var filter = new NameFilter();
             var result = filter.EscapeIdentifier(name);
             Assert.AreEqual(safe_variant, result.Item1);
