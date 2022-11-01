@@ -5,15 +5,12 @@ using System.Globalization;
 using HtmlGenerator;
 using System.Text.Json.Serialization;
 
-namespace Stitch
-{
+namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary> 
-    public static class Read
-    {
+    public static class Read {
         /// <summary> To save metadata of a read/path of which could be used in calculations to determine the likelihood
         ///  of certain assignments or for quality control or ease of use for humans. </summary>
-        public abstract class IRead
-        {
+        public abstract class IRead {
             /// <summary> The sequence of this read. </summary>
             public LocalSequence Sequence { get; set; }
 
@@ -33,10 +30,6 @@ namespace Stitch
 
             /// <summary> The Identifier of the read escaped for use in filenames. </summary> 
             public string EscapedIdentifier { get; protected set; }
-
-            /// <summary> Returns the positional score for this read, so for every position the confidence.
-            /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary> 
-            public virtual double[] PositionalScore { get { return new double[0]; } }
 
             /// <summary> Returns the overall intensity for this read. It is used to determine which read to 
             /// choose if multiple reads exist at the same spot. </summary> 
@@ -60,35 +53,28 @@ namespace Stitch
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public IRead(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null)
-            {
-                Sequence = sequence == null ? new LocalSequence(new AminoAcid[0]) : new LocalSequence(sequence);
+            public IRead(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null, double[] positional_score = null) {
+                Sequence = new LocalSequence(sequence == null ? new AminoAcid[0] : sequence, positional_score ?? Enumerable.Repeat(Intensity, (sequence == null ? 0 : sequence.Length)).ToArray());
                 nameFilter = filter;
                 FileRange = file;
                 Identifier = id;
                 ClassIdentifier = classId ?? Identifier;
 
-                if (filter != null)
-                {
+                if (filter != null) {
                     var (escaped_id, bst, count) = filter.EscapeIdentifier(Identifier);
-                    if (count <= 1)
-                    {
+                    if (count <= 1) {
                         EscapedIdentifier = escaped_id;
-                    }
-                    else
-                    {
+                    } else {
                         Identifier = $"{Identifier}_{count:D3}";
                         EscapedIdentifier = $"{escaped_id}_{count:D3}";
                     }
                 }
             }
 
-            protected HtmlBuilder RenderChangedSequence()
-            {
+            protected HtmlBuilder RenderChangedSequence() {
                 var html = new HtmlBuilder();
                 if (SequenceChanges.Count == 0) return html;
-                foreach (var set in SequenceChanges)
-                {
+                foreach (var set in SequenceChanges) {
                     if (set.Sequence.SequenceChanges.Count == 0) continue;
                     html.OpenAndClose(HtmlTag.h2, "", "Changed in context of: " + set.Template.Identifier);
                     html.Add(set.Sequence.RenderChangedSequence());
@@ -98,8 +84,7 @@ namespace Stitch
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public class Simple : IRead
-        {
+        public class Simple : IRead {
             /// <summary> Create a new Simple MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
@@ -107,8 +92,7 @@ namespace Stitch
             public Simple(AminoAcid[] sequence, FileRange? file = null, NameFilter filter = null, string identifier = "R") : base(sequence, file, identifier, filter) { }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.Add(this.RenderChangedSequence());
                 html.Add(File.ToHTML());
@@ -117,8 +101,7 @@ namespace Stitch
         }
 
         /// <summary> A class to hold meta information from fasta data. </summary>
-        public class Fasta : IRead
-        {
+        public class Fasta : IRead {
             /// <summary> The identifier from the fasta file. </summary> 
             public readonly string FastaHeader;
             public List<(HelperFunctionality.Annotation Type, string Sequence)> AnnotatedSequence = null;
@@ -129,15 +112,13 @@ namespace Stitch
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             public Fasta(AminoAcid[] sequence, string identifier, string fastaHeader, FileRange? file, NameFilter filter, string classIdentifier = null)
-                : base(sequence, file, identifier, filter, classIdentifier)
-            {
+                : base(sequence, file, identifier, filter, classIdentifier) {
                 this.FastaHeader = fastaHeader;
             }
 
             /// <summary> Generate HTML with all meta information from the fasta data. </summary>
             /// <returns> Returns an HTML string with the meta information. </returns>
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from fasta");
                 html.OpenAndClose(HtmlTag.h3, "", "Identifier");
@@ -151,8 +132,7 @@ namespace Stitch
         }
 
         /// <summary> A struct to hold meta information from PEAKS data. </summary>
-        public class Peaks : IRead
-        {
+        public class Peaks : IRead {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
 
@@ -197,12 +177,9 @@ namespace Stitch
 
             /// <summary> The intensity of this read, find out how it should be handled if it if later updated. </summary> 
             double intensity = 1;
-            public override double Intensity
-            {
-                get
-                {
-                    if (Area != 0 && nameFilter != null && nameFilter.MinimalPeaksArea != Double.MaxValue && nameFilter.MaximalPeaksArea != Double.MinValue)
-                    {
+            public override double Intensity {
+                get {
+                    if (Area != 0 && nameFilter != null && nameFilter.MinimalPeaksArea != Double.MaxValue && nameFilter.MaximalPeaksArea != Double.MinValue) {
                         return (Math.Log10(Area) - nameFilter.MinimalPeaksArea) / (nameFilter.MaximalPeaksArea - nameFilter.MinimalPeaksArea);
                     }
                     return 1;
@@ -210,10 +187,8 @@ namespace Stitch
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string, int, string)> ScanNumbers
-            {
-                get
-                {
+            public override List<(string, int, string)> ScanNumbers {
+                get {
                     var output = new List<(string, int, string)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
                         output.Add((Source_File, scan, Original_tag));
@@ -224,10 +199,6 @@ namespace Stitch
             /// <summary> Posttranslational Modifications of the peptide. </summary>
             public string Post_translational_modifications = null;
 
-            /// <summary> Local confidence scores of the peptide. Determined as a fraction based on the local confidence of the total intensity of this read. </summary>
-            public int[] Local_confidence = null;
-            public override double[] PositionalScore { get { return Local_confidence.Select(a => (double)a / 100).ToArray(); } }
-
             /// <summary> Fragmentation mode used to generate the peptide. </summary>
             public string Fragmentation_mode = null;
 
@@ -235,7 +206,7 @@ namespace Stitch
             /// <param name="identifier">The fasta identifier.</param>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
-            private Peaks(AminoAcid[] sequence, FileRange? file, string identifier, NameFilter filter) : base(sequence, file, identifier, filter) { }
+            private Peaks(AminoAcid[] sequence, FileRange? file, string identifier, NameFilter filter, double[] positional_score = null) : base(sequence, file, identifier, filter, null, positional_score) { }
 
             /// <summary> Tries to create a PeaksMeta struct based on a CSV line in PEAKS format. </summary>
             /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
@@ -246,8 +217,7 @@ namespace Stitch
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, Alphabet alphabet)
-            {
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, Alphabet alphabet) {
                 var out_either = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
@@ -257,47 +227,38 @@ namespace Stitch
 
                 if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
 
-                if (fields.Count < 5)
-                {
+                if (fields.Count < 5) {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "Make sure the used separator is correct.", ""));
                     return out_either;
                 }
 
                 // Some helper functions
-                int ConvertToInt(int pos)
-                {
+                int ConvertToInt(int pos) {
                     return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
-                double ConvertToDouble(int pos)
-                {
+                double ConvertToDouble(int pos) {
                     return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text.Replace(decimalseparator, current_decimal_separator), fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
-                bool CheckFieldExists(int pos)
-                {
-                    if (pos > fields.Count - 1)
-                    {
+                bool CheckFieldExists(int pos) {
+                    if (pos > fields.Count - 1) {
                         out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Line too short", $"Line misses field {pos} while this is necessary in this peaks format."));
                         return false;
                     }
                     return true;
                 }
 
-                if (!(pf.scan >= 0 && CheckFieldExists(pf.scan)))
-                {
+                if (!(pf.scan >= 0 && CheckFieldExists(pf.scan))) {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a ScanID to use as an identifier"));
                     return out_either;
                 }
                 string original_peptide;
                 AminoAcid[] sequence;
-                if (pf.peptide >= 0 && CheckFieldExists(pf.peptide))
-                {
+                if (pf.peptide >= 0 && CheckFieldExists(pf.peptide)) {
                     original_peptide = fields[pf.peptide].Text;
                     sequence = AminoAcid.FromString(new string(original_peptide.Where(x => Char.IsUpper(x) && Char.IsLetter(x)).ToArray()), alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]);
-                }
-                else
-                {
+                } else {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(range, "Missing identifier", "Each Peaks line needs a Peptide to use as an identifier"));
                     return out_either;
                 }
@@ -349,16 +310,11 @@ namespace Stitch
                 if (pf.ptm >= 0 && CheckFieldExists(pf.ptm))
                     peaks.Post_translational_modifications = fields[pf.ptm].Text;
 
-                if (pf.local_confidence >= 0 && CheckFieldExists(pf.local_confidence))
-                {
-                    try
-                    {
-                        peaks.Local_confidence = fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x)).ToArray();
-                        if (peaks.Local_confidence.Length != peaks.Sequence.Sequence.Length)
+                if (pf.local_confidence >= 0 && CheckFieldExists(pf.local_confidence)) {
+                    try {
+                        if (!peaks.Sequence.SetPositionalScore(fields[pf.local_confidence].Text.Split(" ".ToCharArray()).ToList().Select(x => Convert.ToInt32(x) / 100.0).ToArray()))
                             out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
-                    }
-                    catch
-                    {
+                    } catch {
                         out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[pf.local_confidence].Pos, "Local confidence invalid", "One of the confidences is not a number"));
                     }
                 }
@@ -367,8 +323,7 @@ namespace Stitch
                     peaks.Fragmentation_mode = fields[pf.mode].Text;
 
                 // Calculate intensity
-                if (peaks.Area != 0)
-                {
+                if (peaks.Area != 0) {
                     var pArea = Math.Log10(peaks.Area);
                     if (pArea < filter.MinimalPeaksArea) filter.MinimalPeaksArea = pArea;
                     if (pArea > filter.MaximalPeaksArea) filter.MaximalPeaksArea = pArea;
@@ -379,9 +334,8 @@ namespace Stitch
                 return out_either;
             }
 
-            public Read.Peaks Clone()
-            {
-                var meta = new Read.Peaks(this.Sequence.Sequence, this.FileRange, this.Identifier, this.nameFilter);
+            public Read.Peaks Clone() {
+                var meta = new Read.Peaks(this.Sequence.Sequence, this.FileRange, this.Identifier, this.nameFilter, this.Sequence.PositionalScore);
                 meta.Area = this.Area;
                 meta.Charge = this.Charge;
                 meta.Confidence = this.Confidence;
@@ -390,7 +344,6 @@ namespace Stitch
                 meta.Fraction = new string(this.Fraction);
                 meta.Fragmentation_mode = new string(this.Fragmentation_mode);
                 meta.intensity = this.intensity;
-                meta.Local_confidence = (int[])this.Local_confidence.Clone();
                 meta.Mass = this.Mass;
                 meta.Mass_over_charge = this.Mass_over_charge;
                 meta.Original_tag = new string(this.Original_tag);
@@ -404,40 +357,33 @@ namespace Stitch
 
             /// <summary> Generate HTML with all meta information from the PEAKS data. </summary>
             /// <returns> Returns an HTML string with the meta information. </returns>
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from PEAKS");
 
                 // Look for each field if it is defined, otherwise leave it out
-                if (ScanID != null)
-                {
+                if (ScanID != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Scan Identifier");
                     html.OpenAndClose(HtmlTag.p, "", ScanID.ToString());
                 }
 
                 // Create a display of the sequence with local confidence and modifications (if present)
-                if (Original_tag != null && Local_confidence != null)
-                {
+                if (Original_tag != null && Sequence.PositionalScore != null) {
                     html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                     int original_offset = 0;
 
-                    for (int i = 0; i < this.Sequence.Sequence.Length; i++)
-                    {
-                        html.Open(HtmlTag.div, $"style='--value:{Local_confidence[i]}'");
+                    for (int i = 0; i < this.Sequence.Sequence.Length; i++) {
+                        html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
                         html.OpenAndClose(HtmlTag.p, "", this.Sequence.Sequence[i].ToString());
 
-                        if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(')
-                        {
+                        if (original_offset < Original_tag.Length - 2 && Original_tag[original_offset + 1] == '(') {
                             html.Open(HtmlTag.p, "class='modification'");
                             original_offset += 2;
-                            while (Original_tag[original_offset] != ')')
-                            {
+                            while (Original_tag[original_offset] != ')') {
                                 html.Content(Original_tag[original_offset].ToString());
                                 original_offset++;
-                                if (original_offset > Original_tag.Length - 2)
-                                {
+                                if (original_offset > Original_tag.Length - 2) {
                                     break;
                                 }
                             }
@@ -449,86 +395,72 @@ namespace Stitch
                     html.Close(HtmlTag.div);
                 }
 
-                if (Post_translational_modifications != null)
-                {
+                if (Post_translational_modifications != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Posttranslational Modifications");
                     html.OpenAndClose(HtmlTag.p, "", Post_translational_modifications);
                 }
 
-                if (Source_File != null)
-                {
+                if (Source_File != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Source File");
                     html.OpenAndClose(HtmlTag.p, "", Source_File);
                 }
 
-                if (Fraction != null)
-                {
+                if (Fraction != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Fraction");
                     html.OpenAndClose(HtmlTag.p, "", Fraction);
                 }
 
-                if (Feature != null)
-                {
+                if (Feature != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Scan Feature");
                     html.OpenAndClose(HtmlTag.p, "", Feature);
                 }
 
-                if (DeNovoScore >= 0)
-                {
+                if (DeNovoScore >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "De Novo Score");
                     html.OpenAndClose(HtmlTag.p, "", DeNovoScore.ToString());
                 }
 
-                if (Confidence >= 0)
-                {
+                if (Confidence >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "ConfidenceScore");
                     html.OpenAndClose(HtmlTag.p, "", Confidence.ToString());
                 }
 
-                if (Mass_over_charge >= 0)
-                {
+                if (Mass_over_charge >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "m/z");
                     html.OpenAndClose(HtmlTag.p, "", Mass_over_charge.ToString());
                 }
 
-                if (Mass >= 0)
-                {
+                if (Mass >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "Mass");
                     html.OpenAndClose(HtmlTag.p, "", Mass.ToString());
                 };
 
-                if (Charge >= 0)
-                {
+                if (Charge >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "Charge");
                     html.OpenAndClose(HtmlTag.p, "", Charge.ToString());
                 }
 
-                if (Retention_time >= 0)
-                {
+                if (Retention_time >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "Retention Time");
                     html.OpenAndClose(HtmlTag.p, "", Retention_time.ToString());
                 }
 
-                if (PredictedRetentionTime != null)
-                {
+                if (PredictedRetentionTime != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Predicted Retention Time");
                     html.OpenAndClose(HtmlTag.p, "", PredictedRetentionTime.ToString());
                 }
 
-                if (Area >= 0)
-                {
+                if (Area >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "Area");
                     html.OpenAndClose(HtmlTag.p, "", Area.ToString("G4"));
                 }
 
-                if (Parts_per_million >= 0)
-                {
+                if (Parts_per_million >= 0) {
                     html.OpenAndClose(HtmlTag.h3, "", "Parts Per Million");
                     html.OpenAndClose(HtmlTag.p, "", Parts_per_million.ToString());
                 }
 
-                if (Fragmentation_mode != null)
-                {
+                if (Fragmentation_mode != null) {
                     html.OpenAndClose(HtmlTag.h3, "", "Fragmentation mode");
                     html.OpenAndClose(HtmlTag.p, "", Fragmentation_mode);
                 }
@@ -540,54 +472,23 @@ namespace Stitch
             }
         }
 
-        public class Combined : IRead
-        {
-
-            /// <summary> Returns the positional score for this read, so for every position the confidence.
-            /// In this case it is defined as the average positional score for all children reads. </summary> 
-            public override double[] PositionalScore
-            {
-                get
-                {
-                    var scores = Children.Select(c => c.PositionalScore).Aggregate(new List<(int, double)>(), (acc, l) =>
-                    {
-                        if (acc.Count < l.Length)
-                        {
-                            acc.AddRange(Enumerable.Repeat((0, 0.0), l.Length - acc.Count));
-                        }
-                        for (int i = 0; i < l.Length; i++)
-                        {
-                            acc[i] = (acc[i].Item1 + 1, acc[i].Item2 + l[i]);
-                        }
-                        return acc;
-                    });
-                    var output = new double[scores.Count];
-                    for (int i = 0; i < scores.Count; i++)
-                    {
-                        output[i] = scores[i].Item2 / scores[i].Item1;
-                    }
-                    return output;
-                }
-            }
-
+        public class Combined : IRead {
             /// <summary> Returns the overall intensity for this read. It is used to determine which read to 
             /// choose if multiple reads exist at the same spot. </summary> 
-            public override double Intensity { get => Children.Average(m => m.Intensity); }
+            public override double Intensity { get => Children.Count == 0 ? 0.0 : Children.Average(m => m.Intensity); }
 
             /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user 
             /// and help him/her get a better picture of the validity of the data. </summary> 
-            public new double TotalArea { get => Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers
-            {
+            public new double TotalArea { get => Children.Count == 0 ? 0.0 : Children.Sum(m => m.TotalArea); }
+            public override List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 
-            public List<IRead> Children = new List<IRead>();
+            public readonly List<IRead> Children = new List<IRead>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary> 
             /// <returns>A string containing the MetaData.</returns>
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from Multiple reads");
                 html.OpenAndClose(HtmlTag.h3, "", "Number of combined reads");
@@ -596,24 +497,26 @@ namespace Stitch
                 html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
                 html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G4"));
-                html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
+                html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(Sequence.PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
                 html.Add(this.RenderChangedSequence());
-                foreach (var child in Children)
-                {
+                foreach (var child in Children) {
                     html.Add(child.ToHTML());
                 }
                 return html;
             }
 
-            public Combined(AminoAcid[] sequence, NameFilter filter, List<IRead> children) : base(sequence, null, "Combined", filter)
-            {
+            public Combined(AminoAcid[] sequence, NameFilter filter, List<IRead> children) : base(sequence, null, "Combined", filter) {
                 Children = children;
+            }
+
+            public void AddChild(IRead read) {
+                Children.Add(read);
+                Sequence.UpdatePositionalScore(read.Sequence.PositionalScore, Children.Count() - 1);
             }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public abstract class Novor : IRead
-        {
+        public abstract class Novor : IRead {
             /// <summary> The fraction where this peptide was found. </summary> 
             public string Fraction;
             /// <summary> The scan number of this peptide. </summary> 
@@ -633,8 +536,7 @@ namespace Stitch
 
             /// <summary> The intensity of this read </summary> 
             double intensity = 1;
-            public override double Intensity
-            {
+            public override double Intensity {
                 get { return 1 + Score / 100; }
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
@@ -642,8 +544,7 @@ namespace Stitch
             /// <summary> Create a new Novor MetaData. </summary> 
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Novor(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence) : base(sequence, file, "N", filter)
-            {
+            public Novor(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence) : base(sequence, file, "N", filter) {
                 this.Fraction = fraction;
                 this.Scan = scan;
                 this.MZ = mz;
@@ -655,8 +556,7 @@ namespace Stitch
             }
 
             /// <summary> Returns Simple MetaData to HTML. </summary> 
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from Novor");
                 html.OpenAndClose(HtmlTag.h3, "", "Fraction");
@@ -681,18 +581,15 @@ namespace Stitch
             }
         }
 
-        public class NovorDeNovo : Novor
-        {
+        public class NovorDeNovo : Novor {
             /// <summary> The database sequence with possible modifications. </summary> 
             public string DBSequence;
             public NovorDeNovo(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string databaseSequence)
-            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence)
-            {
+            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence) {
                 this.DBSequence = databaseSequence;
             }
 
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = base.ToHTML();
                 html.OpenAndClose(HtmlTag.h3, "", "DBSequence");
                 html.OpenAndClose(HtmlTag.p, "", DBSequence);
@@ -700,21 +597,18 @@ namespace Stitch
             }
         }
 
-        public class NovorPSMS : Novor
-        {
+        public class NovorPSMS : Novor {
             /// <summary> The read ID. </summary> 
             public string ID;
             /// <summary> The read ID. </summary> 
             public int Proteins;
             public NovorPSMS(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string id, int proteins)
-            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence)
-            {
+            : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence) {
                 this.ID = id;
                 this.Proteins = proteins;
             }
 
-            public override HtmlBuilder ToHTML()
-            {
+            public override HtmlBuilder ToHTML() {
                 var html = base.ToHTML();
                 html.OpenAndClose(HtmlTag.h3, "", "ID");
                 html.OpenAndClose(HtmlTag.p, "", ID);
@@ -725,8 +619,7 @@ namespace Stitch
         }
 
         /// <summary> A identifier for a file, to hold information about where reads originate from. </summary>
-        public class FileIdentifier
-        {
+        public class FileIdentifier {
             /// <summary>The absolute path to the file.</summary>
             public string Path { get { return path; } set { path = System.IO.Path.GetFullPath(value); } }
             string path;
@@ -743,8 +636,7 @@ namespace Stitch
             /// <param name="pathInput">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
             /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
-            public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin)
-            {
+            public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin) {
                 path = System.IO.Path.GetFullPath(pathInput);
                 Name = name;
                 RefersToFile = true;
@@ -752,8 +644,7 @@ namespace Stitch
             }
 
             /// <summary> To create a blank instance of FileIdentifier. </summary> 
-            public FileIdentifier()
-            {
+            public FileIdentifier() {
                 path = "";
                 Name = "";
                 RefersToFile = false;
@@ -761,8 +652,7 @@ namespace Stitch
 
             /// <summary> To generate HTML for use in the metadata sidebar in the HTML report. </summary> 
             /// <returns>A string containing the HTML.</returns>
-            public HtmlBuilder ToHTML()
-            {
+            public HtmlBuilder ToHTML() {
                 if (!RefersToFile) return new HtmlBuilder();
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Originating File");
@@ -773,22 +663,18 @@ namespace Stitch
                 return html;
             }
 
-            public string Display()
-            {
+            public string Display() {
                 return $"Path: {path}\nName: {Name}";
             }
 
-            public override bool Equals(object obj)
-            {
-                if (obj is FileIdentifier that)
-                {
+            public override bool Equals(object obj) {
+                if (obj is FileIdentifier that) {
                     return this.Path == that.Path && this.Name == that.Name && this.Origin == that.Origin;
                 }
                 return false;
             }
 
-            public override int GetHashCode()
-            {
+            public override int GetHashCode() {
                 return 23 + 397 * this.Path.GetHashCode() + 17 * 397 * this.Name.GetHashCode() + 17 * 17 * 397 * this.Origin.GetHashCode();
             }
         }

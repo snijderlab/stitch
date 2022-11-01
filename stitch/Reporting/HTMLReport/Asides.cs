@@ -564,12 +564,12 @@ namespace HTMLNameSpace
             {
                 Row("Peaks ALC", p.DeNovoScore.ToString());
             }
-            if (match.Query.PositionalScore.Length != 0)
+            if (match.Query.Sequence.PositionalScore.Length != 0)
             {
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.td, "", doc_title);
                 html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.Query.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.Query.Sequence.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
                 html.Close(HtmlTag.td);
                 html.Close(HtmlTag.tr);
             }

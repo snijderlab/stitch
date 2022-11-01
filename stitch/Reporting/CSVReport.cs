@@ -61,7 +61,7 @@ namespace Stitch
                             meta.Mass.ToString(),
                             meta.Parts_per_million.ToString(),
                             meta.Post_translational_modifications,
-                            System.String.Join(' ', meta.Local_confidence.Select(a => a.ToString())),
+                            System.String.Join(' ', meta.Sequence.PositionalScore.Select(a => a.ToString())),
                             meta.Original_tag,
                             meta.Fragmentation_mode
                         });
