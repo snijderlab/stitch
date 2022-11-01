@@ -20,12 +20,12 @@ namespace StitchTest {
             var aa = new AminoAcid[] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'A') };
             var set = new AminoAcidSet(aa);
             Console.WriteLine(set);
-            Assert.AreEqual(0u, set.Value);
+            Assert.AreEqual(0b000001_000001u, set.Value);
 
             aa = new AminoAcid[] { new AminoAcid(alp, 'B'), new AminoAcid(alp, 'B') };
             set = new AminoAcidSet(aa);
             Console.WriteLine(set);
-            Assert.AreEqual(0b000001_000001u, set.Value);
+            Assert.AreEqual(0b000010_000010u, set.Value);
         }
 
         [TestMethod]
