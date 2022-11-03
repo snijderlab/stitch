@@ -156,7 +156,7 @@ namespace Stitch {
         }
 
         /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
-        void Simplify() {
+        public void Simplify() {
             MatchPiece lastElement = null;
             int count = Alignment.Count;
             int i = 0;
@@ -164,6 +164,10 @@ namespace Stitch {
                 if (lastElement != null && lastElement.GetType() == Alignment[i].GetType()) {
                     Alignment[i].Length += Alignment[i - 1].Length;
                     Alignment.RemoveAt(i - 1);
+                    i--;
+                    count--;
+                } else if (Alignment[i].Length == 0) {
+                    Alignment.RemoveAt(i);
                     i--;
                     count--;
                 }
@@ -309,6 +313,7 @@ namespace Stitch {
             /// <summary> Creates a new piece </summary> 
             /// <param name="length">The length</param>
             public MatchPiece(int length) {
+                if (length < 0) throw new ArgumentException("The length of a sequence match piece cannot be less then zero.");
                 Length = length;
             }
 

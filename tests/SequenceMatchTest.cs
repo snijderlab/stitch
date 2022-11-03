@@ -61,5 +61,23 @@ namespace StitchTest {
             Assert.AreEqual('A', sm.GetAtTemplateIndex(11).Value.Character);
             Assert.AreEqual('A', sm.GetAtTemplateIndex(13).Value.Character);
         }
+
+        [TestMethod]
+        public void SimplifyTestJoining() {
+            var sm = CreateTestData();
+            sm.Alignment[1] = new SequenceMatch.Match(1);
+            sm.Alignment[6] = new SequenceMatch.Insertion(2);
+            sm.Simplify();
+            Assert.AreEqual("6M1I3M2D4I4M", HelperFunctionality.CIGAR(sm.Alignment));
+        }
+
+        [TestMethod]
+        public void SimplifyTestRemoveEmpty() {
+            var sm = CreateTestData();
+            sm.Alignment[1] = new SequenceMatch.Insertion(0);
+            sm.Alignment[7] = new SequenceMatch.Deletion(0);
+            sm.Simplify();
+            Assert.AreEqual("5M1I3M2D6M", HelperFunctionality.CIGAR(sm.Alignment));
+        }
     }
 }

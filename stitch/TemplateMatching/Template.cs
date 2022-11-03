@@ -136,11 +136,13 @@ namespace Stitch {
 
                 // Pre computes a hash code based on the actual sequence of the gap
                 int hash = 1217;
-                int pos = 0;
-                for (int i = 0; i < 5; i++) {
-                    hash ^= Sequence[pos].GetHashCode();
-                    hash += 11;
-                    pos = ((pos + i) * 653) % Sequence.Length;
+                if (sequence.Length != 0) {
+                    int pos = 0;
+                    for (int i = 0; i < 5; i++) {
+                        hash ^= Sequence[pos].GetHashCode();
+                        hash += 11;
+                        pos = ((pos + i) * 653) % Sequence.Length;
+                    }
                 }
                 hashCode = hash;
             }
@@ -513,24 +515,37 @@ namespace Stitch {
                 int pos = match.StartTemplatePosition;
                 int q_pos = match.StartQueryPosition;
 
-                foreach (var piece in match.Alignment) {
+                for (int piece_pos = 0; piece_pos < match.Alignment.Count; piece_pos++) {
+                    SequenceMatch.MatchPiece piece = match.Alignment[piece_pos];
                     if (piece is SequenceMatch.Match ma) {
-                        for (int offset = 0; offset < piece.Length; offset++) {
+                        for (int offset = 0; offset < ma.Length; offset++) {
                             var skip = 0;
                             var found = false;
                             if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
-                                for (int size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); size > 0 && !found; size--) {
+                                for (int size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); size > 0 && !found; size--) {
                                     var key = match.QuerySequence.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
                                     if (equal_mass.ContainsKey(key)) {
                                         var set = equal_mass[key];
 
-                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, piece.Length - offset); template_size > 0; template_size--) {
+                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); template_size > 0; template_size--) {
                                             var template_key = this.Sequence.SubArray(pos + offset, template_size).ToSortedAminoAcidSet();
                                             if (set.Contains(template_key)) {
                                                 // Force template
                                                 match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
-                                                ma.Length = ma.Length - size + template_size; // Update SequenceMatch
-                                                skip = size;
+                                                //ma.Length = ma.Length - size + template_size; // Update SequenceMatch
+
+                                                // Fix misalignment issues
+                                                if (template_size < size) {
+                                                    match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Insertion(size - template_size));
+                                                    match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - size));
+                                                    ma.Length = offset;
+                                                } else if (template_size > size) {
+                                                    match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Deletion(template_size - size));
+                                                    match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - template_size));
+                                                    ma.Length = offset;
+                                                    q_pos -= template_size - size;
+                                                }
+                                                skip = Math.Max(size, template_size);
                                                 found = true;
                                                 break; // Goes to next position
                                             }
@@ -540,8 +555,8 @@ namespace Stitch {
                             }
                             offset += skip;
                         }
-                        pos += piece.Length;
-                        q_pos += piece.Length;
+                        pos += ma.Length;
+                        q_pos += ma.Length;
                     } else if (piece is SequenceMatch.Deletion) {
                         pos += piece.Length;
 
@@ -550,6 +565,7 @@ namespace Stitch {
 
                     }
                 }
+                match.Simplify();
             }
         }
     }
