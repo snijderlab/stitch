@@ -42,6 +42,12 @@ Nightly versions, which contain all new features but are less stable, can be fou
 
 ## Building
 
+First retrieve the source code using git clone.
+
+```
+git clone https://github.com/snijderlab/stitch.git stitch
+```
+
 The project is built with dotnet (.NET 6.0) development is done on windows, but it should work on all major platforms. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
 
 ```
@@ -75,7 +81,7 @@ dotnet test tests
 
 ## Examples
 
-The 'batchfiles' folder contains some examples which can be run to see what the program is up to.
+The 'batchfiles' folder contains some examples which can be run to see what the program is up to. These examples are present both with the built binaries and the source code.
 
 - `basic.txt` 
 - `monoclonal.txt`
