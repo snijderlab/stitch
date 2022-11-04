@@ -16,7 +16,7 @@ namespace Stitch {
         public readonly int Score;
 
         /// <summary> The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>. </summary>
-        public readonly List<MatchPiece> Alignment;
+        public List<MatchPiece> Alignment;
 
         /// <summary> The query to align. </summary>
         public readonly Read.IRead Query;
@@ -157,23 +157,7 @@ namespace Stitch {
 
         /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
         public void Simplify() {
-            MatchPiece lastElement = null;
-            int count = Alignment.Count;
-            int i = 0;
-            while (i < count) {
-                if (lastElement != null && lastElement.GetType() == Alignment[i].GetType()) {
-                    Alignment[i].Length += Alignment[i - 1].Length;
-                    Alignment.RemoveAt(i - 1);
-                    i--;
-                    count--;
-                } else if (Alignment[i].Length == 0) {
-                    Alignment.RemoveAt(i);
-                    i--;
-                    count--;
-                }
-                lastElement = Alignment[i];
-                i++;
-            }
+            Simplify(ref Alignment);
         }
 
         /// <summary> Get a part of the query sequence as indicated by positions on the template sequence. </summary>
@@ -304,6 +288,76 @@ namespace Stitch {
             return 0;
         }
 
+        /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
+        private static void Simplify(ref List<MatchPiece> Alignment) {
+            MatchPiece lastElement = null;
+            int count = Alignment.Count;
+            int i = 0;
+            while (i < count) {
+                if (lastElement != null && lastElement.GetType() == Alignment[i].GetType()) {
+                    Alignment[i].Length += Alignment[i - 1].Length;
+                    Alignment.RemoveAt(i - 1);
+                    i--;
+                    count--;
+                } else if (Alignment[i].Length == 0) {
+                    Alignment.RemoveAt(i);
+                    i--;
+                    count--;
+                }
+                lastElement = i < 0 ? null : Alignment[i];
+                i++;
+            }
+        }
+
+        /// <summary> Overwrite an alignment with a new match piece at the given template location. </summary>
+        /// <param name="alignment"> The original alignment. </param>
+        /// <param name="insert"> The number of places to insert. </param>
+        /// <param name="offset"> The template offset to place it at. </param>
+        /// <param name="delete"> The number of positions to delete where the insertion is placed. </param>
+        public static void OverWriteAlignment(ref List<MatchPiece> alignment, int offset, int delete, int insert) {
+            // This needs to insert insertions at the correct places.
+            int pos = 0;
+            int to_delete = 0;
+            bool placed = false;
+            for (int i = 0; i < alignment.Count; i++) {
+                MatchPiece piece = alignment[i];
+                if (placed && to_delete == 0) break;
+                if (!(piece is Insertion)) {
+                    if (to_delete != 0) {
+                        var deleted = Math.Min(piece.Length, to_delete);
+                        piece.Length = piece.Length - deleted;
+                        to_delete -= deleted;
+                    }
+                    if (pos <= offset && pos + piece.Length > offset) {
+                        alignment.Insert(i + 1, new Match(Math.Min(delete, insert)));
+                        var n = 2;
+                        if (delete > insert)
+                            alignment.Insert(i + n, new Deletion(delete - insert));
+                        else if (insert > delete)
+                            alignment.Insert(i + n, new Insertion(insert - delete));
+                        else n = 1;
+
+                        var original_length = piece.Length;
+                        var length = offset - pos;
+                        piece.Length = Math.Max(0, length);
+                        if (original_length - piece.Length < delete) to_delete = delete - (original_length - piece.Length);
+                        else if (original_length - piece.Length != delete) {
+                            n += 1;
+                            alignment.Insert(i + n, piece.Copy(original_length - piece.Length - delete));
+                        }
+                        placed = true;
+                        pos += original_length;
+                        i += n - 1; // Skip past the placed insertion
+                    } else {
+                        pos += piece.Length;
+                    }
+                } else if (to_delete != 0) {
+                    piece.Length = 0; // Remove all insertions if inserting anything here.
+                }
+            }
+            Simplify(ref alignment);
+        }
+
 
         /// <summary> Represents a piece of a match between two sequences </summary>
         public abstract class MatchPiece {
@@ -320,6 +374,8 @@ namespace Stitch {
             /// <summary> The Identifier to put in the string representation </summary> 
             abstract protected string Identifier();
 
+            abstract public MatchPiece Copy(int length);
+
             /// <summary> The CIGAR representation of this piece </summary> 
             public override string ToString() {
                 return $"{Length}{Identifier()}";
@@ -330,6 +386,10 @@ namespace Stitch {
         public class Match : MatchPiece {
             public Match(int c) : base(c) { }
             override protected string Identifier() { return "M"; }
+
+            override public MatchPiece Copy(int length) {
+                return new Match(length);
+            }
         }
 
         /// <summary> A gap in respect to the Template. 
@@ -339,6 +399,9 @@ namespace Stitch {
         public class Deletion : MatchPiece {
             public Deletion(int c) : base(c) { }
             override protected string Identifier() { return "D"; }
+            override public MatchPiece Copy(int length) {
+                return new Deletion(length);
+            }
         }
 
         /// <summary> A gap in respect to the Query.
@@ -348,6 +411,9 @@ namespace Stitch {
         public class Insertion : MatchPiece {
             public Insertion(int c) : base(c) { }
             override protected string Identifier() { return "I"; }
+            override public MatchPiece Copy(int length) {
+                return new Insertion(length);
+            }
         }
     }
 }

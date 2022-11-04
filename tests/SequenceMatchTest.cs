@@ -79,5 +79,25 @@ namespace StitchTest {
             sm.Simplify();
             Assert.AreEqual("5M1I3M2D6M", HelperFunctionality.CIGAR(sm.Alignment));
         }
+
+        [TestMethod]
+        public void TestOverwriting() {
+            var sm = CreateTestData();
+            Assert.AreEqual("4M1D1M1I3M2D2M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
+            SequenceMatch.OverWriteAlignment(ref sm.Alignment, 5, 2, 3);
+            Assert.AreEqual("4M1D2M1I2M2D2M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
+            SequenceMatch.OverWriteAlignment(ref sm.Alignment, 10, 2, 2);
+            Assert.AreEqual("4M1D2M1I2M1D3M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
+        }
+
+        [TestMethod]
+        public void TestOverwritingComplex() {
+            var sm = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(12) };
+            Assert.AreEqual("12M", HelperFunctionality.CIGAR(sm));
+            SequenceMatch.OverWriteAlignment(ref sm, 5, 2, 5);
+            Assert.AreEqual("7M3I5M", HelperFunctionality.CIGAR(sm));
+            SequenceMatch.OverWriteAlignment(ref sm, 1, 5, 2);
+            Assert.AreEqual("3M3D1M3I5M", HelperFunctionality.CIGAR(sm));
+        }
     }
 }

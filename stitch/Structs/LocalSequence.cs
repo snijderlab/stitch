@@ -10,9 +10,10 @@ namespace Stitch {
 
         /// <summary> The sequence of this read. </summary>
         public AminoAcid[] Sequence { get; private set; }
+        AminoAcid[] OriginalSequence;
 
         /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
-        public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> SequenceChanges = new();
+        public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> Changes = new();
 
         /// <summary> Returns the positional score for this read, so for every position the confidence.
         /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary> 
@@ -23,6 +24,7 @@ namespace Stitch {
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="sequence"> The original sequence, will be cloned. </param>
         public LocalSequence(AminoAcid[] sequence, double[] positional_score) {
+            OriginalSequence = sequence.ToArray();
             Sequence = sequence.ToArray();
             PositionalScore = positional_score;
         }
@@ -31,6 +33,7 @@ namespace Stitch {
         /// <param name="read"> The read with the original sequence, will be updated to contain a pointer to this local sequence. </param>
         /// <param name="template"> The template where this read is placed. </param>
         public LocalSequence(Read.IRead read, Read.IRead template) {
+            OriginalSequence = read.Sequence.Sequence.ToArray();
             Sequence = read.Sequence.Sequence.ToArray();
             PositionalScore = read.Sequence.PositionalScore.ToArray();
             read.SequenceChanges.Add((template, this));
@@ -42,7 +45,7 @@ namespace Stitch {
         /// <param name="change"> The new aminoacids to introduce. </param>
         /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
         public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason) {
-            this.SequenceChanges.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
+            this.Changes.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
             this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
             if (PositionalScore.Length != 0) {
                 var to_delete = this.PositionalScore.Skip(offset).Take(delete);
@@ -69,11 +72,15 @@ namespace Stitch {
         }
 
         /// <summary> Render that changes of this sequencing changing context in a nice and user accessible manner. </summary>
-        public HtmlBuilder RenderChangedSequence() {
+        public HtmlBuilder RenderToHtml() {
             var html = new HtmlBuilder();
-            if (SequenceChanges.Count == 0) return html;
+            if (Changes.Count == 0) return html;
             html.OpenAndClose(HtmlTag.h3, "", "Changes to the peptide sequence");
-            var rev = SequenceChanges.ToList();
+            html.OpenAndClose(HtmlTag.p, "", HelperFunctionality.CIGAR(AlignmentWithOriginal()));
+            html.Open(HtmlTag.div, "class='seq'");
+            foreach (var set in Sequence.Zip(ChangeProfile())) html.OpenAndClose(HtmlTag.span, set.Second ? "class='changed'" : "", set.First.Character.ToString());
+            html.Close(HtmlTag.div);
+            var rev = Changes.ToList();
             rev.Reverse();
             foreach (var change in rev) {
                 html.Open(HtmlTag.p, "class='changed-sequence'");
@@ -85,6 +92,20 @@ namespace Stitch {
                 html.Close(HtmlTag.p);
             }
             return html;
+        }
+
+        public bool[] ChangeProfile() {
+            IEnumerable<bool> changed = new bool[OriginalSequence.Length];
+            foreach (var change in Changes) {
+                changed = changed.Take(change.Offset).Concat(Enumerable.Repeat(true, change.New.Length)).Concat(changed.Skip(change.Offset + change.Old.Length));
+            }
+            return changed.ToArray();
+        }
+
+        public List<SequenceMatch.MatchPiece> AlignmentWithOriginal() {
+            var alignment = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(OriginalSequence.Length) };
+            foreach (var change in Changes) SequenceMatch.OverWriteAlignment(ref alignment, change.Offset, change.Old.Length, change.New.Length);
+            return alignment;
         }
     }
 }

@@ -75,9 +75,9 @@ namespace Stitch {
                 var html = new HtmlBuilder();
                 if (SequenceChanges.Count == 0) return html;
                 foreach (var set in SequenceChanges) {
-                    if (set.Sequence.SequenceChanges.Count == 0) continue;
+                    if (set.Sequence.Changes.Count == 0) continue;
                     html.OpenAndClose(HtmlTag.h2, "", "Changed in context of: " + set.Template.Identifier);
-                    html.Add(set.Sequence.RenderChangedSequence());
+                    html.Add(set.Sequence.RenderToHtml());
                 }
                 return html;
             }
