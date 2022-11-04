@@ -18,8 +18,8 @@ namespace StitchTest {
             ls.UpdateSequence(5, 3, AminoAcid.FromString("BBB", alp).Unwrap(), "Fun");
             ls.UpdateSequence(9, 3, AminoAcid.FromString("BBB", alp).Unwrap(), "Fun");
             Assert.AreEqual("AAAAABBBABBB", AminoAcid.ArrayToString(ls.Sequence));
-            bool[] actual = ls.ChangeProfile();
-            bool[] expected = new bool[12] { false, false, false, false, false, true, true, true, false, true, true, true };
+            var actual = ls.ChangeProfile();
+            var expected = new (bool, int)[] { (false, 5), (true, 3), (false, 1), (true, 3) };
             for (int i = 0; i < actual.Length; i++) {
                 Assert.AreEqual(expected[i], actual[i], $"At position {i}");
             }
@@ -35,8 +35,8 @@ namespace StitchTest {
             ls.UpdateSequence(5, 2, AminoAcid.FromString("BBB", alp).Unwrap(), "Fun");
             ls.UpdateSequence(10, 1, AminoAcid.FromString("BBB", alp).Unwrap(), "Fun");
             Assert.AreEqual("AAAAABBBAABBBAA", AminoAcid.ArrayToString(ls.Sequence));
-            bool[] actual = ls.ChangeProfile();
-            bool[] expected = new bool[15] { false, false, false, false, false, true, true, true, false, false, true, true, true, false, false };
+            var actual = ls.ChangeProfile();
+            var expected = new (bool, int)[] { (false, 5), (true, 3), (false, 2), (true, 3), (false, 2) };
             for (int i = 0; i < actual.Length; i++) {
                 Assert.AreEqual(expected[i], actual[i], $"At position {i}");
             }

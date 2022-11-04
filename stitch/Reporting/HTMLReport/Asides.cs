@@ -404,10 +404,16 @@ namespace HTMLNameSpace {
                 classes_string = string.IsNullOrEmpty(classes_string) ? "" : $"class='{classes_string}' ";
 
                 // Generate the actual HTMl and Fasta lines
-                html.OpenAndClose(
+                html.Open(
                     HtmlTag.a,
-                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
-                    seq);
+                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'");
+                var position = 0;
+                foreach (var set in read.QuerySequence.ChangeProfile()) {
+                    if (set.Item1) html.OpenAndClose(HtmlTag.span, "class='changed'", AminoAcid.ArrayToString(HelperFunctionality.SubArray(read.QuerySequence.Sequence, position, set.Item2)));
+                    else html.Content(AminoAcid.ArrayToString(HelperFunctionality.SubArray(read.QuerySequence.Sequence, position, set.Item2)));
+                    position += set.Item2;
+                }
+                html.Close(HtmlTag.a);
                 data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
             }
 

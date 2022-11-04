@@ -6,7 +6,7 @@ using HtmlGenerator;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary> 
-    public struct LocalSequence {
+    public class LocalSequence {
 
         /// <summary> The sequence of this read. </summary>
         public AminoAcid[] Sequence { get; private set; }
@@ -78,7 +78,12 @@ namespace Stitch {
             html.OpenAndClose(HtmlTag.h3, "", "Changes to the peptide sequence");
             html.OpenAndClose(HtmlTag.p, "", HelperFunctionality.CIGAR(AlignmentWithOriginal()));
             html.Open(HtmlTag.div, "class='seq'");
-            foreach (var set in Sequence.Zip(ChangeProfile())) html.OpenAndClose(HtmlTag.span, set.Second ? "class='changed'" : "", set.First.Character.ToString());
+            var position = 0;
+            foreach (var set in ChangeProfile()) {
+                if (set.Item1) html.OpenAndClose(HtmlTag.span, "class='changed'", AminoAcid.ArrayToString(HelperFunctionality.SubArray(Sequence, position, set.Item2)));
+                else html.Content(AminoAcid.ArrayToString(HelperFunctionality.SubArray(Sequence, position, set.Item2)));
+                position += set.Item2;
+            }
             html.Close(HtmlTag.div);
             var rev = Changes.ToList();
             rev.Reverse();
@@ -94,12 +99,25 @@ namespace Stitch {
             return html;
         }
 
-        public bool[] ChangeProfile() {
+        public (bool, int)[] ChangeProfile() {
             IEnumerable<bool> changed = new bool[OriginalSequence.Length];
             foreach (var change in Changes) {
                 changed = changed.Take(change.Offset).Concat(Enumerable.Repeat(true, change.New.Length)).Concat(changed.Skip(change.Offset + change.Old.Length));
             }
-            return changed.ToArray();
+            var output = new List<(bool, int)>();
+            var last = changed.First();
+            var length = 1;
+            foreach (var position in changed.Skip(1)) {
+                if (position == last) {
+                    length += 1;
+                } else {
+                    output.Add((last, length));
+                    last = position;
+                    length = 1;
+                }
+            }
+            output.Add((last, length));
+            return output.ToArray();
         }
 
         public List<SequenceMatch.MatchPiece> AlignmentWithOriginal() {
