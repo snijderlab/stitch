@@ -407,11 +407,35 @@ namespace HTMLNameSpace {
                 html.Open(
                     HtmlTag.a,
                     $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'");
-                var position = 0;
-                foreach (var set in read.QuerySequence.ChangeProfile()) {
-                    if (set.Item1) html.OpenAndClose(HtmlTag.span, "class='changed'", AminoAcid.ArrayToString(HelperFunctionality.SubArray(read.QuerySequence.Sequence, position, set.Item2)));
-                    else html.Content(AminoAcid.ArrayToString(HelperFunctionality.SubArray(read.QuerySequence.Sequence, position, set.Item2)));
-                    position += set.Item2;
+                var position = 0; // Position in the changed_profile
+                var changed_profile_index = 0; // Position in this changed set (in changed_profile)
+                var changed_profile = read.QuerySequence.ChangeProfile();
+                // Skip the correct profile sets based on read.StartQueryPosition
+                for (int i = 0; i < read.StartQueryPosition; i++) {
+                    changed_profile_index++;
+                    if (changed_profile_index == changed_profile[position].Length) {
+                        position++;
+                        changed_profile_index = 0;
+                    }
+                }
+                // Go over all characters in the seq and annotate it properly
+                var last = "";
+                for (int i = 0; i < seq.Length; i++) {
+                    last += seq[i];
+                    if (seq[i] != gap_char) {
+                        changed_profile_index++;
+                        if (changed_profile_index == changed_profile[position].Length) {
+                            changed_profile_index = 0;
+                            if (changed_profile[position].Changed) html.OpenAndClose(HtmlTag.span, "class='changed'", last);
+                            else html.Content(last);
+                            position++;
+                            last = "";
+                        }
+                    }
+                }
+                if (!String.IsNullOrEmpty(last)) {
+                    if (changed_profile.Last().Changed) html.OpenAndClose(HtmlTag.span, "class='changed'", last);
+                    else html.Content(last);
                 }
                 html.Close(HtmlTag.a);
                 data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");

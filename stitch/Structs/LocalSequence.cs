@@ -99,7 +99,7 @@ namespace Stitch {
             return html;
         }
 
-        public (bool, int)[] ChangeProfile() {
+        public (bool Changed, int Length)[] ChangeProfile() {
             IEnumerable<bool> changed = new bool[OriginalSequence.Length];
             foreach (var change in Changes) {
                 changed = changed.Take(change.Offset).Concat(Enumerable.Repeat(true, change.New.Length)).Concat(changed.Skip(change.Offset + change.Old.Length));
