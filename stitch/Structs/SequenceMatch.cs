@@ -171,7 +171,7 @@ namespace Stitch {
                     i--;
                     count--;
                 }
-                lastElement = Alignment[i];
+                lastElement = i < 0 ? null : Alignment[i];
                 i++;
             }
         }
