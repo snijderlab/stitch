@@ -92,7 +92,7 @@ The 'benchmarks' folder contains a set of examples with a known output which are
 
 ## Credits
 
-* Douwe Schulte - Software engineer
+* Douwe Schulte - Software engineer - d.schulte[at]uu[dot]nl
 * Joost Snijder - Principal investigator
 * Bastiaan de Graaf - Code reviews
 * Wei Wei Peng - Testing and analysis
