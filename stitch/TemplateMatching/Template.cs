@@ -527,40 +527,42 @@ namespace Stitch {
                                     if (equal_mass.ContainsKey(key)) {
                                         var set = equal_mass[key];
 
-                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); template_size > 0; template_size--) {
+                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); template_size > 0 && !found; template_size--) {
                                             var template_key = this.Sequence.SubArray(pos + offset, template_size).ToSortedAminoAcidSet();
-                                            if (set.Contains(template_key)) {
-                                                // First check if IS <-> LS is found because this should be categorised as I <-> L
-                                                var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
-                                                var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
-                                                if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls)) {
-                                                    if (match.QuerySequence.Sequence[q_pos + offset].Character == 'S') {
-                                                        break;
-                                                    } else { // The current position is I or L
-                                                        match.QuerySequence.UpdateSequence(q_pos + offset, 1, this.Sequence.SubArray(pos + offset, 1), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
-                                                        skip = 1;
-                                                        found = true;
-                                                        break;
-                                                    }
-                                                } else {
-                                                    // Force template
-                                                    match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
-                                                    //ma.Length = ma.Length - size + template_size; // Update SequenceMatch
+                                            foreach (var rule_set in set) {
+                                                if (rule_set.Set.Contains(template_key)) {
+                                                    // First check if IS <-> LS is found because this should be categorised as I <-> L
+                                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
+                                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
+                                                    if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls)) {
+                                                        if (match.QuerySequence.Sequence[q_pos + offset].Character == 'S') {
+                                                            break;
+                                                        } else { // The current position is I or L
+                                                            match.QuerySequence.UpdateSequence(q_pos + offset, 1, this.Sequence.SubArray(pos + offset, 1), rule_set.Type.Description());
+                                                            skip = 1;
+                                                            found = true;
+                                                            break;
+                                                        }
+                                                    } else {
+                                                        // Force template
+                                                        match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), rule_set.Type.Description());
+                                                        //ma.Length = ma.Length - size + template_size; // Update SequenceMatch
 
-                                                    // Fix misalignment issues
-                                                    if (template_size < size) {
-                                                        match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Insertion(size - template_size));
-                                                        match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - size));
-                                                        ma.Length = offset;
-                                                    } else if (template_size > size) {
-                                                        match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Deletion(template_size - size));
-                                                        match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - template_size));
-                                                        ma.Length = offset;
-                                                        q_pos -= template_size - size;
+                                                        // Fix misalignment issues
+                                                        if (template_size < size) {
+                                                            match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Insertion(size - template_size));
+                                                            match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - size));
+                                                            ma.Length = offset;
+                                                        } else if (template_size > size) {
+                                                            match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Deletion(template_size - size));
+                                                            match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - template_size));
+                                                            ma.Length = offset;
+                                                            q_pos -= template_size - size;
+                                                        }
+                                                        skip = Math.Max(size, template_size);
+                                                        found = true;
+                                                        break; // Goes to next position
                                                     }
-                                                    skip = Math.Max(size, template_size);
-                                                    found = true;
-                                                    break; // Goes to next position
                                                 }
                                             }
                                         }
