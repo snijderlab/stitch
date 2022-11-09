@@ -1,7 +1,7 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Globalization;
+using System.Linq;
 using HtmlGenerator;
 
 namespace Stitch {
@@ -122,7 +122,8 @@ namespace Stitch {
 
         public List<SequenceMatch.MatchPiece> AlignmentWithOriginal() {
             var alignment = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(OriginalSequence.Length) };
-            foreach (var change in Changes) SequenceMatch.OverWriteAlignment(ref alignment, change.Offset, change.Old.Length, change.New.Length);
+            //var match = new SequenceMatch(0, 0, 0, alignment, this., null, 0);
+            //foreach (var change in Changes) match.OverWriteAlignment(change.Offset, change.Old.Length, change.New.Length);
             return alignment;
         }
     }

@@ -40,7 +40,7 @@ namespace Stitch {
         };
 
         public const int MaxLength = 4;
-        public static Dictionary<AminoAcidSet, HashSet<(MSErrorType Type, HashSet<AminoAcidSet> Set)>> EqualMasses(Alphabet alphabet) {
+        public static Dictionary<AminoAcidSet, HashSet<(MSErrorType Type, HashSet<AminoAcidSet> Set)>> ErrorTable(Alphabet alphabet) {
             var output = new Dictionary<AminoAcidSet, HashSet<(MSErrorType Type, HashSet<AminoAcidSet> Set)>>();
 
             void Add(AminoAcidSet key, MSErrorType type, HashSet<AminoAcidSet> set) {

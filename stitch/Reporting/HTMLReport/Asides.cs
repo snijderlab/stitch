@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using HtmlGenerator;
 using Stitch;
 using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
-using System.Collections.ObjectModel;
-using HtmlGenerator;
-using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
 namespace HTMLNameSpace {
     public static class HTMLAsides {
@@ -294,7 +294,8 @@ namespace HTMLNameSpace {
                 var sequence = new List<string>();
                 foreach (var piece in match.Alignment) {
                     if (piece is SequenceMatch.Match ma) {
-                        sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
+                        var length = Math.Min(match.QuerySequence.Sequence.Length - pos - match.StartQueryPosition, piece.Length); // TODO check why needed
+                        sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, length).Select(a => a.Character.ToString()));
                         pos += piece.Length;
                     } else if (piece is SequenceMatch.Deletion) {
                         sequence.AddRange(Enumerable.Repeat(gap_char.ToString(), piece.Length));
@@ -310,10 +311,14 @@ namespace HTMLNameSpace {
                 bool first = true;
                 var insertion_length = 0;
                 foreach (var piece in match.Alignment) {
+                    if (node == null) {
+                        sequence_list.AddLast(gap_char.ToString());
+                        node = sequence_list.Last;
+                    }
                     if (piece is SequenceMatch.Insertion) {
                         if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - piece.Length - insertion_length));
                         insertion_length = piece.Length;
-                        node = node.Next;
+                        node = node?.Next;
                         first = false;
                     } else {
                         for (int i = 0; i < piece.Length; i++, pos++) {
@@ -321,6 +326,10 @@ namespace HTMLNameSpace {
                             if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - insertion_length));
                             insertion_length = 0;
                             node = node.Next;
+                            if (node == null) {
+                                sequence_list.AddLast(gap_char.ToString());
+                                node = sequence_list.Last;
+                            }
                             first = false;
                         }
                     }

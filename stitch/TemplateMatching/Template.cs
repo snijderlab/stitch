@@ -1,8 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Stitch.HelperFunctionality;
 using System.Text.Json.Serialization;
+using static Stitch.HelperFunctionality;
 
 
 namespace Stitch {
@@ -510,77 +510,78 @@ namespace Stitch {
         }
 
         public void FixCommonMassSpecErrors() {
-            var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
-            foreach (var match in this.Matches) {
-                int pos = match.StartTemplatePosition;
-                int q_pos = match.StartQueryPosition;
+            var error_table = MassSpecErrors.ErrorTable(this.Parent.Alphabet);
+            (bool Replace, int Delete, AminoAcid[] Insert, MSErrorType Type) FindErrorAtPosition(AminoAcid[] query, AminoAcid[] template) {
+                for (int size = query.Length; size > 0; size--) {
+                    var key = query.Take(size).ToSortedAminoAcidSet();
+                    if (error_table.ContainsKey(key)) {
+                        var set = error_table[key];
 
-                for (int piece_pos = 0; piece_pos < match.Alignment.Count; piece_pos++) {
-                    SequenceMatch.MatchPiece piece = match.Alignment[piece_pos];
-                    if (piece is SequenceMatch.Match ma) {
-                        for (int offset = 0; offset < ma.Length; offset++) {
-                            var skip = 0;
-                            var found = false;
-                            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
-                                for (int size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); size > 0 && !found; size--) {
-                                    var key = match.QuerySequence.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
-                                    if (equal_mass.ContainsKey(key)) {
-                                        var set = equal_mass[key];
-
-                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); template_size > 0 && !found; template_size--) {
-                                            var template_key = this.Sequence.SubArray(pos + offset, template_size).ToSortedAminoAcidSet();
-                                            foreach (var rule_set in set) {
-                                                if (rule_set.Set.Contains(template_key)) {
-                                                    // First check if IS <-> LS is found because this should be categorised as I <-> L
-                                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
-                                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
-                                                    if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls)) {
-                                                        if (match.QuerySequence.Sequence[q_pos + offset].Character == 'S') {
-                                                            break;
-                                                        } else { // The current position is I or L
-                                                            match.QuerySequence.UpdateSequence(q_pos + offset, 1, this.Sequence.SubArray(pos + offset, 1), rule_set.Type.Description());
-                                                            skip = 1;
-                                                            found = true;
-                                                            break;
-                                                        }
-                                                    } else {
-                                                        // Force template
-                                                        match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), rule_set.Type.Description());
-                                                        //ma.Length = ma.Length - size + template_size; // Update SequenceMatch
-
-                                                        // Fix misalignment issues
-                                                        if (template_size < size) {
-                                                            match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Insertion(size - template_size));
-                                                            match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - size));
-                                                            ma.Length = offset;
-                                                        } else if (template_size > size) {
-                                                            match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Deletion(template_size - size));
-                                                            match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - template_size));
-                                                            ma.Length = offset;
-                                                            q_pos -= template_size - size;
-                                                        }
-                                                        skip = Math.Max(size, template_size);
-                                                        found = true;
-                                                        break; // Goes to next position
-                                                    }
-                                                }
-                                            }
-                                        }
+                        for (int template_size = template.Length; template_size > 0; template_size--) {
+                            var template_key = template.Take(template_size).ToSortedAminoAcidSet();
+                            foreach (var rule_set in set) {
+                                if (rule_set.Set.Contains(template_key)) {
+                                    // First check if IS <-> LS is found because this should be categorised as I <-> L
+                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
+                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
+                                    if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls) && query[0].Character != 'S') {
+                                        // The current position is I or L
+                                        return (true, 1, new AminoAcid[] { template[0] }, rule_set.Type);
+                                    } else {
+                                        // Force template
+                                        return (true, size, template.Take(template_size).ToArray(), rule_set.Type);
                                     }
                                 }
                             }
-                            offset += skip;
                         }
-                        pos += ma.Length;
-                        q_pos += ma.Length;
-                    } else if (piece is SequenceMatch.Deletion) {
-                        pos += piece.Length;
-
-                    } else if (piece is SequenceMatch.Insertion) {
-                        q_pos += piece.Length;
-
                     }
                 }
+                return (false, 0, null, MSErrorType.Isomass);
+            }
+
+            foreach (var match in this.Matches) {
+                //int pos = match.StartTemplatePosition;
+                //int q_pos = match.StartQueryPosition;
+
+                for (int pos = match.StartTemplatePosition; pos < match.StartTemplatePosition + match.LengthOnTemplate; pos++) {
+                    var query = match.GetQuerySubMatch(pos, MassSpecErrors.MaxLength);
+                    var template = this.Sequence.SubArray(pos, Math.Min(MassSpecErrors.MaxLength, this.Sequence.Length - pos));
+                    var res = FindErrorAtPosition(query.Item2, template);
+                    if (res.Replace) {
+                        var q_pos = match.GetQueryPosition(pos);
+                        match.QuerySequence.UpdateSequence(q_pos, res.Delete, res.Insert, res.Type.Description());
+                        match.OverWriteAlignment(pos, res.Delete, res.Insert.Length);
+                        pos += Math.Max(res.Delete, res.Insert.Length); // Skip over the newly placed AAs
+                    }
+                }
+
+                //for (int piece_pos = 0; piece_pos < match.Alignment.Count; piece_pos++) {
+                //    SequenceMatch.MatchPiece piece = match.Alignment[piece_pos];
+                //    if (piece is SequenceMatch.Match ma) {
+                //        for (int offset = 0; offset < ma.Length; offset++) {
+                //            var skip = 0;
+                //            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
+                //                var res = FindErrorAtPosition(
+                //                    match.QuerySequence.Sequence.SubArray(q_pos + offset, Math.Min(MassSpecErrors.MaxLength, match.QuerySequence.Sequence.Length - q_pos - offset)),
+                //                    this.Sequence.SubArray(pos + offset, Math.Min(MassSpecErrors.MaxLength, this.Sequence.Length - pos - offset)));
+                //                if (res.Replace) {
+                //                    match.QuerySequence.UpdateSequence(q_pos, res.Delete, res.Insert, res.Type.Description());
+                //                    SequenceMatch.OverWriteAlignment(ref match.Alignment, pos, res.Delete, res.Insert.Length);
+                //                    skip = Math.Max(res.Delete, res.Insert.Length);
+                //                }
+                //            }
+                //            offset += skip;
+                //        }
+                //        pos += ma.Length;
+                //        q_pos += ma.Length;
+                //    } else if (piece is SequenceMatch.Deletion) {
+                //        pos += piece.Length;
+                //
+                //    } else if (piece is SequenceMatch.Insertion) {
+                //        q_pos += piece.Length;
+                //
+                //    }
+                //}
                 match.Simplify();
             }
         }

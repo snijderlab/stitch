@@ -26,11 +26,11 @@ namespace Stitch {
         public readonly Read.IRead Template;
 
         /// <summary> The total amount of (mis)matching aminoacids in the alignment </summary>
-        public readonly int TotalMatches;
+        public int TotalMatches { get; private set; }
         /// <summary> The total length on the template (matches + gaps in query) </summary>
-        public readonly int LengthOnTemplate;
+        public int LengthOnTemplate { get; private set; }
         /// <summary> The total length on the query (matches + gaps in template) </summary>
-        public readonly int LengthOnQuery;
+        public int LengthOnQuery { get; private set; }
 
         public readonly int Index;
         /// <summary> The index of the Template sequence if available. </summary>
@@ -163,11 +163,12 @@ namespace Stitch {
         /// <summary> Get a part of the query sequence as indicated by positions on the template sequence. </summary>
         /// <param name="startTemplatePosition">The start position on the template.</param>
         /// <param name="lengthOnTemplate">The length on the template of the part of the query sequence needed.</param>
-        /// <returns></returns>
-        public string GetQuerySubMatch(int startTemplatePosition, int lengthOnTemplate) {
+        /// <returns>Both a string with the full alignment with inserted gaps and an array with only the aminoacids from the query which align to these positions.</returns>
+        public (string, AminoAcid[]) GetQuerySubMatch(int startTemplatePosition, int lengthOnTemplate) {
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
             var buf = new StringBuilder();
+            var aa = new List<AminoAcid>();
 
             if (pos > startTemplatePosition) buf.Append(new string(Alphabet.GapChar, pos - startTemplatePosition));
 
@@ -178,6 +179,7 @@ namespace Stitch {
                         int dif = pos < startTemplatePosition ? startTemplatePosition - pos : 0; // Skip all AA before the interesting sequence
                         int length = Math.Min(Math.Min(Math.Min(startTemplatePosition + lengthOnTemplate - pos, lengthOnTemplate), this.QuerySequence.Sequence.Length - q_pos - dif), piece.Length - dif);
                         buf.Append(AminoAcid.ArrayToString(this.QuerySequence.Sequence.SubArray(q_pos + dif, length)));
+                        aa.AddRange(this.QuerySequence.Sequence.SubArray(q_pos + dif, length));
                     }
 
                     pos += piece.Length;
@@ -192,6 +194,7 @@ namespace Stitch {
                 } else if (piece is SequenceMatch.Insertion gc) {
                     if (pos < startTemplatePosition + lengthOnTemplate && pos > startTemplatePosition) {
                         buf.Append(AminoAcid.ArrayToString(this.QuerySequence.Sequence.SubArray(q_pos, piece.Length)));
+                        aa.AddRange(this.QuerySequence.Sequence.SubArray(q_pos, piece.Length));
                     }
 
                     q_pos += piece.Length;
@@ -200,7 +203,28 @@ namespace Stitch {
 
             if (pos < startTemplatePosition + lengthOnTemplate) buf.Append(new string(Alphabet.GapChar, startTemplatePosition + lengthOnTemplate - pos));
 
-            return buf.ToString();
+            return (buf.ToString(), aa.ToArray());
+        }
+
+        /// <summary> Find the query position with the given template position, does a full search from to start so not terribly efficient. It returns -1 for any template position outside the actual match.</summary>
+        /// <param name="templatePosition"> The template position, as the index in the actual sequence so with the StartTemplatePosition offset. </param>
+        public int GetQueryPosition(int templatePosition) {
+            int pos = this.StartTemplatePosition;
+            int q_pos = this.StartQueryPosition;
+            if (pos >= templatePosition) return -1;
+            foreach (var piece in this.Alignment) {
+                if (piece is SequenceMatch.Match ma) {
+                    pos += piece.Length;
+                    q_pos += piece.Length;
+                    if (pos >= templatePosition) return q_pos - (pos - templatePosition);
+                } else if (piece is SequenceMatch.Deletion) {
+                    pos += piece.Length;
+                    if (pos >= templatePosition) return q_pos;
+                } else if (piece is SequenceMatch.Insertion) {
+                    q_pos += piece.Length;
+                }
+            }
+            return -1;
         }
 
         (int Matches, int MisMatches, int GapInQuery, int GapInTemplate)? scores = null;
@@ -314,13 +338,14 @@ namespace Stitch {
         /// <param name="insert"> The number of places to insert. </param>
         /// <param name="offset"> The template offset to place it at. </param>
         /// <param name="delete"> The number of positions to delete where the insertion is placed. </param>
-        public static void OverWriteAlignment(ref List<MatchPiece> alignment, int offset, int delete, int insert) {
+        public void OverWriteAlignment(int offset, int delete, int insert) {
             // This needs to insert insertions at the correct places.
+            // TODO update LengthOnTemplate etc
             int pos = 0;
             int to_delete = 0;
             bool placed = false;
-            for (int i = 0; i < alignment.Count; i++) {
-                MatchPiece piece = alignment[i];
+            for (int i = 0; i < this.Alignment.Count; i++) {
+                MatchPiece piece = this.Alignment[i];
                 if (placed && to_delete == 0) break;
                 if (!(piece is Insertion)) {
                     if (to_delete != 0) {
@@ -329,12 +354,12 @@ namespace Stitch {
                         to_delete -= deleted;
                     }
                     if (pos <= offset && pos + piece.Length > offset) {
-                        alignment.Insert(i + 1, new Match(Math.Min(delete, insert)));
+                        this.Alignment.Insert(i + 1, new Match(Math.Min(delete, insert)));
                         var n = 2;
                         if (delete > insert)
-                            alignment.Insert(i + n, new Deletion(delete - insert));
+                            this.Alignment.Insert(i + n, new Deletion(delete - insert));
                         else if (insert > delete)
-                            alignment.Insert(i + n, new Insertion(insert - delete));
+                            this.Alignment.Insert(i + n, new Insertion(insert - delete));
                         else n = 1;
 
                         var original_length = piece.Length;
@@ -343,7 +368,7 @@ namespace Stitch {
                         if (original_length - piece.Length < delete) to_delete = delete - (original_length - piece.Length);
                         else if (original_length - piece.Length != delete) {
                             n += 1;
-                            alignment.Insert(i + n, piece.Copy(original_length - piece.Length - delete));
+                            this.Alignment.Insert(i + n, piece.Copy(original_length - piece.Length - delete));
                         }
                         placed = true;
                         pos += original_length;
@@ -355,7 +380,22 @@ namespace Stitch {
                     piece.Length = 0; // Remove all insertions if inserting anything here.
                 }
             }
-            Simplify(ref alignment);
+            this.Simplify();
+
+            // Set up Length on * again
+            int sum1 = 0;
+            int sum2 = 0;
+            int sum3 = 0;
+            foreach (var m in Alignment) {
+                if (m is SequenceMatch.Match match) {
+                    sum1 += match.Length;
+                }
+                if (m is SequenceMatch.Insertion gc) sum2 += gc.Length;
+                if (m is SequenceMatch.Deletion gt) sum3 += gt.Length;
+            }
+            TotalMatches = sum1;
+            LengthOnTemplate = sum1 + sum2;
+            LengthOnQuery = sum1 + sum3;
         }
 
 

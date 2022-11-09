@@ -1,16 +1,16 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
+using HtmlGenerator;
 using HTMLNameSpace;
 using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
-using HtmlGenerator;
 
 namespace Stitch {
     /// <summary> An HTML report. </summary> 
@@ -63,6 +63,7 @@ namespace Stitch {
             }
         }
 
+        static object ErrorPrintingLock = new Object();
         void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1) {
             try {
                 HtmlBuilder inner_html;
@@ -105,8 +106,10 @@ namespace Stitch {
 
                 SaveAndCreateDirectories(full_path, html.ToString());
             } catch (Exception e) {
-                InputNameSpace.ErrorMessage.PrintException(e);
-                throw new Exception("Exception raised in creation of aside. See above message for more details.");
+                lock (ErrorPrintingLock) {
+                    InputNameSpace.ErrorMessage.PrintException(e, false);
+                    throw new Exception("Exception raised in creation of aside. See above message for more details.");
+                }
             }
         }
 
@@ -144,7 +147,7 @@ namespace Stitch {
                     foreach (var read in template.Matches) {
                         foreach (var (group, cdr) in positions) {
                             if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
-                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
+                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique);
                                 switch (group) {
                                     case Annotation.CDR1:
                                         cdr1_reads.Add(piece);
@@ -165,7 +168,7 @@ namespace Stitch {
 
                     foreach (var read in template.Matches) {
                         if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
-                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
+                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique));
                         }
                     }
                 }
