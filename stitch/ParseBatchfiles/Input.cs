@@ -93,7 +93,7 @@ namespace Stitch {
 
             // Detect missing parameters
             if (string.IsNullOrWhiteSpace(output.Runname)) output.Runname = Path.GetFileNameWithoutExtension(path);
-            if (output.Recombine != null && output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
+            if (output.TemplateMatching == null) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "TemplateMatching"));
             if (output.Report == null || output.Report.Files.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(def_range, "Any report parameter"));
             else {
                 // Test validity of FASTA output type
@@ -105,6 +105,8 @@ namespace Stitch {
                     }
                 }
             }
+
+            outEither.Unwrap(); // Quit running further if any breaking changes where detected before this point. As further analysis depends on certain properties of the data.
 
             // Parse Recombination order
             if (output.Recombine != null && output.TemplateMatching != null) {
@@ -198,7 +200,7 @@ namespace Stitch {
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
+            if (output.Input != null && output.TemplateMatching.Alphabet != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
 
             // Check if there is a version specified
             if (!version_specified) {

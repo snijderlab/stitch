@@ -406,14 +406,16 @@ namespace Stitch {
                                 } else {
                                     var children = new List<SegmentValue>();
                                     foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new())) {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
-
-                                        // Check to see if the name is valid
-                                        if (children.Select(db => db.Name).Contains(segment_value.Name))
-                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
-                                        if (segment_value.Name.Contains('*'))
-                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
-                                        children.Add(segment_value);
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, output.Alphabet, false);
+                                        if (segment_value.IsOk(outEither)) {
+                                            var segment_object = segment_value.Unwrap();
+                                            // Check to see if the name is valid
+                                            if (children.Select(db => db.Name).Contains(segment_object.Name))
+                                                outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
+                                            if (segment_object.Name.Contains('*'))
+                                                outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
+                                            children.Add(segment_object);
+                                        }
                                     }
                                     output.Segments.Add((segment.OriginalName, children));
                                 }
