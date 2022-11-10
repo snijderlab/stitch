@@ -13,7 +13,7 @@ using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
 
 namespace Stitch {
-    /// <summary> An HTML report. </summary> 
+    /// <summary> An HTML report. </summary>
     public class HTMLReport : Report {
         /// <summary> The name of the assets folder </summary>
         public string AssetsFolderName;
@@ -566,9 +566,9 @@ namespace Stitch {
             html.Collapsible("docs-share", new HtmlBuilder("Sharing this report"),
             new HtmlBuilder(HtmlTag.p, @$"To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
              be zipped and sent to anyone having a modern browser. This is quite easy to do in Windows as you can select the file
-             (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
+             (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then
              making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder` in Windows 10
-             or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all 
+             or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all
              interactivity as provided by the report."
             ));
             var outer = new HtmlBuilder();

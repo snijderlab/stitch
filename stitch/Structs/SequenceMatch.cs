@@ -229,8 +229,8 @@ namespace Stitch {
 
         (int Matches, int MisMatches, int GapInQuery, int GapInTemplate)? scores = null;
         /// <summary> Get a detailed breakdown of the scores of this match. </summary>
-        /// <returns> A tuple with 4 counts, the first is the number of exact matches, the second 
-        /// is the number of not exact matches (or mismatches), the third is the number of 
+        /// <returns> A tuple with 4 counts, the first is the number of exact matches, the second
+        /// is the number of not exact matches (or mismatches), the third is the number of
         /// GapInQuery, and the fourth is the number of GapInTemplate.</returns>
         public (int Matches, int MisMatches, int GapInQuery, int GapInTemplate) GetDetailedScores() {
             if (scores != null) return scores.Value;
@@ -401,22 +401,22 @@ namespace Stitch {
 
         /// <summary> Represents a piece of a match between two sequences </summary>
         public abstract class MatchPiece {
-            /// <summary> The length of this piece (amount of AminoAcids) </summary> 
+            /// <summary> The length of this piece (amount of AminoAcids) </summary>
             public int Length;
 
-            /// <summary> Creates a new piece </summary> 
+            /// <summary> Creates a new piece </summary>
             /// <param name="length">The length</param>
             public MatchPiece(int length) {
                 if (length < 0) throw new ArgumentException("The length of a sequence match piece cannot be less then zero.");
                 Length = length;
             }
 
-            /// <summary> The Identifier to put in the string representation </summary> 
+            /// <summary> The Identifier to put in the string representation </summary>
             abstract protected string Identifier();
 
             abstract public MatchPiece Copy(int length);
 
-            /// <summary> The CIGAR representation of this piece </summary> 
+            /// <summary> The CIGAR representation of this piece </summary>
             public override string ToString() {
                 return $"{Length}{Identifier()}";
             }
@@ -432,7 +432,7 @@ namespace Stitch {
             }
         }
 
-        /// <summary> A gap in respect to the Template. 
+        /// <summary> A gap in respect to the Template.
         /// Can be seen as a deletion in respect to the template sequence.
         /// `TEMPLATETEMPLATE`
         /// `QUERY......QUERY` </summary>

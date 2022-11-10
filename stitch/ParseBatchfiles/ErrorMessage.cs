@@ -222,7 +222,7 @@ namespace Stitch {
                 Console.WriteLine("");
             }
 
-            /// <summary> Print an exception in a nice way. </summary> 
+            /// <summary> Print an exception in a nice way. </summary>
             /// <param name="e">The exception</param>
             public static void PrintException(Exception e, bool last = true) {
                 ProgressBar.Off = true;

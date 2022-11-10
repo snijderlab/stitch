@@ -6,7 +6,7 @@ using Stitch.InputNameSpace;
 using Stitch.RunParameters;
 
 namespace Stitch {
-    /// <summary> A class with options to parse a batch file. </summary> 
+    /// <summary> A class with options to parse a batch file. </summary>
     public static class ParseCommandFile {
         /// <summary> Parses a batch file and retrieves the run parameters or fails with an exception. </summary>
         /// <param name="path"> The path to the batch file. </param>
@@ -232,7 +232,7 @@ namespace Stitch {
             return outEither.Unwrap();
         }
     }
-    /// <summary> An exception to indicate some error while parsing the batch file </summary> 
+    /// <summary> An exception to indicate some error while parsing the batch file </summary>
     public class ParseException : Exception {
         /// <summary> To create a ParseException </summary>
         /// <param name="msg">The message for this Exception</param>

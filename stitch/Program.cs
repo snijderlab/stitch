@@ -70,12 +70,12 @@ namespace Stitch {
 
 Or use any of the following commands:
 * clean - removes duplicates and incomplete sequences from fasta
-    1   [path] the fasta file to clean 
+    1   [path] the fasta file to clean
     2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file)
 eg: assembler.exe clean Homo_sapiens_IGHV.fasta
 
 * annotate - parses the sequences from an IMGT html file and creates annotated fasta files
-    1   [path] the html file to parse the annotated sequences from 
+    1   [path] the html file to parse the annotated sequences from
     2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file).
 eg: assembler.exe annotate Homo_sapiens_IGHV.html Homo_sapiens_IGHV.fasta
 note: for an example IMGT html file see: http://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species=human&latin=Homo%20sapiens&group=IGHV
@@ -251,7 +251,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         }
 
         /// <summary> Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens. </summary>
-        /// <param name="name"> The name of the species, it will be matched to all predefined names. It can 
+        /// <param name="name"> The name of the species, it will be matched to all predefined names. It can
         /// be scientific name, common name, shorthand or short name (matched in that order). </param>
         static void DownloadSingleSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC") {
             (string CommonName, string ShortName, string ShortHand, string ScientificName) species = ("", "", "", "");
@@ -413,7 +413,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bool C = new List<String> { "CL", "C-KAPPA", "C-LAMBDA", "C-IOTA", "C-ALPHA", "C-BETA", "C-BETA-1", "C-BETA-2", "C-GAMMA", "C-GAMMA-1", "C-GAMMA-2", "C-DELTA" }.Contains(pieces[5]);
                 var sequence = pieces[7].Substring(5, pieces[7].Length - 5 - 11); // Strip opening <pre> and closing </pre></td>
 
-                if (pieces[6] == "ORF" || pieces[6] == "P") continue; // Remove Pseudo genes and Open Reading Frames 
+                if (pieces[6] == "ORF" || pieces[6] == "P") continue; // Remove Pseudo genes and Open Reading Frames
 
                 List<(List<string> classes, string seq)> ParseSequence(string input, List<string> current_classes, string current_seq, List<(List<string> classes, string seq)> result) {
                     if (input.Length == 0) {

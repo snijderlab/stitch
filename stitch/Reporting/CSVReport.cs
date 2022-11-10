@@ -3,7 +3,7 @@ using System.Text;
 using System.Linq;
 
 namespace Stitch {
-    /// <summary> A FASTA report. </summary> 
+    /// <summary> A FASTA report. </summary>
     public class CSVReport : Report {
         readonly RunParameters.Report.OutputType OutputType;
 

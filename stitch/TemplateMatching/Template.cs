@@ -6,7 +6,7 @@ using static Stitch.HelperFunctionality;
 
 
 namespace Stitch {
-    /// <summary> Saves a template and its alignment with the given matches. </summary> 
+    /// <summary> Saves a template and its alignment with the given matches. </summary>
     public class Template {
         /// <summary> The name of the containing Segment. <see cref="Segment.Name"/> </summary>
         public readonly string Name;
@@ -125,11 +125,11 @@ namespace Stitch {
 
         /// <summary> A gap </summary>
         public struct Gap : IGap {
-            /// <summary> The sequence of this gap </summary> 
+            /// <summary> The sequence of this gap </summary>
             public readonly AminoAcid[] Sequence;
             int hashCode;
 
-            /// <summary> Creates a new Gap </summary> 
+            /// <summary> Creates a new Gap </summary>
             /// <param name="sequence">The sequence of this gap, <see cref="Sequence"/>.</param>
             public Gap(AminoAcid[] sequence) {
                 Sequence = sequence;
@@ -587,7 +587,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> The location of a template, in its Segment and its location </summary> 
+    /// <summary> The location of a template, in its Segment and its location </summary>
     public class TemplateLocation {
         /// <summary> The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>. </summary>
         public readonly int SegmentIndex;
@@ -604,7 +604,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary> 
+    /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary>
     public class RecombinedTemplateLocation : TemplateLocation {
         public RecombinedTemplateLocation(int templateIndex) : base(-1, templateIndex) { }
     }

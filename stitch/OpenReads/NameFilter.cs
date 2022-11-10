@@ -3,7 +3,7 @@ using System.IO;
 using System.Collections.Generic;
 
 namespace Stitch {
-    /// <summary> Contains the logic to filter all the identifiers for all input reads to enforce unique names. </summary> 
+    /// <summary> Contains the logic to filter all the identifiers for all input reads to enforce unique names. </summary>
     public class NameFilter {
         // SideNote: If the lookup in the BST at one point becomes a bottleneck please consider implementing a way of reorganising the BST (splay tree?)
 
@@ -32,8 +32,8 @@ namespace Stitch {
         }
 
         /// <summary> Escapes the given identifier and returns the amount of read with exactly the same identifer
-        /// that were already Escaped by this name filter plus one. So it can be seen as the index 
-        /// (1-based) of this identifier in the list of identical identifiers. The total number of 
+        /// that were already Escaped by this name filter plus one. So it can be seen as the index
+        /// (1-based) of this identifier in the list of identical identifiers. The total number of
         /// duplicates can be found by using the 'Count' member of the IdenticalIdentifiersNode (BST). </summary>
         /// <param name="identifier">The identifier to escape.</param>
         public (string EscapedIdentifier, BST IdenticalIdentifiersNode, int Index) EscapeIdentifier(string identifier) {
@@ -61,7 +61,7 @@ namespace Stitch {
 
     }
 
-    /// <summary> Binary Search Tree a single node </summary> 
+    /// <summary> Binary Search Tree a single node </summary>
     public class BST {
         /// <summary> The identifier of this node. </summary>
         public readonly string Name;
@@ -80,7 +80,7 @@ namespace Stitch {
             Right = null;
         }
 
-        /// <summary> Add an extra identifier to the tree. Append if it does not exist yet. 
+        /// <summary> Add an extra identifier to the tree. Append if it does not exist yet.
         /// Increment the Count if this identifier was already found. </summary>
         /// <param name="name"> The identifier to add. </param>
         public (BST IdenticalIdentifiersNode, int Index) Append(string name) {

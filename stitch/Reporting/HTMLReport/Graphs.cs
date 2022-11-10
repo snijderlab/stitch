@@ -100,7 +100,7 @@ namespace HTMLNameSpace {
                     dataBuffer.Append($"\n\"{set.Label}\"\t{set.Value:G3}");
                 }
             } else {
-                min = 0; // always start graphs at 0 
+                min = 0; // always start graphs at 0
                 html.Open(HtmlTag.div, "class='histogram' oncontextmenu='CopyGraphData()' aria-hidden='true'");
 
                 // Y axis

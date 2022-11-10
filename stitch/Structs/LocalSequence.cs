@@ -5,7 +5,7 @@ using System.Linq;
 using HtmlGenerator;
 
 namespace Stitch {
-    /// <summary> A class to hold all metadata handling in one place. </summary> 
+    /// <summary> A class to hold all metadata handling in one place. </summary>
     public class LocalSequence {
 
         /// <summary> The sequence of this read. </summary>
@@ -16,7 +16,7 @@ namespace Stitch {
         public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> Changes = new();
 
         /// <summary> Returns the positional score for this read, so for every position the confidence.
-        /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary> 
+        /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary>
         public double[] PositionalScore { get; private set; }
 
         public int Length { get => Sequence.Length; }

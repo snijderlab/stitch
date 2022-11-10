@@ -28,7 +28,7 @@ namespace Stitch {
             Fragments = fragments;
         }
     }
-    /// <summary> To be a base point for any reporting options, handling all the metadata. </summary> 
+    /// <summary> To be a base point for any reporting options, handling all the metadata. </summary>
     public abstract class Report {
         protected readonly int MaxThreads;
         public readonly ParsedFile BatchFile;

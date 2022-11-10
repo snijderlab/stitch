@@ -602,7 +602,7 @@ namespace HTMLNameSpace {
             } else {
                 var max_support = ambiguous.SelectMany(n => n.Support.Values).Max();
 
-                // Find the position of each aminoacid node by determining the total support for that AA 
+                // Find the position of each aminoacid node by determining the total support for that AA
                 // at that position and sorting on highest at the top.
                 var placed = new List<(AminoAcid, double)>[ambiguous.Length];
                 for (int i = 0; i < placed.Length; i++) placed[i] = new();

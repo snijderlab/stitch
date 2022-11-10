@@ -4,7 +4,7 @@ using System.Linq;
 using static System.Math;
 
 namespace Stitch {
-    /// <summary> A FASTA report. </summary> 
+    /// <summary> A FASTA report. </summary>
     public class FASTAReport : Report {
         readonly int MinScore;
         readonly RunParameters.Report.OutputType OutputType;

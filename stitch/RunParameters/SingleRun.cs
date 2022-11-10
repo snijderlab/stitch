@@ -11,28 +11,28 @@ namespace Stitch {
     namespace RunParameters {
         /// <summary> All parameters for a single run. </summary>
         public class SingleRun {
-            /// <summary> THe name of this run. </summary> 
+            /// <summary> THe name of this run. </summary>
             public string Runname;
             public string RawDataDirectory;
             public readonly int MaxNumberOfCPUCores;
 
-            /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary> 
+            /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary>
             public List<Read.IRead> Input;
 
-            /// <summary> The alphabet used in this run. </summary> 
+            /// <summary> The alphabet used in this run. </summary>
             public AlphabetParameter Alphabet;
 
-            /// <summary> The template(s) used in this run. </summary> 
+            /// <summary> The template(s) used in this run. </summary>
             public TemplateMatchingParameter TemplateMatching;
             public RecombineParameter Recombine;
 
-            /// <summary> The reports to be generated. </summary> 
+            /// <summary> The reports to be generated. </summary>
             public ReportParameter Report;
             readonly ProgressBar progressBar;
             public readonly ParsedFile BatchFile;
             public readonly RunVariables runVariables;
 
-            /// <summary> To create a single run with a single data parameter as input. Without assembly </summary> 
+            /// <summary> To create a single run with a single data parameter as input. Without assembly </summary>
             /// <param name="id">The ID of the run.</param>
             /// <param name="runname">The name of the run.</param>
             /// <param name="input">The input data to be run.</param>
@@ -52,13 +52,13 @@ namespace Stitch {
                 RawDataDirectory = rawDataDirectory;
             }
 
-            /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary> 
+            /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary>
             /// <returns>The main parameters.</returns>
             public string Display() {
                 return $"\tRunname\t\t: {Runname}";
             }
 
-            /// <summary> Runs this run. Runs the assembly, and generates the reports. </summary> 
+            /// <summary> Runs this run. Runs the assembly, and generates the reports. </summary>
             public void Calculate() {
                 Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
                 // Template Matching
@@ -327,14 +327,14 @@ namespace Stitch {
                     var join = false;
                     foreach (var element in order) {
                         if (element.GetType() == typeof(RecombineOrder.Gap)) {
-                            // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                            // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found
                             // and removed from the Template sequence for the recombine round.
                             join = true;
                         } else {
                             var index = ((RecombineOrder.Template)element).Index;
                             var seq = sequence.ElementAt(index).ConsensusSequence().Item1;
                             if (join) {
-                                // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found 
+                                // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
                                 var deleted_gaps = s.Count + seq.Count;

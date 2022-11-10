@@ -45,7 +45,7 @@ namespace Stitch {
 
             // Repeat until only two trees remain
             while (length > 2) {
-                // Calculate the Q matrix 
+                // Calculate the Q matrix
                 var q = new double[length, length];
                 var rows = new double[length];
                 for (int i = 0; i < length; i++)
@@ -147,9 +147,9 @@ namespace Stitch {
                 List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.Query.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().Query.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
-                // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all 
-                // elements in the tree set are in the MatchSet) remove the matched indices. Now add whatever 
-                // data is required to the node. 
+                // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all
+                // elements in the tree set are in the MatchSet) remove the matched indices. Now add whatever
+                // data is required to the node.
 
                 DataTree = SetTree.Remodel(branch => {
                     var score = 0;

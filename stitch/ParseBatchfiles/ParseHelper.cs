@@ -7,11 +7,11 @@ using System.Text.RegularExpressions;
 using Stitch.RunParameters;
 
 namespace Stitch {
-    /// <summary> To contain all input functionality </summary> 
+    /// <summary> To contain all input functionality </summary>
     namespace InputNameSpace {
         /// <summary> A class with helper functionality for parsing </summary>
         static class ParseHelper {
-            /// <summary> Split a line by a separator and return the trimmed pieces and their position as a FileRange. </summary> 
+            /// <summary> Split a line by a separator and return the trimmed pieces and their position as a FileRange. </summary>
             /// <param name="separator">The separator to use.</param>
             /// <param name="linenumber">The linenumber.</param>
             /// <param name="parse_file">The file where the line should be taken from.</param>
@@ -38,7 +38,7 @@ namespace Stitch {
                 return results;
             }
 
-            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<int> ConvertToInt(string input, FileRange pos) {
                 try {
@@ -54,21 +54,21 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<int> ConvertToInt(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
                 return ConvertToInt(input.Unwrap(), item.ValueRange);
             }
-            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary> 
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<double> ConvertToDouble(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
                 return ConvertToDouble(input.Unwrap(), item.ValueRange);
             }
-            /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary> 
+            /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary>
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
             public static ParseResult<double> ConvertToDouble(string input, FileRange pos) {
@@ -766,7 +766,7 @@ namespace Stitch {
                 }
                 return outEither;
             }
-            /// <summary> Parses a Template </summary> 
+            /// <summary> Parses a Template </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
             public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, AlphabetParameter backup_alphabet, bool extended) {
