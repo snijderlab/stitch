@@ -72,4 +72,8 @@ dotnet_style_qualification_for_method = true:error
 dotnet_style_qualification_for_property = true:error
 
 # Figure out something for naming
-# ...
+dotnet_naming_symbols.non_interface_type_symbol.applicable_kinds = class,struct,enum,delegate
+dotnet_naming_style.non_interface_type_style.capitalization = pascal_case
+dotnet_naming_rule.non_interface_types_are_pascal_case.severity = error
+dotnet_naming_rule.non_interface_types_are_pascal_case.symbols = non_interface_type_symbol
+dotnet_naming_rule.non_interface_types_are_pascal_case.style = non_interface_type_style
