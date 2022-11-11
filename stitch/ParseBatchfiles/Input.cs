@@ -73,14 +73,20 @@ namespace Stitch {
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                         output.TemplateMatching = ParseHelper.ParseTemplateMatching(name_filter, pair).UnwrapOrDefault(outEither, new());
+                        if (output.TemplateMatching == null || output.TemplateMatching.Alphabet == null || output.TemplateMatching.Alphabet.Alphabet == null) outEither.Unwrap();
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                         (output.Recombine, order_groups, readAlignmentKey) = ParseHelper.ParseRecombine(pair).UnwrapOrDefault(outEither, new());
+                        if (output.Recombine == null) outEither.Unwrap();
                         break;
                     case "report":
                         if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                        output.Report = ParseHelper.ParseReport(pair).UnwrapOrDefault(outEither, new());
+                        var res = ParseHelper.ParseReport(pair);
+                        if (res.IsOk(outEither)) 
+                            output.Report = res.Unwrap();
+                        else 
+                            outEither.Unwrap();
                         break;
                     default:
                         outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "batchfile", "'Runname', 'Version', 'MaxCores', 'Input', 'TemplateMatching', 'Recombine' or 'Report'"));

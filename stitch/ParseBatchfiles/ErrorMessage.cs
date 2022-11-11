@@ -198,7 +198,10 @@ namespace Stitch {
                         for (int i = start_position.Value.Line; i <= end_position.Value.Line; i++) {
                             line = File.Lines[i];
                             var number = (i + 1).ToString().PadRight(number_width + 1, ' ');
-                            Console.Write($"{number}│ {line}\n");
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write($"{number}│");
+                            Console.ForegroundColor = defaultColour;
+                            Console.Write($" {line}\n");
                         }
                     }
                     for (int i = 1; i <= contextLines; i++)

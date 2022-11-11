@@ -424,7 +424,12 @@ namespace Stitch {
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
+                            var alp = ParseHelper.ParseAlphabet(setting);
+                            if (alp.IsOk(outEither)) {
+                                output.Alphabet = alp.Unwrap();
+                            } else {
+                                return outEither;
+                            }
                             break;
                         case "enforceunique":
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").UnwrapOrDefault(outEither, true);
@@ -679,6 +684,9 @@ namespace Stitch {
                         result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
                         asettings.Alphabet = result.Item1;
                         asettings.ScoringMatrix = result.Item2;
+                    } else {
+                        outEither.Value = null;
+                        return outEither; // The path is wrong so just give up 
                     }
                 }
 
@@ -842,6 +850,8 @@ namespace Stitch {
                 if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
                 if (file_path == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Path"));
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
+                if ((tsettings.Alphabet ?? backup_alphabet).Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
+                if (outEither.IsErr()) return outEither;
 
                 // Open the file
                 var fileId = new Read.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
@@ -914,7 +924,7 @@ namespace Stitch {
                         }
                         break;
                     default:
-                        var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).UnwrapOrDefault(outEither, new());
+                        var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).UnwrapOrDefault(outEither, (new(true), true));
                         peaks_settings.Parameter = parameters;
 
                         if (success == false)
