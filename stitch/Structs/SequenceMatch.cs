@@ -266,7 +266,7 @@ namespace Stitch {
         /// <param name="templatePosition">The position to get the AminoAcid from.</param>
         /// <returns>The AminoAcid or null if it could not be found.</returns>
         public AminoAcid? GetAtTemplateIndex(int templatePosition) {
-            if (templatePosition < this.StartTemplatePosition || templatePosition > this.StartTemplatePosition + this.LengthOnTemplate) return null;
+            if (templatePosition < this.StartTemplatePosition || templatePosition >= this.StartTemplatePosition + this.LengthOnTemplate) return null;
 
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
@@ -340,7 +340,6 @@ namespace Stitch {
         /// <param name="delete"> The number of positions to delete where the insertion is placed. </param>
         public void OverWriteAlignment(int offset, int delete, int insert) {
             // This needs to insert insertions at the correct places.
-            // TODO update LengthOnTemplate etc
             int pos = 0;
             int to_delete = 0;
             bool placed = false;

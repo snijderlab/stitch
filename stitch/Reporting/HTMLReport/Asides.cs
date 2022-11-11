@@ -537,7 +537,7 @@ namespace HTMLNameSpace {
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.td, "", doc_title);
                 html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.Query.Sequence.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.QuerySequence.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
                 html.Close(HtmlTag.td);
                 html.Close(HtmlTag.tr);
             }

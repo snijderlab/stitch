@@ -1,7 +1,7 @@
-using Stitch;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System.Collections.Generic;
 using System;
+using System.Collections.Generic;
+using Microsoft.VisualStudio.TestTools.UnitTesting;
+using Stitch;
 
 namespace StitchTest {
     [TestClass]
@@ -63,6 +63,45 @@ namespace StitchTest {
         }
 
         [TestMethod]
+        public void GetAtTemplateIndexTestOffset() {
+            var sm = CreateTestData();
+            sm = new SequenceMatch(150, sm.StartQueryPosition, sm.Score, sm.Alignment, sm.Template, sm.Query, sm.Index, sm.TemplateIndex);
+            var gaps = "";
+            for (int i = 0; i < sm.LengthOnTemplate; i++) {
+                gaps += $", {i}: {sm.GetAtTemplateIndex(150 + i)}";
+            }
+            Console.WriteLine(gaps);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(150 + 5).Value.Character);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(150 + 6).Value.Character);
+            Assert.AreEqual('B', sm.GetAtTemplateIndex(150 + 7).Value.Character);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(150 + 11).Value.Character);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(150 + 13).Value.Character);
+            Assert.AreEqual('A', sm.GetAtTemplateIndex(150 + sm.LengthOnTemplate - 1).Value.Character);
+            Assert.AreEqual(null, sm.GetAtTemplateIndex(150 + sm.LengthOnTemplate));
+            Assert.AreEqual(null, sm.GetAtTemplateIndex(150 + sm.LengthOnTemplate + 1));
+        }
+
+        [TestMethod]
+        public void GetAtTemplateIndexTestReal() {
+            Alphabet blosum = new Alphabet(Globals.Root + @"alphabets/blosum62_X1.csv", Alphabet.AlphabetParamType.Path, 12, 1);
+            var query = new Read.Simple(AminoAcid.FromString("VDNALQSGGGSQESVTEQDDK", blosum).Unwrap());
+            query.Sequence.UpdateSequence(8, 2, new AminoAcid[] { new AminoAcid(blosum, 'N') }, "Isomass");
+            query.Sequence.UpdateSequence(16, 1, new AminoAcid[] { new AminoAcid(blosum, 'E') }, "Deamidation");
+            var template = new Read.Simple(AminoAcid.FromString("DIQMTQSPSSLSASVGDRVTITCRASAGISNAVAWYQQKPGKAPKLLLYSASFLYSGVPSRFSGSRSGTDYTLTISSLQPEDFATYYCQQHYTTPWTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC", blosum).Unwrap());
+            var sm = new SequenceMatch(149, 0, 75, new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(9), new SequenceMatch.Insertion(1), new SequenceMatch.Match(11) }, template, query, 644, 0);
+            for (int i = 0; i < sm.LengthOnTemplate; i++) {
+                Console.Write($", {i}: {sm.GetAtTemplateIndex(149 + i)}");
+            }
+            Console.WriteLine("");
+            Assert.AreEqual('V', sm.GetAtTemplateIndex(149 + 0).Value.Character);
+            Assert.AreEqual('N', sm.GetAtTemplateIndex(149 + 8).Value.Character);
+            Assert.AreEqual('E', sm.GetAtTemplateIndex(149 + 16).Value.Character);
+            Assert.AreEqual('K', sm.GetAtTemplateIndex(149 + sm.LengthOnTemplate - 1).Value.Character);
+            Assert.AreEqual(null, sm.GetAtTemplateIndex(149 + sm.LengthOnTemplate));
+            Assert.AreEqual(null, sm.GetAtTemplateIndex(149 + sm.LengthOnTemplate + 1));
+        }
+
+        [TestMethod]
         public void SimplifyTestJoining() {
             var sm = CreateTestData();
             sm.Alignment[1] = new SequenceMatch.Match(1);
@@ -84,9 +123,9 @@ namespace StitchTest {
         public void TestOverwriting() {
             var sm = CreateTestData();
             Assert.AreEqual("4M1D1M1I3M2D2M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
-            SequenceMatch.OverWriteAlignment(ref sm.Alignment, 5, 2, 3);
+            //SequenceMatch.OverWriteAlignment(ref sm.Alignment, 5, 2, 3);
             Assert.AreEqual("4M1D2M1I2M2D2M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
-            SequenceMatch.OverWriteAlignment(ref sm.Alignment, 10, 2, 2);
+            //SequenceMatch.OverWriteAlignment(ref sm.Alignment, 10, 2, 2);
             Assert.AreEqual("4M1D2M1I2M1D3M2I4M", HelperFunctionality.CIGAR(sm.Alignment));
         }
 
@@ -94,9 +133,9 @@ namespace StitchTest {
         public void TestOverwritingComplex() {
             var sm = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(12) };
             Assert.AreEqual("12M", HelperFunctionality.CIGAR(sm));
-            SequenceMatch.OverWriteAlignment(ref sm, 5, 2, 5);
+            //SequenceMatch.OverWriteAlignment(ref sm, 5, 2, 5);
             Assert.AreEqual("7M3I5M", HelperFunctionality.CIGAR(sm));
-            SequenceMatch.OverWriteAlignment(ref sm, 1, 5, 2);
+            //SequenceMatch.OverWriteAlignment(ref sm, 1, 5, 2);
             Assert.AreEqual("3M3D1M3I5M", HelperFunctionality.CIGAR(sm));
         }
     }

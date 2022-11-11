@@ -45,6 +45,7 @@ namespace Stitch {
         /// <param name="change"> The new aminoacids to introduce. </param>
         /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
         public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason) {
+            // TODO update the LengthOnTemplate ETC here, but these are not part of the LocalSequence so find a way to make these work together.
             this.Changes.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
             this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
             if (PositionalScore.Length != 0) {
