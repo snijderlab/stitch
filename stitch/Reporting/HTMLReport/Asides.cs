@@ -493,13 +493,13 @@ namespace HTMLNameSpace {
             foreach (var piece in grouped) {
                 if (piece.Item1 != Annotation.None) {
                     output1.Append("linear-gradient(to right, " + Color(piece.Item1) + ", " + Color(piece.Item1) + "),");
-                    output2.Append($"{piece.Item2}ch,");
+                    output2.Append($"{piece.Item2}ch 100%,");
                     output3.Append($"{len}ch,");
                 }
                 len += piece.Item2;
             }
             output1.Append("linear-gradient(to right, var(--color-primary-o), var(--color-primary-o))");
-            output2.Append("1ch");
+            output2.Append("1ch 100%");
             output3.Append("var(--highlight-pos)");
             return output1 + ";" + output2 + ";" + output3 + ";background-repeat:no-repeat;";
         }
