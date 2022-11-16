@@ -14,7 +14,7 @@ Windows:
 Linux:
 ```
 (x64, should work on most distros)
-chmod +x ./stitch                          (give running permission to the binary)
+chmod +x ./stitch.bin                      (give running permission to the binary)
 ./stitch.bin batchfiles/monoclonal.txt
 
 (arm64)
