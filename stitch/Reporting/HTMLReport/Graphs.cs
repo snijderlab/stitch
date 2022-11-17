@@ -360,7 +360,7 @@ namespace HTMLNameSpace {
                     return double.IsNaN(value) ? 0.0 : value;
                 }
 
-                var values = (0.0, 0.0, 0.0);
+                (double, double, double) values;
                 if (!unique)
                     values = (Normalise((double)value.Score / max.Score), Normalise((double)value.Matches / max.Matches), Normalise((double)value.Area / max.Area));
                 else

@@ -492,7 +492,7 @@ namespace Stitch {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from Multiple reads");
                 html.OpenAndClose(HtmlTag.h3, "", "Number of combined reads");
-                html.OpenAndClose(HtmlTag.p, "", Children.Count().ToString());
+                html.OpenAndClose(HtmlTag.p, "", Children.Count.ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Intensity");
                 html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
@@ -511,7 +511,7 @@ namespace Stitch {
 
             public void AddChild(IRead read) {
                 Children.Add(read);
-                Sequence.UpdatePositionalScore(read.Sequence.PositionalScore, Children.Count() - 1);
+                Sequence.UpdatePositionalScore(read.Sequence.PositionalScore, Children.Count - 1);
             }
         }
 

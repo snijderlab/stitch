@@ -686,7 +686,7 @@ namespace Stitch {
                         asettings.ScoringMatrix = result.Item2;
                     } else {
                         outEither.Value = null;
-                        return outEither; // The path is wrong so just give up 
+                        return outEither; // The path is wrong so just give up
                     }
                 }
 
@@ -838,7 +838,7 @@ namespace Stitch {
                             var peaks = GetPeaksSettings(setting, true, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
 
-                            if (peaks.Value == false) {
+                            if (!peaks.Value) {
                                 var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', and all PEAKS format parameters";
                                 if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
                                 outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
@@ -927,7 +927,7 @@ namespace Stitch {
                         var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).UnwrapOrDefault(outEither, (new(true), true));
                         peaks_settings.Parameter = parameters;
 
-                        if (success == false)
+                        if (!success)
                             outEither.Value = false;
                         break;
                 }
@@ -1051,7 +1051,7 @@ namespace Stitch {
                         if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
                             string current_path = $"{drive}:\\";
                             for (int i = 1; i < pieces.Length - 1; i++) {
-                                string next_path = current_path + pieces[i] + "\\";
+                                string next_path = current_path + pieces[i] + Path.DirectorySeparatorChar;
 
                                 if (!Directory.Exists(next_path)) {
                                     var directories = Directory.GetDirectories(current_path);
@@ -1131,7 +1131,7 @@ namespace Stitch {
                                 if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
                                     string current_path = $"{drive}:\\";
                                     for (int i = 1; i < pieces.Length - 1; i++) {
-                                        string next_path = current_path + pieces[i] + "\\";
+                                        string next_path = current_path + pieces[i] + Path.DirectorySeparatorChar;
 
                                         if (!Directory.Exists(next_path)) {
                                             var directories = Directory.GetDirectories(current_path);

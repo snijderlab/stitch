@@ -430,7 +430,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
                 var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3 + set.Score.Best.Position));
                 var seqB = AminoAcid.ArrayToString(set.SeqB.Take(3 + set.Score.Best.Position).ToArray());
-                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{A.Name}\n      {B.Name}"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{seqA}\n      {seqB}"); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 html.OpenAndClose(HtmlTag.p, "", $"Best overlap {set.Score.Best.Position} with score {set.Score.Best.Score}");
 
                 html.Add(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Item2)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HtmlGenerator.HtmlTag.p, HTMLHelp.SegmentJoining)));

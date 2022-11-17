@@ -24,9 +24,9 @@ namespace StitchTest {
                 Assert.AreEqual(expected[i], actual[i], $"At position {i}");
             }
 
-            var actual1 = ls.AlignmentWithOriginal();
-            var expected1 = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(12) };
-            Assert.AreEqual(HelperFunctionality.CIGAR(expected1), HelperFunctionality.CIGAR(actual1));
+            //var actual1 = ls.AlignmentWithOriginal();
+            //var expected1 = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(12) };
+            //Assert.AreEqual(HelperFunctionality.CIGAR(expected1), HelperFunctionality.CIGAR(actual1));
         }
 
         [TestMethod]
@@ -41,9 +41,9 @@ namespace StitchTest {
                 Assert.AreEqual(expected[i], actual[i], $"At position {i}");
             }
 
-            var actual1 = ls.AlignmentWithOriginal();
-            var expected1 = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(7), new SequenceMatch.Insertion(1), new SequenceMatch.Match(3), new SequenceMatch.Insertion(2), new SequenceMatch.Match(2) };
-            Assert.AreEqual(HelperFunctionality.CIGAR(expected1), HelperFunctionality.CIGAR(actual1));
+            //var actual1 = ls.AlignmentWithOriginal();
+            //var expected1 = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(7), new SequenceMatch.Insertion(1), new SequenceMatch.Match(3), new SequenceMatch.Insertion(2), new SequenceMatch.Match(2) };
+            //Assert.AreEqual(HelperFunctionality.CIGAR(expected1), HelperFunctionality.CIGAR(actual1));
         }
 
         [TestMethod]

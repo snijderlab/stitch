@@ -145,7 +145,7 @@ namespace HTMLNameSpace {
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.td, "class='center'", template.Sequence.Length.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.Score.ToString("G4"));
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count().ToString("G4"));
+            html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueScore.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueMatches.ToString("G4"));
@@ -674,10 +674,10 @@ namespace HTMLNameSpace {
                 for (int ambiguous_position = 0; ambiguous_position < ambiguous.Length; ambiguous_position++) {
                     var position = ambiguous[ambiguous_position];
                     var graphs = position.SupportTrees.Select(t => (RenderAmbiguityTree(t.Value), t.Value.Forward.Variant)).Select((a) => (a.Item1.Graph, a.Item1.BackwardLength, a.Variant)).ToList();
-                    var max_backward_length = graphs.Count() == 0 ? 0 : graphs.Max(g => g.BackwardLength);
+                    var max_backward_length = graphs.Count == 0 ? 0 : graphs.Max(g => g.BackwardLength);
 
                     html.Open(HtmlTag.div, $"class='position a{position.Position}' style='--max-backward-length:{max_backward_length};'");
-                    if (graphs.Count() == 0) {
+                    if (graphs.Count == 0) {
                         html.OpenAndClose(HtmlTag.p, "class='error'", "No higher order graphs found.");
                         html.Close(HtmlTag.div);
                         continue;
@@ -685,7 +685,7 @@ namespace HTMLNameSpace {
 
                     // Find the support for all graphs on this position
                     var order = graphs.Select(i => (i.Variant, 0.0)); // All graphs that were drawn (sometimes one of these has no 1st order support but it has to be included anyway)
-                    if (position.Support.Count() > 0) order = order.Concat(position.Support.Select(a => (a.Key.Item1, a.Value))); // Forward 1st order support
+                    if (position.Support.Count > 0) order = order.Concat(position.Support.Select(a => (a.Key.Item1, a.Value))); // Forward 1st order support
                     if (ambiguous_position > 0) order = order.Concat(ambiguous[ambiguous_position - 1].Support.Select(a => (a.Key.Item2, a.Value))); // backward 1st order support
 
                     // Deduplicate order
@@ -724,7 +724,7 @@ namespace HTMLNameSpace {
                         if (already_placed.Contains(child.Next)) continue;
                         already_placed.Add(child.Next);
 
-                        while (levels.Count() < element.Level + 2) {
+                        while (levels.Count < element.Level + 2) {
                             levels.Add(new List<(AmbiguityTreeNode, double)>());
                         }
                         to_scan.Push((element.Level + 1, child.Next));
@@ -786,7 +786,7 @@ namespace HTMLNameSpace {
 
             svg.Close(SvgTag.svg);
 
-            return (svg, backward_levels.Count());
+            return (svg, backward_levels.Length);
         }
     }
 }
