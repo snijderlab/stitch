@@ -7,17 +7,17 @@ namespace Stitch {
     namespace RunParameters {
         /// <summary> To contain parameters for the input of data. </summary>
         public class InputData {
-            /// <summary> To contain overrules of the global input parameters </summary> 
+            /// <summary> To contain overrules of the global input parameters </summary>
             public InputLocalParameters LocalParameters = null;
 
-            /// <summary> To contain a local definition of the input </summary> 
+            /// <summary> To contain a local definition of the input </summary>
             public InputParameters Parameters = null;
 
-            /// <summary> To contain the input data itself </summary> 
+            /// <summary> To contain the input data itself </summary>
             public ActualData Data = new ActualData();
 
             public class ActualData {
-                /// <summary> The inputs for this run. </summary> 
+                /// <summary> The inputs for this run. </summary>
                 public List<List<Read.IRead>> Raw = new();
                 public List<Read.IRead> Cleaned = new();
             }
@@ -53,19 +53,19 @@ namespace Stitch {
                 return output;
             }
 
-            /// <summary> A parameter to save an input file. </summary> 
+            /// <summary> A parameter to save an input file. </summary>
             public abstract class Parameter {
-                /// <summary> The identifier of the file. </summary> 
+                /// <summary> The identifier of the file. </summary>
                 public Read.FileIdentifier File = new Read.FileIdentifier();
 
                 public abstract string Display();
             }
 
-            /// <summary> A data parameter for PEAKS input files. </summary> 
+            /// <summary> A data parameter for PEAKS input files. </summary>
             public class Peaks : Parameter {
                 public PeaksParameters Parameter = new PeaksParameters(true);
 
-                /// <summary> The file format of the PEAKS file. </summary> 
+                /// <summary> The file format of the PEAKS file. </summary>
                 public FileFormat.Peaks FileFormat = Stitch.FileFormat.Peaks.PeaksX();
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
@@ -75,14 +75,14 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> A parameter for simple reads files. </summary> 
+            /// <summary> A parameter for simple reads files. </summary>
             public class Reads : Parameter {
                 public override string Display() {
                     return $"Simple ->\n{File.Display()}\n<-";
                 }
             }
 
-            /// <summary> A parameter for FASTA reads files. </summary> 
+            /// <summary> A parameter for FASTA reads files. </summary>
             public class FASTA : Parameter {
                 /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public Regex Identifier = new Regex("(.*)");
@@ -92,7 +92,7 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> A parameter for Novor reads files. </summary> 
+            /// <summary> A parameter for Novor reads files. </summary>
             public class Novor : Parameter {
                 /// <summary> To parse the identifier from the header string in the fasta file </summary>
                 public char Separator = ',';
@@ -143,16 +143,16 @@ namespace Stitch {
 
         /// <summary> An input for an alphabet. </summary>
         public class AlphabetParameter {
-            /// <summary> The data, Paths should be looked up to find the data. </summary> 
+            /// <summary> The data, Paths should be looked up to find the data. </summary>
             public int[,] ScoringMatrix;
 
-            /// <summary> The name for this alphabet, to recognize it. </summary> 
+            /// <summary> The name for this alphabet, to recognize it. </summary>
             public char[] Alphabet;
 
-            /// <summary> The penalty for opening a gap in an alignment. </summary> 
+            /// <summary> The penalty for opening a gap in an alignment. </summary>
             public int GapStartPenalty = 12;
 
-            /// <summary> The penalty for extending a gap in an alignment. </summary> 
+            /// <summary> The penalty for extending a gap in an alignment. </summary>
             public int GapExtendPenalty = 1;
             public string Name = "";
 
@@ -163,18 +163,18 @@ namespace Stitch {
 
         /// <summary> An input for a template. </summary>
         public class SegmentValue {
-            /// <summary> The alphabet to be used for all templates. </summary> 
+            /// <summary> The alphabet to be used for all templates. </summary>
             public AlphabetParameter Alphabet = null;
 
-            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary> 
+            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 0;
 
-            /// <summary> The name for this template, to recognize it. </summary> 
+            /// <summary> The name for this template, to recognize it. </summary>
             public string Name = null;
 
-            /// <summary> The templates of this segment </summary> 
+            /// <summary> The templates of this segment </summary>
             public List<Read.IRead> Templates = new();
-            /// <summary> The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template). </summary> 
+            /// <summary> The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template). </summary>
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 
             /// <summary> To parse the identifier from the header string in the fasta file </summary>
@@ -184,57 +184,57 @@ namespace Stitch {
         }
 
         public class TemplateMatchingParameter {
-            /// <summary> The alphabet to be used for all templates. </summary> 
+            /// <summary> The alphabet to be used for all templates. </summary>
             public AlphabetParameter Alphabet = null;
 
-            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary> 
+            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;
 
-            /// <summary> Whether or not reads/paths will be forced to a single template. </summary> 
+            /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
             public bool EnforceUnique = true;
 
-            /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary> 
+            /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public bool ForceGermlineIsoleucine = true;
 
-            /// <summary> The threshold which determines if a position is seen as ambiguous. Saved as fraction. </summary> 
+            /// <summary> The threshold which determines if a position is seen as ambiguous. Saved as fraction. </summary>
             public double AmbiguityThreshold = 0.75;
 
-            /// <summary> The templates themselves. Grouped by their template group. </summary> 
+            /// <summary> The templates themselves. Grouped by their template group. </summary>
             public List<(String Name, List<SegmentValue> Segments)> Segments = new List<(String, List<SegmentValue>)>();
         }
 
         /// <summary> To contain all parameters for recombination of Segments. </summary>
         public class RecombineParameter {
-            /// <summary> The alphabet to be used for all templates. </summary> 
+            /// <summary> The alphabet to be used for all templates. </summary>
             public AlphabetParameter Alphabet = null;
 
-            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary> 
+            /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;
 
-            /// <summary> Whether or not reads/paths will be forced to a single template. </summary> 
+            /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
             public Trilean EnforceUnique = Trilean.Unspecified;
 
-            /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary> 
+            /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public Trilean ForceGermlineIsoleucine = Trilean.Unspecified;
 
-            /// <summary> The amount of templates to recombine from the highest scoring Segments. </summary> 
+            /// <summary> The amount of templates to recombine from the highest scoring Segments. </summary>
             public int N = 0;
 
-            /// <summary> The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition. </summary> 
+            /// <summary> The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition. </summary>
             public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
 
-            /// <summary> To determine if an automatic decoy segment has to be set up. This segment will contain all unused templates from template matching to remove background from the recombination step. </summary> 
+            /// <summary> To determine if an automatic decoy segment has to be set up. This segment will contain all unused templates from template matching to remove background from the recombination step. </summary>
             public bool Decoy = false;
         }
 
         namespace RecombineOrder {
-            /// <summary> An abstract class to contain the order of templates. </summary> 
+            /// <summary> An abstract class to contain the order of templates. </summary>
             public abstract class OrderPiece {
                 public abstract bool IsGap();
                 public abstract string Display();
             }
 
-            /// <summary> Introduce a gap in the recombined templates. </summary> 
+            /// <summary> Introduce a gap in the recombined templates. </summary>
             public class Gap : OrderPiece {
                 public Gap() { }
 
@@ -247,9 +247,9 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> Introduce a template in the recombined templates. </summary> 
+            /// <summary> Introduce a template in the recombined templates. </summary>
             public class Template : OrderPiece {
-                /// <summary> The index in the Templates list of the enclosing RecombineValue. </summary> 
+                /// <summary> The index in the Templates list of the enclosing RecombineValue. </summary>
                 public int Index;
                 public Template(int i) {
                     Index = i;
@@ -266,13 +266,13 @@ namespace Stitch {
         }
 
         public class ReportParameter {
-            /// <summary> The report(s) to be generated for this run. </summary> 
+            /// <summary> The report(s) to be generated for this run. </summary>
             public List<Report.Parameter> Files = new List<Report.Parameter>();
-            /// <summary> The base folder where all generated reports will be stored (or at least relative to) 
-            /// if undefined it is interpreted as the folder the batchfile is saved in. </summary> 
+            /// <summary> The base folder where all generated reports will be stored (or at least relative to)
+            /// if undefined it is interpreted as the folder the batchfile is saved in. </summary>
             public String Folder = null;
 
-            /// <summary> Generates a (unique) name based on the given template. </summary> 
+            /// <summary> Generates a (unique) name based on the given template. </summary>
             /// <param name="r">The values for the parameters.</param>
             /// <param name="input">The path template.</param>
             /// <returns>A name.</returns>
@@ -291,12 +291,12 @@ namespace Stitch {
 
         /// <summary> To contain parameters for reporting. </summary>
         public class Report {
-            /// <summary> A parameter to define how to report the results. </summary> 
+            /// <summary> A parameter to define how to report the results. </summary>
             public abstract class Parameter {
-                /// <summary> The path to save the result to. </summary> 
+                /// <summary> The path to save the result to. </summary>
                 public string Path = null;
 
-                /// <summary> Generates a (unique) name based on the given template. </summary> 
+                /// <summary> Generates a (unique) name based on the given template. </summary>
                 /// <param name="r">The values for the parameters.</param>
                 /// <returns>A name.</returns>
                 public string CreateName(String folder, SingleRun r) {
@@ -307,29 +307,29 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> To indicate to return an HTML report. </summary> 
+            /// <summary> To indicate to return an HTML report. </summary>
             public class HTML : Parameter {
             }
 
-            /// <summary> To indicate to return an JSON report. </summary> 
+            /// <summary> To indicate to return an JSON report. </summary>
             public class JSON : Parameter {
             }
 
-            /// <summary> The type sequences in the fasta to give as output </summary> 
+            /// <summary> The type sequences in the fasta to give as output </summary>
             public enum OutputType { TemplateMatches, Recombine }
 
-            /// <summary> To indicate to return a FASTA report. </summary> 
+            /// <summary> To indicate to return a FASTA report. </summary>
             public class FASTA : Parameter {
-                /// <summary> The minimal score needed to be included. </summary> 
+                /// <summary> The minimal score needed to be included. </summary>
                 public int MinimalScore = 0;
 
-                /// <summary> The output type of the sequences </summary> 
+                /// <summary> The output type of the sequences </summary>
                 public OutputType OutputType = OutputType.TemplateMatches;
             }
 
-            /// <summary> To indicate to return a CSV report. </summary> 
+            /// <summary> To indicate to return a CSV report. </summary>
             public class CSV : Parameter {
-                /// <summary> The output type of the sequences </summary> 
+                /// <summary> The output type of the sequences </summary>
                 public OutputType OutputType = OutputType.TemplateMatches;
             }
         }

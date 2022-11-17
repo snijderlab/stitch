@@ -2,7 +2,7 @@ using System;
 using System.Text.Json.Serialization;
 
 namespace Stitch {
-    /// <summary> To keep track of a location in a file, for example for error messages. </summary> 
+    /// <summary> To keep track of a location in a file, for example for error messages. </summary>
     public struct Position {
         /// <summary> The file this position is in </summary>
         public readonly ParsedFile File;
@@ -43,7 +43,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> Tracks a range in a file, for example the range of a keyword </summary> 
+    /// <summary> Tracks a range in a file, for example the range of a keyword </summary>
     public struct FileRange {
         /// <summary> The file this positions are in </summary>
         public readonly ParsedFile File;
@@ -76,7 +76,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> Tracks a range of a key in a keyvalue element in a file, |Key| :&gt; &lt;:| </summary> 
+    /// <summary> Tracks a range of a key in a keyvalue element in a file, |Key| :&gt; &lt;:| </summary>
     public struct KeyRange {
         /// <summary> The file of the range </summary>
         public readonly ParsedFile File;
@@ -133,7 +133,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> Saves a file to use with positions </summary> 
+    /// <summary> Saves a file to use with positions </summary>
     public class ParsedFile {
         [JsonIgnore]
         /// <summary> The content of this file, as an array of all lines </summary>

@@ -3,7 +3,7 @@ using System.Text;
 using System.Linq;
 
 namespace Stitch {
-    /// <summary> A FASTA report. </summary> 
+    /// <summary> A FASTA report. </summary>
     public class CSVReport : Report {
         readonly RunParameters.Report.OutputType OutputType;
 
@@ -34,8 +34,8 @@ namespace Stitch {
                     read.Unique.ToString(),
                     read.StartTemplatePosition.ToString(),
                     read.StartQueryPosition.ToString(),
-                    read.LengthOnTemplate.ToString(),
-                    HelperFunctionality.CIGAR(read.Alignment)
+                    read.QuerySequence.LengthOnTemplate.ToString(),
+                    HelperFunctionality.CIGAR(read.QuerySequence.Alignment)
                     };
                 if (read.Query is Read.Peaks) {
                     peaks = true;

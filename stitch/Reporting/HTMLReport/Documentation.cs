@@ -1,5 +1,5 @@
 namespace HTMLNameSpace {
-    /// <summary> To contain all help messages related to tables </summary> 
+    /// <summary> To contain all help messages related to tables </summary>
     public class HTMLHelp {
         public const string AmbiguityOverview = "All ambiguous positions, this means positions where the highest scoring aminoacid has less then {threshold} of the total score for that position. For each option in the ambiguous position the support for each option in the next ambiguous position is show with a bar. The thickness indicates the total value of the support. The value can be set to relative to only this position ('Local') or relative to all positions ('Global'). Empty positions indicate that no support was found to any adjoining ambiguous positions. The bars beside the options show the total higher order support for that option, it is scaled to the global maximum.";
         public const string AnnotatedConsensusSequence = "The consensus sequence aligned with the germline sequence. The differences are accentuated by displaying the changes from the germline sequence below. The format follows the format of Domain Gap Align.";

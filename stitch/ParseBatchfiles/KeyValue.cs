@@ -4,18 +4,18 @@ namespace Stitch {
     namespace InputNameSpace {
         /// <summary> A class to save key value trees. </summary>
         public class KeyValue {
-            /// <summary> The name of a key. </summary> 
+            /// <summary> The name of a key. </summary>
             public string Name;
 
-            /// <summary> The name of a key with original casing. </summary> 
+            /// <summary> The name of a key with original casing. </summary>
             public string OriginalName;
 
-            /// <summary> The value for this key. </summary> 
+            /// <summary> The value for this key. </summary>
             readonly ValueType Value;
             public readonly KeyRange KeyRange;
             public readonly FileRange ValueRange;
 
-            /// <summary> Create a new single valued key. </summary> 
+            /// <summary> Create a new single valued key. </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="value">The value of the key.</param>
             public KeyValue(string name, string value, KeyRange keyRange, FileRange valueRange) {
@@ -26,7 +26,7 @@ namespace Stitch {
                 ValueRange = valueRange;
             }
 
-            /// <summary> Create a new multiple valued key. </summary> 
+            /// <summary> Create a new multiple valued key. </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
             public KeyValue(string name, List<KeyValue> values, KeyRange keyRange, FileRange valueRange) {
@@ -37,7 +37,7 @@ namespace Stitch {
                 ValueRange = valueRange;
             }
 
-            /// <summary> Tries to get a single value from this key, otherwise fails with an error message for the end user. </summary> 
+            /// <summary> Tries to get a single value from this key, otherwise fails with an error message for the end user. </summary>
             /// <returns>The value of the KeyValue.</returns>
             public ParseResult<string> GetValue() {
                 if (Value is Single value) {
@@ -49,7 +49,7 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> Tries to get the values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user. </summary> 
+            /// <summary> Tries to get the values from this key, only succeeds if this KeyValue is multiple valued, otherwise fails with an error message for the end user. </summary>
             /// <returns>The values of this KeyValue.</returns>
             public ParseResult<List<KeyValue>> GetValues() {
                 if (Value is Multiple multiple) {
@@ -67,27 +67,27 @@ namespace Stitch {
                 return Value is Single;
             }
 
-            /// <summary> An abstract class to represent possible values for a KeyValue. </summary> 
+            /// <summary> An abstract class to represent possible values for a KeyValue. </summary>
             abstract class ValueType { }
 
             /// <summary> A ValueType for a single valued KeyValue. </summary>
             class Single : ValueType {
-                /// <summary> The value. </summary> 
+                /// <summary> The value. </summary>
                 public string Value;
 
-                /// <summary> To create a single value. </summary> 
+                /// <summary> To create a single value. </summary>
                 /// <param name="value">The value.</param>
                 public Single(string value) {
                     Value = value.Trim();
                 }
             }
 
-            /// <summary> A ValueType to contain multiple values. </summary> 
+            /// <summary> A ValueType to contain multiple values. </summary>
             class Multiple : ValueType {
-                /// <summary> The list of values. </summary> 
+                /// <summary> The list of values. </summary>
                 public List<KeyValue> Values;
 
-                /// <summary> To create a multiple value. </summary> 
+                /// <summary> To create a multiple value. </summary>
                 /// <param name="values">The values.</param>
                 public Multiple(List<KeyValue> values) {
                     Values = values;

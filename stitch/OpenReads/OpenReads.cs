@@ -6,7 +6,7 @@ using System.Text.RegularExpressions;
 using static Stitch.HelperFunctionality;
 
 namespace Stitch {
-    /// <summary> To contain all logic for the reading of reads out of files. </summary> 
+    /// <summary> To contain all logic for the reading of reads out of files. </summary>
     public static class OpenReads {
         /// <summary> To open a file with reads. It assumes a very basic format,
         /// namely sequences separated with newlines
@@ -289,7 +289,7 @@ namespace Stitch {
             return out_either;
         }
 
-        /// <summary> To open a file with reads. It uses the Novor file format. Which is a 
+        /// <summary> To open a file with reads. It uses the Novor file format. Which is a
         /// character separated file format with a defined column ordering.  </summary>
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="novor"> The novor input parameter. </param>

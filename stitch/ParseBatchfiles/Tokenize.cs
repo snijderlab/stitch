@@ -27,7 +27,7 @@ namespace Stitch {
                 return output;
             }
 
-            /// <summary> To keep track of the location of the parse head. </summary> 
+            /// <summary> To keep track of the location of the parse head. </summary>
             public class Counter {
                 /// <summary> The current line number (0-based). </summary>
                 public int Line;
@@ -73,9 +73,9 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> A class with functionality for tokenizing. </summary> 
+            /// <summary> A class with functionality for tokenizing. </summary>
             static class TokenizeHelper {
-                /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines. </summary> 
+                /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines. </summary>
                 /// <returns>The status.</returns>
                 public static ParseResult<(KeyValue, string)> MainArgument(string content, Counter counter) {
                     ParseHelper.Trim(ref content, counter);
@@ -89,7 +89,7 @@ namespace Stitch {
                     }
                 }
 
-                /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines. </summary> 
+                /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines. </summary>
                 /// <returns>The status.</returns>
                 static ParseResult<(KeyValue, string)> Argument(string content, Counter counter) {
                     // This is a parameter line, get the name
@@ -112,7 +112,7 @@ namespace Stitch {
                     return outEither;
                 }
 
-                /// <summary> Single parameter on a single line. </summary> 
+                /// <summary> Single parameter on a single line. </summary>
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
@@ -125,7 +125,7 @@ namespace Stitch {
                     return (new KeyValue(name, value, new KeyRange(name_range, counter.GetPosition()), range), content);
                 }
 
-                /// <summary> Single parameter on multiple lines. </summary> 
+                /// <summary> Single parameter on multiple lines. </summary>
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
@@ -141,7 +141,7 @@ namespace Stitch {
                     return (new KeyValue(name, value.Trim(), new KeyRange(name_range, end_key), new FileRange(start_value, end_value)), content);
                 }
 
-                /// <summary> Multi parameter. </summary> 
+                /// <summary> Multi parameter. </summary>
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
@@ -206,9 +206,9 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> A class with helper functionality for parsing. </summary> 
+            /// <summary> A class with helper functionality for parsing. </summary>
             public static class ParseHelper {
-                /// <summary> Consumes a whole line of the string. </summary> 
+                /// <summary> Consumes a whole line of the string. </summary>
                 /// <param name="content">The string.</param>
                 public static void SkipLine(ref string content, Counter counter) {
                     int next_newline = FindNextNewLine(ref content);
@@ -221,7 +221,7 @@ namespace Stitch {
                     }
                 }
 
-                /// <summary> To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core. </summary> 
+                /// <summary> To find the next newline, this needs to be written by hand instead of using "String.IndexOf()" because that gives weird behavior in .NET Core. </summary>
                 /// <param name="content">The string to search in.</param>
                 /// <returns>The position of the next newline '\n' or -1 if none could be found.</returns>
                 public static int FindNextNewLine(ref string content) {
@@ -233,7 +233,7 @@ namespace Stitch {
                     return -1;
                 }
 
-                /// <summary> Consumes a name from the start of the string. </summary> 
+                /// <summary> Consumes a name from the start of the string. </summary>
                 /// <param name="content">The string.</param>
                 /// <returns>The name.</returns>
                 public static ParseResult<(string, FileRange)> Name(ref string content, Counter counter) {
@@ -268,7 +268,7 @@ namespace Stitch {
                     return output;
                 }
 
-                /// <summary> Consumes a value from the start of the string. </summary> 
+                /// <summary> Consumes a value from the start of the string. </summary>
                 /// <param name="content">The string and range.</param>
                 /// <returns>The value.</returns>
                 public static (string, FileRange) Value(ref string content, Counter counter) {
@@ -301,7 +301,7 @@ namespace Stitch {
                     content = content.Remove(0, count);
                 }
 
-                /// <summary> Consumes the string until it find the sequence. </summary> 
+                /// <summary> Consumes the string until it find the sequence. </summary>
                 /// <param name="content">The string.</param>
                 /// <param name="sequence">The sequence to find.</param>
                 /// <param name="counter">The counter to keep track of the location</param>
@@ -336,7 +336,7 @@ namespace Stitch {
                     }
                     return value;
                 }
-                /// <summary> Consumes the string until it find one of the sequences </summary> 
+                /// <summary> Consumes the string until it find one of the sequences </summary>
                 /// <param name="content">The string, assumed not to have newlines before the first occurrence of a sequence</param>
                 /// <param name="sequence">The sequences to find</param>
                 /// <returns>The consumed part of the string</returns>

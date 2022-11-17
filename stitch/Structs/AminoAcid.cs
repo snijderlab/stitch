@@ -1,8 +1,8 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Text.Json.Serialization;
-using System;
 
 namespace Stitch {
     /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can

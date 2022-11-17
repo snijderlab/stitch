@@ -4,10 +4,10 @@ using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Stitch {
-    /// <summary> To contain an alphabet with scoring matrix to score pairs of amino acids </summary> 
+    /// <summary> To contain an alphabet with scoring matrix to score pairs of amino acids </summary>
     public class Alphabet {
         [JsonIgnore]
-        /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet. 
+        /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet.
         /// As such this matrix is rectangular. </summary>
         public readonly int[,] ScoringMatrix;
 

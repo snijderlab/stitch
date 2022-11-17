@@ -1,19 +1,19 @@
 using System;
-using System.IO;
 using System.Collections.Generic;
-using System.Linq;
+using System.ComponentModel;
 using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
-using System.ComponentModel;
-using System.Reflection;
+using HtmlGenerator;
 using HTMLNameSpace;
 using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
-using HtmlGenerator;
 
 namespace Stitch {
-    /// <summary> An HTML report. </summary> 
+    /// <summary> An HTML report. </summary>
     public class HTMLReport : Report {
         /// <summary> The name of the assets folder </summary>
         public string AssetsFolderName;
@@ -63,6 +63,7 @@ namespace Stitch {
             }
         }
 
+        static object ErrorPrintingLock = new Object();
         void CreateAndSaveAside(AsideType aside, int index3, int index2, int index1) {
             try {
                 HtmlBuilder inner_html;
@@ -105,8 +106,10 @@ namespace Stitch {
 
                 SaveAndCreateDirectories(full_path, html.ToString());
             } catch (Exception e) {
-                InputNameSpace.ErrorMessage.PrintException(e);
-                throw new Exception("Exception raised in creation of aside. See above message for more details.");
+                lock (ErrorPrintingLock) {
+                    InputNameSpace.ErrorMessage.PrintException(e, false);
+                    throw new Exception("Exception raised in creation of aside. See above message for more details.");
+                }
             }
         }
 
@@ -143,8 +146,8 @@ namespace Stitch {
                     found_cdr_region = true;
                     foreach (var read in template.Matches) {
                         foreach (var (group, cdr) in positions) {
-                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
-                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique);
+                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
+                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique);
                                 switch (group) {
                                     case Annotation.CDR1:
                                         cdr1_reads.Add(piece);
@@ -164,8 +167,8 @@ namespace Stitch {
                     var cdr = positions[Annotation.CDR3];
 
                     foreach (var read in template.Matches) {
-                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
-                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length), read.Unique));
+                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
+                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique));
                         }
                     }
                 }
@@ -563,9 +566,9 @@ namespace Stitch {
             html.Collapsible("docs-share", new HtmlBuilder("Sharing this report"),
             new HtmlBuilder(HtmlTag.p, @$"To share the HTML report with someone else the html file with its accompanying folder (with the same name) can
              be zipped and sent to anyone having a modern browser. This is quite easy to do in Windows as you can select the file
-             (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then 
+             (eg `report-monoclonal.html`) and the folder (eg `report-monoclonal`) by holding control and clicking on both. Then
              making a zip file can be done by right clicking and selecting `Send to` > `Compressed (zipped) folder` in Windows 10
-             or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all 
+             or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all
              interactivity as provided by the report."
             ));
             var outer = new HtmlBuilder();

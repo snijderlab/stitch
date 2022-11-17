@@ -1,13 +1,13 @@
 using System;
 using System.Collections.Generic;
+using System.Collections.ObjectModel;
 using System.Linq;
 using System.Text;
+using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using HtmlGenerator;
 using Stitch;
 using static HTMLNameSpace.CommonPieces;
 using static Stitch.HelperFunctionality;
-using System.Collections.ObjectModel;
-using HtmlGenerator;
-using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 
 namespace HTMLNameSpace {
     public static class HTMLAsides {
@@ -182,7 +182,7 @@ namespace HTMLNameSpace {
             int template_pos = match.StartTemplatePosition;
             int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
 
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 switch (piece) {
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++) {
@@ -270,12 +270,12 @@ namespace HTMLNameSpace {
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{AminoAcid.ArrayToString(consensus.Item1).Replace(gap_char, '.')}");
 
             var localMatches = template.Matches.ToList();
-            localMatches.Sort((a, b) => b.LengthOnTemplate.CompareTo(a.LengthOnTemplate)); // Try to keep the longest matches at the top.
+            localMatches.Sort((a, b) => b.QuerySequence.LengthOnTemplate.CompareTo(a.QuerySequence.LengthOnTemplate)); // Try to keep the longest matches at the top.
 
             // Find the longest gaps for each position.
             foreach (var match in localMatches) {
                 var pos = match.StartTemplatePosition;
-                foreach (var piece in match.Alignment) {
+                foreach (var piece in match.QuerySequence.Alignment) {
                     if (piece is SequenceMatch.Match ma) {
                         pos += piece.Length;
                     } else if (piece is SequenceMatch.Deletion) {
@@ -292,9 +292,10 @@ namespace HTMLNameSpace {
                 var pos = 0;
 
                 var sequence = new List<string>();
-                foreach (var piece in match.Alignment) {
+                foreach (var piece in match.QuerySequence.Alignment) {
                     if (piece is SequenceMatch.Match ma) {
-                        sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, piece.Length).Select(a => a.Character.ToString()));
+                        var length = Math.Min(match.QuerySequence.Sequence.Length - pos - match.StartQueryPosition, piece.Length); // TODO check why needed
+                        sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, length).Select(a => a.Character.ToString()));
                         pos += piece.Length;
                     } else if (piece is SequenceMatch.Deletion) {
                         sequence.AddRange(Enumerable.Repeat(gap_char.ToString(), piece.Length));
@@ -309,11 +310,16 @@ namespace HTMLNameSpace {
                 var start_pad = 0;
                 bool first = true;
                 var insertion_length = 0;
-                foreach (var piece in match.Alignment) {
+                for (var i1 = 0; i1 < match.QuerySequence.Alignment.Count; i1++) {
+                    var piece = match.QuerySequence.Alignment[i1];
+                    if (node == null) {
+                        sequence_list.AddLast(gap_char.ToString());
+                        node = sequence_list.Last;
+                    }
                     if (piece is SequenceMatch.Insertion) {
                         if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - piece.Length - insertion_length));
                         insertion_length = piece.Length;
-                        node = node.Next;
+                        node = node?.Next;
                         first = false;
                     } else {
                         for (int i = 0; i < piece.Length; i++, pos++) {
@@ -321,11 +327,15 @@ namespace HTMLNameSpace {
                             if (!first && gaps[pos] != 0) sequence_list.AddBefore(node, new string(gap_char, gaps[pos] - insertion_length));
                             insertion_length = 0;
                             node = node.Next;
+                            if (node == null) {
+                                sequence_list.AddLast(gap_char.ToString());
+                                node = sequence_list.Last;
+                            }
                             first = false;
                         }
                     }
-
                 }
+                if (sequence_list.Last.Value == gap_char.ToString()) sequence_list.RemoveLast(); // The code always inserts a gap after the last character
                 return (string.Concat(sequence_list), start_pad);
             }
 
@@ -404,11 +414,41 @@ namespace HTMLNameSpace {
                 classes_string = string.IsNullOrEmpty(classes_string) ? "" : $"class='{classes_string}' ";
 
                 // Generate the actual HTMl and Fasta lines
-                html.OpenAndClose(
+                html.Open(
                     HtmlTag.a,
-                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'",
-                    seq);
-                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
+                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'");
+                var position = 0; // Position in the changed_profile
+                var changed_profile_index = 0; // Position in this changed set (in changed_profile)
+                var changed_profile = read.QuerySequence.ChangeProfile();
+                // Skip the correct profile sets based on read.StartQueryPosition
+                for (int i = 0; i < read.StartQueryPosition; i++) {
+                    changed_profile_index++;
+                    if (changed_profile_index == changed_profile[position].Length) {
+                        position++;
+                        changed_profile_index = 0;
+                    }
+                }
+                // Go over all characters in the seq and annotate it properly
+                var last = "";
+                for (int i = 0; i < seq.Length; i++) {
+                    last += seq[i];
+                    if (seq[i] != gap_char) {
+                        changed_profile_index++;
+                        if (changed_profile_index == changed_profile[position].Length) {
+                            changed_profile_index = 0;
+                            if (changed_profile[position].Changed) html.OpenAndClose(HtmlTag.span, "class='changed'", last);
+                            else html.Content(last);
+                            position++;
+                            last = "";
+                        }
+                    }
+                }
+                if (!String.IsNullOrEmpty(last)) {
+                    if (changed_profile.Last().Changed) html.OpenAndClose(HtmlTag.span, "class='changed'", last);
+                    else html.Content(last);
+                }
+                html.Close(HtmlTag.a);
+                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.QuerySequence.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
             }
 
             html.Close(HtmlTag.div);
@@ -454,13 +494,13 @@ namespace HTMLNameSpace {
             foreach (var piece in grouped) {
                 if (piece.Item1 != Annotation.None) {
                     output1.Append("linear-gradient(to right, " + Color(piece.Item1) + ", " + Color(piece.Item1) + "),");
-                    output2.Append($"{piece.Item2}ch,");
+                    output2.Append($"{piece.Item2}ch 100%,");
                     output3.Append($"{len}ch,");
                 }
                 len += piece.Item2;
             }
             output1.Append("linear-gradient(to right, var(--color-primary-o), var(--color-primary-o))");
-            output2.Append("1ch");
+            output2.Append("1ch 100%");
             output3.Append("var(--highlight-pos)");
             return output1 + ";" + output2 + ";" + output3 + ";background-repeat:no-repeat;";
         }
@@ -483,7 +523,7 @@ namespace HTMLNameSpace {
             Row("Type", type);
             Row("Score", match.Score.ToString());
             Row("Total area", match.Query.TotalArea.ToString("G4"));
-            Row("Length on Template", match.LengthOnTemplate.ToString());
+            Row("Length on Template", match.QuerySequence.LengthOnTemplate.ToString());
             Row("Position on Template", match.StartTemplatePosition.ToString());
             Row($"Start on {type}", match.StartQueryPosition.ToString());
             Row($"Length of {type}", match.QuerySequence.Sequence.Length.ToString());
@@ -498,7 +538,7 @@ namespace HTMLNameSpace {
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.td, "", doc_title);
                 html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.Query.Sequence.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.QuerySequence.PositionalScore.SubArray(match.StartQueryPosition, match.QuerySequence.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
                 html.Close(HtmlTag.td);
                 html.Close(HtmlTag.tr);
             }
@@ -516,7 +556,7 @@ namespace HTMLNameSpace {
         static HtmlBuilder SequenceMatchGraphic(SequenceMatch match) {
             var id = "none";
             var html = new HtmlBuilder();
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match)
                     id = "match";
                 else if (piece is SequenceMatch.Deletion)
@@ -563,7 +603,7 @@ namespace HTMLNameSpace {
             } else {
                 var max_support = ambiguous.SelectMany(n => n.Support.Values).Max();
 
-                // Find the position of each aminoacid node by determining the total support for that AA 
+                // Find the position of each aminoacid node by determining the total support for that AA
                 // at that position and sorting on highest at the top.
                 var placed = new List<(AminoAcid, double)>[ambiguous.Length];
                 for (int i = 0; i < placed.Length; i++) placed[i] = new();

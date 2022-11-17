@@ -5,7 +5,7 @@ using System;
 
 
 namespace Stitch {
-    /// <summary> A JSON report. </summary> 
+    /// <summary> A JSON report. </summary>
     public class JSONReport : Report {
 
         /// <summary> To retrieve all metadata. </summary>

@@ -1,9 +1,9 @@
 using System;
-using System.Text;
-using System.Text.RegularExpressions;
-using System.Reflection;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Text;
+using System.Text.RegularExpressions;
 
 namespace Stitch {
     namespace InputNameSpace {
@@ -225,9 +225,9 @@ namespace Stitch {
                 Console.WriteLine("");
             }
 
-            /// <summary> Print an exception in a nice way. </summary> 
+            /// <summary> Print an exception in a nice way. </summary>
             /// <param name="e">The exception</param>
-            public static void PrintException(Exception e) {
+            public static void PrintException(Exception e, bool last = true) {
                 ProgressBar.Off = true;
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -240,11 +240,12 @@ namespace Stitch {
                 foreach (var l in e.StackTrace.Split(" at ")) {
                     var line = l.Trim();
                     if (String.IsNullOrWhiteSpace(line)) continue;
+
                     // Regex to match stacktrace lines. path.<name>?function[generic]?(arguments) in path\name:line number
-                    var full_pieces = Regex.Match(line, @"^\s*(.+\.)((?:<.+>)?)([_\w\d]+)((?:\[.+\])?)\((.*)\)(?: in (.+\\)([^\\]+):line (.+))?\s*$");
+                    var full_pieces = Regex.Match(line, @"^\s*(.+\.)((?:<.+>)?)([_|\w\d]+)((?:\[.+\])?)\((.*)\)(?: in (.+\\)([^\\]+):line (.+))?\s*(--- End of stack trace from previous location ---)?\s*$");
                     if (full_pieces.Success) {
                         Console.ForegroundColor = ConsoleColor.Blue;
-                        Console.Write("| ");
+                        Console.Write(full_pieces.Groups[6].Length > 0 ? "╷ " : "| ");
                         Console.ForegroundColor = defaultColour;
                         Console.Write(full_pieces.Groups[1]);
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
@@ -262,12 +263,15 @@ namespace Stitch {
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                         Console.Write("(");
                         Console.ForegroundColor = defaultColour;
-                        Console.Write(full_pieces.Groups[5]);
+                        if (full_pieces.Groups[5].Length > 30)
+                            Console.Write("...");
+                        else
+                            Console.Write(full_pieces.Groups[5]);
                         Console.ForegroundColor = ConsoleColor.DarkBlue;
                         Console.Write(")");
                         if (full_pieces.Groups[6].Length > 0) {
                             Console.ForegroundColor = ConsoleColor.Blue;
-                            Console.Write(" in ");
+                            Console.Write("\n╰─ ");
                             var path_pieces = full_pieces.Groups[6].Value.Split(Path.DirectorySeparatorChar, StringSplitOptions.RemoveEmptyEntries).ToList();
                             var index = path_pieces.IndexOf("stitch");
                             Console.ForegroundColor = ConsoleColor.DarkGray;
@@ -281,6 +285,12 @@ namespace Stitch {
                             Console.ForegroundColor = ConsoleColor.Red;
                             Console.Write(full_pieces.Groups[8]);
                         }
+                        if (full_pieces.Groups[9].Length > 0) {
+                            Console.Write("\n");
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write(" --> End of stacktrace from previous location.");
+                            Console.ForegroundColor = defaultColour;
+                        }
                     } else {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write("| ");
@@ -290,15 +300,18 @@ namespace Stitch {
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine("");
                 }
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.Write("Version: ");
-                Console.ForegroundColor = defaultColour;
-                Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
 
-                Console.WriteLine("\nPlease include this entire error if you open a bug report.");
-                Console.ForegroundColor = ConsoleColor.Blue;
-                Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
-                Console.ForegroundColor = defaultColour;
+                if (last) {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("Version: ");
+                    Console.ForegroundColor = defaultColour;
+                    Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+
+                    Console.WriteLine("\nPlease include this entire error if you open a bug report.");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
+                    Console.ForegroundColor = defaultColour;
+                }
             }
         }
     }

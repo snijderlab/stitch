@@ -169,7 +169,7 @@ namespace Stitch {
             }
         }
 
-        /// <summary> The tail is the longest single connection path from this node. If any of the nodes 
+        /// <summary> The tail is the longest single connection path from this node. If any of the nodes
         /// in the path has multiple connections the tail is null. </summary>
         /// <returns> null or the tail in the order. </returns>
         private List<AminoAcid> Tail() {

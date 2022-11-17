@@ -1,12 +1,12 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
-using static Stitch.HelperFunctionality;
 using System.Text.Json.Serialization;
+using static Stitch.HelperFunctionality;
 
 
 namespace Stitch {
-    /// <summary> Saves a template and its alignment with the given matches. </summary> 
+    /// <summary> Saves a template and its alignment with the given matches. </summary>
     public class Template {
         /// <summary> The name of the containing Segment. <see cref="Segment.Name"/> </summary>
         public readonly string Name;
@@ -125,11 +125,11 @@ namespace Stitch {
 
         /// <summary> A gap </summary>
         public struct Gap : IGap {
-            /// <summary> The sequence of this gap </summary> 
+            /// <summary> The sequence of this gap </summary>
             public readonly AminoAcid[] Sequence;
             int hashCode;
 
-            /// <summary> Creates a new Gap </summary> 
+            /// <summary> Creates a new Gap </summary>
             /// <param name="sequence">The sequence of this gap, <see cref="Sequence"/>.</param>
             public Gap(AminoAcid[] sequence) {
                 Sequence = sequence;
@@ -173,7 +173,7 @@ namespace Stitch {
         public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences() {
             if (alignedSequencesCache != null) return alignedSequencesCache;
 
-            Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
+            Matches.Sort((a, b) => b.QuerySequence.TotalMatches.CompareTo(a.QuerySequence.TotalMatches)); // So the longest match will be at the top
 
             // Add all the positions
             var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
@@ -195,9 +195,9 @@ namespace Stitch {
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
 
-                for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++) {
-                    piece = match.Alignment[piece_index];
-                    var inseq = piece_index < match.Alignment.Count - 1 && piece_index > 0;
+                for (int piece_index = 0; piece_index < match.QuerySequence.Alignment.Count; piece_index++) {
+                    piece = match.QuerySequence.Alignment[piece_index];
+                    var inseq = piece_index < match.QuerySequence.Alignment.Count - 1 && piece_index > 0;
 
                     if (piece is SequenceMatch.Match m) {
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Sequence.Length; i++) {
@@ -205,7 +205,7 @@ namespace Stitch {
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
-                                           || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
+                                           || (piece_index < match.QuerySequence.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
                             output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.QuerySequence.PositionalScore.Length > 0 ? match.QuerySequence.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], contigid, in_sequence);
@@ -392,7 +392,7 @@ namespace Stitch {
             if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
 
             var match = this.AlignConsensusWithTemplate();
-            var annotation = new List<Annotation>(match.LengthOnQuery);
+            var annotation = new List<Annotation>(match.QuerySequence.LengthOnQuery);
 
             List<(Annotation, string)> annotated = null;
             if (this.Recombination != null) {
@@ -423,7 +423,7 @@ namespace Stitch {
             var columns = new List<(char Template, char Query, char Difference, string Class)>();
             int query_pos = 0;
             int template_pos = 0;
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 switch (piece) {
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++) {
@@ -510,67 +510,84 @@ namespace Stitch {
         }
 
         public void FixCommonMassSpecErrors() {
-            var equal_mass = MassSpecErrors.EqualMasses(this.Parent.Alphabet);
-            foreach (var match in this.Matches) {
-                int pos = match.StartTemplatePosition;
-                int q_pos = match.StartQueryPosition;
+            var error_table = MassSpecErrors.ErrorTable(this.Parent.Alphabet);
+            (bool Replace, int Delete, AminoAcid[] Insert, MSErrorType Type) FindErrorAtPosition(AminoAcid[] query, AminoAcid[] template) {
+                for (int size = query.Length; size > 0; size--) {
+                    var key = query.Take(size).ToSortedAminoAcidSet();
+                    if (error_table.ContainsKey(key)) {
+                        var set = error_table[key];
 
-                for (int piece_pos = 0; piece_pos < match.Alignment.Count; piece_pos++) {
-                    SequenceMatch.MatchPiece piece = match.Alignment[piece_pos];
-                    if (piece is SequenceMatch.Match ma) {
-                        for (int offset = 0; offset < ma.Length; offset++) {
-                            var skip = 0;
-                            var found = false;
-                            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
-                                for (int size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); size > 0 && !found; size--) {
-                                    var key = match.QuerySequence.Sequence.SubArray(q_pos + offset, size).ToSortedAminoAcidSet();
-                                    if (equal_mass.ContainsKey(key)) {
-                                        var set = equal_mass[key];
-
-                                        for (int template_size = Math.Min(MassSpecErrors.MaxLength, ma.Length - offset); template_size > 0; template_size--) {
-                                            var template_key = this.Sequence.SubArray(pos + offset, template_size).ToSortedAminoAcidSet();
-                                            if (set.Contains(template_key)) {
-                                                // Force template
-                                                match.QuerySequence.UpdateSequence(q_pos + offset, size, this.Sequence.SubArray(pos + offset, template_size), "These sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.");
-                                                //ma.Length = ma.Length - size + template_size; // Update SequenceMatch
-
-                                                // Fix misalignment issues
-                                                if (template_size < size) {
-                                                    match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Insertion(size - template_size));
-                                                    match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - size));
-                                                    ma.Length = offset;
-                                                } else if (template_size > size) {
-                                                    match.Alignment.Insert(piece_pos + 1, new SequenceMatch.Deletion(template_size - size));
-                                                    match.Alignment.Insert(piece_pos + 2, new SequenceMatch.Match(ma.Length - offset - template_size));
-                                                    ma.Length = offset;
-                                                    q_pos -= template_size - size;
-                                                }
-                                                skip = Math.Max(size, template_size);
-                                                found = true;
-                                                break; // Goes to next position
-                                            }
-                                        }
+                        for (int template_size = template.Length; template_size > 0; template_size--) {
+                            var template_key = template.Take(template_size).ToSortedAminoAcidSet();
+                            foreach (var rule_set in set) {
+                                if (rule_set.Set.Contains(template_key)) {
+                                    // First check if IS <-> LS is found because this should be categorised as I <-> L
+                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
+                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
+                                    if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls) && query[0].Character != 'S') {
+                                        // The current position is I or L
+                                        return (true, 1, new AminoAcid[] { template[0] }, rule_set.Type);
+                                    } else {
+                                        // Force template
+                                        return (true, size, template.Take(template_size).ToArray(), rule_set.Type);
                                     }
                                 }
                             }
-                            offset += skip;
                         }
-                        pos += ma.Length;
-                        q_pos += ma.Length;
-                    } else if (piece is SequenceMatch.Deletion) {
-                        pos += piece.Length;
-
-                    } else if (piece is SequenceMatch.Insertion) {
-                        q_pos += piece.Length;
-
                     }
                 }
+                return (false, 0, null, MSErrorType.Isomass);
+            }
+
+            foreach (var match in this.Matches) {
+                //int pos = match.StartTemplatePosition;
+                //int q_pos = match.StartQueryPosition;
+
+                for (int pos = match.StartTemplatePosition; pos < match.StartTemplatePosition + match.QuerySequence.LengthOnTemplate; pos++) {
+                    var query = match.GetQuerySubMatch(pos, MassSpecErrors.MaxLength);
+                    var template = this.Sequence.SubArray(pos, Math.Min(MassSpecErrors.MaxLength, this.Sequence.Length - pos));
+                    var res = FindErrorAtPosition(query.Item2, template);
+                    if (res.Replace) {
+                        var q_pos = match.GetQueryPosition(pos);
+                        match.QuerySequence.UpdateSequence(q_pos, res.Delete, res.Insert, res.Type.Description());
+                        //match.OverWriteAlignment(pos, res.Delete, res.Insert.Length);
+                        pos += Math.Max(res.Delete, res.Insert.Length); // Skip over the newly placed AAs
+                    }
+                }
+
+                //for (int piece_pos = 0; piece_pos < match.Alignment.Count; piece_pos++) {
+                //    SequenceMatch.MatchPiece piece = match.Alignment[piece_pos];
+                //    if (piece is SequenceMatch.Match ma) {
+                //        for (int offset = 0; offset < ma.Length; offset++) {
+                //            var skip = 0;
+                //            if (this.Sequence[pos + offset] != match.QuerySequence.Sequence[q_pos + offset]) {
+                //                var res = FindErrorAtPosition(
+                //                    match.QuerySequence.Sequence.SubArray(q_pos + offset, Math.Min(MassSpecErrors.MaxLength, match.QuerySequence.Sequence.Length - q_pos - offset)),
+                //                    this.Sequence.SubArray(pos + offset, Math.Min(MassSpecErrors.MaxLength, this.Sequence.Length - pos - offset)));
+                //                if (res.Replace) {
+                //                    match.QuerySequence.UpdateSequence(q_pos, res.Delete, res.Insert, res.Type.Description());
+                //                    SequenceMatch.OverWriteAlignment(ref match.Alignment, pos, res.Delete, res.Insert.Length);
+                //                    skip = Math.Max(res.Delete, res.Insert.Length);
+                //                }
+                //            }
+                //            offset += skip;
+                //        }
+                //        pos += ma.Length;
+                //        q_pos += ma.Length;
+                //    } else if (piece is SequenceMatch.Deletion) {
+                //        pos += piece.Length;
+                //
+                //    } else if (piece is SequenceMatch.Insertion) {
+                //        q_pos += piece.Length;
+                //
+                //    }
+                //}
                 match.Simplify();
             }
         }
     }
 
-    /// <summary> The location of a template, in its Segment and its location </summary> 
+    /// <summary> The location of a template, in its Segment and its location </summary>
     public class TemplateLocation {
         /// <summary> The location of the <see cref="Segment"/>, see <see cref="Segment.Index"/>. </summary>
         public readonly int SegmentIndex;
@@ -587,7 +604,7 @@ namespace Stitch {
         }
     }
 
-    /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary> 
+    /// <summary> The location of a recombined template, as there is only one list of recombined templates only one index has to be saved. </summary>
     public class RecombinedTemplateLocation : TemplateLocation {
         public RecombinedTemplateLocation(int templateIndex) : base(-1, templateIndex) { }
     }

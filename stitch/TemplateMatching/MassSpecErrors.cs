@@ -7,7 +7,7 @@ using Stitch;
 
 namespace Stitch {
     public static class MassSpecErrors {
-        readonly static string[] Preset = new string[]{
+        readonly static string[] IsoMassSets = new string[]{
             "I,L",
             "N,GG",
             "Q,AG",
@@ -34,17 +34,36 @@ namespace Stitch {
             "EK,ASV,GLS,GIS,GTV",
             "MQ,AGM,CGV",
             "AAQ,NGV,AAAG,GGGV"};
+        readonly static (MSErrorType Type, string Prior, string Posterior)[] Modifications = new (MSErrorType, string, string)[] {
+            (MSErrorType.Deamidation, "N", "D"),
+            (MSErrorType.Deamidation, "Q", "E"),
+        };
 
         public const int MaxLength = 4;
-        public static Dictionary<AminoAcidSet, HashSet<AminoAcidSet>> EqualMasses(Alphabet alphabet) {
-            var output = new Dictionary<AminoAcidSet, HashSet<AminoAcidSet>>();
+        public static Dictionary<AminoAcidSet, HashSet<(MSErrorType Type, HashSet<AminoAcidSet> Set)>> ErrorTable(Alphabet alphabet) {
+            var output = new Dictionary<AminoAcidSet, HashSet<(MSErrorType Type, HashSet<AminoAcidSet> Set)>>();
 
-            var combinations = Preset.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap())));
+            void Add(AminoAcidSet key, MSErrorType type, HashSet<AminoAcidSet> set) {
+                if (output.ContainsKey(key)) {
+                    output[key].Add((type, set));
+                } else {
+                    output.Add(key, new HashSet<(MSErrorType, HashSet<AminoAcidSet>)> { (type, set) });
+                }
+            }
+            void AddSingle(AminoAcidSet key, MSErrorType type, AminoAcidSet set) {
+                Add(key, type, new HashSet<AminoAcidSet> { set });
+            }
+
+            var combinations = IsoMassSets.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap())));
 
             foreach (var group in combinations) {
                 foreach (var element in group) {
-                    output.Add(element, group.Where(e => e != element).ToHashSet());
+                    Add(element, MSErrorType.Isomass, group.Where(e => e != element).ToHashSet());
                 }
+            }
+
+            foreach (var rule in Modifications) {
+                AddSingle(new AminoAcidSet(AminoAcid.FromString(rule.Prior, alphabet).Unwrap()), rule.Type, new AminoAcidSet(AminoAcid.FromString(rule.Posterior, alphabet).Unwrap()));
             }
 
             return output;
@@ -66,14 +85,30 @@ namespace Stitch {
         public static AminoAcidSet ToSortedAminoAcidSet(this IEnumerable<AminoAcid> data) {
             return new AminoAcidSet(data.Sort());
         }
+
+        public static string Description(this MSErrorType error) {
+            return new string[]{
+                "Isomass, these sets of amino acids have the same mass but the new sequence is the same as the germline and so more probable.",
+                "Amidation, a common post translational modification where the C terminal carboxyl is replaced by an amide group. (-0.98402Δ)",
+                "Deamidation, a common post translational modification where an amide group is converted to a carboxyl. (+0.98402Δ)"
+            }[(int)error];
+        }
     }
+
+    public enum MSErrorType {
+        Isomass,
+        Amidation,
+        Deamidation
+    }
+
+
 
     public struct AminoAcidSet : IComparable, IEquatable<AminoAcidSet> {
         public readonly uint Value = 0;
         const int width = 6;
 
         public AminoAcidSet(AminoAcid[] set) {
-            if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more then 10 elements.");
+            if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more than 10 elements.");
             for (int i = 0; i < set.Length; i++) {
                 uint index = set[i].Alphabet.GetIndexInAlphabet(set[i].Character) < 0 ? 0 : (uint)set[i].Alphabet.GetIndexInAlphabet(set[i].Character) + 1u;
                 uint element = index << (i * width);
