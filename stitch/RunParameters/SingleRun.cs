@@ -149,7 +149,7 @@ namespace Stitch {
                         var match = HelperFunctionality.SmithWaterman(template, query, result.Parent.Alphabet);
                         var details = match.GetDetailedScores();
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.Alignment.CIGAR()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.QuerySequence.Alignment.CIGAR()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate) * 100).ToString("G3")));
                     }
 

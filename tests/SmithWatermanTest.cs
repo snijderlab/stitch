@@ -26,7 +26,7 @@ namespace StitchTest {
             Assert.AreEqual(10, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("6M1I6M", r.Alignment.CIGAR());
+            Assert.AreEqual("6M1I6M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("ACACCACCACCA", "ACACDCACCDACCA")]
         [DataRow("ABBCABAAABCA", "ABBCDABAADABCA")]
@@ -39,7 +39,7 @@ namespace StitchTest {
             Assert.AreEqual(8, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("4M1I4M1I4M", r.Alignment.CIGAR());
+            Assert.AreEqual("4M1I4M1I4M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("ACBCCACBABCA", "ACBCDDCACBABCA")]
         [DataRow("ABBCABAAABCA", "ABBCDDABAAABCA")]
@@ -52,7 +52,7 @@ namespace StitchTest {
             Assert.AreEqual(9, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("4M2I8M", r.Alignment.CIGAR());
+            Assert.AreEqual("4M2I8M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("ACACCACACCAABCA", "ACACCACDDDACCAABCA")]
         [DataRow("ABBCABAABCAACCA", "ABBCABADDDABCAACCA")]
@@ -65,7 +65,7 @@ namespace StitchTest {
             Assert.AreEqual(11, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("7M3I8M", r.Alignment.CIGAR());
+            Assert.AreEqual("7M3I8M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("ACACACA", "ACABACA")]
         [DataRow("ACACACA", "ACACBCA")]
@@ -78,7 +78,7 @@ namespace StitchTest {
             Assert.AreEqual(6, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("7M", r.Alignment.CIGAR());
+            Assert.AreEqual("7M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("ABBA")]
         [DataRow("AAABBA")]
@@ -93,7 +93,7 @@ namespace StitchTest {
             Assert.AreEqual(x.Length, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual($"{x.Length}M", r.Alignment.CIGAR());
+            Assert.AreEqual($"{x.Length}M", r.QuerySequence.Alignment.CIGAR());
         }
         [DataRow("BABACBAAABCB", "CBAAA")]
         [DataRow("CBABABACCBCA", "ABACC")]
@@ -106,7 +106,7 @@ namespace StitchTest {
             Assert.AreEqual(5, r.Score);
             Assert.AreEqual(4, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("5M", r.Alignment.CIGAR());
+            Assert.AreEqual("5M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void MismatchAndGap() {
@@ -119,7 +119,7 @@ namespace StitchTest {
             Assert.AreEqual(7, r.Score);
             Assert.AreEqual(5, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("4M1I6M", r.Alignment.CIGAR());
+            Assert.AreEqual("4M1I6M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void GenomicTest01() {
@@ -133,7 +133,7 @@ namespace StitchTest {
             Assert.AreEqual(21, r.Score);
             Assert.AreEqual(8, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("6M", r.Alignment.CIGAR());
+            Assert.AreEqual("6M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void GenomicTest02() {
@@ -147,7 +147,7 @@ namespace StitchTest {
             Assert.AreEqual(112, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(2, r.StartQueryPosition);
-            Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.Alignment.CIGAR());
+            Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void LongerSequence() {
@@ -160,7 +160,7 @@ namespace StitchTest {
             Assert.AreEqual(361, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("26M17D24M17I29M", r.Alignment.CIGAR());
+            Assert.AreEqual("26M17D24M17I29M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void AlreadyAddedGap() {
@@ -173,7 +173,7 @@ namespace StitchTest {
             Assert.AreEqual(454, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("45M26I52M", r.Alignment.CIGAR());
+            Assert.AreEqual("45M26I52M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void GFPAlignment() {
@@ -193,7 +193,7 @@ namespace StitchTest {
             Assert.AreEqual(283, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(1, r.StartQueryPosition);
-            Assert.AreEqual("13M4I22M1D3M1I12M1I28M2D59M1I11M4D20M5D2M2I6M1I22M1D2M2D13M2I10M", r.Alignment.CIGAR());
+            Assert.AreEqual("13M4I22M1D3M1I12M1I28M2D59M1I11M4D20M5D2M2I6M1I22M1D2M2D13M2I10M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void IgGAlignment() {
@@ -210,7 +210,7 @@ namespace StitchTest {
             Assert.AreEqual(3070, r.Score);
             Assert.AreEqual(0, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("103M2I1M1I128M1I244M1D63M1D118M", r.Alignment.CIGAR());
+            Assert.AreEqual("103M2I1M1I128M1I244M1D63M1D118M", r.QuerySequence.Alignment.CIGAR());
         }
         // The following tests are written based on paths that were misaligned by the full program
         // The testcases should only pass if the alignment is what should be expected as a good alignment, so not the one given by the full program
@@ -227,7 +227,7 @@ namespace StitchTest {
             Assert.AreEqual(241, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("31M1D6M4I22M", r.Alignment.CIGAR());
+            Assert.AreEqual("31M1D6M4I22M", r.QuerySequence.Alignment.CIGAR());
         }
         [TestMethod]
         public void RealWorldIGHV() {
@@ -242,7 +242,7 @@ namespace StitchTest {
             Assert.AreEqual(147, r.Score);
             Assert.AreEqual(68, r.StartTemplatePosition);
             Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("30M", r.Alignment.CIGAR());
+            Assert.AreEqual("30M", r.QuerySequence.Alignment.CIGAR());
         }
         Read.IRead StringToSequence(string input, Alphabet alp) {
             return new Read.Simple(AminoAcid.FromString(input, alp).Unwrap());

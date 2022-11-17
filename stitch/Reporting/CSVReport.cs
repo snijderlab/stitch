@@ -34,8 +34,8 @@ namespace Stitch {
                     read.Unique.ToString(),
                     read.StartTemplatePosition.ToString(),
                     read.StartQueryPosition.ToString(),
-                    read.LengthOnTemplate.ToString(),
-                    HelperFunctionality.CIGAR(read.Alignment)
+                    read.QuerySequence.LengthOnTemplate.ToString(),
+                    HelperFunctionality.CIGAR(read.QuerySequence.Alignment)
                     };
                 if (read.Query is Read.Peaks) {
                     peaks = true;

@@ -173,7 +173,7 @@ namespace Stitch {
         public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences() {
             if (alignedSequencesCache != null) return alignedSequencesCache;
 
-            Matches.Sort((a, b) => b.TotalMatches.CompareTo(a.TotalMatches)); // So the longest match will be at the top
+            Matches.Sort((a, b) => b.QuerySequence.TotalMatches.CompareTo(a.QuerySequence.TotalMatches)); // So the longest match will be at the top
 
             // Add all the positions
             var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
@@ -195,9 +195,9 @@ namespace Stitch {
                 int seq_pos = match.StartQueryPosition;
                 bool gap = false;
 
-                for (int piece_index = 0; piece_index < match.Alignment.Count; piece_index++) {
-                    piece = match.Alignment[piece_index];
-                    var inseq = piece_index < match.Alignment.Count - 1 && piece_index > 0;
+                for (int piece_index = 0; piece_index < match.QuerySequence.Alignment.Count; piece_index++) {
+                    piece = match.QuerySequence.Alignment[piece_index];
+                    var inseq = piece_index < match.QuerySequence.Alignment.Count - 1 && piece_index > 0;
 
                     if (piece is SequenceMatch.Match m) {
                         for (int i = 0; i < m.Length && template_pos < Sequence.Length && seq_pos < match.QuerySequence.Sequence.Length; i++) {
@@ -205,7 +205,7 @@ namespace Stitch {
                             // Add this ID to the list
                             var in_sequence = inseq // In the middle of the pieces
                                            || (i < m.Length - 1) // Not the last AA
-                                           || (piece_index < match.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
+                                           || (piece_index < match.QuerySequence.Alignment.Count - 1 && i == m.Length - 1); // With a piece after this one the last AA is in the sequence
 
                             output[template_pos].Sequences[match_index] = (match_index, seq_pos + 1, match.QuerySequence.PositionalScore.Length > 0 ? match.QuerySequence.PositionalScore[seq_pos] : 1.0, contigid);
                             if (!gap) output[template_pos].Gaps[match_index] = (match_index, new None(), new double[0], contigid, in_sequence);
@@ -392,7 +392,7 @@ namespace Stitch {
             if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
 
             var match = this.AlignConsensusWithTemplate();
-            var annotation = new List<Annotation>(match.LengthOnQuery);
+            var annotation = new List<Annotation>(match.QuerySequence.LengthOnQuery);
 
             List<(Annotation, string)> annotated = null;
             if (this.Recombination != null) {
@@ -423,7 +423,7 @@ namespace Stitch {
             var columns = new List<(char Template, char Query, char Difference, string Class)>();
             int query_pos = 0;
             int template_pos = 0;
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 switch (piece) {
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++) {
@@ -543,14 +543,14 @@ namespace Stitch {
                 //int pos = match.StartTemplatePosition;
                 //int q_pos = match.StartQueryPosition;
 
-                for (int pos = match.StartTemplatePosition; pos < match.StartTemplatePosition + match.LengthOnTemplate; pos++) {
+                for (int pos = match.StartTemplatePosition; pos < match.StartTemplatePosition + match.QuerySequence.LengthOnTemplate; pos++) {
                     var query = match.GetQuerySubMatch(pos, MassSpecErrors.MaxLength);
                     var template = this.Sequence.SubArray(pos, Math.Min(MassSpecErrors.MaxLength, this.Sequence.Length - pos));
                     var res = FindErrorAtPosition(query.Item2, template);
                     if (res.Replace) {
                         var q_pos = match.GetQueryPosition(pos);
                         match.QuerySequence.UpdateSequence(q_pos, res.Delete, res.Insert, res.Type.Description());
-                        match.OverWriteAlignment(pos, res.Delete, res.Insert.Length);
+                        //match.OverWriteAlignment(pos, res.Delete, res.Insert.Length);
                         pos += Math.Max(res.Delete, res.Insert.Length); // Skip over the newly placed AAs
                     }
                 }

@@ -182,7 +182,7 @@ namespace HTMLNameSpace {
             int template_pos = match.StartTemplatePosition;
             int query_pos = match.StartQueryPosition; // Handle overlaps (also at the end)
 
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 switch (piece) {
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++) {
@@ -270,12 +270,12 @@ namespace HTMLNameSpace {
             data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{AminoAcid.ArrayToString(consensus.Item1).Replace(gap_char, '.')}");
 
             var localMatches = template.Matches.ToList();
-            localMatches.Sort((a, b) => b.LengthOnTemplate.CompareTo(a.LengthOnTemplate)); // Try to keep the longest matches at the top.
+            localMatches.Sort((a, b) => b.QuerySequence.LengthOnTemplate.CompareTo(a.QuerySequence.LengthOnTemplate)); // Try to keep the longest matches at the top.
 
             // Find the longest gaps for each position.
             foreach (var match in localMatches) {
                 var pos = match.StartTemplatePosition;
-                foreach (var piece in match.Alignment) {
+                foreach (var piece in match.QuerySequence.Alignment) {
                     if (piece is SequenceMatch.Match ma) {
                         pos += piece.Length;
                     } else if (piece is SequenceMatch.Deletion) {
@@ -292,7 +292,7 @@ namespace HTMLNameSpace {
                 var pos = 0;
 
                 var sequence = new List<string>();
-                foreach (var piece in match.Alignment) {
+                foreach (var piece in match.QuerySequence.Alignment) {
                     if (piece is SequenceMatch.Match ma) {
                         var length = Math.Min(match.QuerySequence.Sequence.Length - pos - match.StartQueryPosition, piece.Length); // TODO check why needed
                         sequence.AddRange(match.QuerySequence.Sequence.SubArray(match.StartQueryPosition + pos, length).Select(a => a.Character.ToString()));
@@ -310,7 +310,7 @@ namespace HTMLNameSpace {
                 var start_pad = 0;
                 bool first = true;
                 var insertion_length = 0;
-                foreach (var piece in match.Alignment) {
+                foreach (var piece in match.QuerySequence.Alignment) {
                     if (node == null) {
                         sequence_list.AddLast(gap_char.ToString());
                         node = sequence_list.Last;
@@ -447,7 +447,7 @@ namespace HTMLNameSpace {
                     else html.Content(last);
                 }
                 html.Close(HtmlTag.a);
-                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
+                data_buffer.AppendLine($">{read.Query.EscapedIdentifier} score:{read.Score} alignment:{read.QuerySequence.Alignment.CIGAR()} unique:{read.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
             }
 
             html.Close(HtmlTag.div);
@@ -522,7 +522,7 @@ namespace HTMLNameSpace {
             Row("Type", type);
             Row("Score", match.Score.ToString());
             Row("Total area", match.Query.TotalArea.ToString("G4"));
-            Row("Length on Template", match.LengthOnTemplate.ToString());
+            Row("Length on Template", match.QuerySequence.LengthOnTemplate.ToString());
             Row("Position on Template", match.StartTemplatePosition.ToString());
             Row($"Start on {type}", match.StartQueryPosition.ToString());
             Row($"Length of {type}", match.QuerySequence.Sequence.Length.ToString());
@@ -537,7 +537,7 @@ namespace HTMLNameSpace {
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.td, "", doc_title);
                 html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.QuerySequence.PositionalScore.SubArray(match.StartQueryPosition, match.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
+                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.QuerySequence.PositionalScore.SubArray(match.StartQueryPosition, match.QuerySequence.TotalMatches).Select(a => (double)a).ToList(), match.StartQueryPosition, true)));
                 html.Close(HtmlTag.td);
                 html.Close(HtmlTag.tr);
             }
@@ -555,7 +555,7 @@ namespace HTMLNameSpace {
         static HtmlBuilder SequenceMatchGraphic(SequenceMatch match) {
             var id = "none";
             var html = new HtmlBuilder();
-            foreach (var piece in match.Alignment) {
+            foreach (var piece in match.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match)
                     id = "match";
                 else if (piece is SequenceMatch.Deletion)

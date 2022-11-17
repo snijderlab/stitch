@@ -146,7 +146,7 @@ namespace Stitch {
                     found_cdr_region = true;
                     foreach (var read in template.Matches) {
                         foreach (var (group, cdr) in positions) {
-                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
+                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
                                 var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique);
                                 switch (group) {
                                     case Annotation.CDR1:
@@ -167,7 +167,7 @@ namespace Stitch {
                     var cdr = positions[Annotation.CDR3];
 
                     foreach (var read in template.Matches) {
-                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.LengthOnTemplate > cdr.Start) {
+                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
                             cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique));
                         }
                     }

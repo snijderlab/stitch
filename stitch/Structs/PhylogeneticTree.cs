@@ -144,7 +144,7 @@ namespace Stitch {
                         (left, right) => (left.Item1.Union(right.Item1).ToList(), ""),
                         (index, _) => (new List<int> { index }, branch.Value)));
 
-                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.Query.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().TotalMatches, group.First().Query.TotalArea)).ToList();
+                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.Query.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().QuerySequence.TotalMatches, group.First().Query.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all

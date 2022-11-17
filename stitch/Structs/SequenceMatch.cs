@@ -16,7 +16,7 @@ namespace Stitch {
         public readonly int Score;
 
         /// <summary> The alignment of the match, consisting of <see cref="MatchPiece">MatchPieces</see>. </summary>
-        public List<MatchPiece> Alignment;
+        //public List<MatchPiece> Alignment;
 
         /// <summary> The query to align. </summary>
         public readonly Read.IRead Query;
@@ -26,11 +26,11 @@ namespace Stitch {
         public readonly Read.IRead Template;
 
         /// <summary> The total amount of (mis)matching aminoacids in the alignment </summary>
-        public int TotalMatches { get; private set; }
+        //public int TotalMatches { get; private set; }
         /// <summary> The total length on the template (matches + gaps in query) </summary>
-        public int LengthOnTemplate { get; private set; }
+        //public int LengthOnTemplate { get; private set; }
         /// <summary> The total length on the query (matches + gaps in template) </summary>
-        public int LengthOnQuery { get; private set; }
+        //public int LengthOnQuery { get; private set; }
 
         public readonly int Index;
         /// <summary> The index of the Template sequence if available. </summary>
@@ -41,27 +41,13 @@ namespace Stitch {
             StartTemplatePosition = startTemplatePosition;
             StartQueryPosition = startQueryPosition;
             Score = score;
-            Alignment = alignment;
+            //Alignment = alignment;
             Template = template;
             Query = query;
-            QuerySequence = new LocalSequence(query, template);
+            QuerySequence = new LocalSequence(query, template, alignment);
             Index = index;
             TemplateIndex = templateIndex;
             Simplify();
-
-            int sum1 = 0;
-            int sum2 = 0;
-            int sum3 = 0;
-            foreach (var m in Alignment) {
-                if (m is SequenceMatch.Match match) {
-                    sum1 += match.Length;
-                }
-                if (m is SequenceMatch.Insertion gc) sum2 += gc.Length;
-                if (m is SequenceMatch.Deletion gt) sum3 += gt.Length;
-            }
-            TotalMatches = sum1;
-            LengthOnTemplate = sum1 + sum2;
-            LengthOnQuery = sum1 + sum3;
         }
 
         /// <summary> Visualises this SequenceMatch, with a very simple visualisation of the alignment </summary>
@@ -69,63 +55,8 @@ namespace Stitch {
             var buffer = new StringBuilder();
             var buffer1 = new StringBuilder();
             var buffer2 = new StringBuilder();
-            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tMatch: {Alignment.CIGAR()}\n\n");
-            int tem_pos = StartTemplatePosition;
-            int query_pos = StartQueryPosition;
-            string tSeq = AminoAcid.ArrayToString(Template.Sequence.Sequence);
-            string qSeq = AminoAcid.ArrayToString(QuerySequence.Sequence);
-
-            if (tem_pos != 0 || query_pos != 0) {
-                if (tem_pos != 0) buffer1.Append("... ");
-                else buffer1.Append("    ");
-                if (query_pos != 0) buffer2.Append("... ");
-                else buffer2.Append("    ");
-            }
-
-            foreach (MatchPiece element in Alignment) {
-                switch (element) {
-                    case Match match:
-                        buffer1.Append(tSeq.Substring(tem_pos, match.Length));
-                        buffer2.Append(qSeq.Substring(query_pos, match.Length));
-                        tem_pos += match.Length;
-                        query_pos += match.Length;
-                        break;
-                    case Insertion gapC:
-                        buffer1.Append(new string('-', gapC.Length));
-                        buffer2.Append(qSeq.Substring(query_pos, gapC.Length));
-                        query_pos += gapC.Length;
-                        break;
-                    case Deletion gapT:
-                        buffer1.Append(tSeq.Substring(tem_pos, gapT.Length));
-                        buffer2.Append(new string('-', gapT.Length));
-                        tem_pos += gapT.Length;
-                        break;
-                }
-            }
-
-            if (tem_pos != tSeq.Length || query_pos != qSeq.Length) {
-                if (tem_pos != tSeq.Length) buffer1.Append(" ...");
-                else buffer1.Append("    ");
-                if (query_pos != qSeq.Length) buffer2.Append(" ...");
-                else buffer2.Append("    ");
-            }
-
-            var seq1 = buffer1.ToString();
-            var seq2 = buffer2.ToString();
-            const int block = 80;
-            var blocks = seq1.Length / block + (seq1.Length % block == 0 ? 0 : 1);
-
-            for (int i = 0; i < blocks; i++) {
-                buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
-                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
-                buffer.Append('\n');
-                buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
-                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
-                buffer.Append('\n');
-                if (i != blocks) {
-                    buffer.Append('\n');
-                }
-            }
+            buffer.Append($"SequenceMatch:\n\tStarting at template: {StartTemplatePosition}\n\tStarting at query: {StartQueryPosition}\n\tScore: {Score}\n\tMatch: {QuerySequence.Alignment.CIGAR()}\n\n");
+            buffer.Append(AlignmentToString(QuerySequence.Alignment, StartTemplatePosition, StartQueryPosition, AminoAcid.ArrayToString(Template.Sequence.Sequence), AminoAcid.ArrayToString(QuerySequence.Sequence)));
 
             return buffer.ToString();
         }
@@ -136,7 +67,7 @@ namespace Stitch {
             int tem_pos = StartTemplatePosition;
             int query_pos = StartQueryPosition;
 
-            foreach (MatchPiece element in Alignment) {
+            foreach (MatchPiece element in QuerySequence.Alignment) {
                 switch (element) {
                     case Match match:
                         if (!Template.Sequence.Sequence.SubArray(tem_pos, match.Length).All(a => a.Character == 'X')) return false;
@@ -157,7 +88,7 @@ namespace Stitch {
 
         /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
         public void Simplify() {
-            Simplify(ref Alignment);
+            Simplify(ref QuerySequence.Alignment);
         }
 
         /// <summary> Get a part of the query sequence as indicated by positions on the template sequence. </summary>
@@ -172,7 +103,7 @@ namespace Stitch {
 
             if (pos > startTemplatePosition) buf.Append(new string(Alphabet.GapChar, pos - startTemplatePosition));
 
-            foreach (var piece in this.Alignment) {
+            foreach (var piece in this.QuerySequence.Alignment) {
                 if (pos > startTemplatePosition + lengthOnTemplate) break;
                 if (piece is SequenceMatch.Match ma) {
                     if (pos < startTemplatePosition + lengthOnTemplate && pos + piece.Length > startTemplatePosition) {
@@ -212,7 +143,7 @@ namespace Stitch {
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
             if (pos >= templatePosition) return -1;
-            foreach (var piece in this.Alignment) {
+            foreach (var piece in this.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match ma) {
                     pos += piece.Length;
                     q_pos += piece.Length;
@@ -238,7 +169,7 @@ namespace Stitch {
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
 
-            foreach (var piece in this.Alignment) {
+            foreach (var piece in this.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match ma) {
                     for (int i = 0; i < ma.Length; i++) {
                         if (Template.Sequence.Sequence[pos + i] == QuerySequence.Sequence[q_pos + i])
@@ -266,16 +197,16 @@ namespace Stitch {
         /// <param name="templatePosition">The position to get the AminoAcid from.</param>
         /// <returns>The AminoAcid or null if it could not be found.</returns>
         public AminoAcid? GetAtTemplateIndex(int templatePosition) {
-            if (templatePosition < this.StartTemplatePosition || templatePosition >= this.StartTemplatePosition + this.LengthOnTemplate) return null;
+            if (templatePosition < this.StartTemplatePosition || templatePosition >= this.StartTemplatePosition + this.QuerySequence.LengthOnTemplate) return null;
 
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
 
-            foreach (var piece in this.Alignment) {
+            foreach (var piece in this.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match ma) {
                     pos += piece.Length;
                     q_pos += piece.Length;
-                    if (pos > templatePosition) return this.QuerySequence.Sequence[q_pos - (pos - templatePosition)];
+                    if (pos > templatePosition) return this.QuerySequence.Sequence[Math.Min(q_pos - (pos - templatePosition), this.QuerySequence.Sequence.Length - 1)];
                 } else if (piece is SequenceMatch.Deletion) {
                     pos += piece.Length;
                     if (pos > templatePosition) return this.QuerySequence.Sequence[q_pos];
@@ -290,12 +221,12 @@ namespace Stitch {
         /// <param name="templatePosition">The position to get the AminoAcid from.</param>
         /// <returns>The AminoAcid or null if it could not be found.</returns>
         public int GetGapAtTemplateIndex(int templatePosition) {
-            if (templatePosition < this.StartTemplatePosition || templatePosition > this.StartTemplatePosition + this.LengthOnTemplate) return 0;
+            if (templatePosition < this.StartTemplatePosition || templatePosition > this.StartTemplatePosition + this.QuerySequence.LengthOnTemplate) return 0;
 
             int pos = this.StartTemplatePosition;
             int q_pos = this.StartQueryPosition;
 
-            foreach (var piece in this.Alignment) {
+            foreach (var piece in this.QuerySequence.Alignment) {
                 if (piece is SequenceMatch.Match ma) {
                     pos += piece.Length;
                     q_pos += piece.Length;
@@ -313,7 +244,7 @@ namespace Stitch {
         }
 
         /// <summary> Simplifies the MatchList, so combines MatchPieces of the same kind which are in sequence with each other </summary>
-        private static void Simplify(ref List<MatchPiece> Alignment) {
+        public static void Simplify(ref List<MatchPiece> Alignment) {
             MatchPiece lastElement = null;
             int count = Alignment.Count;
             int i = 0;
@@ -333,70 +264,58 @@ namespace Stitch {
             }
         }
 
-        /// <summary> Overwrite an alignment with a new match piece at the given template location. </summary>
-        /// <param name="alignment"> The original alignment. </param>
-        /// <param name="insert"> The number of places to insert. </param>
-        /// <param name="offset"> The template offset to place it at. </param>
-        /// <param name="delete"> The number of positions to delete where the insertion is placed. </param>
-        public void OverWriteAlignment(int offset, int delete, int insert) {
-            // This needs to insert insertions at the correct places.
-            int pos = 0;
-            int to_delete = 0;
-            bool placed = false;
-            for (int i = 0; i < this.Alignment.Count; i++) {
-                MatchPiece piece = this.Alignment[i];
-                if (placed && to_delete == 0) break;
-                if (!(piece is Insertion)) {
-                    if (to_delete != 0) {
-                        var deleted = Math.Min(piece.Length, to_delete);
-                        piece.Length = piece.Length - deleted;
-                        to_delete -= deleted;
-                    }
-                    if (pos <= offset && pos + piece.Length > offset) {
-                        this.Alignment.Insert(i + 1, new Match(Math.Min(delete, insert)));
-                        var n = 2;
-                        if (delete > insert)
-                            this.Alignment.Insert(i + n, new Deletion(delete - insert));
-                        else if (insert > delete)
-                            this.Alignment.Insert(i + n, new Insertion(insert - delete));
-                        else n = 1;
-
-                        var original_length = piece.Length;
-                        var length = offset - pos;
-                        piece.Length = Math.Max(0, length);
-                        if (original_length - piece.Length < delete) to_delete = delete - (original_length - piece.Length);
-                        else if (original_length - piece.Length != delete) {
-                            n += 1;
-                            this.Alignment.Insert(i + n, piece.Copy(original_length - piece.Length - delete));
-                        }
-                        placed = true;
-                        pos += original_length;
-                        i += n - 1; // Skip past the placed insertion
-                    } else {
-                        pos += piece.Length;
-                    }
-                } else if (to_delete != 0) {
-                    piece.Length = 0; // Remove all insertions if inserting anything here.
+        public static string AlignmentToString(List<MatchPiece> alignment, int startTemplatePosition, int startQueryPosition, string tSeq, string qSeq) {
+            int tem_pos = startTemplatePosition;
+            int query_pos = startQueryPosition;
+            var buffer = new StringBuilder();
+            var buffer1 = new StringBuilder();
+            var buffer2 = new StringBuilder();
+            foreach (MatchPiece element in alignment) {
+                switch (element) {
+                    case Match match:
+                        buffer1.Append(tSeq.Substring(tem_pos, match.Length));
+                        buffer2.Append(qSeq.Substring(query_pos, match.Length));
+                        tem_pos += match.Length;
+                        query_pos += match.Length;
+                        break;
+                    case Insertion gapC:
+                        buffer1.Append(new string('-', gapC.Length));
+                        buffer2.Append(qSeq.Substring(query_pos, gapC.Length));
+                        query_pos += gapC.Length;
+                        break;
+                    case Deletion gapT:
+                        buffer1.Append(tSeq.Substring(tem_pos, gapT.Length));
+                        buffer2.Append(new string('-', gapT.Length));
+                        tem_pos += gapT.Length;
+                        break;
                 }
             }
-            this.Simplify();
-
-            // Set up Length on * again
-            int sum1 = 0;
-            int sum2 = 0;
-            int sum3 = 0;
-            foreach (var m in Alignment) {
-                if (m is SequenceMatch.Match match) {
-                    sum1 += match.Length;
-                }
-                if (m is SequenceMatch.Insertion gc) sum2 += gc.Length;
-                if (m is SequenceMatch.Deletion gt) sum3 += gt.Length;
+            if (tem_pos != tSeq.Length || query_pos != qSeq.Length) {
+                if (tem_pos != tSeq.Length) buffer1.Append(" ...");
+                else buffer1.Append("    ");
+                if (query_pos != qSeq.Length) buffer2.Append(" ...");
+                else buffer2.Append("    ");
             }
-            TotalMatches = sum1;
-            LengthOnTemplate = sum1 + sum2;
-            LengthOnQuery = sum1 + sum3;
+
+            var seq1 = buffer1.ToString();
+            var seq2 = buffer2.ToString();
+            const int block = 80;
+            var blocks = seq1.Length / block + (seq1.Length % block == 0 ? 0 : 1);
+
+            for (int i = 0; i < blocks; i++) {
+                buffer.Append(seq1.Substring(i * block, Math.Min(block, seq1.Length - i * block)));
+                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq1.Length - i * block) + StartTemplatePosition}\n");
+                buffer.Append('\n');
+                buffer.Append(seq2.Substring(i * block, Math.Min(block, seq2.Length - i * block)));
+                //buffer.Append($"{new string(' ', 2 + block - Math.Min(block, seq2.Length - i * block))}{i * block + Math.Min(block, seq2.Length - i * block) + StartQueryPosition}\n");
+                buffer.Append('\n');
+                if (i != blocks) {
+                    buffer.Append('\n');
+                }
+            }
+
+            return buffer.ToString();
         }
-
 
         /// <summary> Represents a piece of a match between two sequences </summary>
         public abstract class MatchPiece {
