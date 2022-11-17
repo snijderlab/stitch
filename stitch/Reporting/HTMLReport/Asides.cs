@@ -310,7 +310,8 @@ namespace HTMLNameSpace {
                 var start_pad = 0;
                 bool first = true;
                 var insertion_length = 0;
-                foreach (var piece in match.QuerySequence.Alignment) {
+                for (var i1 = 0; i1 < match.QuerySequence.Alignment.Count; i1++) {
+                    var piece = match.QuerySequence.Alignment[i1];
                     if (node == null) {
                         sequence_list.AddLast(gap_char.ToString());
                         node = sequence_list.Last;
@@ -333,8 +334,8 @@ namespace HTMLNameSpace {
                             first = false;
                         }
                     }
-
                 }
+                if (sequence_list.Last.Value == gap_char.ToString()) sequence_list.RemoveLast(); // The code always inserts a gap after the last character
                 return (string.Concat(sequence_list), start_pad);
             }
 

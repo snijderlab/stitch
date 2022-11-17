@@ -258,6 +258,33 @@ namespace Stitch {
                     Alignment.RemoveAt(i);
                     i--;
                     count--;
+                } else if (lastElement is Insertion ins && Alignment[i] is Deletion del) {
+                    // Combine Insertion and deletion if they are found right after each other
+                    ins.Length = Math.Max(0, ins.Length - del.Length);
+                    del.Length = Math.Max(0, del.Length - ins.Length);
+                    if (ins.Length == 0) {
+                        Alignment.RemoveAt(i - 1);
+                        i--;
+                        count--;
+                    }
+                    if (del.Length == 0) {
+                        Alignment.RemoveAt(i);
+                        i--;
+                        count--;
+                    }
+                } else if (lastElement is Deletion del2 && Alignment[i] is Insertion ins2) {
+                    ins2.Length = Math.Max(0, ins2.Length - del2.Length);
+                    del2.Length = Math.Max(0, del2.Length - ins2.Length);
+                    if (ins2.Length == 0) {
+                        Alignment.RemoveAt(i);
+                        i--;
+                        count--;
+                    }
+                    if (del2.Length == 0) {
+                        Alignment.RemoveAt(i - 1);
+                        i--;
+                        count--;
+                    }
                 }
                 lastElement = i < 0 ? null : Alignment[i];
                 i++;
