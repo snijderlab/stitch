@@ -4,6 +4,7 @@ using System.Linq;
 using System.Reflection;
 using System.Text;
 using System.Text.RegularExpressions;
+using System.Collections.Generic;
 
 namespace Stitch {
     namespace InputNameSpace {
@@ -12,24 +13,24 @@ namespace Stitch {
             readonly Position? end_position;
             readonly ParsedFile File;
             readonly string shortDescription = "";
-            readonly string longDescription = "";
-            readonly string helpDescription = "";
+            List<string> Notes = new List<string>();
+            List<string> Help = new List<string>();
             readonly string subject = "";
             readonly uint contextLines = 0;
             public bool Warning { get; private set; }
             public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 subject = sub;
                 shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
+                Notes.Add(longD);
+                Help.Add(help);
                 Warning = warning;
                 File = new ParsedFile();
                 this.contextLines = contextLines;
             }
             public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
+                Notes.Add(longD);
+                Help.Add(help);
                 Warning = warning;
                 File = file;
                 this.contextLines = contextLines;
@@ -37,8 +38,8 @@ namespace Stitch {
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 start_position = pos;
                 shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
+                Notes.Add(longD);
+                Help.Add(help);
                 Warning = warning;
                 File = pos.File;
                 this.contextLines = contextLines;
@@ -47,8 +48,8 @@ namespace Stitch {
                 start_position = range.Start;
                 end_position = range.End;
                 shortDescription = shortD;
-                longDescription = longD;
-                helpDescription = help;
+                Notes.Add(longD);
+                Help.Add(help);
                 Warning = warning;
                 File = range.File;
                 this.contextLines = contextLines;
@@ -112,10 +113,18 @@ namespace Stitch {
 
                 // Body
                 var body = "";
-                if (!string.IsNullOrEmpty(longDescription)) body += longDescription + "\n";
-                if (!string.IsNullOrEmpty(helpDescription)) body += helpDescription + "\n";
+                foreach (var note in Notes) body += note + "\n";
+                foreach (var help in Help) body += help + "\n";
 
                 return header + location + body;
+            }
+            public ErrorMessage AddNote(string note) {
+                Notes.Add(note);
+                return this;
+            }
+            public ErrorMessage AddHelp(string help) {
+                Help.Add(help);
+                return this;
             }
             public void Print() {
                 var defaultColour = Console.ForegroundColor;
@@ -210,17 +219,17 @@ namespace Stitch {
                 }
 
                 // Body
-                if (!string.IsNullOrEmpty(longDescription)) {
+                foreach (var note in Notes) {
                     Console.ForegroundColor = ConsoleColor.Yellow;
                     Console.Write("note");
                     Console.ForegroundColor = defaultColour;
-                    Console.WriteLine(": " + longDescription);
+                    Console.WriteLine(": " + note);
                 }
-                if (!string.IsNullOrEmpty(helpDescription)) {
+                foreach (var help in Help) {
                     Console.ForegroundColor = ConsoleColor.Green;
                     Console.Write("help");
                     Console.ForegroundColor = defaultColour;
-                    Console.WriteLine(": " + helpDescription);
+                    Console.WriteLine(": " + help);
                 }
                 Console.WriteLine("");
             }
