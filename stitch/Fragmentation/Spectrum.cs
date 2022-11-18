@@ -28,10 +28,10 @@ namespace Stitch {
                     try {
                         raw_file.Open(raw_file_path);
                         raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
-                    } catch (Exception error) {
+                    } catch (Exception exception) {
                         throw new RunTimeException(
-                            new InputNameSpace.ErrorMessage(raw_file_path, "Could not open file properly", "The shown raw file could not be opened without errors. See the error below for more information."),
-                            error);
+                            new InputNameSpace.ErrorMessage(raw_file_path, "Could not open raw data file", "The shown raw file could not be opened. See the error below for more information."),
+                            exception);
                     }
                 } else {
                     throw new RunTimeException(
