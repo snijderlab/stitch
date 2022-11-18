@@ -123,13 +123,16 @@ namespace HTMLNameSpace {
                     }
                     table_buffer.Close(HtmlTag.td);
                 }
-                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Score / max_values.Item1}'", templates[i].Score.ToString("G4"));
-                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].Matches.Count / max_values.Item2}'", templates[i].Matches.Count.ToString("G4"));
-                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalArea / max_values.Item3}'", templates[i].TotalArea.ToString("G4"));
+                double vd(double v1, double v2) {
+                    return (v2 == 0 ? 0 : v1 / v2);
+                }
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].Score, max_values.Item1)}'", templates[i].Score.ToString("G4"));
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].Matches.Count, max_values.Item2)}'", templates[i].Matches.Count.ToString("G4"));
+                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalArea, max_values.Item3)}'", templates[i].TotalArea.ToString("G4"));
                 if (displayUnique) {
-                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueScore / max_values.Item4}'", templates[i].UniqueScore.ToString("G4"));
-                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].UniqueMatches / max_values.Item5}'", templates[i].UniqueMatches.ToString("G4"));
-                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{templates[i].TotalUniqueArea / max_values.Item6}'", templates[i].TotalUniqueArea.ToString("G4"));
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].UniqueScore, max_values.Item4)}'", templates[i].UniqueScore.ToString("G4"));
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].UniqueMatches, max_values.Item5)}'", templates[i].UniqueMatches.ToString("G4"));
+                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalUniqueArea, max_values.Item6)}'", templates[i].TotalUniqueArea.ToString("G4"));
                 }
                 table_buffer.Close(HtmlTag.tr);
 

@@ -53,8 +53,8 @@ namespace HTMLNameSpace {
                     }
                 }
             }
-            if (recombined != null) {
-                html.Close(HtmlTag.table);
+            html.Close(HtmlTag.table);
+            if (recombined != null && recombined.Count > 0) {
                 html.Open(HtmlTag.table, "class='wide-table'");
                 html.Open(HtmlTag.tr);
                 html.OpenAndClose(HtmlTag.th, "", "Recombined");
@@ -76,9 +76,9 @@ namespace HTMLNameSpace {
                         }
                     }
                 }
+                html.Close(HtmlTag.table);
             }
 
-            html.Close(HtmlTag.table);
             html.Add(MetaData.ToHTML());
             html.Close(HtmlTag.div);
             return html;
@@ -416,7 +416,7 @@ namespace HTMLNameSpace {
                 // Generate the actual HTMl and Fasta lines
                 html.Open(
                     HtmlTag.a,
-                    $"{classes_string}href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'");
+                    $"{classes_string}id='aligned-{GetAsideIdentifier(read.Query)}' href='{CommonPieces.GetAsideRawLink(read.Query, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column-start:{start};grid-column-end:{end};' onmouseover='AlignmentDetails({read.Index})' onmouseout='AlignmentDetailsClear()'");
                 var position = 0; // Position in the changed_profile
                 var changed_profile_index = 0; // Position in this changed set (in changed_profile)
                 var changed_profile = read.QuerySequence.ChangeProfile();

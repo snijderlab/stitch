@@ -408,10 +408,10 @@ namespace Stitch {
                             var highest_area = Parameters.Groups[group].Segments[segment].Templates.MaxBy(t => t.TotalArea);
                             html.Open(HtmlTag.tr);
                             html.OpenAndClose(HtmlTag.td, "class='center'", Parameters.Groups[group].Segments[segment].Name);
-                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_score.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_score.MetaData, AsideType.Template, AssetsFolderName));
                             html.OpenAndClose(HtmlTag.td, "class='center'", highest_score.Score.ToString("G4"));
 
-                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_area.MetaData, AsideType.RecombinedTemplate, AssetsFolderName));
+                            html.OpenAndClose(HtmlTag.td, "class='center'", CommonPieces.GetAsideLinkHtml(highest_area.MetaData, AsideType.Template, AssetsFolderName));
                             html.OpenAndClose(HtmlTag.td, "class='center'", highest_area.TotalArea.ToString("G4"));
                             html.Close(HtmlTag.tr);
                         }

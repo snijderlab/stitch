@@ -21,16 +21,16 @@ namespace Stitch {
             public ErrorMessage(string sub, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 subject = sub;
                 shortDescription = shortD;
-                Notes.Add(longD);
-                Help.Add(help);
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
                 Warning = warning;
                 File = new ParsedFile();
                 this.contextLines = contextLines;
             }
             public ErrorMessage(ParsedFile file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 shortDescription = shortD;
-                Notes.Add(longD);
-                Help.Add(help);
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
                 Warning = warning;
                 File = file;
                 this.contextLines = contextLines;
@@ -38,8 +38,8 @@ namespace Stitch {
             public ErrorMessage(Position pos, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
                 start_position = pos;
                 shortDescription = shortD;
-                Notes.Add(longD);
-                Help.Add(help);
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
                 Warning = warning;
                 File = pos.File;
                 this.contextLines = contextLines;
@@ -48,8 +48,8 @@ namespace Stitch {
                 start_position = range.Start;
                 end_position = range.End;
                 shortDescription = shortD;
-                Notes.Add(longD);
-                Help.Add(help);
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
                 Warning = warning;
                 File = range.File;
                 this.contextLines = contextLines;
