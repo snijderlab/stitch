@@ -22,8 +22,15 @@ namespace Stitch {
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
-                raw_file.Open(directory + Path.DirectorySeparatorChar + group.Key);
-                raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
+                var raw_file_path = directory + Path.DirectorySeparatorChar + group.Key;
+                try {
+                    raw_file.Open(raw_file_path);
+                    raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
+                } catch (Exception error) {
+                    throw new RunTimeException(
+                        new InputNameSpace.ErrorMessage(raw_file_path, "Could not open file properly", "The shown raw file could not be opened without errors. See the error below for more information."),
+                        error);
+                }
 
                 foreach (var scan in group) {
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");

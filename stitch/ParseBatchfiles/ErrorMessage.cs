@@ -228,6 +228,28 @@ namespace Stitch {
             /// <summary> Print an exception in a nice way. </summary>
             /// <param name="e">The exception</param>
             public static void PrintException(Exception e, bool last = true) {
+                if (e is RunTimeException rte) {
+                    rte.ErrorMessage.Print();
+                    if (rte.InnerException != null) PrintRawException(rte.InnerException);
+                } else {
+                    PrintRawException(e);
+                }
+
+                var defaultColour = Console.ForegroundColor;
+                if (last) {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.Write("Version: ");
+                    Console.ForegroundColor = defaultColour;
+                    Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
+
+                    Console.WriteLine("\nPlease include this entire error if you open a bug report.");
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
+                    Console.ForegroundColor = defaultColour;
+                }
+            }
+
+            private static void PrintRawException(Exception e) {
                 ProgressBar.Off = true;
                 var defaultColour = Console.ForegroundColor;
                 Console.ForegroundColor = ConsoleColor.Red;
@@ -300,18 +322,7 @@ namespace Stitch {
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine("");
                 }
-
-                if (last) {
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write("Version: ");
-                    Console.ForegroundColor = defaultColour;
-                    Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
-
-                    Console.WriteLine("\nPlease include this entire error if you open a bug report.");
-                    Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
-                    Console.ForegroundColor = defaultColour;
-                }
+                Console.ForegroundColor = defaultColour;
             }
         }
     }
