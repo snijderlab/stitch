@@ -1115,7 +1115,17 @@ namespace Stitch {
 
                 return outEither;
             }
-            static (string, string, string) GetAllTextPrivate(string path) {
+            public static ParseResult<string> TestFileExists(string path) {
+                var outEither = new ParseResult<string>();
+
+                var res = TestReadFile(path);
+
+                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
+                else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
+
+                return outEither;
+            }
+            static (string, string, string) TestReadFile(string path) {
                 var try_path = GetFullPathPrivate(path);
 
                 if (string.IsNullOrEmpty(try_path.Item2)) {
@@ -1123,7 +1133,8 @@ namespace Stitch {
                         return ("Could not open file", "The file given is a directory.", "");
                     } else {
                         try {
-                            return (File.ReadAllText(try_path.Item1), "", "");
+                            File.OpenRead(try_path.Item1).Close();
+                            return (try_path.Item1, "", "");
                         } catch (DirectoryNotFoundException) {
                             try {
                                 var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
@@ -1189,6 +1200,13 @@ namespace Stitch {
                 } else {
                     return (try_path.Item1, try_path.Item2, "");
                 }
+            }
+
+            static (string, string, string) GetAllTextPrivate(string path) {
+                var res = TestReadFile(path);
+                if (string.IsNullOrEmpty(res.Item2))
+                    res.Item1 = File.ReadAllText(res.Item1);
+                return res;
             }
         }
     }

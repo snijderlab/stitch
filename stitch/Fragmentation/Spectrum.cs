@@ -23,7 +23,7 @@ namespace Stitch {
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
                 var raw_file_path = directory + Path.DirectorySeparatorChar + group.Key;
-                var correct_path = InputNameSpace.ParseHelper.GetFullPath(raw_file_path);
+                var correct_path = InputNameSpace.ParseHelper.TestFileExists(raw_file_path);
                 if (!correct_path.IsErr()) {
                     try {
                         raw_file.Open(raw_file_path);

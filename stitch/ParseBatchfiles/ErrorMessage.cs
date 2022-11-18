@@ -244,14 +244,15 @@ namespace Stitch {
                     PrintRawException(e);
                 }
 
-                var defaultColour = Console.ForegroundColor;
                 if (last) {
+                    var defaultColour = Console.ForegroundColor;
+                    Console.WriteLine("Please include this entire error if you open a bug report.");
                     Console.ForegroundColor = ConsoleColor.Blue;
-                    Console.Write("Version: ");
+                    Console.Write("Stitch version: ");
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion);
-
-                    Console.WriteLine("\nPlease include this entire error if you open a bug report.");
+                    Console.ForegroundColor = defaultColour;
+                    Console.Write("Open bug reports here: ");
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.WriteLine("https://github.com/snijderlab/stitch/issues/new");
                     Console.ForegroundColor = defaultColour;
