@@ -534,7 +534,7 @@ With this option on the program will force an Isoleucine (I) if the consensus se
 
 ##### Decoy (s)
 
-Create a decoy set from all templates that were not used in the recombination. This decoy set will catch reads that do not match the recombined templates well, which would otherwise be placed there. This setting is especially useful if you have a dataset with lots of background. If `EnforceUnique` is turned on all reads will be matched to all templates, so this setting will be ineffective. Possible values: `True` and `False`. Default: `True`.
+Create a decoy set from all templates that were not used in the recombination. This decoy set will catch reads that do not match the recombined templates well, which would otherwise be placed there. This setting is especially useful if you have a dataset with lots of background. If `EnforceUnique` is turned off all reads will be matched to all templates, so this setting will be ineffective. Possible values: `True` and `False`. Default: `True`.
 
 #### Report
 
