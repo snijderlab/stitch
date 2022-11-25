@@ -92,6 +92,61 @@ namespace Stitch {
                 data[i] = f(i);
         }
 
+        /// <summary> Generate all variations of a two sized selection for the given sequence while leaving out the (A, A) case. Uses Equals inside.</summary>
+        /// <param name="data">The data.</param>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        public static IEnumerable<(T, T)> Variations<T>(this IEnumerable<T> data) {
+            return data.SelectMany(a => data.Where(b => !a.Equals(b)).Select(b => (a, b)));
+        }
+
+        /// <summary> Generate all variations of a len sized selection for the given sequence while reusing already selected options. </summary>
+        /// <param name="data">The data.</param>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        public static IEnumerable<List<T>> Variations<T>(this IEnumerable<T> data, int len) {
+            var sets = data.Select(a => new List<T> { a });
+            for (int i = 1; i <= len; i++) {
+                sets = sets.SelectMany(a => data.Select(b => new List<T>(a) { b }));
+            }
+            return sets;
+        }
+
+        /// <summary> Generate all combinations of a len sized selection for the given sequence while reusing already selected options. </summary>
+        /// <param name="data">The data.</param>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        public static IEnumerable<List<T>> Combinations<T>(this IEnumerable<T> data, int len) {
+            IEnumerable<List<T>> Recurse(List<T> set, IEnumerable<T> data, int len) {
+                return data.
+                    Select((item, index) => (item, data.Skip(index))).
+                    SelectMany(v => len == 0 ?
+                        new List<List<T>> { new List<T>(set) { v.item } } :
+                        Recurse(new List<T>(set) { v.item }, v.Item2, len - 1));
+            }
+            return data.SelectMany(a => Recurse(new List<T> { a }, data, len));
+        }
+
+        /// <summary> Generate all permutations for the given sequence while not choosing the same item again case. Uses Equals inside.</summary>
+        /// <param name="data">The data.</param>
+        /// <typeparam name="T">The type of the elements.</typeparam>
+        public static IEnumerable<IEnumerable<T>> Permutations<T>(this IEnumerable<T> data) {
+            IEnumerable<IEnumerable<T>> Recurse(IEnumerable<T> left) {
+                return left.SelectMany(v => Recurse(left.Where(i => !i.Equals(v))).Select(perm => perm.Append(v)));
+            }
+
+            return Recurse(data);
+        }
+
+        /// <summary> Integer exponentiation: https://stackoverflow.com/a/383596/5779120. </summary>
+        public static int IntPow(int x, uint pow) {
+            int ret = 1;
+            while (pow != 0) {
+                if ((pow & 1) == 1)
+                    ret *= x;
+                x *= x;
+                pow >>= 1;
+            }
+            return ret;
+        }
+
         /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
         /// <param name="template">The template sequence to use.</param>
         /// <param name="query">The query sequence to use.</param>

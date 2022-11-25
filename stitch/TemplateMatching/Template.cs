@@ -513,17 +513,17 @@ namespace Stitch {
             var error_table = MassSpecErrors.ErrorTable(this.Parent.Alphabet);
             (bool Replace, int Delete, AminoAcid[] Insert, MSErrorType Type) FindErrorAtPosition(AminoAcid[] query, AminoAcid[] template) {
                 for (int size = query.Length; size > 0; size--) {
-                    var key = query.Take(size).ToSortedAminoAcidSet();
+                    var key = query.Take(size).ToSortedAminoAcidSet(this.Parent.Alphabet);
                     if (error_table.ContainsKey(key)) {
                         var set = error_table[key];
 
                         for (int template_size = template.Length; template_size > 0; template_size--) {
-                            var template_key = template.Take(template_size).ToSortedAminoAcidSet();
+                            var template_key = template.Take(template_size).ToSortedAminoAcidSet(this.Parent.Alphabet);
                             foreach (var rule_set in set) {
                                 if (rule_set.Set.Contains(template_key)) {
                                     // First check if IS <-> LS is found because this should be categorised as I <-> L
-                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap());
-                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap());
+                                    var set_is = new AminoAcidSet(AminoAcid.FromString("IS", Parent.Alphabet).Unwrap(), this.Parent.Alphabet);
+                                    var set_ls = new AminoAcidSet(AminoAcid.FromString("LS", Parent.Alphabet).Unwrap(), this.Parent.Alphabet);
                                     if ((key == set_is || key == set_ls) && (template_key == set_is || template_key == set_ls) && query[0].Character != 'S') {
                                         // The current position is I or L
                                         return (true, 1, new AminoAcid[] { template[0] }, rule_set.Type);

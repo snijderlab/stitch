@@ -12,8 +12,10 @@ namespace StitchTest {
     [TestClass]
     public class SmithWaterman_Test {
         readonly Alphabet alp;
+        readonly Alphabet genomic_alp;
         public SmithWaterman_Test() {
-            alp = new Alphabet("*;A;B;C;D\nA;1;0;0;0\nB;0;1;0;0\nC;0;0;1;0\nD;0;0;0;1", Alphabet.AlphabetParamType.Data, 2, 1);
+            alp = new Alphabet("*;A;B;C;D;.\nA;1;0;0;0;0\nB;0;1;0;0;0\nC;0;0;1;0;0\nD;0;0;0;1;0\n.;0;0;0;0;0", Alphabet.AlphabetParamType.Data, 2, 1);
+            genomic_alp = new Alphabet("*;A;C;G;T;.\nA;5;-4;-4;-4;0\nC;-4;5;-4;-4;0\nG;-4;-4;5;-4;0\nT;-4;-4;-4;5;0\n.;0;0;0;0;0", Alphabet.AlphabetParamType.Data, 1, 2);
         }
         [DataRow("CAAAACCCABBC", "CAAAACDCCABBC")]
         [DataRow("CCCBAAACACBB", "CCCBAADACACBB")]
@@ -121,34 +123,32 @@ namespace StitchTest {
             Assert.AreEqual(0, r.StartQueryPosition);
             Assert.AreEqual("4M1I6M", r.QuerySequence.Alignment.CIGAR());
         }
-        [TestMethod]
-        public void GenomicTest01() {
-            // I have not found the right value yet
-            // Random sequences
-            var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 10, 10);
-            var a = StringToSequence("GGTGCCGACCGCGGACTGCT", alp);
-            var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
-            Console.WriteLine(r.ToString());
-            Assert.AreEqual(21, r.Score);
-            Assert.AreEqual(8, r.StartTemplatePosition);
-            Assert.AreEqual(0, r.StartQueryPosition);
-            Assert.AreEqual("6M", r.QuerySequence.Alignment.CIGAR());
-        }
-        [TestMethod]
-        public void GenomicTest02() {
-            // I have not found the right value yet
-            // Random sequences
-            var alp = new Alphabet("*;A;C;G;T\nA;5;-4;-4;-4\nC;-4;5;-4;-4\nG;-4;-4;5;-4\nT;-4;-4;-4;5", Alphabet.AlphabetParamType.Data, 1, 2);
-            var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", alp);
-            var b = StringToSequence("TGTCGTCATAGTTTGGGCATGTTTCCCTTGTAGGTGTGAAATCACTTAGC", alp);
-            var r = HelperFunctionality.SmithWaterman(a, b, alp);
-            Console.WriteLine(r.ToString());
-            Assert.AreEqual(112, r.Score);
-            Assert.AreEqual(0, r.StartTemplatePosition);
-            Assert.AreEqual(2, r.StartQueryPosition);
-            Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.QuerySequence.Alignment.CIGAR());
-        }
+        //[TestMethod]
+        //public void GenomicTest01() {
+        //    // I have not found the right value yet
+        //    // Random sequences
+        //    var a = StringToSequence("GGTGCCGACCGCGGACTGCT", genomic_alp);
+        //    var b = StringToSequence("CCCCGGGTGTGGCTCCTTCA", genomic_alp);
+        //    var r = HelperFunctionality.SmithWaterman(a, b, genomic_alp);
+        //    Console.WriteLine(r.ToString());
+        //    Assert.AreEqual(21, r.Score);
+        //    Assert.AreEqual(8, r.StartTemplatePosition);
+        //    Assert.AreEqual(0, r.StartQueryPosition);
+        //    Assert.AreEqual("6M", r.QuerySequence.Alignment.CIGAR());
+        //}
+        //[TestMethod]
+        //public void GenomicTest02() {
+        //    // I have not found the right value yet
+        //    // Random sequences
+        //    var a = StringToSequence("TCTGACAACGTGCAACCGCTATCGCCATCGATTGATTCAGCGGACGGTGT", genomic_alp);
+        //    var b = StringToSequence("TGTCGTCATAGTTTGGGCATGTTTCCCTTGTAGGTGTGAAATCACTTAGC", genomic_alp);
+        //    var r = HelperFunctionality.SmithWaterman(a, b, genomic_alp);
+        //    Console.WriteLine(r.ToString());
+        //    Assert.AreEqual(112, r.Score);
+        //    Assert.AreEqual(0, r.StartTemplatePosition);
+        //    Assert.AreEqual(2, r.StartQueryPosition);
+        //    Assert.AreEqual("2M1D1M1D1I2M1I1M1D2M2I1M2I2M1I3D1M1D1M1D1M1I1M1D2M1D1M1I1D1M1I1M2I1M1I3M1I1D1I3M1D1M1I1D1I1D1M1I1M", r.QuerySequence.Alignment.CIGAR());
+        //}
         [TestMethod]
         public void LongerSequence() {
             // Shuffled the sequence a bit

@@ -13,15 +13,17 @@ namespace Stitch {
         /// <value> The code of this AminoAcid. </value>
         public readonly char Character;
 
-        [JsonIgnore]
-        /// <summary> The alphabet used. </summary>
-        public Alphabet Alphabet;
-
         /// <summary> The creator of AminoAcids. </summary>
         /// <param name="alphabet"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
         public AminoAcid(Alphabet alphabet, char input) {
-            Alphabet = alphabet;
+            if (alphabet.GetIndexInAlphabet(input) == -1) throw new ArgumentException("Invalid AminoAcid");
+            Character = input;
+        }
+
+        /// <summary> The unsafe creator of AminoAcids. </summary>
+        /// <param name="input"> The character to store in this AminoAcid. </param>
+        AminoAcid(char input) {
             Character = input;
         }
 
@@ -39,6 +41,22 @@ namespace Stitch {
                     return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fallback_context ?? input.ToString(), "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
             else
                 return new ParseResult<AminoAcid>(new AminoAcid(alphabet, input));
+        }
+
+        /// <summary> Create a new aminoacid while creating nice error messages if this was not possible. </summary>
+        /// <param name="alphabet"> The alphabet to use. </param>
+        /// <param name="input"> The amino acid as a char. </param>
+        /// <param name="position"> If possible the location where this amino acids was defined to create nicer error messages. </param>
+        /// <param name="fallback_context"> If possible a fallback to the above position to use if the position could not be given. </param>
+        /// <returns> The aminoacid or an error message. </returns>
+        public static ParseResult<AminoAcid> TryCreate(FancyAlphabet alphabet, char input, FileRange? position = null, string fallback_context = null) {
+            if (!alphabet.Contains(input))
+                if (position is FileRange fr)
+                    return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fr, "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
+                else
+                    return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fallback_context ?? input.ToString(), "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
+            else
+                return new ParseResult<AminoAcid>(new AminoAcid(input));
         }
 
         /// <summary> Will create a string of this AminoAcid. Consisting of the character used to
@@ -70,6 +88,21 @@ namespace Stitch {
             outEither.Value = output;
             for (int i = 0; i < input.Length; i++) {
                 output[i] = TryCreate(alphabet, input[i], position, input).UnwrapOrDefault(outEither, new AminoAcid(alphabet, Stitch.Alphabet.GapChar));
+            }
+            return outEither;
+        }
+
+        /// <summary> Create an array of aminoacids from the given string. </summary>
+        /// <param name="input"> The string to parse. </param>
+        /// <param name="alphabet"> The alphabet to use. </param>
+        /// <param name="position"> If possible the position where this sequence was defined to provide nicer error messages. </param>
+        /// <returns> The array or a nice error message. </returns>
+        public static ParseResult<AminoAcid[]> FromString(string input, FancyAlphabet alphabet, FileRange? position = null) {
+            var outEither = new ParseResult<AminoAcid[]>();
+            AminoAcid[] output = new AminoAcid[input.Length];
+            outEither.Value = output;
+            for (int i = 0; i < input.Length; i++) {
+                output[i] = TryCreate(alphabet, input[i], position, input).UnwrapOrDefault(outEither, new AminoAcid(Stitch.Alphabet.GapChar));
             }
             return outEither;
         }
@@ -138,9 +171,9 @@ namespace Stitch {
         /// <c>b.Homology(a)</c>. </remarks>
         /// <param name="right"> The other AminoAcid to use. </param>
         /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-        public int Homology(AminoAcid right, Alphabet otherAlphabet = null) {
+        public int Homology(AminoAcid right, Alphabet alphabet) {
             try {
-                return (otherAlphabet ?? Alphabet).ScoringMatrix[Alphabet.PositionInScoringMatrix[this.Character], Alphabet.PositionInScoringMatrix[right.Character]];
+                return alphabet.ScoringMatrix[alphabet.PositionInScoringMatrix[this.Character], alphabet.PositionInScoringMatrix[right.Character]];
             } catch {
                 (new InputNameSpace.ErrorMessage($"{this.Character} or {right.Character}", "Amino Acid could not be found", "Got an error while looking up the homology for these aminoacids probably there is one (or more) character that is not valid.")).Print();
                 throw;

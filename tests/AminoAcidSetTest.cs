@@ -18,12 +18,12 @@ namespace StitchTest {
         [TestMethod]
         public void Creation() {
             var aa = new AminoAcid[] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'A') };
-            var set = new AminoAcidSet(aa);
+            var set = new AminoAcidSet(aa, alp);
             Console.WriteLine(set);
             Assert.AreEqual(0b000001_000001u, set.Value);
 
             aa = new AminoAcid[] { new AminoAcid(alp, 'B'), new AminoAcid(alp, 'B') };
-            set = new AminoAcidSet(aa);
+            set = new AminoAcidSet(aa, alp);
             Console.WriteLine(set);
             Assert.AreEqual(0b000010_000010u, set.Value);
         }
@@ -32,15 +32,15 @@ namespace StitchTest {
         public void Sort() {
             var ab = new AminoAcid[] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B') };
             var ba = new AminoAcid[] { new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A') };
-            Assert.AreEqual(ab.ToSortedAminoAcidSet(), ba.ToSortedAminoAcidSet());
+            Assert.AreEqual(ab.ToSortedAminoAcidSet(alp), ba.ToSortedAminoAcidSet(alp));
         }
 
         [TestMethod]
         public void TooBig() {
             var perfect = new AminoAcid[10] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B') };
             var too_big = new AminoAcid[11] { new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A'), new AminoAcid(alp, 'B'), new AminoAcid(alp, 'A') };
-            perfect.ToSortedAminoAcidSet();
-            Assert.ThrowsException<ArgumentException>(() => too_big.ToSortedAminoAcidSet());
+            perfect.ToSortedAminoAcidSet(alp);
+            Assert.ThrowsException<ArgumentException>(() => too_big.ToSortedAminoAcidSet(alp));
         }
     }
 }

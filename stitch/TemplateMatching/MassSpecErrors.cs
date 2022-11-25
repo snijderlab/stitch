@@ -54,7 +54,7 @@ namespace Stitch {
                 Add(key, type, new HashSet<AminoAcidSet> { set });
             }
 
-            var combinations = IsoMassSets.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap())));
+            var combinations = IsoMassSets.Select(l => l.Split(',').Select(s => new AminoAcidSet(AminoAcid.FromString(s, alphabet).Unwrap(), alphabet)));
 
             foreach (var group in combinations) {
                 foreach (var element in group) {
@@ -63,7 +63,7 @@ namespace Stitch {
             }
 
             foreach (var rule in Modifications) {
-                AddSingle(new AminoAcidSet(AminoAcid.FromString(rule.Prior, alphabet).Unwrap()), rule.Type, new AminoAcidSet(AminoAcid.FromString(rule.Posterior, alphabet).Unwrap()));
+                AddSingle(new AminoAcidSet(AminoAcid.FromString(rule.Prior, alphabet).Unwrap(), alphabet), rule.Type, new AminoAcidSet(AminoAcid.FromString(rule.Posterior, alphabet).Unwrap(), alphabet));
             }
 
             return output;
@@ -82,8 +82,8 @@ namespace Stitch {
         /// <summary> Create a sorted amino acid set from data. </summary>
         /// <param name="data"> The old array. </param>
         /// <returns> Returns an amino acid set which contains the data sorted. </returns>
-        public static AminoAcidSet ToSortedAminoAcidSet(this IEnumerable<AminoAcid> data) {
-            return new AminoAcidSet(data.Sort());
+        public static AminoAcidSet ToSortedAminoAcidSet(this IEnumerable<AminoAcid> data, Alphabet alphabet) {
+            return new AminoAcidSet(data.Sort(), alphabet);
         }
 
         public static string Description(this MSErrorType error) {
@@ -107,10 +107,10 @@ namespace Stitch {
         public readonly uint Value = 0;
         const int width = 6;
 
-        public AminoAcidSet(AminoAcid[] set) {
+        public AminoAcidSet(AminoAcid[] set, Alphabet alphabet) {
             if (set.Length > 10) throw new ArgumentException("AminoAcidSets cannot be generated for set with more than 10 elements.");
             for (int i = 0; i < set.Length; i++) {
-                uint index = set[i].Alphabet.GetIndexInAlphabet(set[i].Character) < 0 ? 0 : (uint)set[i].Alphabet.GetIndexInAlphabet(set[i].Character) + 1u;
+                uint index = alphabet.GetIndexInAlphabet(set[i].Character) < 0 ? 0 : (uint)alphabet.GetIndexInAlphabet(set[i].Character) + 1u;
                 uint element = index << (i * width);
                 Value = Value | element;
             }

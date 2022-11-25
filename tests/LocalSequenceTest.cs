@@ -9,7 +9,7 @@ namespace StitchTest {
 
         readonly Alphabet alp;
         public LocalSequenceTest() {
-            alp = new Alphabet("*;A;B\nA;1;0\nB;0;1", Alphabet.AlphabetParamType.Data, 12, 1);
+            alp = new Alphabet("*;A;B;.\nA;1;0;0\nB;0;1;0\n.;0;0;0", Alphabet.AlphabetParamType.Data, 12, 1);
         }
 
         [TestMethod]
