@@ -31,7 +31,7 @@ namespace Stitch {
             this.step_b = step_b;
         }
 
-        public string Short() {
+        public string ShortPath() {
             return (this.step_a, this.step_b) switch {
                 (0, 1) => "I",
                 (1, 0) => "D",
@@ -129,8 +129,8 @@ namespace Stitch {
             this.start_b = high.index_b;
         }
 
-        public string Short() {
-            return String.Join("", this.path.Select(p => p.Short()));
+        public string ShortPath() {
+            return String.Join("", this.path.Select(p => p.ShortPath()));
         }
 
         string Aligned() {
@@ -148,12 +148,12 @@ namespace Stitch {
                 if (piece.step_a == 0) {
                     str_a.Append(new string('-', l));
                 } else {
-                    str_a.Append(AminoAcid.ArrayToString(this.read_a.Sequence.Sequence.SubArray(loc_a, piece.step_a)).PadLeft(l, '-'));
+                    str_a.Append(AminoAcid.ArrayToString(this.read_a.Sequence.Sequence.SubArray(loc_a, piece.step_a)).PadLeft(l, '·'));
                 }
                 if (piece.step_b == 0) {
                     str_b.Append(new string('-', l));
                 } else {
-                    str_b.Append(AminoAcid.ArrayToString(this.read_b.Sequence.Sequence.SubArray(loc_b, piece.step_b)).PadLeft(l, '-'));
+                    str_b.Append(AminoAcid.ArrayToString(this.read_b.Sequence.Sequence.SubArray(loc_b, piece.step_b)).PadLeft(l, '·'));
                 }
                 str_blocks.Append(piece.local_score < 0 ? new string(' ', l) : new string(blocks[piece.local_score], l));
                 str_blocks_neg.Append(piece.local_score >= 0 ? new string(' ', l) : new string(blocks_neg[-piece.local_score], l));
@@ -165,7 +165,7 @@ namespace Stitch {
         }
 
         public string Summary() {
-            return $"score: {score}\npath: {Short()}\nstart: ({start_a}, {start_b})\naligned:\n{Aligned()}";
+            return $"score: {score}\npath: {ShortPath()}\nstart: ({start_a}, {start_b})\naligned:\n{Aligned()}";
         }
     }
 }

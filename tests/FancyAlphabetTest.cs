@@ -31,6 +31,24 @@ namespace StitchTest {
         }
 
         [TestMethod]
+        public void Index() {
+            var a = AminoAcid.FromString("A", alphabet).Unwrap();
+            var c = AminoAcid.FromString("C", alphabet).Unwrap();
+            var aa = AminoAcid.FromString("AA", alphabet).Unwrap();
+            var aaa = AminoAcid.FromString("AAA", alphabet).Unwrap();
+            Assert.AreNotEqual(0, alphabet.Index(a));
+            Assert.AreNotEqual(0, alphabet.Index(c));
+            Assert.AreNotEqual(0, alphabet.Index(aa));
+            Assert.AreNotEqual(0, alphabet.Index(aaa));
+            Assert.AreEqual(alphabet.Index(a), alphabet.Index(a));
+            Assert.AreNotEqual(alphabet.Index(a), alphabet.Index(c));
+            Assert.AreEqual(alphabet.Index(aa), alphabet.Index(aa));
+            Assert.AreEqual(alphabet.Index(aaa), alphabet.Index(aaa));
+            Assert.AreNotEqual(alphabet.Index(a), alphabet.Index(aaa));
+            Assert.AreNotEqual(alphabet.Index(aa), alphabet.Index(aaa));
+        }
+
+        [TestMethod]
         public void Similarity() {
             Assert.AreEqual(5, alphabet.Score(AA("L"), AA("I")));
             Assert.AreEqual(5, alphabet.Score(AA("I"), AA("L")));

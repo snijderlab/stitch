@@ -21,7 +21,7 @@ namespace StitchTest {
             Assert.AreEqual(40, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMMMM", result.Short());
+            Assert.AreEqual("MMMMM", result.ShortPath());
         }
 
         [TestMethod]
@@ -33,7 +33,7 @@ namespace StitchTest {
             Assert.AreEqual(27, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMIMM", result.Short());
+            Assert.AreEqual("MMIMM", result.ShortPath());
         }
 
         [TestMethod]
@@ -45,7 +45,7 @@ namespace StitchTest {
             Assert.AreEqual(27, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMDMM", result.Short());
+            Assert.AreEqual("MMDMM", result.ShortPath());
         }
 
         [TestMethod]
@@ -58,7 +58,7 @@ namespace StitchTest {
             Assert.AreEqual(29, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMS[1,2]MM", result.Short());
+            Assert.AreEqual("MMS[1,2]MM", result.ShortPath());
         }
 
         [TestMethod]
@@ -71,7 +71,7 @@ namespace StitchTest {
             Assert.AreEqual(28, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MS[2,2]MM", result.Short());
+            Assert.AreEqual("MS[2,2]MM", result.ShortPath());
         }
 
         [TestMethod]
@@ -84,7 +84,7 @@ namespace StitchTest {
             Assert.AreEqual(24, result.score);
             Assert.AreEqual(1, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMM", result.Short());
+            Assert.AreEqual("MMM", result.ShortPath());
         }
 
         [TestMethod]
@@ -97,7 +97,7 @@ namespace StitchTest {
             Assert.AreEqual(13, result.score);
             Assert.AreEqual(0, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("DMMDM", result.Short());
+            Assert.AreEqual("DMMDM", result.ShortPath());
         }
 
         [TestMethod]
@@ -110,7 +110,7 @@ namespace StitchTest {
             Assert.AreEqual(23, result.score);
             Assert.AreEqual(1, result.start_a);
             Assert.AreEqual(0, result.start_b);
-            Assert.AreEqual("MMMM", result.Short());
+            Assert.AreEqual("MMMM", result.ShortPath());
         }
     }
 }

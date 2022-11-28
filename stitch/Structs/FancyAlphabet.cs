@@ -10,7 +10,7 @@ namespace Stitch {
         [JsonIgnore]
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet.
         /// As such this matrix is rectangular. </summary>
-        readonly sbyte[,] ScoringMatrix;
+        sbyte[,] ScoringMatrix;
 
         /// <summary> The position for each possible amino acid in the ScoringMatrix for fast lookups. </summary>
         readonly Dictionary<char, int> PositionInScoringMatrix;
@@ -35,7 +35,7 @@ namespace Stitch {
             return ScoringMatrix[Index(a), Index(b)];
         }
 
-        int Index(AminoAcid[] data) {
+        public int Index(AminoAcid[] data) {
             var index = 0;
             foreach (var d in data) {
                 index *= AlphabetSize;
@@ -58,6 +58,7 @@ namespace Stitch {
         }
 
         public static FancyAlphabet IdentityMatrix(List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
+            alphabet.Insert(0, ' ');
             var matrix = new sbyte[alphabet.Count, alphabet.Count];
             for (int x = 0; x < alphabet.Count; x++)
                 for (int y = 0; y < alphabet.Count; y++)
