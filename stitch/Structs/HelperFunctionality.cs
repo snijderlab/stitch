@@ -104,7 +104,7 @@ namespace Stitch {
         /// <typeparam name="T">The type of the elements.</typeparam>
         public static IEnumerable<List<T>> Variations<T>(this IEnumerable<T> data, int len) {
             var sets = data.Select(a => new List<T> { a });
-            for (int i = 1; i <= len; i++) {
+            for (int i = 1; i < len; i++) {
                 sets = sets.SelectMany(a => data.Select(b => new List<T>(a) { b }));
             }
             return sets;
@@ -117,11 +117,11 @@ namespace Stitch {
             IEnumerable<List<T>> Recurse(List<T> set, IEnumerable<T> data, int len) {
                 return data.
                     Select((item, index) => (item, data.Skip(index))).
-                    SelectMany(v => len == 0 ?
+                    SelectMany(v => len == 1 ?
                         new List<List<T>> { new List<T>(set) { v.item } } :
                         Recurse(new List<T>(set) { v.item }, v.Item2, len - 1));
             }
-            return data.SelectMany(a => Recurse(new List<T> { a }, data, len));
+            return data.SelectMany(a => Recurse(new List<T> { a }, data, len - 1));
         }
 
         /// <summary> Generate all permutations for the given sequence while not choosing the same item again case. Uses Equals inside.</summary>
@@ -129,6 +129,7 @@ namespace Stitch {
         /// <typeparam name="T">The type of the elements.</typeparam>
         public static IEnumerable<IEnumerable<T>> Permutations<T>(this IEnumerable<T> data) {
             IEnumerable<IEnumerable<T>> Recurse(IEnumerable<T> left) {
+                if (left.Count() == 1) return new List<IEnumerable<T>> { left };
                 return left.SelectMany(v => Recurse(left.Where(i => !i.Equals(v))).Select(perm => perm.Append(v)));
             }
 

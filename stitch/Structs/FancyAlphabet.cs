@@ -84,8 +84,10 @@ namespace Stitch {
             // Set all symmetric similar sets, used for iso mass in the normal case
             foreach (var set in symmetric_similar.sets) {
                 foreach ((var a, var b) in set.Where(s => s.Count <= size).Variations()) {
-                    foreach (var perm_a in a.Permutations()) {
-                        foreach (var perm_b in b.Permutations()) {
+                    var perms_a = a.Permutations();
+                    var perms_b = b.Permutations();
+                    foreach (var perm_a in perms_a) {
+                        foreach (var perm_b in perms_b) {
                             this.SetScore(perm_a, perm_b, symmetric_similar.score);
                         }
                     }
@@ -96,8 +98,10 @@ namespace Stitch {
             foreach (var set in asymmetric_similar.sets) {
                 foreach (var a in set.from.Where(s => s.Count <= size)) {
                     foreach (var b in set.to.Where(s => s.Count <= size)) {
-                        foreach (var perm_a in a.Permutations()) {
-                            foreach (var perm_b in b.Permutations()) {
+                        var perms_a = a.Permutations();
+                        var perms_b = b.Permutations();
+                        foreach (var perm_a in perms_a) {
+                            foreach (var perm_b in perms_b) {
                                 this.SetScore(perm_a, perm_b, asymmetric_similar.score);
                             }
                         }
@@ -108,13 +112,11 @@ namespace Stitch {
             if (swap != 0) {
                 // Set all swap scores by taking all possible combinations whit at least two different items.
                 // Generate all possible permutations for these combinations.
-                for (int len = 2; len <= size; len++) {
+                for (int len = size; len >= 2; len--) {
                     foreach (var set in alphabet.Combinations(len).Where(s => !s.All(i => i == s.First()))) {
-                        foreach (var perm1 in set.Permutations()) {
-                            foreach (var perm2 in set.Permutations()) {
-                                if (perm1 == perm2) continue;
-                                this.SetScore(perm1, perm2, (sbyte)(set.Count * (int)swap));
-                            }
+                        foreach (var perm in set.Permutations()) {
+                            this.SetScore(set, perm, (sbyte)(len * (int)swap));
+                            this.SetScore(perm, set, (sbyte)(len * (int)swap));
                         }
                     }
                 }

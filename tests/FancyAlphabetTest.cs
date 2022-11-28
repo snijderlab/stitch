@@ -55,5 +55,21 @@ namespace StitchTest {
             Assert.AreEqual(5, alphabet.Score(AA("N"), AA("GG")));
             Assert.AreEqual(5, alphabet.Score(AA("GG"), AA("N")));
         }
+
+        [TestMethod]
+        public void Nonidentity() {
+            Assert.AreEqual(0, alphabet.Score(AA("AA"), AA("CC")));
+            Assert.AreEqual(0, alphabet.Score(AA("Q"), AA("GG")));
+            Assert.AreEqual(0, alphabet.Score(AA("QA"), AA("AVA")));
+            Assert.AreEqual(0, alphabet.Score(AA("Q"), AA("AVA")));
+        }
+
+        [TestMethod]
+        public void Switched() {
+            Assert.AreEqual(4, alphabet.Score(AA("AC"), AA("CA")));
+            Assert.AreEqual(4, alphabet.Score(AA("QA"), AA("AQ")));
+            Assert.AreEqual(6, alphabet.Score(AA("AAV"), AA("AVA")));
+            Assert.AreEqual(6, alphabet.Score(AA("VAA"), AA("AAV")));
+        }
     }
 }
