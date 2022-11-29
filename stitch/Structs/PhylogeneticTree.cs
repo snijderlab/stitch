@@ -137,14 +137,14 @@ namespace Stitch {
             public readonly Tree<string> OriginalTree;
             public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea, string Name)> DataTree;
 
-            public ProteinHierarchyTree(Tree<string> tree, List<SequenceMatch> matches) {
+            public ProteinHierarchyTree(Tree<string> tree, List<FancyAlignment> matches) {
                 OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(
                         (left, right) => (left.Item1.Union(right.Item1).ToList(), ""),
                         (index, _) => (new List<int> { index }, branch.Value)));
 
-                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.Query.Identifier).Select(group => (group.Key, group.Select(match => match.TemplateIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().QuerySequence.TotalMatches, group.First().Query.TotalArea)).ToList();
+                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.ReadB.Identifier).Select(group => (group.Key, group.Select(match => match.ReadAIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().GetDetailedScores().Similar, group.First().ReadA.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all

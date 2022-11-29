@@ -56,7 +56,7 @@ namespace Stitch {
         public int UniqueMatches = 0;
 
         /// <summary> The list of matches on this template. </summary>
-        public List<SequenceMatch> Matches;
+        public List<FancyAlignment> Matches;
 
         /// <summary> If this template is recombinated these are the templates it consists of. </summary>
         public readonly List<Template> Recombination;
@@ -84,7 +84,7 @@ namespace Stitch {
             Sequence = seq;
             MetaData = meta;
             score = 0;
-            Matches = new List<SequenceMatch>();
+            Matches = new List<FancyAlignment>();
             Recombination = recombination;
             Location = location;
             Parent = parent;
@@ -94,18 +94,18 @@ namespace Stitch {
         /// <summary> Adds a new match to the list of matches, if the score is above the cutoff. </summary>
         /// <param name="match">The match to add</param>
         /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
-        public void AddMatch(SequenceMatch match, bool unique = false) {
+        public void AddMatch(FancyAlignment match, bool unique = false) {
             lock (Matches) {
-                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.QuerySequence.Sequence.Length) && !match.AllGap()) {
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.ReadB.Sequence.Length)) {
                     score += match.Score;
-                    TotalArea += match.Query.TotalArea;
+                    TotalArea += match.ReadB.TotalArea;
                     Matches.Add(match);
 
                     if (unique) {
                         this.ForcedOnSingleTemplate = true;
                         match.Unique = true;
                         uniqueScore += match.Score;
-                        TotalUniqueArea += match.Query.TotalArea;
+                        TotalUniqueArea += match.ReadB.TotalArea;
                         UniqueMatches++;
                     }
                 }
@@ -173,7 +173,7 @@ namespace Stitch {
         public List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)> AlignedSequences() {
             if (alignedSequencesCache != null) return alignedSequencesCache;
 
-            Matches.Sort((a, b) => b.QuerySequence.TotalMatches.CompareTo(a.QuerySequence.TotalMatches)); // So the longest match will be at the top
+            Matches.Sort((a, b) => b.GetDetailedScores().Similar.CompareTo(a.GetDetailedScores().Similar)); // So the longest match will be at the top
 
             // Add all the positions
             var output = new List<((int MatchIndex, int SequencePosition, double CoverageDepth, int ContigID)[] Sequences, (int MatchIndex, IGap Gap, double[] CoverageDepth, int ContigID, bool InSequence)[] Gaps)>(Sequence.Length);
@@ -378,12 +378,12 @@ namespace Stitch {
 
         /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
-        public SequenceMatch AlignConsensusWithTemplate() {
+        public FancyAlignment AlignConsensusWithTemplate() {
             var consensus = new Read.Simple(this.ConsensusSequence().Item1.ToArray());
             if (Recombination != null)
-                return HelperFunctionality.SmithWaterman(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet);
+                return new FancyAlignment(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
             else
-                return HelperFunctionality.SmithWaterman(this.MetaData, consensus, Parent.Alphabet);
+                return new FancyAlignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
         }
 
         /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>
@@ -392,7 +392,7 @@ namespace Stitch {
             if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
 
             var match = this.AlignConsensusWithTemplate();
-            var annotation = new List<Annotation>(match.QuerySequence.LengthOnQuery);
+            var annotation = new List<Annotation>(match.GetDetailedScores().LenB);
 
             List<(Annotation, string)> annotated = null;
             if (this.Recombination != null) {
@@ -414,7 +414,7 @@ namespace Stitch {
                 int pos = -1;
                 for (int i = 0; i < annotated.Count; i++) {
                     pos += annotated[i].Item2.Length;
-                    if (pos >= position + match.StartTemplatePosition)
+                    if (pos >= position + match.StartB)
                         return annotated[i].Item1;
                 }
                 return Annotation.None;
@@ -423,7 +423,7 @@ namespace Stitch {
             var columns = new List<(char Template, char Query, char Difference, string Class)>();
             int query_pos = 0;
             int template_pos = 0;
-            foreach (var piece in match.QuerySequence.Alignment) {
+            foreach (var piece in match.Path) {
                 switch (piece) {
                     case SequenceMatch.Match m:
                         for (int i = 0; i < m.Length; i++) {

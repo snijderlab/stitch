@@ -47,12 +47,15 @@ namespace Stitch {
         public readonly int StartA;
         public readonly int StartB;
         public readonly Read.IRead ReadA;
+        public readonly int ReadAIndex;
         public readonly Read.IRead ReadB;
+        public bool Unique;
 
-        public FancyAlignment(Read.IRead read_a, Read.IRead read_b, FancyAlphabet alphabet, AlignmentType type) {
+        public FancyAlignment(Read.IRead read_a, Read.IRead read_b, FancyAlphabet alphabet, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.Sequence;
             var seq_b = read_b.Sequence.Sequence;
             this.ReadA = read_a;
+            this.ReadAIndex = readAIndex;
             this.ReadB = read_b;
             var matrix = new AlignmentPiece[seq_a.Length + 1, seq_b.Length + 1];
             (int score, int index_a, int index_b) high = (0, 0, 0);

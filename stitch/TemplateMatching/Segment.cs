@@ -67,12 +67,12 @@ namespace Stitch {
         }
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, SequenceMatch Match)>> Match(List<Read.IRead> sequences) {
-            var output = new List<List<(int TemplateIndex, SequenceMatch Match)>>(sequences.Count);
+        public List<List<(int TemplateIndex, FancyAlignment Match)>> Match(List<Read.IRead> sequences) {
+            var output = new List<List<(int TemplateIndex, FancyAlignment Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++) {
-                var row = new List<(int TemplateIndex, SequenceMatch Match)>(Templates.Count);
+                var row = new List<(int TemplateIndex, FancyAlignment Match)>(Templates.Count);
                 for (int i = 0; i < Templates.Count; i++) {
-                    row.Add((i, HelperFunctionality.SmithWaterman(Templates[i].MetaData, sequences[j], Alphabet, j, i)));
+                    row.Add((i, new FancyAlignment(Templates[i].MetaData, sequences[j], Alphabet, AlignmentType.GlobalForB, i)));
                 }
                 output.Add(row);
             }
