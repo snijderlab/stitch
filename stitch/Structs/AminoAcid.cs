@@ -21,6 +21,14 @@ namespace Stitch {
             Character = input;
         }
 
+        /// <summary> The creator of AminoAcids. </summary>
+        /// <param name="alphabet"> The alphabet used. </param>
+        /// <param name="input"> The character to store in this AminoAcid. </param>
+        public AminoAcid(FancyAlphabet alphabet, char input) {
+            if (!alphabet.Contains(input)) throw new ArgumentException("Invalid AminoAcid");
+            Character = input;
+        }
+
         /// <summary> The unsafe creator of AminoAcids. </summary>
         /// <param name="input"> The character to store in this AminoAcid. </param>
         AminoAcid(char input) {
@@ -180,6 +188,22 @@ namespace Stitch {
             }
         }
 
+        /// <summary> Calculates homology between this and another AminoAcid, using the given alphabet.
+        /// See <see cref="Alphabet"/>. </summary>
+        /// <remarks> Depending on which rules are put into the scoring matrix the order in which this
+        /// function is evaluated could differ. <c>a.Homology(b)</c> does not have to be equal to
+        /// <c>b.Homology(a)</c>. </remarks>
+        /// <param name="right"> The other AminoAcid to use. </param>
+        /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
+        public int Homology(AminoAcid right, FancyAlphabet alphabet) {
+            try {
+                return alphabet.Score(new AminoAcid[] { this }, new AminoAcid[] { right });
+            } catch {
+                (new InputNameSpace.ErrorMessage($"{this.Character} or {right.Character}", "Amino Acid could not be found", "Got an error while looking up the homology for these aminoacids probably there is one (or more) character that is not valid.")).Print();
+                throw;
+            }
+        }
+
         /// <summary> Calculating homology between two arrays of AminoAcids, using the scoring matrix
         /// of the parent Assembler. </summary>
         /// <remarks> Two arrays of different length will result in a value of 0. This function loops
@@ -188,6 +212,23 @@ namespace Stitch {
         /// <param name="right"> The second object to calculate homology with. </param>
         /// <returns> Returns the homology between the two aminoacid arrays. </returns>
         public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right, Alphabet alphabet = null) {
+            int score = 0;
+            if (left.Length != right.Length)
+                return 0;
+            for (int i = 0; i < left.Length; i++) {
+                score += left[i].Homology(right[i], alphabet);
+            }
+            return score;
+        }
+
+        /// <summary> Calculating homology between two arrays of AminoAcids, using the scoring matrix
+        /// of the parent Assembler. </summary>
+        /// <remarks> Two arrays of different length will result in a value of 0. This function loops
+        /// over the AminoAcids and returns the sum of the homology value between those. </remarks>
+        /// <param name="left"> The first object to calculate homology with. </param>
+        /// <param name="right"> The second object to calculate homology with. </param>
+        /// <returns> Returns the homology between the two aminoacid arrays. </returns>
+        public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right, FancyAlphabet alphabet = null) {
             int score = 0;
             if (left.Length != right.Length)
                 return 0;

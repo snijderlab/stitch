@@ -146,11 +146,10 @@ namespace Stitch {
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
                         var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
                         var query = new Read.Simple(result.ConsensusSequence().Item1.ToArray());
-                        var match = HelperFunctionality.SmithWaterman(template, query, result.Parent.Alphabet);
-                        var details = match.GetDetailedScores();
+                        var match = new FancyAlignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.QuerySequence.Alignment.CIGAR()));
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", ((double)details.Matches / (details.Matches + details.MisMatches + details.GapInQuery + details.GapInTemplate) * 100).ToString("G3")));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.ShortPath()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.Identity() * 100).ToString("G3")));
                     }
 
                     // Add this information to the file, appending where needed while keeping the format correct. Note: the list will not be closed this will need to be done afterwards.
@@ -172,7 +171,7 @@ namespace Stitch {
                     var current_group = new List<Segment>();
                     for (int j = 0; j < TemplateMatching.Segments[i].Segments.Count; j++) {
                         var segment = TemplateMatching.Segments[i].Segments[j];
-                        var alph = new Alphabet(segment.Alphabet ?? TemplateMatching.Alphabet);
+                        var alph = segment.Alphabet ?? TemplateMatching.Alphabet;
                         current_group.Add(new Segment(segment.Templates, alph, segment.Name, segment.CutoffScore == 0 ? TemplateMatching.CutoffScore : segment.CutoffScore, j, TemplateMatching.ForceGermlineIsoleucine, segment.Scoring));
                     }
                     segments.Add((TemplateMatching.Segments[i].Name, current_group));
@@ -226,7 +225,7 @@ namespace Stitch {
                 var matches = new List<List<(int GroupIndex, int, int TemplateIndex, SequenceMatch Match)>>(Input.Count);
                 for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, SequenceMatch)>());
 
-                var alph = new Alphabet(Recombine.Alphabet ?? TemplateMatching.Alphabet);
+                var alph = Recombine.Alphabet ?? TemplateMatching.Alphabet;
                 var name_filter = new NameFilter();
                 bool forceGermlineIsoleucine = HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine);
 
@@ -309,14 +308,12 @@ namespace Stitch {
                         recombined_segment[match.GroupIndex].Templates[match.TemplateIndex].AddMatch(match.Match, unique);
                 }
 
-                recombined_segment.ForEach(s => s.Templates.ForEach(t => t.FixCommonMassSpecErrors()));
-
                 // Did recombination
                 if (progressBar != null) progressBar.Update();
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, Alphabet alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, FancyAlphabet alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
                 var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
 

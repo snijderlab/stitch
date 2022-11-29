@@ -144,27 +144,31 @@ namespace Stitch {
         /// <summary> An input for an alphabet. </summary>
         public class AlphabetParameter {
             /// <summary> The data, Paths should be looked up to find the data. </summary>
-            public int[,] ScoringMatrix;
+            public sbyte[,] ScoringMatrix;
 
             /// <summary> The name for this alphabet, to recognize it. </summary>
             public char[] Alphabet;
 
             /// <summary> The penalty for opening a gap in an alignment. </summary>
-            public int GapStartPenalty = 12;
+            public sbyte GapStart = -12;
 
             /// <summary> The penalty for extending a gap in an alignment. </summary>
-            public int GapExtendPenalty = 1;
+            public sbyte GapExtend = -1;
+            /// <summary> The maximum length of a patch in alignment, 1 gives normal SW/NW alignment. </summary>
+            public int PatchLength = 1;
+            /// <summary> The score per residue in a swap, eg {QA} vs {AQ} with swap 2 would give a score of 4. </summary>
+            public sbyte Swap = 0;
             public string Name = "";
 
             public string Display() {
-                return $"Alphabet ->\nName: {Name}\nGapStartPenalty: {GapStartPenalty}\nGapExtendPenalty: {GapExtendPenalty}\n<-";
+                return $"Alphabet ->\nName: {Name}\nGapStart: {GapStart}\nGapExtend: {GapExtend}\nPatchLength: {PatchLength}\nSwap: {Swap}\n<-";
             }
         }
 
         /// <summary> An input for a template. </summary>
         public class SegmentValue {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public AlphabetParameter Alphabet = null;
+            public FancyAlphabet Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 0;
@@ -185,7 +189,7 @@ namespace Stitch {
 
         public class TemplateMatchingParameter {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public AlphabetParameter Alphabet = null;
+            public FancyAlphabet Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;
@@ -206,7 +210,7 @@ namespace Stitch {
         /// <summary> To contain all parameters for recombination of Segments. </summary>
         public class RecombineParameter {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public AlphabetParameter Alphabet = null;
+            public FancyAlphabet Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;

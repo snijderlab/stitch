@@ -13,7 +13,7 @@ namespace Stitch {
         sbyte[,] ScoringMatrix;
 
         /// <summary> The position for each possible amino acid in the ScoringMatrix for fast lookups. </summary>
-        readonly Dictionary<char, int> PositionInScoringMatrix;
+        readonly public Dictionary<char, int> PositionInScoringMatrix;
 
         /// <summary> The penalty for opening a gap in an alignment </summary>
         public readonly sbyte GapStartPenalty;
@@ -39,7 +39,7 @@ namespace Stitch {
             var index = 0;
             foreach (var d in data) {
                 index *= AlphabetSize;
-                index += PositionInScoringMatrix[d.Character];
+                index += PositionInScoringMatrix[d.Character] + 1;
             }
             return index;
         }
@@ -52,22 +52,21 @@ namespace Stitch {
             var index = 0;
             foreach (var d in data) {
                 index *= AlphabetSize;
-                index += PositionInScoringMatrix[d];
+                index += PositionInScoringMatrix[d] + 1;
             }
             return index;
         }
 
         public static FancyAlphabet IdentityMatrix(List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
-            alphabet.Insert(0, ' ');
-            var matrix = new sbyte[alphabet.Count, alphabet.Count];
-            for (int x = 0; x < alphabet.Count; x++)
-                for (int y = 0; y < alphabet.Count; y++)
+            var matrix = new sbyte[alphabet.Count + 1, alphabet.Count + 1];
+            for (int x = 0; x <= alphabet.Count; x++)
+                for (int y = 0; y <= alphabet.Count; y++)
                     matrix[x, y] = x == y ? identity : mismatch;
             return new FancyAlphabet(matrix, alphabet, symmetric_similar, asymmetric_similar, gap_start, gap_extend, swap, size);
         }
 
         public FancyAlphabet(sbyte[,] matrix, List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
-            if (matrix.GetLength(0) != alphabet.Count || matrix.GetLength(1) != alphabet.Count) throw new ArgumentException("Matrix size not fitting for given alphabet size");
+            if (matrix.GetLength(0) != alphabet.Count + 1 || matrix.GetLength(1) != alphabet.Count + 1) throw new ArgumentException("Matrix size not fitting for given alphabet size");
             this.AlphabetSize = alphabet.Count;
             this.GapStartPenalty = gap_start;
             this.GapExtendPenalty = gap_extend;
@@ -75,8 +74,8 @@ namespace Stitch {
             this.ScoringMatrix = new sbyte[HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size), HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size)];
             this.PositionInScoringMatrix = alphabet.Select((item, index) => (item, index)).ToDictionary(item => item.item, item => item.index);
 
-            for (int x = 0; x < alphabet.Count; x++) {
-                for (int y = 0; y < alphabet.Count; y++) {
+            for (int x = 0; x <= alphabet.Count; x++) {
+                for (int y = 0; y <= alphabet.Count; y++) {
                     this.ScoringMatrix[x, y] = matrix[x, y];
                 }
             }
@@ -113,7 +112,7 @@ namespace Stitch {
                 // Set all swap scores by taking all possible combinations whit at least two different items.
                 // Generate all possible permutations for these combinations.
                 for (int len = size; len >= 2; len--) {
-                    foreach (var set in alphabet.Where(i => i != ' ').Combinations(len).Where(s => s.Any(i => i != s.First()))) {
+                    foreach (var set in alphabet.Combinations(len).Where(s => s.Any(i => i != s.First()))) {
                         //Console.WriteLine(string.Join("", set) + ": " + string.Join(",", set.Permutations().Select(s => string.Join("", s))));
                         foreach (var perm in set.Permutations()) {
                             this.SetScore(set, perm, (sbyte)(len * (int)swap));

@@ -7,7 +7,7 @@ namespace Stitch {
     public class Segment {
         public readonly int Index;
         public readonly string Name;
-        public readonly Alphabet Alphabet;
+        public readonly FancyAlphabet Alphabet;
         public List<Template> Templates;
         public readonly double CutoffScore;
         [JsonIgnore]
@@ -23,7 +23,7 @@ namespace Stitch {
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<Read.IRead> sequences, Alphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
+        public Segment(List<Read.IRead> sequences, FancyAlphabet alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
             Name = name;
             Index = index;
             CutoffScore = cutoffScore;
@@ -48,7 +48,7 @@ namespace Stitch {
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="name">The name for this segment</param>
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
-        public Segment(ICollection<Template> templates, Alphabet alphabet, string name, double cutoffScore) {
+        public Segment(ICollection<Template> templates, FancyAlphabet alphabet, string name, double cutoffScore) {
             Name = name;
             CutoffScore = cutoffScore;
             Alphabet = alphabet;

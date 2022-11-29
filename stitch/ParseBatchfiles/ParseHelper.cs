@@ -347,7 +347,7 @@ namespace Stitch {
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, Alphabet alp) {
+            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, FancyAlphabet alphabet) {
                 var result = new ParseResult<bool>();
                 result.Value = true;
 
@@ -364,17 +364,17 @@ namespace Stitch {
 
                 foreach (var file in input.Files) {
                     var reads = file switch {
-                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alp, Input.LocalParameters),
-                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alp),
-                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alp),
-                        InputData.Novor novor => OpenReads.Novor(name_filter, novor, alp),
+                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alphabet, Input.LocalParameters),
+                        InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alphabet),
+                        InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alphabet),
+                        InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
                     if (!reads.IsErr()) Input.Data.Raw.Add(reads.Unwrap());
                 }
 
-                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alp, name_filter).UnwrapOrDefault(result, new());
+                Input.Data.Cleaned = OpenReads.CleanUpInput(Input.Data.Raw, alphabet, name_filter).UnwrapOrDefault(result, new());
 
                 return result;
             }
@@ -481,7 +481,7 @@ namespace Stitch {
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
+                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
                             break;
                         case "enforceunique":
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;
@@ -628,16 +628,17 @@ namespace Stitch {
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<AlphabetParameter> ParseAlphabet(KeyValue key) {
+            public static ParseResult<FancyAlphabet> ParseAlphabet(KeyValue key) {
                 var asettings = new AlphabetParameter();
-                var outEither = new ParseResult<AlphabetParameter>(asettings);
+                var outEither = new ParseResult<FancyAlphabet>();
+                var identity = ("", 0, 0);
 
                 if (key.GetValues().IsErr()) {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
                     return outEither;
                 }
 
-                (char[], int[,]) result;
+                (char[], sbyte[,]) result;
                 KeyValue path_Setting = null;
 
                 foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
@@ -663,40 +664,65 @@ namespace Stitch {
                             asettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                             break;
                         case "gapstartpenalty":
-                            asettings.GapStartPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                        case "gapstart":
+                            asettings.GapStart = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "gapextendpenalty":
-                            asettings.GapExtendPenalty = ConvertToInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                        case "gapextend":
+                            asettings.GapExtend = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                            break;
+                        case "characters":
+                            if (!string.IsNullOrEmpty(identity.Item1)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            identity = (setting.GetValue().UnwrapOrDefault(outEither, ""), identity.Item2, identity.Item3);
+                            break;
+                        case "identity":
+                            identity = (identity.Item1, ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0), identity.Item3);
+                            break;
+                        case "mismatch":
+                            identity = (identity.Item1, identity.Item2, ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0));
+                            break;
+                        case "patchlength":
+                            asettings.PatchLength = ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(0, 10), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                            break;
+                        case "swap":
+                            asettings.Swap = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStartPenalty' and 'GapExtendPenalty'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStart', 'GapExtend', 'Characters', 'Identity', 'Mismatch', 'PatchLength', 'Swap'"));
                             break;
                     }
                 }
 
-                if (path_Setting != null) {
-                    var all_text = GetAllText(path_Setting);
+                if (identity.Item1 == "") {
+                    if (path_Setting != null) {
+                        var all_text = GetAllText(path_Setting);
 
-                    if (all_text.IsOk(outEither)) {
-                        var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
-                        var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, asettings.Name, key);
-                        var counter = new Tokenizer.Counter(id);
-                        result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
-                        asettings.Alphabet = result.Item1;
-                        asettings.ScoringMatrix = result.Item2;
-                    } else {
-                        outEither.Value = null;
-                        return outEither; // The path is wrong so just give up
+                        if (all_text.IsOk(outEither)) {
+                            var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
+                            var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, asettings.Name, key);
+                            var counter = new Tokenizer.Counter(id);
+                            result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
+                            asettings.Alphabet = result.Item1;
+                            asettings.ScoringMatrix = result.Item2;
+                        } else {
+                            outEither.Value = null;
+                            return outEither; // The path is wrong so just give up
+                        }
                     }
-                }
 
-                if (asettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
-                if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
+                    if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
+                    if (!outEither.IsErr())
+                        outEither.Value = new FancyAlphabet(asettings.ScoringMatrix, asettings.Alphabet.ToList(), (0, null), (0, null), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                } else {
+                    asettings.Alphabet = identity.Item1.ToCharArray();
+                    if (!outEither.IsErr())
+                        outEither.Value = FancyAlphabet.IdentityMatrix(asettings.Alphabet.ToList(), (0, null), (0, null), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                }
 
                 return outEither;
             }
-            public static ParseResult<(char[], int[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter) {
-                var outEither = new ParseResult<(char[], int[,])>();
+            public static ParseResult<(char[], sbyte[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter) {
+                var outEither = new ParseResult<(char[], sbyte[,])>();
 
                 int rows = file.Lines.Length;
                 var cells = new List<(Position, List<(string, FileRange)>)>();
@@ -743,12 +769,12 @@ namespace Stitch {
                     outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{Alphabet.GapChar}' is missing in the alphabet definition.", "", true));
                 }
 
-                var scoring_matrix = new int[columns - 1, columns - 1];
+                var scoring_matrix = new sbyte[columns - 1, columns - 1];
 
                 for (int i = 0; i < columns - 1; i++) {
                     for (int j = 0; j < columns - 1; j++) {
                         try {
-                            scoring_matrix[i, j] = ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).UnwrapOrDefault(outEither, 0);
+                            scoring_matrix[i, j] = (sbyte)ConvertToInt(cells[i + 1].Item2[j + 1].Item1, cells[i + 1].Item2[j + 1].Item2).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), cells[i + 1].Item2[j + 1].Item2).UnwrapOrDefault(outEither, 0);
                         } catch (ArgumentOutOfRangeException) {
                             // Invalid amount of cells will already be pointed out
                             //outEither.AddMessage(new ErrorMessage(cells[i + 1].Item1, "Cell out of range", $"Cell {i},{j} out of range."));
@@ -779,7 +805,7 @@ namespace Stitch {
             /// <summary> Parses a Template </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, AlphabetParameter backup_alphabet, bool extended) {
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, FancyAlphabet backup_alphabet, bool extended) {
                 // Parse files one by one
                 var file_path = "";
                 KeyValue file_pos = node;
@@ -809,7 +835,7 @@ namespace Stitch {
                             if (!extended) {
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
                             } else {
-                                tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, new());
+                                tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
                             }
                             break;
                         case "identifier":
@@ -850,14 +876,14 @@ namespace Stitch {
                 if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
                 if (String.IsNullOrWhiteSpace(file_path)) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Path"));
                 if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
-                if ((tsettings.Alphabet ?? backup_alphabet).Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
+                if ((tsettings.Alphabet ?? backup_alphabet) == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
                 if (outEither.IsErr()) return outEither;
 
                 // Open the file
                 var fileId = new Read.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
                 var folder_reads = new ParseResult<List<Read.IRead>>();
-                var alphabet = new Alphabet(tsettings.Alphabet ?? backup_alphabet);
+                var alphabet = tsettings.Alphabet ?? backup_alphabet;
 
                 if (file_path.EndsWith(".fasta"))
                     folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier, alphabet);

@@ -73,7 +73,7 @@ namespace Stitch {
                     case "templatematching":
                         if (output.TemplateMatching != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                         output.TemplateMatching = ParseHelper.ParseTemplateMatching(name_filter, pair).UnwrapOrDefault(outEither, new());
-                        if (output.TemplateMatching == null || output.TemplateMatching.Alphabet == null || output.TemplateMatching.Alphabet.Alphabet == null) outEither.Unwrap();
+                        if (output.TemplateMatching == null || output.TemplateMatching.Alphabet == null || output.TemplateMatching.Alphabet == null) outEither.Unwrap();
                         break;
                     case "recombine":
                         if (output.Recombine != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
@@ -83,9 +83,9 @@ namespace Stitch {
                     case "report":
                         if (output.Report != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
                         var res = ParseHelper.ParseReport(pair);
-                        if (res.IsOk(outEither)) 
+                        if (res.IsOk(outEither))
                             output.Report = res.Unwrap();
-                        else 
+                        else
                             outEither.Unwrap();
                         break;
                     default:
@@ -206,7 +206,7 @@ namespace Stitch {
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null && output.TemplateMatching.Alphabet != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, new Alphabet(output.TemplateMatching.Alphabet)).Messages);
+            if (output.Input != null && output.TemplateMatching.Alphabet != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, output.TemplateMatching.Alphabet).Messages);
 
             // Check if there is a version specified
             if (!version_specified) {
@@ -217,7 +217,7 @@ namespace Stitch {
             Directory.SetCurrentDirectory(original_working_directory);
 
             if (output.TemplateMatching != null) {
-                var alphabet = new Alphabet(output.TemplateMatching.Alphabet);
+                var alphabet = output.TemplateMatching.Alphabet;
                 foreach (var db in output.TemplateMatching.Segments.SelectMany(group => group.Segments)) {
                     if (db.Templates != null) {
                         for (var i = 0; i < db.Templates.Count; i++) {

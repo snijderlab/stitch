@@ -217,7 +217,7 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, Alphabet alphabet) {
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, FancyAlphabet alphabet) {
                 var out_either = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 

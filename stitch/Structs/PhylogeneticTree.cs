@@ -10,7 +10,7 @@ namespace Stitch {
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, Alphabet alphabet, bool addOutGroup = true) {
+        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, FancyAlphabet alphabet, bool addOutGroup = true) {
             if (addOutGroup) {
                 var avg = Sequences.Select(e => e.MetaData.Sequence.Length).Average();
                 Sequences.Add(("OutGroup", new Read.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));
@@ -20,8 +20,8 @@ namespace Stitch {
 
             // Get all the scores in the matrix
             distance.IndexMap((i, j) => {
-                var scores = HelperFunctionality.SmithWaterman(Sequences[i].MetaData, Sequences[j].MetaData, alphabet).GetDetailedScores();
-                return scores.MisMatches + (scores.GapInQuery + scores.GapInTemplate) * 12;
+                var scores = new FancyAlignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global).GetDetailedScores();
+                return scores.LenA - scores.Identical + (scores.GapInA + scores.GapInB) * 12;
             });
 
             var max_distance = (double.MinValue, 0, 0);

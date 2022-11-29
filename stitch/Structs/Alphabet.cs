@@ -9,7 +9,7 @@ namespace Stitch {
         [JsonIgnore]
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet.
         /// As such this matrix is rectangular. </summary>
-        public readonly int[,] ScoringMatrix;
+        public readonly sbyte[,] ScoringMatrix;
 
         /// <summary> The position for each possible amino acid in the ScoringMatrix for fast lookups. </summary>
         public readonly Dictionary<char, int> PositionInScoringMatrix;
@@ -48,7 +48,7 @@ namespace Stitch {
         /// <summary> Create a new Alphabet </summary>
         /// <param name="alphabetValue">The RunParameter to use</param>
         /// <returns></returns>
-        public Alphabet(RunParameters.AlphabetParameter alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStartPenalty, alphabetValue.GapExtendPenalty) { }
+        public Alphabet(RunParameters.AlphabetParameter alphabetValue) : this(alphabetValue.Alphabet, alphabetValue.ScoringMatrix, alphabetValue.GapStart, alphabetValue.GapExtend) { }
 
         /// <summary> Create a new Alphabet </summary>
         /// <param name="data"> The csv data. </param>
@@ -76,7 +76,7 @@ namespace Stitch {
             }
         }
 
-        public Alphabet(char[] alphabet, int[,] data, int gapStartPenalty, int gapExtendPenalty) {
+        public Alphabet(char[] alphabet, sbyte[,] data, int gapStartPenalty, int gapExtendPenalty) {
             GapStartPenalty = gapStartPenalty;
             GapExtendPenalty = gapExtendPenalty;
             ScoringMatrix = data;

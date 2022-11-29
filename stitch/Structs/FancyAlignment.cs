@@ -12,48 +12,48 @@ namespace Stitch {
     }
 
     public struct AlignmentPiece {
-        public int score;
-        public sbyte local_score;
-        public byte step_a;
-        public byte step_b;
+        public int Score;
+        public sbyte LocalScore;
+        public byte StepA;
+        public byte StepB;
 
         public AlignmentPiece() {
-            this.score = 0;
-            this.local_score = 0;
-            this.step_a = 0;
-            this.step_b = 0;
+            this.Score = 0;
+            this.LocalScore = 0;
+            this.StepA = 0;
+            this.StepB = 0;
         }
 
         public AlignmentPiece(int score, sbyte local_score, byte step_a, byte step_b) {
-            this.score = score;
-            this.local_score = local_score;
-            this.step_a = step_a;
-            this.step_b = step_b;
+            this.Score = score;
+            this.LocalScore = local_score;
+            this.StepA = step_a;
+            this.StepB = step_b;
         }
 
         public string ShortPath() {
-            return (this.step_a, this.step_b) switch {
+            return (this.StepA, this.StepB) switch {
                 (0, 1) => "I",
                 (1, 0) => "D",
                 (1, 1) => "M",
-                _ => $"S[{this.step_a},{this.step_b}]",
+                _ => $"S[{this.StepA},{this.StepB}]",
             };
         }
     }
 
     public class FancyAlignment {
-        public readonly int score;
-        public readonly List<AlignmentPiece> path;
-        public readonly int start_a;
-        public readonly int start_b;
-        public readonly Read.IRead read_a;
-        public readonly Read.IRead read_b;
+        public readonly int Score;
+        public readonly List<AlignmentPiece> Path;
+        public readonly int StartA;
+        public readonly int StartB;
+        public readonly Read.IRead ReadA;
+        public readonly Read.IRead ReadB;
 
         public FancyAlignment(Read.IRead read_a, Read.IRead read_b, FancyAlphabet alphabet, AlignmentType type) {
             var seq_a = read_a.Sequence.Sequence;
             var seq_b = read_b.Sequence.Sequence;
-            this.read_a = read_a;
-            this.read_b = read_b;
+            this.ReadA = read_a;
+            this.ReadB = read_b;
             var matrix = new AlignmentPiece[seq_a.Length + 1, seq_b.Length + 1];
             (int score, int index_a, int index_b) high = (0, 0, 0);
 
@@ -90,47 +90,47 @@ namespace Stitch {
 
                             var previous = matrix[index_a - len_a, index_b - len_b];
                             sbyte score = len_a == 0 || len_b == 0
-                                ? (previous.step_a == 0 || previous.step_b == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
+                                ? (previous.StepA == 0 || previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
                                 : alphabet.Score(seq_a.SubArray(index_a - len_a, len_a), seq_b.SubArray(index_b - len_b, len_b));
 
                             if (score == 0)
                                 continue; // Skip undefined pairs
 
-                            values.Add(new AlignmentPiece(previous.score + (int)score, score, len_a, len_b));
+                            values.Add(new AlignmentPiece(previous.Score + (int)score, score, len_a, len_b));
                         }
                     }
                     // Select the best move
-                    var value = values.MaxBy(v => v.score);
-                    if (value.score > high.score)
-                        high = (value.score, index_a, index_b);
+                    var value = values.MaxBy(v => v.Score);
+                    if (value.Score > high.score)
+                        high = (value.Score, index_a, index_b);
                     matrix[index_a, index_b] = value;
                 }
             }
 
             // Find the correct starting point for crawl back
             if (type == AlignmentType.Global) {
-                high = (matrix[seq_a.Length, seq_b.Length].score, seq_a.Length, seq_b.Length);
+                high = (matrix[seq_a.Length, seq_b.Length].Score, seq_a.Length, seq_b.Length);
             } else if (type == AlignmentType.GlobalForB) {
-                var value = Enumerable.Range(0, seq_a.Length + 1).Select(index => (index, matrix[index, seq_b.Length].score)).MaxBy(v => v.Item2);
+                var value = Enumerable.Range(0, seq_a.Length + 1).Select(index => (index, matrix[index, seq_b.Length].Score)).MaxBy(v => v.Item2);
                 high = (value.Item2, value.index, seq_b.Length);
             }
-            this.score = high.score;
+            this.Score = high.score;
 
             // Do the crawl back
-            this.path = new List<AlignmentPiece>();
+            this.Path = new List<AlignmentPiece>();
             while (!(high.index_a == 0 && high.index_b == 0)) {
                 var value = matrix[high.index_a, high.index_b];
-                if (value.step_a == 0 && value.step_b == 0) break; // Catch the end for a Local alignment
-                high = (0, high.index_a - value.step_a, high.index_b - value.step_b);
-                path.Add(value);
+                if (value.StepA == 0 && value.StepB == 0) break; // Catch the end for a Local alignment
+                high = (0, high.index_a - value.StepA, high.index_b - value.StepB);
+                Path.Add(value);
             }
-            path.Reverse();
-            this.start_a = high.index_a;
-            this.start_b = high.index_b;
+            Path.Reverse();
+            this.StartA = high.index_a;
+            this.StartB = high.index_b;
         }
 
         public string ShortPath() {
-            return String.Join("", this.path.Select(p => p.ShortPath()));
+            return String.Join("", this.Path.Select(p => p.ShortPath()));
         }
 
         string Aligned() {
@@ -140,32 +140,57 @@ namespace Stitch {
             var str_b = new StringBuilder();
             var str_blocks = new StringBuilder();
             var str_blocks_neg = new StringBuilder();
-            var loc_a = start_a;
-            var loc_b = start_b;
+            var loc_a = StartA;
+            var loc_b = StartB;
 
-            foreach (var piece in path) {
-                var l = Math.Max(piece.step_a, piece.step_b);
-                if (piece.step_a == 0) {
+            foreach (var piece in Path) {
+                var l = Math.Max(piece.StepA, piece.StepB);
+                if (piece.StepA == 0) {
                     str_a.Append(new string('-', l));
                 } else {
-                    str_a.Append(AminoAcid.ArrayToString(this.read_a.Sequence.Sequence.SubArray(loc_a, piece.step_a)).PadLeft(l, '·'));
+                    str_a.Append(AminoAcid.ArrayToString(this.ReadA.Sequence.Sequence.SubArray(loc_a, piece.StepA)).PadLeft(l, '·'));
                 }
-                if (piece.step_b == 0) {
+                if (piece.StepB == 0) {
                     str_b.Append(new string('-', l));
                 } else {
-                    str_b.Append(AminoAcid.ArrayToString(this.read_b.Sequence.Sequence.SubArray(loc_b, piece.step_b)).PadLeft(l, '·'));
+                    str_b.Append(AminoAcid.ArrayToString(this.ReadB.Sequence.Sequence.SubArray(loc_b, piece.StepB)).PadLeft(l, '·'));
                 }
-                str_blocks.Append(piece.local_score < 0 ? new string(' ', l) : new string(blocks[piece.local_score], l));
-                str_blocks_neg.Append(piece.local_score >= 0 ? new string(' ', l) : new string(blocks_neg[-piece.local_score], l));
-                loc_a += piece.step_a;
-                loc_b += piece.step_b;
+                str_blocks.Append(piece.LocalScore < 0 ? new string(' ', l) : new string(blocks[piece.LocalScore], l));
+                str_blocks_neg.Append(piece.LocalScore >= 0 ? new string(' ', l) : new string(blocks_neg[-piece.LocalScore], l));
+                loc_a += piece.StepA;
+                loc_b += piece.StepB;
             }
 
             return $"{str_a}\n{str_b}\n{str_blocks}\n{str_blocks_neg}";
         }
 
         public string Summary() {
-            return $"score: {score}\npath: {ShortPath()}\nstart: ({start_a}, {start_b})\naligned:\n{Aligned()}";
+            return $"score: {Score}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{Aligned()}";
+        }
+
+        public double Identity() {
+            var details = GetDetailedScores();
+            return (double)details.Identical / (double)details.LenA;
+        }
+
+        public (int LenA, int LenB, int Identical, int Similar, int GapInA, int GapInB) GetDetailedScores() {
+            var len_a = 0;
+            var len_b = 0;
+            var identity = 0;
+            var similar = 0;
+            var gapInA = 0;
+            var gapInB = 0;
+            foreach (var piece in Path) {
+                len_a += piece.StepA;
+                len_b += piece.StepB;
+                if (piece.StepA == 1 && piece.StepB == 1 && ReadA.Sequence.Sequence[len_a] == ReadB.Sequence.Sequence[len_b]) {
+                    identity += 1;
+                }
+                if (piece.StepA != 0 && piece.StepB != 0) similar += 1;
+                if (piece.StepA == 0) gapInA += 1;
+                if (piece.StepB == 0) gapInB += 1;
+            }
+            return (len_a, len_b, identity, similar, gapInA, gapInB);
         }
     }
 }

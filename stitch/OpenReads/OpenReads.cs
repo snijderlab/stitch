@@ -16,7 +16,7 @@ namespace Stitch {
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<Read.IRead>> Simple(NameFilter filter, Read.FileIdentifier inputFile, Alphabet alphabet, char commentChar = '#') {
+        public static ParseResult<List<Read.IRead>> Simple(NameFilter filter, Read.FileIdentifier inputFile, FancyAlphabet alphabet, char commentChar = '#') {
             var out_either = new ParseResult<List<Read.IRead>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
@@ -46,7 +46,7 @@ namespace Stitch {
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseResult<List<Read.IRead>> Fasta(NameFilter filter, Read.FileIdentifier inputFile, Regex parseIdentifier, Alphabet alphabet) {
+        public static ParseResult<List<Read.IRead>> Fasta(NameFilter filter, Read.FileIdentifier inputFile, Regex parseIdentifier, FancyAlphabet alphabet) {
             var out_either = new ParseResult<List<Read.IRead>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
@@ -147,7 +147,7 @@ namespace Stitch {
             return remove_whitespace.Replace(input, "");
         }
         private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
-        static ParseResult<Read.IRead> ParseAnnotatedFasta(string line, Read.IRead metaData, int identifier_line_number, ParsedFile file, Alphabet alphabet) {
+        static ParseResult<Read.IRead> ParseAnnotatedFasta(string line, Read.IRead metaData, int identifier_line_number, ParsedFile file, FancyAlphabet alphabet) {
             var out_either = new ParseResult<Read.IRead>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(HelperFunctionality.Annotation, string)>();
@@ -221,7 +221,7 @@ namespace Stitch {
         /// <param name="filter">The name filter to use to filter the name of the reads.</param>
         /// <param name="peaks">The peaks settings to use</param>
         /// <param name="local">If defined the local peaks parameters to use</param>
-        public static ParseResult<List<Read.IRead>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, Alphabet alphabet, RunParameters.InputData.InputLocalParameters local = null) {
+        public static ParseResult<List<Read.IRead>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, FancyAlphabet alphabet, RunParameters.InputData.InputLocalParameters local = null) {
             var out_either = new ParseResult<List<Read.IRead>>();
 
             var peaks_parameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
@@ -294,7 +294,7 @@ namespace Stitch {
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="novor"> The novor input parameter. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<Read.IRead>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, Alphabet alphabet) {
+        public static ParseResult<List<Read.IRead>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, FancyAlphabet alphabet) {
             var out_either = new ParseResult<List<Read.IRead>>();
             var output = new List<Read.IRead>();
             out_either.Value = output;
@@ -315,7 +315,7 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<Read.IRead>> ParseNovorDeNovo(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, Alphabet alphabet) {
+        static ParseResult<List<Read.IRead>> ParseNovorDeNovo(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, FancyAlphabet alphabet) {
             var out_either = new ParseResult<List<Read.IRead>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
@@ -377,7 +377,7 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<Read.IRead>> ParseNovorPSMS(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, Alphabet alphabet) {
+        static ParseResult<List<Read.IRead>> ParseNovorPSMS(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, FancyAlphabet alphabet) {
             var out_either = new ParseResult<List<Read.IRead>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
@@ -436,13 +436,13 @@ namespace Stitch {
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<Read.IRead>> CleanUpInput(List<Read.IRead> reads, Alphabet alp, NameFilter filter) {
+        public static ParseResult<List<Read.IRead>> CleanUpInput(List<Read.IRead> reads, FancyAlphabet alp, NameFilter filter) {
             return CleanUpInput(new List<List<Read.IRead>> { reads }, alp, filter);
         }
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<Read.IRead>> CleanUpInput(List<List<Read.IRead>> reads, Alphabet alp, NameFilter filter) {
+        public static ParseResult<List<Read.IRead>> CleanUpInput(List<List<Read.IRead>> reads, FancyAlphabet alp, NameFilter filter) {
             var filtered = new Dictionary<string, Read.IRead>();
             var out_either = new ParseResult<List<Read.IRead>>();
 
@@ -456,7 +456,7 @@ namespace Stitch {
                         }
                     } else {
                         for (int i = 0; i < read.Sequence.Sequence.Length; i++) {
-                            if (!alp.PositionInScoringMatrix.ContainsKey(read.Sequence.Sequence[i].Character))
+                            if (!alp.Contains(read.Sequence.Sequence[i].Character))
                                 out_either.AddMessage(new InputNameSpace.ErrorMessage(read.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
                         }
 
