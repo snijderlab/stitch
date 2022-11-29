@@ -128,12 +128,18 @@ namespace Stitch {
         /// <param name="data">The data.</param>
         /// <typeparam name="T">The type of the elements.</typeparam>
         public static IEnumerable<IEnumerable<T>> Permutations<T>(this IEnumerable<T> data) {
-            IEnumerable<IEnumerable<T>> Recurse(IEnumerable<T> left) {
-                if (left.Count() == 1) return new List<IEnumerable<T>> { left };
-                return left.SelectMany(v => Recurse(left.Where(i => !i.Equals(v))).Select(perm => perm.Append(v)));
+            IEnumerable<IEnumerable<T>> Recurse(IEnumerable<T> data, bool[] chosen, List<T> result) {
+                if (chosen.All(i => i)) return new List<List<T>>() { result };
+                return data.Select((v, i) => (v, i)).Where((v) => !chosen[v.Item2]).SelectMany((v) => {
+                    var new_chosen = chosen.ToArray();
+                    var new_result = result.ToList();
+                    new_result.Add(v.Item1);
+                    new_chosen[v.Item2] = true;
+                    return Recurse(data, new_chosen, new_result);
+                });
             }
 
-            return Recurse(data);
+            return Recurse(data, new bool[data.Count()], new List<T>());
         }
 
         /// <summary> Integer exponentiation: https://stackoverflow.com/a/383596/5779120. </summary>

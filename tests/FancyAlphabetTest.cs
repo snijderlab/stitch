@@ -32,20 +32,26 @@ namespace StitchTest {
 
         [TestMethod]
         public void Index() {
-            var a = AminoAcid.FromString("A", alphabet).Unwrap();
-            var c = AminoAcid.FromString("C", alphabet).Unwrap();
-            var aa = AminoAcid.FromString("AA", alphabet).Unwrap();
-            var aaa = AminoAcid.FromString("AAA", alphabet).Unwrap();
-            Assert.AreNotEqual(0, alphabet.Index(a));
-            Assert.AreNotEqual(0, alphabet.Index(c));
-            Assert.AreNotEqual(0, alphabet.Index(aa));
-            Assert.AreNotEqual(0, alphabet.Index(aaa));
-            Assert.AreEqual(alphabet.Index(a), alphabet.Index(a));
-            Assert.AreNotEqual(alphabet.Index(a), alphabet.Index(c));
-            Assert.AreEqual(alphabet.Index(aa), alphabet.Index(aa));
-            Assert.AreEqual(alphabet.Index(aaa), alphabet.Index(aaa));
-            Assert.AreNotEqual(alphabet.Index(a), alphabet.Index(aaa));
-            Assert.AreNotEqual(alphabet.Index(aa), alphabet.Index(aaa));
+            var a = alphabet.Index(AminoAcid.FromString("A", alphabet).Unwrap());
+            var c = alphabet.Index(AminoAcid.FromString("C", alphabet).Unwrap());
+            var aa = alphabet.Index(AminoAcid.FromString("AA", alphabet).Unwrap());
+            var ac = alphabet.Index(AminoAcid.FromString("AC", alphabet).Unwrap());
+            var aaa = alphabet.Index(AminoAcid.FromString("AAA", alphabet).Unwrap());
+            Console.WriteLine($"A{a} C{c} AA{aa} AC{ac} AAA{aaa}");
+            Assert.AreNotEqual(0, a);
+            Assert.AreNotEqual(0, c);
+            Assert.AreNotEqual(0, aa);
+            Assert.AreNotEqual(0, ac);
+            Assert.AreNotEqual(0, aaa);
+            Assert.AreEqual(a, a);
+            Assert.AreNotEqual(a, c);
+            Assert.AreEqual(aa, aa);
+            Assert.AreEqual(aaa, aaa);
+            Assert.AreNotEqual(a, aaa);
+            Assert.AreNotEqual(aa, aaa);
+            Assert.AreNotEqual(ac, aaa);
+            Assert.AreNotEqual(ac, aa);
+            Assert.AreNotEqual(ac, a);
         }
 
         [TestMethod]
@@ -57,7 +63,7 @@ namespace StitchTest {
         }
 
         [TestMethod]
-        public void Nonidentity() {
+        public void NonIdentity() {
             Assert.AreEqual(0, alphabet.Score(AA("AA"), AA("CC")));
             Assert.AreEqual(0, alphabet.Score(AA("Q"), AA("GG")));
             Assert.AreEqual(0, alphabet.Score(AA("QA"), AA("AVA")));
@@ -66,10 +72,15 @@ namespace StitchTest {
 
         [TestMethod]
         public void Switched() {
-            Assert.AreEqual(4, alphabet.Score(AA("AC"), AA("CA")));
-            Assert.AreEqual(4, alphabet.Score(AA("QA"), AA("AQ")));
-            Assert.AreEqual(6, alphabet.Score(AA("AAV"), AA("AVA")));
-            Assert.AreEqual(6, alphabet.Score(AA("VAA"), AA("AAV")));
+            var a = alphabet.Score(AA("AC"), AA("CA"));
+            var b = alphabet.Score(AA("QA"), AA("AQ"));
+            var c = alphabet.Score(AA("AAV"), AA("AVA"));
+            var d = alphabet.Score(AA("VAA"), AA("AAV"));
+            Console.WriteLine($"A{a} B{b} C{c} D{d}");
+            Assert.AreEqual(4, a);
+            Assert.AreEqual(4, b);
+            Assert.AreEqual(6, c);
+            Assert.AreEqual(6, d);
         }
     }
 }

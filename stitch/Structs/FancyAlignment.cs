@@ -110,7 +110,7 @@ namespace Stitch {
             // Find the correct starting point for crawl back
             if (type == AlignmentType.Global) {
                 high = (matrix[seq_a.Length, seq_b.Length].score, seq_a.Length, seq_b.Length);
-            } else if (type == AlignmentType.Global) {
+            } else if (type == AlignmentType.GlobalForB) {
                 var value = Enumerable.Range(0, seq_a.Length + 1).Select(index => (index, matrix[index, seq_b.Length].score)).MaxBy(v => v.Item2);
                 high = (value.Item2, value.index, seq_b.Length);
             }

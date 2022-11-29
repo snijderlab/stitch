@@ -93,12 +93,12 @@ namespace StitchTest {
             foreach (var option in permutations) {
                 Console.Write($",{option}");
             }
-            Assert.AreEqual("CBA", permutations[0]);
-            Assert.AreEqual("BCA", permutations[1]);
-            Assert.AreEqual("CAB", permutations[2]);
-            Assert.AreEqual("ACB", permutations[3]);
-            Assert.AreEqual("BAC", permutations[4]);
-            Assert.AreEqual("ABC", permutations[5]);
+            Assert.AreEqual("ABC", permutations[0]);
+            Assert.AreEqual("ACB", permutations[1]);
+            Assert.AreEqual("BAC", permutations[2]);
+            Assert.AreEqual("BCA", permutations[3]);
+            Assert.AreEqual("CAB", permutations[4]);
+            Assert.AreEqual("CBA", permutations[5]);
         }
     }
 }

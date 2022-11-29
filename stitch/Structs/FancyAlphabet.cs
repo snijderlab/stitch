@@ -113,7 +113,8 @@ namespace Stitch {
                 // Set all swap scores by taking all possible combinations whit at least two different items.
                 // Generate all possible permutations for these combinations.
                 for (int len = size; len >= 2; len--) {
-                    foreach (var set in alphabet.Combinations(len).Where(s => !s.All(i => i == s.First()))) {
+                    foreach (var set in alphabet.Where(i => i != ' ').Combinations(len).Where(s => s.Any(i => i != s.First()))) {
+                        //Console.WriteLine(string.Join("", set) + ": " + string.Join(",", set.Permutations().Select(s => string.Join("", s))));
                         foreach (var perm in set.Permutations()) {
                             this.SetScore(set, perm, (sbyte)(len * (int)swap));
                             this.SetScore(perm, set, (sbyte)(len * (int)swap));
