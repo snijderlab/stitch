@@ -10,10 +10,10 @@ using Stitch.RunParameters;
 namespace StitchTest {
     [TestClass]
     public class FancyAlphabet_Test {
-        public FancyAlphabet alphabet;
+        public ScoringMatrix alphabet;
 
         public FancyAlphabet_Test() {
-            alphabet = FancyAlphabet.Default();
+            alphabet = ScoringMatrix.Default();
         }
 
         public AminoAcid[] AA(string input) {

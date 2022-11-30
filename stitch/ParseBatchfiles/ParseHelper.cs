@@ -347,7 +347,7 @@ namespace Stitch {
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, FancyAlphabet alphabet) {
+            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, ScoringMatrix alphabet) {
                 var result = new ParseResult<bool>();
                 result.Value = true;
 
@@ -628,9 +628,9 @@ namespace Stitch {
                 outEither.Value = output;
                 return outEither;
             }
-            public static ParseResult<FancyAlphabet> ParseAlphabet(KeyValue key) {
+            public static ParseResult<ScoringMatrix> ParseAlphabet(KeyValue key) {
                 var asettings = new AlphabetParameter();
-                var outEither = new ParseResult<FancyAlphabet>();
+                var outEither = new ParseResult<ScoringMatrix>();
                 var identity = ("", 0, 0);
 
                 if (key.GetValues().IsErr()) {
@@ -693,7 +693,7 @@ namespace Stitch {
                     }
                 }
 
-                if (identity.Item1 == "") {
+                if (String.IsNullOrEmpty(identity.Item1)) {
                     if (path_Setting != null) {
                         var all_text = GetAllText(path_Setting);
 
@@ -712,11 +712,11 @@ namespace Stitch {
 
                     if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
                     if (!outEither.IsErr())
-                        outEither.Value = new FancyAlphabet(asettings.ScoringMatrix, asettings.Alphabet.ToList(), (0, null), (0, null), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), (0, new List<List<List<char>>>()), (0, new List<(List<List<char>> from, List<List<char>> to)>()), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 } else {
                     asettings.Alphabet = identity.Item1.ToCharArray();
                     if (!outEither.IsErr())
-                        outEither.Value = FancyAlphabet.IdentityMatrix(asettings.Alphabet.ToList(), (0, null), (0, null), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), (0, new List<List<List<char>>>()), (0, new List<(List<List<char>> from, List<List<char>> to)>()), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 }
 
                 return outEither;
@@ -805,7 +805,7 @@ namespace Stitch {
             /// <summary> Parses a Template </summary>
             /// <param name="node">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, FancyAlphabet backup_alphabet, bool extended) {
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, ScoringMatrix backup_alphabet, bool extended) {
                 // Parse files one by one
                 var file_path = "";
                 KeyValue file_pos = node;

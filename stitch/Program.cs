@@ -169,7 +169,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         static void CleanFasta(string filename, string output) {
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap();
             var name_filter = new NameFilter();
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var reads = OpenReads.Fasta(name_filter, new Read.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|"), alphabet).Unwrap();
             SaveAndCleanFasta(output, reads);
         }

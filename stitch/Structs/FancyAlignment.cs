@@ -57,7 +57,7 @@ namespace Stitch {
         public readonly int GapInA;
         public readonly int GapInB;
 
-        public FancyAlignment(Read.IRead read_a, Read.IRead read_b, FancyAlphabet alphabet, AlignmentType type, int readAIndex = 0) {
+        public FancyAlignment(Read.IRead read_a, Read.IRead read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.Sequence;
             var seq_b = read_b.Sequence.Sequence;
             this.ReadA = read_a;
@@ -145,14 +145,14 @@ namespace Stitch {
             this.GapInA = 0;
             this.GapInB = 0;
             foreach (var piece in Path) {
-                this.LenA += piece.StepA;
-                this.LenB += piece.StepB;
                 if (piece.StepA == 1 && piece.StepB == 1 && ReadA.Sequence.Sequence[this.LenA] == ReadB.Sequence.Sequence[this.LenB]) {
                     this.Identical += 1;
                 }
                 if (piece.StepA != 0 && piece.StepB != 0) this.Similar += 1;
                 if (piece.StepA == 0) this.GapInA += 1;
                 if (piece.StepB == 0) this.GapInB += 1;
+                this.LenA += piece.StepA;
+                this.LenB += piece.StepB;
             }
         }
 
@@ -208,7 +208,7 @@ namespace Stitch {
             foreach (var piece in this.Path) {
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;
-                if (pos_a >= position) return this.ReadB.Sequence.Sequence[pos_b]; // Match, deletion
+                if (pos_a >= position) return this.ReadB.Sequence.Sequence[Math.Min(pos_b, this.ReadB.Sequence.Sequence.Length - 1)]; // Match, deletion
             }
 
             return null;

@@ -313,7 +313,7 @@ namespace Stitch {
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, FancyAlphabet alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
                 var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
 

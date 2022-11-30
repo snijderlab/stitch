@@ -318,7 +318,7 @@ namespace Stitch {
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="maxOverlap">The maximal length of the overlap</param>
         /// <returns>A tuple with the best position and its score</returns>
-        public static ((int Position, int Score) Best, List<(int Position, int Score)> Scores) EndAlignment(AminoAcid[] template, AminoAcid[] query, FancyAlphabet alphabet, int maxOverlap) {
+        public static ((int Position, int Score) Best, List<(int Position, int Score)> Scores) EndAlignment(AminoAcid[] template, AminoAcid[] query, ScoringMatrix alphabet, int maxOverlap) {
             var scores = new List<(int, int)>();
             for (int i = 1; i < maxOverlap && i < query.Length && i < template.Length; i++) {
                 var score = AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
@@ -420,7 +420,7 @@ namespace Stitch {
             };
         }
 
-        public static AminoAcid[] GenerateRandomSequence(FancyAlphabet alphabet, int length) {
+        public static AminoAcid[] GenerateRandomSequence(ScoringMatrix alphabet, int length) {
             var output = new AminoAcid[length];
             Random random = new Random(42);
             var count = alphabet.PositionInScoringMatrix.Count;

@@ -260,7 +260,7 @@ namespace HTMLNameSpace {
                 var gap = 0;
                 foreach (var piece in match.Path) {
                     if (gap > 0) {
-                        gaps[pos] = Math.Max(gaps[pos], gap);
+                        gaps[Math.Min(pos, gaps.Length - 1)] = Math.Max(gaps[Math.Min(pos, gaps.Length - 1)], gap);
                         gap = 0;
                     }
                     pos += piece.StepA;
@@ -268,22 +268,33 @@ namespace HTMLNameSpace {
                         gap += piece.StepB;
                 }
                 if (gap > 0)
-                    gaps[pos] = Math.Max(gaps[pos], gap);
+                    gaps[Math.Min(pos, gaps.Length - 1)] = Math.Max(gaps[Math.Min(pos, gaps.Length - 1)], gap);
             }
             var total_length = gaps.Sum() + template.Sequence.Length + 1;
 
-            string DisplayTemplateWithGaps() {
+            (string, Annotation[]) DisplayTemplateWithGaps() {
                 var sequence = new LinkedList<string>(template.Sequence.Select(a => a.Character.ToString()));
+                var annotation = new LinkedList<Annotation>(template.ConsensusSequenceAnnotation());
                 var node = sequence.First;
+                var annotation_node = annotation.First;
                 for (int pos = 0; pos < template.Sequence.Length; pos++) {
-                    if (gaps[pos] != 0) sequence.AddBefore(node, new string(gap_char, gaps[pos]));
+                    if (gaps[pos] != 0) {
+                        var current_annotation = annotation_node.Value;
+                        if (pos > 0 && annotation_node.Previous.Value == Annotation.None || annotation_node.Value == Annotation.None)
+                            current_annotation = Annotation.None;
+                        else if (pos > 0 && annotation_node.Previous.Value != annotation_node.Value)
+                            current_annotation = Annotation.None;
+                        annotation.AddBefore(annotation_node, current_annotation);
+                        sequence.AddBefore(node, new string(gap_char, gaps[pos]));
+                    }
                     node = node.Next;
+                    annotation_node = annotation_node.Next;
                 }
-                return string.Concat(sequence);
+                return (string.Concat(sequence), annotation.ToArray());
             }
 
             // Find template sequence and numbering
-            var template_sequence = DisplayTemplateWithGaps();
+            var (template_sequence, annotatedSequence) = DisplayTemplateWithGaps();
             var numbering = new StringBuilder();
             var last_size = 1;
             const int block_size = 10;
@@ -294,22 +305,6 @@ namespace HTMLNameSpace {
                 last_size = i_string.Length;
             }
 
-            var annotatedSequence = template.ConsensusSequenceAnnotation().ToList();
-            // Fill in the gaps
-            for (int i = 0; i < template_sequence.Length; i++) {
-                if (template_sequence[i] == gap_char) {
-                    if (i == 0) {
-                        annotatedSequence.Insert(i, annotatedSequence[i]);
-                    } else {
-                        if (annotatedSequence[i - 1] == Annotation.None || annotatedSequence[i] == Annotation.None)
-                            annotatedSequence.Insert(i, Annotation.None);
-                        else if (annotatedSequence[i - 1] != annotatedSequence[i])
-                            annotatedSequence.Insert(i, Annotation.None);
-                        else
-                            annotatedSequence.Insert(i, annotatedSequence[i]);
-                    }
-                }
-            }
             html.Open(HtmlTag.div, "class='buttons'");
             html.OpenAndClose(HtmlTag.button, "onclick='ToggleCDRReads()'", "Only show CDR reads");
             html.OpenAndClose(HtmlTag.button, "onclick='ToggleAlignmentComic()'", "Show as comic");
@@ -350,6 +345,7 @@ namespace HTMLNameSpace {
                 var pos_a = alignment.StartA;
                 var pos_b = alignment.StartB;
                 foreach (var piece in alignment.Path) {
+                    // TODO: fix the accompanying css
                     var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
                     var total_gaps = piece.StepA == 0 ? 0 : gaps.SubArray(pos_a, piece.StepA).Sum();
                     if (piece.StepA == piece.StepB && piece.StepA > 1 && template.Parent.Alphabet.Swap != 0 && piece.LocalScore == piece.StepA * template.Parent.Alphabet.Swap) {
@@ -396,7 +392,7 @@ namespace HTMLNameSpace {
         /// <summary> Create the background colour annotation for the reads alignment blocks. </summary>
         /// <param name="annotated">The annotation, a list of all Types for each position as finally aligned.</param>
         /// <returns>The colour as a style element to directly put in a HTML element.</returns>
-        static string TemplateAlignmentAnnotation(List<Annotation> annotated) {
+        static string TemplateAlignmentAnnotation(Annotation[] annotated) {
             string Color(Annotation Type) {
                 if (Type.IsAnyCDR())
                     return "var(--color-secondary-o)";
@@ -407,7 +403,7 @@ namespace HTMLNameSpace {
             }
             var annotatedSequence = annotated.ToArray();
             var grouped = new List<(Annotation, uint)>() { (annotated[0], 1) };
-            for (int i = 1; i < annotated.Count; i++) {
+            for (int i = 1; i < annotated.Length; i++) {
                 var last = grouped.Count - 1;
                 if (annotated[i] == grouped[last].Item1) {
                     grouped[last] = (grouped[last].Item1, grouped[last].Item2 + 1);
@@ -485,6 +481,7 @@ namespace HTMLNameSpace {
             var id = "none";
             var html = new HtmlBuilder();
             foreach (var piece in match.Path) {
+                // TODO: fix the accompanying css
                 if (piece.StepA == piece.StepB && piece.StepA > 1 && template.Parent.Alphabet.Swap != 0 && piece.LocalScore == piece.StepA * template.Parent.Alphabet.Swap) {
                     id = "swap";
                 } else if (piece.StepA == 0) {
@@ -504,12 +501,12 @@ namespace HTMLNameSpace {
 
         static HtmlBuilder SequenceConsensusOverview(Template template, string title = null, HtmlBuilder help = null) {
             var consensus_sequence = template.CombinedSequence();
-            var diversity = new List<Dictionary<string, double>>(consensus_sequence.Count * 2);
+            var diversity = new List<Dictionary<(string, int), double>>(consensus_sequence.Count * 2);
 
             for (int i = 0; i < consensus_sequence.Count; i++) {
-                var items = new Dictionary<string, double>();
+                var items = new Dictionary<(string, int), double>();
                 foreach (var item in consensus_sequence[i].AminoAcids) {
-                    items.Add(AminoAcid.ArrayToString(item.Key.Sequence), item.Value);
+                    items.Add((AminoAcid.ArrayToString(item.Key.Sequence), item.Key.Length), item.Value);
                 }
                 diversity.Add(items);
                 var gaps = new Dictionary<string, double>();

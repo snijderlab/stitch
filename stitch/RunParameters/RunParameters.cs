@@ -168,7 +168,7 @@ namespace Stitch {
         /// <summary> An input for a template. </summary>
         public class SegmentValue {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public FancyAlphabet Alphabet = null;
+            public ScoringMatrix Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 0;
@@ -189,7 +189,7 @@ namespace Stitch {
 
         public class TemplateMatchingParameter {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public FancyAlphabet Alphabet = null;
+            public ScoringMatrix Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;
@@ -210,7 +210,7 @@ namespace Stitch {
         /// <summary> To contain all parameters for recombination of Segments. </summary>
         public class RecombineParameter {
             /// <summary> The alphabet to be used for all templates. </summary>
-            public FancyAlphabet Alphabet = null;
+            public ScoringMatrix Alphabet = null;
 
             /// <summary> The average score needed for a path to be included in the alignment with a template. </summary>
             public double CutoffScore = 10;

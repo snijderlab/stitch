@@ -10,7 +10,7 @@ namespace Stitch {
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, FancyAlphabet alphabet, bool addOutGroup = true) {
+        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, ScoringMatrix alphabet, bool addOutGroup = true) {
             if (addOutGroup) {
                 var avg = Sequences.Select(e => e.MetaData.Sequence.Length).Average();
                 Sequences.Add(("OutGroup", new Read.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));

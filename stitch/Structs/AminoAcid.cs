@@ -24,7 +24,7 @@ namespace Stitch {
         /// <summary> The creator of AminoAcids. </summary>
         /// <param name="alphabet"> The alphabet used. </param>
         /// <param name="input"> The character to store in this AminoAcid. </param>
-        public AminoAcid(FancyAlphabet alphabet, char input) {
+        public AminoAcid(ScoringMatrix alphabet, char input) {
             if (!alphabet.Contains(input)) throw new ArgumentException("Invalid AminoAcid");
             Character = input;
         }
@@ -57,7 +57,7 @@ namespace Stitch {
         /// <param name="position"> If possible the location where this amino acids was defined to create nicer error messages. </param>
         /// <param name="fallback_context"> If possible a fallback to the above position to use if the position could not be given. </param>
         /// <returns> The aminoacid or an error message. </returns>
-        public static ParseResult<AminoAcid> TryCreate(FancyAlphabet alphabet, char input, FileRange? position = null, string fallback_context = null) {
+        public static ParseResult<AminoAcid> TryCreate(ScoringMatrix alphabet, char input, FileRange? position = null, string fallback_context = null) {
             if (!alphabet.Contains(input))
                 if (position is FileRange fr)
                     return new ParseResult<AminoAcid>(new InputNameSpace.ErrorMessage(fr, "AminoAcid not in alphabet", $"The aminoacid '{input}' does not exist in the used alphabet, make sure this amino acid is correct and the correct alphabet is chosen."));
@@ -105,7 +105,7 @@ namespace Stitch {
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="position"> If possible the position where this sequence was defined to provide nicer error messages. </param>
         /// <returns> The array or a nice error message. </returns>
-        public static ParseResult<AminoAcid[]> FromString(string input, FancyAlphabet alphabet, FileRange? position = null) {
+        public static ParseResult<AminoAcid[]> FromString(string input, ScoringMatrix alphabet, FileRange? position = null) {
             var outEither = new ParseResult<AminoAcid[]>();
             AminoAcid[] output = new AminoAcid[input.Length];
             outEither.Value = output;
@@ -195,7 +195,7 @@ namespace Stitch {
         /// <c>b.Homology(a)</c>. </remarks>
         /// <param name="right"> The other AminoAcid to use. </param>
         /// <returns> Returns the homology score (based on the scoring matrix) of the two AminoAcids. </returns>
-        public int Homology(AminoAcid right, FancyAlphabet alphabet) {
+        public int Homology(AminoAcid right, ScoringMatrix alphabet) {
             try {
                 return alphabet.Score(new AminoAcid[] { this }, new AminoAcid[] { right });
             } catch {
@@ -228,7 +228,7 @@ namespace Stitch {
         /// <param name="left"> The first object to calculate homology with. </param>
         /// <param name="right"> The second object to calculate homology with. </param>
         /// <returns> Returns the homology between the two aminoacid arrays. </returns>
-        public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right, FancyAlphabet alphabet = null) {
+        public static int ArrayHomology(AminoAcid[] left, AminoAcid[] right, ScoringMatrix alphabet = null) {
             int score = 0;
             if (left.Length != right.Length)
                 return 0;

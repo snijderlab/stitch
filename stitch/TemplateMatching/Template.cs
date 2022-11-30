@@ -184,6 +184,14 @@ namespace Stitch {
             public override int GetHashCode() {
                 return this.Length * 7877 + Sequence.Aggregate(0, (acc, item) => (int)item.Character + acc * 97);
             }
+
+            public static bool operator ==(SequenceOption a, SequenceOption b) {
+                return a.Equals(b);
+            }
+
+            public static bool operator !=(SequenceOption a, SequenceOption b) {
+                return !a.Equals(b);
+            }
         }
 
         /// <summary> Returns the combined sequence or aminoacid variety per position in the alignment. </summary>
@@ -193,14 +201,16 @@ namespace Stitch {
             if (combinedSequenceCache != null) return combinedSequenceCache;
 
             var output = new List<(AminoAcid Template, Dictionary<SequenceOption, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps)>() {
-                Capacity = Sequence.Length
+                Capacity = Sequence.Length + 1
             };
 
             //var alignedSequences = AlignedSequences();
             foreach (var amino in Sequence) {
-                (AminoAcid Template, Dictionary<SequenceOption, double> AminoAcids, Dictionary<IGap, (int Count, double[] CoverageDepth)> Gaps) position = (amino, new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>());
+                var position = (amino, new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>());
                 output.Add(position);
             }
+            output.Add((new AminoAcid(this.Parent.Alphabet, '.'), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
+            // TODO: why do I need an extra element?
 
             foreach (var match in Matches) {
                 var pos_a = match.StartA;
@@ -227,8 +237,8 @@ namespace Stitch {
                             insertion.Clear();
                         }
                         // Handle normal sequences
-                        var option = new SequenceOption(match.ReadB.Sequence.Sequence.SubArray(pos_b, match.LenB), match.LenA);
-                        var cov = match.ReadB.Sequence.PositionalScore.SubArray(pos_b, match.LenB).Average();
+                        var option = new SequenceOption(match.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
+                        var cov = piece.StepB == 0 ? 0 : match.ReadB.Sequence.PositionalScore.SubArray(pos_b, piece.StepB).Average();
                         if (output[pos_a].AminoAcids.ContainsKey(option)) {
                             output[pos_a].AminoAcids[option] += cov;
                         } else {
@@ -243,7 +253,7 @@ namespace Stitch {
                 if (insertion.Count != 0) {
                     var gap = new Gap(insertion.ToArray());
                     var gap_cov = match.ReadB.Sequence.PositionalScore.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
-                    var position = output[pos_a].Gaps;
+                    var position = output.Last().Gaps;
                     if (position.ContainsKey(gap)) {
                         if (position[gap].CoverageDepth != null)
                             gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
@@ -288,12 +298,12 @@ namespace Stitch {
                 }
 
                 var template = new SequenceOption(new AminoAcid[] { combinedSequence[i].Template }, 1);
-                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence[0].Character == Alphabet.GapChar) {
+                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == Alphabet.GapChar) {
                     // Do not add gaps, as those are not part of the final sequence
                 } else if (options.Count > 1 && options.Contains(template)) {
                     consensus.Add(template);
                     doc.Add(coverage);
-                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Length == 1 && options[0].Sequence[0].Character == 'L' && combinedSequence[i].Template.Character == 'I') {
+                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == 'L' && combinedSequence[i].Template.Character == 'I') {
                     consensus.Add(template);
                     doc.Add(coverage);
                 } else if (options.Count > 0) {
@@ -346,7 +356,7 @@ namespace Stitch {
             if (ConsensusSequenceAnnotationCache != null) return ConsensusSequenceAnnotationCache;
 
             var match = this.AlignConsensusWithTemplate();
-            var annotation = new List<Annotation>(match.LenB);
+            var annotation = new List<Annotation>(this.Sequence.Length);
 
             List<(Annotation, string)> annotated = null;
             if (this.Recombination != null) {
@@ -368,7 +378,7 @@ namespace Stitch {
                 int pos = -1;
                 for (int i = 0; i < annotated.Count; i++) {
                     pos += annotated[i].Item2.Length;
-                    if (pos >= position + match.StartB)
+                    if (pos >= position + match.StartA)
                         return annotated[i].Item1;
                 }
                 return Annotation.None;
@@ -378,8 +388,8 @@ namespace Stitch {
             int pos_a = 0;
             int pos_b = 0;
             foreach (var piece in match.Path) {
-                if (piece.StepB != 0) {
-                    annotation.Add(GetClasses(pos_b));
+                if (piece.StepA != 0) {
+                    annotation.AddRange(Enumerable.Repeat(GetClasses(pos_a), piece.StepA));
                 }
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;

@@ -12,7 +12,7 @@ namespace StitchTest {
     public class FancyAlignment_Test {
         [TestMethod]
         public void Equal() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             Assert.IsTrue(alphabet.Contains('A'));
             Console.WriteLine(alphabet.Debug());
             var read_a = new Read.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
@@ -26,7 +26,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Insertion() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
@@ -38,7 +38,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Deletion() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
@@ -50,7 +50,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Isomass() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("AFNW", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
@@ -63,7 +63,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Switched() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("AGFGW", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
@@ -76,7 +76,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Local() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
@@ -89,7 +89,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void Global() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Global);
@@ -102,7 +102,7 @@ namespace StitchTest {
 
         [TestMethod]
         public void GlobalForB() {
-            var alphabet = FancyAlphabet.Default();
+            var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);

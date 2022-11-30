@@ -165,16 +165,16 @@ namespace HTMLNameSpace {
             html.OpenAndClose(HtmlTag.p, "class='text-header'", $"{matched} ({(double)matched / total_reads:P2} of all input reads) distinct reads were matched on {templates} ({(double)templates / total_templates:P2} of all templates with CDRs) distinct templates, of these {unique} ({(double)unique / matched:P2} of all matched reads) were matched uniquely (on a single template). The consensus sequence is shown below.");
             html.Open(HtmlTag.p);
 
-            var diversity = new List<Dictionary<string, double>>();
+            var diversity = new List<Dictionary<(string, int), double>>();
 
             foreach (var row in CDRs) {
                 for (int i = 0; i < row.Sequence.Length; i++) {
-                    if (i >= diversity.Count) diversity.Add(new Dictionary<string, double>());
+                    if (i >= diversity.Count) diversity.Add(new Dictionary<(string, int), double>());
                     if (row.Sequence[i] != Alphabet.GapChar) {
-                        if (diversity[i].ContainsKey(row.Sequence[i].ToString()))
-                            diversity[i][row.Sequence[i].ToString()] += 1;
+                        if (diversity[i].ContainsKey((row.Sequence[i].ToString(), 1)))
+                            diversity[i][(row.Sequence[i].ToString(), 1)] = diversity[i][(row.Sequence[i].ToString(), 1)] + 1;
                         else
-                            diversity[i].Add(row.Sequence[i].ToString(), 1);
+                            diversity[i].Add((row.Sequence[i].ToString(), 1), 1);
                     }
                 }
             }
@@ -217,7 +217,7 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<string, double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null) {
+        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<(string, int), double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null) {
             const double threshold = 0.05;
             const int height = 35;
             const int font_size = 30;
@@ -233,23 +233,33 @@ namespace HTMLNameSpace {
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
                 html.CopyData(title + " (TSV)", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverviewData));
             html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
+            var offsets = new double[10];
             for (int i = 0; i < diversity.Count; i++) {
+                var offset = offsets[0];
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
                 var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? $" ambiguous a{i}" : "";
                 html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'");
 
-                double sum = diversity[i].Values.Sum();
+                double sum = diversity[i].Values.Sum() + offset;
                 var sorted = diversity[i].ToList();
                 sorted.Sort((a, b) => a.Value.CompareTo(b.Value));
                 data_buffer.Append($"{i}");
 
+                if (offset != 0)
+                    html.OpenAndClose(HtmlTag.span, $"style='font-size:{offset:G3}px;opacity:0'", "A");
+
                 bool placed = false;
                 foreach (var item in sorted) {
-                    if (item.Key != "~" && (double)item.Value / sum > threshold) {
+                    if (item.Key.Item1 != "~" && (double)item.Value / sum > threshold) {
                         var size = (item.Value / sum * font_size).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3})'", item.Key);
+                        html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3}) scaleY({item.Key.Item2})'", item.Key.Item1);
                         placed = true;
+                        if (item.Key.Item2 > 1) {
+                            for (int j = 1; j <= item.Key.Item2; j++) {
+                                offsets[j] += item.Value;
+                            }
+                        }
                     }
                     data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
                 }
@@ -258,6 +268,11 @@ namespace HTMLNameSpace {
 
                 html.Close(HtmlTag.div);
                 data_buffer.Append("\n");
+                // Cycle the offsets
+                for (int j = 1; j < offsets.Length; j++) {
+                    offsets[j - 1] = offsets[j];
+                }
+                offsets[offsets.Length - 1] = 0;
             }
             html.Close(HtmlTag.div);
             if (title == null) // Bad way of only doing this in the CDR tables and not in the asides

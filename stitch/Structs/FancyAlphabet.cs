@@ -6,11 +6,11 @@ using System.Linq;
 
 namespace Stitch {
     /// <summary> To contain an alphabet with scoring matrix to score pairs of amino acids </summary>
-    public class FancyAlphabet {
+    public class ScoringMatrix {
         [JsonIgnore]
         /// <summary> The matrix used for scoring of the alignment between two characters in the alphabet.
         /// As such this matrix is rectangular. </summary>
-        sbyte[,] ScoringMatrix;
+        sbyte[,] Matrix;
 
         /// <summary> The position for each possible amino acid in the ScoringMatrix for fast lookups. </summary>
         readonly public Dictionary<char, int> PositionInScoringMatrix;
@@ -35,7 +35,7 @@ namespace Stitch {
         public readonly int AsymmetricScore;
 
         public sbyte Score(AminoAcid[] a, AminoAcid[] b) {
-            return ScoringMatrix[Index(a), Index(b)];
+            return Matrix[Index(a), Index(b)];
         }
 
         public int Index(AminoAcid[] data) {
@@ -48,7 +48,7 @@ namespace Stitch {
         }
 
         void SetScore(IEnumerable<char> a, IEnumerable<char> b, sbyte score) {
-            ScoringMatrix[Index(a), Index(b)] = score;
+            Matrix[Index(a), Index(b)] = score;
         }
 
         int Index(IEnumerable<char> data) {
@@ -60,29 +60,30 @@ namespace Stitch {
             return index;
         }
 
-        public static FancyAlphabet IdentityMatrix(List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
-            var matrix = new sbyte[alphabet.Count + 1, alphabet.Count + 1];
-            for (int x = 0; x <= alphabet.Count; x++)
-                for (int y = 0; y <= alphabet.Count; y++)
+        public static ScoringMatrix IdentityMatrix(List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
+            var matrix = new sbyte[alphabet.Count, alphabet.Count];
+            for (int x = 0; x < alphabet.Count; x++)
+                for (int y = 0; y < alphabet.Count; y++)
                     matrix[x, y] = x == y ? identity : mismatch;
-            return new FancyAlphabet(matrix, alphabet, symmetric_similar, asymmetric_similar, gap_start, gap_extend, swap, size);
+            return new ScoringMatrix(matrix, alphabet, symmetric_similar, asymmetric_similar, gap_start, gap_extend, swap, size);
         }
 
-        public FancyAlphabet(sbyte[,] matrix, List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
-            if (matrix.GetLength(0) != alphabet.Count + 1 || matrix.GetLength(1) != alphabet.Count + 1) throw new ArgumentException("Matrix size not fitting for given alphabet size");
+        public ScoringMatrix(sbyte[,] matrix, List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
+            if (matrix.GetLength(0) != alphabet.Count || matrix.GetLength(1) != alphabet.Count) throw new ArgumentException("Matrix size not fitting for given alphabet size");
             this.AlphabetSize = alphabet.Count;
             this.GapStartPenalty = gap_start;
             this.GapExtendPenalty = gap_extend;
             this.Size = size;
-            this.ScoringMatrix = new sbyte[HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size), HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size)];
+            var matrix_size = HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size) + 1;
+            this.Matrix = new sbyte[matrix_size, matrix_size];
             this.PositionInScoringMatrix = alphabet.Select((item, index) => (item, index)).ToDictionary(item => item.item, item => item.index);
             this.Swap = swap;
             this.SymmetricScore = symmetric_similar.score;
             this.AsymmetricScore = asymmetric_similar.score;
 
-            for (int x = 0; x <= alphabet.Count; x++) {
-                for (int y = 0; y <= alphabet.Count; y++) {
-                    this.ScoringMatrix[x, y] = matrix[x, y];
+            for (int x = 0; x < alphabet.Count; x++) {
+                for (int y = 0; y < alphabet.Count; y++) {
+                    this.Matrix[x + 1, y + 1] = matrix[x, y];
                 }
             }
 
@@ -129,7 +130,7 @@ namespace Stitch {
             }
         }
 
-        public static FancyAlphabet Default() {
+        public static ScoringMatrix Default() {
             return IdentityMatrix(
                 "ARNDCQEGHILKMFPSTWYVBZX.*".ToList(),
                 (5, new List<List<List<char>>>{
