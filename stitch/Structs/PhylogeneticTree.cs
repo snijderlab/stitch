@@ -20,8 +20,8 @@ namespace Stitch {
 
             // Get all the scores in the matrix
             distance.IndexMap((i, j) => {
-                var scores = new FancyAlignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global).GetDetailedScores();
-                return scores.LenA - scores.Identical + (scores.GapInA + scores.GapInB) * 12;
+                var match = new FancyAlignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global);
+                return match.LenA - match.Identical + (match.GapInA + match.GapInB) * 12;
             });
 
             var max_distance = (double.MinValue, 0, 0);
@@ -144,7 +144,7 @@ namespace Stitch {
                         (left, right) => (left.Item1.Union(right.Item1).ToList(), ""),
                         (index, _) => (new List<int> { index }, branch.Value)));
 
-                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.ReadB.Identifier).Select(group => (group.Key, group.Select(match => match.ReadAIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().GetDetailedScores().Similar, group.First().ReadA.TotalArea)).ToList();
+                List<(string Key, HashSet<int> Set, bool Unique, int Score, int Matches, double Area)> MatchSets = matches.GroupBy(match => match.ReadB.Identifier).Select(group => (group.Key, group.Select(match => match.ReadAIndex).ToHashSet(), group.First().Unique, group.First().Score, group.First().Similar, group.First().ReadA.TotalArea)).ToList();
 
                 // Now remodel the tree again, into a version that contains the matching data that is needed.
                 // Take the MatchSets and on each branch in the SetTree if any set is fully contained (all

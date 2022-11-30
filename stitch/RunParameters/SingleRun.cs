@@ -145,11 +145,11 @@ namespace Stitch {
                     // Give the scoring result for each result
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
                         var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
-                        var query = new Read.Simple(result.ConsensusSequence().Item1.ToArray());
+                        var query = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
                         var match = new FancyAlignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.ShortPath()));
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.Identity() * 100).ToString("G3")));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.PercentIdentity() * 100).ToString("G3")));
                     }
 
                     // Add this information to the file, appending where needed while keeping the format correct. Note: the list will not be closed this will need to be done afterwards.
@@ -329,15 +329,15 @@ namespace Stitch {
                             join = true;
                         } else {
                             var index = ((RecombineOrder.Template)element).Index;
-                            var seq = sequence.ElementAt(index).ConsensusSequence().Item1;
+                            var seq = sequence.ElementAt(index).ConsensusSequence().Item1.SelectMany(i => i.Sequence);
                             if (join) {
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
-                                var deleted_gaps = s.Count + seq.Count;
+                                var deleted_gaps = s.Count + seq.Count();
                                 s = s.TakeWhile(a => a.Character != 'X').ToList();
                                 seq = seq.SkipWhile(a => a.Character == 'X').ToList();
-                                deleted_gaps -= s.Count + seq.Count;
+                                deleted_gaps -= s.Count + seq.Count();
                                 var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
 

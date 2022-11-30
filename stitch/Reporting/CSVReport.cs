@@ -23,23 +23,23 @@ namespace Stitch {
             var data = new List<List<string>>();
             var peaks = false;
 
-            void AddLine(string group, Template template, SequenceMatch read) {
+            void AddLine(string group, Template template, FancyAlignment match) {
                 var row = new List<string> {
-                    read.Query.Identifier,
+                    match.ReadB.Identifier,
                     template.MetaData.Identifier,
                     template.Name,
                     group,
-                    AminoAcid.ArrayToString(read.QuerySequence.Sequence),
-                    read.Score.ToString(),
-                    read.Unique.ToString(),
-                    read.StartTemplatePosition.ToString(),
-                    read.StartQueryPosition.ToString(),
-                    read.QuerySequence.LengthOnTemplate.ToString(),
-                    HelperFunctionality.CIGAR(read.QuerySequence.Alignment)
+                    AminoAcid.ArrayToString(match.ReadB.Sequence.Sequence),
+                    match.Score.ToString(),
+                    match.Unique.ToString(),
+                    match.StartA.ToString(),
+                    match.StartB.ToString(),
+                    match.LenA.ToString(),
+                    match.ShortPath()
                     };
-                if (read.Query is Read.Peaks) {
+                if (match.ReadB is Read.Peaks) {
                     peaks = true;
-                    var meta = (Read.Peaks)read.Query;
+                    var meta = (Read.Peaks)match.ReadB;
                     row.AddRange(new List<string>
                         {
                             meta.Fraction,

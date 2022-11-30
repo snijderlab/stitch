@@ -26,7 +26,7 @@ namespace Stitch {
                 sequences.Capacity = Max(sequences.Capacity, Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum());
                 foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates)) {
                     if (template.Score >= MinScore)
-                        sequences.Add((template.Score, $">{template.MetaData.Identifier} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                        sequences.Add((template.Score, $">{template.MetaData.Identifier} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1.SelectMany(i => i.Sequence))}"));
                 }
             } else // TemplateMatching
               {
@@ -34,7 +34,7 @@ namespace Stitch {
                 foreach (var (group, dbs) in Parameters.Groups) {
                     foreach (var template in dbs.SelectMany(a => a.Templates)) {
                         if (template.Score >= MinScore)
-                            sequences.Add((template.Score, $">{template.MetaData.Identifier} id:{group}-{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1)}"));
+                            sequences.Add((template.Score, $">{template.MetaData.Identifier} id:{group}-{template.Location.TemplateIndex} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1.SelectMany(i => i.Sequence))}"));
                     }
                 }
             }

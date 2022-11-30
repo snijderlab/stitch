@@ -50,6 +50,12 @@ namespace Stitch {
         public readonly int ReadAIndex;
         public readonly Read.IRead ReadB;
         public bool Unique;
+        public readonly int LenA;
+        public readonly int LenB;
+        public readonly int Identical;
+        public readonly int Similar;
+        public readonly int GapInA;
+        public readonly int GapInB;
 
         public FancyAlignment(Read.IRead read_a, Read.IRead read_b, FancyAlphabet alphabet, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.Sequence;
@@ -130,6 +136,24 @@ namespace Stitch {
             Path.Reverse();
             this.StartA = high.index_a;
             this.StartB = high.index_b;
+
+            // Calculate some statistics
+            this.LenA = 0;
+            this.LenB = 0;
+            this.Identical = 0;
+            this.Similar = 0;
+            this.GapInA = 0;
+            this.GapInB = 0;
+            foreach (var piece in Path) {
+                this.LenA += piece.StepA;
+                this.LenB += piece.StepB;
+                if (piece.StepA == 1 && piece.StepB == 1 && ReadA.Sequence.Sequence[this.LenA] == ReadB.Sequence.Sequence[this.LenB]) {
+                    this.Identical += 1;
+                }
+                if (piece.StepA != 0 && piece.StepB != 0) this.Similar += 1;
+                if (piece.StepA == 0) this.GapInA += 1;
+                if (piece.StepB == 0) this.GapInB += 1;
+            }
         }
 
         public string ShortPath() {
@@ -171,29 +195,23 @@ namespace Stitch {
             return $"score: {Score}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{Aligned()}";
         }
 
-        public double Identity() {
-            var details = GetDetailedScores();
-            return (double)details.Identical / (double)details.LenA;
+        public double PercentIdentity() {
+            return (double)this.Identical / (double)this.LenA;
         }
 
-        public (int LenA, int LenB, int Identical, int Similar, int GapInA, int GapInB) GetDetailedScores() {
-            var len_a = 0;
-            var len_b = 0;
-            var identity = 0;
-            var similar = 0;
-            var gapInA = 0;
-            var gapInB = 0;
-            foreach (var piece in Path) {
-                len_a += piece.StepA;
-                len_b += piece.StepB;
-                if (piece.StepA == 1 && piece.StepB == 1 && ReadA.Sequence.Sequence[len_a] == ReadB.Sequence.Sequence[len_b]) {
-                    identity += 1;
-                }
-                if (piece.StepA != 0 && piece.StepB != 0) similar += 1;
-                if (piece.StepA == 0) gapInA += 1;
-                if (piece.StepB == 0) gapInB += 1;
+        public AminoAcid? GetAtTemplateIndex(int position) {
+            if (position < this.StartA || position > this.StartA + this.LenA) return null;
+            int pos_a = this.StartA;
+            int pos_b = this.StartB;
+            if (position == this.StartA) return this.ReadB.Sequence.Sequence[pos_b];
+
+            foreach (var piece in this.Path) {
+                pos_a += piece.StepA;
+                pos_b += piece.StepB;
+                if (pos_a >= position) return this.ReadB.Sequence.Sequence[pos_b]; // Match, deletion
             }
-            return (len_a, len_b, identity, similar, gapInA, gapInB);
+
+            return null;
         }
     }
 }

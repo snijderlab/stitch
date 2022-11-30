@@ -381,8 +381,8 @@ namespace HTMLNameSpace {
             var set = new HashSet<string>();
             var unique_set = new HashSet<string>();
             foreach (var template in templates) {
-                set.UnionWith(template.Matches.Select(a => a.Query.EscapedIdentifier));
-                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.Query.EscapedIdentifier));
+                set.UnionWith(template.Matches.Select(a => a.ReadB.EscapedIdentifier));
+                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.ReadB.EscapedIdentifier));
             }
             var html = new HtmlBuilder();
             html.OpenAndClose(HtmlTag.p, "class='text-header'", $"Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.");

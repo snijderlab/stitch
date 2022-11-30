@@ -77,7 +77,7 @@ namespace Stitch {
         /// <summary> Will create a string of a collection of AminoAcids. </summary>
         /// <param name="collection"> The collection to create a string from. </param>
         /// <returns> Returns the string of the collection. </returns>
-        public static string ArrayToString(ICollection<AminoAcid> collection) {
+        public static string ArrayToString(IEnumerable<AminoAcid> collection) {
             var builder = new StringBuilder();
             foreach (AminoAcid aa in collection) {
                 builder.Append(aa.ToString());
