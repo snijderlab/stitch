@@ -30,6 +30,9 @@ namespace Stitch {
         /// <summary> The char that represents a stop codon, where translation will stop. </summary>
         public const char StopCodon = '*';
         int AlphabetSize;
+        public readonly int Swap;
+        public readonly int SymmetricScore;
+        public readonly int AsymmetricScore;
 
         public sbyte Score(AminoAcid[] a, AminoAcid[] b) {
             return ScoringMatrix[Index(a), Index(b)];
@@ -73,6 +76,9 @@ namespace Stitch {
             this.Size = size;
             this.ScoringMatrix = new sbyte[HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size), HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size)];
             this.PositionInScoringMatrix = alphabet.Select((item, index) => (item, index)).ToDictionary(item => item.item, item => item.index);
+            this.Swap = swap;
+            this.SymmetricScore = symmetric_similar.score;
+            this.AsymmetricScore = asymmetric_similar.score;
 
             for (int x = 0; x <= alphabet.Count; x++) {
                 for (int y = 0; y <= alphabet.Count; y++) {

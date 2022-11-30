@@ -213,5 +213,20 @@ namespace Stitch {
 
             return null;
         }
+
+        public AminoAcid[] GetQuerySubMatch(int start_position, int length) {
+            var output = new List<AminoAcid>();
+            int pos_a = this.StartA;
+            int pos_b = this.StartB;
+
+            foreach (var piece in this.Path) {
+                if (pos_a > start_position && pos_a <= start_position + length)
+                    output.AddRange(this.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)); // TODO: this does not handle sets at the boundaries gracefully.
+                pos_a += piece.StepA;
+                pos_b += piece.StepB;
+            }
+
+            return output.ToArray();
+        }
     }
 }

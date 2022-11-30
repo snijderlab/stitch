@@ -146,8 +146,8 @@ namespace Stitch {
                     found_cdr_region = true;
                     foreach (var read in template.Matches) {
                         foreach (var (group, cdr) in positions) {
-                            if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
-                                var piece = (read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique);
+                            if (read.StartA < cdr.Start + cdr.Length && read.StartA + read.LenA > cdr.Start) {
+                                var piece = (read.ReadB, template.MetaData, AminoAcid.ArrayToString(read.GetQuerySubMatch(cdr.Start, cdr.Length)), read.Unique);
                                 switch (group) {
                                     case Annotation.CDR1:
                                         cdr1_reads.Add(piece);
@@ -167,8 +167,8 @@ namespace Stitch {
                     var cdr = positions[Annotation.CDR3];
 
                     foreach (var read in template.Matches) {
-                        if (read.StartTemplatePosition < cdr.Start + cdr.Length && read.StartTemplatePosition + read.QuerySequence.LengthOnTemplate > cdr.Start) {
-                            cdr3_reads.Add((read.Query, template.MetaData, read.GetQuerySubMatch(cdr.Start, cdr.Length).Item1, read.Unique));
+                        if (read.StartA < cdr.Start + cdr.Length && read.StartA + read.LenA > cdr.Start) {
+                            cdr3_reads.Add((read.ReadB, template.MetaData, AminoAcid.ArrayToString(read.GetQuerySubMatch(cdr.Start, cdr.Length)), read.Unique));
                         }
                     }
                 }
@@ -313,7 +313,7 @@ namespace Stitch {
                         html.Open(HtmlTag.h2);
                         html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName)}' target='_blank'", Parameters.Groups[group].Item1);
                         html.Close(HtmlTag.h2);
-                        html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
+                        html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq.SelectMany(i => i.Sequence)));
                         html.Open(HtmlTag.div, "class='doc-plot'");
                         html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
                         html.Close(HtmlTag.div);
@@ -384,7 +384,7 @@ namespace Stitch {
                             html.Open(HtmlTag.h3);
                             html.OpenAndClose(HtmlTag.a, "", CommonPieces.GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName));
                             html.Close(HtmlTag.h3);
-                            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq));
+                            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq.SelectMany(i => i.Sequence)));
                             html.Open(HtmlTag.div, "class='doc-plot'");
                             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
                             html.Close(HtmlTag.div);
