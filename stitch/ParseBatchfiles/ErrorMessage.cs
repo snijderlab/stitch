@@ -54,6 +54,16 @@ namespace Stitch {
                 File = range.File;
                 this.contextLines = contextLines;
             }
+            public ErrorMessage(KeyRange range, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
+                start_position = range.Start;
+                end_position = range.NameEnd;
+                shortDescription = shortD;
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
+                Warning = warning;
+                File = range.File;
+                this.contextLines = contextLines;
+            }
             public static ErrorMessage DuplicateValue(FileRange range) {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;

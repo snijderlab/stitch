@@ -2,6 +2,40 @@
 Version	: 1.3
 Runname	: Basic run
 
+FancyAlphabet ->
+    -@load ../alphabets/mass_based.txt
+    -Matrix: ../alphabets/blosum62.csv
+    -Size: 1
+    -GapStartPenalty: 12
+    -GapExtendPenalty: 1
+    Characters: ARNDCQEGHILKMFPSTWYVBZX.*
+    Identity: 8
+    Mismatch: -1
+
+
+    Size: 3
+    GapStart: -5
+    GapExtend: -5
+    Swap: 2
+
+    Symmetric ->
+        Score: 5
+        Sets:>
+            I,L
+            N,GG
+            Q,AG
+        <:
+    <-
+
+    Asymmetric ->
+        Score: 3
+        Sets:>
+            Q->E
+            A,C->D,E
+        <:
+    <-
+<-
+
 Input ->
     Peaks ->
         Path            : ..\datasets\200305_HER_test_04_DENOVO.csv

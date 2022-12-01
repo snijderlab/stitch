@@ -374,7 +374,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
 
             var name_filter = new NameFilter();
             var list = new List<Read.IRead>(results.Count);
-            var alphabet = new Alphabet("alphabets/default_alphabet.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var alphabet = ScoringMatrix.Default();
             foreach (var (isotype, sequence) in results) {
                 list.Add(new Read.Fasta(AminoAcid.FromString(sequence, alphabet).Unwrap(), isotype, isotype, null, name_filter));
             }
@@ -386,7 +386,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true) {
             var sequences = new List<Read.IRead>();
             var name_filter = new NameFilter();
-            var alphabet = new Alphabet("alphabets/default_alphabet.csv", Alphabet.AlphabetParamType.Path, 12, 2);
+            var alphabet = ScoringMatrix.Default();
 
             content = content.Substring(content.IndexOf("<table class=\"tableseq\">"));
             content = content.Substring(0, content.IndexOf("</table>"));
@@ -439,7 +439,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                         return ParseSequence(input.Substring(7), current_classes, "", result);
                     } else if (input.StartsWith(' ') || (remove_gaps && input.StartsWith('.'))) {
                         return ParseSequence(input.Substring(1), current_classes, current_seq, result);
-                    } else if (input.StartsWith(Alphabet.StopCodon)) {
+                    } else if (input.StartsWith(ScoringMatrix.StopCodon)) {
                         return null; // Contains a stop codon so is not a valid sequence
                     } else {
                         return ParseSequence(input.Substring(1), current_classes, current_seq + input[0], result);

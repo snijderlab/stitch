@@ -154,123 +154,6 @@ namespace Stitch {
             return ret;
         }
 
-        /// <summary>Do a local alignment based on the SmithWaterman algorithm of two sequences. </summary>
-        /// <param name="template">The template sequence to use.</param>
-        /// <param name="query">The query sequence to use.</param>
-        public static SequenceMatch SmithWaterman(Read.IRead template, Read.IRead query, Alphabet alphabet, int index = 0, int templateIndex = -1) {
-            int[] score_matrix = new int[(template.Sequence.Length + 1) * (query.Sequence.Length + 1)];
-            int[] direction_matrix = new int[(template.Sequence.Length + 1) * (query.Sequence.Length + 1)];
-            Span<int> indices_template = template.Sequence.Length <= 1024 ? stackalloc int[template.Sequence.Length] : new int[template.Sequence.Length];
-            Span<int> indices_query = query.Sequence.Length <= 1024 ? stackalloc int[query.Sequence.Length] : new int[query.Sequence.Length];
-
-            int row_size = query.Sequence.Length + 1;
-
-            // Cache the indices as otherwise even dictionary lookups will become costly
-            for (int i = 0; i < template.Sequence.Length; i++) {
-                indices_template[i] = alphabet.PositionInScoringMatrix[template.Sequence.Sequence[i].Character];
-            }
-            for (int i = 0; i < query.Sequence.Length; i++) {
-                indices_query[i] = alphabet.PositionInScoringMatrix[query.Sequence.Sequence[i].Character];
-            }
-
-            int max_value = 0;
-            int max_index_t = 0;
-            int max_index_q = 0;
-            sbyte[,] alphabet_scores = alphabet.ScoringMatrix;
-
-            int tem_pos, query_pos, score, a, b, c, bpos, cpos, value;
-            Direction direction;
-            bool gap;
-            char gap_char = Alphabet.GapChar;
-
-            for (tem_pos = 1; tem_pos <= template.Sequence.Length; tem_pos++) {
-                for (query_pos = 1; query_pos <= query.Sequence.Length; query_pos++) {
-                    gap = template.Sequence.Sequence[tem_pos - 1].Character == gap_char || query.Sequence.Sequence[query_pos - 1].Character == gap_char;
-
-                    // Calculate the score for the current position
-                    if (gap)
-                        a = score_matrix[row_size * (tem_pos - 1) + query_pos - 1]; // Match Gap, 0 penalty
-                    else {
-                        //The following line is the most time consuming in this whole function, maybe cache the matrix?? - now test it
-                        score = alphabet_scores[indices_template[tem_pos - 1], indices_query[query_pos - 1]];
-                        a = score_matrix[row_size * (tem_pos - 1) + query_pos - 1] + score; // Match
-                    }
-
-                    bpos = row_size * tem_pos + query_pos - 1;
-
-                    b = score_matrix[bpos] - ((direction_matrix[bpos] == (int)Direction.Insertion || direction_matrix[bpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
-
-                    cpos = row_size * (tem_pos - 1) + query_pos;
-
-                    c = score_matrix[cpos] - ((direction_matrix[cpos] == (int)Direction.Deletion || direction_matrix[cpos] == (int)Direction.MatchGap) ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty);
-
-                    if (a > b && a > c && a > 0) {
-                        if (gap) {
-                            value = a;
-                            direction = Direction.MatchGap;
-                        } else {
-                            value = a;
-                            direction = Direction.Match;
-                        }
-                    } else if (!gap && b > c && b > 0) {
-                        value = b;
-                        direction = Direction.Insertion;
-                    } else if (!gap && c > 0) {
-                        value = c;
-                        direction = Direction.Deletion;
-                    } else {
-                        value = 0;
-                        direction = Direction.NoMatch;
-                    }
-
-                    score_matrix[row_size * tem_pos + query_pos] = value;
-                    direction_matrix[row_size * tem_pos + query_pos] = (int)direction;
-
-                    // Keep track of the maximal value
-                    if (value > max_value) {
-                        max_value = value;
-                        max_index_t = tem_pos;
-                        max_index_q = query_pos;
-                    }
-                }
-            }
-
-            // Trace back
-            var match_list = new List<SequenceMatch.MatchPiece>();
-
-            while (true) {
-                switch (direction_matrix[row_size * max_index_t + max_index_q]) {
-                    case (int)Direction.Match:
-                        match_list.Add(new SequenceMatch.Match(1));
-                        max_index_t--;
-                        max_index_q--;
-                        break;
-                    case (int)Direction.MatchGap:
-                        match_list.Add(new SequenceMatch.Match(1));
-                        max_index_t--;
-                        max_index_q--;
-                        break;
-                    case (int)Direction.Deletion:
-                        match_list.Add(new SequenceMatch.Deletion(1));
-                        max_index_t--;
-                        break;
-                    case (int)Direction.Insertion:
-                        match_list.Add(new SequenceMatch.Insertion(1));
-                        max_index_q--;
-                        break;
-                    case (int)Direction.NoMatch:
-                        goto END_OF_CRAWL; // I am hopeful this compiles to a single jump instruction, which would be more efficient than a bool variable which is checked every loop iteration
-                        break;
-                }
-            }
-
-        END_OF_CRAWL:
-            match_list.Reverse();
-
-            var match = new SequenceMatch(max_index_t, max_index_q, max_value, match_list, template, query, index, templateIndex);
-            return match;
-        }
-
         public static int SmithWatermanStrings(string template, string query) {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
             int[] indices_template = new int[template.Length];
@@ -361,14 +244,6 @@ namespace Stitch {
         }
 
         enum Direction { NoMatch, Deletion, Insertion, Match, MatchGap }
-
-        public static string CIGAR(this ICollection<SequenceMatch.MatchPiece> match) {
-            StringBuilder sb = new StringBuilder();
-            foreach (SequenceMatch.MatchPiece element in match) {
-                sb.Append(element.ToString());
-            }
-            return sb.ToString();
-        }
 
         public static string DisplayTime(long elapsedMilliseconds) {
             const long sec_time = 1000;

@@ -94,12 +94,12 @@ namespace Stitch {
                                     // List all possible moves
                     for (byte len_a = 0; len_a <= alphabet.Size; len_a++) {
                         for (byte len_b = 0; len_b <= alphabet.Size; len_b++) {
-                            if (len_a == 0 && len_b != 1 || len_b == 0 && len_a != 1 || len_a > index_a || len_b > index_b)
+                            if ((len_a == 0 && len_b != 1) || (len_b == 0 && len_a != 1) || (len_a > index_a) || (len_b > index_b))
                                 continue; // Skip combined gaps, the point 0,0, and too big steps (outside bounds)
 
                             var previous = matrix[index_a - len_a, index_b - len_b];
                             sbyte score = len_a == 0 || len_b == 0
-                                ? (previous.StepA == 0 || previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
+                                ? (len_a == 0 && previous.StepA == 0 || len_b == 0 && previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
                                 : alphabet.Score(seq_a.SubArray(index_a - len_a, len_a), seq_b.SubArray(index_b - len_b, len_b));
 
                             if (score == 0)

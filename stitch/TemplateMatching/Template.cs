@@ -182,7 +182,7 @@ namespace Stitch {
             }
 
             public override int GetHashCode() {
-                return this.Length * 7877 + Sequence.Aggregate(0, (acc, item) => (int)item.Character + acc * 97);
+                return this.Length + Sequence.Aggregate(0, (acc, item) => (int)item.Character + acc * 97) * 7877;
             }
 
             public static bool operator ==(SequenceOption a, SequenceOption b) {
@@ -209,36 +209,41 @@ namespace Stitch {
                 var position = (amino, new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>());
                 output.Add(position);
             }
-            output.Add((new AminoAcid(this.Parent.Alphabet, '.'), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
+            output.Add((new AminoAcid(this.Parent.Alphabet, ScoringMatrix.GapChar), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
             // TODO: why do I need an extra element?
 
-            foreach (var match in Matches) {
-                var pos_a = match.StartA;
-                var pos_b = match.StartB;
+            foreach (var alignment in Matches) {
+                var pos_a = alignment.StartA;
+                var pos_b = alignment.StartB;
                 var insertion = new List<AminoAcid>();
 
-                foreach (var piece in match.Path) {
-                    if (match.LenA == 0) {
-                        insertion.Add(match.ReadB.Sequence.Sequence[pos_b]);
+                foreach (var piece in alignment.Path) {
+                    if (alignment.LenA == 0) {
+                        insertion.Add(alignment.ReadB.Sequence.Sequence[pos_b]); // StepB is 1 so this works
                     } else {
                         // Handle gaps
+                        var positional_score = alignment.ReadB.Sequence.PositionalScore;
+                        IGap gap = new None();
+                        if (pos_b > positional_score.Length) Console.WriteLine($"Too big {pos_b} {positional_score.Length} {alignment.ReadA.Identifier} {alignment.ReadB.Identifier}");
+                        var gap_cov = new double[] { pos_b == positional_score.Length ? positional_score.Last() : positional_score[pos_b] }; // TODO: is this a nice coverage for a gap?
                         if (insertion.Count != 0) {
-                            var gap = new Gap(insertion.ToArray());
-                            var gap_cov = match.ReadB.Sequence.PositionalScore.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
-                            var position = output[pos_a].Gaps;
-                            if (position.ContainsKey(gap)) {
-                                if (position[gap].CoverageDepth != null)
-                                    gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
-
-                                position[gap] = (position[gap].Count + 1, gap_cov);
-                            } else {
-                                position.Add(gap, (1, gap_cov));
-                            }
-                            insertion.Clear();
+                            gap = new Gap(insertion.ToArray());
+                            gap_cov = positional_score.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
                         }
+                        var position = output[pos_a].Gaps;
+                        if (position.ContainsKey(gap)) {
+                            if (position[gap].CoverageDepth != null)
+                                gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
+
+                            position[gap] = (position[gap].Count + 1, gap_cov);
+                        } else {
+                            position.Add(gap, (1, gap_cov));
+                        }
+                        insertion.Clear();
+
                         // Handle normal sequences
-                        var option = new SequenceOption(match.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
-                        var cov = piece.StepB == 0 ? 0 : match.ReadB.Sequence.PositionalScore.SubArray(pos_b, piece.StepB).Average();
+                        var option = new SequenceOption(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
+                        var cov = piece.StepB == 0 ? 0 : positional_score.SubArray(pos_b, piece.StepB).Average();
                         if (output[pos_a].AminoAcids.ContainsKey(option)) {
                             output[pos_a].AminoAcids[option] += cov;
                         } else {
@@ -251,18 +256,19 @@ namespace Stitch {
 
                 // Handle possible remaining gap
                 if (insertion.Count != 0) {
-                    var gap = new Gap(insertion.ToArray());
-                    var gap_cov = match.ReadB.Sequence.PositionalScore.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
-                    var position = output.Last().Gaps;
-                    if (position.ContainsKey(gap)) {
-                        if (position[gap].CoverageDepth != null)
-                            gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
-
-                        position[gap] = (position[gap].Count + 1, gap_cov);
-                    } else {
-                        position.Add(gap, (1, gap_cov));
-                    }
-                    insertion.Clear();
+                    Console.WriteLine($"WARNING: gap left after full alignment: {AminoAcid.ArrayToString(insertion)} {alignment.ReadB.Identifier} on {alignment.ReadA.Identifier}");
+                    //var gap = new Gap(insertion.ToArray());
+                    //var gap_cov = alignment.ReadB.Sequence.PositionalScore.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
+                    //var position = output.Last().Gaps;
+                    //if (position.ContainsKey(gap)) {
+                    //    if (position[gap].CoverageDepth != null)
+                    //        gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
+                    //
+                    //    position[gap] = (position[gap].Count + 1, gap_cov);
+                    //} else {
+                    //    position.Add(gap, (1, gap_cov));
+                    //}
+                    //insertion.Clear();
                 }
             }
             combinedSequenceCache = output;
@@ -298,7 +304,7 @@ namespace Stitch {
                 }
 
                 var template = new SequenceOption(new AminoAcid[] { combinedSequence[i].Template }, 1);
-                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == Alphabet.GapChar) {
+                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == ScoringMatrix.GapChar) {
                     // Do not add gaps, as those are not part of the final sequence
                 } else if (options.Count > 1 && options.Contains(template)) {
                     consensus.Add(template);

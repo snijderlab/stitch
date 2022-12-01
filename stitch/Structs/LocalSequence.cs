@@ -11,7 +11,6 @@ namespace Stitch {
         /// <summary> The sequence of this read. </summary>
         public AminoAcid[] Sequence { get; private set; }
         AminoAcid[] OriginalSequence;
-        public List<SequenceMatch.MatchPiece> Alignment;
 
         /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
         public List<(int Offset, AminoAcid[] Old, AminoAcid[] New, string Reason)> Changes = new();
@@ -30,24 +29,21 @@ namespace Stitch {
 
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="sequence"> The original sequence, will be cloned. </param>
-        public LocalSequence(AminoAcid[] sequence, double[] positional_score, List<SequenceMatch.MatchPiece> alignment = null) {
+        public LocalSequence(AminoAcid[] sequence, double[] positional_score) {
+            if (sequence.Length != positional_score.Length) throw new ArgumentException($"Unequal length of arguments when generating local sequence. seq {sequence.Length} pos_score {positional_score}.");
             OriginalSequence = sequence.ToArray();
             Sequence = sequence.ToArray();
             PositionalScore = positional_score;
-            Alignment = alignment ?? new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(Sequence.Length) };
-            UpdateLengths();
         }
 
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="read"> The read with the original sequence, will be updated to contain a pointer to this local sequence. </param>
         /// <param name="template"> The template where this read is placed. </param>
-        public LocalSequence(Read.IRead read, Read.IRead template, List<SequenceMatch.MatchPiece> alignment = null) {
+        public LocalSequence(Read.IRead read, Read.IRead template) {
             OriginalSequence = read.Sequence.Sequence.ToArray();
             Sequence = read.Sequence.Sequence.ToArray();
             PositionalScore = read.Sequence.PositionalScore.ToArray();
             read.SequenceChanges.Add((template, this));
-            Alignment = alignment ?? new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(Sequence.Length) };
-            UpdateLengths();
         }
 
         /// <summary> Update the sequence. </summary>
@@ -64,7 +60,6 @@ namespace Stitch {
                 var average_score = to_delete.Count() == 0 ? 0.0 : to_delete.Average();
                 this.PositionalScore = this.PositionalScore.Take(offset).Concat(Enumerable.Repeat(average_score, change.Length)).Concat(this.PositionalScore.Skip(offset + delete)).ToArray();
             }
-            OverWriteAlignment(offset, delete, change.Length);
         }
 
         public bool SetPositionalScore(double[] positional_score) {
@@ -89,7 +84,6 @@ namespace Stitch {
             var html = new HtmlBuilder();
             if (Changes.Count == 0) return html;
             html.OpenAndClose(HtmlTag.h3, "", "Changes to the peptide sequence");
-            html.OpenAndClose(HtmlTag.p, "", HelperFunctionality.CIGAR(AlignmentWithOriginal()));
             html.Open(HtmlTag.div, "class='seq'");
             var position = 0;
             foreach (var set in ChangeProfile()) {
@@ -131,80 +125,6 @@ namespace Stitch {
             }
             output.Add((last, length));
             return output.ToArray();
-        }
-
-        public List<SequenceMatch.MatchPiece> AlignmentWithOriginal() {
-            var alignment = new List<SequenceMatch.MatchPiece> { new SequenceMatch.Match(OriginalSequence.Length) };
-            //var match = new SequenceMatch(0, 0, 0, alignment, this., null, 0);
-            //foreach (var change in Changes) match.OverWriteAlignment(change.Offset, change.Old.Length, change.New.Length);
-            return alignment;
-        }
-
-        /// <summary> Overwrite an alignment with a new match piece at the given template location. </summary>
-        /// <param name="alignment"> The original alignment. </param>
-        /// <param name="insert"> The number of places to insert. </param>
-        /// <param name="offset"> The template offset to place it at. </param>
-        /// <param name="delete"> The number of positions to delete where the insertion is placed. </param>
-        void OverWriteAlignment(int offset, int delete, int insert) {
-            // This needs to insert insertions at the correct places.
-            int pos = 0;
-            int to_delete = 0;
-            bool placed = false;
-            for (int i = 0; i < this.Alignment.Count; i++) {
-                SequenceMatch.MatchPiece piece = this.Alignment[i];
-                if (placed && to_delete == 0) break;
-                if (!(piece is SequenceMatch.Insertion)) {
-                    if (to_delete != 0) {
-                        var deleted = Math.Min(piece.Length, to_delete);
-                        piece.Length = piece.Length - deleted;
-                        to_delete -= deleted;
-                    }
-                    if (pos <= offset && pos + piece.Length > offset) {
-                        this.Alignment.Insert(i + 1, new SequenceMatch.Match(Math.Min(delete, insert)));
-                        var n = 2;
-                        if (delete > insert)
-                            this.Alignment.Insert(i + n, new SequenceMatch.Deletion(delete - insert));
-                        else if (insert > delete)
-                            this.Alignment.Insert(i + n, new SequenceMatch.Insertion(insert - delete));
-                        else n = 1;
-
-                        var original_length = piece.Length;
-                        var length = offset - pos;
-                        piece.Length = Math.Max(0, length);
-                        if (original_length - piece.Length < delete) to_delete = delete - (original_length - piece.Length);
-                        else if (original_length - piece.Length != delete) {
-                            n += 1;
-                            this.Alignment.Insert(i + n, piece.Copy(original_length - piece.Length - delete));
-                        }
-                        placed = true;
-                        pos += original_length;
-                        i += n - 1; // Skip past the placed insertion
-                    } else {
-                        pos += piece.Length;
-                    }
-                } else if (to_delete != 0) {
-                    piece.Length = 0; // Remove all insertions if inserting anything here.
-                }
-            }
-            SequenceMatch.Simplify(ref Alignment);
-            UpdateLengths();
-        }
-
-        void UpdateLengths() {
-            // Set up Length on * again
-            int sum1 = 0;
-            int sum2 = 0;
-            int sum3 = 0;
-            foreach (var m in Alignment) {
-                if (m is SequenceMatch.Match match) {
-                    sum1 += match.Length;
-                }
-                if (m is SequenceMatch.Insertion gc) sum2 += gc.Length;
-                if (m is SequenceMatch.Deletion gt) sum3 += gt.Length;
-            }
-            TotalMatches = sum1;
-            LengthOnTemplate = sum1 + sum2;
-            LengthOnQuery = sum1 + sum3;
         }
     }
 }

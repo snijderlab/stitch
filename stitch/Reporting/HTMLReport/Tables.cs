@@ -170,7 +170,7 @@ namespace HTMLNameSpace {
             foreach (var row in CDRs) {
                 for (int i = 0; i < row.Sequence.Length; i++) {
                     if (i >= diversity.Count) diversity.Add(new Dictionary<(string, int), double>());
-                    if (row.Sequence[i] != Alphabet.GapChar) {
+                    if (row.Sequence[i] != ScoringMatrix.GapChar) {
                         if (diversity[i].ContainsKey((row.Sequence[i].ToString(), 1)))
                             diversity[i][(row.Sequence[i].ToString(), 1)] = diversity[i][(row.Sequence[i].ToString(), 1)] + 1;
                         else
@@ -204,7 +204,7 @@ namespace HTMLNameSpace {
                 foreach (var g in group.Select(item => item.MetaData).Distinct())
                     html.Add(GetAsideLinkHtml(g, AsideType.Read, AssetsFolderName));
                 html.Close(HtmlTag.td);
-                html.OpenAndClose(HtmlTag.td, "class='seq'", row.Sequence.Replace('~', Alphabet.GapChar));
+                html.OpenAndClose(HtmlTag.td, "class='seq'", row.Sequence.Replace('~', ScoringMatrix.GapChar));
                 html.Open(HtmlTag.td, "class='center'");
                 foreach (var g in group.Select(item => item.Template).Distinct())
                     html.Add(GetAsideLinkHtml(g, AsideType.Template, AssetsFolderName));

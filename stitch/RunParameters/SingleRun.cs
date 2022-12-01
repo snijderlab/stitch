@@ -346,7 +346,7 @@ namespace Stitch {
                                     sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
                                 } else {
                                     // When no good overlap is found just paste them one after the other
-                                    s.Add(new AminoAcid(alphabet, Stitch.Alphabet.GapChar));
+                                    s.Add(new AminoAcid(alphabet, ScoringMatrix.GapChar));
                                     s.AddRange(seq);
                                     sequence.ElementAt(index).Overlap = 0;
                                 }

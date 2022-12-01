@@ -18,10 +18,10 @@ TemplateMatching ->
     AmbiguityThreshold : 0.9
 
     Alphabet ->
-        Path            : ../alphabets/blosum62_X1.csv
-        Name            : Blosum62
-        GapStartPenalty : 12
-        GapExtendPenalty: 1
+        Path     : ../alphabets/blosum62_X1.csv
+        Name     : Blosum62
+        GapStart : -12
+        GapExtend: -1
     <-
 
     Segments->
