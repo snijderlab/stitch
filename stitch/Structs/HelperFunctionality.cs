@@ -22,6 +22,20 @@ namespace Stitch {
             }
         }
 
+        /// <summary> To copy a sub array to a new array. </summary>
+        /// <param name="data"> The old array to copy from. </param>
+        /// <param name="index"> The index to start copying. </param>
+        /// <param name="length"> The length of the created sub array. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns a new array with clones of the original array. </returns>
+        public static ArraySegment<T> Slice<T>(this T[] data, int index, int length) {
+            try {
+                return new ArraySegment<T>(data, index, length);
+            } catch {
+                throw new ArgumentException($"Slice Exception length {length} index {index} on an array of length {data.Length}");
+            }
+        }
+
         /// <summary> Create a hash set from data with a given comparer. </summary>
         /// <param name="data"> The data. </param>
         /// <param name="comparer"> The comparer function, should return true when two element are equal. </param>

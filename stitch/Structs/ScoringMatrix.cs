@@ -37,7 +37,6 @@ namespace Stitch {
         public sbyte Score(AminoAcid[] a, AminoAcid[] b) {
             return Matrix[Index(a), Index(b)];
         }
-
         public int Index(AminoAcid[] data) {
             var index = 0;
             foreach (var d in data) {
@@ -120,7 +119,6 @@ namespace Stitch {
                 // Generate all possible permutations for these combinations.
                 for (int len = size; len >= 2; len--) {
                     foreach (var set in alphabet.Combinations(len).Where(s => s.Any(i => i != s.First()))) {
-                        //Console.WriteLine(string.Join("", set) + ": " + string.Join(",", set.Permutations().Select(s => string.Join("", s))));
                         foreach (var perm in set.Permutations()) {
                             this.SetScore(set, perm, (sbyte)(len * (int)swap));
                             this.SetScore(perm, set, (sbyte)(len * (int)swap));
@@ -162,6 +160,14 @@ namespace Stitch {
                             }
                     })
                 }), 8, -1, -5, -5, 2, 3
+            );
+        }
+
+        public static ScoringMatrix TestMatrix() {
+            return IdentityMatrix(
+                "ABC.*".ToList(),
+                (5, new List<List<List<char>>>()),
+                (3, new List<(List<List<char>>, List<List<char>>)>()), 1, 0, -12, -1, 0, 1
             );
         }
 

@@ -41,7 +41,7 @@ namespace Stitch {
         }
     }
 
-    public class FancyAlignment {
+    public class Alignment {
         public readonly int Score;
         public readonly List<AlignmentPiece> Path;
         public readonly int StartA;
@@ -57,7 +57,7 @@ namespace Stitch {
         public readonly int GapInA;
         public readonly int GapInB;
 
-        public FancyAlignment(Read.IRead read_a, Read.IRead read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
+        public Alignment(Read.IRead read_a, Read.IRead read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.Sequence;
             var seq_b = read_b.Sequence.Sequence;
             this.ReadA = read_a;

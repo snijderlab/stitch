@@ -9,7 +9,7 @@ using Stitch;
 namespace StitchTest {
     [TestClass]
     public class AmbiguityTree_Test {
-        readonly static Alphabet alp = new Alphabet("*;A;B;C;.\nA;1;0;0;-1\nB;0;1;0;-1\nC;0;0;1,-1\n.;-1;-1;-1;0", Alphabet.AlphabetParamType.Data, 12, 1);
+        readonly static ScoringMatrix alp = ScoringMatrix.Default();
         readonly static AminoAcid A = new AminoAcid(alp, 'A');
         readonly static AminoAcid B = new AminoAcid(alp, 'B');
         readonly static AminoAcid C = new AminoAcid(alp, 'C');

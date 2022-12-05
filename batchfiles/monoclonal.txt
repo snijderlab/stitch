@@ -18,10 +18,44 @@ TemplateMatching ->
     AmbiguityThreshold : 0.9
 
     Alphabet ->
-        Path     : ../alphabets/blosum62_X1.csv
-        Name     : Blosum62
-        GapStart : -12
-        GapExtend: -1
+        Path       : ../alphabets/blosum62_X1.csv
+        Name       : Blosum62
+        GapStart   : -12
+        GapExtend  : -1
+        PatchLength: 3
+        Swap       : 2
+
+        Symmetric sets ->
+            Score: 5
+            Sets :>
+                N,GG
+                EV,DL
+                Q,AG
+                AV,GL,GI
+                AN,QG,AGG
+                LS,IS,TV
+                AM,CV
+                NV,AAA,GGV
+                NT,QS,AGS,GGT
+                LN,IN,QV,AGV,GGL,GGI
+                DL,DI,EV
+                QT,AAS,AGT
+                AY,FS
+                LQ,IQ,AAV,AGL,AGI
+                NQ,ANG,QGG
+                KN,GGK
+                EN,DQ,ADG,EGG
+                DK,AAT,GSV
+                MN,AAC,GGM
+                AS,GT
+                AAL,AAI,GVV
+                QQ,AAN,AQG
+                EQ,AAD,AEG
+                EK,ASV,GLS,GIS,GTV
+                MQ,AGM,CGV
+                AAQ,NGV
+            <:
+        <-
     <-
 
     Segments->

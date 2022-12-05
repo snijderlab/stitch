@@ -57,7 +57,7 @@ namespace Stitch {
         public int UniqueMatches = 0;
 
         /// <summary> The list of matches on this template. </summary>
-        public List<FancyAlignment> Matches;
+        public List<Alignment> Matches;
 
         /// <summary> If this template is recombinated these are the templates it consists of. </summary>
         public readonly List<Template> Recombination;
@@ -85,7 +85,7 @@ namespace Stitch {
             Sequence = seq;
             MetaData = meta;
             score = 0;
-            Matches = new List<FancyAlignment>();
+            Matches = new List<Alignment>();
             Recombination = recombination;
             Location = location;
             Parent = parent;
@@ -95,7 +95,7 @@ namespace Stitch {
         /// <summary> Adds a new match to the list of matches, if the score is above the cutoff. </summary>
         /// <param name="match">The match to add</param>
         /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
-        public void AddMatch(FancyAlignment match, bool unique = false) {
+        public void AddMatch(Alignment match, bool unique = false) {
             lock (Matches) {
                 if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.ReadB.Sequence.Length)) {
                     score += match.Score;
@@ -244,10 +244,12 @@ namespace Stitch {
                         // Handle normal sequences
                         var option = new SequenceOption(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
                         var cov = piece.StepB == 0 ? 0 : positional_score.SubArray(pos_b, piece.StepB).Average();
-                        if (output[pos_a].AminoAcids.ContainsKey(option)) {
-                            output[pos_a].AminoAcids[option] += cov;
-                        } else {
-                            output[pos_a].AminoAcids.Add(option, cov);
+                        if (pos_a >= 0 && pos_a < output.Count) {
+                            if (output[pos_a].AminoAcids.ContainsKey(option)) {
+                                output[pos_a].AminoAcids[option] += cov;
+                            } else {
+                                output[pos_a].AminoAcids.Add(option, cov);
+                            }
                         }
                     }
                     pos_a += piece.StepA;
@@ -348,12 +350,12 @@ namespace Stitch {
 
         /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
-        public FancyAlignment AlignConsensusWithTemplate() {
+        public Alignment AlignConsensusWithTemplate() {
             var consensus = new Read.Simple(this.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
             if (Recombination != null)
-                return new FancyAlignment(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
+                return new Alignment(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
             else
-                return new FancyAlignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
+                return new Alignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
         }
 
         /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>

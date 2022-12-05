@@ -17,7 +17,7 @@ namespace StitchTest {
             Console.WriteLine(alphabet.Debug());
             var read_a = new Read.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(40, result.Score);
             Assert.AreEqual(0, result.StartA);
             Assert.AreEqual(0, result.StartB);
@@ -29,7 +29,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(27, result.Score);
             Assert.AreEqual(0, result.StartA);
             Assert.AreEqual(0, result.StartB);
@@ -41,7 +41,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(27, result.Score);
             Assert.AreEqual(0, result.StartA);
             Assert.AreEqual(0, result.StartB);
@@ -53,7 +53,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("AFNW", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(29, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -66,7 +66,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("AGFGW", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(28, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -79,7 +79,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Local);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(24, result.Score);
             Assert.AreEqual(1, result.StartA);
@@ -92,7 +92,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.Global);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Global);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(13, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -105,7 +105,7 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
-            var result = new FancyAlignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(23, result.Score);
             Assert.AreEqual(1, result.StartA);

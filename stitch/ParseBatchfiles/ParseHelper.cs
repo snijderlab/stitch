@@ -632,6 +632,7 @@ namespace Stitch {
                 var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<ScoringMatrix>();
                 var identity = ("", 0, 0);
+                var symmetric_sets = ((sbyte)0, new List<List<List<char>>>());
 
                 if (key.GetValues().IsErr()) {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
@@ -693,6 +694,26 @@ namespace Stitch {
                         case "swap":
                             asettings.Swap = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
+                        case "symmetric sets":
+                            sbyte score = 0;
+                            var sets = new List<List<List<char>>>();
+                            foreach (var inner in setting.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
+                                switch (inner.Name) {
+                                    case "score":
+                                        score = (sbyte)ConvertToInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
+                                        break;
+                                    case "sets":
+                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split(',').Select(s1 => s1.ToCharArray().ToList()).ToList()).ToList();
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(inner.KeyRange.Name, "Symmetric Sets", "'Score', 'Sets'"));
+                                        break;
+                                }
+                            }
+                            if (score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Score"));
+                            if (sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Sets"));
+                            symmetric_sets = (score, sets);
+                            break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStart', 'GapExtend', 'Characters', 'Identity', 'Mismatch', 'PatchLength', 'Swap'"));
                             break;
@@ -718,11 +739,11 @@ namespace Stitch {
 
                     if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
                     if (!outEither.IsErr())
-                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), (0, new List<List<List<char>>>()), (0, new List<(List<List<char>> from, List<List<char>> to)>()), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), symmetric_sets, (0, new List<(List<List<char>> from, List<List<char>> to)>()), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 } else {
                     asettings.Alphabet = identity.Item1.ToCharArray();
                     if (!outEither.IsErr())
-                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), (0, new List<List<List<char>>>()), (0, new List<(List<List<char>> from, List<List<char>> to)>()), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), symmetric_sets, (0, new List<(List<List<char>> from, List<List<char>> to)>()), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 }
 
                 return outEither;

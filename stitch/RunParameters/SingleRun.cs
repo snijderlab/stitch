@@ -146,7 +146,7 @@ namespace Stitch {
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
                         var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
                         var query = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
-                        var match = new FancyAlignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
+                        var match = new Alignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.ShortPath()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.PercentIdentity() * 100).ToString("G3")));
@@ -163,8 +163,8 @@ namespace Stitch {
 
             List<(string, List<Segment>)> RunTemplateMatching() {
                 // Initialise the matches list with empty lists for every input read
-                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, FancyAlignment Match)>>(Input.Count);
-                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, FancyAlignment)>());
+                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, Alignment Match)>>(Input.Count);
+                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
 
                 var segments = new List<(string, List<Segment>)>();
                 for (int i = 0; i < TemplateMatching.Segments.Count; i++) {
@@ -222,8 +222,8 @@ namespace Stitch {
             }
 
             void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment) {
-                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, FancyAlignment Match)>>(Input.Count);
-                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, FancyAlignment)>());
+                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, Alignment Match)>>(Input.Count);
+                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
 
                 var alph = Recombine.Alphabet ?? TemplateMatching.Alphabet;
                 var name_filter = new NameFilter();
@@ -369,10 +369,10 @@ namespace Stitch {
                 return scores;
             }
 
-            static void EnforceUnique(List<List<(int, int, int, FancyAlignment Match)>> matches) {
+            static void EnforceUnique(List<List<(int, int, int, Alignment Match)>> matches) {
                 if (matches == null) return;
                 for (int read_index = 0; read_index < matches.Count; read_index++) {
-                    var best = new List<(int, int, int, FancyAlignment)>();
+                    var best = new List<(int, int, int, Alignment)>();
                     var best_score = 0;
                     if (matches[read_index] == null) continue;
                     for (int template_index = 0; template_index < matches[read_index].Count; template_index++) {

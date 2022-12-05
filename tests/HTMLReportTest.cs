@@ -12,10 +12,10 @@ using Stitch.RunParameters;
 namespace StitchTest {
     [TestClass]
     public class HTMLReport_Test {
-        Alphabet alp;
+        ScoringMatrix alp;
 
         public HTMLReport_Test() {
-            alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            alp = ScoringMatrix.Default();
         }
 
         Read.IRead Read(string sequence) {
@@ -38,7 +38,7 @@ namespace StitchTest {
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(1.0, 20).ToList();
-            CompareDOC(doc, doc_expected);
+            CompareDOC(doc_expected, doc);
         }
 
         [TestMethod]
@@ -57,7 +57,7 @@ namespace StitchTest {
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(2.0, 10).ToList();
-            CompareDOC(doc, doc_expected);
+            CompareDOC(doc_expected, doc);
         }
 
         [TestMethod]
@@ -76,7 +76,7 @@ namespace StitchTest {
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(1.0, 1).ToList();
-            CompareDOC(doc, doc_expected);
+            CompareDOC(doc_expected, doc);
         }
 
         [TestMethod]
@@ -92,13 +92,13 @@ namespace StitchTest {
                 );
             var doc = segment.Templates[0].ConsensusSequence().Item2;
             var doc_expected = Enumerable.Repeat(0.0, 0).ToList();
-            CompareDOC(doc, doc_expected);
+            CompareDOC(doc_expected, doc);
         }
 
         void CompareDOC(List<double> actual, List<double> expected) {
             Assert.IsNotNull(actual);
             Assert.IsNotNull(expected);
-            Assert.AreEqual(actual.Count, expected.Count);
+            Assert.AreEqual(actual.Count, expected.Count, "Assume same length");
 
             Console.Write("\n");
             foreach (var doc in actual) Console.Write($" {doc}");
@@ -107,14 +107,6 @@ namespace StitchTest {
 
             for (int index = 0; index < actual.Count; index++)
                 Assert.AreEqual(actual[index], expected[index]);
-        }
-
-        AminoAcid[] StringToSequence(string input, Alphabet alp) {
-            AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++) {
-                output[i] = new AminoAcid(alp, input[i]);
-            }
-            return output;
         }
     }
 

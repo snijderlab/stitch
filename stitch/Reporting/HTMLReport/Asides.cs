@@ -11,6 +11,9 @@ using static Stitch.HelperFunctionality;
 
 namespace HTMLNameSpace {
     public static class HTMLAsides {
+        const char gap_char = '-';
+        const char non_breaking_space = '\u00A0'; // &nbsp; in html
+
         /// <summary> Returns an aside for details viewing of a read. </summary>
         public static HtmlBuilder CreateReadAside(Read.IRead MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments) {
             var html = new HtmlBuilder();
@@ -173,23 +176,27 @@ namespace HTMLNameSpace {
             // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
             // HERECOMESTHEGERMLINE.SEQUENCE
             //             CONSENSUS          (differences)
-            var annotated = template.ConsensusSequenceAnnotation();
+            var annotated = template.ConsensusSequenceAnnotation(); // TODO: is having the annotation based on the consensus the best way forward? Or should it be done based on template?
             var match = template.AlignConsensusWithTemplate();
             var columns = new List<(string Template, string Query, string Difference, Annotation Class)>();
             var data_buffer = new StringBuilder();
             var html = new HtmlBuilder();
 
             int pos_a = match.StartA;
-            int pos_b = match.StartB; // Handle overlaps (also at the end)
+            int pos_b = match.StartB;
 
             foreach (var piece in match.Path) {
                 var a = AminoAcid.ArrayToString(match.ReadA.Sequence.Sequence.SubArray(pos_a, piece.StepA));
                 var b = AminoAcid.ArrayToString(match.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
-                columns.Add((
-                    a,
-                    b,
-                    a == b ? new string(' ', piece.StepA) : b,
-                    annotated[pos_b - match.StartB]));
+                if (!(String.IsNullOrEmpty(a) && b == "X")) {
+                    columns.Add((
+                        a.Length == 0 ? ScoringMatrix.GapChar.ToString() : a,
+                        b.Length == 0 ? ScoringMatrix.GapChar.ToString() : b,
+                        a == b ? new string(non_breaking_space, piece.StepA) : b,
+                        pos_b >= annotated.Length ? Annotation.None : annotated[pos_b]));
+                }
+                pos_a += piece.StepA;
+                pos_b += piece.StepB;
             }
 
             html.Open(HtmlTag.div, "class='annotated-consensus-sequence'");
@@ -203,7 +210,7 @@ namespace HTMLNameSpace {
 
             var present = new HashSet<Annotation>();
             foreach (var column in columns) {
-                if (column.Template == "X" && (column.Query == "." || column.Query == "X")) continue;
+                if (column.Template == "X" && (column.Query == ScoringMatrix.GapChar.ToString() || column.Query == "X")) continue;
                 html.Open(HtmlTag.div, $"class='{column.Class}'");
                 if (column.Class.IsAnyCDR())
                     if (!present.Contains(column.Class)) {
@@ -234,8 +241,6 @@ namespace HTMLNameSpace {
             //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
-            const char gap_char = '-';
-            const char non_breaking_space = '\u00A0'; // &nbsp; in html
             var gaps = new int[template.Sequence.Length + 1];
 
             if (template.Matches.Count == 0)
@@ -263,8 +268,6 @@ namespace HTMLNameSpace {
                     if (piece.StepA == 0)
                         gap += pos_a == match.StartA || pos_a == match.StartA + match.LenA ? 0 : piece.StepB;
                     else if (gap > 0) {
-                        if (template.MetaData.Identifier == "IGHJ4")
-                            Console.WriteLine($"pos_a {pos_a} gap {gap} previous {gaps[pos_a]} for {match.ReadB.Identifier} at pos {pos_b}");
                         gaps[pos_a] = Math.Max(gaps[pos_a], gap);
                         gap = 0;
                     }
@@ -343,8 +346,13 @@ namespace HTMLNameSpace {
                 classes_string = string.IsNullOrEmpty(classes_string) ? "" : $"class='{classes_string}' ";
 
                 // Generate the actual HTMl and Fasta lines
-                var start = 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA).Sum();
-                var end = start + alignment.LenA + gaps.SubArray(alignment.StartA, alignment.LenA).Sum() + 1;
+                var len_start = alignment.Path.TakeWhile(a => a.StepA == 0).Select(a => (int)a.StepB).Sum();
+                var reverse_path = new List<AlignmentPiece>(alignment.Path);
+                reverse_path.Reverse();
+                var len_end = reverse_path.TakeWhile(a => a.StepA == 0).Select(a => (int)a.StepB).Sum();
+
+                var start = Math.Max(0, 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA + 1).Sum() - len_start);
+                var end = start + alignment.LenA + gaps.SubArray(alignment.StartA, alignment.LenA).Sum() + 1 + len_start + len_end;
                 html.Open(
                     HtmlTag.a,
                     $"{classes_string}id='aligned-{GetAsideIdentifier(alignment.ReadB)}' href='{CommonPieces.GetAsideRawLink(alignment.ReadB, AsideType.Read, AssetsFolderName, location)}' target='_blank' style='grid-column:{start} / {end};' onmouseover='AlignmentDetails(\"{alignment.ReadB.EscapedIdentifier}\")' onmouseout='AlignmentDetailsClear()'");
@@ -355,31 +363,41 @@ namespace HTMLNameSpace {
                     // TODO: fix the accompanying css
                     var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
                     var total_gaps = piece.StepA == 0 ? 0 : gaps.SubArray(pos_a, piece.StepA).Sum();
+                    var positional_gap_char = pos_a == alignment.StartA ? non_breaking_space : gap_char;
                     if (piece.StepA == piece.StepB && piece.StepA > 1 && template.Parent.Alphabet.Swap != 0 && piece.LocalScore == piece.StepA * template.Parent.Alphabet.Swap) {
                         if (inserted > total_gaps) inserted = total_gaps;
                         // Display swaps with internal gaps
-                        html.Open(HtmlTag.span, $"class='swap' style='--i:{piece.StepB + total_gaps - inserted};--w:{piece.StepA + total_gaps};'");
+                        var already_inserted = gaps[pos_a];
+                        html.Content(new string(positional_gap_char, gaps[pos_a]));
+                        html.Open(HtmlTag.span, $"class='swap' style='--i:{piece.StepB + total_gaps - inserted - already_inserted};--w:{piece.StepA + total_gaps - already_inserted};'");
                         for (int i = 0; i < piece.StepA; i++) {
-                            html.Content(new string('s', gaps[pos_a + i]));
+                            if (i != 0) html.Content(new string(gap_char, gaps[pos_a + i]));
                             html.Content(content[i].ToString());
                         }
                         html.Close(HtmlTag.span);
                         inserted = 0;
                     } else if (piece.StepA == 0) {
+                        if (pos_a == 0 && pos_b == 0) {
+                            html.Content(new string(non_breaking_space, Math.Max(0, gaps[pos_a] - len_start)));
+                            inserted += Math.Max(0, gaps[pos_a] - len_start);
+                        }
                         html.Content(AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)));
                         inserted += piece.StepB;
                     } else if (piece.StepB == 0) {
                         if (inserted > total_gaps) inserted = total_gaps;
-                        html.Content(new string(pos_a == alignment.StartA ? 'd' : 'b', piece.StepA + total_gaps - inserted));
+                        html.Content(new string(positional_gap_char, piece.StepA + total_gaps - inserted));
                         inserted = 0;
                     } else if (piece.StepA != piece.StepB) {
                         // Display unequal sets stretched (or squashed) including all gaps
                         if (inserted > total_gaps) inserted = total_gaps;
-                        html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - inserted};'", content);
+                        if (pos_a == alignment.StartA) total_gaps -= gaps[pos_a];
+                        var already_inserted = gaps[pos_a];
+                        html.Content(new string(positional_gap_char, gaps[pos_a]));
+                        html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - inserted - already_inserted};'", content);
                         inserted = 0;
                     } else {
                         if (inserted > total_gaps) inserted = total_gaps;
-                        html.Content(new string(pos_a == alignment.StartA ? 'n' : gap_char, total_gaps - inserted));
+                        if (pos_a != alignment.StartA) html.Content(new string(gap_char, total_gaps - inserted));
                         html.Content(content);
                         inserted = 0;
                     }
@@ -445,7 +463,7 @@ namespace HTMLNameSpace {
             return output1 + ";" + output2 + ";" + output3 + ";background-repeat:no-repeat;";
         }
 
-        static HtmlBuilder AlignmentDetails(FancyAlignment match, Template template) {
+        static HtmlBuilder AlignmentDetails(Alignment match, Template template) {
             var doc_title = "Positional Score";
             var type = "Read";
             var html = new HtmlBuilder();
@@ -493,7 +511,7 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        static HtmlBuilder SequenceMatchGraphic(FancyAlignment match, Template template) {
+        static HtmlBuilder SequenceMatchGraphic(Alignment match, Template template) {
             var id = "none";
             var html = new HtmlBuilder();
             foreach (var piece in match.Path) {

@@ -23,7 +23,7 @@ namespace Stitch {
             var data = new List<List<string>>();
             var peaks = false;
 
-            void AddLine(string group, Template template, FancyAlignment match) {
+            void AddLine(string group, Template template, Alignment match) {
                 var row = new List<string> {
                     match.ReadB.Identifier,
                     template.MetaData.Identifier,

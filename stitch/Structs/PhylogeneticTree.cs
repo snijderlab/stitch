@@ -20,7 +20,7 @@ namespace Stitch {
 
             // Get all the scores in the matrix
             distance.IndexMap((i, j) => {
-                var match = new FancyAlignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global);
+                var match = new Alignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global);
                 return match.LenA - match.Identical + (match.GapInA + match.GapInB) * 12;
             });
 
@@ -137,7 +137,7 @@ namespace Stitch {
             public readonly Tree<string> OriginalTree;
             public readonly Tree<(int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea, string Name)> DataTree;
 
-            public ProteinHierarchyTree(Tree<string> tree, List<FancyAlignment> matches) {
+            public ProteinHierarchyTree(Tree<string> tree, List<Alignment> matches) {
                 OriginalTree = tree;
                 var SetTree = tree.Remodel(branch => // Slightly inefficient as it recreates all sets from scratch every time, but I do not think that it takes much time
                     branch.Fold(

@@ -14,7 +14,7 @@ namespace StitchTest {
         /// <summary> All templates given as examples should be valid FASTA files </summary>
         [TestMethod]
         public void TestExamples() {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = ScoringMatrix.Default();
             var path = Globals.Root + @"templates";
             var files = Directory.GetFiles(path);
             var namefilter = new NameFilter();
@@ -32,7 +32,7 @@ namespace StitchTest {
         /// <summary> Test the reading of annotated fasta files </summary>
         [TestMethod]
         public void TestAnnotation() {
-            var alp = new Alphabet(Globals.Root + "alphabets/blosum62.csv", Alphabet.AlphabetParamType.Path, 6, 2);
+            var alp = ScoringMatrix.Default();
             var file = Globals.Root + @"templates/Homo_sapiens_IGHV.fasta";
             var namefilter = new NameFilter();
             var reads = OpenReads.Fasta(namefilter, new Read.FileIdentifier(file, "", null), new Regex("(.*)"), alp).Unwrap();
