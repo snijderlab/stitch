@@ -666,14 +666,14 @@ namespace Stitch {
                             break;
                         case "gapstartpenalty":
                             asettings.GapStart = (sbyte)-ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapStartPenalty is Deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {-asettings.GapStart}", true));
+                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapStartPenalty is Deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {asettings.GapStart}", true));
                             break;
                         case "gapstart":
                             asettings.GapStart = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "gapextendpenalty":
                             asettings.GapExtend = (sbyte)-ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapExtendPenalty is Deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {-asettings.GapExtend}", true));
+                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapExtendPenalty is Deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {asettings.GapExtend}", true));
                             break;
                         case "gapextend":
                             asettings.GapExtend = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
