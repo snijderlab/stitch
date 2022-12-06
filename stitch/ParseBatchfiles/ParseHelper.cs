@@ -703,7 +703,7 @@ namespace Stitch {
                                         score = (sbyte)ConvertToInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "sets":
-                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split(',').Select(s1 => s1.ToCharArray().ToList()).ToList()).ToList();
+                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(inner.KeyRange.Name, "Symmetric Sets", "'Score', 'Sets'"));
@@ -719,6 +719,8 @@ namespace Stitch {
                             break;
                     }
                 }
+
+
 
                 if (String.IsNullOrEmpty(identity.Item1)) {
                     if (path_Setting != null) {
@@ -736,12 +738,27 @@ namespace Stitch {
                             return outEither; // The path is wrong so just give up
                         }
                     }
+                } else {
+                    asettings.Alphabet = identity.Item1.ToCharArray();
+                }
 
+                // Detect erroneous set definitions
+                var error = false;
+                if (symmetric_sets.Item1 != 0)
+                    foreach (var set in symmetric_sets.Item2)
+                        foreach (var seq in set)
+                            foreach (var aa in seq)
+                                if (!asettings.Alphabet.Contains(aa)) {
+                                    new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet.").Print();
+                                    error = true;
+                                }
+                if (error) throw new ParseException("Invalid sets in alphabet definition.");
+
+                if (String.IsNullOrEmpty(identity.Item1)) {
                     if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
                     if (!outEither.IsErr())
                         outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), symmetric_sets, (0, new List<(List<List<char>> from, List<List<char>> to)>()), asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 } else {
-                    asettings.Alphabet = identity.Item1.ToCharArray();
                     if (!outEither.IsErr())
                         outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), symmetric_sets, (0, new List<(List<List<char>> from, List<List<char>> to)>()), (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
                 }

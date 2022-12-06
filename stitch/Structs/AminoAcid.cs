@@ -23,7 +23,7 @@ namespace Stitch {
 
         /// <summary> The unsafe creator of AminoAcids. </summary>
         /// <param name="input"> The character to store in this AminoAcid. </param>
-        AminoAcid(char input) {
+        public AminoAcid(char input) {
             Character = input;
         }
 
