@@ -46,6 +46,18 @@ namespace Stitch {
             return index;
         }
 
+        public sbyte Score(Span<AminoAcid> a, Span<AminoAcid> b) {
+            return Matrix[Index(a), Index(b)];
+        }
+        public int Index(Span<AminoAcid> data) {
+            var index = 0;
+            foreach (var d in data) {
+                index *= AlphabetSize;
+                index += PositionInScoringMatrix[d.Character] + 1;
+            }
+            return index;
+        }
+
         void SetScore(IEnumerable<char> a, IEnumerable<char> b, sbyte score) {
             Matrix[Index(a), Index(b)] = score;
         }

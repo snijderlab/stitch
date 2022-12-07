@@ -22,17 +22,17 @@ namespace Stitch {
             }
         }
 
-        /// <summary> To copy a sub array to a new array. </summary>
+        /// <summary> To create a span to the given slice in an array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
         /// <param name="length"> The length of the created sub array. </param>
         /// <typeparam name="T"> The type of the elements in the array. </typeparam>
         /// <returns> Returns a new array with clones of the original array. </returns>
-        public static ArraySegment<T> Slice<T>(this T[] data, int index, int length) {
+        public static Span<T> SubSpan<T>(this T[] data, int index, int length) {
             try {
-                return new ArraySegment<T>(data, index, length);
+                return new Span<T>(data, index, length);
             } catch {
-                throw new ArgumentException($"Slice Exception length {length} index {index} on an array of length {data.Length}");
+                throw new ArgumentException($"SubArray Exception length {length} index {index} on an array of length {data.Length}");
             }
         }
 
