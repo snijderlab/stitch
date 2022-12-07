@@ -148,7 +148,7 @@ namespace Stitch {
                         var query = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
                         var match = new Alignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
-                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.ShortPath()));
+                        buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.VeryShortPath()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.PercentIdentity() * 100).ToString("G3")));
                     }
 

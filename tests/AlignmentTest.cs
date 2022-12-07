@@ -34,6 +34,7 @@ namespace StitchTest {
             Assert.AreEqual(0, result.StartA);
             Assert.AreEqual(0, result.StartB);
             Assert.AreEqual("MMIMM", result.ShortPath());
+            Assert.AreEqual("2M1I2M", result.VeryShortPath());
         }
 
         [TestMethod]

@@ -160,6 +160,20 @@ namespace Stitch {
             return String.Join("", this.Path.Select(p => p.ShortPath()));
         }
 
+        public string VeryShortPath() {
+            var items = this.Path.Select(i => i.ShortPath());
+            var builder = new StringBuilder();
+            var previous = items.Count();
+            while (items.Count() > 0) {
+                var selected = items.First();
+                items = items.SkipWhile(i => i == selected);
+                var current = items.Count();
+                builder.Append($"{previous - current}{selected}");
+                previous = current;
+            }
+            return builder.ToString();
+        }
+
         string Aligned() {
             var blocks = " ▁▂▃▄▅▆▇█".ToCharArray();
             var blocks_neg = " ▔▔▔▀▀▀▀█".ToCharArray();
