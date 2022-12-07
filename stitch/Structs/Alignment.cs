@@ -87,11 +87,12 @@ namespace Stitch {
             }
 
             // Fill the matrix with the best move for each position
+            //var values = new List<AlignmentPiece>(alphabet.Size * alphabet.Size + 2);
             for (int index_a = 1; index_a <= seq_a.Length; index_a++) {
                 for (int index_b = 1; index_b <= seq_b.Length; index_b++) {
-                    AlignmentPiece value = new AlignmentPiece(int.MinValue, sbyte.MinValue, 0, 0);
+                    //values.Clear(); // Reuse the values memory
+                    AlignmentPiece value = new AlignmentPiece();
                     // List all possible moves
-                    // TODO: speed up option: create a list of all valid lena/b combinations so no branches are needed any more in the hot loop.
                     for (byte len_a = 0; len_a <= alphabet.Size; len_a++) {
                         for (byte len_b = 0; len_b <= alphabet.Size; len_b++) {
                             if ((len_a == 0 && len_b != 1) || (len_b == 0 && len_a != 1) || (len_a > index_a) || (len_b > index_b))
@@ -100,13 +101,14 @@ namespace Stitch {
                             var previous = matrix[index_a - len_a, index_b - len_b];
                             sbyte score = len_a == 0 || len_b == 0
                                 ? (len_a == 0 && previous.StepA == 0 || len_b == 0 && previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
-                                : alphabet.Score(seq_a.SubSpan(index_a - len_a, len_a), seq_b.SubSpan(index_b - len_b, len_b));
+                                : alphabet.Score(seq_a.SubArray(index_a - len_a, len_a), seq_b.SubArray(index_b - len_b, len_b));
 
                             if (score == 0)
                                 continue; // Skip undefined pairs
 
-                            if (score > value.Score)
-                                value = new AlignmentPiece(previous.Score + (int)score, score, len_a, len_b);
+                            var total_score = previous.Score + (int)score;
+                            if (value.Score < total_score)
+                                value = new AlignmentPiece(total_score, score, len_a, len_b);
                         }
                     }
                     // Select the best move
