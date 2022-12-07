@@ -101,7 +101,7 @@ namespace Stitch {
                             var previous = matrix[index_a - len_a, index_b - len_b];
                             sbyte score = len_a == 0 || len_b == 0
                                 ? (len_a == 0 && previous.StepA == 0 || len_b == 0 && previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
-                                : alphabet.Score(seq_a.SubArray(index_a - len_a, len_a), seq_b.SubArray(index_b - len_b, len_b));
+                                : alphabet.Score(seq_a.SubSpan(index_a - len_a, len_a), seq_b.SubSpan(index_b - len_b, len_b));
 
                             if (score == 0)
                                 continue; // Skip undefined pairs

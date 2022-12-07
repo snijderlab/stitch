@@ -57,6 +57,9 @@ namespace Stitch {
             }
             return index;
         }
+        public sbyte Score(IEnumerable<char> a, IEnumerable<char> b) {
+            return Matrix[Index(a), Index(b)];
+        }
 
         void SetScore(IEnumerable<char> a, IEnumerable<char> b, sbyte score) {
             Matrix[Index(a), Index(b)] = score;
@@ -105,7 +108,7 @@ namespace Stitch {
                     var perms_b = b.Permutations();
                     foreach (var perm_a in perms_a) {
                         foreach (var perm_b in perms_b) {
-                            this.SetScore(perm_a, perm_b, symmetric_similar.score);
+                            this.SetScore(perm_a, perm_b, Math.Max(this.Score(perm_a, perm_b), symmetric_similar.score));
                         }
                     }
                 }
@@ -119,7 +122,7 @@ namespace Stitch {
                         var perms_b = b.Permutations();
                         foreach (var perm_a in perms_a) {
                             foreach (var perm_b in perms_b) {
-                                this.SetScore(perm_a, perm_b, asymmetric_similar.score);
+                                this.SetScore(perm_a, perm_b, Math.Max(this.Score(perm_a, perm_b), asymmetric_similar.score));
                             }
                         }
                     }

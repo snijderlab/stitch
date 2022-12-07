@@ -28,6 +28,7 @@ TemplateMatching ->
         Symmetric sets ->
             Score: 6
             Sets :>
+                I,L
                 N,GG
                 Q,AG
                 AV,GL,GI
@@ -53,6 +54,20 @@ TemplateMatching ->
                 EK,ASV,GLS,GIS,GTV
                 MQ,AGM,CGV
                 AAQ,NGV
+            <:
+        <-
+
+        Asymmetric sets ->
+            Score: 3
+            Sets :>
+                Q->E
+                D->N
+                C->T
+                T->D
+                S->T
+                D->E
+                R->AV,GL
+                Q->AA
             <:
         <-
     <-
