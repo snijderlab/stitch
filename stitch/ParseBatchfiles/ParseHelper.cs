@@ -704,7 +704,7 @@ namespace Stitch {
                                         score = (sbyte)ConvertToInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "sets":
-                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
+                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split('-', 2).First().Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(inner.KeyRange.Name, "Symmetric Sets", "'Score', 'Sets'"));
@@ -725,7 +725,7 @@ namespace Stitch {
                                         break;
                                     case "sets":
                                         a_sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => {
-                                            var temp = s.Split("->", 2).Select(s0 => s0.Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
+                                            var temp = s.Split("->", 2).Select(s0 => s0.Split('-', 2).First().Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
                                             return (temp[0], temp[1]);
                                         }).ToList();
                                         break;
@@ -775,6 +775,7 @@ namespace Stitch {
                                 if (!asettings.Alphabet.Contains(aa)) {
                                     new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet.").Print();
                                     error = true;
+                                    break;
                                 }
                 if (asymmetric_sets.Item1 != 0)
                     foreach (var set in asymmetric_sets.Item2)
@@ -784,6 +785,7 @@ namespace Stitch {
                                     if (!asettings.Alphabet.Contains(aa)) {
                                         new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet.").Print();
                                         error = true;
+                                        break;
                                     }
                 if (error) throw new ParseException("Invalid sets in alphabet definition.");
 

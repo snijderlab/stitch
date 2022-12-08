@@ -63,14 +63,21 @@ TemplateMatching ->
         Asymmetric sets ->
             Score: 3
             Sets :>
-                Q->E
-                D->N
-                C->T
-                T->D
-                S->T
-                D->E
-                R->AV,GL
-                Q->AA
+                Q->E -Deamidation
+                D->N,GG -Deamidation
+                C->T -Disulfide bond
+                T->D -Methylation
+                S->T -Methylation
+                D->E -Methylation
+                R->AV,GL,GI -Methylation
+                Q->AA -Methylation
+                W->DS,AM,CV,TT -Oxidation
+                M->F -Oxidation
+                T->E -Formylation
+                K->GV,R -Formylation
+                S->D -Formylation
+                S->E -Acetylation
+                K->AV,GL,GI -Acetylation/Homoarginine
             <:
         <-
     <-
