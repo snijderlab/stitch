@@ -21,7 +21,7 @@ namespace StitchTest {
             var tree = PhylogeneticTree.CreateTree(sequences, alp, false);
             var out_group_tree = PhylogeneticTree.CreateTree(sequences, alp, true);
             Assert.AreEqual("((A, B), C)", tree.BracketsNotation()); // un rooted, this is how it comes out
-            Assert.AreEqual("((C, B), A)", out_group_tree.BracketsNotation()); // out group rooted it comes out as (A, (B, C)), although a bit rotated
+            Assert.AreEqual("((A, B), C)", out_group_tree.BracketsNotation()); // out group rooted it comes out as (A, (B, C)), although a bit rotated
         }
     }
 }

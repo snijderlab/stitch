@@ -53,6 +53,7 @@ namespace Stitch {
         public readonly int LenA;
         public readonly int LenB;
         public readonly int Identical;
+        public readonly int MisMatches;
         public readonly int Similar;
         public readonly int GapInA;
         public readonly int GapInB;
@@ -144,12 +145,16 @@ namespace Stitch {
             this.LenA = 0;
             this.LenB = 0;
             this.Identical = 0;
+            this.MisMatches = 0;
             this.Similar = 0;
             this.GapInA = 0;
             this.GapInB = 0;
             foreach (var piece in Path) {
-                if (piece.StepA == 1 && piece.StepB == 1 && ReadA.Sequence.Sequence[this.LenA] == ReadB.Sequence.Sequence[this.LenB]) {
-                    this.Identical += 1;
+                if (piece.StepA == 1 && piece.StepB == 1) {
+                    if (ReadA.Sequence.Sequence[this.LenA] == ReadB.Sequence.Sequence[this.LenB])
+                        this.Identical += 1;
+                    else
+                        this.MisMatches += 1;
                 }
                 if (piece.StepA != 0 && piece.StepB != 0) this.Similar += 1;
                 if (piece.StepA == 0) this.GapInA += 1;

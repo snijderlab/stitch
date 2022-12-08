@@ -360,7 +360,6 @@ namespace HTMLNameSpace {
                 var pos_b = alignment.StartB;
                 var inserted = 0;
                 foreach (var piece in alignment.Path) {
-                    // TODO: fix the accompanying css
                     var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
                     var total_gaps = piece.StepA == 0 ? 0 : gaps.SubArray(pos_a, piece.StepA).Sum();
                     var positional_gap_char = pos_a == alignment.StartA ? non_breaking_space : gap_char;
@@ -368,7 +367,7 @@ namespace HTMLNameSpace {
                         if (inserted > total_gaps) inserted = total_gaps;
                         // Display swaps with internal gaps
                         var already_inserted = gaps[pos_a];
-                        html.Content(new string(positional_gap_char, gaps[pos_a]));
+                        if (pos_a != alignment.StartA) html.Content(new string(positional_gap_char, gaps[pos_a]));
                         html.Open(HtmlTag.span, $"class='swap' style='--i:{piece.StepB + total_gaps - inserted - already_inserted};--w:{piece.StepA + total_gaps - already_inserted};'");
                         for (int i = 0; i < piece.StepA; i++) {
                             if (i != 0) html.Content(new string(gap_char, gaps[pos_a + i]));

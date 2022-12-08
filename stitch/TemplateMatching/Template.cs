@@ -209,7 +209,7 @@ namespace Stitch {
                 var position = (amino, new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>());
                 output.Add(position);
             }
-            output.Add((new AminoAcid(this.Parent.Alphabet, ScoringMatrix.GapChar), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
+            //output.Add((new AminoAcid(this.Parent.Alphabet, ScoringMatrix.GapChar), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
             // TODO: why do I need an extra element?
 
             foreach (var alignment in Matches) {
@@ -230,7 +230,7 @@ namespace Stitch {
                             gap = new Gap(insertion.ToArray());
                             gap_cov = positional_score.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();
                         }
-                        var position = output[pos_a].Gaps;
+                        var position = output[Math.Min(pos_a, output.Count - 1)].Gaps;
                         if (position.ContainsKey(gap)) {
                             if (position[gap].CoverageDepth != null)
                                 gap_cov = position[gap].CoverageDepth.ElementwiseAdd(gap_cov);
@@ -244,12 +244,11 @@ namespace Stitch {
                         // Handle normal sequences
                         var option = new SequenceOption(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
                         var cov = piece.StepB == 0 ? 0 : positional_score.SubArray(pos_b, piece.StepB).Average();
-                        if (pos_a >= 0 && pos_a < output.Count) {
-                            if (output[pos_a].AminoAcids.ContainsKey(option)) {
-                                output[pos_a].AminoAcids[option] += cov;
-                            } else {
-                                output[pos_a].AminoAcids.Add(option, cov);
-                            }
+
+                        if (output[Math.Min(pos_a, output.Count - 1)].AminoAcids.ContainsKey(option)) {
+                            output[Math.Min(pos_a, output.Count - 1)].AminoAcids[option] += cov;
+                        } else {
+                            output[Math.Min(pos_a, output.Count - 1)].AminoAcids.Add(option, cov);
                         }
                     }
                     pos_a += piece.StepA;

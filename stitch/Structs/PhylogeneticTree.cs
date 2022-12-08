@@ -21,7 +21,7 @@ namespace Stitch {
             // Get all the scores in the matrix
             distance.IndexMap((i, j) => {
                 var match = new Alignment(Sequences[i].MetaData, Sequences[j].MetaData, alphabet, AlignmentType.Global);
-                return match.LenA - match.Identical + (match.GapInA + match.GapInB) * 12;
+                return match.MisMatches + (match.GapInA + match.GapInB) * 12;
             });
 
             var max_distance = (double.MinValue, 0, 0);
