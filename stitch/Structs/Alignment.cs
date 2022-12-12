@@ -151,7 +151,7 @@ namespace Stitch {
             this.GapInB = 0;
             foreach (var piece in Path) {
                 if (piece.StepA == 1 && piece.StepB == 1) {
-                    if (ReadA.Sequence.Sequence[this.LenA] == ReadB.Sequence.Sequence[this.LenB])
+                    if (ReadA.Sequence.Sequence[this.LenA + this.StartA] == ReadB.Sequence.Sequence[this.LenB + this.StartB])
                         this.Identical += 1;
                     else
                         this.MisMatches += 1;
@@ -204,8 +204,8 @@ namespace Stitch {
                 } else {
                     str_b.Append(AminoAcid.ArrayToString(this.ReadB.Sequence.Sequence.SubArray(loc_b, piece.StepB)).PadLeft(l, '·'));
                 }
-                str_blocks.Append(piece.LocalScore < 0 ? new string(' ', l) : new string(blocks[piece.LocalScore], l));
-                str_blocks_neg.Append(piece.LocalScore >= 0 ? new string(' ', l) : new string(blocks_neg[-piece.LocalScore], l));
+                str_blocks.Append(piece.LocalScore < 0 || piece.LocalScore >= blocks.Length ? new string(' ', l) : new string(blocks[piece.LocalScore], l));
+                str_blocks_neg.Append(piece.LocalScore >= 0 || -piece.LocalScore >= blocks_neg.Length ? new string(' ', l) : new string(blocks_neg[-piece.LocalScore], l));
                 loc_a += piece.StepA;
                 loc_b += piece.StepB;
             }
@@ -214,7 +214,7 @@ namespace Stitch {
         }
 
         public string Summary() {
-            return $"score: {Score}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{Aligned()}";
+            return $"score: {Score}\nidentity: {PercentIdentity():P2}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{Aligned()}";
         }
 
         public double PercentIdentity() {

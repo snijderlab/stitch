@@ -146,7 +146,7 @@ namespace Stitch {
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
                         var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
                         var query = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
-                        var match = new Alignment(template, query, result.Parent.Alphabet, AlignmentType.Global);
+                        var match = new Alignment(template, query, result.Parent.Alphabet, AlignmentType.Local);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.VeryShortPath()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.PercentIdentity() * 100).ToString("G3")));
