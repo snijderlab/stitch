@@ -101,7 +101,11 @@ namespace Stitch {
 
                             var previous = matrix[index_a - len_a, index_b - len_b];
                             sbyte score = len_a == 0 || len_b == 0
-                                ? (len_a == 0 && previous.StepA == 0 || len_b == 0 && previous.StepB == 0 ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
+                                ? (len_a == 0 && previous.StepA == 0
+                                   || len_b == 0 && previous.StepB == 0
+                                   || len_a == 0 && seq_a[index_a - 1] == alphabet.GapChar
+                                   || len_b == 0 && seq_b[index_b - 1] == alphabet.GapChar
+                                   ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
                                 : alphabet.Score(seq_a.SubSpan(index_a - len_a, len_a), seq_b.SubSpan(index_b - len_b, len_b));
 
                             if (score == 0)

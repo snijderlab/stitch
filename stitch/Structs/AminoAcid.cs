@@ -71,7 +71,7 @@ namespace Stitch {
             AminoAcid[] output = new AminoAcid[input.Length];
             outEither.Value = output;
             for (int i = 0; i < input.Length; i++) {
-                output[i] = TryCreate(alphabet, input[i], position, input).UnwrapOrDefault(outEither, new AminoAcid(ScoringMatrix.GapChar));
+                output[i] = TryCreate(alphabet, input[i], position, input).UnwrapOrDefault(outEither, new AminoAcid(alphabet.GapChar));
             }
             return outEither;
         }

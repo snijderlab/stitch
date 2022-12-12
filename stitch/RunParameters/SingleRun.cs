@@ -346,7 +346,7 @@ namespace Stitch {
                                     sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
                                 } else {
                                     // When no good overlap is found just paste them one after the other
-                                    s.Add(new AminoAcid(alphabet, ScoringMatrix.GapChar));
+                                    s.Add(new AminoAcid(alphabet, alphabet.GapChar));
                                     s.AddRange(seq);
                                     sequence.ElementAt(index).Overlap = 0;
                                 }
@@ -372,16 +372,16 @@ namespace Stitch {
             static void EnforceUnique(List<List<(int, int, int, Alignment Match)>> matches) {
                 if (matches == null) return;
                 for (int read_index = 0; read_index < matches.Count; read_index++) {
-                    var best = new List<(int, int, int, Alignment)>();
+                    var best = new List<(int, int, int, Alignment Match)>();
                     var best_score = 0;
                     if (matches[read_index] == null) continue;
                     for (int template_index = 0; template_index < matches[read_index].Count; template_index++) {
                         var match = matches[read_index][template_index];
                         if (match.Match.Score > best_score) {
-                            best.Clear();
+                            best = best.Where(m => m.Match.Score >= match.Match.Score * 0.95).ToList();
                             best.Add(match);
                             best_score = match.Match.Score;
-                        } else if (match.Match.Score == best_score) {
+                        } else if (match.Match.Score >= best_score * 0.95) {
                             best.Add(match);
                         }
                     }

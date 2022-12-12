@@ -1,5 +1,5 @@
 -Run Info---------------
-Version    : 1.1
+Version    : 1.3
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
@@ -7,28 +7,33 @@ Input ->
         Path     : 218_2.csv
         Format   : X+
         Name     : 01
-        CutoffALC: 90
+        CutoffALC: 85
     <-
 <-
 
 TemplateMatching ->
     EnforceUnique: True
-    CutoffScore          : 10
+    CutoffScore  : 10
 
     Alphabet ->
         Characters : ARNDCQEGHILKMFPSTWYVBZX.*
         Identity   : 8
         Mismatch   : -1
-        Name       : Blosum62
         GapStart   : -12
         GapExtend  : -1
         PatchLength: 3
         Swap       : 2
 
         Symmetric sets ->
-            Score: 6
+            Score: 8
             Sets :>
                 I,L
+            <:
+        <-
+
+        Symmetric sets ->
+            Score: 6
+            Sets :>
                 N,GG
                 Q,AG
                 AV,GL,GI
@@ -54,6 +59,22 @@ TemplateMatching ->
                 EK,ASV,GLS,GIS,GTV
                 MQ,AGM,CGV
                 AAQ,NGV
+            <:
+        <-
+
+        Asymmetric sets ->
+            Score: 1
+            Sets :>
+                X->A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z -Remove mismatch penalty on single gaps
+                A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z->X -Remove mismatch penalty on single gaps
+            <:
+        <-
+
+        Asymmetric sets ->
+            Score: -4
+            Sets :>
+                .->A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z -Add additional penalty on bigger gaps
+                A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z->. -Add additional penalty on bigger gaps
             <:
         <-
 
@@ -115,63 +136,18 @@ TemplateMatching ->
                 Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
             <-
         <-
-        - Mus musculus segments
-        - Mus Heavy Chain->
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGHV.fasta
-        -         Name      : IGHV
-        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGHJ.fasta
-        -         Name      : IGHJ
-        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGHC_uniprot.fasta
-        -         Name      : IGHC
-        -         Identifier: ^sp\|[\w]*\|([\w]+)_
-        -     <-
-        - <-
-        - Mus Light Chain->
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGKV,IGLV.fasta
-        -         Name      : IGLV
-        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGKJ,IGLJ.fasta
-        -         Name      : IGLJ
-        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
-        -     <-
-        -     Segment->
-        -         Path      : ../templates/Mus_musculus_IGKC,IGLC.fasta
-        -         Name      : IGLC
-        -         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
-        -     <-
-        - <-
-        - Decoy ->
-        -     Segment->
-        -         Path      : ../templates/common.contaminants.fasta
-        -         Name      : Common contaminants
-        -     <-
-        - <-
     <-
 <-
 
 Recombine->
     -Pick the <n> highest scoring templates from each segment
-    N          : 1
-    -Decoy      : True
-    CutoffScore: 10
+    N: 1
 
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order->
         Heavy Chain: IGHV * IGHJ IGHC
         Light Chain: IGLV IGLJ IGLC
-        Mus Heavy Chain: IGHV * IGHJ IGHC
-        Mus Light Chain: IGLV IGLJ IGLC
     <-
 <-
 
