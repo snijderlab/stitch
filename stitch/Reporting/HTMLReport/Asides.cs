@@ -307,9 +307,9 @@ namespace HTMLNameSpace {
             var numbering = new StringBuilder();
             var last_size = 1;
             const int block_size = 10;
-            for (int i = 10; i < total_length - block_size; i += block_size) {
+            for (int i = block_size; i < gaps.Length - block_size; i += block_size) {
                 var i_string = i.ToString();
-                numbering.Append(new string(non_breaking_space, block_size - last_size));
+                numbering.Append(new string(non_breaking_space, block_size - last_size + gaps.SubArray(i - block_size, block_size).Sum()));
                 numbering.Append(i_string);
                 last_size = i_string.Length;
             }
