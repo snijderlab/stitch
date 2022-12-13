@@ -243,7 +243,7 @@ namespace Stitch {
                 public Gap() { }
 
                 public override string Display() {
-                    return ScoringMatrix.GapChar.ToString();
+                    return "."; // TODO: It cannot take the correct gap char here
                 }
 
                 public override bool IsGap() {

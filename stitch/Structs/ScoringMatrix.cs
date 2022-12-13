@@ -25,7 +25,7 @@ namespace Stitch {
         public readonly int Size;
 
         /// <summary> The char that represents a gap </summary>
-        public const char GapChar = '.';
+        public readonly char GapChar;
 
         /// <summary> The char that represents a stop codon, where translation will stop. </summary>
         public const char StopCodon = '*';
@@ -74,26 +74,25 @@ namespace Stitch {
             return index;
         }
 
-        public static ScoringMatrix IdentityMatrix(List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
+        public static ScoringMatrix IdentityMatrix(List<char> alphabet, List<(sbyte score, List<List<List<char>>> sets)> symmetric_similar, List<(sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets)> asymmetric_similar, sbyte identity, sbyte mismatch, sbyte gap_start, sbyte gap_extend, sbyte swap, int size, char gap_char) {
             var matrix = new sbyte[alphabet.Count, alphabet.Count];
             for (int x = 0; x < alphabet.Count; x++)
                 for (int y = 0; y < alphabet.Count; y++)
                     matrix[x, y] = x == y ? identity : mismatch;
-            return new ScoringMatrix(matrix, alphabet, symmetric_similar, asymmetric_similar, gap_start, gap_extend, swap, size);
+            return new ScoringMatrix(matrix, alphabet, symmetric_similar, asymmetric_similar, gap_start, gap_extend, swap, size, gap_char);
         }
 
-        public ScoringMatrix(sbyte[,] matrix, List<char> alphabet, (sbyte score, List<List<List<char>>> sets) symmetric_similar, (sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets) asymmetric_similar, sbyte gap_start, sbyte gap_extend, sbyte swap, int size) {
+        public ScoringMatrix(sbyte[,] matrix, List<char> alphabet, List<(sbyte score, List<List<List<char>>> sets)> symmetric_similar, List<(sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets)> asymmetric_similar, sbyte gap_start, sbyte gap_extend, sbyte swap, int size, char gap_char) {
             if (matrix.GetLength(0) != alphabet.Count || matrix.GetLength(1) != alphabet.Count) throw new ArgumentException("Matrix size not fitting for given alphabet size");
             this.AlphabetSize = alphabet.Count;
             this.GapStartPenalty = gap_start;
             this.GapExtendPenalty = gap_extend;
+            this.GapChar = gap_char;
             this.Size = size;
             var matrix_size = HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size) + 1;
             this.Matrix = new sbyte[matrix_size, matrix_size];
             this.PositionInScoringMatrix = alphabet.Select((item, index) => (item, index)).ToDictionary(item => item.item, item => item.index);
             this.Swap = swap;
-            this.SymmetricScore = symmetric_similar.score;
-            this.AsymmetricScore = asymmetric_similar.score;
 
             for (int x = 0; x < alphabet.Count; x++) {
                 for (int y = 0; y < alphabet.Count; y++) {
@@ -102,27 +101,31 @@ namespace Stitch {
             }
 
             // Set all symmetric similar sets, used for iso mass in the normal case
-            foreach (var set in symmetric_similar.sets) {
-                foreach ((var a, var b) in set.Where(s => s.Count <= size).Variations()) {
-                    var perms_a = a.Permutations();
-                    var perms_b = b.Permutations();
-                    foreach (var perm_a in perms_a) {
-                        foreach (var perm_b in perms_b) {
-                            this.SetScore(perm_a, perm_b, Math.Max(this.Score(perm_a, perm_b), symmetric_similar.score));
+            foreach (var super_set in symmetric_similar) {
+                foreach (var set in super_set.sets) {
+                    foreach ((var a, var b) in set.Where(s => s.Count <= size).Variations()) {
+                        var perms_a = a.Permutations();
+                        var perms_b = b.Permutations();
+                        foreach (var perm_a in perms_a) {
+                            foreach (var perm_b in perms_b) {
+                                this.SetScore(perm_a, perm_b, super_set.score);
+                            }
                         }
                     }
                 }
             }
 
             // Set all asymmetric similar sets, used for modifications in the normal case
-            foreach (var set in asymmetric_similar.sets) {
-                foreach (var a in set.from.Where(s => s.Count <= size)) {
-                    foreach (var b in set.to.Where(s => s.Count <= size)) {
-                        var perms_a = a.Permutations();
-                        var perms_b = b.Permutations();
-                        foreach (var perm_a in perms_a) {
-                            foreach (var perm_b in perms_b) {
-                                this.SetScore(perm_a, perm_b, Math.Max(this.Score(perm_a, perm_b), asymmetric_similar.score));
+            foreach (var super_set in asymmetric_similar) {
+                foreach (var set in super_set.sets) {
+                    foreach (var a in set.from.Where(s => s.Count <= size)) {
+                        foreach (var b in set.to.Where(s => s.Count <= size)) {
+                            var perms_a = a.Permutations();
+                            var perms_b = b.Permutations();
+                            foreach (var perm_a in perms_a) {
+                                foreach (var perm_b in perms_b) {
+                                    this.SetScore(perm_a, perm_b, super_set.score);
+                                }
                             }
                         }
                     }
@@ -146,7 +149,7 @@ namespace Stitch {
         public static ScoringMatrix Default() {
             return IdentityMatrix(
                 "ARNDCQEGHILKMFPSTWYVBZX.*".ToList(),
-                (5, new List<List<List<char>>>{
+                new List<(sbyte score, List<List<List<char>>> sets)>{(5, new List<List<List<char>>>{
                     new List<List<char>>{
                         new List<char>{
                             'I'
@@ -163,8 +166,8 @@ namespace Stitch {
                             'N'
                         }
                     }
-                }),
-                (3, new List<(List<List<char>>, List<List<char>>)> {
+                })},
+                new List<(sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets)>{(3, new List<(List<List<char>>, List<List<char>>)> {
                     (new List<List<char>>{
                         new List<char> {
                             'Q'
@@ -174,15 +177,15 @@ namespace Stitch {
                             'E'
                             }
                     })
-                }), 8, -1, -5, -5, 2, 3
+                })}, 8, -1, -5, -5, 2, 3, '.'
             );
         }
 
         public static ScoringMatrix TestMatrix() {
             return IdentityMatrix(
                 "ABC.*".ToList(),
-                (5, new List<List<List<char>>>()),
-                (3, new List<(List<List<char>>, List<List<char>>)>()), 1, 0, -12, -1, 0, 1
+                new List<(sbyte score, List<List<List<char>>> sets)> { (5, new List<List<List<char>>>()) },
+                new List<(sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets)> { (3, new List<(List<List<char>>, List<List<char>>)>()) }, 1, 0, -12, -1, 0, 1, '.'
             );
         }
 

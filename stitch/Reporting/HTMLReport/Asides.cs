@@ -190,8 +190,8 @@ namespace HTMLNameSpace {
                 var b = AminoAcid.ArrayToString(match.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
                 if (!(String.IsNullOrEmpty(a) && b == "X")) {
                     columns.Add((
-                        a.Length == 0 ? ScoringMatrix.GapChar.ToString() : a,
-                        b.Length == 0 ? ScoringMatrix.GapChar.ToString() : b,
+                        a.Length == 0 ? template.Parent.Alphabet.GapChar.ToString() : a,
+                        b.Length == 0 ? template.Parent.Alphabet.GapChar.ToString() : b,
                         a == b ? new string(non_breaking_space, piece.StepA) : b,
                         pos_b >= annotated.Length ? Annotation.None : annotated[pos_b]));
                 }
@@ -210,7 +210,7 @@ namespace HTMLNameSpace {
 
             var present = new HashSet<Annotation>();
             foreach (var column in columns) {
-                if (column.Template == "X" && (column.Query == ScoringMatrix.GapChar.ToString() || column.Query == "X")) continue;
+                if (column.Template == "X" && (column.Query == template.Parent.Alphabet.GapChar.ToString() || column.Query == "X")) continue;
                 html.Open(HtmlTag.div, $"class='{column.Class}'");
                 if (column.Class.IsAnyCDR())
                     if (!present.Contains(column.Class)) {

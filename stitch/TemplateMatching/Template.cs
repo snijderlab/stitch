@@ -302,7 +302,7 @@ namespace Stitch {
                 }
 
                 var template = new SequenceOption(new AminoAcid[] { combinedSequence[i].Template }, 1);
-                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == ScoringMatrix.GapChar) {
+                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
                     // Do not add gaps, as those are not part of the final sequence
                 } else if (options.Count > 1 && options.Contains(template)) {
                     consensus.Add(template);

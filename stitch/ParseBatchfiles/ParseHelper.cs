@@ -632,8 +632,8 @@ namespace Stitch {
                 var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<ScoringMatrix>();
                 var identity = ("", 0, 0);
-                var symmetric_sets = ((sbyte)0, new List<List<List<char>>>());
-                var asymmetric_sets = ((sbyte)0, new List<(List<List<char>>, List<List<char>>)>());
+                var symmetric_sets = new List<(sbyte, List<List<List<char>>>)>();
+                var asymmetric_sets = new List<(sbyte, List<(List<List<char>>, List<List<char>>)>)>();
 
                 if (key.GetValues().IsErr()) {
                     outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
@@ -713,7 +713,7 @@ namespace Stitch {
                             }
                             if (score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Score"));
                             if (sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Sets"));
-                            symmetric_sets = (score, sets);
+                            symmetric_sets.Add((score, sets));
                             break;
                         case "asymmetric sets":
                             sbyte a_score = 0;
@@ -736,7 +736,7 @@ namespace Stitch {
                             }
                             if (a_score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Score"));
                             if (a_sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Sets"));
-                            asymmetric_sets = (a_score, a_sets);
+                            asymmetric_sets.Add((a_score, a_sets));
                             break;
                         default:
                             outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStart', 'GapExtend', 'Characters', 'Identity', 'Mismatch', 'PatchLength', 'Swap', 'Symmetric Sets', 'Asymmetric Sets'"));
@@ -768,8 +768,8 @@ namespace Stitch {
 
                 // Detect erroneous set definitions
                 var error = false;
-                if (symmetric_sets.Item1 != 0)
-                    foreach (var set in symmetric_sets.Item2)
+                foreach (var super_set in symmetric_sets)
+                    foreach (var set in super_set.Item2)
                         foreach (var seq in set)
                             foreach (var aa in seq)
                                 if (!asettings.Alphabet.Contains(aa)) {
@@ -777,8 +777,8 @@ namespace Stitch {
                                     error = true;
                                     break;
                                 }
-                if (asymmetric_sets.Item1 != 0)
-                    foreach (var set in asymmetric_sets.Item2)
+                foreach (var super_set in asymmetric_sets)
+                    foreach (var set in super_set.Item2)
                         foreach (var collection in new List<List<char>>[] { set.Item1, set.Item2 })
                             foreach (var seq in collection)
                                 foreach (var aa in seq)
@@ -792,10 +792,10 @@ namespace Stitch {
                 if (String.IsNullOrEmpty(identity.Item1)) {
                     if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
                     if (!outEither.IsErr())
-                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength, '.');
                 } else {
                     if (!outEither.IsErr())
-                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength);
+                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength, '.');
                 }
 
                 return outEither;
@@ -844,8 +844,8 @@ namespace Stitch {
                 }
                 var alphabet = alphabetBuilder.ToString().Trim().ToCharArray();
 
-                if (!alphabet.Contains(ScoringMatrix.GapChar)) {
-                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '{ScoringMatrix.GapChar}' is missing in the alphabet definition.", "", true));
+                if (!alphabet.Contains('.')) {
+                    outEither.AddMessage(new ErrorMessage(counter.File, "GapChar missing", $"The Gap '.' is missing in the alphabet definition.", "", true));
                 }
 
                 var scoring_matrix = new sbyte[columns - 1, columns - 1];
