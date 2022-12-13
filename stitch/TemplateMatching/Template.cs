@@ -204,13 +204,10 @@ namespace Stitch {
                 Capacity = Sequence.Length + 1
             };
 
-            //var alignedSequences = AlignedSequences();
             foreach (var amino in Sequence) {
                 var position = (amino, new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>());
                 output.Add(position);
             }
-            //output.Add((new AminoAcid(this.Parent.Alphabet, ScoringMatrix.GapChar), new Dictionary<SequenceOption, double>(), new Dictionary<IGap, (int, double[])>()));
-            // TODO: why do I need an extra element?
 
             foreach (var alignment in Matches) {
                 var pos_a = alignment.StartA;
@@ -225,7 +222,7 @@ namespace Stitch {
                         var positional_score = alignment.ReadB.Sequence.PositionalScore;
                         IGap gap = new None();
                         if (pos_b > positional_score.Length) Console.WriteLine($"Too big {pos_b} {positional_score.Length} {alignment.ReadA.Identifier} {alignment.ReadB.Identifier}");
-                        var gap_cov = new double[] { pos_b == positional_score.Length ? positional_score.Last() : positional_score[pos_b] }; // TODO: is this a nice coverage for a gap?
+                        var gap_cov = new double[] { pos_b == positional_score.Length ? positional_score.Last() : positional_score[pos_b] };
                         if (insertion.Count != 0) {
                             gap = new Gap(insertion.ToArray());
                             gap_cov = positional_score.SubArray(pos_b - insertion.Count, insertion.Count).ToArray();

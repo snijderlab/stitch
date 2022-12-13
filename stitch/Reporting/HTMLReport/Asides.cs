@@ -176,7 +176,7 @@ namespace HTMLNameSpace {
             // HERECOMESTHECONSENSUSSEQUENCE  (coloured to IMGT region)
             // HERECOMESTHEGERMLINE.SEQUENCE
             //             CONSENSUS          (differences)
-            var annotated = template.ConsensusSequenceAnnotation(); // TODO: is having the annotation based on the consensus the best way forward? Or should it be done based on template?
+            var annotated = template.ConsensusSequenceAnnotation();
             var match = template.AlignConsensusWithTemplate();
             var columns = new List<(string Template, string Query, string Difference, Annotation Class)>();
             var data_buffer = new StringBuilder();
@@ -359,6 +359,7 @@ namespace HTMLNameSpace {
                 var pos_a = alignment.StartA;
                 var pos_b = alignment.StartB;
                 var inserted = 0;
+                var seq = new StringBuilder();
                 foreach (var piece in alignment.Path) {
                     var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
                     var total_gaps = piece.StepA == 0 ? 0 : gaps.SubArray(pos_a, piece.StepA).Sum();
@@ -367,24 +368,34 @@ namespace HTMLNameSpace {
                         if (inserted > total_gaps) inserted = total_gaps;
                         // Display swaps with internal gaps
                         var already_inserted = gaps[pos_a];
-                        if (pos_a != alignment.StartA) html.Content(new string(positional_gap_char, gaps[pos_a]));
+                        if (pos_a != alignment.StartA) {
+                            html.Content(new string(positional_gap_char, gaps[pos_a]));
+                            seq.Append(new string(positional_gap_char, gaps[pos_a]));
+                        }
                         html.Open(HtmlTag.span, $"class='swap' style='--i:{piece.StepB + total_gaps - inserted - already_inserted};--w:{piece.StepA + total_gaps - already_inserted};'");
                         for (int i = 0; i < piece.StepA; i++) {
-                            if (i != 0) html.Content(new string(gap_char, gaps[pos_a + i]));
+                            if (i != 0) {
+                                html.Content(new string(gap_char, gaps[pos_a + i]));
+                                seq.Append(new string(gap_char, gaps[pos_a + i]));
+                            }
                             html.Content(content[i].ToString());
+                            seq.Append(content[i].ToString());
                         }
                         html.Close(HtmlTag.span);
                         inserted = 0;
                     } else if (piece.StepA == 0) {
                         if (pos_a == 0 && pos_b == 0) {
                             html.Content(new string(non_breaking_space, Math.Max(0, gaps[pos_a] - len_start)));
+                            seq.Append(new string(non_breaking_space, Math.Max(0, gaps[pos_a] - len_start)));
                             inserted += Math.Max(0, gaps[pos_a] - len_start);
                         }
                         html.Content(AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)));
+                        seq.Append(AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)));
                         inserted += piece.StepB;
                     } else if (piece.StepB == 0) {
                         if (inserted > total_gaps) inserted = total_gaps;
                         html.Content(new string(positional_gap_char, piece.StepA + total_gaps - inserted));
+                        seq.Append(new string(positional_gap_char, piece.StepA + total_gaps - inserted));
                         inserted = 0;
                     } else if (piece.StepA != piece.StepB) {
                         // Display unequal sets stretched (or squashed) including all gaps
@@ -393,19 +404,23 @@ namespace HTMLNameSpace {
                         var already_inserted = gaps[pos_a];
                         html.Content(new string(positional_gap_char, gaps[pos_a]));
                         html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - inserted - already_inserted};'", content);
+                        seq.Append(new string(positional_gap_char, gaps[pos_a]) + content);
                         inserted = 0;
                     } else {
                         if (inserted > total_gaps) inserted = total_gaps;
-                        if (pos_a != alignment.StartA) html.Content(new string(gap_char, total_gaps - inserted));
+                        if (pos_a != alignment.StartA) {
+                            html.Content(new string(gap_char, total_gaps - inserted));
+                            seq.Append(new string(gap_char, total_gaps - inserted));
+                        }
                         html.Content(content);
+                        seq.Append(content);
                         inserted = 0;
                     }
                     pos_a += piece.StepA;
                     pos_b += piece.StepB;
                 }
                 html.Close(HtmlTag.a);
-                // TODO: think about output, because no other program accepts unequal length matches
-                //data_buffer.AppendLine($">{alignment.ReadB.EscapedIdentifier} score:{alignment.Score} alignment:{alignment.ShortPath()} unique:{alignment.Unique}\n{new string('~', start)}{seq.Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
+                data_buffer.AppendLine($">{alignment.ReadB.EscapedIdentifier} score:{alignment.Score} alignment:{alignment.VeryShortPath()} unique:{alignment.Unique}\n{new string('~', start)}{seq.ToString().Replace(gap_char, '.')}{new string('~', Math.Max(total_length - end, 0))}");
             }
 
             html.Close(HtmlTag.div);
@@ -514,7 +529,6 @@ namespace HTMLNameSpace {
             var id = "none";
             var html = new HtmlBuilder();
             foreach (var piece in match.Path) {
-                // TODO: fix the accompanying css
                 if (piece.StepA == piece.StepB && piece.StepA > 1 && template.Parent.Alphabet.Swap != 0 && piece.LocalScore == piece.StepA * template.Parent.Alphabet.Swap) {
                     id = "swap";
                 } else if (piece.StepA == 0) {

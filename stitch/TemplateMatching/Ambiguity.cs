@@ -191,7 +191,6 @@ namespace Stitch {
                     return null;
                 }
             }
-
         }
 
         /// <summary> A method to ease testing of a whole network. </summary>
@@ -218,7 +217,6 @@ namespace Stitch {
 
         /// <summary> The total intensity of all connections in the whole DAG. </summary>
         public double TotalIntensity() {
-            return 0.0; //TODO: was never finishing for some reason
             double total = 0.0;
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
             var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
