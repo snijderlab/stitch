@@ -247,8 +247,8 @@ namespace HTMLNameSpace {
                 return (html, gaps);
 
             html.Open(HtmlTag.div, "class='alignment'");
-            html.OpenAndClose(HtmlTag.h2, "", "Alignment");
-            html.CopyData("Reads Alignment (FASTA)", new HtmlBuilder(HTMLHelp.ReadsAlignment));
+            html.TagWithHelp(HtmlTag.h2, "Alignment", new HtmlBuilder(HTMLHelp.ReadsAlignment));
+            html.CopyData("Reads Alignment (FASTA)", new HtmlBuilder(HTMLHelp.ReadsAlignmentData));
 
             var depthOfCoverage = new List<double>();
             var data_buffer = new StringBuilder();

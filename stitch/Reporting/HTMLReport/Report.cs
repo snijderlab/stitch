@@ -248,13 +248,9 @@ namespace Stitch {
 }}
 @font-face {{
   font-family: 'Roboto Mono';
-  src: url({link}RobotoMono-Regular.ttf);
-  font-weight: normal;
-}}
-@font-face {{
-  font-family: 'Roboto Mono';
-  src: url({link}RobotoMono-Medium.ttf);
-  font-weight: 500;
+  src: url({link}RobotoMono-VariableFont_wght.ttf);
+  font-weight: 100 700;
+  font-style: normal;
 }}");
             html.Close(HtmlTag.style);
             html.Open(HtmlTag.script);
@@ -598,8 +594,7 @@ namespace Stitch {
             CopyAssetsFile("script.js");
             CopyAssetsFile("Roboto-Regular.ttf");
             CopyAssetsFile("Roboto-Medium.ttf");
-            CopyAssetsFile("RobotoMono-Regular.ttf");
-            CopyAssetsFile("RobotoMono-Medium.ttf");
+            CopyAssetsFile("RobotoMono-VariableFont_wght.ttf");
         }
 
         /// <summary> Creates an HTML report to view the results and metadata. </summary>

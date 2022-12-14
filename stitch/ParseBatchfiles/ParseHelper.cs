@@ -424,12 +424,7 @@ namespace Stitch {
                             break;
                         case "alphabet":
                             if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var alp = ParseHelper.ParseAlphabet(setting);
-                            if (alp.IsOk(outEither)) {
-                                output.Alphabet = alp.Unwrap();
-                            } else {
-                                return outEither;
-                            }
+                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
                             break;
                         case "enforceunique":
                             output.EnforceUnique = ParseBool(setting, "EnforceUnique").UnwrapOrDefault(outEither, true);
@@ -667,14 +662,14 @@ namespace Stitch {
                             break;
                         case "gapstartpenalty":
                             asettings.GapStart = (sbyte)-ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapStartPenalty is Deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {asettings.GapStart}", true));
+                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapStartPenalty is deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {asettings.GapStart}", true));
                             break;
                         case "gapstart":
                             asettings.GapStart = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "gapextendpenalty":
                             asettings.GapExtend = (sbyte)-ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapExtendPenalty is Deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {asettings.GapExtend}", true));
+                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapExtendPenalty is deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {asettings.GapExtend}", true));
                             break;
                         case "gapextend":
                             asettings.GapExtend = (sbyte)ConvertToInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
@@ -767,14 +762,12 @@ namespace Stitch {
                 }
 
                 // Detect erroneous set definitions
-                var error = false;
                 foreach (var super_set in symmetric_sets)
                     foreach (var set in super_set.Item2)
                         foreach (var seq in set)
                             foreach (var aa in seq)
                                 if (!asettings.Alphabet.Contains(aa)) {
-                                    new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet.").Print();
-                                    error = true;
+                                    outEither.AddMessage(new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet."));
                                     break;
                                 }
                 foreach (var super_set in asymmetric_sets)
@@ -783,11 +776,10 @@ namespace Stitch {
                             foreach (var seq in collection)
                                 foreach (var aa in seq)
                                     if (!asettings.Alphabet.Contains(aa)) {
-                                        new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet.").Print();
-                                        error = true;
+                                        outEither.AddMessage(new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet."));
                                         break;
                                     }
-                if (error) throw new ParseException("Invalid sets in alphabet definition.");
+                if (outEither.IsErr()) return outEither;
 
                 if (String.IsNullOrEmpty(identity.Item1)) {
                     if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));

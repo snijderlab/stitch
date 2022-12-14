@@ -265,7 +265,7 @@ namespace HTMLNameSpace {
                             }
                         }
                     }
-                    data_buffer.Append($"\t{item.Key}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
+                    data_buffer.Append($"\t{item.Key.Item1}\t{item.Key.Item2}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
                 }
                 if (!placed)
                     html.OpenAndClose(HtmlTag.span, "", ".");
