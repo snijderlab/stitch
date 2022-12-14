@@ -645,15 +645,43 @@ Path: Folder/{date}/{alph}/{time}.fasta
 
 #### Alphabet
 
-Defines the alphabet used to score K-mers against each other. If multiple alphabets are defined, these will be run independently in different runs. Both `;` and `,` are considered separators.
+Defines the alphabet used to score reads against each other. 
 
 | Inner parameter  | Explanation                                                                                                                      | Default Value |
 | ---------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Path             | The path to the alphabet (cannot be used in conjunction with `Data`)                                                             | (No Default)  |
-| Data             | The alphabet, to allow for newlines the alphabet should be enclosed in `:>` and `<:` (cannot be used in conjunction with `Path`) | (No Default)  |
+| Path             | The path to the alphabet (cannot be used in conjunction with `Data` or `Characters`)                                             | (No Default)  |
+| Data             | The alphabet, to allow for newlines the alphabet should be enclosed in `:>` and `<:` (cannot be used in conjunction with `Path` or `Characters`) | (No Default)  |
 | Name             | To recognize the alphabet                                                                                                        | (No Default)  |
-| GapStartPenalty  | The penalty for opening a gap in an alignment. Used in template matching.                                                        | 12            |
-| GapExtendPenalty | The penalty for extending a gap in an alignment. Used in template matching.                                                      | 1             |
+| GapStartPenalty  | The penalty for opening a gap in an alignment. Used in template matching. (Deprecated use GapStart)                              | 12            |
+| GapExtendPenalty | The penalty for extending a gap in an alignment. Used in template matching. (Deprecated use GapExtend)                           | 1             |
+| GapStart         | The score for opening a gap in an alignment. Used in template matching. (Inverse of GapStartPenalty)                             | -12           |
+| GapExtend        | The score for extending a gap in an alignment. Used in template matching. (Inverse of GapExtendPenalty)                          | -1            |
+| Characters       | The set of characters in this alphabet. (cannot be used with `Data` or `Path`)                                                   | (No Default)  |
+| Identity         | The score of matching two identical characters from the `Characters` set.                                                        | (No Default)  |
+| Mismatch         | The score of matching two non identical characters from the `Characters` set.                                                    | (No Default)  |
+| PatchLength      | The maximal length of patches of sequence compared to each other. (Used in swaps and sets, useful for mass based alignment)      | 1             |
+| Swap             | The score of a swap of up to `PatchLength` length patches of sequence. The score is the length of the set times the score given here. | (No Default)  |
+| Symmetric sets   | Used to define symmetric relations between sequence patches, see below.                                                          | (No Default)  |
+| Asymmetric sets  | Used to define asymmetric relations between sequence patches, see below.                                                         | (No Default)  |
+
+_Symmetric sets_
+
+These define sets of characters from the alphabet which have a symmetrical relation, meaning that 
+for a set of `A,B` with score 5 both matching `A` to `B` and matching `B` to `A` will result in a
+score of 5. This is commonly used for isomass sets of aminoacids as can be seen in the last example.
+These sets can be defined multiple times with different score. Later sets overwrite previously 
+defined scores and asymmetric sets always overwrite the scores of symmetric sets.
+
+_Asymmetric sets_
+
+These defines sets of characters from the alphabet which have an asymmetrical relation, meaning that 
+for a set of `A->B` with score 5 only matching `B` (in the read) on `A` (in the template) will score 5. 
+this logic can be remembered as 'A could result in B'. This is commonly used to model modifications 
+in the alignment. For example an aminoacid (say `Q`) could deamidated in the MS leading to the mass 
+of another aminoacid (say `E`). So a read with an `E` at the position where the template is `Q` is 
+a relatively nice placement. These sets can be defined multiple times with different score. Later
+sets overwrite previously defined scores and asymmetric sets always overwrite the scores of symmetric 
+sets.
 
 _Examples_
 ```
@@ -689,6 +717,69 @@ Alphabet->
 Alphabet->
     Path    : My/Path/To/AnAlphabet.csv
     Name	: Normal
+<-
+
+Alphabet ->
+    Characters : ARNDCQEGHILKMFPSTWYVBZX.*
+    Identity   : 8
+    Mismatch   : -1
+    GapStart   : -12
+    GapExtend  : -1
+    PatchLength: 3
+    Swap       : 2
+
+    Symmetric sets ->
+        Score: 6
+        Sets :>
+            I,L
+            N,GG
+            Q,AG
+            AV,GL,GI
+            AN,QG,AGG
+            LS,IS,TV
+            AM,CV
+            NV,AAA,GGV
+            NT,QS,AGS,GGT
+            LN,IN,QV,AGV,GGL,GGI
+            DL,DI,EV
+            QT,AAS,AGT
+            AY,FS
+            LQ,IQ,AAV,AGL,AGI
+            NQ,ANG,QGG
+            KN,GGK
+            EN,DQ,ADG,EGG
+            DK,AAT,GSV
+            MN,AAC,GGM
+            AS,GT
+            AAL,AAI,GVV
+            QQ,AAN,AQG
+            EQ,AAD,AEG
+            EK,ASV,GLS,GIS,GTV
+            MQ,AGM,CGV
+            AAQ,NGV
+        <:
+    <-
+
+    Asymmetric sets ->
+        Score: 3
+        Sets :>
+            Q->E -Deamidation
+            D->N,GG -Deamidation
+            C->T -Disulfide bond
+            T->D -Methylation
+            S->T -Methylation
+            D->E -Methylation
+            R->AV,GL,GI -Methylation
+            Q->AA -Methylation
+            W->DS,AM,CV,TT -Oxidation
+            M->F -Oxidation
+            T->E -Formylation
+            K->GV,R -Formylation
+            S->D -Formylation
+            S->E -Acetylation
+            K->AV,GL,GI -Acetylation/Homoarginine
+        <:
+    <-
 <-
 ```
 

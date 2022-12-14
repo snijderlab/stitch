@@ -165,6 +165,17 @@ namespace Stitch {
                         new List<char> {
                             'N'
                         }
+                    },
+                    new List<List<char>>{
+                        new List<char>{
+                            'E','V'
+                        },
+                        new List<char> {
+                            'D','L'
+                        },
+                        new List<char> {
+                            'D','I'
+                        }
                     }
                 })},
                 new List<(sbyte score, List<(List<List<char>> from, List<List<char>> to)> sets)>{(3, new List<(List<List<char>>, List<List<char>>)> {

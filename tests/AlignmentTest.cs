@@ -113,5 +113,18 @@ namespace StitchTest {
             Assert.AreEqual(0, result.StartB);
             Assert.AreEqual("MMMM", result.ShortPath());
         }
+
+        [TestMethod]
+        public void StartWithIsomass() {
+            var alphabet = ScoringMatrix.Default();
+            var read_a = new Read.Simple(AminoAcid.FromString("DLVQL", alphabet).Unwrap());
+            var read_b = new Read.Simple(AminoAcid.FromString("EVVQL", alphabet).Unwrap());
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
+            Console.WriteLine(result.Summary());
+            Assert.AreEqual(29, result.Score);
+            Assert.AreEqual(0, result.StartA);
+            Assert.AreEqual(0, result.StartB);
+            Assert.AreEqual("S[2,2]MMM", result.ShortPath());
+        }
     }
 }
