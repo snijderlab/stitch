@@ -4,7 +4,7 @@ Version    : 1.3
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
     Peaks ->
-        Path     : 3276.csv
+        Path     : 3576.csv
         Format   : X+
         Name     : 01
         CutoffALC: 85
