@@ -1,5 +1,17 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
+# Upcoming
+_tba_
+
+* Implemented alignment which can take bigger patches into account, see `Alphabet` in the manual or any of the examples. (#197)
+* Initial try at #146 TODO: Needs a key in the batchfile.
+* Fixed many small bugs in the batchfile parsing. (#205)
+* Added support for high contrast theme settings when viewing the HTML report.
+
+Note
+* The benchmarks show a mixed result of the mass based alignment, but as the identity is good enough in comparison with the previous results and the mass based alignment shows very promising result when looked at a case by case basis this result is justified. In the future with more tweaking of the parameters the identity could very likely even be better.
+* Performance of this new alignment is worse, a run likely will take 3 times longer, which is expected based on the algorithmic complexity of the mass based alignment algorithm.
+
 # v1.3.0
 _2022-10-21_
 
