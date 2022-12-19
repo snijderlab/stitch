@@ -723,7 +723,10 @@ namespace Stitch {
                                         score = (sbyte)ParseInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "sets":
-                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => s.Split('-', 2).First().Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
+                                        sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => {
+                                            if (s.Trim().StartsWith('-')) return new();
+                                            return s.Split('-', 2).First().Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList();
+                                        }).ToList();
                                         break;
                                     default:
                                         outEither.AddMessage(ErrorMessage.UnknownKey(inner.KeyRange.Name, "Symmetric Sets", "'Score', 'Sets'"));
