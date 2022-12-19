@@ -83,9 +83,9 @@ TemplateMatching ->
         Asymmetric sets ->
             Score: 3
             Sets :>
+                - Template sequence -- results -> in read sequence - Type
                 Q->E -Deamidation
-                D->N,GG -Deamidation
-                C->T -Disulfide bond
+                N,GG->D -Deamidation
                 T->D -Methylation
                 S->T -Methylation
                 D->E -Methylation
@@ -93,9 +93,6 @@ TemplateMatching ->
                 Q->AA -Methylation
                 W->DS,AM,CV,TT -Oxidation
                 M->F -Oxidation
-                T->E -Formylation
-                K->GV,R -Formylation
-                S->D -Formylation
                 S->E -Acetylation
                 K->AV,GL,GI -Acetylation/Homoarginine
             <:
