@@ -273,7 +273,7 @@ namespace Stitch {
                     peaks.Fraction = fields[pf.fraction].Text;
 
                 if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
-                    peaks.Source_File = RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar) + fields[pf.source_file].Text;
+                    peaks.Source_File = (string.IsNullOrWhiteSpace(RawDataDirectory) ? "" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[pf.source_file].Text;
 
                 if (pf.feature >= 0 && CheckFieldExists(pf.feature))
                     peaks.Feature = fields[pf.feature].Text;
