@@ -145,7 +145,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             var input_params = ParseCommandFile.Batch(filename);
             if (runVariables.ExpectedResult.Count == 0) {
                 bar.Update();
-                bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.RawDataDirectory != null ? 1 : 0));
+                bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.LoadRawData ? 1 : 0));
             }
 
             input_params.CreateRun(runVariables, bar).Calculate();

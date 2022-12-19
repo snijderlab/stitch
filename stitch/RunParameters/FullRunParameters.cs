@@ -6,8 +6,10 @@ namespace Stitch {
         public class FullRunParameters {
             /// <summary> The name of this run. </summary>
             public string Runname = "";
-            /// <summary> The directory which contains all raw files. </summary>
+            /// <summary> The directory which contains all raw files. DEPRECATED: moved to RawDataDirectory on the actual input parameters instead. </summary>
             public string RawDataDirectory = null;
+            /// <summary> Signals whether to do raw data loading or not. </summary>
+            public bool LoadRawData = false;
 
             /// <summary> Determines the maximum number of CPU cores to be used. </summary>
             public int MaxNumberOfCPUCores = Environment.ProcessorCount;
@@ -29,7 +31,7 @@ namespace Stitch {
 
             /// <summary> Creates the run </summary>
             public SingleRun CreateRun(RunVariables variables, ProgressBar bar = null) {
-                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, variables, RawDataDirectory, bar);
+                return new SingleRun(Runname, Input.Data.Cleaned, TemplateMatching, Recombine, Report, BatchFile, MaxNumberOfCPUCores, variables, RawDataDirectory, bar, LoadRawData);
             }
         }
     }

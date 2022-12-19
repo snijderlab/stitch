@@ -8,6 +8,8 @@ _tba_
 * Added a column indicating if a read is placed on a CDR position in the CSV output. (#200)
 * Fixed many small bugs in the batchfile parsing. (#205)
 * Added support for high contrast theme settings when viewing the HTML report.
+* Moved to a hybrid local/global alignment which aligns the reads globally while aligning the template locally. (#157)
+* Moved the `RawDataDirectory` to single peaks definitions instead of having a global setting.
 
 Note
 * The benchmarks show a mixed result of the mass based alignment, but as the identity is good enough in comparison with the previous results and the mass based alignment shows very promising result when looked at a case by case basis this result is justified. In the future with more tweaking of the parameters the identity could very likely even be better.

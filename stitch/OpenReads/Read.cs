@@ -4,6 +4,7 @@ using System.Linq;
 using System.Globalization;
 using HtmlGenerator;
 using System.Text.Json.Serialization;
+using System.IO;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
@@ -217,7 +218,7 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, ScoringMatrix alphabet) {
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, FileFormat.Peaks pf, NameFilter filter, ScoringMatrix alphabet, string RawDataDirectory) {
                 var out_either = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
@@ -272,7 +273,7 @@ namespace Stitch {
                     peaks.Fraction = fields[pf.fraction].Text;
 
                 if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
-                    peaks.Source_File = fields[pf.source_file].Text;
+                    peaks.Source_File = RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar) + fields[pf.source_file].Text;
 
                 if (pf.feature >= 0 && CheckFieldExists(pf.feature))
                     peaks.Feature = fields[pf.feature].Text;

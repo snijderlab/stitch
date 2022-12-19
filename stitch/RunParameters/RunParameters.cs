@@ -67,6 +67,7 @@ namespace Stitch {
 
                 /// <summary> The file format of the PEAKS file. </summary>
                 public FileFormat.Peaks FileFormat = Stitch.FileFormat.Peaks.PeaksX();
+                public string RawDataDirectory = null;
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
 

@@ -273,6 +273,7 @@ Any parameter with a default value can be left out.
 | Name             | Used to recognize the origin of reads from this file                      | (No Default)  |
 | Separator        | The separator used to separate cells in the csv                           | `,`           |
 | DecimalSeparator | The separator used to separate decimals                                   | `.`           |
+| RawDataDirectory | The directory to load raw data from (see below for more info).            | (No Default)  |
 
 _Examples_
 ```
@@ -317,6 +318,15 @@ Scan,Peptide,Tag Length,ALC (%),length,m/z,z,RT,Area,Mass,ppm,PTM,local confiden
 4,20191211_F1_Ag5_peng0013_SA_her_Ela.raw,F4:4797,SGFGGLKN(+.98)TYLHW,F4:9505,13,99,13,494.2459,3,52.43,2.4924E7,1479.7146,0.9,Deamidation (NQ),100 100 100 100 100 100 100 100 100 100 100 100 100,SGFGGLKN(+.98)TYLHW,HCD
 ```
 _Note: this does not contain the `Fraction`, `Source File`, and `Feature` columns from Peaks X_
+
+###### RawDataDirectory (s)
+
+The path to the directory that contains all raw data files. This should be the directory in which the files that are listed in the Peaks input files are located. If any one particular file, or a particular scan could not be found this will be ignored and the output report will just not contain that spectrum. If the full directory could not be located there will be a warning, but the reports will still be generated. For now only Thermo raw files are supported. More information can be found in the library used for opening the raw files 'Hecklib.core' and 'Hecklib.rawfiles'.
+
+_Example_
+```
+RawDataDirectory: R:/RawData/08-2022/
+```
 
 ##### Novor (m) *
 

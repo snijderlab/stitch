@@ -14,6 +14,7 @@ namespace Stitch {
             /// <summary> THe name of this run. </summary>
             public string Runname;
             public string RawDataDirectory;
+            public bool LoadRawData;
             public readonly int MaxNumberOfCPUCores;
 
             /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary>
@@ -39,7 +40,7 @@ namespace Stitch {
             /// <param name="template">The templates to be used.</param>
             /// <param name="recombine">The recombination, if needed.</param>
             /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar = null) {
+            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar, bool loadRawData) {
                 Runname = runname;
                 Input = input;
                 TemplateMatching = templateMatching;
@@ -50,6 +51,7 @@ namespace Stitch {
                 runVariables = variables;
                 progressBar = bar;
                 RawDataDirectory = rawDataDirectory;
+                LoadRawData = loadRawData;
             }
 
             /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary>
@@ -83,8 +85,8 @@ namespace Stitch {
 
                 // Raw data
                 Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
-                if (this.RawDataDirectory != null) {
-                    fragments = Fragmentation.GetSpectra(Input, this.RawDataDirectory);
+                if (this.LoadRawData) {
+                    fragments = Fragmentation.GetSpectra(Input);
                     progressBar.Update();
                 }
 

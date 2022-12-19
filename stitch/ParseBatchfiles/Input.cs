@@ -47,7 +47,9 @@ namespace Stitch {
                         break;
                     case "rawdatadirectory":
                         if (output.RawDataDirectory != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        outEither.AddMessage(new ErrorMessage(pair.KeyRange, "Outer scope RawDataDirectory is deprecated", "To allow for more logical information grouping, combinations of multiple datasets, and flexibility with other input file formats the `RawDataDirectory` should be used on Input definitions instead.", "See RawDataDirectory under Input parameters.", true));
                         output.RawDataDirectory = ParseHelper.GetFullPath(pair).UnwrapOrDefault(outEither, "");
+                        output.LoadRawData = true;
                         if (!Directory.Exists(output.RawDataDirectory)) {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Could not find RawDataDirectory.", "Execution will continue, but the spectra will be missing from all reports.", "", true));
                             output.RawDataDirectory = null;
@@ -56,10 +58,10 @@ namespace Stitch {
                     case "version":
                         var version = ParseHelper.ParseDouble(pair).UnwrapOrDefault(outEither, 1.0);
                         if (version < 1.0) {
-                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please change to version '1.x'."));
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please update your batchfile to version '1.x'."));
                         }
                         if (version >= 2.0) {
-                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "This version of Stitch cannot handle batchfiles major version 2.0 or higher, please change to version '1.x'."));
+                            outEither.AddMessage(new ErrorMessage(pair.ValueRange, "This version of Stitch cannot handle batchfiles major version 2.0 or higher."));
                         }
                         version_specified = true;
                         break;
@@ -108,6 +110,8 @@ namespace Stitch {
                     }
                 }
             }
+
+            output.LoadRawData = output.LoadRawData || output.Input.Parameters.Files.Any(f => { if (f is InputData.Peaks p) { return !string.IsNullOrWhiteSpace(p.RawDataDirectory); } else { return false; } });
 
             if (outEither.IsErr()) outEither.Unwrap(); // Quit running further if any breaking changes where detected before this point. As further analysis depends on certain properties of the data.
 
@@ -203,7 +207,7 @@ namespace Stitch {
             if (output.TemplateMatching != null && output.Recombine != null && output.Recombine.Alphabet == null) output.Recombine.Alphabet = output.TemplateMatching.Alphabet;
 
             // Prepare the input
-            if (output.Input != null && output.TemplateMatching.Alphabet != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, output.TemplateMatching.Alphabet).Messages);
+            if (output.Input != null && output.TemplateMatching.Alphabet != null) outEither.Messages.AddRange(ParseHelper.PrepareInput(name_filter, null, output.Input, null, output.TemplateMatching.Alphabet, output.RawDataDirectory).Messages);
 
             // Check if there is a version specified
             if (!version_specified) {

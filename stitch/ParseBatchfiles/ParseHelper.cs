@@ -163,6 +163,10 @@ namespace Stitch {
                                         if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
+                                    case "rawdatadirectory":
+                                        if (!string.IsNullOrWhiteSpace(settings.RawDataDirectory)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        settings.RawDataDirectory = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
+                                        break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
                                         outEither.Messages.AddRange(peaks.Messages);
@@ -347,7 +351,7 @@ namespace Stitch {
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
-            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, ScoringMatrix alphabet) {
+            public static ParseResult<bool> PrepareInput(NameFilter name_filter, KeyValue key, InputData Input, InputData.InputParameters GlobalInput, ScoringMatrix alphabet, string RawDataDirectory) {
                 var result = new ParseResult<bool>();
                 result.Value = true;
 
@@ -364,7 +368,7 @@ namespace Stitch {
 
                 foreach (var file in input.Files) {
                     var reads = file switch {
-                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alphabet, Input.LocalParameters),
+                        InputData.Peaks peaks => OpenReads.Peaks(name_filter, peaks, alphabet, Input.LocalParameters, RawDataDirectory),
                         InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alphabet),
                         InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alphabet),
                         InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
