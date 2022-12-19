@@ -1,6 +1,7 @@
 using System.Collections.Generic;
 using System.Text;
 using System.Linq;
+using System;
 
 namespace Stitch {
     /// <summary> A FASTA report. </summary>
@@ -28,7 +29,7 @@ namespace Stitch {
                 var cdr = false;
                 // Detect it this read is part of any CDR
                 for (int i = 0; i < match.LenA; i++)
-                    if (annotation[match.StartA + i].IsAnyCDR()) {
+                    if (annotation[Math.Min(match.StartA + i, annotation.Length - 1)].IsAnyCDR()) {
                         cdr = true;
                         break;
                     }

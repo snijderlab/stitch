@@ -744,6 +744,7 @@ namespace Stitch {
                                         break;
                                     case "sets":
                                         a_sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => {
+                                            if (s.Trim().StartsWith('-')) return (new(), new());
                                             var temp = s.Split("->", 2).Select(s0 => s0.Split('-', 2).First().Split(',').Select(s1 => s1.Trim().ToCharArray().ToList()).ToList()).ToList();
                                             return (temp[0], temp[1]);
                                         }).ToList();
