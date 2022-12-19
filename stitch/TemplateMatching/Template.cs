@@ -461,6 +461,34 @@ namespace Stitch {
             SequenceAmbiguityAnalysisCache = ambiguous;
             return ambiguous;
         }
+
+        int[] gaps_cache = null;
+        public int[] Gaps() {
+            if (gaps_cache != null) return gaps_cache;
+            var gaps = new int[this.Sequence.Length + 1];
+            var localMatches = this.Matches.ToList();
+
+            // Find the longest gaps for each position.
+            foreach (var match in localMatches) {
+                var pos_a = match.StartA;
+                var pos_b = match.StartB;
+                var gap = 0;
+                foreach (var piece in match.Path) {
+                    if (piece.StepA == 0)
+                        gap += pos_a == match.StartA || pos_a == match.StartA + match.LenA ? 0 : piece.StepB;
+                    else if (gap > 0) {
+                        gaps[pos_a] = Math.Max(gaps[pos_a], gap);
+                        gap = 0;
+                    }
+                    pos_a += piece.StepA;
+                    pos_b += piece.StepB;
+                }
+                if (gap > 0)
+                    gaps[pos_a] = Math.Max(gaps[pos_a], gap);
+            }
+            gaps_cache = gaps;
+            return gaps;
+        }
     }
 
     /// <summary> The location of a template, in its Segment and its location </summary>

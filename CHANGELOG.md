@@ -5,6 +5,7 @@ _tba_
 
 * Implemented alignment which can take bigger patches into account, see `Alphabet` in the manual or any of the examples. (#197)
 * Implemented a more gradual variant of `EnforceUnique` now it can take all reads that score at least `x` * the highest score. (#146)
+* Added a column indicating if a read is placed on a CDR position in the CSV output. (#200)
 * Fixed many small bugs in the batchfile parsing. (#205)
 * Added support for high contrast theme settings when viewing the HTML report.
 

@@ -241,7 +241,7 @@ namespace HTMLNameSpace {
             //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
-            var gaps = new int[template.Sequence.Length + 1];
+            var gaps = template.Gaps();
 
             if (template.Matches.Count == 0)
                 return (html, gaps);
@@ -258,25 +258,6 @@ namespace HTMLNameSpace {
 
             var localMatches = template.Matches.ToList();
             localMatches.Sort((a, b) => b.LenA.CompareTo(a.LenA)); // Try to keep the longest matches at the top.
-
-            // Find the longest gaps for each position.
-            foreach (var match in localMatches) {
-                var pos_a = match.StartA;
-                var pos_b = match.StartB;
-                var gap = 0;
-                foreach (var piece in match.Path) {
-                    if (piece.StepA == 0)
-                        gap += pos_a == match.StartA || pos_a == match.StartA + match.LenA ? 0 : piece.StepB;
-                    else if (gap > 0) {
-                        gaps[pos_a] = Math.Max(gaps[pos_a], gap);
-                        gap = 0;
-                    }
-                    pos_a += piece.StepA;
-                    pos_b += piece.StepB;
-                }
-                if (gap > 0)
-                    gaps[pos_a] = Math.Max(gaps[pos_a], gap);
-            }
             var total_length = gaps.Sum() + template.Sequence.Length + 1;
 
             (string, Annotation[]) DisplayTemplateWithGaps() {
@@ -565,7 +546,7 @@ namespace HTMLNameSpace {
                     }
                 }
             }
-            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray());
+            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray(), template.Gaps());
         }
 
         static HtmlBuilder SequenceAmbiguityOverview(Template template, int[] gaps) {

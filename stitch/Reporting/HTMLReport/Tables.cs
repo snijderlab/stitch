@@ -217,7 +217,7 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<(string, int), double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] Ambiguous = null) {
+        public static HtmlBuilder SequenceConsensusOverview(List<Dictionary<(string, int), double>> diversity, string title = null, HtmlBuilder help = null, HelperFunctionality.Annotation[] annotation = null, int[] ambiguous = null, int[] gaps = null) {
             const double threshold = 0.05;
             const int height = 35;
             const int font_size = 30;
@@ -237,8 +237,9 @@ namespace HTMLNameSpace {
             for (int i = 0; i < diversity.Count; i++) {
                 var offset = offsets[0];
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
-                var ambiguous_position = Ambiguous != null && Ambiguous.Contains(i) ? $" ambiguous a{i}" : "";
-                html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'");
+                var ambiguous_position = ambiguous != null && ambiguous.Contains(i) ? $" ambiguous a{i}" : "";
+                var click = ambiguous != null && ambiguous.Contains(i) ? $" onclick='HighlightAmbiguous(\"a{i}\", {gaps.Take(i + 1).Sum() + i})'" : "";
+                html.Open(HtmlTag.div, $"class='sequence-logo-position{Class}{ambiguous_position}'{click}");
 
                 double sum = diversity[i].Values.Sum();
                 var sorted = diversity[i].ToList();
@@ -246,8 +247,7 @@ namespace HTMLNameSpace {
                     var res = a.Key.Item2.CompareTo(b.Key.Item2);
                     if (res == 0) return a.Value.CompareTo(b.Value);
                     return res;
-                }
-                    );
+                });
                 data_buffer.Append($"{i}");
 
 
