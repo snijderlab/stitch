@@ -75,8 +75,8 @@
     <Rule Id="CA1712" Action="Warning" />
     <Rule Id="CA1713" Action="Warning" />
     <Rule Id="CA1714" Action="Warning" />
-    <Rule Id="CA1715" Action="Warning" />
-    <Rule Id="CA1716" Action="Warning" />
+    <Rule Id="CA1715" Action="None" />
+    <Rule Id="CA1716" Action="None" />
     <Rule Id="CA1719" Action="Warning" />
     <Rule Id="CA1720" Action="Warning" />
     <Rule Id="CA1721" Action="Warning" />

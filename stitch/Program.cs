@@ -11,8 +11,6 @@ using System.Net.Http;
 namespace Stitch {
     /// <summary> The main class which is the entry point from the command line. </summary>
     public class ToRunWithCommandLine {
-        static readonly Stopwatch stopwatch = new();
-
         /// <summary> The entry point. </summary>
         static int Main() {
             Console.OutputEncoding = Encoding.UTF8;
@@ -158,9 +156,8 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             e.Cancel = true;
             var def = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Red;
-            Console.WriteLine("\n== Aborted based on user input ==");
+            Console.WriteLine("\nAborted by user");
             Console.ForegroundColor = def;
-            Console.WriteLine($"Total time ran {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}.");
             Console.Out.Flush();
             Environment.Exit(1);
         }

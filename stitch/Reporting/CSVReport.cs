@@ -19,11 +19,19 @@ namespace Stitch {
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            var header = new List<string>() { "ReadID", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment" };
+            var header = new List<string>() { "ReadID", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment", "CDR" };
             var data = new List<List<string>>();
             var peaks = false;
 
             void AddLine(string group, Template template, Alignment match) {
+                var annotation = template.ConsensusSequenceAnnotation();
+                var cdr = false;
+                // Detect it this read is part of any CDR
+                for (int i = 0; i < match.LenA; i++)
+                    if (annotation[match.StartA + i].IsAnyCDR()) {
+                        cdr = true;
+                        break;
+                    }
                 var row = new List<string> {
                     match.ReadB.Identifier,
                     template.MetaData.Identifier,
@@ -35,7 +43,8 @@ namespace Stitch {
                     match.StartA.ToString(),
                     match.StartB.ToString(),
                     match.LenA.ToString(),
-                    match.ShortPath()
+                    '\"' + match.ShortPath() + '\"',
+                    cdr.ToString()
                     };
                 if (match.ReadB is Read.Peaks) {
                     peaks = true;
