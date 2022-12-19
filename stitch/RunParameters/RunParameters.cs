@@ -195,7 +195,7 @@ namespace Stitch {
             public double CutoffScore = 10;
 
             /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
-            public bool EnforceUnique = true;
+            public double EnforceUnique = 1.0;
 
             /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public bool ForceGermlineIsoleucine = true;
@@ -216,7 +216,7 @@ namespace Stitch {
             public double CutoffScore = 10;
 
             /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
-            public Trilean EnforceUnique = Trilean.Unspecified;
+            public Option<double> EnforceUnique = new Option<double>();
 
             /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public Trilean ForceGermlineIsoleucine = Trilean.Unspecified;

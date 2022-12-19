@@ -200,8 +200,7 @@ namespace Stitch {
                 if (progressBar != null) progressBar.Update();
 
                 // Filter matches if Forced
-                if (TemplateMatching.EnforceUnique)
-                    EnforceUnique(matches);
+                EnforceUnique(matches, TemplateMatching.EnforceUnique);
 
                 // Add all matches to the right templates
                 foreach (var row in matches) {
@@ -298,8 +297,7 @@ namespace Stitch {
                 }
 
                 // Filter matches if Forced
-                if (HelperFunctionality.EvaluateTrilean(Recombine.EnforceUnique, TemplateMatching.EnforceUnique))
-                    EnforceUnique(matches);
+                EnforceUnique(matches, Recombine.EnforceUnique.Unwrap(TemplateMatching.EnforceUnique));
 
                 // Add all matches to the right templates
                 foreach (var row in matches) {
@@ -369,8 +367,8 @@ namespace Stitch {
                 return scores;
             }
 
-            static void EnforceUnique(List<List<(int, int, int, Alignment Match)>> matches) {
-                if (matches == null) return;
+            static void EnforceUnique(List<List<(int, int, int, Alignment Match)>> matches, double unique_threshold) {
+                if (matches == null || unique_threshold == 0.0) return;
                 for (int read_index = 0; read_index < matches.Count; read_index++) {
                     var best = new List<(int, int, int, Alignment Match)>();
                     var best_score = 0;
@@ -378,10 +376,10 @@ namespace Stitch {
                     for (int template_index = 0; template_index < matches[read_index].Count; template_index++) {
                         var match = matches[read_index][template_index];
                         if (match.Match.Score > best_score) {
-                            best = best.Where(m => m.Match.Score >= match.Match.Score * 0.95).ToList();
+                            best = best.Where(m => m.Match.Score >= match.Match.Score * unique_threshold).ToList();
                             best.Add(match);
                             best_score = match.Match.Score;
-                        } else if (match.Match.Score >= best_score * 0.95) {
+                        } else if (match.Match.Score >= best_score * unique_threshold) {
                             best.Add(match);
                         }
                     }

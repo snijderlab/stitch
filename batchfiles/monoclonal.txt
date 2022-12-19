@@ -13,7 +13,7 @@ Input ->
 <-
 
 TemplateMatching ->
-    EnforceUnique      : True
+    EnforceUnique      : 1.0
     CutoffScore        : 10
     AmbiguityThreshold : 0.9
 

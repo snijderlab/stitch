@@ -463,7 +463,7 @@ The scoring strategy used when determining the score of this segment. `Absolute`
 
 ###### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is `1.0`.
 
 ##### ForceGermlineIsoleucine (s)
 
@@ -526,7 +526,7 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of these segments will be forced to the best template(s) or just all templates which score high enough. Setting this options for a segment in the segments list of overrules the global value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in TemplateMatching which defaults to `1.0`.
 
 ##### ForceGermlineIsoleucine (s)
 

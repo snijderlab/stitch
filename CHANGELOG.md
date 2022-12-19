@@ -4,7 +4,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 _tba_
 
 * Implemented alignment which can take bigger patches into account, see `Alphabet` in the manual or any of the examples. (#197)
-* Initial try at #146 TODO: Needs a key in the batchfile.
+* Implemented a more gradual variant of `EnforceUnique` now it can take all reads that score at least `x` * the highest score. (#146)
 * Fixed many small bugs in the batchfile parsing. (#205)
 * Added support for high contrast theme settings when viewing the HTML report.
 

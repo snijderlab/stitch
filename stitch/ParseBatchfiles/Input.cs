@@ -54,7 +54,7 @@ namespace Stitch {
                         }
                         break;
                     case "version":
-                        var version = ParseHelper.ConvertToDouble(pair).UnwrapOrDefault(outEither, 1.0);
+                        var version = ParseHelper.ParseDouble(pair).UnwrapOrDefault(outEither, 1.0);
                         if (version < 1.0) {
                             outEither.AddMessage(new ErrorMessage(pair.ValueRange, "Batchfile versions below '1.0' (pre release versions) are deprecated, please change to version '1.x'."));
                         }
@@ -64,7 +64,7 @@ namespace Stitch {
                         version_specified = true;
                         break;
                     case "maxcores":
-                        output.MaxNumberOfCPUCores = ParseHelper.ConvertToInt(pair).RestrictRange(ParseHelper.NumberRange<int>.Open(0), pair.ValueRange).UnwrapOrDefault(outEither, new());
+                        output.MaxNumberOfCPUCores = ParseHelper.ParseInt(pair).RestrictRange(ParseHelper.NumberRange<int>.Open(0), pair.ValueRange).UnwrapOrDefault(outEither, new());
                         break;
                     case "input":
                         if (output.Input.Parameters != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));

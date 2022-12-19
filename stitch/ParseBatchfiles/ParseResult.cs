@@ -37,6 +37,11 @@ namespace Stitch {
             return false;
         }
 
+        /// <summary> See if this ParseResult is ok. It will ignore any warnings. </summary>
+        public bool IsOk() {
+            return !IsErr();
+        }
+
         /// <summary> See if this ParseResult is ok and store its messages in the given Result. </summary>
         /// <param name="other"> Another ParseResult to store this ParseResults messages in. </param>
         /// <typeparam name="TOut"> Any Type. </typeparam>
