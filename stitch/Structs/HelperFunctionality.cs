@@ -22,6 +22,22 @@ namespace Stitch {
             }
         }
 
+        /// <summary> To copy a sub array to a new array. </summary>
+        /// <param name="data"> The old array to copy from. </param>
+        /// <param name="index"> The index to start copying. </param>
+        /// <param name="length"> The length of the created sub array. </param>
+        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
+        /// <returns> Returns a new array with clones of the original array. </returns>
+        public static List<T> SubList<T>(this List<T> data, int index, int length) {
+            try {
+                T[] result = new T[length];
+                Array.Copy(data.ToArray(), index, result, 0, length);
+                return result.ToList();
+            } catch {
+                throw new ArgumentException($"SubList Exception length {length} index {index} on a list of length {data.Count}");
+            }
+        }
+
         /// <summary> To create a span to the given slice in an array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>

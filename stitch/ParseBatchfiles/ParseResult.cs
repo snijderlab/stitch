@@ -111,5 +111,13 @@ namespace Stitch {
                 }
             }
         }
+
+        public ParseResult<O> Map<O>(Func<T, O> f) {
+            var output = new ParseResult<O>();
+            output.Messages.AddRange(Messages);
+            if (this.IsOk())
+                output.Value = f(this.Value);
+            return output;
+        }
     }
 }

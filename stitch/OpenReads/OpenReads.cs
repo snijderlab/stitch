@@ -434,6 +434,25 @@ namespace Stitch {
             return out_either;
         }
 
+        static ParseResult<List<Read.IRead>> ParseStructuralRead(NameFilter filter, Read.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<Read.IRead>>();
+
+            var loaded_file = InputNameSpace.ParseHelper.GetAllText(file).Map(c => new ParsedFile(file, c.Split(Environment.NewLine)));
+
+            if (loaded_file.IsErr()) {
+                out_either.Messages.AddRange(loaded_file.Messages);
+                return out_either;
+            }
+            var lexed = MMCIFNameSpace.MMCIFTokenizer.Tokenize(loaded_file.Unwrap());
+
+            // TODO: now do something with the lexed file
+            // * Find the correct loop
+            // * Find the correct columns
+            // * Get all aminoacids from here
+
+            return out_either;
+        }
+
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
         public static ParseResult<List<Read.IRead>> CleanUpInput(List<Read.IRead> reads, ScoringMatrix alp, NameFilter filter) {

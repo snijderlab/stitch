@@ -619,6 +619,30 @@ namespace Stitch {
             }
         }
 
+        /// <summary> A metadata instance to contain reads from a structural source (mmCIF files). </summary>
+        public abstract class StructuralRead : IRead {
+            /// <summary> The original chain name. </summary>
+            public string Name;
+
+            /// <summary> Create a new structural read MetaData. </summary>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
+            public StructuralRead(AminoAcid[] sequence, FileRange file, NameFilter filter, string name) : base(sequence, file, "S", filter) {
+                this.Name = name;
+            }
+
+            /// <summary> Returns Simple MetaData to HTML. </summary>
+            public override HtmlBuilder ToHTML() {
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from a structural read");
+                html.OpenAndClose(HtmlTag.h3, "", "Name");
+                html.OpenAndClose(HtmlTag.p, "", this.Name);
+                html.Add(this.RenderChangedSequence());
+                html.Add(File.ToHTML());
+                return html;
+            }
+        }
+
         /// <summary> A identifier for a file, to hold information about where reads originate from. </summary>
         public class FileIdentifier {
             /// <summary>The absolute path to the file.</summary>
