@@ -11,14 +11,13 @@ namespace Stitch {
     namespace RunParameters {
         /// <summary> All parameters for a single run. </summary>
         public class SingleRun {
-            /// <summary> THe name of this run. </summary>
-            public string Runname;
-            public string RawDataDirectory;
-            public bool LoadRawData;
-            public readonly int MaxNumberOfCPUCores;
+            /// <summary> The name of this run. </summary>
+            public string Runname = "";
+            public string RawDataDirectory = null;
+            public bool LoadRawData = false;
+            public int MaxNumberOfCPUCores = Environment.ProcessorCount;
 
-            /// <summary> The input data for this run. A runtype of \"Separate\" will result in only one input data in this list. </summary>
-            public List<Read.IRead> Input;
+            public RunParameters.InputData Input = new InputData();
 
             /// <summary> The alphabet used in this run. </summary>
             public AlphabetParameter Alphabet;
@@ -29,30 +28,12 @@ namespace Stitch {
 
             /// <summary> The reports to be generated. </summary>
             public ReportParameter Report;
-            readonly ProgressBar progressBar;
-            public readonly ParsedFile BatchFile;
-            public readonly RunVariables runVariables;
+            public ProgressBar ProgressBar;
+            public ParsedFile BatchFile;
+            public RunVariables runVariables;
 
-            /// <summary> To create a single run with a single data parameter as input. Without assembly </summary>
-            /// <param name="id">The ID of the run.</param>
-            /// <param name="runname">The name of the run.</param>
-            /// <param name="input">The input data to be run.</param>
-            /// <param name="template">The templates to be used.</param>
-            /// <param name="recombine">The recombination, if needed.</param>
-            /// <param name="report">The report(s) to be generated.</param>
-            public SingleRun(string runname, List<Read.IRead> input, TemplateMatchingParameter templateMatching, RecombineParameter recombine, ReportParameter report, ParsedFile batchfile, int maxNumberOfCPUCores, RunVariables variables, string rawDataDirectory, ProgressBar bar, bool loadRawData) {
-                Runname = runname;
-                Input = input;
-                TemplateMatching = templateMatching;
-                Recombine = recombine;
-                Report = report;
-                BatchFile = batchfile;
-                MaxNumberOfCPUCores = maxNumberOfCPUCores;
-                runVariables = variables;
-                progressBar = bar;
-                RawDataDirectory = rawDataDirectory;
-                LoadRawData = loadRawData;
-            }
+            /// <summary> Create a new empty single run parameter set. </summary>
+            public SingleRun() { }
 
             /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary>
             /// <returns>The main parameters.</returns>
@@ -86,11 +67,11 @@ namespace Stitch {
                 // Raw data
                 Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
                 if (this.LoadRawData) {
-                    fragments = Fragmentation.GetSpectra(Input);
-                    progressBar.Update();
+                    fragments = Fragmentation.GetSpectra(Input.Data.Cleaned);
+                    ProgressBar.Update();
                 }
 
-                var parameters = new ReportInputParameters(Input, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
+                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here
                 if (runVariables.ExpectedResult.Count > 0) {
@@ -122,7 +103,7 @@ namespace Stitch {
                 }
 
                 // Did reports
-                if (progressBar != null) progressBar.Update();
+                if (ProgressBar != null) ProgressBar.Update();
             }
 
             void GenerateBenchmarkOutput(ReportInputParameters parameters) {
@@ -165,8 +146,8 @@ namespace Stitch {
 
             List<(string, List<Segment>)> RunTemplateMatching() {
                 // Initialise the matches list with empty lists for every input read
-                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, Alignment Match)>>(Input.Count);
-                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
+                var matches = new List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, Alignment Match)>>(Input.Data.Cleaned.Count);
+                for (int i = 0; i < Input.Data.Cleaned.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
 
                 var segments = new List<(string, List<Segment>)>();
                 for (int i = 0; i < TemplateMatching.Segments.Count; i++) {
@@ -190,16 +171,16 @@ namespace Stitch {
                     var segment1 = segments[i].Item2[j];
 
                     // These contain all matches for all Input reads (outer list) for all templates (inner list) with the score
-                    var local_matches = segment1.Match(Input);
+                    var local_matches = segment1.Match(Input.Data.Cleaned);
 
-                    for (int read = 0; read < Input.Count; read++)
+                    for (int read = 0; read < Input.Data.Cleaned.Count; read++)
                         matches[read].AddRange(local_matches[read].Select(a => (i, j, a.TemplateIndex, a.Match)));
                 }
 
                 Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
 
                 // Save the progress, finished TemplateMatching
-                if (progressBar != null) progressBar.Update();
+                if (ProgressBar != null) ProgressBar.Update();
 
                 // Filter matches if Forced
                 EnforceUnique(matches, TemplateMatching.EnforceUnique);
@@ -223,8 +204,8 @@ namespace Stitch {
             }
 
             void RunRecombine(List<(string, List<Segment>)> segments, List<Segment> recombined_segment) {
-                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, Alignment Match)>>(Input.Count);
-                for (int i = 0; i < Input.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
+                var matches = new List<List<(int GroupIndex, int, int TemplateIndex, Alignment Match)>>(Input.Data.Cleaned.Count);
+                for (int i = 0; i < Input.Data.Cleaned.Count; i++) matches.Add(new List<(int, int, int, Alignment)>());
 
                 var alph = Recombine.Alphabet ?? TemplateMatching.Alphabet;
                 var name_filter = new NameFilter();
@@ -264,9 +245,9 @@ namespace Stitch {
                     recombined_segment_group.SegmentJoiningScores = CreateRecombinationTemplates(combinations, Recombine.Order[segment_group_index - offset], alph, recombined_segment_group, name_filter);
                     if (Recombine.Decoy) recombined_segment_group.Templates.AddRange(decoy);
 
-                    var local_matches = recombined_segment_group.Match(Input);
+                    var local_matches = recombined_segment_group.Match(Input.Data.Cleaned);
 
-                    for (int read = 0; read < Input.Count; read++)
+                    for (int read = 0; read < Input.Data.Cleaned.Count; read++)
                         matches[read].AddRange(local_matches[read].Select(a => (segment_group_index, 0, a.TemplateIndex, a.Match)));
 
                     recombined_segment.Add(recombined_segment_group);
@@ -290,9 +271,9 @@ namespace Stitch {
                 }
                 if (general_decoy.Count > 0) {
                     var segment = new Segment(general_decoy, alph, "General Decoy Segment", Recombine.CutoffScore);
-                    var local_matches = segment.Match(Input);
+                    var local_matches = segment.Match(Input.Data.Cleaned);
 
-                    for (int read = 0; read < Input.Count; read++)
+                    for (int read = 0; read < Input.Data.Cleaned.Count; read++)
                         matches[read].AddRange(local_matches[read].Select(a => (recombined_segment.Count, 0, a.TemplateIndex, a.Match)));
 
                     recombined_segment.Add(segment);
@@ -309,7 +290,7 @@ namespace Stitch {
                 }
 
                 // Did recombination
-                if (progressBar != null) progressBar.Update();
+                if (ProgressBar != null) ProgressBar.Update();
             }
 
             // Also known as the CDR joining step

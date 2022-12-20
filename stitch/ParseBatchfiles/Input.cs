@@ -11,9 +11,9 @@ namespace Stitch {
         /// <summary> Parses a batch file and retrieves the run parameters or fails with an exception. </summary>
         /// <param name="path"> The path to the batch file. </param>
         /// <returns> The run parameters as specified in the file. </returns>
-        public static FullRunParameters Batch(string path) {
-            var output = new FullRunParameters();
-            var outEither = new ParseResult<FullRunParameters>(output);
+        public static SingleRun Batch(string path) {
+            var output = new SingleRun();
+            var outEither = new ParseResult<SingleRun>(output);
             var name_filter = new NameFilter();
 
             // Get the contents

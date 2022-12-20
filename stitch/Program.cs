@@ -147,8 +147,9 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bar.Update();
                 bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.LoadRawData ? 1 : 0));
             }
-
-            input_params.CreateRun(runVariables, bar).Calculate();
+            input_params.ProgressBar = bar;
+            input_params.runVariables = runVariables;
+            input_params.Calculate();
         }
 
         /// <summary> Gracefully handles user abort by printing a final message and the total time the program ran, after that it aborts. </summary>
