@@ -319,7 +319,7 @@ namespace Stitch {
                                 s = s.TakeWhile(a => a.Character != 'X').ToList();
                                 seq = seq.SkipWhile(a => a.Character == 'X').ToList();
                                 deleted_gaps -= s.Count + seq.Count();
-                                var aligned_template = HelperFunctionality.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
+                                var aligned_template = Alignment.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
 
                                 if (aligned_template.Best.Score > 0) {

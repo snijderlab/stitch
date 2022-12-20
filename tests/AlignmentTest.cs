@@ -126,5 +126,33 @@ namespace StitchTest {
             Assert.AreEqual(0, result.StartB);
             Assert.AreEqual("S[2,2]MMM", result.ShortPath());
         }
+
+        [TestMethod]
+        public void TestEndAlignment() {
+            var alphabet = ScoringMatrix.Default();
+            var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGEW", alphabet).Unwrap());
+            var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
+            var result = Alignment.EndAlignment(read_a.Sequence.Sequence, read_b.Sequence.Sequence, alphabet, 6);
+            Console.WriteLine($"Best Alignment: {result.Best.Score} at {result.Best.Position}");
+            foreach (var set in result.Scores) {
+                Console.WriteLine($"\t{set.Score} at {set.Position}");
+            }
+            Assert.AreEqual(5, result.Best.Position);
+            Assert.AreEqual(24, result.Best.Score);
+        }
+
+        [TestMethod]
+        public void TestEndAlignmentWithGap() {
+            var alphabet = ScoringMatrix.Default();
+            var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
+            var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
+            var result = Alignment.EndAlignment(read_a.Sequence.Sequence, read_b.Sequence.Sequence, alphabet, 6);
+            Console.WriteLine($"Best Alignment: {result.Best.Score} at {result.Best.Position}");
+            foreach (var set in result.Scores) {
+                Console.WriteLine($"\t{set.Score} at {set.Position}");
+            }
+            Assert.AreEqual(4, result.Best.Position);
+            Assert.AreEqual(16, result.Best.Score);
+        }
     }
 }
