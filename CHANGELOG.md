@@ -1,7 +1,7 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
-# Upcoming
-_tba_
+# v1.4.0
+_2022-12-20_
 
 * Implemented alignment which can take bigger patches into account, see `Alphabet` in the manual or any of the examples. (#197)
 * Implemented a more gradual variant of `EnforceUnique` now it can take all reads that score at least `x` * the highest score. (#146)

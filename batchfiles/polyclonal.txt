@@ -1,5 +1,5 @@
 -Run Info---------------
-Version	: 1.3
+Version	: 1.4
 Runname	: COVID 19 patient 14
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
