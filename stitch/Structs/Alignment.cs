@@ -186,7 +186,7 @@ namespace Stitch {
             return builder.ToString();
         }
 
-        string Aligned() {
+        public (string Aligned, string Scores) Aligned() {
             var blocks = " ▁▂▃▄▅▆▇█".ToCharArray();
             var blocks_neg = " ▔▔▔▀▀▀▀█".ToCharArray();
             var str_a = new StringBuilder();
@@ -214,11 +214,12 @@ namespace Stitch {
                 loc_b += piece.StepB;
             }
 
-            return $"{str_a}\n{str_b}\n{str_blocks}\n{str_blocks_neg}";
+            return ($"{str_a}\n{str_b}", $"{str_blocks}\n{str_blocks_neg}");
         }
 
         public string Summary() {
-            return $"score: {Score}\nidentity: {PercentIdentity():P2}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{Aligned()}";
+            var aligned = Aligned();
+            return $"score: {Score}\nidentity: {PercentIdentity():P2}\npath: {ShortPath()}\nstart: ({StartA}, {StartB})\naligned:\n{aligned.Aligned}\n{aligned.Scores}";
         }
 
         public double PercentIdentity() {
@@ -261,18 +262,17 @@ namespace Stitch {
         /// <param name="alphabet">The alphabet to use</param>
         /// <param name="maxOverlap">The maximal length of the overlap</param>
         /// <returns>A tuple with the best position and its score</returns>
-        public static ((int Position, int Score) Best, List<(int Position, int Score)> Scores) EndAlignment(AminoAcid[] template, AminoAcid[] query, ScoringMatrix alphabet, int maxOverlap) {
-            var scores = new List<(int, int)>();
+        public static ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores) EndAlignment(AminoAcid[] template, AminoAcid[] query, ScoringMatrix alphabet, int maxOverlap) {
+            var scores = new List<(int, Alignment)>();
             for (int i = 1; i < maxOverlap && i < query.Length && i < template.Length; i++) {
                 var score = new Alignment(new Read.Simple(template.TakeLast(i).ToArray()), new Read.Simple(query.Take(i).ToArray()), alphabet, AlignmentType.Global);
-                //AminoAcid.ArrayHomology(template.TakeLast(i).ToArray(), query.Take(i).ToArray(), alphabet) - (2 * i);
-                scores.Add((i, score.Score));
+                scores.Add((i, score));
             }
-            if (scores.Count == 0) return ((0, 0), scores);
+            if (scores.Count == 0) return ((0, null), scores);
 
             var best = scores[0];
             foreach (var item in scores)
-                if (item.Item2 > best.Item2) best = item;
+                if (item.Item2.Score > best.Item2.Score) best = item;
             return (best, scores);
         }
     }

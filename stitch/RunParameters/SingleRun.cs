@@ -294,9 +294,9 @@ namespace Stitch {
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
-                var scores = new List<(int Group, int Index, ((int Position, int Score) Best, List<(int Position, int Score)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
+                var scores = new List<(int Group, int Index, ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
 
                 for (int i = 0; i < combinations.Count(); i++) {
                     var sequence = combinations.ElementAt(i);
@@ -322,7 +322,7 @@ namespace Stitch {
                                 var aligned_template = Alignment.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
                                 scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
 
-                                if (aligned_template.Best.Score > 0) {
+                                if (aligned_template.Best.Match.Score > 0) {
                                     s.AddRange(seq.Skip(aligned_template.Best.Position));
                                     sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
                                 } else {
