@@ -276,6 +276,32 @@ namespace Stitch {
 
                             output.Files.Add(fastasettings);
                             break;
+                        case "mmcif":
+                            var mmcif_settings = new InputData.MMCIF();
+                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
+                                switch (setting.Name) {
+                                    case "path":
+                                        if (!string.IsNullOrWhiteSpace(mmcif_settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        mmcif_settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
+                                        break;
+                                    case "name":
+                                        if (!string.IsNullOrWhiteSpace(mmcif_settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        mmcif_settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
+                                        break;
+                                    case "minlength":
+                                        mmcif_settings.MinLength = (uint)ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 5);
+                                        break;
+                                    default:
+                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
+                                        break;
+                                }
+                            }
+
+                            if (string.IsNullOrWhiteSpace(mmcif_settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(mmcif_settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            output.Files.Add(mmcif_settings);
+                            break;
                         case "folder":
                             // Parse files one by one
                             var folder_path = "";
@@ -372,6 +398,7 @@ namespace Stitch {
                         InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alphabet),
                         InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alphabet),
                         InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
+                        InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif.File, mmcif.MinLength, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);

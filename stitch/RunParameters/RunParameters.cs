@@ -120,6 +120,18 @@ namespace Stitch {
                 }
             }
 
+            public class MMCIF : Parameter {
+                public uint MinLength = 5;
+                public override string Display() {
+                    var db = new StringBuilder();
+                    db.AppendLine("mmCIF ->");
+                    db.AppendLine($"{File.Display()}");
+                    db.AppendLine($"MinLength:{MinLength}");
+                    db.AppendLine($"S<-");
+                    return db.ToString();
+                }
+            }
+
             public class PeaksParameters {
                 public int CutoffALC;
                 public int LocalCutoffALC;

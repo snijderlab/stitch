@@ -10,6 +10,11 @@ Input ->
         Name     : 01
         CutoffALC: 90
     <-
+    mmCIF ->
+        Path : "C:\Users\douwe\src\pdbtbx\example-pdbs\1ubq.cif"
+        Name : stuff
+        MinLength: 10
+    <-
 <-
 
 TemplateMatching ->

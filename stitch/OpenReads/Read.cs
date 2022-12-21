@@ -620,7 +620,7 @@ namespace Stitch {
         }
 
         /// <summary> A metadata instance to contain reads from a structural source (mmCIF files). </summary>
-        public abstract class StructuralRead : IRead {
+        public class StructuralRead : IRead {
             /// <summary> The original chain name. </summary>
             public string Name;
 

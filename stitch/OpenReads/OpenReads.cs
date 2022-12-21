@@ -434,8 +434,17 @@ namespace Stitch {
             return out_either;
         }
 
-        static ParseResult<List<Read.IRead>> ParseStructuralRead(NameFilter filter, Read.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
+        public static ParseResult<List<Read.IRead>> MMCIF(NameFilter filter, Read.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
             var out_either = new ParseResult<List<Read.IRead>>();
+            string[] AMINO_ACIDS = new string[]{
+    "ALA", "ARG", "ASH", "ASN", "ASP", "ASX", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", "HID",
+    "HIE", "HIM", "HIP", "HIS", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR",
+    "TRP", "TYR", "VAL", "SEC", "PYL"
+            };
+            char[] AMINO_ACIDS_SHORT = new char[]{
+    'A', 'R', 'N', 'N', 'D', 'B', 'C', 'C', 'Q', 'Q', 'E', 'G', 'H', 'H', 'H', 'H', 'H', 'I', 'L',
+    'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O',
+            };
 
             var loaded_file = InputNameSpace.ParseHelper.GetAllText(file).Map(c => new ParsedFile(file, c.Split(Environment.NewLine)));
 
@@ -445,11 +454,55 @@ namespace Stitch {
             }
             var lexed = MMCIFNameSpace.MMCIFTokenizer.Tokenize(loaded_file.Unwrap());
 
-            // TODO: now do something with the lexed file
-            // * Find the correct loop
-            // * Find the correct columns
-            // * Get all aminoacids from here
+            if (lexed.IsErr())
+                return new ParseResult<List<Read.IRead>>(lexed.Messages);
 
+            foreach (var item in lexed.Unwrap().Items) {
+                if (item is MMCIFNameSpace.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
+                    var chain = loop.Header.FindIndex(i => i == "_atom_site.label_asym_id");
+                    var residue = loop.Header.FindIndex(i => i == "_atom_site.label_comp_id");
+                    if (chain == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
+                    if (residue == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
+
+                    var sequences = new List<(string, string)>();
+                    var current_chain = "";
+                    var current_sequence = "";
+
+                    foreach (var row in loop.Data) {
+                        if (row[chain].AsText() != current_chain) {
+                            if (current_sequence.Length >= minimal_length)
+                                sequences.Add((current_chain, current_sequence));
+                            current_chain = row[chain].AsText();
+                            current_sequence = "";
+                        }
+                        var aa = Array.IndexOf(AMINO_ACIDS, row[residue].AsText());
+                        if (aa != -1) {
+                            current_sequence += AMINO_ACIDS_SHORT[aa];
+                        } else {
+                            out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid."));
+                        }
+                    }
+                    if (current_sequence.Length > 0 && current_sequence.Length >= minimal_length) {
+                        sequences.Add((current_chain, current_sequence));
+                    }
+
+                    var output = new List<Read.IRead>(sequences.Count);
+                    foreach (var sequence in sequences) {
+                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new Read.StructuralRead(s, new FileRange(), filter, sequence.Item1));
+                        if (read.IsOk())
+                            output.Add(read.Unwrap());
+                        else
+                            out_either.AddMessage(new InputNameSpace.ErrorMessage($"{sequence}", "Not a valid sequence", "There where aminoacids in this sequence that are not part of the used alphabet."));
+                    }
+
+                    if (out_either.IsOk()) {
+                        out_either.Value = output;
+                    }
+                    return out_either;
+                }
+            }
+
+            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.ToString(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
             return out_either;
         }
 

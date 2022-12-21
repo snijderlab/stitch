@@ -109,7 +109,9 @@ namespace Stitch {
                     } else if (content.StartsWith(';')) {
                         return ParseMultilineString(ref content, counter).Map<Value>(s => new Text(s));
                     } else if (IsOrdinary(content[0])) {
-                        var number = ParseNumeric(ref content, counter);
+                        var num_start = new Counter(counter);
+                        var text = ParseIdentifier(ref content, counter);
+                        var number = ParseNumeric(text, num_start);
                         if (number.IsOk())
                             return number;
                         else
@@ -136,11 +138,11 @@ namespace Stitch {
                     return identifier;
                 }
 
-                public static ParseResult<Value> ParseNumeric(ref string content, Counter counter) {
+                public static ParseResult<Value> ParseNumeric(string content, Counter counter) {
                     var to_remove = 0;
 
                     // Get number
-                    while (char.IsDigit(content[to_remove]) || ".+-eE".Contains(content[to_remove])) {
+                    while (to_remove < content.Length && (char.IsDigit(content[to_remove]) || ".+-eE".Contains(content[to_remove]))) {
                         to_remove += 1;
                     }
                     var number = 0.0;

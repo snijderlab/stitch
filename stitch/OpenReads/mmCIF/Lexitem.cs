@@ -7,6 +7,11 @@ namespace Stitch {
         public struct DataBlock {
             public string Name;
             public List<Item> Items;
+
+            public DataBlock() {
+                Name = "";
+                Items = new List<Item>();
+            }
         }
 
         public interface Item { }

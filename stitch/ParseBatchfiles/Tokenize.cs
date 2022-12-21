@@ -54,6 +54,14 @@ namespace Stitch {
                     File = pos.File;
                 }
 
+                /// <summary> Create a new counter at the given position. </summary>
+                /// <param name="counter"> The starting position and file for this counter. </param>
+                public Counter(Counter counter) {
+                    Line = counter.Line;
+                    Column = counter.Column;
+                    File = counter.File;
+                }
+
                 /// <summary> Go to the next line, set all numbers correctly. </summary>
                 public void NextLine() {
                     Line += 1;
