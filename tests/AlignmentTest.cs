@@ -132,13 +132,12 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGEW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
-            var result = Alignment.EndAlignment(read_a.Sequence.Sequence, read_b.Sequence.Sequence, alphabet, 6);
-            Console.WriteLine($"Best Alignment: {result.Best.Match.Score} at {result.Best.Position}");
-            foreach (var set in result.Scores) {
-                Console.WriteLine($"\t{set.Match.Score} at {set.Position}");
-            }
-            Assert.AreEqual(5, result.Best.Position);
-            Assert.AreEqual(24, result.Best.Match.Score);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.EndAlignment);
+            Console.WriteLine($"Best Alignment: {result.Score} at {result.LenA}, {result.LenB}");
+            Console.WriteLine(result.Summary());
+            Assert.AreEqual(5, result.LenA);
+            Assert.AreEqual(4, result.LenB);
+            Assert.AreEqual(29, result.Score);
         }
 
         [TestMethod]
@@ -146,13 +145,12 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
             var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
-            var result = Alignment.EndAlignment(read_a.Sequence.Sequence, read_b.Sequence.Sequence, alphabet, 6);
-            Console.WriteLine($"Best Alignment: {result.Best.Match.Score} at {result.Best.Position}");
-            foreach (var set in result.Scores) {
-                Console.WriteLine($"\t{set.Match.Score} at {set.Position}");
-            }
-            Assert.AreEqual(4, result.Best.Position);
-            Assert.AreEqual(16, result.Best.Match.Score);
+            var result = new Alignment(read_a, read_b, alphabet, AlignmentType.EndAlignment);
+            Console.WriteLine($"Best Alignment: {result.Score} at {result.LenA}, {result.LenB}");
+            Console.WriteLine(result.Summary());
+            Assert.AreEqual(4, result.LenA);
+            Assert.AreEqual(4, result.LenB);
+            Assert.AreEqual(16, result.Score);
         }
     }
 }

@@ -127,9 +127,9 @@ namespace Stitch {
                 } else {
                     // Give the scoring result for each result
                     foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
-                        var template = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
-                        var query = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
-                        var match = new Alignment(template, query, result.Parent.Alphabet, AlignmentType.Local);
+                        var expected_read = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
+                        var actual_read = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
+                        var match = new Alignment(expected_read, actual_read, result.Parent.Alphabet, AlignmentType.Local);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.VeryShortPath()));
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Identity", "Percent", (match.PercentIdentity() * 100).ToString("G3")));
@@ -294,13 +294,14 @@ namespace Stitch {
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)> CreateRecombinationTemplates(System.Collections.Generic.IEnumerable<System.Collections.Generic.IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)> CreateRecombinationTemplates(IEnumerable<IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
-                var scores = new List<(int Group, int Index, ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores), AminoAcid[] SeqA, AminoAcid[] SeqB)>();
+                var scores = new List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)>();
 
                 for (int i = 0; i < combinations.Count(); i++) {
                     var sequence = combinations.ElementAt(i);
                     var s = new List<AminoAcid>();
+                    var s_doc = new List<double>();
                     var t = new List<Template>();
                     var join = false;
                     foreach (var element in order) {
@@ -310,29 +311,97 @@ namespace Stitch {
                             join = true;
                         } else {
                             var index = ((RecombineOrder.Template)element).Index;
-                            var seq = sequence.ElementAt(index).ConsensusSequence().Item1.SelectMany(i => i.Sequence);
+                            var seq_consensus = sequence.ElementAt(index).ConsensusSequence();
+                            var seq = seq_consensus.Item1.Zip(seq_consensus.Item2).SelectMany(i => i.First.Sequence);
+                            var seq_doc = seq_consensus.Item1.Zip(seq_consensus.Item2).SelectMany(i => Enumerable.Repeat(i.Second, i.First.Length));
                             if (join) {
+                                const int padding = 5;
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
-                                var deleted_gaps = s.Count + seq.Count();
+                                var deleted_gaps_s = s.Count;
+                                var deleted_gaps_seq = seq.Count();
                                 s = s.TakeWhile(a => a.Character != 'X').ToList();
                                 seq = seq.SkipWhile(a => a.Character == 'X').ToList();
-                                deleted_gaps -= s.Count + seq.Count();
-                                var aligned_template = Alignment.EndAlignment(s.ToArray(), seq.ToArray(), alphabet, 40 - deleted_gaps);
-                                scores.Add((i, index, aligned_template, s.ToArray(), seq.ToArray()));
+                                deleted_gaps_s -= s.Count;
+                                deleted_gaps_seq -= seq.Count();
+                                s_doc = s_doc.SkipLast(deleted_gaps_s).ToList();
+                                seq_doc = seq_doc.Skip(deleted_gaps_seq).ToList();
+                                var aligned_template = new Alignment(
+                                    new Read.Simple(s.TakeLast(deleted_gaps_s + padding).ToArray(), null, null, "R", s_doc.TakeLast(deleted_gaps_s + padding).ToArray()),
+                                    new Read.Simple(seq.Take(deleted_gaps_seq + padding).ToArray(), null, null, "R", seq_doc.Take(deleted_gaps_seq + padding).ToArray()),
+                                    alphabet, AlignmentType.EndAlignment);
+                                var original_s = new Read.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
+                                var original_seq = new Read.Simple(seq.ToArray(), null, null, "R", seq_doc.ToArray());
+                                var overlap = 0;
 
-                                if (aligned_template.Best.Match.Score > 0) {
-                                    s.AddRange(seq.Skip(aligned_template.Best.Position));
-                                    sequence.ElementAt(index).Overlap = aligned_template.Best.Position;
+                                if (aligned_template.Score > 0) {
+                                    s = s.SkipLast(aligned_template.LenA).ToList();
+                                    // Add the consensus of the alignment
+                                    // Gaps are inserted when its supporting score is bigger than the minimal supporting score of the amino acids on both side on the other sequence
+                                    // Matches are chosen based on the depth of coverage of both, if the DOC is the same an 'X' is inserted if defined otherwise the first is chosen
+                                    // Special cases are chosen based on the depth of coverage, if the DOC is the same the first is chosen.
+                                    int pos_a = aligned_template.StartA;
+                                    int pos_b = aligned_template.StartB;
+                                    foreach (var step in aligned_template.Path) {
+                                        if (step.StepA == 0) {
+                                            var doc_a = aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, Math.Min(2, aligned_template.ReadA.Sequence.PositionalScore.Length - pos_a - 1)).Min();
+                                            var doc_b = aligned_template.ReadB.Sequence.PositionalScore[pos_b];
+                                            if (doc_b >= doc_a) {
+                                                s.Add(aligned_template.ReadB.Sequence.Sequence[pos_b]);
+                                                overlap++;
+                                            }
+                                        } else if (step.StepB == 0) {
+                                            var doc_a = aligned_template.ReadA.Sequence.PositionalScore[pos_a];
+                                            var doc_b = aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, Math.Min(2, aligned_template.ReadB.Sequence.PositionalScore.Length - pos_b - 1)).Min();
+                                            if (doc_a >= doc_b) {
+                                                s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                overlap++;
+                                            }
+                                        } else if (step.StepA == 1 && step.StepB == 1) {
+                                            if (aligned_template.ReadA.Sequence.Sequence[pos_a] == aligned_template.ReadB.Sequence.Sequence[pos_b]) {
+                                                s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                            } else {
+                                                var doc_a = aligned_template.ReadA.Sequence.PositionalScore[pos_a];
+                                                var doc_b = aligned_template.ReadB.Sequence.PositionalScore[pos_b];
+                                                if (doc_a == doc_b) {
+                                                    s.Add(alphabet.Contains('X') ? new AminoAcid(alphabet, 'X') : aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                } else if (doc_a > doc_b) {
+                                                    s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                } else {
+                                                    s.Add(aligned_template.ReadB.Sequence.Sequence[pos_b]);
+                                                }
+                                            }
+                                            overlap++;
+                                        } else {
+                                            var doc_a = aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, step.StepA).Average();
+                                            var doc_b = aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, step.StepB).Average();
+                                            if (doc_a == doc_b) {
+                                                s.AddRange(aligned_template.ReadA.Sequence.Sequence.SubArray(pos_a, step.StepA));
+                                                overlap += step.StepA;
+                                            } else if (doc_a > doc_b) {
+                                                s.AddRange(aligned_template.ReadA.Sequence.Sequence.SubArray(pos_a, step.StepA));
+                                                overlap += step.StepA;
+                                            } else {
+                                                s.AddRange(aligned_template.ReadB.Sequence.Sequence.SubArray(pos_b, step.StepB));
+                                                overlap += step.StepB;
+                                            }
+                                        }
+                                        pos_a += step.StepA;
+                                        pos_b += step.StepB;
+                                    }
+                                    s.AddRange(seq.Skip(aligned_template.LenB));
                                 } else {
                                     // When no good overlap is found just paste them one after the other
                                     s.Add(new AminoAcid(alphabet, alphabet.GapChar));
                                     s.AddRange(seq);
-                                    sequence.ElementAt(index).Overlap = 0;
                                 }
+                                sequence.ElementAt(index).Overlap = overlap;
+                                var final_s = new Read.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
+                                scores.Add((i, index, aligned_template, original_s, original_seq, final_s, overlap));
                             } else {
                                 s.AddRange(seq);
+                                s_doc.AddRange(seq_doc);
                             }
                             t.Add(sequence.ElementAt(((RecombineOrder.Template)element).Index));
                         }

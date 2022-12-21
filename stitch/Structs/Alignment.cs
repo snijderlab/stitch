@@ -6,9 +6,14 @@ using System.Text;
 namespace Stitch {
 
     public enum AlignmentType {
+        /// <summary> Align both sequences fully to each other, there can be no dangling patches of sequence on any side of any sequence. </summary>
         Global,
+        /// <summary> Align the read (sequence B, 2nd argument) fully to the template (sequence A, 1st argument) only the template can have dangling patches of sequence at any side.</summary>
         GlobalForB,
-        Local
+        /// <summary> Align the best matching patches of both sequences, both can have dangling patches of sequence at any side. </summary>
+        Local,
+        /// <summary> Align the ends of two sequences, the left sequence (1st argument) can have dangling patches of sequence on the left, but has to be fully placed on the right while the right sequence (2nd argument) works the other way around. </summary>
+        EndAlignment,
     }
 
     public struct AlignmentPiece {
@@ -33,6 +38,7 @@ namespace Stitch {
 
         public string ShortPath() {
             return (this.StepA, this.StepB) switch {
+                (0, 0) => "*",
                 (0, 1) => "I",
                 (1, 0) => "D",
                 (1, 1) => "M",
@@ -68,7 +74,7 @@ namespace Stitch {
             (int score, int index_a, int index_b) high = (0, 0, 0);
 
             // Set up the gaps for the B side, used to guide the path back to (0,0) when the actual alignment already ended at the B side.
-            if (type == AlignmentType.Global || type == AlignmentType.GlobalForB) {
+            if (type == AlignmentType.Global || type == AlignmentType.GlobalForB || type == AlignmentType.EndAlignment) {
                 for (int b = 0; b <= seq_b.Length; b++) {
                     matrix[0, b] = new AlignmentPiece(b == 0 ? 0 : b == 1 ? alphabet.GapStartPenalty : alphabet.GapStartPenalty + (b - 1) * alphabet.GapExtendPenalty,
                     b == 0 ? (sbyte)0 : b == 1 ? (sbyte)alphabet.GapStartPenalty : (sbyte)alphabet.GapExtendPenalty,
@@ -88,11 +94,10 @@ namespace Stitch {
             }
 
             // Fill the matrix with the best move for each position
-            //var values = new List<AlignmentPiece>(alphabet.Size * alphabet.Size + 2);
             for (int index_a = 1; index_a <= seq_a.Length; index_a++) {
                 for (int index_b = 1; index_b <= seq_b.Length; index_b++) {
-                    //values.Clear(); // Reuse the values memory
                     AlignmentPiece value = new AlignmentPiece();
+                    var changed = false;
                     // List all possible moves
                     for (byte len_a = 0; len_a <= alphabet.Size; len_a++) {
                         for (byte len_b = 0; len_b <= alphabet.Size; len_b++) {
@@ -112,14 +117,16 @@ namespace Stitch {
                                 continue; // Skip undefined pairs
 
                             var total_score = previous.Score + (int)score;
-                            if (value.Score < total_score)
+                            if (value.Score < total_score || !changed && type != AlignmentType.Local) {
                                 value = new AlignmentPiece(total_score, score, len_a, len_b);
+                                changed = true;
+                            }
                         }
                     }
-                    // Select the best move
-                    //var value = values.MaxBy(v => v.Score);
                     if (value.Score > high.score)
                         high = (value.Score, index_a, index_b);
+                    if (value.Score < 0 && type == AlignmentType.Local)
+                        value = new AlignmentPiece(0, 0, 0, 0);
                     matrix[index_a, index_b] = value;
                 }
             }
@@ -130,6 +137,9 @@ namespace Stitch {
             } else if (type == AlignmentType.GlobalForB) {
                 var value = Enumerable.Range(0, seq_a.Length + 1).Select(index => (index, matrix[index, seq_b.Length].Score)).MaxBy(v => v.Item2);
                 high = (value.Item2, value.index, seq_b.Length);
+            } else if (type == AlignmentType.EndAlignment) {
+                var value = Enumerable.Range(0, seq_b.Length + 1).Select(index => (index, matrix[seq_a.Length, index].Score)).MaxBy(v => v.Item2);
+                high = (value.Item2, seq_a.Length, value.index);
             }
             this.Score = high.score;
 
@@ -254,26 +264,6 @@ namespace Stitch {
             }
 
             return output.ToArray();
-        }
-
-        /// <summary> End align two sequences </summary>
-        /// <param name="template">The front sequence</param>
-        /// <param name="query">The tail sequence</param>
-        /// <param name="alphabet">The alphabet to use</param>
-        /// <param name="maxOverlap">The maximal length of the overlap</param>
-        /// <returns>A tuple with the best position and its score</returns>
-        public static ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores) EndAlignment(AminoAcid[] template, AminoAcid[] query, ScoringMatrix alphabet, int maxOverlap) {
-            var scores = new List<(int, Alignment)>();
-            for (int i = 1; i < maxOverlap && i < query.Length && i < template.Length; i++) {
-                var score = new Alignment(new Read.Simple(template.TakeLast(i).ToArray()), new Read.Simple(query.Take(i).ToArray()), alphabet, AlignmentType.Global);
-                scores.Add((i, score));
-            }
-            if (scores.Count == 0) return ((0, null), scores);
-
-            var best = scores[0];
-            foreach (var item in scores)
-                if (item.Item2.Score > best.Item2.Score) best = item;
-            return (best, scores);
         }
     }
 }
