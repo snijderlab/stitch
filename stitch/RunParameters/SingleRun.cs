@@ -319,17 +319,19 @@ namespace Stitch {
                                 // When the templates are aligned with a gap (a * in the Order definition) the overlap between the two templates is found
                                 // and removed from the Template sequence for the recombine round.
                                 join = false;
-                                var deleted_gaps_s = s.Count;
-                                var deleted_gaps_seq = seq.Count();
+                                var inserted_cdr_s = s.Count;
+                                var inserted_cdr_seq = seq.Count();
                                 s = s.TakeWhile(a => a.Character != 'X').ToList();
                                 seq = seq.SkipWhile(a => a.Character == 'X').ToList();
-                                deleted_gaps_s -= s.Count;
-                                deleted_gaps_seq -= seq.Count();
-                                s_doc = s_doc.SkipLast(deleted_gaps_s).ToList();
-                                seq_doc = seq_doc.Skip(deleted_gaps_seq).ToList();
+                                inserted_cdr_s -= s.Count;
+                                inserted_cdr_seq -= seq.Count();
+                                inserted_cdr_s = 20 - inserted_cdr_s;
+                                inserted_cdr_seq = 20 - inserted_cdr_seq;
+                                s_doc = s_doc.SkipLast(inserted_cdr_s).ToList();
+                                seq_doc = seq_doc.Skip(inserted_cdr_seq).ToList();
                                 var aligned_template = new Alignment(
-                                    new Read.Simple(s.TakeLast(deleted_gaps_s + padding).ToArray(), null, null, "R", s_doc.TakeLast(deleted_gaps_s + padding).ToArray()),
-                                    new Read.Simple(seq.Take(deleted_gaps_seq + padding).ToArray(), null, null, "R", seq_doc.Take(deleted_gaps_seq + padding).ToArray()),
+                                    new Read.Simple(s.TakeLast(inserted_cdr_s + padding).ToArray(), null, null, "R", s_doc.TakeLast(inserted_cdr_s + padding).ToArray()),
+                                    new Read.Simple(seq.Take(inserted_cdr_seq + padding).ToArray(), null, null, "R", seq_doc.Take(inserted_cdr_seq + padding).ToArray()),
                                     alphabet, AlignmentType.EndAlignment);
                                 var original_s = new Read.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
                                 var original_seq = new Read.Simple(seq.ToArray(), null, null, "R", seq_doc.ToArray());
