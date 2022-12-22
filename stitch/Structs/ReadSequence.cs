@@ -39,7 +39,7 @@ namespace Stitch {
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="read"> The read with the original sequence, will be updated to contain a pointer to this local sequence. </param>
         /// <param name="template"> The template where this read is placed. </param>
-        public ReadSequence(ReadFormat.Read read, ReadFormat.Read template) {
+        public ReadSequence(ReadFormat.General read, ReadFormat.General template) {
             OriginalSequence = read.Sequence.AminoAcids.ToArray();
             AminoAcids = read.Sequence.AminoAcids.ToArray();
             PositionalScore = read.Sequence.PositionalScore.ToArray();

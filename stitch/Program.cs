@@ -175,7 +175,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// <summary> Do common deduplication and clean up steps. Take note: Assumes all MetaData to be of type ReadMetaData.Fasta. </summary>
         /// <param name="output">The file to save the fasta sequences in.</param>
         /// <param name="reads">The reads/sequences itself.</param>
-        private static void SaveAndCleanFasta(string output, List<ReadFormat.Read> reads) {
+        private static void SaveAndCleanFasta(string output, List<ReadFormat.General> reads) {
             // Two dictionaries to ensure both unique ids (to join isoforms) and unique sequences.
             var id_dict = new Dictionary<string, (string, string)>();
             var sequence_dict = new Dictionary<string, string>();
@@ -371,7 +371,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
 
             var name_filter = new NameFilter();
-            var list = new List<ReadFormat.Read>(results.Count);
+            var list = new List<ReadFormat.General>(results.Count);
             var alphabet = ScoringMatrix.Default();
             foreach (var (isotype, sequence) in results) {
                 list.Add(new ReadFormat.Fasta(AminoAcid.FromString(sequence, alphabet).Unwrap(), isotype, isotype, null, name_filter));
@@ -382,7 +382,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
 
         /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
         static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true) {
-            var sequences = new List<ReadFormat.Read>();
+            var sequences = new List<ReadFormat.General>();
             var name_filter = new NameFilter();
             var alphabet = ScoringMatrix.Default();
 

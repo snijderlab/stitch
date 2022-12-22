@@ -9,22 +9,19 @@ using static Stitch.HelperFunctionality;
 namespace Stitch {
     /// <summary> To contain all logic for the reading of reads out of files. </summary>
     public static class OpenReads {
-        /// <summary> To open a file with reads. It assumes a very basic format,
-        /// namely sequences separated with newlines
-        /// with the possibility to specify comments as lines starting with a
-        /// specific character (standard '#').  </summary>
+        /// <summary> To open a file with reads. It assumes a very basic format, namely sequences separated with newlines with the possibility to specify comments as lines starting with a specific character (standard '#'). </summary>
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<ReadFormat.Read>> Simple(NameFilter filter, ReadFormat.FileIdentifier inputFile, ScoringMatrix alphabet, char commentChar = '#') {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        public static ParseResult<List<ReadFormat.General>> Simple(NameFilter filter, ReadFormat.FileIdentifier inputFile, ScoringMatrix alphabet, char commentChar = '#') {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
             if (possible_content.IsOk(out_either)) {
                 var parsed = new ParsedFile(inputFile, possible_content.Unwrap().Split('\n'));
-                var reads = new List<ReadFormat.Read>();
+                var reads = new List<ReadFormat.General>();
                 out_either.Value = reads;
 
                 for (int line = 0; line < parsed.Lines.Length; line++) {
@@ -39,16 +36,13 @@ namespace Stitch {
             return out_either;
         }
 
-        /// <summary> To open a file with reads. the file should be in fasta format
-        /// so identifiers on a single line starting with '>' followed by an arbitrary
-        /// number of lines with sequences. Because sometimes programs output the length
-        /// of a line after every line this is stripped away.  </summary>
+        /// <summary> To open a file with reads. the file should be in fasta format so identifiers on a single line starting with '>' followed by an arbitrary number of lines with sequences. Because sometimes programs output the length of a line after every line this is stripped away. </summary>
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseResult<List<ReadFormat.Read>> Fasta(NameFilter filter, ReadFormat.FileIdentifier inputFile, Regex parseIdentifier, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        public static ParseResult<List<ReadFormat.General>> Fasta(NameFilter filter, ReadFormat.FileIdentifier inputFile, Regex parseIdentifier, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
@@ -57,7 +51,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<ReadFormat.Read>();
+            var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n').ToArray();
@@ -148,8 +142,8 @@ namespace Stitch {
             return remove_whitespace.Replace(input, "");
         }
         private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
-        static ParseResult<ReadFormat.Read> ParseAnnotatedFasta(string line, ReadFormat.Read metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<ReadFormat.Read>();
+        static ParseResult<ReadFormat.General> ParseAnnotatedFasta(string line, ReadFormat.General metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<ReadFormat.General>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(HelperFunctionality.Annotation, string)>();
             string current_seq = "";
@@ -222,8 +216,8 @@ namespace Stitch {
         /// <param name="filter">The name filter to use to filter the name of the reads.</param>
         /// <param name="peaks">The peaks settings to use</param>
         /// <param name="local">If defined the local peaks parameters to use</param>
-        public static ParseResult<List<ReadFormat.Read>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, ScoringMatrix alphabet, RunParameters.InputData.InputLocalParameters local = null, string GlobalRawDataDirectory = null) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        public static ParseResult<List<ReadFormat.General>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, ScoringMatrix alphabet, RunParameters.InputData.InputLocalParameters local = null, string GlobalRawDataDirectory = null) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var peaks_parameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
             if (peaks_parameters.CutoffALC == -1) peaks_parameters.CutoffALC = peaks.Parameter.CutoffALC;
@@ -238,7 +232,7 @@ namespace Stitch {
             }
 
             List<string> lines = possible_content.Unwrap().Split('\n').ToList();
-            var reads = new List<ReadFormat.Read>();
+            var reads = new List<ReadFormat.General>();
             var parse_file = new ParsedFile(peaks.File, lines.ToArray());
 
             out_either.Value = reads;
@@ -295,9 +289,9 @@ namespace Stitch {
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="novor"> The novor input parameter. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<ReadFormat.Read>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
-            var output = new List<ReadFormat.Read>();
+        public static ParseResult<List<ReadFormat.General>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
+            var output = new List<ReadFormat.General>();
             out_either.Value = output;
 
             if (novor.DeNovoFile != null) {
@@ -316,8 +310,8 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<ReadFormat.Read>> ParseNovorDeNovo(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        static ParseResult<List<ReadFormat.General>> ParseNovorDeNovo(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
@@ -326,7 +320,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<ReadFormat.Read>();
+            var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
@@ -378,8 +372,8 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<ReadFormat.Read>> ParseNovorPSMS(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        static ParseResult<List<ReadFormat.General>> ParseNovorPSMS(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
@@ -388,7 +382,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<ReadFormat.Read>();
+            var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
@@ -435,8 +429,8 @@ namespace Stitch {
             return out_either;
         }
 
-        public static ParseResult<List<ReadFormat.Read>> MMCIF(NameFilter filter, ReadFormat.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        public static ParseResult<List<ReadFormat.General>> MMCIF(NameFilter filter, ReadFormat.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
             string[] AMINO_ACIDS = new string[]{
     "ALA", "ARG", "ASH", "ASN", "ASP", "ASX", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", "HID",
     "HIE", "HIM", "HIP", "HIS", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR",
@@ -457,16 +451,16 @@ namespace Stitch {
             var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
 
             if (lexed.IsErr())
-                return new ParseResult<List<ReadFormat.Read>>(lexed.Messages);
+                return new ParseResult<List<ReadFormat.General>>(lexed.Messages);
 
             foreach (var item in lexed.Unwrap().Items) {
                 if (item is MMCIFItems.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
                     var chain = loop.Header.FindIndex(i => i == "atom_site.label_asym_id");
                     var residue = loop.Header.FindIndex(i => i == "atom_site.label_comp_id");
                     var residue_num = loop.Header.FindIndex(i => i == "atom_site.label_seq_id");
-                    if (chain == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
-                    if (residue == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
-                    if (residue_num == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
+                    if (chain == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
+                    if (residue == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
+                    if (residue_num == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
 
                     var sequences = new List<(string, string)>();
                     var current_chain = "";
@@ -494,7 +488,7 @@ namespace Stitch {
                         sequences.Add((current_chain, current_sequence));
                     }
 
-                    var output = new List<ReadFormat.Read>(sequences.Count);
+                    var output = new List<ReadFormat.General>(sequences.Count);
                     foreach (var sequence in sequences) {
                         var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new ReadFormat.StructuralRead(s, file_range, filter, sequence.Item1));
                         if (read.IsOk())
@@ -516,15 +510,15 @@ namespace Stitch {
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<ReadFormat.Read>> CleanUpInput(List<ReadFormat.Read> reads, ScoringMatrix alp, NameFilter filter) {
-            return CleanUpInput(new List<List<ReadFormat.Read>> { reads }, alp, filter);
+        public static ParseResult<List<ReadFormat.General>> CleanUpInput(List<ReadFormat.General> reads, ScoringMatrix alp, NameFilter filter) {
+            return CleanUpInput(new List<List<ReadFormat.General>> { reads }, alp, filter);
         }
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<ReadFormat.Read>> CleanUpInput(List<List<ReadFormat.Read>> reads, ScoringMatrix alp, NameFilter filter) {
-            var filtered = new Dictionary<string, ReadFormat.Read>();
-            var out_either = new ParseResult<List<ReadFormat.Read>>();
+        public static ParseResult<List<ReadFormat.General>> CleanUpInput(List<List<ReadFormat.General>> reads, ScoringMatrix alp, NameFilter filter) {
+            var filtered = new Dictionary<string, ReadFormat.General>();
+            var out_either = new ParseResult<List<ReadFormat.General>>();
 
             foreach (var set in reads) {
                 foreach (var read in set) {
@@ -532,7 +526,7 @@ namespace Stitch {
                         if (filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] is ReadFormat.Combined c) {
                             c.AddChild(read);
                         } else {
-                            filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] = new ReadFormat.Combined(read.Sequence.AminoAcids, filter, new List<ReadFormat.Read> { filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)], read });
+                            filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] = new ReadFormat.Combined(read.Sequence.AminoAcids, filter, new List<ReadFormat.General> { filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)], read });
                         }
                     } else {
                         for (int i = 0; i < read.Sequence.Length; i++) {

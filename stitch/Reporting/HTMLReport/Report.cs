@@ -68,7 +68,7 @@ namespace Stitch {
             try {
                 HtmlBuilder inner_html;
 
-                ReadFormat.Read metadata;
+                ReadFormat.General metadata;
                 switch (aside) {
                     case AsideType.Read:
                         inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
@@ -114,9 +114,9 @@ namespace Stitch {
         }
 
         HtmlBuilder CreateCDROverview(string id, List<Segment> segments) {
-            var cdr1_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
+            var cdr1_reads = new List<(ReadFormat.General MetaData, ReadFormat.General Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(ReadFormat.General MetaData, ReadFormat.General Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(ReadFormat.General MetaData, ReadFormat.General Template, string Sequence, bool Unique)>();
             int total_templates = 0;
             bool found_cdr_region = false;
 

@@ -12,7 +12,7 @@ namespace Stitch {
         public readonly double CutoffScore;
         [JsonIgnore]
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
-        public List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)> SegmentJoiningScores = new();
+        public List<(int Group, int Index, Alignment EndAlignment, ReadFormat.General SeqA, ReadFormat.General SeqB, ReadFormat.General Result, int Overlap)> SegmentJoiningScores = new();
         [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
@@ -24,7 +24,7 @@ namespace Stitch {
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<ReadFormat.Read> sequences, ScoringMatrix alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
+        public Segment(List<ReadFormat.General> sequences, ScoringMatrix alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
             Name = name;
             Index = index;
             CutoffScore = cutoffScore;
@@ -59,7 +59,7 @@ namespace Stitch {
 
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, Alignment Match)>> Match(List<ReadFormat.Read> sequences) {
+        public List<List<(int TemplateIndex, Alignment Match)>> Match(List<ReadFormat.General> sequences) {
             var output = new List<List<(int TemplateIndex, Alignment Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++) {
                 var row = new List<(int TemplateIndex, Alignment Match)>(Templates.Count);

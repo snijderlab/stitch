@@ -18,22 +18,22 @@ namespace StitchTest {
             alp = ScoringMatrix.Default();
         }
 
-        ReadFormat.Read Read(string sequence) {
-            return (ReadFormat.Read)new ReadFormat.Simple(AminoAcid.FromString(sequence, alp).Unwrap(), null, new NameFilter());
+        ReadFormat.General Read(string sequence) {
+            return (ReadFormat.General)new ReadFormat.Simple(AminoAcid.FromString(sequence, alp).Unwrap(), null, new NameFilter());
         }
 
         [TestMethod]
         public void SingleMatchTemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadFormat.Read> { Read("EVQLVESGGGLVQPGGSLRL") },
+                new List<ReadFormat.General> { Read("EVQLVESGGGLVQPGGSLRL") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadFormat.Read> { Read("EVQLVESGGGLVQPGGSLRL") });
+            var matches = segment.Match(new List<ReadFormat.General> { Read("EVQLVESGGGLVQPGGSLRL") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -45,14 +45,14 @@ namespace StitchTest {
         public void MultiMatchTemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadFormat.Read> { Read("EVQLVESGGG") },
+                new List<ReadFormat.General> { Read("EVQLVESGGG") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadFormat.Read> { Read("EVQLV"), Read("ESGGG"), Read("EVQ"), Read("LVES"), Read("GGG") });
+            var matches = segment.Match(new List<ReadFormat.General> { Read("EVQLV"), Read("ESGGG"), Read("EVQ"), Read("LVES"), Read("GGG") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -64,14 +64,14 @@ namespace StitchTest {
         public void SingleAATemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadFormat.Read> { Read("E") },
+                new List<ReadFormat.General> { Read("E") },
                 alp,
                 "segment",
                 1.0, // CutoffScore
                 0, // Index
                 true
                 );
-            var matches = segment.Match(new List<ReadFormat.Read> { Read("E") });
+            var matches = segment.Match(new List<ReadFormat.General> { Read("E") });
             Assert.IsTrue(matches.All(m => m.All(m => m.TemplateIndex == 0)));
             foreach (var (_, match) in matches.SelectMany(m => m)) segment.Templates[0].AddMatch(match);
             var doc = segment.Templates[0].ConsensusSequence().Item2;
@@ -83,7 +83,7 @@ namespace StitchTest {
         public void NoAATemplateAlignment() {
             //SCAASGFTFSSYWMSWVRQAPGKGLEWVANIKQDGSEKYYVDSVKGRFTISRDNAKNSLYLQMNSLRAEDTAVYYCAR
             var segment = new Segment(
-                new List<ReadFormat.Read> { Read("") },
+                new List<ReadFormat.General> { Read("") },
                 alp,
                 "segment",
                 1.0, // CutoffScore

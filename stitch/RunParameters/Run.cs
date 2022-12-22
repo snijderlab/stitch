@@ -303,9 +303,9 @@ namespace Stitch {
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)> CreateRecombinationTemplates(IEnumerable<IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, Alignment EndAlignment, ReadFormat.General SeqA, ReadFormat.General SeqB, ReadFormat.General Result, int Overlap)> CreateRecombinationTemplates(IEnumerable<IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
-                var scores = new List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)>();
+                var scores = new List<(int Group, int Index, Alignment EndAlignment, ReadFormat.General SeqA, ReadFormat.General SeqB, ReadFormat.General Result, int Overlap)>();
 
                 for (int i = 0; i < combinations.Count(); i++) {
                     var sequence = combinations.ElementAt(i);

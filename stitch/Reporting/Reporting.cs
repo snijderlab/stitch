@@ -10,7 +10,7 @@ using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 namespace Stitch {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public readonly struct ReportInputParameters {
-        public readonly ReadOnlyCollection<ReadFormat.Read> Input;
+        public readonly ReadOnlyCollection<ReadFormat.General> Input;
         public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
@@ -18,7 +18,7 @@ namespace Stitch {
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<ReadFormat.Read> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
+        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();

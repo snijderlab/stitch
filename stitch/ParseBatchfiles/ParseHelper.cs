@@ -1008,7 +1008,7 @@ namespace Stitch {
                 // Open the file
                 var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<ReadFormat.Read>>();
+                var folder_reads = new ParseResult<List<ReadFormat.General>>();
                 var alphabet = tsettings.Alphabet ?? backup_alphabet;
 
                 if (file_path.EndsWith(".fasta"))

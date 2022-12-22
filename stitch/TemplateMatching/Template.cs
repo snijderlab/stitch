@@ -23,7 +23,7 @@ namespace Stitch {
         public readonly AminoAcid[] Sequence;
 
         /// <summary> Metadata for this template </summary>
-        public readonly ReadFormat.Read MetaData;
+        public readonly ReadFormat.General MetaData;
 
         /// <summary> The score for this template </summary>
         public int Score {
@@ -80,7 +80,7 @@ namespace Stitch {
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, ReadFormat.Read meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null) {
+        public Template(string name, AminoAcid[] seq, ReadFormat.General meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null) {
             Name = name;
             Sequence = seq;
             MetaData = meta;

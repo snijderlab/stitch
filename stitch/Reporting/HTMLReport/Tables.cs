@@ -14,7 +14,7 @@ namespace HTMLNameSpace {
 
         /// <summary> Create HTML with all reads in a table. With annotations for sorting the table. </summary>
         /// <returns> Returns an HTML string. </returns>
-        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<ReadFormat.Read> reads, string AssetsFolderName) {
+        public static HtmlBuilder CreateReadsTable(ReadOnlyCollection<ReadFormat.General> reads, string AssetsFolderName) {
             var html = new HtmlBuilder();
 
             html.Add(TableHeader("reads", reads.Select(a => (double)a.Sequence.Length)));
@@ -149,7 +149,7 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder CDRTable(List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates) {
+        public static HtmlBuilder CDRTable(List<(ReadFormat.General MetaData, ReadFormat.General Template, string Sequence, bool Unique)> CDRs, string AssetsFolderName, string title, int total_reads, int total_templates) {
             table_counter++;
             var table_id = $"table-{table_counter}";
 

@@ -52,9 +52,9 @@ namespace Stitch {
         public readonly List<AlignmentPiece> Path;
         public readonly int StartA;
         public readonly int StartB;
-        public readonly ReadFormat.Read ReadA;
+        public readonly ReadFormat.General ReadA;
         public readonly int ReadAIndex;
-        public readonly ReadFormat.Read ReadB;
+        public readonly ReadFormat.General ReadB;
         public bool Unique;
         public readonly int LenA;
         public readonly int LenB;
@@ -64,7 +64,7 @@ namespace Stitch {
         public readonly int GapInA;
         public readonly int GapInB;
 
-        public Alignment(ReadFormat.Read read_a, ReadFormat.Read read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
+        public Alignment(ReadFormat.General read_a, ReadFormat.General read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.AminoAcids;
             var seq_b = read_b.Sequence.AminoAcids;
             this.ReadA = read_a;

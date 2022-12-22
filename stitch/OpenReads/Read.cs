@@ -11,7 +11,7 @@ namespace Stitch {
     public static class ReadFormat {
         /// <summary> To save metadata of a read/path of which could be used in calculations to determine the likelihood
         ///  of certain assignments or for quality control or ease of use for humans. </summary>
-        public abstract class Read {
+        public abstract class General {
             /// <summary> The sequence of this read. </summary>
             public ReadSequence Sequence { get; set; }
 
@@ -50,7 +50,7 @@ namespace Stitch {
             /// <param name="file">The identifier of the originating file.</param>
             /// <param name="id">The identifier of the read.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Read(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null, double[] positional_score = null) {
+            public General(AminoAcid[] sequence, FileRange? file, string id, NameFilter filter, string classId = null, double[] positional_score = null) {
                 Sequence = new ReadSequence(sequence == null ? new AminoAcid[0] : sequence, positional_score ?? Enumerable.Repeat(Intensity, (sequence == null ? 0 : sequence.Length)).ToArray());
                 nameFilter = filter;
                 FileRange = file;
@@ -70,7 +70,7 @@ namespace Stitch {
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public class Simple : Read {
+        public class Simple : General {
             /// <summary> Create a new Simple MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
@@ -89,7 +89,7 @@ namespace Stitch {
         }
 
         /// <summary> A class to hold meta information from fasta data. </summary>
-        public class Fasta : Read {
+        public class Fasta : General {
             /// <summary> The identifier from the fasta file. </summary>
             public readonly string FastaHeader;
             public List<(HelperFunctionality.Annotation Type, string Sequence)> AnnotatedSequence = null;
@@ -119,7 +119,7 @@ namespace Stitch {
         }
 
         /// <summary> A struct to hold meta information from PEAKS data. </summary>
-        public class Peaks : Read {
+        public class Peaks : General {
             /// <summary> The Fraction number of the peptide. </summary>
             public string Fraction = null;
 
@@ -458,7 +458,7 @@ namespace Stitch {
             }
         }
 
-        public class Combined : Read {
+        public class Combined : General {
             /// <summary> Returns the overall intensity for this read. It is used to determine which read to
             /// choose if multiple reads exist at the same spot. </summary>
             public override double Intensity { get => Children.Count == 0 ? 0.0 : Children.Average(m => m.Intensity); }
@@ -470,7 +470,7 @@ namespace Stitch {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 
-            public readonly List<Read> Children = new List<Read>();
+            public readonly List<General> Children = new List<General>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns>A string containing the MetaData.</returns>
@@ -490,18 +490,18 @@ namespace Stitch {
                 return html;
             }
 
-            public Combined(AminoAcid[] sequence, NameFilter filter, List<Read> children) : base(sequence, null, "Combined", filter) {
+            public Combined(AminoAcid[] sequence, NameFilter filter, List<General> children) : base(sequence, null, "Combined", filter) {
                 Children = children;
             }
 
-            public void AddChild(Read read) {
+            public void AddChild(General read) {
                 Children.Add(read);
                 Sequence.UpdatePositionalScore(read.Sequence.PositionalScore, Children.Count - 1);
             }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
-        public abstract class Novor : Read {
+        public abstract class Novor : General {
             /// <summary> The fraction where this peptide was found. </summary>
             public string Fraction;
             /// <summary> The scan number of this peptide. </summary>
@@ -603,7 +603,7 @@ namespace Stitch {
         }
 
         /// <summary> A metadata instance to contain reads from a structural source (mmCIF files). </summary>
-        public class StructuralRead : Read {
+        public class StructuralRead : General {
             /// <summary> The original chain name. </summary>
             public string Name;
 

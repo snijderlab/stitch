@@ -18,8 +18,8 @@ namespace Stitch {
 
             public class ActualData {
                 /// <summary> The inputs for this run. </summary>
-                public List<List<ReadFormat.Read>> Raw = new();
-                public List<ReadFormat.Read> Cleaned = new();
+                public List<List<ReadFormat.General>> Raw = new();
+                public List<ReadFormat.General> Cleaned = new();
             }
 
             public class InputParameters {
@@ -120,7 +120,7 @@ namespace Stitch {
             public string Name = null;
 
             /// <summary> The templates of this segment </summary>
-            public List<ReadFormat.Read> Templates = new();
+            public List<ReadFormat.General> Templates = new();
             /// <summary> The scoring system of this segment, whether it will use Absolute (scores are just added up) or relative (scores are divided by the length of the template). </summary>
             public ScoringParameter Scoring = ScoringParameter.Absolute;
 

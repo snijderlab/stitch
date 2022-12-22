@@ -17,7 +17,7 @@ namespace StitchTest {
         [TestMethod]
         public void TestSmall() {
             var alp = ScoringMatrix.Default();
-            var sequences = new List<(string, ReadFormat.Read)> { ("A", new ReadFormat.Simple(AminoAcid.FromString("VKAFEALQ", alp).Unwrap())), ("B", new ReadFormat.Simple(AminoAcid.FromString("VKAWWALW", alp).Unwrap())), ("C", new ReadFormat.Simple(AminoAcid.FromString("VKAWVALW", alp).Unwrap())) };
+            var sequences = new List<(string, ReadFormat.General)> { ("A", new ReadFormat.Simple(AminoAcid.FromString("VKAFEALQ", alp).Unwrap())), ("B", new ReadFormat.Simple(AminoAcid.FromString("VKAWWALW", alp).Unwrap())), ("C", new ReadFormat.Simple(AminoAcid.FromString("VKAWVALW", alp).Unwrap())) };
             var tree = PhylogeneticTree.CreateTree(sequences, alp, false);
             var out_group_tree = PhylogeneticTree.CreateTree(sequences, alp, true);
             Assert.AreEqual("((A, B), C)", tree.BracketsNotation()); // un rooted, this is how it comes out
