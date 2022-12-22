@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
@@ -453,20 +454,24 @@ namespace Stitch {
                 return out_either;
             }
             var lexed = MMCIFNameSpace.MMCIFTokenizer.Tokenize(loaded_file.Unwrap());
+            var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
 
             if (lexed.IsErr())
                 return new ParseResult<List<Read.IRead>>(lexed.Messages);
 
             foreach (var item in lexed.Unwrap().Items) {
                 if (item is MMCIFNameSpace.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
-                    var chain = loop.Header.FindIndex(i => i == "_atom_site.label_asym_id");
-                    var residue = loop.Header.FindIndex(i => i == "_atom_site.label_comp_id");
+                    var chain = loop.Header.FindIndex(i => i == "atom_site.label_asym_id");
+                    var residue = loop.Header.FindIndex(i => i == "atom_site.label_comp_id");
+                    var residue_num = loop.Header.FindIndex(i => i == "atom_site.label_seq_id");
                     if (chain == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
                     if (residue == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
+                    if (residue_num == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
 
                     var sequences = new List<(string, string)>();
                     var current_chain = "";
                     var current_sequence = "";
+                    var current_num = "";
 
                     foreach (var row in loop.Data) {
                         if (row[chain].AsText() != current_chain) {
@@ -475,6 +480,9 @@ namespace Stitch {
                             current_chain = row[chain].AsText();
                             current_sequence = "";
                         }
+                        if (row[residue_num].AsText() == current_num)
+                            continue;
+                        current_num = row[residue_num].AsText();
                         var aa = Array.IndexOf(AMINO_ACIDS, row[residue].AsText());
                         if (aa != -1) {
                             current_sequence += AMINO_ACIDS_SHORT[aa];
@@ -488,7 +496,7 @@ namespace Stitch {
 
                     var output = new List<Read.IRead>(sequences.Count);
                     foreach (var sequence in sequences) {
-                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new Read.StructuralRead(s, new FileRange(), filter, sequence.Item1));
+                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new Read.StructuralRead(s, file_range, filter, sequence.Item1));
                         if (read.IsOk())
                             output.Add(read.Unwrap());
                         else
@@ -502,7 +510,7 @@ namespace Stitch {
                 }
             }
 
-            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.ToString(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
+            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.Display(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
             return out_either;
         }
 

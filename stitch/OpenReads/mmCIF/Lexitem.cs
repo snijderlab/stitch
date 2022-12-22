@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 
 namespace Stitch {
@@ -12,9 +13,15 @@ namespace Stitch {
                 Name = "";
                 Items = new List<Item>();
             }
+
+            public string Debug() {
+                return $"DataBlock({Name}, [{string.Join(", ", Items.Select(i => i.Debug()))}])";
+            }
         }
 
-        public interface Item { }
+        public interface Item {
+            string Debug();
+        }
 
         public struct SaveFrame : Item {
             public string Name;
@@ -24,19 +31,27 @@ namespace Stitch {
                 Name = name;
                 Items = items;
             }
+
+            public string Debug() {
+                return $"Item::SaveFrame({Name}, [{string.Join(", ", Items.Select(i => i.Debug()))}])";
+            }
         }
 
         public interface DataItem : Item {
 
         }
 
-        public struct Single : DataItem {
+        public struct SingleItem : DataItem {
             public string Name;
             public Value Content;
 
-            public Single(string name, Value value) {
+            public SingleItem(string name, Value value) {
                 Name = name;
                 Content = value;
+            }
+
+            public string Debug() {
+                return $"DataItem::Single({Name}, {Content.Debug()})";
             }
         }
 
@@ -48,17 +63,24 @@ namespace Stitch {
                 Header = new List<string>();
                 Data = new List<List<Value>>();
             }
+
+            public string Debug() {
+                return $"DataItem::Loop([{string.Join(", ", Header)}], [{string.Join(", ", Data.Select(d => "[" + string.Join(", ", d.Select(i => i.Debug())) + "]"))}])";
+            }
         }
 
         public interface Value {
             string AsText();
+            string Debug();
         }
 
         public struct Inapplicable : Value {
             public string AsText() { return "."; }
+            public string Debug() { return "Value::Inapplicable"; }
         }
         public struct Unknown : Value {
             public string AsText() { return "?"; }
+            public string Debug() { return "Value::Unknown"; }
         }
         public struct Numeric : Value {
             public double Value;
@@ -66,6 +88,7 @@ namespace Stitch {
                 Value = value;
             }
             public string AsText() { return Value.ToString(); }
+            public string Debug() { return $"Value::Numeric({Value.ToString()})"; }
         }
 
         public struct NumericWithUncertainty : Value {
@@ -77,6 +100,7 @@ namespace Stitch {
                 Uncertainty = uncertainty;
             }
             public string AsText() { return $"{Value}({Uncertainty})"; }
+            public string Debug() { return $"Value::NumericWithUncertainty({Value}, {Uncertainty})"; }
         }
         public struct Text : Value {
             public string Value;
@@ -85,6 +109,7 @@ namespace Stitch {
                 Value = value;
             }
             public string AsText() { return Value; }
+            public string Debug() { return $"Value::Text({Value})"; }
         }
 
     }
