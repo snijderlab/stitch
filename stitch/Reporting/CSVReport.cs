@@ -38,7 +38,7 @@ namespace Stitch {
                     template.MetaData.Identifier,
                     template.Name,
                     group,
-                    AminoAcid.ArrayToString(match.ReadB.Sequence.Sequence),
+                    AminoAcid.ArrayToString(match.ReadB.Sequence.AminoAcids),
                     match.Score.ToString(),
                     match.Unique.ToString(),
                     match.StartA.ToString(),
@@ -47,27 +47,27 @@ namespace Stitch {
                     '\"' + match.ShortPath() + '\"',
                     cdr.ToString()
                     };
-                if (match.ReadB is Read.Peaks) {
+                if (match.ReadB is ReadFormat.Peaks) {
                     peaks = true;
-                    var meta = (Read.Peaks)match.ReadB;
+                    var meta = (ReadFormat.Peaks)match.ReadB;
                     row.AddRange(new List<string>
                         {
                             meta.Fraction,
-                            meta.Source_File,
+                            meta.SourceFile,
                             meta.Feature,
                             meta.ScanID,
                             meta.DeNovoScore.ToString(),
-                            meta.Mass_over_charge.ToString(),
+                            meta.MassOverCharge.ToString(),
                             meta.Charge.ToString(),
-                            meta.Retention_time.ToString(),
+                            meta.RetentionTime.ToString(),
                             meta.PredictedRetentionTime,
                             meta.Area.ToString(),
                             meta.Mass.ToString(),
-                            meta.Parts_per_million.ToString(),
+                            meta.PartsPerMillion.ToString(),
                             meta.Post_translational_modifications,
                             System.String.Join(' ', meta.Sequence.PositionalScore.Select(a => a.ToString())),
-                            meta.Original_tag,
-                            meta.Fragmentation_mode
+                            meta.OriginalTag,
+                            meta.FragmentationMode
                         });
                 }
                 data.Add(row);

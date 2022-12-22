@@ -10,13 +10,20 @@ using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 namespace Stitch {
     namespace RunParameters {
         /// <summary> All parameters for a single run. </summary>
-        public class SingleRun {
+        public class Run {
             /// <summary> The name of this run. </summary>
             public string Runname = "";
+
+            /// <summary> Deprecated: global raw data directory, local directories should be used instead on the input data. </summary>
             public string RawDataDirectory = null;
+
+            /// <summary> Flag to know if to do raw data loading, is set to True when any input data set has a raw directory set. </summary>
             public bool LoadRawData = false;
+
+            /// <summary> The maximal number of threads to use. </summary>
             public int MaxNumberOfCPUCores = Environment.ProcessorCount;
 
+            /// <summary> The input data for this run. </summary>
             public RunParameters.InputData Input = new InputData();
 
             /// <summary> The alphabet used in this run. </summary>
@@ -24,22 +31,24 @@ namespace Stitch {
 
             /// <summary> The template(s) used in this run. </summary>
             public TemplateMatchingParameter TemplateMatching;
+
+            /// <summary> The settings for recombination. </summary>
             public RecombineParameter Recombine;
 
             /// <summary> The reports to be generated. </summary>
             public ReportParameter Report;
+
+            /// <summary> The progress bar to depict progress to the users. </summary>
             public ProgressBar ProgressBar;
+
+            /// <summary> The batchfile where this run was defined. </summary>
             public ParsedFile BatchFile;
-            public RunVariables runVariables;
+
+            /// <summary> Any additional variables given at the invocation of the command. </summary>
+            public ExtraArguments extraArguments;
 
             /// <summary> Create a new empty single run parameter set. </summary>
-            public SingleRun() { }
-
-            /// <summary> To display the main parameters of this run in a string, mainly for error tracking and debugging purposes. </summary>
-            /// <returns>The main parameters.</returns>
-            public string Display() {
-                return $"\tRunname\t\t: {Runname}";
-            }
+            public Run() { }
 
             /// <summary> Runs this run. Runs the assembly, and generates the reports. </summary>
             public void Calculate() {
@@ -71,10 +80,10 @@ namespace Stitch {
                     ProgressBar.Update();
                 }
 
-                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.runVariables, this.Runname, fragments);
+                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here
-                if (runVariables.ExpectedResult.Count > 0) {
+                if (extraArguments.ExpectedResult.Count > 0) {
                     GenerateBenchmarkOutput(parameters);
                 } else {
                     // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
@@ -121,14 +130,14 @@ namespace Stitch {
                     templates = parameters.Groups.Where(s => s.Item1.ToLower() != "decoy").SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
 
                 // See if the number of results match up
-                if (templates.Count() != runVariables.ExpectedResult.Count) {
-                    Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({runVariables.ExpectedResult.Count}).");
+                if (templates.Count() != extraArguments.ExpectedResult.Count) {
+                    Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({extraArguments.ExpectedResult.Count}).");
                     return;
                 } else {
                     // Give the scoring result for each result
-                    foreach (var (expected, (group, result)) in runVariables.ExpectedResult.Zip(templates)) {
-                        var expected_read = new Read.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
-                        var actual_read = new Read.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
+                    foreach (var (expected, (group, result)) in extraArguments.ExpectedResult.Zip(templates)) {
+                        var expected_read = new ReadFormat.Simple(AminoAcid.FromString(expected, result.Parent.Alphabet).Unwrap());
+                        var actual_read = new ReadFormat.Simple(result.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
                         var match = new Alignment(expected_read, actual_read, result.Parent.Alphabet, AlignmentType.Local);
                         var id = HTMLNameSpace.CommonPieces.GetAsideIdentifier(result.MetaData, true);
                         buffer.Append(JSONBlock($"{Runname}/{group}/{id} - Score", "Score", match.Score.ToString(), match.VeryShortPath()));
@@ -294,9 +303,9 @@ namespace Stitch {
             }
 
             // Also known as the CDR joining step
-            List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)> CreateRecombinationTemplates(IEnumerable<IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
+            List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)> CreateRecombinationTemplates(IEnumerable<IEnumerable<Stitch.Template>> combinations, List<RecombineOrder.OrderPiece> order, ScoringMatrix alphabet, Segment parent, NameFilter name_filter) {
                 var recombined_templates = new List<Template>();
-                var scores = new List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)>();
+                var scores = new List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)>();
 
                 for (int i = 0; i < combinations.Count(); i++) {
                     var sequence = combinations.ElementAt(i);
@@ -330,11 +339,11 @@ namespace Stitch {
                                 s_doc = s_doc.SkipLast(inserted_cdr_s).ToList();
                                 seq_doc = seq_doc.Skip(inserted_cdr_seq).ToList();
                                 var aligned_template = new Alignment(
-                                    new Read.Simple(s.TakeLast(inserted_cdr_s + padding).ToArray(), null, null, "R", s_doc.TakeLast(inserted_cdr_s + padding).ToArray()),
-                                    new Read.Simple(seq.Take(inserted_cdr_seq + padding).ToArray(), null, null, "R", seq_doc.Take(inserted_cdr_seq + padding).ToArray()),
+                                    new ReadFormat.Simple(s.TakeLast(inserted_cdr_s + padding).ToArray(), null, null, "R", s_doc.TakeLast(inserted_cdr_s + padding).ToArray()),
+                                    new ReadFormat.Simple(seq.Take(inserted_cdr_seq + padding).ToArray(), null, null, "R", seq_doc.Take(inserted_cdr_seq + padding).ToArray()),
                                     alphabet, AlignmentType.EndAlignment);
-                                var original_s = new Read.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
-                                var original_seq = new Read.Simple(seq.ToArray(), null, null, "R", seq_doc.ToArray());
+                                var original_s = new ReadFormat.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
+                                var original_seq = new ReadFormat.Simple(seq.ToArray(), null, null, "R", seq_doc.ToArray());
                                 var overlap = 0;
 
                                 if (aligned_template.Score > 0) {
@@ -351,7 +360,7 @@ namespace Stitch {
                                             var doc_a = la == 0 ? 0 : aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, Math.Min(2, la)).Min();
                                             var doc_b = aligned_template.ReadB.Sequence.PositionalScore[pos_b];
                                             if (doc_b >= doc_a) {
-                                                s.Add(aligned_template.ReadB.Sequence.Sequence[pos_b]);
+                                                s.Add(aligned_template.ReadB.Sequence.AminoAcids[pos_b]);
                                                 overlap++;
                                             }
                                         } else if (step.StepB == 0) {
@@ -359,21 +368,21 @@ namespace Stitch {
                                             var lb = aligned_template.ReadB.Sequence.PositionalScore.Length - pos_b - 1;
                                             var doc_b = lb == 0 ? 0 : aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, Math.Min(2, lb)).Min();
                                             if (doc_a >= doc_b) {
-                                                s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                s.Add(aligned_template.ReadA.Sequence.AminoAcids[pos_a]);
                                                 overlap++;
                                             }
                                         } else if (step.StepA == 1 && step.StepB == 1) {
-                                            if (aligned_template.ReadA.Sequence.Sequence[pos_a] == aligned_template.ReadB.Sequence.Sequence[pos_b]) {
-                                                s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                            if (aligned_template.ReadA.Sequence.AminoAcids[pos_a] == aligned_template.ReadB.Sequence.AminoAcids[pos_b]) {
+                                                s.Add(aligned_template.ReadA.Sequence.AminoAcids[pos_a]);
                                             } else {
                                                 var doc_a = aligned_template.ReadA.Sequence.PositionalScore[pos_a];
                                                 var doc_b = aligned_template.ReadB.Sequence.PositionalScore[pos_b];
                                                 if (doc_a == doc_b) {
-                                                    s.Add(alphabet.Contains('X') ? new AminoAcid(alphabet, 'X') : aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                    s.Add(alphabet.Contains('X') ? new AminoAcid(alphabet, 'X') : aligned_template.ReadA.Sequence.AminoAcids[pos_a]);
                                                 } else if (doc_a > doc_b) {
-                                                    s.Add(aligned_template.ReadA.Sequence.Sequence[pos_a]);
+                                                    s.Add(aligned_template.ReadA.Sequence.AminoAcids[pos_a]);
                                                 } else {
-                                                    s.Add(aligned_template.ReadB.Sequence.Sequence[pos_b]);
+                                                    s.Add(aligned_template.ReadB.Sequence.AminoAcids[pos_b]);
                                                 }
                                             }
                                             overlap++;
@@ -381,13 +390,13 @@ namespace Stitch {
                                             var doc_a = aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, step.StepA).Average();
                                             var doc_b = aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, step.StepB).Average();
                                             if (doc_a == doc_b) {
-                                                s.AddRange(aligned_template.ReadA.Sequence.Sequence.SubArray(pos_a, step.StepA));
+                                                s.AddRange(aligned_template.ReadA.Sequence.AminoAcids.SubArray(pos_a, step.StepA));
                                                 overlap += step.StepA;
                                             } else if (doc_a > doc_b) {
-                                                s.AddRange(aligned_template.ReadA.Sequence.Sequence.SubArray(pos_a, step.StepA));
+                                                s.AddRange(aligned_template.ReadA.Sequence.AminoAcids.SubArray(pos_a, step.StepA));
                                                 overlap += step.StepA;
                                             } else {
-                                                s.AddRange(aligned_template.ReadB.Sequence.Sequence.SubArray(pos_b, step.StepB));
+                                                s.AddRange(aligned_template.ReadB.Sequence.AminoAcids.SubArray(pos_b, step.StepB));
                                                 overlap += step.StepB;
                                             }
                                         }
@@ -401,7 +410,7 @@ namespace Stitch {
                                     s.AddRange(seq);
                                 }
                                 sequence.ElementAt(index).Overlap = overlap;
-                                var final_s = new Read.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
+                                var final_s = new ReadFormat.Simple(s.ToArray(), null, null, "R", s_doc.ToArray());
                                 scores.Add((i, index, aligned_template, original_s, original_seq, final_s, overlap));
                             } else {
                                 s.AddRange(seq);
@@ -414,7 +423,7 @@ namespace Stitch {
                         new Template(
                             "recombined",
                             s.ToArray(),
-                            new Read.Simple(s.ToArray(), null, name_filter, $"REC-{parent.Index}-{i + 1}"),
+                            new ReadFormat.Simple(s.ToArray(), null, name_filter, $"REC-{parent.Index}-{i + 1}"),
                             parent,
                             HelperFunctionality.EvaluateTrilean(Recombine.ForceGermlineIsoleucine, TemplateMatching.ForceGermlineIsoleucine),
                             new RecombinedTemplateLocation(i), t));

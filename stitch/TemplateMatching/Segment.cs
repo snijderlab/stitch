@@ -12,10 +12,11 @@ namespace Stitch {
         public readonly double CutoffScore;
         [JsonIgnore]
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
-        public List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)> SegmentJoiningScores = new();
+        public List<(int Group, int Index, Alignment EndAlignment, ReadFormat.Read SeqA, ReadFormat.Read SeqB, ReadFormat.Read Result, int Overlap)> SegmentJoiningScores = new();
         [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;
+
         /// <summary> Create a new Segment based on the reads found in the given file. </summary>
         /// <param name="sequences">The reads to generate templates from</param>
         /// <param name="alphabet">The alphabet to use</param>
@@ -23,7 +24,7 @@ namespace Stitch {
         /// <param name="cutoffScore">The cutoffscore for a path to be aligned to a template</param>
         /// <param name="index">The index of this template for cross reference purposes</param>
         /// <param name="scoring">The scoring behaviour to use in this segment</param>
-        public Segment(List<Read.IRead> sequences, ScoringMatrix alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
+        public Segment(List<ReadFormat.Read> sequences, ScoringMatrix alphabet, string name, double cutoffScore, int index, bool forceGermlineIsoleucine, RunParameters.ScoringParameter scoring = RunParameters.ScoringParameter.Absolute) {
             Name = name;
             Index = index;
             CutoffScore = cutoffScore;
@@ -33,7 +34,7 @@ namespace Stitch {
 
             for (int i = 0; i < sequences.Count; i++) {
                 var meta = sequences[i];
-                Templates.Add(new Template(name, meta.Sequence.Sequence, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
+                Templates.Add(new Template(name, meta.Sequence.AminoAcids, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
             }
 
             try {
@@ -43,6 +44,7 @@ namespace Stitch {
                 InputNameSpace.ErrorMessage.PrintException(e);
             }
         }
+
         /// <summary> Create a new Segment based on the templates provided. </summary>
         /// <param name="templates">The templates</param>
         /// <param name="alphabet">The alphabet to use</param>
@@ -55,19 +57,9 @@ namespace Stitch {
             Templates = templates.ToList();
         }
 
-        /// <summary> Gets the sequence in AminoAcids from a string </summary>
-        /// <param name="input">The input string</param>
-        /// <returns>The sequence in AminoAcids</returns>
-        AminoAcid[] StringToSequence(string input) {
-            AminoAcid[] output = new AminoAcid[input.Length];
-            for (int i = 0; i < input.Length; i++) {
-                output[i] = new AminoAcid(Alphabet, input[i]);
-            }
-            return output;
-        }
         /// <summary> Match the given sequences to the segment. Saves the results in this instance of the segment. </summary>
         /// <param name="sequences">The sequences to match with</param>
-        public List<List<(int TemplateIndex, Alignment Match)>> Match(List<Read.IRead> sequences) {
+        public List<List<(int TemplateIndex, Alignment Match)>> Match(List<ReadFormat.Read> sequences) {
             var output = new List<List<(int TemplateIndex, Alignment Match)>>(sequences.Count);
             for (int j = 0; j < sequences.Count; j++) {
                 var row = new List<(int TemplateIndex, Alignment Match)>(Templates.Count);

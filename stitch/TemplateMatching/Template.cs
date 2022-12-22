@@ -23,7 +23,7 @@ namespace Stitch {
         public readonly AminoAcid[] Sequence;
 
         /// <summary> Metadata for this template </summary>
-        public readonly Read.IRead MetaData;
+        public readonly ReadFormat.Read MetaData;
 
         /// <summary> The score for this template </summary>
         public int Score {
@@ -80,7 +80,7 @@ namespace Stitch {
         /// <param name="alphabet">The alphabet, <see cref="Alphabet"/>.</param>
         /// <param name="location">The location, <see cref="Location"/>.</param>
         /// <param name="recombination">The recombination, if recombined otherwise null, <see cref="Recombination"/>.</param>
-        public Template(string name, AminoAcid[] seq, Read.IRead meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null) {
+        public Template(string name, AminoAcid[] seq, ReadFormat.Read meta, Segment parent, bool forceGermlineIsoleucine, TemplateLocation location = null, List<Template> recombination = null) {
             Name = name;
             Sequence = seq;
             MetaData = meta;
@@ -216,7 +216,7 @@ namespace Stitch {
 
                 foreach (var piece in alignment.Path) {
                     if (alignment.LenA == 0) {
-                        insertion.Add(alignment.ReadB.Sequence.Sequence[pos_b]); // StepB is 1 so this works
+                        insertion.Add(alignment.ReadB.Sequence.AminoAcids[pos_b]); // StepB is 1 so this works
                     } else {
                         // Handle gaps
                         var positional_score = alignment.ReadB.Sequence.PositionalScore;
@@ -239,7 +239,7 @@ namespace Stitch {
                         insertion.Clear();
 
                         // Handle normal sequences
-                        var option = new SequenceOption(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB), piece.StepA);
+                        var option = new SequenceOption(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB), piece.StepA);
                         var cov = piece.StepB == 0 ? 0 : positional_score.SubArray(pos_b, piece.StepB).Average();
 
                         if (output[Math.Min(pos_a, output.Count - 1)].AminoAcids.ContainsKey(option)) {
@@ -347,9 +347,9 @@ namespace Stitch {
         /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
         public Alignment AlignConsensusWithTemplate() {
-            var consensus = new Read.Simple(this.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
+            var consensus = new ReadFormat.Simple(this.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
             if (Recombination != null)
-                return new Alignment(new Read.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
+                return new Alignment(new ReadFormat.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
             else
                 return new Alignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
         }
@@ -372,7 +372,7 @@ namespace Stitch {
                     return acc;
                 });
             } else {
-                if (this.MetaData is Read.Fasta meta)
+                if (this.MetaData is ReadFormat.Fasta meta)
                     if (meta.AnnotatedSequence != null)
                         annotated = meta.AnnotatedSequence;
             }

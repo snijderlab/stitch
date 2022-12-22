@@ -21,7 +21,7 @@ namespace StitchTest {
             foreach (var file in files) {
                 try {
                     Console.WriteLine(file);
-                    OpenReads.Fasta(namefilter, new Read.FileIdentifier(file, "", null), new Regex("(.*)"), alp);
+                    OpenReads.Fasta(namefilter, new ReadFormat.FileIdentifier(file, "", null), new Regex("(.*)"), alp);
                 } catch (Exception e) {
                     Console.WriteLine($"At file {file}");
                     Console.WriteLine($"{e.Message}");
@@ -35,8 +35,8 @@ namespace StitchTest {
             var alp = ScoringMatrix.Default();
             var file = Globals.Root + @"templates/Homo_sapiens_IGHV.fasta";
             var namefilter = new NameFilter();
-            var reads = OpenReads.Fasta(namefilter, new Read.FileIdentifier(file, "", null), new Regex("(.*)"), alp).Unwrap();
-            var meta = (Read.Fasta)reads[0];
+            var reads = OpenReads.Fasta(namefilter, new ReadFormat.FileIdentifier(file, "", null), new Regex("(.*)"), alp).Unwrap();
+            var meta = (ReadFormat.Fasta)reads[0];
             Assert.AreEqual("IGHV1-2", meta.Identifier);
             foreach (var part in meta.AnnotatedSequence) {
                 Console.WriteLine($"{part.Type}: {part.Sequence}");

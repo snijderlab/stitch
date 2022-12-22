@@ -322,7 +322,7 @@ namespace HTMLNameSpace {
             }
 
             var pos = 0.0;
-            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, Read.IRead MetaData)>(
+            var y_pos_tree = tree.DataTree.ReverseRemodel<(double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadFormat.Read MetaData)>(
                 (t, value) => ((t.Left.Value.Item2.Value.Y + t.Right.Value.Item2.Value.Y) / 2, unpack(value), null),
                 leaf => {
                     pos += 1.0;
@@ -330,7 +330,7 @@ namespace HTMLNameSpace {
                 });
 
             var columns = 0;
-            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, Read.IRead MetaData)>((t, depth) => {
+            var pos_tree = y_pos_tree.Remodel<(double X, double Y, (int Score, int UniqueScore, int Matches, int UniqueMatches, double Area, double UniqueArea) Scores, ReadFormat.Read MetaData)>((t, depth) => {
                 if (depth > columns) columns = depth;
                 return ((double)depth, t.Value.Y, t.Value.Scores, t.Value.MetaData);
             });

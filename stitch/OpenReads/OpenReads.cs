@@ -17,14 +17,14 @@ namespace Stitch {
         /// <param name="inputFile"> The file to read from. </param>
         /// <param name="commentChar"> The character comment lines start with. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<Read.IRead>> Simple(NameFilter filter, Read.FileIdentifier inputFile, ScoringMatrix alphabet, char commentChar = '#') {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        public static ParseResult<List<ReadFormat.Read>> Simple(NameFilter filter, ReadFormat.FileIdentifier inputFile, ScoringMatrix alphabet, char commentChar = '#') {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
             if (possible_content.IsOk(out_either)) {
                 var parsed = new ParsedFile(inputFile, possible_content.Unwrap().Split('\n'));
-                var reads = new List<Read.IRead>();
+                var reads = new List<ReadFormat.Read>();
                 out_either.Value = reads;
 
                 for (int line = 0; line < parsed.Lines.Length; line++) {
@@ -32,7 +32,7 @@ namespace Stitch {
                     if (content.Length == 0) continue;
                     if (content[0] != commentChar) {
                         var range = new FileRange(new Position(line, 0, parsed), new Position(line, 0, parsed));
-                        reads.Add(new Read.Simple(AminoAcid.FromString(content.Trim(), alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter));
+                        reads.Add(new ReadFormat.Simple(AminoAcid.FromString(content.Trim(), alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter));
                     }
                 }
             }
@@ -47,8 +47,8 @@ namespace Stitch {
         /// <param name="inputFile"> The path to the file to read from. </param>
         /// <param name="parseIdentifier"> The regex to determine how to parse the identifier from the fasta header. </param>
         /// <returns> A list of all reads found with their identifiers. </returns>
-        public static ParseResult<List<Read.IRead>> Fasta(NameFilter filter, Read.FileIdentifier inputFile, Regex parseIdentifier, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        public static ParseResult<List<ReadFormat.Read>> Fasta(NameFilter filter, ReadFormat.FileIdentifier inputFile, Regex parseIdentifier, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
@@ -57,7 +57,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<Read.IRead>();
+            var reads = new List<ReadFormat.Read>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n').ToArray();
@@ -79,9 +79,9 @@ namespace Stitch {
                         var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
                         if (match.Success) {
                             if (match.Groups.Count == 3) {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new Read.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
                             } else if (match.Groups.Count == 2) {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new Read.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
                             } else {
                                 out_either.AddMessage(new InputNameSpace.ErrorMessage(
                                     identifier_line_range,
@@ -118,9 +118,9 @@ namespace Stitch {
 
                 if (match.Success) {
                     if (match.Groups.Count == 3) {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new Read.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
                     } else if (match.Groups.Count == 2) {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new Read.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
                     } else {
                         out_either.AddMessage(new InputNameSpace.ErrorMessage(
                             identifier_line_range,
@@ -148,8 +148,8 @@ namespace Stitch {
             return remove_whitespace.Replace(input, "");
         }
         private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
-        static ParseResult<Read.IRead> ParseAnnotatedFasta(string line, Read.IRead metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<Read.IRead>();
+        static ParseResult<ReadFormat.Read> ParseAnnotatedFasta(string line, ReadFormat.Read metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<ReadFormat.Read>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(HelperFunctionality.Annotation, string)>();
             string current_seq = "";
@@ -212,8 +212,8 @@ namespace Stitch {
                 }
             }
 
-            ((Read.Fasta)metaData).AnnotatedSequence = annotated;
-            metaData.Sequence = new LocalSequence(AminoAcid.FromString(sequence, alphabet).UnwrapOrDefault(out_either, new AminoAcid[0]), Enumerable.Repeat(metaData.Intensity, sequence.Length).ToArray());
+            ((ReadFormat.Fasta)metaData).AnnotatedSequence = annotated;
+            metaData.Sequence = new ReadSequence(AminoAcid.FromString(sequence, alphabet).UnwrapOrDefault(out_either, new AminoAcid[0]), Enumerable.Repeat(metaData.Intensity, sequence.Length).ToArray());
             out_either.Value = metaData;
             return out_either;
         }
@@ -222,8 +222,8 @@ namespace Stitch {
         /// <param name="filter">The name filter to use to filter the name of the reads.</param>
         /// <param name="peaks">The peaks settings to use</param>
         /// <param name="local">If defined the local peaks parameters to use</param>
-        public static ParseResult<List<Read.IRead>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, ScoringMatrix alphabet, RunParameters.InputData.InputLocalParameters local = null, string GlobalRawDataDirectory = null) {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        public static ParseResult<List<ReadFormat.Read>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, ScoringMatrix alphabet, RunParameters.InputData.InputLocalParameters local = null, string GlobalRawDataDirectory = null) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             var peaks_parameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
             if (peaks_parameters.CutoffALC == -1) peaks_parameters.CutoffALC = peaks.Parameter.CutoffALC;
@@ -238,14 +238,14 @@ namespace Stitch {
             }
 
             List<string> lines = possible_content.Unwrap().Split('\n').ToList();
-            var reads = new List<Read.IRead>();
+            var reads = new List<ReadFormat.Read>();
             var parse_file = new ParsedFile(peaks.File, lines.ToArray());
 
             out_either.Value = reads;
 
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parse_file.Lines.Length; linenumber++) {
-                var parsed = Read.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter, alphabet, peaks.RawDataDirectory ?? GlobalRawDataDirectory);
+                var parsed = ReadFormat.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter, alphabet, peaks.RawDataDirectory ?? GlobalRawDataDirectory);
 
                 if (parsed.IsOk(out_either)) {
                     var meta = parsed.Unwrap();
@@ -271,11 +271,11 @@ namespace Stitch {
                                     char[] chunk = new char[i - start_pos];
 
                                     for (int j = start_pos; j < i; j++) {
-                                        chunk[j - start_pos] = meta.Sequence.Sequence[j].Character;
+                                        chunk[j - start_pos] = meta.Sequence.AminoAcids[j].Character;
                                     }
 
                                     var clone = meta.Clone();
-                                    clone.Sequence = new LocalSequence(AminoAcid.FromString(new string(chunk), alphabet, meta.FileRange).UnwrapOrDefault(out_either, new AminoAcid[0]), meta.Sequence.PositionalScore.Skip(start_pos).Take(i - start_pos).ToArray());
+                                    clone.Sequence = new ReadSequence(AminoAcid.FromString(new string(chunk), alphabet, meta.FileRange).UnwrapOrDefault(out_either, new AminoAcid[0]), meta.Sequence.PositionalScore.Skip(start_pos).Take(i - start_pos).ToArray());
                                     reads.Add(clone);
                                 }
                             }
@@ -295,9 +295,9 @@ namespace Stitch {
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>
         /// <param name="novor"> The novor input parameter. </param>
         /// <returns> A list of all reads found. </returns>
-        public static ParseResult<List<Read.IRead>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<Read.IRead>>();
-            var output = new List<Read.IRead>();
+        public static ParseResult<List<ReadFormat.Read>> Novor(NameFilter filter, RunParameters.InputData.Novor novor, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
+            var output = new List<ReadFormat.Read>();
             out_either.Value = output;
 
             if (novor.DeNovoFile != null) {
@@ -316,8 +316,8 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<Read.IRead>> ParseNovorDeNovo(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        static ParseResult<List<ReadFormat.Read>> ParseNovorDeNovo(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
@@ -326,7 +326,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<Read.IRead>();
+            var reads = new List<ReadFormat.Read>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
@@ -366,7 +366,7 @@ namespace Stitch {
                     }
                 }
                 if (score >= cutoff)
-                    reads.Add(new Read.NovorDeNovo(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence));
+                    reads.Add(new ReadFormat.NovorDeNovo(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence));
             }
 
             return out_either;
@@ -378,8 +378,8 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<Read.IRead>> ParseNovorPSMS(NameFilter filter, Read.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        static ParseResult<List<ReadFormat.Read>> ParseNovorPSMS(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
@@ -388,7 +388,7 @@ namespace Stitch {
                 return out_either;
             }
 
-            var reads = new List<Read.IRead>();
+            var reads = new List<ReadFormat.Read>();
             out_either.Value = reads;
 
             var lines = possible_content.Unwrap().Split('\n');
@@ -429,14 +429,14 @@ namespace Stitch {
                     }
                 }
                 if (score >= cutoff)
-                    reads.Add(new Read.NovorPSMS(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, id, proteins));
+                    reads.Add(new ReadFormat.NovorPSMS(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, id, proteins));
             }
 
             return out_either;
         }
 
-        public static ParseResult<List<Read.IRead>> MMCIF(NameFilter filter, Read.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
-            var out_either = new ParseResult<List<Read.IRead>>();
+        public static ParseResult<List<ReadFormat.Read>> MMCIF(NameFilter filter, ReadFormat.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
             string[] AMINO_ACIDS = new string[]{
     "ALA", "ARG", "ASH", "ASN", "ASP", "ASX", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", "HID",
     "HIE", "HIM", "HIP", "HIS", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR",
@@ -453,20 +453,20 @@ namespace Stitch {
                 out_either.Messages.AddRange(loaded_file.Messages);
                 return out_either;
             }
-            var lexed = MMCIFNameSpace.MMCIFTokenizer.Tokenize(loaded_file.Unwrap());
+            var lexed = MMCIFParser.Parse(loaded_file.Unwrap());
             var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
 
             if (lexed.IsErr())
-                return new ParseResult<List<Read.IRead>>(lexed.Messages);
+                return new ParseResult<List<ReadFormat.Read>>(lexed.Messages);
 
             foreach (var item in lexed.Unwrap().Items) {
-                if (item is MMCIFNameSpace.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
+                if (item is MMCIFItems.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
                     var chain = loop.Header.FindIndex(i => i == "atom_site.label_asym_id");
                     var residue = loop.Header.FindIndex(i => i == "atom_site.label_comp_id");
                     var residue_num = loop.Header.FindIndex(i => i == "atom_site.label_seq_id");
-                    if (chain == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
-                    if (residue == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
-                    if (residue_num == -1) return new ParseResult<List<Read.IRead>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
+                    if (chain == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
+                    if (residue == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
+                    if (residue_num == -1) return new ParseResult<List<ReadFormat.Read>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
 
                     var sequences = new List<(string, string)>();
                     var current_chain = "";
@@ -494,9 +494,9 @@ namespace Stitch {
                         sequences.Add((current_chain, current_sequence));
                     }
 
-                    var output = new List<Read.IRead>(sequences.Count);
+                    var output = new List<ReadFormat.Read>(sequences.Count);
                     foreach (var sequence in sequences) {
-                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new Read.StructuralRead(s, file_range, filter, sequence.Item1));
+                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new ReadFormat.StructuralRead(s, file_range, filter, sequence.Item1));
                         if (read.IsOk())
                             output.Add(read.Unwrap());
                         else
@@ -510,37 +510,37 @@ namespace Stitch {
                 }
             }
 
-            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.Display(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
+            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.ToString(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
             return out_either;
         }
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<Read.IRead>> CleanUpInput(List<Read.IRead> reads, ScoringMatrix alp, NameFilter filter) {
-            return CleanUpInput(new List<List<Read.IRead>> { reads }, alp, filter);
+        public static ParseResult<List<ReadFormat.Read>> CleanUpInput(List<ReadFormat.Read> reads, ScoringMatrix alp, NameFilter filter) {
+            return CleanUpInput(new List<List<ReadFormat.Read>> { reads }, alp, filter);
         }
 
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
-        public static ParseResult<List<Read.IRead>> CleanUpInput(List<List<Read.IRead>> reads, ScoringMatrix alp, NameFilter filter) {
-            var filtered = new Dictionary<string, Read.IRead>();
-            var out_either = new ParseResult<List<Read.IRead>>();
+        public static ParseResult<List<ReadFormat.Read>> CleanUpInput(List<List<ReadFormat.Read>> reads, ScoringMatrix alp, NameFilter filter) {
+            var filtered = new Dictionary<string, ReadFormat.Read>();
+            var out_either = new ParseResult<List<ReadFormat.Read>>();
 
             foreach (var set in reads) {
                 foreach (var read in set) {
-                    if (filtered.ContainsKey(AminoAcid.ArrayToString(read.Sequence.Sequence))) {
-                        if (filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)] is Read.Combined c) {
+                    if (filtered.ContainsKey(AminoAcid.ArrayToString(read.Sequence.AminoAcids))) {
+                        if (filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] is ReadFormat.Combined c) {
                             c.AddChild(read);
                         } else {
-                            filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)] = new Read.Combined(read.Sequence.Sequence, filter, new List<Read.IRead> { filtered[AminoAcid.ArrayToString(read.Sequence.Sequence)], read });
+                            filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] = new ReadFormat.Combined(read.Sequence.AminoAcids, filter, new List<ReadFormat.Read> { filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)], read });
                         }
                     } else {
-                        for (int i = 0; i < read.Sequence.Sequence.Length; i++) {
-                            if (!alp.Contains(read.Sequence.Sequence[i].Character))
+                        for (int i = 0; i < read.Sequence.Length; i++) {
+                            if (!alp.Contains(read.Sequence.AminoAcids[i].Character))
                                 out_either.AddMessage(new InputNameSpace.ErrorMessage(read.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
                         }
 
-                        filtered.Add(AminoAcid.ArrayToString(read.Sequence.Sequence), read);
+                        filtered.Add(AminoAcid.ArrayToString(read.Sequence.AminoAcids), read);
                     }
                 }
             }

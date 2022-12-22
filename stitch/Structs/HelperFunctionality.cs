@@ -52,19 +52,6 @@ namespace Stitch {
             }
         }
 
-        /// <summary> Create a hash set from data with a given comparer. </summary>
-        /// <param name="data"> The data. </param>
-        /// <param name="comparer"> The comparer function, should return true when two element are equal. </param>
-        /// <typeparam name="T"> The type of the elements in the array. </typeparam>
-        /// <returns> Returns a new hash set with only the unique elements from the data as determined by the comparer function. </returns>
-        public static HashSet<T> Unique<T>(this IEnumerable<T> data, Func<T, T, bool> comparer) {
-            var temp = new HashSet<T>();
-            foreach (var element in data)
-                if (temp.Count() == 0 || temp.All(e => !comparer(element, e)))
-                    temp.Add(element);
-            return temp;
-        }
-
         /// <summary> To copy a sub array to a new array. </summary>
         /// <param name="data"> The old array to copy from. </param>
         /// <param name="index"> The index to start copying. </param>
@@ -81,24 +68,6 @@ namespace Stitch {
                 result[i] += that[i];
             }
             return result;
-        }
-        public static string TrimEnd(this string input, string suffixToRemove) {
-            if (input == null || suffixToRemove == null || string.IsNullOrEmpty(input) || input.Length < suffixToRemove.Length) return input;
-            if (input == suffixToRemove) return "";
-            int location = input.Length - suffixToRemove.Length;
-            while (location > 0 && string.CompareOrdinal(input, location, suffixToRemove, 0, suffixToRemove.Length) == 0) {
-                location -= suffixToRemove.Length;
-            }
-            return input.Remove(location);
-        }
-        public static string TrimStart(this string input, string prefixToRemove) {
-            if (input == null || prefixToRemove == null || string.IsNullOrEmpty(input) || input.Length < prefixToRemove.Length) return input;
-            if (input == prefixToRemove) return "";
-            int location = 0;
-            while (location < input.Length - 1 - prefixToRemove.Length && string.CompareOrdinal(input, location, prefixToRemove, 0, prefixToRemove.Length) == 0) {
-                location += prefixToRemove.Length;
-            }
-            return input.Remove(location);
         }
 
         /// <summary> Apply a function to a 2D array modifying it in place. </summary>
@@ -292,15 +261,6 @@ namespace Stitch {
                 RunParameters.Trilean.True => true,
                 RunParameters.Trilean.False => false,
                 RunParameters.Trilean.Unspecified => baseValue,
-                _ => throw new ArgumentException("Tried to evaluate a trilean type which does not exist.")
-            };
-        }
-
-        public static bool EvaluateTrilean(RunParameters.Trilean trilean1, RunParameters.Trilean trilean2, bool baseValue) {
-            return trilean1 switch {
-                RunParameters.Trilean.True => true,
-                RunParameters.Trilean.False => false,
-                RunParameters.Trilean.Unspecified => EvaluateTrilean(trilean2, baseValue),
                 _ => throw new ArgumentException("Tried to evaluate a trilean type which does not exist.")
             };
         }

@@ -122,7 +122,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                         else
                             live = "5500";
                     }
-                    RunBatchFile(filename, new RunVariables(args.Contains("--open"), live, expected));
+                    RunBatchFile(filename, new ExtraArguments(args.Contains("--open"), live, expected));
                 }
             } catch (ParseException) {
                 return 3;
@@ -135,7 +135,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
 
         /// <summary> Run the given batch file </summary>
         /// <param name="filename"></param>
-        public static void RunBatchFile(string filename, RunVariables runVariables) {
+        public static void RunBatchFile(string filename, ExtraArguments runVariables) {
             ProgressBar bar = null;
             if (runVariables.ExpectedResult.Count == 0) {
                 bar = new ProgressBar();
@@ -148,7 +148,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.LoadRawData ? 1 : 0));
             }
             input_params.ProgressBar = bar;
-            input_params.runVariables = runVariables;
+            input_params.extraArguments = runVariables;
             input_params.Calculate();
         }
 
@@ -168,34 +168,34 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             var path = InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap();
             var name_filter = new NameFilter();
             var alphabet = ScoringMatrix.Default();
-            var reads = OpenReads.Fasta(name_filter, new Read.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|"), alphabet).Unwrap();
+            var reads = OpenReads.Fasta(name_filter, new ReadFormat.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|"), alphabet).Unwrap();
             SaveAndCleanFasta(output, reads);
         }
 
         /// <summary> Do common deduplication and clean up steps. Take note: Assumes all MetaData to be of type ReadMetaData.Fasta. </summary>
         /// <param name="output">The file to save the fasta sequences in.</param>
         /// <param name="reads">The reads/sequences itself.</param>
-        private static void SaveAndCleanFasta(string output, List<Read.IRead> reads) {
+        private static void SaveAndCleanFasta(string output, List<ReadFormat.Read> reads) {
             // Two dictionaries to ensure both unique ids (to join isoforms) and unique sequences.
             var id_dict = new Dictionary<string, (string, string)>();
             var sequence_dict = new Dictionary<string, string>();
 
             // Condense all isoforms
             foreach (var read in reads) {
-                var long_id = ((Read.Fasta)read).FastaHeader;
+                var long_id = ((ReadFormat.Fasta)read).FastaHeader;
                 if (!long_id.Contains("partial") && !long_id.Contains("/OR")) // Filter out all partial variants and /OR variants
                 {
                     // Join all isoforms
                     if (id_dict.ContainsKey(read.Identifier)) {
-                        id_dict[read.Identifier] = (id_dict[read.Identifier].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
+                        id_dict[read.Identifier] = (id_dict[read.Identifier].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.AminoAcids));
                     } else {
                         // Join all equal sequences
-                        if (sequence_dict.ContainsKey(AminoAcid.ArrayToString(read.Sequence.Sequence))) {
-                            var deduplicated_id = sequence_dict[AminoAcid.ArrayToString(read.Sequence.Sequence)];
-                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
+                        if (sequence_dict.ContainsKey(AminoAcid.ArrayToString(read.Sequence.AminoAcids))) {
+                            var deduplicated_id = sequence_dict[AminoAcid.ArrayToString(read.Sequence.AminoAcids)];
+                            id_dict[deduplicated_id] = (id_dict[deduplicated_id].Item1 + " " + long_id, AminoAcid.ArrayToString(read.Sequence.AminoAcids));
                         } else {
-                            id_dict[read.Identifier] = (long_id, AminoAcid.ArrayToString(read.Sequence.Sequence));
-                            sequence_dict[AminoAcid.ArrayToString(read.Sequence.Sequence)] = read.Identifier;
+                            id_dict[read.Identifier] = (long_id, AminoAcid.ArrayToString(read.Sequence.AminoAcids));
+                            sequence_dict[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] = read.Identifier;
                         }
                     }
                 }
@@ -371,10 +371,10 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
             }
 
             var name_filter = new NameFilter();
-            var list = new List<Read.IRead>(results.Count);
+            var list = new List<ReadFormat.Read>(results.Count);
             var alphabet = ScoringMatrix.Default();
             foreach (var (isotype, sequence) in results) {
-                list.Add(new Read.Fasta(AminoAcid.FromString(sequence, alphabet).Unwrap(), isotype, isotype, null, name_filter));
+                list.Add(new ReadFormat.Fasta(AminoAcid.FromString(sequence, alphabet).Unwrap(), isotype, isotype, null, name_filter));
             }
 
             SaveAndCleanFasta(output, list);
@@ -382,7 +382,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
 
         /// <summary> Generates an annotated fasta file from the HTML files from IMGT </summary>
         static void GenerateAnnotatedTemplate(string content, string output, bool remove_gaps = true) {
-            var sequences = new List<Read.IRead>();
+            var sequences = new List<ReadFormat.Read>();
             var name_filter = new NameFilter();
             var alphabet = ScoringMatrix.Default();
 
@@ -514,7 +514,7 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                     else
                         encoded_sequence.Append($"({piece.Type} {piece.Sequence})");
                 }
-                sequences.Add(new Read.Fasta(AminoAcid.FromString(encoded_sequence.ToString(), alphabet).Unwrap(), pieces[2], pieces[2], null, name_filter));
+                sequences.Add(new ReadFormat.Fasta(AminoAcid.FromString(encoded_sequence.ToString(), alphabet).Unwrap(), pieces[2], pieces[2], null, name_filter));
             }
             SaveAndCleanFasta(output, sequences);
         }

@@ -15,8 +15,8 @@ namespace StitchTest {
             var alphabet = ScoringMatrix.Default();
             Assert.IsTrue(alphabet.Contains('A'));
             Console.WriteLine(alphabet.Debug());
-            var read_a = new Read.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("ACCGW", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(40, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -27,8 +27,8 @@ namespace StitchTest {
         [TestMethod]
         public void Insertion() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(27, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -40,8 +40,8 @@ namespace StitchTest {
         [TestMethod]
         public void Deletion() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("ACFGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("ACGW", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Assert.AreEqual(27, result.Score);
             Assert.AreEqual(0, result.StartA);
@@ -52,8 +52,8 @@ namespace StitchTest {
         [TestMethod]
         public void Isomass() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("AFNW", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("AFNW", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(29, result.Score);
@@ -65,8 +65,8 @@ namespace StitchTest {
         [TestMethod]
         public void Switched() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("AGFGW", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("AGFGW", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(28, result.Score);
@@ -78,8 +78,8 @@ namespace StitchTest {
         [TestMethod]
         public void Local() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Local);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(24, result.Score);
@@ -91,8 +91,8 @@ namespace StitchTest {
         [TestMethod]
         public void Global() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.Global);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(13, result.Score);
@@ -104,8 +104,8 @@ namespace StitchTest {
         [TestMethod]
         public void GlobalForB() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGEW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FGGD", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(23, result.Score);
@@ -117,8 +117,8 @@ namespace StitchTest {
         [TestMethod]
         public void StartWithIsomass() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("DLVQL", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("EVVQL", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("DLVQL", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("EVVQL", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
             Console.WriteLine(result.Summary());
             Assert.AreEqual(29, result.Score);
@@ -130,8 +130,8 @@ namespace StitchTest {
         [TestMethod]
         public void TestEndAlignment() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGEW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGEW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.EndAlignment);
             Console.WriteLine($"Best Alignment: {result.Score} at {result.LenA}, {result.LenB}");
             Console.WriteLine(result.Summary());
@@ -143,8 +143,8 @@ namespace StitchTest {
         [TestMethod]
         public void TestEndAlignmentWithGap() {
             var alphabet = ScoringMatrix.Default();
-            var read_a = new Read.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
-            var read_b = new Read.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FNEWAEYFQHWGQGTLVTVSS", alphabet).Unwrap());
             var result = new Alignment(read_a, read_b, alphabet, AlignmentType.EndAlignment);
             Console.WriteLine($"Best Alignment: {result.Score} at {result.LenA}, {result.LenB}");
             Console.WriteLine(result.Summary());

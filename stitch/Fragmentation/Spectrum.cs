@@ -16,7 +16,7 @@ namespace Stitch {
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         /// <returns></returns>
-        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<Read.IRead> peptides) {
+        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.Read> peptides) {
             var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
             var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag)));
 

@@ -52,9 +52,9 @@ namespace Stitch {
         public readonly List<AlignmentPiece> Path;
         public readonly int StartA;
         public readonly int StartB;
-        public readonly Read.IRead ReadA;
+        public readonly ReadFormat.Read ReadA;
         public readonly int ReadAIndex;
-        public readonly Read.IRead ReadB;
+        public readonly ReadFormat.Read ReadB;
         public bool Unique;
         public readonly int LenA;
         public readonly int LenB;
@@ -64,9 +64,9 @@ namespace Stitch {
         public readonly int GapInA;
         public readonly int GapInB;
 
-        public Alignment(Read.IRead read_a, Read.IRead read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
-            var seq_a = read_a.Sequence.Sequence;
-            var seq_b = read_b.Sequence.Sequence;
+        public Alignment(ReadFormat.Read read_a, ReadFormat.Read read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
+            var seq_a = read_a.Sequence.AminoAcids;
+            var seq_b = read_b.Sequence.AminoAcids;
             this.ReadA = read_a;
             this.ReadAIndex = readAIndex;
             this.ReadB = read_b;
@@ -165,7 +165,7 @@ namespace Stitch {
             this.GapInB = 0;
             foreach (var piece in Path) {
                 if (piece.StepA == 1 && piece.StepB == 1) {
-                    if (ReadA.Sequence.Sequence[this.LenA + this.StartA] == ReadB.Sequence.Sequence[this.LenB + this.StartB])
+                    if (ReadA.Sequence.AminoAcids[this.LenA + this.StartA] == ReadB.Sequence.AminoAcids[this.LenB + this.StartB])
                         this.Identical += 1;
                     else
                         this.MisMatches += 1;
@@ -211,12 +211,12 @@ namespace Stitch {
                 if (piece.StepA == 0) {
                     str_a.Append(new string('-', l));
                 } else {
-                    str_a.Append(AminoAcid.ArrayToString(this.ReadA.Sequence.Sequence.SubArray(loc_a, piece.StepA)).PadLeft(l, '·'));
+                    str_a.Append(AminoAcid.ArrayToString(this.ReadA.Sequence.AminoAcids.SubArray(loc_a, piece.StepA)).PadLeft(l, '·'));
                 }
                 if (piece.StepB == 0) {
                     str_b.Append(new string('-', l));
                 } else {
-                    str_b.Append(AminoAcid.ArrayToString(this.ReadB.Sequence.Sequence.SubArray(loc_b, piece.StepB)).PadLeft(l, '·'));
+                    str_b.Append(AminoAcid.ArrayToString(this.ReadB.Sequence.AminoAcids.SubArray(loc_b, piece.StepB)).PadLeft(l, '·'));
                 }
                 str_blocks.Append(piece.LocalScore < 0 || piece.LocalScore >= blocks.Length ? new string(' ', l) : new string(blocks[piece.LocalScore], l));
                 str_blocks_neg.Append(piece.LocalScore >= 0 || -piece.LocalScore >= blocks_neg.Length ? new string(' ', l) : new string(blocks_neg[-piece.LocalScore], l));
@@ -240,12 +240,12 @@ namespace Stitch {
             if (position < this.StartA || position > this.StartA + this.LenA) return null;
             int pos_a = this.StartA;
             int pos_b = this.StartB;
-            if (position == this.StartA) return this.ReadB.Sequence.Sequence[pos_b];
+            if (position == this.StartA) return this.ReadB.Sequence.AminoAcids[pos_b];
 
             foreach (var piece in this.Path) {
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;
-                if (pos_a >= position) return this.ReadB.Sequence.Sequence[Math.Min(pos_b, this.ReadB.Sequence.Sequence.Length - 1)]; // Match, deletion
+                if (pos_a >= position) return this.ReadB.Sequence.AminoAcids[Math.Min(pos_b, this.ReadB.Sequence.Length - 1)]; // Match, deletion
             }
 
             return null;
@@ -258,7 +258,7 @@ namespace Stitch {
 
             foreach (var piece in this.Path) {
                 if (pos_a > start_position && pos_a <= start_position + length)
-                    output.AddRange(this.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)); // TODO: this does not handle sets at the boundaries gracefully.
+                    output.AddRange(this.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB)); // TODO: this does not handle sets at the boundaries gracefully.
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;
             }

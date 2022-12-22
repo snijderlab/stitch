@@ -68,7 +68,7 @@ namespace Stitch {
             try {
                 HtmlBuilder inner_html;
 
-                Read.IRead metadata;
+                ReadFormat.Read metadata;
                 switch (aside) {
                     case AsideType.Read:
                         inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
@@ -114,9 +114,9 @@ namespace Stitch {
         }
 
         HtmlBuilder CreateCDROverview(string id, List<Segment> segments) {
-            var cdr1_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
-            var cdr2_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
-            var cdr3_reads = new List<(Read.IRead MetaData, Read.IRead Template, string Sequence, bool Unique)>();
+            var cdr1_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
+            var cdr2_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
+            var cdr3_reads = new List<(ReadFormat.Read MetaData, ReadFormat.Read Template, string Sequence, bool Unique)>();
             int total_templates = 0;
             bool found_cdr_region = false;
 
@@ -124,7 +124,7 @@ namespace Stitch {
                 var positions = new Dictionary<Annotation, (int Start, int Length)>();
                 int cumulative = 0;
                 int position = 0;
-                if (template.MetaData is Read.Fasta fasta && fasta != null) {
+                if (template.MetaData is ReadFormat.Fasta fasta && fasta != null) {
                     foreach (var piece in fasta.AnnotatedSequence) {
                         if (piece.Type.IsAnyCDR()) {
                             if (positions.ContainsKey(piece.Type)) {
@@ -426,8 +426,8 @@ namespace Stitch {
                 var B = Parameters.Groups[group].Item2[set.Index];
                 html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
                 var aligned = set.EndAlignment.Aligned().Aligned.Split('\n');
-                var seqA = AminoAcid.ArrayToString(set.SeqA.Sequence.Sequence.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding));
-                var seqB = AminoAcid.ArrayToString(set.SeqB.Sequence.Sequence.SubArray(set.EndAlignment.LenB, padding));
+                var seqA = AminoAcid.ArrayToString(set.SeqA.Sequence.AminoAcids.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding));
+                var seqB = AminoAcid.ArrayToString(set.SeqB.Sequence.AminoAcids.SubArray(set.EndAlignment.LenB, padding));
                 var bars_a = new HtmlBuilder();
                 var bars_b = new HtmlBuilder();
                 var max_doc = new double[] {
@@ -457,7 +457,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{seqA}{aligned[0]}\n   {new string(' ', padding)}{aligned[1]}{seqB}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
                 html.Add(bars_b);
                 html.OpenAndClose(HtmlTag.p, "", $"Best overlap ({set.EndAlignment.LenA}, {set.EndAlignment.LenB}) with score {set.EndAlignment.Score} which results in the following sequence:");
-                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{AminoAcid.ArrayToString(set.Result.Sequence.Sequence.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, set.Overlap + padding * 2))}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{AminoAcid.ArrayToString(set.Result.Sequence.AminoAcids.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, set.Overlap + padding * 2))}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
             }
             return html;
         }

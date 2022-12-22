@@ -6,10 +6,10 @@ using HtmlGenerator;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
-    public class LocalSequence {
+    public class ReadSequence {
 
         /// <summary> The sequence of this read. </summary>
-        public AminoAcid[] Sequence { get; private set; }
+        public AminoAcid[] AminoAcids { get; private set; }
         AminoAcid[] OriginalSequence;
 
         /// <summary> All changes made to the sequence of this read with their reasoning. </summary>
@@ -19,7 +19,7 @@ namespace Stitch {
         /// The exact meaning differs for all read types but overall it is used in the depth of coverage calculations. </summary>
         public double[] PositionalScore { get; private set; }
 
-        public int Length { get => Sequence.Length; }
+        public int Length { get => AminoAcids.Length; }
         /// <summary> The total amount of (mis)matching aminoacids in the alignment </summary>
         public int TotalMatches { get; private set; }
         /// <summary> The total length on the template (matches + gaps in query) </summary>
@@ -29,21 +29,20 @@ namespace Stitch {
 
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="sequence"> The original sequence, will be cloned. </param>
-        public LocalSequence(AminoAcid[] sequence, double[] positional_score) {
+        public ReadSequence(AminoAcid[] sequence, double[] positional_score) {
             if (sequence.Length != positional_score.Length) throw new ArgumentException($"Unequal length of arguments when generating local sequence. seq {sequence.Length} pos_score {positional_score}.");
             OriginalSequence = sequence.ToArray();
-            Sequence = sequence.ToArray();
+            AminoAcids = sequence.ToArray();
             PositionalScore = positional_score;
         }
 
         /// <summary> Create a new sequence changing context. </summary>
         /// <param name="read"> The read with the original sequence, will be updated to contain a pointer to this local sequence. </param>
         /// <param name="template"> The template where this read is placed. </param>
-        public LocalSequence(Read.IRead read, Read.IRead template) {
-            OriginalSequence = read.Sequence.Sequence.ToArray();
-            Sequence = read.Sequence.Sequence.ToArray();
+        public ReadSequence(ReadFormat.Read read, ReadFormat.Read template) {
+            OriginalSequence = read.Sequence.AminoAcids.ToArray();
+            AminoAcids = read.Sequence.AminoAcids.ToArray();
             PositionalScore = read.Sequence.PositionalScore.ToArray();
-            read.SequenceChanges.Add((template, this));
         }
 
         /// <summary> Update the sequence. </summary>
@@ -52,8 +51,8 @@ namespace Stitch {
         /// <param name="change"> The new aminoacids to introduce. </param>
         /// <param name="reason"> The reasoning for the change, used to review the changes as a human. </param>
         public void UpdateSequence(int offset, int delete, AminoAcid[] change, string reason) {
-            this.Changes.Add((offset, this.Sequence.Skip(offset).Take(delete).ToArray(), change, reason));
-            this.Sequence = this.Sequence.Take(offset).Concat(change).Concat(this.Sequence.Skip(offset + delete)).ToArray();
+            this.Changes.Add((offset, this.AminoAcids.Skip(offset).Take(delete).ToArray(), change, reason));
+            this.AminoAcids = this.AminoAcids.Take(offset).Concat(change).Concat(this.AminoAcids.Skip(offset + delete)).ToArray();
             if (PositionalScore.Length != 0) {
                 var to_delete = this.PositionalScore.Skip(offset).Take(delete);
                 var average_score = to_delete.Count() == 0 ? 0.0 : to_delete.Average();
@@ -62,7 +61,7 @@ namespace Stitch {
         }
 
         public bool SetPositionalScore(double[] positional_score) {
-            if (positional_score.Length != this.Sequence.Length) {
+            if (positional_score.Length != this.AminoAcids.Length) {
                 return false;
             } else {
                 PositionalScore = positional_score;
@@ -86,8 +85,8 @@ namespace Stitch {
             html.Open(HtmlTag.div, "class='seq'");
             var position = 0;
             foreach (var set in ChangeProfile()) {
-                if (set.Item1) html.OpenAndClose(HtmlTag.span, "class='changed'", AminoAcid.ArrayToString(HelperFunctionality.SubArray(Sequence, position, set.Item2)));
-                else html.Content(AminoAcid.ArrayToString(HelperFunctionality.SubArray(Sequence, position, set.Item2)));
+                if (set.Item1) html.OpenAndClose(HtmlTag.span, "class='changed'", AminoAcid.ArrayToString(HelperFunctionality.SubArray(AminoAcids, position, set.Item2)));
+                else html.Content(AminoAcid.ArrayToString(HelperFunctionality.SubArray(AminoAcids, position, set.Item2)));
                 position += set.Item2;
             }
             html.Close(HtmlTag.div);

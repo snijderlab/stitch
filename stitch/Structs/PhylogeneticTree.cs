@@ -10,10 +10,10 @@ namespace Stitch {
         /// <param name="Sequences"> The sequences to join in a tree. </param>
         /// <param name="alphabet"> The alphabet to use. </param>
         /// <param name="addOutGroup"> Add a randomised sequence of the average length of the sequences and use this to determine a root for the tree. </param>
-        public static Tree<string> CreateTree(List<(string Name, Read.IRead MetaData)> Sequences, ScoringMatrix alphabet, bool addOutGroup = true) {
+        public static Tree<string> CreateTree(List<(string Name, ReadFormat.Read MetaData)> Sequences, ScoringMatrix alphabet, bool addOutGroup = true) {
             if (addOutGroup) {
                 var avg = Sequences.Select(e => e.MetaData.Sequence.Length).Average();
-                Sequences.Add(("OutGroup", new Read.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));
+                Sequences.Add(("OutGroup", new ReadFormat.Simple(HelperFunctionality.GenerateRandomSequence(alphabet, (int)Math.Round(avg)))));
             }
             var length = Sequences.Count;
             var distance = new double[length, length];
@@ -446,20 +446,6 @@ namespace Stitch {
                     Right.Value.Item2.RemoveNegativeDistances();
                 }
             }
-
-            //public static Tree<TOut> Rebase(Tree<TOut> tree)
-            //{
-            //    var leaves = tree.Leaves;
-            //    var distances = new double[leaves, leaves];
-            //    var nodes = tree.Fold((a, b) => a.join(b), (index, value) => new List<int>{index})
-            //
-            //    tree.Apply(
-            //        (left, right) => {
-            //
-            //        }
-            //        (leaf) => {}
-            //    )
-            //}
-        }//
+        }
     }
 }

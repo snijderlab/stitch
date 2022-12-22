@@ -216,11 +216,11 @@ namespace Stitch {
                                 switch (setting.Name) {
                                     case "denovo path":
                                         if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.DeNovoFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "psms path":
                                         if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.PSMSFile = new Read.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
+                                        novor_settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
                                         break;
                                     case "name":
                                         if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
@@ -351,7 +351,7 @@ namespace Stitch {
                                 foreach (var file in files.Item1) {
                                     if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
-                                    var fileId = new Read.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
+                                    var fileId = new ReadFormat.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
 
                                     if (file.EndsWith(".fasta"))
                                         output.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
@@ -1006,9 +1006,9 @@ namespace Stitch {
                 if (outEither.IsErr()) return outEither;
 
                 // Open the file
-                var fileId = new Read.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
+                var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
 
-                var folder_reads = new ParseResult<List<Read.IRead>>();
+                var folder_reads = new ParseResult<List<ReadFormat.Read>>();
                 var alphabet = tsettings.Alphabet ?? backup_alphabet;
 
                 if (file_path.EndsWith(".fasta"))
@@ -1043,13 +1043,13 @@ namespace Stitch {
                         if (res.IsOk(outEither)) {
                             switch (res.Unwrap().ToLower()) {
                                 case "old":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.OldFormat();
+                                    peaks_settings.FileFormat = PeaksFileFormat.OldFormat();
                                     break;
                                 case "x":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksX();
+                                    peaks_settings.FileFormat = PeaksFileFormat.PeaksX();
                                     break;
                                 case "x+":
-                                    peaks_settings.FileFormat = FileFormat.Peaks.PeaksXPlus();
+                                    peaks_settings.FileFormat = PeaksFileFormat.PeaksXPlus();
                                     break;
                                 default:
                                     outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
@@ -1253,7 +1253,7 @@ namespace Stitch {
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetAllText(Read.FileIdentifier file) {
+            public static ParseResult<string> GetAllText(ReadFormat.FileIdentifier file) {
                 if (file.Origin != null) return GetAllText(file.Origin);
                 else return GetAllText(file.Path);
             }

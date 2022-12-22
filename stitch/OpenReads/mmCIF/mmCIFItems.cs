@@ -1,10 +1,10 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
+
+// Lex/tokenize a CIF file into its constituent parts.
 
 namespace Stitch {
-    namespace MMCIFNameSpace {
+    namespace MMCIFItems {
         public struct DataBlock {
             public string Name;
             public List<Item> Items;

@@ -15,12 +15,12 @@ namespace HTMLNameSpace {
         const char non_breaking_space = '\u00A0'; // &nbsp; in html
 
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static HtmlBuilder CreateReadAside(Read.IRead MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments) {
+        public static HtmlBuilder CreateReadAside(ReadFormat.Read MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
             html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
-            html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Sequence.Length})");
-            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence.Sequence));
+            html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Length})");
+            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids));
 
             if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier)) {
                 foreach (var spectrum in Fragments[MetaData.EscapedIdentifier]) {
@@ -186,8 +186,8 @@ namespace HTMLNameSpace {
             int pos_b = match.StartB;
 
             foreach (var piece in match.Path) {
-                var a = AminoAcid.ArrayToString(match.ReadA.Sequence.Sequence.SubArray(pos_a, piece.StepA));
-                var b = AminoAcid.ArrayToString(match.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
+                var a = AminoAcid.ArrayToString(match.ReadA.Sequence.AminoAcids.SubArray(pos_a, piece.StepA));
+                var b = AminoAcid.ArrayToString(match.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB));
                 if (!(String.IsNullOrEmpty(a) && b == "X")) {
                     columns.Add((
                         a.Length == 0 ? template.Parent.Alphabet.GapChar.ToString() : a,
@@ -342,7 +342,7 @@ namespace HTMLNameSpace {
                 var inserted = 0;
                 var seq = new StringBuilder();
                 foreach (var piece in alignment.Path) {
-                    var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB));
+                    var content = AminoAcid.ArrayToString(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB));
                     var total_gaps = piece.StepA == 0 ? 0 : gaps.SubArray(pos_a, piece.StepA).Sum();
                     var positional_gap_char = pos_a == alignment.StartA ? non_breaking_space : gap_char;
                     if (piece.StepA == piece.StepB && piece.StepA > 1 && template.Parent.Alphabet.Swap != 0 && piece.LocalScore == piece.StepA * template.Parent.Alphabet.Swap) {
@@ -370,8 +370,8 @@ namespace HTMLNameSpace {
                             seq.Append(new string(non_breaking_space, Math.Max(0, gaps[pos_a] - len_start)));
                             inserted += Math.Max(0, gaps[pos_a] - len_start);
                         }
-                        html.Content(AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)));
-                        seq.Append(AminoAcid.ArrayToString(alignment.ReadB.Sequence.Sequence.SubArray(pos_b, piece.StepB)));
+                        html.Content(AminoAcid.ArrayToString(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB)));
+                        seq.Append(AminoAcid.ArrayToString(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB)));
                         inserted += piece.StepB;
                     } else if (piece.StepB == 0) {
                         if (inserted > total_gaps) inserted = total_gaps;
@@ -484,7 +484,7 @@ namespace HTMLNameSpace {
             if (template.ForcedOnSingleTemplate) {
                 Row("Unique", match.Unique ? "Yes" : "No");
             }
-            if (match.ReadB is Read.Peaks p) {
+            if (match.ReadB is ReadFormat.Peaks p) {
                 Row("Peaks ALC", p.DeNovoScore.ToString());
             }
             if (match.ReadB.Sequence.PositionalScore.Length != 0) {

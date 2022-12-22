@@ -10,15 +10,15 @@ using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 namespace Stitch {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
     public readonly struct ReportInputParameters {
-        public readonly ReadOnlyCollection<Read.IRead> Input;
+        public readonly ReadOnlyCollection<ReadFormat.Read> Input;
         public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
-        public readonly RunVariables runVariables;
+        public readonly ExtraArguments runVariables;
         public readonly string Runname;
         [JsonIgnore]
         public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<Read.IRead> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, RunVariables variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
+        public ReportInputParameters(List<ReadFormat.Read> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();
@@ -63,22 +63,6 @@ namespace Stitch {
             }
 
             File.WriteAllText(filename, buffer);
-        }
-
-        protected Task SaveAndCreateDirectoriesAsync(string filename, string buffer) {
-            try {
-                Directory.CreateDirectory(Directory.GetParent(filename).FullName);
-            } catch {
-                new InputNameSpace.ErrorMessage(filename, "Directory could not be created", $"The directory '{Directory.GetParent(filename).FullName}' could not be created.").Print();
-                throw new Exception("Could not save file, see error message above");
-            }
-
-            if (File.Exists(filename)) {
-                new InputNameSpace.ErrorMessage(filename, "File already exists", "All filenames are supposed to be unique to prevent data races.").Print();
-                throw new Exception("Could not save file, see error message above");
-            }
-
-            return File.WriteAllTextAsync(filename, buffer);
         }
     }
 }
