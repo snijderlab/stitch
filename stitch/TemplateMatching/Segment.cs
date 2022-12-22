@@ -12,7 +12,7 @@ namespace Stitch {
         public readonly double CutoffScore;
         [JsonIgnore]
         public readonly PhylogeneticTree.Tree<string> Hierarchy;
-        public List<(int Group, int Index, ((int Position, Alignment Match) Best, List<(int Position, Alignment Match)> Scores) Score, AminoAcid[] SeqA, AminoAcid[] SeqB)> SegmentJoiningScores = new();
+        public List<(int Group, int Index, Alignment EndAlignment, Read.IRead SeqA, Read.IRead SeqB, Read.IRead Result, int Overlap)> SegmentJoiningScores = new();
         [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
         public readonly RunParameters.ScoringParameter Scoring;

@@ -332,7 +332,7 @@ namespace HTMLNameSpace {
                 reverse_path.Reverse();
                 var len_end = reverse_path.TakeWhile(a => a.StepA == 0).Select(a => (int)a.StepB).Sum();
 
-                var start = Math.Max(0, 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA + 1).Sum() - len_start);
+                var start = Math.Max(1, 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA + 1).Sum() - len_start);
                 var end = start + alignment.LenA + gaps.SubArray(alignment.StartA, alignment.LenA).Sum() + 1 + len_start + len_end;
                 html.Open(
                     HtmlTag.a,

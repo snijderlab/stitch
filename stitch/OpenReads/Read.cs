@@ -90,7 +90,10 @@ namespace Stitch {
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
             /// <param name="identifier">The identifier for this read, does not have to be unique, the name filter will enforce that.</param>
-            public Simple(AminoAcid[] sequence, FileRange? file = null, NameFilter filter = null, string identifier = "R") : base(sequence, file, identifier, filter) { }
+            public Simple(AminoAcid[] sequence, FileRange? file = null, NameFilter filter = null, string identifier = "R", double[] doc = null) : base(sequence, file, identifier, filter) {
+                if (doc != null)
+                    this.Sequence.SetPositionalScore(doc);
+            }
 
             /// <summary> Returns Simple MetaData to HTML. </summary>
             public override HtmlBuilder ToHTML() {

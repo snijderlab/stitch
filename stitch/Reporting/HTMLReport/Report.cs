@@ -419,18 +419,45 @@ namespace Stitch {
         }
 
         private HtmlBuilder CreateSegmentJoining(int group) {
+            const int padding = 3;
             var html = new HtmlBuilder();
             foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores) {
                 var A = Parameters.Groups[group].Item2[set.Index - 1];
                 var B = Parameters.Groups[group].Item2[set.Index];
                 html.OpenAndClose(HtmlTag.h2, "", $"{A.Name} * {B.Name}");
-                var aligned = set.Score.Best.Match.Aligned().Aligned.Split('\n');
-                var seqA = AminoAcid.ArrayToString(set.SeqA.SubArray(set.SeqA.Length - set.Score.Best.Position - 3, 3));
-                var seqB = AminoAcid.ArrayToString(set.SeqB.Skip(set.Score.Best.Match.LenB).Take(3).ToArray());
-                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{seqA}{aligned[0]}\n      {aligned[1]}{seqB}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
-                html.OpenAndClose(HtmlTag.p, "", $"Best overlap {set.Score.Best.Position} with score {set.Score.Best.Match.Score}");
+                var aligned = set.EndAlignment.Aligned().Aligned.Split('\n');
+                var seqA = AminoAcid.ArrayToString(set.SeqA.Sequence.Sequence.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding));
+                var seqB = AminoAcid.ArrayToString(set.SeqB.Sequence.Sequence.SubArray(set.EndAlignment.LenB, padding));
+                var bars_a = new HtmlBuilder();
+                var bars_b = new HtmlBuilder();
+                var max_doc = new double[] {
+                    set.EndAlignment.ReadA.Sequence.PositionalScore.SubArray(set.EndAlignment.StartA, set.EndAlignment.LenA).Max(),
+                    set.EndAlignment.ReadB.Sequence.PositionalScore.SubArray(set.EndAlignment.StartB, set.EndAlignment.LenB).Max(),
+                    set.SeqA.Sequence.PositionalScore.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding).Max(),
+                    set.SeqB.Sequence.PositionalScore.SubArray(set.EndAlignment.LenB, padding).Max(),
+                }.Max();
+                bars_a.Open(HtmlTag.div, $"class='joining a' style='--max:{max_doc}'");
+                bars_b.Open(HtmlTag.div, $"class='joining b' style='--max:{max_doc}'");
+                var pos_a = set.EndAlignment.StartA;
+                var pos_b = set.EndAlignment.StartB;
+                for (int i = 0; i < padding; i++) {
+                    bars_a.OpenAndClose(HtmlTag.span, $"class='bar' style='--doc:{set.SeqA.Sequence.PositionalScore[set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding + i]}'", "");
+                }
+                foreach (var item in set.EndAlignment.Path) {
+                    bars_a.OpenAndClose(HtmlTag.span, $"class='bar' style='--doc:{set.EndAlignment.ReadA.Sequence.PositionalScore[pos_a]}'", "");
+                    bars_b.OpenAndClose(HtmlTag.span, $"class='bar' style='--doc:{set.EndAlignment.ReadB.Sequence.PositionalScore[pos_b]}'", "");
+                }
+                for (int i = 0; i < padding; i++) {
+                    bars_b.OpenAndClose(HtmlTag.span, $"class='bar' style='--doc:{set.SeqB.Sequence.PositionalScore[set.EndAlignment.LenB + i]}'", "");
+                }
+                bars_a.Close(HtmlTag.div);
+                bars_b.Close(HtmlTag.div);
 
-                html.Add(HTMLGraph.Bargraph(set.Score.Scores.Select(s => (s.Item1.ToString(), (double)s.Match.Score)).ToList(), new HtmlGenerator.HtmlBuilder("Other overlaps"), new HtmlGenerator.HtmlBuilder(HtmlGenerator.HtmlTag.p, HTMLHelp.SegmentJoining)));
+                html.Add(bars_a);
+                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{seqA}{aligned[0]}\n   {new string(' ', padding)}{aligned[1]}{seqB}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
+                html.Add(bars_b);
+                html.OpenAndClose(HtmlTag.p, "", $"Best overlap ({set.EndAlignment.LenA}, {set.EndAlignment.LenB}) with score {set.EndAlignment.Score} which results in the following sequence:");
+                html.OpenAndClose(HtmlTag.pre, "class='seq'", $"...{AminoAcid.ArrayToString(set.Result.Sequence.Sequence.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, set.Overlap + padding * 2))}..."); // The seq B starts exactly 3 chars into seq A plus the padding for '...'
             }
             return html;
         }
@@ -537,7 +564,7 @@ namespace Stitch {
             if (Parameters.RecombinedSegment.Count != 0)
                 for (int group = 0; group < Parameters.Groups.Count; group++)
                     foreach (var set in Parameters.RecombinedSegment[group].SegmentJoiningScores)
-                        if (set.Score.Best.Position == 0) {
+                        if (set.EndAlignment.LenB == 0) {
                             var A = Parameters.Groups[group].Item2[set.Index - 1];
                             var B = Parameters.Groups[group].Item2[set.Index];
                             html.UnsafeContent(CommonPieces.Warning("Ineffective segment joining", $"<p>The segment joining between {A.Name} and {B.Name} did not find a good solution, look into the specific report to see if this influences the validity of the results.</p>"));
