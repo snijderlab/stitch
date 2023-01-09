@@ -22,7 +22,7 @@ namespace Stitch {
         public readonly sbyte GapExtendPenalty;
 
         /// <summary> The maximum size of checked patches. </summary>
-        public readonly int Size;
+        public readonly int PatchSize;
 
         /// <summary> The char that represents a gap </summary>
         public readonly char GapChar;
@@ -88,7 +88,7 @@ namespace Stitch {
             this.GapStartPenalty = gap_start;
             this.GapExtendPenalty = gap_extend;
             this.GapChar = gap_char;
-            this.Size = size;
+            this.PatchSize = size;
             var matrix_size = HelperFunctionality.IntPow(AlphabetSize + 1, (uint)size) + 1;
             this.Matrix = new sbyte[matrix_size, matrix_size];
             this.PositionInScoringMatrix = alphabet.Select((item, index) => (item, index)).ToDictionary(item => item.item, item => item.index);

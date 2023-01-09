@@ -64,7 +64,7 @@ namespace Stitch {
         public readonly int GapInA;
         public readonly int GapInB;
 
-        public Alignment(ReadFormat.General read_a, ReadFormat.General read_b, ScoringMatrix alphabet, AlignmentType type, int readAIndex = 0) {
+        public Alignment(ReadFormat.General read_a, ReadFormat.General read_b, ScoringMatrix scoring_matrix, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.AminoAcids;
             var seq_b = read_b.Sequence.AminoAcids;
             this.ReadA = read_a;
@@ -76,8 +76,8 @@ namespace Stitch {
             // Set up the gaps for the B side, used to guide the path back to (0,0) when the actual alignment already ended at the B side.
             if (type == AlignmentType.Global || type == AlignmentType.GlobalForB || type == AlignmentType.EndAlignment) {
                 for (int b = 0; b <= seq_b.Length; b++) {
-                    matrix[0, b] = new AlignmentPiece(b == 0 ? 0 : b == 1 ? alphabet.GapStartPenalty : alphabet.GapStartPenalty + (b - 1) * alphabet.GapExtendPenalty,
-                    b == 0 ? (sbyte)0 : b == 1 ? (sbyte)alphabet.GapStartPenalty : (sbyte)alphabet.GapExtendPenalty,
+                    matrix[0, b] = new AlignmentPiece(b == 0 ? 0 : b == 1 ? scoring_matrix.GapStartPenalty : scoring_matrix.GapStartPenalty + (b - 1) * scoring_matrix.GapExtendPenalty,
+                    b == 0 ? (sbyte)0 : b == 1 ? (sbyte)scoring_matrix.GapStartPenalty : (sbyte)scoring_matrix.GapExtendPenalty,
                     0,
                     b == 0 ? (byte)0 : (byte)1);
                 }
@@ -86,8 +86,8 @@ namespace Stitch {
             // Set up starting gaps for the A side, used to guide the path back to (0,0) when the actual alignment already ended at the A side.
             if (type == AlignmentType.Global) {
                 for (int a = 0; a <= seq_a.Length; a++) {
-                    matrix[a, 0] = new AlignmentPiece(a == 0 ? 0 : a == 1 ? alphabet.GapStartPenalty : alphabet.GapStartPenalty + (a - 1) * alphabet.GapExtendPenalty,
-                    a == 0 ? (sbyte)0 : a == 1 ? (sbyte)alphabet.GapStartPenalty : (sbyte)alphabet.GapExtendPenalty,
+                    matrix[a, 0] = new AlignmentPiece(a == 0 ? 0 : a == 1 ? scoring_matrix.GapStartPenalty : scoring_matrix.GapStartPenalty + (a - 1) * scoring_matrix.GapExtendPenalty,
+                    a == 0 ? (sbyte)0 : a == 1 ? (sbyte)scoring_matrix.GapStartPenalty : (sbyte)scoring_matrix.GapExtendPenalty,
                     a == 0 ? (byte)0 : (byte)1,
                     0);
                 }
@@ -99,26 +99,26 @@ namespace Stitch {
                     AlignmentPiece value = new AlignmentPiece();
                     var changed = false;
                     // List all possible moves
-                    for (byte len_a = 0; len_a <= alphabet.Size; len_a++) {
-                        for (byte len_b = 0; len_b <= alphabet.Size; len_b++) {
+                    for (byte len_a = 0; len_a <= scoring_matrix.PatchSize; len_a++) {
+                        for (byte len_b = 0; len_b <= scoring_matrix.PatchSize; len_b++) {
                             if ((len_a == 0 && len_b != 1) || (len_b == 0 && len_a != 1) || (len_a > index_a) || (len_b > index_b))
                                 continue; // Skip combined gaps, the point 0,0, and too big steps (outside bounds)
 
                             var previous = matrix[index_a - len_a, index_b - len_b];
-                            sbyte score = len_a == 0 || len_b == 0
+                            sbyte local_score = len_a == 0 || len_b == 0
                                 ? (len_a == 0 && previous.StepA == 0
-                                   || len_b == 0 && previous.StepB == 0
-                                   || len_a == 0 && seq_a[index_a - 1] == alphabet.GapChar
-                                   || len_b == 0 && seq_b[index_b - 1] == alphabet.GapChar
-                                   ? alphabet.GapExtendPenalty : alphabet.GapStartPenalty)
-                                : alphabet.Score(seq_a.SubSpan(index_a - len_a, len_a), seq_b.SubSpan(index_b - len_b, len_b));
+                                    || len_b == 0 && previous.StepB == 0
+                                    || len_a == 0 && seq_a[index_a - 1] == scoring_matrix.GapChar
+                                    || len_b == 0 && seq_b[index_b - 1] == scoring_matrix.GapChar
+                                    ? scoring_matrix.GapExtendPenalty : scoring_matrix.GapStartPenalty)
+                                : scoring_matrix.Score(seq_a.SubSpan(index_a - len_a, len_a), seq_b.SubSpan(index_b - len_b, len_b));
 
-                            if (score == 0)
+                            if (local_score == 0)
                                 continue; // Skip undefined pairs
 
-                            var total_score = previous.Score + (int)score;
+                            var total_score = previous.Score + (int)local_score;
                             if (value.Score < total_score || !changed && type != AlignmentType.Local) {
-                                value = new AlignmentPiece(total_score, score, len_a, len_b);
+                                value = new AlignmentPiece(total_score, local_score, len_a, len_b);
                                 changed = true;
                             }
                         }
