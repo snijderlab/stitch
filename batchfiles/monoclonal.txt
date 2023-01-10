@@ -9,6 +9,7 @@ Input ->
         Format   : X+
         Name     : 01
         CutoffALC: 90
+        RawDataDirectory: R:\F1\peng0013\201912
     <-
 <-
 
@@ -18,7 +19,7 @@ TemplateMatching ->
     AmbiguityThreshold : 0.9
 
     Alphabet ->
-        Characters : ARNDCQEGHILKMFPSTWYVBZX.*
+        Characters : ARNDCQEGHILKMFPSTWYVBZXJ.*
         Identity   : 8
         Mismatch   : -1
         GapStart   : -12
@@ -29,7 +30,7 @@ TemplateMatching ->
         Symmetric sets ->
             Score: 8
             Sets :>
-                I,L
+                I,L,J
             <:
         <-
 
@@ -38,27 +39,27 @@ TemplateMatching ->
             Sets :>
                 N,GG
                 Q,AG
-                AV,GL,GI
+                AV,GL,GI,GJ
                 AN,QG,AGG
-                LS,IS,TV
+                LS,IS,JS,TV
                 AM,CV
                 NV,AAA,GGV
                 NT,QS,AGS,GGT
-                LN,IN,QV,AGV,GGL,GGI
-                DL,DI,EV
+                LN,IN,JN,QV,AGV,GGL,GGI,GGJ
+                DL,DI,DJ,EV
                 QT,AAS,AGT
                 AY,FS
-                LQ,IQ,AAV,AGL,AGI
+                LQ,IQ,AAV,AGL,AGI,AGJ
                 NQ,ANG,QGG
                 KN,GGK
                 EN,DQ,ADG,EGG
                 DK,AAT,GSV
                 MN,AAC,GGM
                 AS,GT
-                AAL,AAI,GVV
+                AAL,AAI,AAJ,GVV
                 QQ,AAN,AQG
                 EQ,AAD,AEG
-                EK,ASV,GLS,GIS,GTV
+                EK,ASV,GLS,GIS,GJS,GTV
                 MQ,AGM,CGV
                 AAQ,NGV
             <:
@@ -67,16 +68,16 @@ TemplateMatching ->
         Asymmetric sets ->
             Score: 1
             Sets :>
-                X->A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z -Remove mismatch penalty on single gaps
-                A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z->X -Remove mismatch penalty on single gaps
+                X->A,R,N,D,C,Q,E,G,H,I,L,J,K,M,F,P,S,T,W,Y,V,B,Z -Remove mismatch penalty on single gaps
+                A,R,N,D,C,Q,E,G,H,I,L,J,K,M,F,P,S,T,W,Y,V,B,Z->X -Remove mismatch penalty on single gaps
             <:
         <-
 
         Asymmetric sets ->
             Score: -4
             Sets :>
-                .->A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z -Add additional penalty on bigger gaps
-                A,R,N,D,C,Q,E,G,H,I,L,K,M,F,P,S,T,W,Y,V,B,Z->. -Add additional penalty on bigger gaps
+                .->A,R,N,D,C,Q,E,G,H,I,L,J,K,M,F,P,S,T,W,Y,V,B,Z -Add additional penalty on bigger gaps
+                A,R,N,D,C,Q,E,G,H,I,L,J,K,M,F,P,S,T,W,Y,V,B,Z->. -Add additional penalty on bigger gaps
             <:
         <-
 
@@ -89,12 +90,12 @@ TemplateMatching ->
                 T->D -Methylation
                 S->T -Methylation
                 D->E -Methylation
-                R->AV,GL,GI -Methylation
+                R->AV,GL,GI,GJ -Methylation
                 Q->AA -Methylation
                 W->DS,AM,CV,TT -Oxidation
                 M->F -Oxidation
                 S->E -Acetylation
-                K->AV,GL,GI -Acetylation/Homoarginine
+                K->AV,GL,GI,GJ -Acetylation/Homoarginine
             <:
         <-
     <-

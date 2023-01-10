@@ -16,9 +16,9 @@ namespace Stitch {
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         /// <returns></returns>
-        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.General> peptides) {
+        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
             var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
-            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag)));
+            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, p)));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
@@ -39,9 +39,7 @@ namespace Stitch {
                 }
 
                 foreach (var scan in group) {
-                    string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     // Get the information to find this peptide
-
                     double[] mzs;
                     float[] intensities;
 
@@ -53,10 +51,15 @@ namespace Stitch {
                     if (precursor.MonoIsotopicMass < 100 || precursor.ChargeState < 2)
                         continue;
 
-                    var tic = raw_file.GetScanHeaderInfoForScanNum(scan.Scan).Tic;
-
                     // determine the type of fragmentation used
-                    var model = PeptideFragment.GetFragmentModel(filter.Fragmentation);
+                    var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation)) {
+                        W = new PeptideFragment.FragmentRange {
+                            MinPos = 1,
+                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            HigherCharges = true,
+                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                        }
+                    };
                     raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
                     // Default set to 20, should be lower for BU
@@ -72,30 +75,50 @@ namespace Stitch {
                     }
 
                     // Deisotope: not strictly necessary
-                    IsotopePattern[] isotopes = IsotopePatternDetection.Process(spectrum, new IsotopePatternDetection.Settings { MaxCharge = (short)precursor.ChargeState });
-                    var spectrumDeiso = SpectrumUtils.Deisotope(spectrum, isotopes, (short)precursor.ChargeState, true);
+                    //IsotopePattern[] isotopes = IsotopePatternDetection.Process(spectrum, new IsotopePatternDetection.Settings { MaxCharge = (short)precursor.ChargeState });
+                    //var spectrumDeiso = SpectrumUtils.Deisotope(spectrum, isotopes, (short)precursor.ChargeState, true);
+                    //var spectrumTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks);
+                    //var spectrumDeisoTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks2);
 
-                    var spectrumTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks);
-                    var spectrumDeisoTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks2);
-
+                    string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     string sequence = FastaParser.ParseProForma(transformedPeaksPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
+                    if (xle_disambiguation) {
+                        string pureL = new String(sequence.Select(c => c == 'I' ? 'L' : c).ToArray());
+                        string pureI = new String(sequence.Select(c => c == 'L' ? 'I' : c).ToArray());
 
-                    Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
+                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
+                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
 
-                    // If not deisotoped, should be charge of the precursor
-                    short maxCharge = 1;
-                    maxCharge = (short)precursor.ChargeState;
-                    PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
-                    var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
-
-                    var hl_precursor = new PrecursorInfo {
-                        Mz = filter.ParentMass,
-                        Fragmentation = filter.Fragmentation,
-                        FragmentationEnergy = filter.FragmentationEnergy,
-                        RawFile = raw_file.GetFilename(),
-                        ScanNumber = scan.Scan,
-                    };
-                    var asm = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: 20), peptide, matchedFragments);
+                        var builder = new StringBuilder();
+                        for (int i = 0; i < pureI.Length; i++) {
+                            if (pureI[i] == 'I') {
+                                var supportL = asmL.FragmentMatches.FirstOrDefault(f => f != null && f.FragmentType == PeptideFragment.ION_W && f.Position == pureI.Length - i); // w ions always have C terminal position
+                                var supportI = asmI.FragmentMatches.FirstOrDefault(f => f != null && f.FragmentType == PeptideFragment.ION_W && f.Position == pureI.Length - i);
+                                var d = default(PeptideFragment);
+                                if (supportL == d && supportI == d) {
+                                    builder.Append('L');
+                                    if (scan.p.Sequence.AminoAcids[i].Character != 'J')
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, "No w ion support for either L or I");
+                                } else if (supportL == d) {
+                                    builder.Append('I');
+                                    if (scan.p.Sequence.AminoAcids[i].Character != 'I')
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('I') }, $"Support for I based on w ions {supportI}");
+                                } else if (supportI == d) {
+                                    builder.Append('L');
+                                    if (scan.p.Sequence.AminoAcids[i].Character != 'L')
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('L') }, $"Support for L based on w ions {supportL}");
+                                } else {
+                                    builder.Append('L');
+                                    if (scan.p.Sequence.AminoAcids[i].Character != 'J')
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, "w Ion support for both L and I");
+                                }
+                            } else {
+                                builder.Append(sequence[i]);
+                            }
+                        }
+                        sequence = builder.ToString();
+                    }
+                    var asm = GetASM(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
 
                     if (fragments.ContainsKey(scan.EscapedIdentifier)) {
                         fragments[scan.EscapedIdentifier].Add(asm);
@@ -105,6 +128,25 @@ namespace Stitch {
                 }
             }
             return fragments;
+        }
+
+        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+            Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
+
+            // If not deisotoped, should be charge of the precursor
+            short maxCharge = 1;
+            maxCharge = (short)precursor.ChargeState;
+            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
+            var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
+
+            var hl_precursor = new PrecursorInfo {
+                Mz = filter.ParentMass,
+                Fragmentation = filter.Fragmentation,
+                FragmentationEnergy = filter.FragmentationEnergy,
+                RawFile = RawFile,
+                ScanNumber = ScanNumber,
+            };
+            return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
         }
     }
 }

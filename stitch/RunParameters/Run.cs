@@ -53,33 +53,24 @@ namespace Stitch {
             /// <summary> Runs this run. Runs the assembly, and generates the reports. </summary>
             public void Calculate() {
                 Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
-                // Template Matching
-                var stopWatch = new Stopwatch();
-                stopWatch.Start();
-
-                var segments = RunTemplateMatching();
-
-                stopWatch.Stop();
-
-                var recombined_segment = new List<Segment>();
-
-                // Recombine
-                if (Recombine != null) {
-                    var recombine_sw = new Stopwatch();
-                    recombine_sw.Start();
-
-                    RunRecombine(segments, recombined_segment);
-
-                    recombine_sw.Stop();
-                }
 
                 // Raw data
                 Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
                 if (this.LoadRawData) {
-                    fragments = Fragmentation.GetSpectra(Input.Data.Cleaned);
+                    fragments = Fragmentation.GetSpectra(Input.Data.Cleaned, true);
                     ProgressBar.Update();
                 }
 
+                // Template Matching
+                var segments = RunTemplateMatching();
+
+                // Recombine
+                var recombined_segment = new List<Segment>();
+                if (Recombine != null) {
+                    RunRecombine(segments, recombined_segment);
+                }
+
+                // Generate report parameters
                 var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname, fragments);
 
                 // If there is an expected outcome present to answers here

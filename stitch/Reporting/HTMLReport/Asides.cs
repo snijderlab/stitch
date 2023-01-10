@@ -24,7 +24,7 @@ namespace HTMLNameSpace {
 
             if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier)) {
                 foreach (var spectrum in Fragments[MetaData.EscapedIdentifier]) {
-                    html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum)));
+                    html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
                 }
             }
             html.TagWithHelp(HtmlTag.h2, "Reverse Lookup", new HtmlBuilder(HTMLHelp.ReadLookup));

@@ -302,22 +302,28 @@ namespace Stitch {
                 }
 
                 var template = new SequenceOption(new AminoAcid[] { combinedSequence[i].Template }, 1);
+                var J = new AminoAcid[] { new AminoAcid('J') };
+                var L = new SequenceOption(new AminoAcid[] { new AminoAcid('L') }, 1);
+                var I = new SequenceOption(new AminoAcid[] { new AminoAcid('I') }, 1);
                 if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
                     // Do not add gaps, as those are not part of the final sequence
                 } else if (options.Count > 1 && options.Contains(template)) {
+                    consensus.Add(template); // TODO: see if this rules still makes sense, do we not want to just choose the highest one? Or the template only if within X% of the highest?
+                } else if (options.Count > 0 && AminoAcid.ArrayEquals(options[0].Sequence, J) && combinedSequence[i].AminoAcids.ContainsKey(L) && !combinedSequence[i].AminoAcids.ContainsKey(I)) {
+                    consensus.Add(L);
+                } else if (options.Count > 0 && AminoAcid.ArrayEquals(options[0].Sequence, J) && combinedSequence[i].AminoAcids.ContainsKey(I) && !combinedSequence[i].AminoAcids.ContainsKey(L)) {
+                    consensus.Add(I);
+                } else if (options.Count > 0 && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
                     consensus.Add(template);
-                    doc.Add(coverage);
-                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == 'L' && combinedSequence[i].Template.Character == 'I') {
+                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0] == L && template == I) {
                     consensus.Add(template);
-                    doc.Add(coverage);
                 } else if (options.Count > 0) {
                     consensus.Add(options[0]);
-                    doc.Add(coverage);
                 } else {
                     // There is no data from reads so take the template sequence
                     consensus.Add(template);
-                    doc.Add(coverage);
                 }
+                doc.Add(coverage);
 
                 // Get the highest gap
                 max_gap.Clear();

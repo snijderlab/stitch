@@ -113,6 +113,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.p, "", Identifier);
                 html.OpenAndClose(HtmlTag.h3, "", "Fasta header");
                 html.OpenAndClose(HtmlTag.p, "", FastaHeader);
+                html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());
                 return html;
             }
@@ -452,6 +453,7 @@ namespace Stitch {
                     html.OpenAndClose(HtmlTag.p, "", FragmentationMode);
                 }
 
+                html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());
 
                 return html;
@@ -483,6 +485,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.p, "", Intensity.ToString("G4"));
                 html.OpenAndClose(HtmlTag.h3, "", "TotalArea");
                 html.OpenAndClose(HtmlTag.p, "", TotalArea.ToString("G4"));
+                html.Add(Sequence.RenderToHtml());
                 html.Add(HTMLNameSpace.HTMLGraph.Bargraph(HTMLNameSpace.HTMLGraph.AnnotateDOCData(Sequence.PositionalScore.Select(a => (double)a).ToList()), new HtmlGenerator.HtmlBuilder("Positional Score"), null, null, 1));
                 foreach (var child in Children) {
                     html.Add(child.ToHTML());
@@ -560,6 +563,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.p, "", Error.ToString());
                 html.OpenAndClose(HtmlTag.h3, "", "Original Sequence");
                 html.OpenAndClose(HtmlTag.p, "", OriginalSequence);
+                html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());
                 return html;
             }
@@ -620,6 +624,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from a structural read");
                 html.OpenAndClose(HtmlTag.h3, "", "Name");
                 html.OpenAndClose(HtmlTag.p, "", this.Name);
+                html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());
                 return html;
             }
