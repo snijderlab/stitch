@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using HeckLib.chemistry;
 
 namespace Stitch {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
@@ -17,8 +18,8 @@ namespace Stitch {
         public readonly ExtraArguments runVariables;
         public readonly string Runname;
         [JsonIgnore]
-        public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
+        public readonly Dictionary<string, List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))>> Fragments;
+        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))>> fragments) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();

@@ -16,8 +16,8 @@ namespace Stitch {
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         /// <returns></returns>
-        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
-            var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
+        public static Dictionary<string, List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))>> GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
+            var fragments = new Dictionary<string, List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))>>(peptides.Count());
             var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, p)));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
@@ -82,12 +82,16 @@ namespace Stitch {
 
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     string sequence = FastaParser.ParseProForma(transformedPeaksPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
+                    AnnotatedSpectrumMatch asmI = null;
+                    AnnotatedSpectrumMatch asmL = null;
+                    PeptideFragment[] theo_asmL = null;
+                    PeptideFragment[] theo_asmI = null;
                     if (xle_disambiguation) {
                         string pureL = new String(sequence.Select(c => c == 'I' ? 'L' : c).ToArray());
                         string pureI = new String(sequence.Select(c => c == 'L' ? 'I' : c).ToArray());
 
-                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
-                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
+                        (asmL, theo_asmL) = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
+                        (asmI, theo_asmI) = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
 
                         var builder = new StringBuilder();
                         for (int i = 0; i < pureI.Length; i++) {
@@ -121,16 +125,16 @@ namespace Stitch {
                     var asm = GetASM(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
 
                     if (fragments.ContainsKey(scan.EscapedIdentifier)) {
-                        fragments[scan.EscapedIdentifier].Add(asm);
+                        fragments[scan.EscapedIdentifier].Add((asm, (asmI, theo_asmI), (asmL, theo_asmL)));
                     } else {
-                        fragments[scan.EscapedIdentifier] = new List<AnnotatedSpectrumMatch> { asm };
+                        fragments[scan.EscapedIdentifier] = new List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))> { (asm, (asmI, theo_asmI), (asmL, theo_asmL)) };
                     }
                 }
             }
             return fragments;
         }
 
-        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+        static (AnnotatedSpectrumMatch, PeptideFragment[]) GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
@@ -146,7 +150,7 @@ namespace Stitch {
                 RawFile = RawFile,
                 ScanNumber = ScanNumber,
             };
-            return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
+            return (new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments), peptide_fragments);
         }
     }
 }

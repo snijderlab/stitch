@@ -15,7 +15,7 @@ namespace HTMLNameSpace {
         const char non_breaking_space = '\u00A0'; // &nbsp; in html
 
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static HtmlBuilder CreateReadAside(ReadFormat.General MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments) {
+        public static HtmlBuilder CreateReadAside(ReadFormat.General MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<((AnnotatedSpectrumMatch, HeckLib.chemistry.PeptideFragment[]), (AnnotatedSpectrumMatch, HeckLib.chemistry.PeptideFragment[]), (AnnotatedSpectrumMatch, HeckLib.chemistry.PeptideFragment[]))>> Fragments) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
             html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
@@ -24,7 +24,15 @@ namespace HTMLNameSpace {
 
             if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier)) {
                 foreach (var spectrum in Fragments[MetaData.EscapedIdentifier]) {
-                    html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+                    html.OpenAndClose(HtmlTag.p, "", $"Internal sequence {spectrum.Item1.Item1.Match.Sequence} Display sequence {AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)}");
+                    html.Add(Graph.RenderSpectrum(spectrum.Item1.Item1, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+                    html.Add(Graph.RenderSpectrum(spectrum.Item2.Item1, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), spectrum.Item3.Item1));
+                    html.Add(SpectrumTable("testing-table-01", spectrum.Item1.Item2, spectrum.Item1.Item1.Spectrum.Peaks, MetaData.Sequence.Length));
+                    html.Add(SpectrumTable("testing-table-02", spectrum.Item2.Item2, spectrum.Item2.Item1.Spectrum.Peaks, MetaData.Sequence.Length));
+                    html.Add(SpectrumTable("testing-table-03", spectrum.Item3.Item2, spectrum.Item3.Item1.Spectrum.Peaks, MetaData.Sequence.Length));
+                    HeckLib.io.json.JsonUtils.Write($"{GetAsideIdentifier(MetaData)}_{spectrum.Item1.Item1.Spectrum.ScanNumber}_final.json", spectrum.Item1.Item1);
+                    HeckLib.io.json.JsonUtils.Write($"{GetAsideIdentifier(MetaData)}_{spectrum.Item1.Item1.Spectrum.ScanNumber}_pureI.json", spectrum.Item2.Item1);
+                    HeckLib.io.json.JsonUtils.Write($"{GetAsideIdentifier(MetaData)}_{spectrum.Item1.Item1.Spectrum.ScanNumber}_pureL.json", spectrum.Item3.Item1);
                 }
             }
             html.TagWithHelp(HtmlTag.h2, "Reverse Lookup", new HtmlBuilder(HTMLHelp.ReadLookup));
@@ -84,6 +92,63 @@ namespace HTMLNameSpace {
 
             html.Add(MetaData.ToHTML());
             html.Close(HtmlTag.div);
+            return html;
+        }
+
+        static HtmlBuilder SpectrumTable(string table_id, HeckLib.chemistry.PeptideFragment[] fragments, HeckLib.Centroid[] spectrum, int len) {
+            string SortOn(int column, string type) {
+                return $"onclick=\"sortTable('{table_id}', {column}, '{type}')\"";
+            }
+            var html = new HtmlBuilder();
+            html.Open(HtmlTag.label, "class='background'");
+            html.Empty(HtmlTag.input, "type='checkbox'");
+            html.Content("Show background peaks");
+            html.Close(HtmlTag.label);
+
+            html.Open(HtmlTag.table, $"id='{table_id}' class='wide-table'");
+            html.Open(HtmlTag.tr);
+            html.OpenAndClose(HtmlTag.th, SortOn(0, "number"), "N Position");
+            html.OpenAndClose(HtmlTag.th, SortOn(1, "string"), "Name");
+            html.OpenAndClose(HtmlTag.th, SortOn(1, "string"), "Ion type");
+            html.OpenAndClose(HtmlTag.th, SortOn(2, "number"), "Intensity");
+            html.OpenAndClose(HtmlTag.th, SortOn(3, "number"), "mz Theoretical");
+            html.OpenAndClose(HtmlTag.th, SortOn(4, "number"), "mz Error (Th)");
+            html.OpenAndClose(HtmlTag.th, SortOn(5, "number"), "mz Error (ppm)");
+            html.OpenAndClose(HtmlTag.th, SortOn(6, "number"), "Charge");
+            html.OpenAndClose(HtmlTag.th, SortOn(7, "number"), "C Position");
+            html.Close(HtmlTag.tr);
+
+            foreach (var (fragment, centroid) in fragments.Zip(spectrum, (a, b) => (a, b))) {
+                if (fragment.FragmentType != HeckLib.chemistry.PeptideFragment.ION_W) continue;
+                if (fragment == null) {
+                    html.Open(HtmlTag.tr, "class='unassigned'");
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.OpenAndClose(HtmlTag.td, "", centroid.Intensity.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", centroid.Mz.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.OpenAndClose(HtmlTag.td, "", centroid.Charge.ToString("+#;-#;0"));
+                    html.OpenAndClose(HtmlTag.td, "", "-");
+                    html.Close(HtmlTag.tr);
+                } else {
+                    var n_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.C ? fragment.Position : len - fragment.Position + 1;
+                    var c_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.N ? fragment.Position : len - fragment.Position + 1;
+                    html.Open(HtmlTag.tr);
+                    html.OpenAndClose(HtmlTag.td, "", n_term.ToString());
+                    html.OpenAndClose(HtmlTag.td, "", fragment.Letter.ToString());
+                    html.OpenAndClose(HtmlTag.td, "", HeckLib.chemistry.PeptideFragment.IonToString(fragment.FragmentType));
+                    html.OpenAndClose(HtmlTag.td, "", centroid.Intensity.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", fragment.Mz.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", Math.Abs(fragment.Mz - centroid.Mz).ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", (Math.Abs(fragment.Mz - centroid.Mz) / fragment.Mz * 1e6).ToString("G4"));
+                    html.OpenAndClose(HtmlTag.td, "", fragment.Charge.ToString("+#;-#;0"));
+                    html.OpenAndClose(HtmlTag.td, "", c_term.ToString());
+                    html.Close(HtmlTag.tr);
+                }
+            }
+            html.Close(HtmlTag.table);
             return html;
         }
 

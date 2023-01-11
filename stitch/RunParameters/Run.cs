@@ -6,6 +6,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using HeckLib.chemistry;
 
 namespace Stitch {
     namespace RunParameters {
@@ -55,7 +56,7 @@ namespace Stitch {
                 Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
 
                 // Raw data
-                Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
+                Dictionary<string, List<((AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]), (AnnotatedSpectrumMatch, PeptideFragment[]))>> fragments = null;
                 if (this.LoadRawData) {
                     fragments = Fragmentation.GetSpectra(Input.Data.Cleaned, true);
                     ProgressBar.Update();
