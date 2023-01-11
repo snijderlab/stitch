@@ -133,8 +133,8 @@ namespace HTMLNameSpace {
                     html.OpenAndClose(HtmlTag.td, "", "-");
                     html.Close(HtmlTag.tr);
                 } else {
-                    var n_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.C ? fragment.Position : len - fragment.Position + 1;
-                    var c_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.N ? fragment.Position : len - fragment.Position + 1;
+                    var n_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.N ? fragment.Position : len - fragment.Position + 1;
+                    var c_term = fragment.Terminus == HeckLib.chemistry.Proteomics.Terminus.C ? fragment.Position : len - fragment.Position + 1;
                     html.Open(HtmlTag.tr);
                     html.OpenAndClose(HtmlTag.td, "", n_term.ToString());
                     html.OpenAndClose(HtmlTag.td, "", fragment.Letter.ToString());
