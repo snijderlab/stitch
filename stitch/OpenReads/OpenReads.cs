@@ -466,19 +466,19 @@ namespace Stitch {
                     if (residue_num == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
                     if (confidence_score == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find B factor column", "mmCIF file does not contain the column '_atom_site.B_iso_or_equiv'"));
 
-                    var sequences = new List<(string, string, string Seq, double[] Doc)>();
+                    var sequences = new List<(string, string, string Seq, double[] Confidence)>();
                     var current_chain = "";
                     var current_auth_chain = "";
                     var current_sequence = "";
                     var current_num = "";
-                    var current_doc = new List<double>();
+                    var local_confidence = new List<double>();
 
                     foreach (var row in loop.Data) {
                         if (row[chain].AsText() != current_chain) {
                             if (current_sequence.Length >= minimal_length) {
-                                sequences.Add((current_chain, current_auth_chain, current_sequence, current_doc.ToArray()));
+                                sequences.Add((current_chain, current_auth_chain, current_sequence, local_confidence.ToArray()));
                             }
-                            current_doc.Clear();
+                            local_confidence.Clear();
                             current_chain = row[chain].AsText();
                             current_auth_chain = row[auth_chain].AsText();
                             current_sequence = "";
@@ -489,18 +489,18 @@ namespace Stitch {
                         var aa = Array.IndexOf(AMINO_ACIDS, row[residue].AsText());
                         if (aa != -1) {
                             current_sequence += AMINO_ACIDS_SHORT[aa];
-                            current_doc.Add(row[confidence_score].AsNumber().Unwrap(0.0) / 100.0);
+                            local_confidence.Add(row[confidence_score].AsNumber().Unwrap(0.0) / 100.0);
                         } else {
                             out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid."));
                         }
                     }
                     if (current_sequence.Length > 0 && current_sequence.Length >= minimal_length) {
-                        sequences.Add((current_chain, current_auth_chain, current_sequence, current_doc.ToArray()));
+                        sequences.Add((current_chain, current_auth_chain, current_sequence, local_confidence.ToArray()));
                     }
 
                     var output = new List<ReadFormat.General>(sequences.Count);
                     foreach (var sequence in sequences) {
-                        var read = AminoAcid.FromString(sequence.Seq, alphabet).Map(s => new ReadFormat.StructuralRead(s, sequence.Doc, file_range, filter, sequence.Item1, sequence.Item2));
+                        var read = AminoAcid.FromString(sequence.Seq, alphabet).Map(s => new ReadFormat.StructuralRead(s, sequence.Confidence, file_range, filter, sequence.Item1, sequence.Item2));
                         if (read.IsOk())
                             output.Add(read.Unwrap());
                         else

@@ -616,10 +616,10 @@ namespace Stitch {
             /// <summary> Create a new structural read MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public StructuralRead(AminoAcid[] sequence, double[] doc, FileRange file, NameFilter filter, string chain_name, string auth_chain_name) : base(sequence, file, "S", filter) {
+            public StructuralRead(AminoAcid[] sequence, double[] confidence, FileRange file, NameFilter filter, string chain_name, string auth_chain_name) : base(sequence, file, "S", filter) {
                 this.ChainName = chain_name;
                 this.AuthChainName = auth_chain_name;
-                this.Sequence.SetPositionalScore(doc);
+                this.Sequence.SetPositionalScore(confidence);
             }
 
             /// <summary> Returns Simple MetaData to HTML. </summary>
@@ -628,20 +628,18 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information from a structural read");
                 html.OpenAndClose(HtmlTag.h3, "", "Chain Name");
                 html.OpenAndClose(HtmlTag.p, "", this.ChainName);
-                html.OpenAndClose(HtmlTag.h3, "", "Auth Chain Name");
+                html.TagWithHelp(HtmlTag.h3, "Auth Chain Name", new HtmlBuilder(HTMLNameSpace.HTMLHelp.AuthChainName));
                 html.OpenAndClose(HtmlTag.p, "", this.AuthChainName);
 
-                // Create a display of the sequence with local confidence and modifications (if present)
+                // Create a display of the sequence with local confidence
                 if (Sequence.PositionalScore != null) {
                     html.OpenAndClose(HtmlTag.h3, "", $"Local Confidence");
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
-                    int original_offset = 0;
 
                     for (int i = 0; i < this.Sequence.Length; i++) {
                         html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
                         html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
                         html.Close(HtmlTag.div);
-                        original_offset++;
                     }
                     html.Close(HtmlTag.div);
                 }
