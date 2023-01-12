@@ -71,16 +71,19 @@ namespace Stitch {
 
         public interface Value {
             string AsText();
+            Option<double> AsNumber();
             string Debug();
         }
 
         public struct Inapplicable : Value {
             public string AsText() { return "."; }
             public string Debug() { return "Value::Inapplicable"; }
+            public Option<double> AsNumber() { return new(); }
         }
         public struct Unknown : Value {
             public string AsText() { return "?"; }
             public string Debug() { return "Value::Unknown"; }
+            public Option<double> AsNumber() { return new(); }
         }
         public struct Numeric : Value {
             public double Value;
@@ -89,6 +92,7 @@ namespace Stitch {
             }
             public string AsText() { return Value.ToString(); }
             public string Debug() { return $"Value::Numeric({Value.ToString()})"; }
+            public Option<double> AsNumber() { return new(Value); }
         }
 
         public struct NumericWithUncertainty : Value {
@@ -101,6 +105,7 @@ namespace Stitch {
             }
             public string AsText() { return $"{Value}({Uncertainty})"; }
             public string Debug() { return $"Value::NumericWithUncertainty({Value}, {Uncertainty})"; }
+            public Option<double> AsNumber() { return new(Value); }
         }
         public struct Text : Value {
             public string Value;
@@ -110,6 +115,7 @@ namespace Stitch {
             }
             public string AsText() { return Value; }
             public string Debug() { return $"Value::Text({Value})"; }
+            public Option<double> AsNumber() { return new(); }
         }
 
     }

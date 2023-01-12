@@ -456,22 +456,31 @@ namespace Stitch {
             foreach (var item in lexed.Unwrap().Items) {
                 if (item is MMCIFItems.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
                     var chain = loop.Header.FindIndex(i => i == "atom_site.label_asym_id");
+                    var auth_chain = loop.Header.FindIndex(i => i == "atom_site.auth_asym_id");
                     var residue = loop.Header.FindIndex(i => i == "atom_site.label_comp_id");
                     var residue_num = loop.Header.FindIndex(i => i == "atom_site.label_seq_id");
+                    var confidence_score = loop.Header.FindIndex(i => i == "atom_site.B_iso_or_equiv");
                     if (chain == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find chain column", "mmCIF file does not contain the column '_atom_site.label_asym_id'"));
+                    if (auth_chain == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find auth chain column", "mmCIF file does not contain the column '_atom_site.auth_asym_id'"));
                     if (residue == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find residue column", "mmCIF file does not contain the column '_atom_site.label_comp_id'"));
                     if (residue_num == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find residue number column", "mmCIF file does not contain the column '_atom_site.label_seq_id'"));
+                    if (confidence_score == -1) return new ParseResult<List<ReadFormat.General>>(new InputNameSpace.ErrorMessage("", "Could not find B factor column", "mmCIF file does not contain the column '_atom_site.B_iso_or_equiv'"));
 
-                    var sequences = new List<(string, string)>();
+                    var sequences = new List<(string, string, string Seq, double[] Doc)>();
                     var current_chain = "";
+                    var current_auth_chain = "";
                     var current_sequence = "";
                     var current_num = "";
+                    var current_doc = new List<double>();
 
                     foreach (var row in loop.Data) {
                         if (row[chain].AsText() != current_chain) {
-                            if (current_sequence.Length >= minimal_length)
-                                sequences.Add((current_chain, current_sequence));
+                            if (current_sequence.Length >= minimal_length) {
+                                sequences.Add((current_chain, current_auth_chain, current_sequence, current_doc.ToArray()));
+                            }
+                            current_doc.Clear();
                             current_chain = row[chain].AsText();
+                            current_auth_chain = row[auth_chain].AsText();
                             current_sequence = "";
                         }
                         if (row[residue_num].AsText() == current_num)
@@ -480,17 +489,18 @@ namespace Stitch {
                         var aa = Array.IndexOf(AMINO_ACIDS, row[residue].AsText());
                         if (aa != -1) {
                             current_sequence += AMINO_ACIDS_SHORT[aa];
+                            current_doc.Add(row[confidence_score].AsNumber().Unwrap(0.0) / 100.0);
                         } else {
                             out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid."));
                         }
                     }
                     if (current_sequence.Length > 0 && current_sequence.Length >= minimal_length) {
-                        sequences.Add((current_chain, current_sequence));
+                        sequences.Add((current_chain, current_auth_chain, current_sequence, current_doc.ToArray()));
                     }
 
                     var output = new List<ReadFormat.General>(sequences.Count);
                     foreach (var sequence in sequences) {
-                        var read = AminoAcid.FromString(sequence.Item2, alphabet).Map(s => new ReadFormat.StructuralRead(s, file_range, filter, sequence.Item1));
+                        var read = AminoAcid.FromString(sequence.Seq, alphabet).Map(s => new ReadFormat.StructuralRead(s, sequence.Doc, file_range, filter, sequence.Item1, sequence.Item2));
                         if (read.IsOk())
                             output.Add(read.Unwrap());
                         else
