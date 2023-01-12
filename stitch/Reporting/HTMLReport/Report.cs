@@ -95,7 +95,7 @@ namespace Stitch {
 
                 var html = new HtmlBuilder();
                 html.UnsafeContent("<!DOCTYPE html>");
-                html.Open(HtmlTag.html, "lang='en-GB'");
+                html.Open(HtmlTag.html, "lang='en-GB' xml:lang='en-GB'");
                 html.Add(CreateHeader("Details " + id, location));
                 html.Open(HtmlTag.body, "class='details' onload='Setup()'");
                 html.OpenAndClose(HtmlTag.a, $"href='{home_location}' class='overview-link'", "Overview");
@@ -233,6 +233,8 @@ namespace Stitch {
             html.Open(HtmlTag.head);
             html.Empty(HtmlTag.meta, "charset='utf-8'");
             html.Empty(HtmlTag.meta, "name='viewport' content='width=device-width, initial-scale=1.0'");
+            html.Empty(HtmlTag.meta, "name='google' content='notranslate'");
+            html.Empty(HtmlTag.meta, "http-equiv='Content-Language' content='en'");
             html.Empty(HtmlTag.link, $"rel='icon' href='{assets_folder}favicon.ico' type='image/x-icon'");
             html.OpenAndClose(HtmlTag.title, "", title + " | Stitch");
             html.Open(HtmlTag.style);
@@ -500,7 +502,7 @@ namespace Stitch {
             var version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
             var html = new HtmlBuilder();
             html.UnsafeContent("<!DOCTYPE html>");
-            html.Open(HtmlTag.html, "lang='en-GB'");
+            html.Open(HtmlTag.html, "lang='en-GB' xml:lang='en-GB'");
             html.Add(CreateHeader(Parameters.Runname, new List<string>()));
             html.Open(HtmlTag.body, "onload='Setup()' class='report'");
             html.Open(HtmlTag.div, "class='report'");
