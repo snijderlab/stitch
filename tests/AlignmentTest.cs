@@ -50,7 +50,7 @@ namespace StitchTest {
         }
 
         [TestMethod]
-        public void Isomass() {
+        public void Isobaric() {
             var alphabet = ScoringMatrix.Default();
             var read_a = new ReadFormat.Simple(AminoAcid.FromString("AFGGW", alphabet).Unwrap());
             var read_b = new ReadFormat.Simple(AminoAcid.FromString("AFNW", alphabet).Unwrap());
@@ -115,7 +115,7 @@ namespace StitchTest {
         }
 
         [TestMethod]
-        public void StartWithIsomass() {
+        public void StartWithIsobaric() {
             var alphabet = ScoringMatrix.Default();
             var read_a = new ReadFormat.Simple(AminoAcid.FromString("DLVQL", alphabet).Unwrap());
             var read_b = new ReadFormat.Simple(AminoAcid.FromString("EVVQL", alphabet).Unwrap());

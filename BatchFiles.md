@@ -676,7 +676,7 @@ Defines the alphabet used to score reads against each other.
 
 _Symmetric sets_
 
-These define sets of characters from the alphabet which have a symmetrical relation, meaning that for a set of `A,B` with score 5 both matching `A` to `B` and matching `B` to `A` will result in a score of 5. This is commonly used for isomass sets of aminoacids as can be seen in the last example. These sets can be defined multiple times with different score. Later sets overwrite previously defined scores and asymmetric sets always overwrite the scores of symmetric sets.
+These define sets of characters from the alphabet which have a symmetrical relation, meaning that for a set of `A,B` with score 5 both matching `A` to `B` and matching `B` to `A` will result in a score of 5. This is commonly used for isobaric sets of aminoacids as can be seen in the last example. These sets can be defined multiple times with different score. Later sets overwrite previously defined scores and asymmetric sets always overwrite the scores of symmetric sets.
 
 _Asymmetric sets_
 
