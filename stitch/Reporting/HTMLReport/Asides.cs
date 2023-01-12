@@ -254,11 +254,13 @@ namespace HTMLNameSpace {
             var data_buffer = new StringBuilder();
             var consensus = template.ConsensusSequence();
 
-            data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{AminoAcid.ArrayToString(consensus.Item1.SelectMany(i => i.Sequence)).Replace(gap_char, '.')}");
 
             var localMatches = template.Matches.ToList();
             localMatches.Sort((a, b) => b.LenA.CompareTo(a.LenA)); // Try to keep the longest matches at the top.
-            var total_length = gaps.Sum() + template.Sequence.Length + 1;
+            // Figure out the maximal size of the insertion before the template starts
+            var max_start_insertion = localMatches.Aggregate(0, (acc, item) => Math.Max(acc, item.StartA == 1 ? item.Path.TakeWhile(a => a.StepA == 0).Select(a => (int)a.StepB).Sum() : 0));
+            var total_length = max_start_insertion + gaps.Sum() + template.Sequence.Length + 1;
+            data_buffer.AppendLine($">{template.MetaData.EscapedIdentifier} template\n{new string('.', max_start_insertion)}{AminoAcid.ArrayToString(consensus.Item1.SelectMany(i => i.Sequence)).Replace(gap_char, '.')}");
 
             (string, Annotation[]) DisplayTemplateWithGaps() {
                 var sequence = new LinkedList<string>(template.Sequence.Select(a => a.Character.ToString()));
@@ -302,7 +304,7 @@ namespace HTMLNameSpace {
             html.Open(HtmlTag.div, "class='alignment-wrapper'");
             html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({total_length}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
             html.OpenAndClose(HtmlTag.div, $"class='numbering' style='grid-column-end:{total_length}'", numbering.ToString());
-            html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", template_sequence);
+            html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", new string(non_breaking_space, max_start_insertion) + template_sequence);
 
             var ambiguous = template.SequenceAmbiguityAnalysis();
             for (var alignment_index = 0; alignment_index < localMatches.Count; alignment_index++) {
@@ -332,7 +334,7 @@ namespace HTMLNameSpace {
                 reverse_path.Reverse();
                 var len_end = reverse_path.TakeWhile(a => a.StepA == 0).Select(a => (int)a.StepB).Sum();
 
-                var start = Math.Max(1, 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA + 1).Sum() - len_start);
+                var start = Math.Max(1, 1 + alignment.StartA + gaps.SubArray(0, alignment.StartA + 1).Sum() - len_start + max_start_insertion);
                 var end = start + alignment.LenA + gaps.SubArray(alignment.StartA, alignment.LenA).Sum() + 1 + len_start + len_end;
                 html.Open(
                     HtmlTag.a,
