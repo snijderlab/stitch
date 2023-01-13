@@ -309,7 +309,7 @@ namespace HTMLNameSpace {
         /// <param name="type"> The type of the leaf nodes. </param>
         /// <param name="AssetsFolderName"> The path to the assets folder from the current HTML. </param>
         /// <returns></returns>
-        public static HtmlBuilder RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName) {
+        public static HtmlBuilder RenderTree(string id, PhylogeneticTree.ProteinHierarchyTree tree, List<Template> templates, CommonPieces.AsideType type, string AssetsFolderName, bool displayArea) {
             var html = new HtmlBuilder();
             const double xf = 30; // Width of the graph in pixels, do not forget to update the CSS when updating this value. The tree will be squeezed in the x dimension if the screen is not wide enough or just cap at this width if the screen is wide.
             const double yf = 22;   // Height of the labels
@@ -341,7 +341,7 @@ namespace HTMLNameSpace {
             html.Open(HtmlTag.div, "class='phylogenetic-tree'");
             html.UnsafeContent(CommonPieces.UserHelp("Tree", HTMLHelp.Tree.ToString()));
 
-            var button_names = new string[] { "Score", "Matches", "Area" };
+            var button_names = displayArea ? new string[] { "Score", "Matches", "Area" } : new string[] { "Score", "Matches" };
             for (int i = 0; i < button_names.Length; i++) {
                 var check = i == 0 ? " checked " : "";
                 html.Empty(HtmlTag.input, $"type='radio' class='show-data-{i}' name='{id}' id='{id}-{i}'{check}");
@@ -366,7 +366,37 @@ namespace HTMLNameSpace {
                 else
                     values = (Normalise((double)value.UniqueScore / max.UniqueScore), Normalise((double)value.UniqueMatches / max.UniqueMatches), Normalise((double)value.UniqueArea / max.UniqueArea));
 
-                return $"--score:{values.Item1};--matches:{values.Item2};--area:{values.Item3};";
+                return $"--score:{values.Item1};--matches:{values.Item2};" + (displayArea ? $"--area:{values.Item3};" : "");
+            }
+
+            string DisplayInt(int value, int max) {
+                if (double.IsNaN(max) || max == 0)
+                    return $"{value:G3}";
+                else
+                    return $"{value:G3} ({(double)value / max:P})";
+            }
+
+            string DisplayDouble(double value, double max) {
+                if (double.IsNaN(max) || max == 0)
+                    return $"{value:G3}";
+                else
+                    return $"{value:G3} ({value / max:P})";
+            }
+
+            string DisplayStatDouble(string name, double value, double max) {
+                return $"{name}: {DisplayDouble(value, max)}";
+            }
+
+            string DisplayStatInt(string name, int value, int max) {
+                return $"{name}: {DisplayInt(value, max)}";
+            }
+
+            string DisplayStatDoubleUnique(string name, double value, double max, double unique, double unique_max) {
+                return $"{name}: {DisplayDouble(value, max)} Unique: {DisplayDouble(unique, unique_max)}";
+            }
+
+            string DisplayStatIntUnique(string name, int value, int max, int unique, int unique_max) {
+                return $"{name}: {DisplayInt(value, max)} Unique: {DisplayInt(unique, unique_max)}";
             }
 
             pos_tree.Apply(t => {
@@ -382,9 +412,9 @@ namespace HTMLNameSpace {
                 svg.OpenAndClose(SvgTag.line, $"x1={x - stroke / 2}px y1={ly}px x2={x1}px y2={ly}px");
                 svg.OpenAndClose(SvgTag.line, $"x1={x - stroke / 2}px y1={ry}px x2={x1}px y2={ry}px");
                 svg.OpenAndClose(SvgTag.circle, $"cx={x}px cy={y}px r={radius}px class='value' style='{GetScores(t.Value.Scores, max, false)}'");
-                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-0'", $"Score: {t.Value.Scores.Score} ({(double)t.Value.Scores.Score / max.Item1:P})");
-                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-1'", $"Matches: {t.Value.Scores.Matches} ({(double)t.Value.Scores.Matches / max.Item3:P})");
-                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-2'", $"Area: {t.Value.Scores.Area:G3} ({(double)t.Value.Scores.Area / max.Item5:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-0'", DisplayStatInt("Score", t.Value.Scores.Score, max.Item1));
+                svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-1'", DisplayStatInt("Matches", t.Value.Scores.Matches, max.Item3));
+                if (displayArea) svg.OpenAndClose(SvgTag.text, $"x={x + radius + stroke * 2}px y={y}px class='info info-2'", DisplayStatDouble("Area", t.Value.Scores.Area, max.Item5));
                 svg.Close(SvgTag.g);
             }, leaf => {
                 var x = leaf.X * xf;
@@ -394,9 +424,9 @@ namespace HTMLNameSpace {
                 if (leaf.X != columns) svg.OpenAndClose(SvgTag.line, $"x1={x + stroke / 2}px y1={y}px x2={end - radius}px y2={y}px");
                 svg.OpenAndClose(SvgTag.path, $"d='M {end} {y + radius} A {radius} {radius} 0 0 1 {end} {y - radius}' class='value' style='{GetScores(leaf.Scores, max, false)}'");
                 svg.OpenAndClose(SvgTag.path, $"d='M {end} {y - radius} A {radius} {radius} 0 0 1 {end} {y + radius}' class='value unique' style='{GetScores(leaf.Scores, max, true)}'");
-                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'", $"Score: {leaf.Scores.Score} ({(double)leaf.Scores.Score / max.Item1:P}) Unique: {leaf.Scores.UniqueScore} ({(double)leaf.Scores.UniqueScore / max.Item2:P})");
-                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'", $"Area: {leaf.Scores.Area:G3} ({(double)leaf.Scores.Area / max.Item5:P}) Unique: {leaf.Scores.UniqueArea:G3} ({(double)leaf.Scores.UniqueArea / max.Item6:P})");
-                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'", $"Matches: {leaf.Scores.Matches} ({(double)leaf.Scores.Matches / max.Item3:P}) Unique: {leaf.Scores.UniqueMatches} ({(double)leaf.Scores.UniqueMatches / max.Item4:P})");
+                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-0' style='text-anchor:end'", DisplayStatIntUnique("Score", leaf.Scores.Score, max.Item1, leaf.Scores.UniqueScore, max.Item2));
+                svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-1' style='text-anchor:end'", DisplayStatIntUnique("Matches", leaf.Scores.Matches, max.Item3, leaf.Scores.UniqueMatches, max.Item4));
+                if (displayArea) svg.OpenAndClose(SvgTag.text, $"x={end - radius - stroke * 2}px y={y}px class='info info-2' style='text-anchor:end'", DisplayStatDoubleUnique("Area", leaf.Scores.Area, max.Item5, leaf.Scores.UniqueArea, max.Item6));
                 svg.Open(SvgTag.a, $"class='info-link' id='tree-leaf-{CommonPieces.GetAsideIdentifier(leaf.MetaData, false)}' href='{CommonPieces.GetAsideRawLink(leaf.MetaData, type, AssetsFolderName)}' target='_blank'");
                 svg.OpenAndClose(SvgTag.rect, $"x={max_x + radius}px y={y - yf / 2 + stroke}px width={text_width}px height={yf - stroke * 2}px rx=3.2px");
                 svg.OpenAndClose(SvgTag.text, $"x={max_x + radius + stroke * 2}px y={y + 1}px", CommonPieces.GetAsideIdentifier(leaf.MetaData, true));
@@ -412,7 +442,7 @@ namespace HTMLNameSpace {
                 obj.Keys.Add("rightDistance", new JsonNumber(bd));
                 obj.Keys.Add("score", new JsonNumber(value.Score));
                 obj.Keys.Add("matches", new JsonNumber(value.Matches));
-                obj.Keys.Add("area", new JsonNumber(value.Area));
+                if (displayArea) obj.Keys.Add("area", new JsonNumber(value.Area));
                 return obj;
             }, value => {
                 var obj = new JsonObject();
@@ -421,8 +451,8 @@ namespace HTMLNameSpace {
                 obj.Keys.Add("uniqueScore", new JsonNumber(value.UniqueScore));
                 obj.Keys.Add("matches", new JsonNumber(value.Matches));
                 obj.Keys.Add("uniqueMatches", new JsonNumber(value.UniqueMatches));
-                obj.Keys.Add("area", new JsonNumber(value.Area));
-                obj.Keys.Add("uniqueArea", new JsonNumber(value.UniqueArea));
+                if (displayArea) obj.Keys.Add("area", new JsonNumber(value.Area));
+                if (displayArea) obj.Keys.Add("uniqueArea", new JsonNumber(value.UniqueArea));
                 return obj;
             });
             var data_buffer = new StringBuilder();

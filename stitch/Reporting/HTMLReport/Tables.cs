@@ -59,6 +59,7 @@ namespace HTMLNameSpace {
             CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             bool displayOrder = templates.Exists(a => a.Recombination != null);
+            bool displayArea = templates.Any(item => item.TotalArea > 0 || item.TotalUniqueArea > 0);
             int order_factor = displayOrder ? 1 : 0;
             var table_id = $"table-{table_counter}";
 
@@ -75,7 +76,7 @@ namespace HTMLNameSpace {
                 html.Add(TableHeader(templates, total_reads));
 
             if (tree != null)
-                html.Collapsible(name + "-tree", new HtmlBuilder("Tree"), HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName), HtmlBuilder.CollapsibleState.Open);
+                html.Collapsible(name + "-tree", new HtmlBuilder("Tree"), HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName, displayArea), HtmlBuilder.CollapsibleState.Open);
 
             var table_buffer = new HtmlBuilder();
             table_buffer.Open(HtmlTag.table, $"id='{table_id}' class='wide-table'");
@@ -85,11 +86,11 @@ namespace HTMLNameSpace {
             if (displayOrder) table_buffer.TagWithHelp(HtmlTag.th, "Order", new HtmlBuilder(HtmlTag.p, HTMLHelp.Order), "small-cell", SortOn(2, "id"));
             table_buffer.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateScore), "small-cell", SortOn(2 + order_factor, "number") + " data-sort-order='desc'");
             table_buffer.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateMatches), "small-cell", SortOn(3 + order_factor, "number"));
-            table_buffer.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea), "small-cell", SortOn(4 + order_factor, "number"));
+            if (displayArea) table_buffer.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateTotalArea), "small-cell", SortOn(4 + order_factor, "number"));
             if (displayUnique) {
                 table_buffer.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueScore), "small-cell", SortOn(5 + order_factor, "number"));
                 table_buffer.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueMatches), "small-cell", SortOn(6 + order_factor, "number"));
-                table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueArea), "small-cell", SortOn(7 + order_factor, "number"));
+                if (displayArea) table_buffer.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HtmlTag.p, HTMLHelp.TemplateUniqueArea), "small-cell", SortOn(7 + order_factor, "number"));
             }
             table_buffer.Close(HtmlTag.tr);
 
@@ -128,11 +129,11 @@ namespace HTMLNameSpace {
                 }
                 table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].Score, max_values.Item1)}'", templates[i].Score.ToString("G4"));
                 table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].Matches.Count, max_values.Item2)}'", templates[i].Matches.Count.ToString("G4"));
-                table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalArea, max_values.Item3)}'", templates[i].TotalArea.ToString("G4"));
+                if (displayArea) table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalArea, max_values.Item3)}'", templates[i].TotalArea.ToString("G4"));
                 if (displayUnique) {
                     table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].UniqueScore, max_values.Item4)}'", templates[i].UniqueScore.ToString("G4"));
                     table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].UniqueMatches, max_values.Item5)}'", templates[i].UniqueMatches.ToString("G4"));
-                    table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalUniqueArea, max_values.Item6)}'", templates[i].TotalUniqueArea.ToString("G4"));
+                    if (displayArea) table_buffer.OpenAndClose(HtmlTag.td, $"class='center bar' style='--relative-value:{vd(templates[i].TotalUniqueArea, max_values.Item6)}'", templates[i].TotalUniqueArea.ToString("G4"));
                 }
                 table_buffer.Close(HtmlTag.tr);
 
@@ -345,6 +346,7 @@ namespace HTMLNameSpace {
                 return html;
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
+            bool displayArea = templates.Any(item => item.TotalArea > 0 || item.TotalUniqueArea > 0);
 
             var type_data = new Dictionary<string, (double MaxScore, double TotalScore, double UniqueMaxScore, double UniqueTotalScore, int Num, int Matches, int UniqueMatches, double Area, double UniqueArea)>(templates.Count);
             foreach (var item in templates) {
@@ -369,7 +371,7 @@ namespace HTMLNameSpace {
             var areaData = new List<(string, List<double>)>(type_data.Count);
             foreach (var (type, data) in type_data) {
                 var scoreList = new List<double> { data.MaxScore, data.TotalScore / data.Num };
-                var areaList = new List<double> { data.Matches, data.Area };
+                var areaList = displayArea ? new List<double> { data.Matches, data.Area } : new List<double> { data.Matches };
                 if (displayUnique) {
                     scoreList.Add(data.UniqueMaxScore);
                     scoreList.Add(data.UniqueTotalScore / data.Num);
@@ -381,19 +383,19 @@ namespace HTMLNameSpace {
             }
 
             var scoreLabels = new List<(string, uint)> { ("Max Score", 0), ("Average Score", 0) };
-            var areaLabels = new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) };
+            var areaLabels = displayArea ? new List<(string, uint)> { ("Matches", 0), ("Total Area", 1) } : new List<(string, uint)> { ("Matches", 0) };
             if (displayUnique) {
                 scoreLabels.Add(("Unique Max Score", 0));
                 scoreLabels.Add(("Unique Average Score", 0));
                 areaLabels.Add(("Unique Matches", 0));
-                areaLabels.Add(("Unique Total Area", 1));
+                if (displayArea) areaLabels.Add(("Unique Total Area", 1));
             }
 
             html.Open(HtmlTag.div);
             html.Add(HTMLGraph.GroupedBargraph(scoreData, scoreLabels, "Scores per group"));
             html.Close(HtmlTag.div);
             html.Open(HtmlTag.div);
-            html.Add(HTMLGraph.GroupedBargraph(areaData, areaLabels, "Area per group"));
+            html.Add(HTMLGraph.GroupedBargraph(areaData, areaLabels, displayArea ? "Area per group" : "Matches per group"));
             html.Close(HtmlTag.div);
             return html;
         }

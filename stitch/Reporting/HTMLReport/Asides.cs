@@ -27,59 +27,59 @@ namespace HTMLNameSpace {
                     html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
                 }
             }
-            html.TagWithHelp(HtmlTag.h2, "Reverse Lookup", new HtmlBuilder(HTMLHelp.ReadLookup));
-            html.Open(HtmlTag.table, "class='wide-table'");
-            html.Open(HtmlTag.tr);
-            html.OpenAndClose(HtmlTag.th, "", "Group");
-            html.OpenAndClose(HtmlTag.th, "", "Segment");
-            html.OpenAndClose(HtmlTag.th, "", "Template");
-            html.OpenAndClose(HtmlTag.th, "", "Location");
-            html.OpenAndClose(HtmlTag.th, "", "Score");
-            html.OpenAndClose(HtmlTag.th, "", "Unique");
-            html.Close(HtmlTag.tr);
 
-            foreach (var group in segments) {
-                foreach (var segment in group.Item2) {
-                    foreach (var template in segment.Templates) {
-                        foreach (var match in template.Matches.ToList()) {
-                            if (match.ReadB.Identifier == MetaData.Identifier) {
-                                html.Open(HtmlTag.tr);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", group.Item1);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", segment.Name);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.StartA.ToString());
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
-                                html.Close(HtmlTag.tr);
-                            }
-                        }
-                    }
-                }
-            }
-            html.Close(HtmlTag.table);
-            if (recombined != null && recombined.Count > 0) {
+            // Search for all position this read was placed
+            var locations = segments.SelectMany(group => group.Item2.SelectMany(segment => segment.Templates.SelectMany(template => template.Matches.Where(match => match.ReadB.Identifier == MetaData.Identifier).Select(match => (group, segment, template, match)))));
+            html.TagWithHelp(HtmlTag.h2, "Reverse Lookup", new HtmlBuilder(HTMLHelp.ReadLookup));
+            if (locations.Count() > 0) {
                 html.Open(HtmlTag.table, "class='wide-table'");
                 html.Open(HtmlTag.tr);
-                html.OpenAndClose(HtmlTag.th, "", "Recombined");
+                html.OpenAndClose(HtmlTag.th, "", "Group");
+                html.OpenAndClose(HtmlTag.th, "", "Segment");
+                html.OpenAndClose(HtmlTag.th, "", "Template");
                 html.OpenAndClose(HtmlTag.th, "", "Location");
                 html.OpenAndClose(HtmlTag.th, "", "Score");
                 html.OpenAndClose(HtmlTag.th, "", "Unique");
                 html.Close(HtmlTag.tr);
-                foreach (var segment in recombined) {
-                    foreach (var template in segment.Templates) {
-                        foreach (var match in template.Matches) {
-                            if (match.ReadB.Identifier == MetaData.Identifier) {
-                                html.Open(HtmlTag.tr);
-                                html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.StartA.ToString());
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Score.ToString());
-                                html.OpenAndClose(HtmlTag.td, "class='center'", match.Unique.ToString());
-                                html.Close(HtmlTag.tr);
-                            }
-                        }
-                    }
+
+                foreach (var location in locations) {
+                    html.Open(HtmlTag.tr);
+                    html.OpenAndClose(HtmlTag.td, "class='center'", location.group.Item1);
+                    html.OpenAndClose(HtmlTag.td, "class='center'", location.segment.Name);
+                    html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(location.template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
+                    html.OpenAndClose(HtmlTag.td, "class='center'", location.match.StartA.ToString());
+                    html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Score.ToString());
+                    html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Unique.ToString());
+                    html.Close(HtmlTag.tr);
                 }
                 html.Close(HtmlTag.table);
+            } else {
+                html.OpenAndClose(HtmlTag.p, "class='message'", "Not placed on any template.");
+            }
+
+            // Search for all positions on recombined templates this read was placed
+            if (recombined != null && recombined.Count > 0) {
+                var recombined_locations = recombined.SelectMany(segment => segment.Templates.SelectMany(template => template.Matches.Where(match => match.ReadB.Identifier == MetaData.Identifier).Select(match => (template, match))));
+                if (recombined_locations.Count() > 0) {
+                    html.Open(HtmlTag.table, "class='wide-table'");
+                    html.Open(HtmlTag.tr);
+                    html.OpenAndClose(HtmlTag.th, "", "Recombined");
+                    html.OpenAndClose(HtmlTag.th, "", "Location");
+                    html.OpenAndClose(HtmlTag.th, "", "Score");
+                    html.OpenAndClose(HtmlTag.th, "", "Unique");
+                    html.Close(HtmlTag.tr);
+                    foreach (var location in locations) {
+                        html.Open(HtmlTag.tr);
+                        html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(location.template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
+                        html.OpenAndClose(HtmlTag.td, "class='center'", location.match.StartA.ToString());
+                        html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Score.ToString());
+                        html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Unique.ToString());
+                        html.Close(HtmlTag.tr);
+                    }
+                    html.Close(HtmlTag.table);
+                }
+            } else {
+                html.OpenAndClose(HtmlTag.p, "class='message'", "Not placed on any recombined template.");
             }
 
             html.Add(MetaData.ToHTML());
@@ -205,33 +205,34 @@ namespace HTMLNameSpace {
             html.Open(HtmlTag.div, "class='annotated'");
             html.Open(HtmlTag.div, "class='names'");
             html.OpenAndClose(HtmlTag.span, "", "Consensus");
-            html.OpenAndClose(HtmlTag.span, "", "Germline");
+            html.OpenAndClose(HtmlTag.span, "", "Template");
             html.Close(HtmlTag.div);
 
             var present = new HashSet<Annotation>();
             foreach (var column in columns) {
                 if (column.Template == "X" && (column.Query == template.Parent.Alphabet.GapChar.ToString() || column.Query == "X")) continue;
                 html.Open(HtmlTag.div, $"class='{column.Class}'");
-                if (column.Class.IsAnyCDR())
-                    if (!present.Contains(column.Class)) {
-                        present.Add(column.Class);
-                        html.OpenAndClose(HtmlTag.span, "class='title'", column.Class.ToString());
-                    }
+                if (column.Class.IsAnyCDR() && !present.Contains(column.Class)) {
+                    present.Add(column.Class);
+                    html.OpenAndClose(HtmlTag.span, "class='title'", column.Class.ToString());
+                }
                 html.OpenAndClose(HtmlTag.span, "", column.Query.ToString());
                 html.OpenAndClose(HtmlTag.span, "", column.Template.ToString());
                 html.OpenAndClose(HtmlTag.span, "class='dif'", column.Difference.ToString());
                 html.Close(HtmlTag.div);
             }
             html.Close(HtmlTag.div);
-            html.Open(HtmlTag.div, "class='annotated legend'");
-            html.OpenAndClose(HtmlTag.p, "class='names'", "Legend");
-            html.OpenAndClose(HtmlTag.span, "class='CDR'", "CDR");
-            html.OpenAndClose(HtmlTag.span, "class='Conserved'", "Conserved");
-            html.OpenAndClose(HtmlTag.span, "class='Glycosylationsite'", "Possible glycosylation site");
-            html.Close(HtmlTag.div);
+            if (present.Count > 1) {
+                html.Open(HtmlTag.div, "class='annotated legend'");
+                html.OpenAndClose(HtmlTag.p, "class='names'", "Legend");
+                html.OpenAndClose(HtmlTag.span, "class='CDR'", "CDR");
+                html.OpenAndClose(HtmlTag.span, "class='Conserved'", "Conserved");
+                html.OpenAndClose(HtmlTag.span, "class='Glycosylationsite'", "Possible glycosylation site");
+                html.Close(HtmlTag.div);
+            }
             html.Open(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'");
             var (c, g, d) = columns.Aggregate(("", "", ""), (acc, c) => (acc.Item1 + c.Template, acc.Item2 + c.Query, acc.Item3 + c.Difference));
-            html.Content($"Consensus  {c}\nGermline   {g}\nDifference {d}");
+            html.Content($"Consensus  {c}\nTemplate   {g}\nDifference {d}");
             html.Close(HtmlTag.textarea);
             html.Close(HtmlTag.div);
             return html;
@@ -298,7 +299,7 @@ namespace HTMLNameSpace {
             }
 
             html.Open(HtmlTag.div, "class='buttons'");
-            html.OpenAndClose(HtmlTag.button, "onclick='ToggleCDRReads()'", "Only show CDR reads");
+            if (annotatedSequence.Any(a => a.IsAnyCDR())) html.OpenAndClose(HtmlTag.button, "onclick='ToggleCDRReads()'", "Only show CDR reads");
             html.OpenAndClose(HtmlTag.button, "onclick='ToggleAlignmentComic()'", "Show as comic");
             html.Close(HtmlTag.div);
             html.Open(HtmlTag.div, "class='alignment-wrapper'");
