@@ -18,7 +18,7 @@ namespace Stitch {
         /// <returns></returns>
         public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
             var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
-            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, p)));
+            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, s.XleDisambiguation, p)));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
@@ -52,14 +52,7 @@ namespace Stitch {
                         continue;
 
                     // determine the type of fragmentation used
-                    var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation)) {
-                        W = new PeptideFragment.FragmentRange {
-                            MinPos = 1,
-                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
-                            HigherCharges = true,
-                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
-                        }
-                    };
+                    var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation));
                     raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
                     // Default set to 20, should be lower for BU
@@ -74,51 +67,61 @@ namespace Stitch {
                         spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
                     }
 
-                    // Deisotope: not strictly necessary
-                    //IsotopePattern[] isotopes = IsotopePatternDetection.Process(spectrum, new IsotopePatternDetection.Settings { MaxCharge = (short)precursor.ChargeState });
-                    //var spectrumDeiso = SpectrumUtils.Deisotope(spectrum, isotopes, (short)precursor.ChargeState, true);
-                    //var spectrumTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks);
-                    //var spectrumDeisoTopX = SpectrumUtils.TopX(spectrum, 40, 100, out int[] ranks2);
-
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     string sequence = FastaParser.ParseProForma(transformedPeaksPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
-                    if (xle_disambiguation) {
+                    if (scan.XleDisambiguation) {
+                        // Update the model to use w and d ions as well
+                        model.W = new PeptideFragment.FragmentRange {
+                            MinPos = 1,
+                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            HigherCharges = true,
+                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                        };
+                        model.D = new PeptideFragment.FragmentRange {
+                            MinPos = 1,
+                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            HigherCharges = true,
+                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                        };
+
+                        // Generate sequences with only L and only I to scan for support
                         string pureL = new String(sequence.Select(c => c == 'I' ? 'L' : c).ToArray());
                         string pureI = new String(sequence.Select(c => c == 'L' ? 'I' : c).ToArray());
 
-                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
-                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
+                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
+                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
 
+                        // For each Xle see which version is more supported
                         var builder = new StringBuilder();
                         for (int i = 0; i < pureI.Length; i++) {
                             if (pureI[i] == 'I') {
-                                var supportL = asmL.FragmentMatches.FirstOrDefault(f => f != null && f.FragmentType == PeptideFragment.ION_W && f.Position == pureI.Length - i); // w ions always have C terminal position
-                                var supportI = asmI.FragmentMatches.FirstOrDefault(f => f != null && f.FragmentType == PeptideFragment.ION_W && f.Position == pureI.Length - i);
-                                var d = default(PeptideFragment);
-                                if (supportL == d && supportI == d) {
+                                var supportL = asmL.FragmentMatches.Count(f => f != null && (f.FragmentType == PeptideFragment.ION_W || f.FragmentType == PeptideFragment.ION_D) && f.Position == i);
+                                var supportI = asmI.FragmentMatches.Count(f => f != null && (f.FragmentType == PeptideFragment.ION_W || f.FragmentType == PeptideFragment.ION_D) && f.Position == i);
+                                if (supportL == 0 && supportI == 0) {
                                     builder.Append('L');
                                     if (scan.p.Sequence.AminoAcids[i].Character != 'J')
-                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, "No w ion support for either L or I");
-                                } else if (supportL == d) {
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, "No support for either Leucine or Isoleucine based on side chain ions");
+                                } else if (supportI > supportL) {
                                     builder.Append('I');
                                     if (scan.p.Sequence.AminoAcids[i].Character != 'I')
-                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('I') }, $"Support for I based on w ions {supportI}");
-                                } else if (supportI == d) {
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('I') }, $"Support for Isoleucine based on side chain ions ({supportI} for I {supportL} for L)");
+                                } else if (supportL > supportI) {
                                     builder.Append('L');
                                     if (scan.p.Sequence.AminoAcids[i].Character != 'L')
-                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('L') }, $"Support for L based on w ions {supportL}");
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('L') }, $"Support for Leucine based on side chain ions ({supportL} for L {supportI} for I)");
                                 } else {
                                     builder.Append('L');
                                     if (scan.p.Sequence.AminoAcids[i].Character != 'J')
-                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, "w Ion support for both L and I");
+                                        scan.p.Sequence.UpdateSequence(i, 1, new AminoAcid[] { new AminoAcid('J') }, $"Equal support for both Leucine and Isoleucine based on side chain ions ({supportI} ions for both)");
                                 }
                             } else {
                                 builder.Append(sequence[i]);
                             }
                         }
+                        // Assemble the final sequence with the disambiguated positions
                         sequence = builder.ToString();
                     }
-                    var asm = GetASM(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, model, spectrum, filter);
+                    var asm = GetASM(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
 
                     if (fragments.ContainsKey(scan.EscapedIdentifier)) {
                         fragments[scan.EscapedIdentifier].Add(asm);

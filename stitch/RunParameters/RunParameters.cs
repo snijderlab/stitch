@@ -45,6 +45,7 @@ namespace Stitch {
                 public string RawDataDirectory = null;
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
+                public bool XleDisambiguation = false;
             }
 
             /// <summary> A parameter for simple reads files. </summary>

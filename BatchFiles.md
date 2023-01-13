@@ -274,6 +274,7 @@ Any parameter with a default value can be left out.
 | Separator        | The separator used to separate cells in the csv                           | `,`           |
 | DecimalSeparator | The separator used to separate decimals                                   | `.`           |
 | RawDataDirectory | The directory to load raw data from (see below for more info).            | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
 
 _Examples_
 ```
@@ -327,6 +328,10 @@ _Example_
 ```
 RawDataDirectory: R:/RawData/08-2022/
 ```
+
+###### XleDisambiguation (s)
+
+If set to `True` the program will before running the template matching go through all reads and determine based on side chain fragmentation (w and d ions) if a Leucine or Isoleucine is better supported. If no support (or equal support) is found it will insert a `J` at that location, to be able to use this later as a direct marker for ambiguity. To prevent false discoveries make sure w and d ions are expected with your MS method.
 
 ##### Novor (m) *
 

@@ -38,7 +38,7 @@ namespace Stitch {
             public double TotalArea = 0;
 
             /// <summary> Contains the information needed to find this metadata in a raw file. </summary>
-            public virtual List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers { get; protected set; } = new List<(string, int, string)>();
+            public virtual List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, bool)>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
@@ -163,6 +163,8 @@ namespace Stitch {
             /// <summary> PPM of the peptide. </summary>
             public double PartsPerMillion = -1;
 
+            public bool XleDisambiguation;
+
             /// <summary> The intensity of this read, find out how it should be handled if it if later updated. </summary>
             double intensity = 1;
             public override double Intensity {
@@ -175,11 +177,11 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string, int, string)> ScanNumbers {
+            public override List<(string, int, string, bool)> ScanNumbers {
                 get {
-                    var output = new List<(string, int, string)>();
+                    var output = new List<(string, int, string, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag));
+                        output.Add((SourceFile, scan, OriginalTag, XleDisambiguation));
                     return output;
                 }
             }
@@ -205,7 +207,7 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the peaks metadata instance and/or the errors. </returns>
-            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, PeaksFileFormat pf, NameFilter filter, ScoringMatrix alphabet, string RawDataDirectory) {
+            public static ParseResult<Peaks> ParseLine(ParsedFile parse_file, int linenumber, char separator, char decimalseparator, PeaksFileFormat pf, NameFilter filter, ScoringMatrix alphabet, string RawDataDirectory, bool xleDisambiguation) {
                 var out_either = new ParseResult<Peaks>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
@@ -254,6 +256,7 @@ namespace Stitch {
                 var peaks = new Peaks(sequence, range, fields[pf.scan].Text, filter);
                 out_either.Value = peaks;
                 peaks.OriginalTag = original_peptide;
+                peaks.XleDisambiguation = xleDisambiguation;
 
                 // Get all the properties of this peptide and save them in the MetaData
                 if (pf.fraction >= 0 && CheckFieldExists(pf.fraction))
@@ -468,7 +471,7 @@ namespace Stitch {
             /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user
             /// and help him/her get a better picture of the validity of the data. </summary>
             public new double TotalArea { get => Children.Count == 0 ? 0.0 : Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, int Scan, string OriginalTag)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 

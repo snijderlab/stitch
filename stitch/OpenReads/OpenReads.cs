@@ -239,7 +239,7 @@ namespace Stitch {
 
             // Parse each line, and filter for score or local patch
             for (int linenumber = 1; linenumber < parse_file.Lines.Length; linenumber++) {
-                var parsed = ReadFormat.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter, alphabet, peaks.RawDataDirectory ?? GlobalRawDataDirectory);
+                var parsed = ReadFormat.Peaks.ParseLine(parse_file, linenumber, peaks.Separator, peaks.DecimalSeparator, peaks.FileFormat, filter, alphabet, peaks.RawDataDirectory ?? GlobalRawDataDirectory, peaks.XleDisambiguation);
 
                 if (parsed.IsOk(out_either)) {
                     var meta = parsed.Unwrap();

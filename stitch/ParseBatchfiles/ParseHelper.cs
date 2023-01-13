@@ -167,6 +167,9 @@ namespace Stitch {
                                         if (!string.IsNullOrWhiteSpace(settings.RawDataDirectory)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
                                         settings.RawDataDirectory = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
+                                    case "xledisambiguation":
+                                        settings.XleDisambiguation = ParseHelper.ParseBool(setting, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);
+                                        break;
                                     default:
                                         var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
                                         outEither.Messages.AddRange(peaks.Messages);
