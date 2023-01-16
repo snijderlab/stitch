@@ -662,9 +662,6 @@ namespace Stitch {
             /// <summary>The name or identifier given to the file.</summary>
             public string Name;
 
-            /// <summary> To signify if this FileIdentifier points to a file or to nothing. </summary>
-            bool RefersToFile;
-
             public InputNameSpace.KeyValue Origin;
 
             /// <summary> Creating a new FileIdentifier. </summary>
@@ -674,7 +671,6 @@ namespace Stitch {
             public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin) {
                 path = System.IO.Path.GetFullPath(pathInput);
                 Name = name;
-                RefersToFile = true;
                 Origin = origin;
             }
 
@@ -682,19 +678,18 @@ namespace Stitch {
             public FileIdentifier() {
                 path = "";
                 Name = "";
-                RefersToFile = false;
             }
 
             /// <summary> To generate HTML for use in the metadata sidebar in the HTML report. </summary>
             /// <returns>A string containing the HTML.</returns>
             public HtmlBuilder ToHTML() {
-                if (!RefersToFile) return new HtmlBuilder();
+                if (String.IsNullOrEmpty(path)) return new HtmlBuilder();
                 var html = new HtmlBuilder();
-                html.OpenAndClose(HtmlTag.h2, "", "Originating File");
-                html.OpenAndClose(HtmlTag.h3, "", "Originating file identifier");
-                html.OpenAndClose(HtmlTag.p, "", Name);
-                html.OpenAndClose(HtmlTag.h3, "", "Originating file path");
+                html.OpenAndClose(HtmlTag.h3, "", "Originating file");
+                html.Open(HtmlTag.p, "");
+                html.Content(Name + " ");
                 html.OpenAndClose(HtmlTag.a, $"href='file:///{path}' target='_blank'", Path);
+                html.Close(HtmlTag.p);
                 return html;
             }
 

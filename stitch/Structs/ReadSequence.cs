@@ -94,9 +94,9 @@ namespace Stitch {
             rev.Reverse();
             foreach (var change in rev) {
                 html.Open(HtmlTag.p, "class='changed-sequence'");
-                html.OpenAndClose(HtmlTag.span, "class='seq old'", AminoAcid.ArrayToString(change.Old));
+                html.OpenAndClose(HtmlTag.span, "class='seq old'", change.Old.Length == 0 ? "∅" : AminoAcid.ArrayToString(change.Old));
                 html.Content("→");
-                html.OpenAndClose(HtmlTag.span, "class='seq new'", AminoAcid.ArrayToString(change.New));
+                html.OpenAndClose(HtmlTag.span, "class='seq new'", change.New.Length == 0 ? "∅" : AminoAcid.ArrayToString(change.New));
                 html.OpenAndClose(HtmlTag.span, "class='reason'", change.Reason);
                 html.OpenAndClose(HtmlTag.span, "class='offset'", $" (Position: {change.Offset + 1})");
                 html.Close(HtmlTag.p);

@@ -597,6 +597,16 @@ namespace Stitch {
              or `Compress to zip file` in Windows 11. The recipient can then unzip the folder and make full use of all
              interactivity as provided by the report."
             ));
+            var ions = new HtmlBuilder();
+            ions.OpenAndClose(HtmlTag.p, "", @"The Roepstorff, Fohlman, Johnson ion nomenclature is used. This is the common way of naming ions most
+            people will be familiar with. But we use two special ions, w and d also called satellite ions, which are not commonly used. These form by
+            cleavages of the side chain and are thus specially suited for the disambiguation of Leucine and Isoleucine. In the overview below the mass
+            differences and ions formed are displayed. The d ion is very similar to an a ion with a fragmented side chain. The w ion is very similar
+            to a z ion with a fragmented side chain. Because isoleucine and threonine are doubly substituted at the beta carbon these two amino acids
+            form two different w/d ions.");
+            ions.Empty(HtmlTag.img, $"src='{AssetsFolderName}/ion_overview.svg' alt='Overview of ion fragmentation with the special fragments from w and d ions annotated.'");
+            ions.OpenAndClose(HtmlTag.a, "href='http://www.matrixscience.com/help/fragmentation_help.html' target='_blank' style='max-width:500px;display:block;'", "Find more information here.");
+            html.Collapsible("docs-ions", new HtmlBuilder("Ion nomenclature"), ions);
             var outer = new HtmlBuilder();
             outer.Collapsible("docs", new HtmlBuilder("Documentation"), html);
             return outer;
@@ -618,6 +628,7 @@ namespace Stitch {
             }
 
             CopyAssetsFile("export_pdf_example.png", "images");
+            CopyAssetsFile("ion_overview.svg", "images");
             CopyAssetsFile("favicon.ico", "images");
             if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer)) return;
             CopyAssetsFile("styles.css");

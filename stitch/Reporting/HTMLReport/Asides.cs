@@ -93,6 +93,7 @@ namespace HTMLNameSpace {
             string id = GetAsideIdentifier(template.MetaData);
             string human_id = GetAsideIdentifier(template.MetaData, true);
             var location = new List<string>() { AssetsFolderName, GetAsideName(type) + "s" };
+            bool displayArea = template.TotalArea != 0 || template.TotalUniqueArea != 0;
 
             var (consensus_sequence, consensus_doc) = template.ConsensusSequence();
 
@@ -127,7 +128,7 @@ namespace HTMLNameSpace {
             html.Add(CreateAnnotatedSequence(human_id, template));
 
             html.Add(SequenceConsensusOverview(template, "Sequence Consensus Overview", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverview)));
-            (var alignment, var gaps) = CreateTemplateAlignment(template, id, location, AssetsFolderName);
+            (var alignment, var gaps) = CreateTemplateAlignment(template, id, location, AssetsFolderName, displayArea);
             html.Add(SequenceAmbiguityOverview(template, gaps));
 
             html.Open(HtmlTag.div, "class='doc-plot'");
@@ -140,19 +141,19 @@ namespace HTMLNameSpace {
             html.TagWithHelp(HtmlTag.th, "Length", new HtmlBuilder(HTMLHelp.TemplateLength.ToString()), "small-cell");
             html.TagWithHelp(HtmlTag.th, "Score", new HtmlBuilder(HTMLHelp.TemplateScore.ToString()), "small-cell");
             html.TagWithHelp(HtmlTag.th, "Matches", new HtmlBuilder(HTMLHelp.TemplateMatches.ToString()), "small-cell");
-            html.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HTMLHelp.TemplateTotalArea.ToString()), "small-cell");
+            if (displayArea) html.TagWithHelp(HtmlTag.th, "Total Area", new HtmlBuilder(HTMLHelp.TemplateTotalArea.ToString()), "small-cell");
             html.TagWithHelp(HtmlTag.th, "Unique Score", new HtmlBuilder(HTMLHelp.TemplateUniqueScore.ToString()), "small-cell");
             html.TagWithHelp(HtmlTag.th, "Unique Matches", new HtmlBuilder(HTMLHelp.TemplateUniqueMatches.ToString()), "small-cell");
-            html.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HTMLHelp.TemplateUniqueArea.ToString()), "small-cell");
+            if (displayArea) html.TagWithHelp(HtmlTag.th, "Unique Area", new HtmlBuilder(HTMLHelp.TemplateUniqueArea.ToString()), "small-cell");
             html.Close(HtmlTag.tr);
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.td, "class='center'", template.Sequence.Length.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.Score.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.Matches.Count.ToString("G4"));
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString("G4"));
+            if (displayArea) html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalArea.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueScore.ToString("G4"));
             html.OpenAndClose(HtmlTag.td, "class='center'", template.UniqueMatches.ToString("G4"));
-            html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString("G4"));
+            if (displayArea) html.OpenAndClose(HtmlTag.td, "class='center'", template.TotalUniqueArea.ToString("G4"));
             html.Close(HtmlTag.tr);
             html.Close(HtmlTag.table);
 
@@ -238,7 +239,7 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        static public (HtmlBuilder, int[]) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName) {
+        static public (HtmlBuilder, int[]) CreateTemplateAlignment(Template template, string id, List<string> location, string AssetsFolderName, bool displayArea) {
             //var alignedSequences = template.AlignedSequences();
             var placed_ids = new HashSet<string>(); // To make sure to only give the first align-link its ID
             var html = new HtmlBuilder();
@@ -254,7 +255,6 @@ namespace HTMLNameSpace {
             var depthOfCoverage = new List<double>();
             var data_buffer = new StringBuilder();
             var consensus = template.ConsensusSequence();
-
 
             var localMatches = template.Matches.ToList();
             localMatches.Sort((a, b) => b.LenA.CompareTo(a.LenA)); // Try to keep the longest matches at the top.
@@ -413,7 +413,7 @@ namespace HTMLNameSpace {
             // Index menus
             html.Open(HtmlTag.div, "id='index-menus'");
             for (var i = 0; i < template.Matches.Count; i++) {
-                html.Add(AlignmentDetails(template.Matches[i], template));
+                html.Add(AlignmentDetails(template.Matches[i], template, displayArea));
             }
             html.Close(HtmlTag.div);
             html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
@@ -461,7 +461,7 @@ namespace HTMLNameSpace {
             return output1 + ";" + output2 + ";" + output3 + ";background-repeat:no-repeat;";
         }
 
-        static HtmlBuilder AlignmentDetails(Alignment match, Template template) {
+        static HtmlBuilder AlignmentDetails(Alignment match, Template template, bool displayArea) {
             var doc_title = "Positional Score";
             var type = "Read";
             var html = new HtmlBuilder();
@@ -473,37 +473,30 @@ namespace HTMLNameSpace {
                 html.Close(HtmlTag.tr);
             }
 
+            void RowHtml(string name, string header, HtmlBuilder content) {
+                html.Open(HtmlTag.tr);
+                html.OpenAndClose(HtmlTag.td, "", name);
+                html.OpenAndClose(HtmlTag.td, header, content);
+                html.Close(HtmlTag.tr);
+            }
+
             html.Open(HtmlTag.div, $"class='alignment-details' id='alignment-details-{match.ReadB.EscapedIdentifier}'");
             html.OpenAndClose(HtmlTag.h4, "", match.ReadB.Identifier);
             html.Open(HtmlTag.table);
             Row("Type", type);
             Row("Score", match.Score.ToString());
-            Row("Total area", match.ReadB.TotalArea.ToString("G4"));
+            if (displayArea) Row("Total area", match.ReadB.TotalArea.ToString("G4"));
+            Row("Start on Template", match.StartA.ToString());
             Row("Length on Template", match.LenA.ToString());
-            Row("Position on Template", match.StartA.ToString());
             Row($"Start on {type}", match.StartB.ToString());
             Row($"Length of {type}", match.LenB.ToString());
+            if (template.ForcedOnSingleTemplate) Row("Unique", match.Unique ? "Yes" : "No");
+            if (match.ReadB is ReadFormat.Peaks p) Row("Peaks ALC", p.DeNovoScore.ToString());
 
-            if (template.ForcedOnSingleTemplate) {
-                Row("Unique", match.Unique ? "Yes" : "No");
-            }
-            if (match.ReadB is ReadFormat.Peaks p) {
-                Row("Peaks ALC", p.DeNovoScore.ToString());
-            }
-            if (match.ReadB.Sequence.PositionalScore.Length != 0) {
-                html.Open(HtmlTag.tr);
-                html.OpenAndClose(HtmlTag.td, "", doc_title);
-                html.Open(HtmlTag.td, "class='doc-plot'");
-                html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.ReadB.Sequence.PositionalScore.SubArray(match.StartB, match.LenB).Select(a => (double)a).ToList(), match.StartB, true)));
-                html.Close(HtmlTag.td);
-                html.Close(HtmlTag.tr);
-            }
-            html.Open(HtmlTag.tr);
-            html.OpenAndClose(HtmlTag.td, "", "Alignment graphic");
-            html.Open(HtmlTag.td, "class='sequence-match-graphic'");
-            html.Add(SequenceMatchGraphic(match, template));
-            html.Close(HtmlTag.td);
-            html.Close(HtmlTag.tr);
+            if (match.ReadB.Sequence.PositionalScore.Length != 0)
+                RowHtml(doc_title, "class='doc-plot'", HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(match.ReadB.Sequence.PositionalScore.SubArray(match.StartB, match.LenB).Select(a => (double)a).ToList(), match.StartB, true)));
+
+            RowHtml("Alignment graphic", "class='sequence-match-graphic'", SequenceMatchGraphic(match, template));
             html.Close(HtmlTag.table);
             html.Close(HtmlTag.div);
             return html;
