@@ -6,6 +6,7 @@ using System.Text;
 using System.Diagnostics;
 using System.Threading.Tasks;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using static Stitch.Fragmentation;
 
 namespace Stitch {
     namespace RunParameters {
@@ -55,9 +56,8 @@ namespace Stitch {
                 Template.AmbiguityThreshold = TemplateMatching.AmbiguityThreshold;
 
                 // Raw data
-                Dictionary<string, List<AnnotatedSpectrumMatch>> fragments = null;
                 if (this.LoadRawData) {
-                    fragments = Fragmentation.GetSpectra(Input.Data.Cleaned, true);
+                    Fragmentation.GetSpectra(Input.Data.Cleaned, true);
                     ProgressBar.Update();
                 }
 
@@ -71,7 +71,7 @@ namespace Stitch {
                 }
 
                 // Generate report parameters
-                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname, fragments);
+                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname);
 
                 // If there is an expected outcome present to answers here
                 if (extraArguments.ExpectedResult.Count > 0) {

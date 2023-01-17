@@ -71,7 +71,7 @@ namespace Stitch {
                 ReadFormat.General metadata;
                 switch (aside) {
                     case AsideType.Read:
-                        inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName, Parameters.Fragments);
+                        inner_html = HTMLAsides.CreateReadAside(Parameters.Input[index1], Parameters.Groups, Parameters.RecombinedSegment, AssetsFolderName);
                         metadata = Parameters.Input[index1];
                         break;
                     case AsideType.Template:

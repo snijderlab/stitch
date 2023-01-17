@@ -7,6 +7,7 @@ using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 using HtmlGenerator;
 using Stitch;
 using static HTMLNameSpace.CommonPieces;
+using static Stitch.Fragmentation;
 using static Stitch.HelperFunctionality;
 
 namespace HTMLNameSpace {
@@ -15,16 +16,19 @@ namespace HTMLNameSpace {
         const char non_breaking_space = '\u00A0'; // &nbsp; in html
 
         /// <summary> Returns an aside for details viewing of a read. </summary>
-        public static HtmlBuilder CreateReadAside(ReadFormat.General MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName, Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments) {
+        public static HtmlBuilder CreateReadAside(ReadFormat.General MetaData, ReadOnlyCollection<(string, List<Segment>)> segments, ReadOnlyCollection<Segment> recombined, string AssetsFolderName) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"id='{GetAsideIdentifier(MetaData)}' class='info-block read-info'");
             html.OpenAndClose(HtmlTag.h1, "", "Read " + GetAsideIdentifier(MetaData, true));
             html.OpenAndClose(HtmlTag.h2, "", $"Sequence (length={MetaData.Sequence.Length})");
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids));
 
-            if (Fragments != null && Fragments.ContainsKey(MetaData.EscapedIdentifier)) {
-                foreach (var spectrum in Fragments[MetaData.EscapedIdentifier]) {
-                    html.Add(Graph.RenderSpectrum(spectrum, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+            if (MetaData.SupportingSpectra.Count() > 0) {
+                foreach (var spectrum in MetaData.SupportingSpectra) {
+                    html.Add(Graph.RenderSpectrum(spectrum.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+                    var text = $"FDR {spectrum.FDRFractionGeneral:P2}";
+                    if (!double.IsNaN(spectrum.FDRFractionSpecific)) text += $" Specific {spectrum.FDRFractionSpecific:P2}";
+                    html.OpenAndClose(HtmlTag.p, "", text);
                 }
             }
 

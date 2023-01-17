@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Collections.ObjectModel;
 using System.Text.Json.Serialization;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using static Stitch.Fragmentation;
 
 namespace Stitch {
     /// <summary>To save all parameters for the generation of a report in one place</summary>
@@ -16,16 +17,13 @@ namespace Stitch {
         public readonly ParsedFile BatchFile;
         public readonly ExtraArguments runVariables;
         public readonly string Runname;
-        [JsonIgnore]
-        public readonly Dictionary<string, List<AnnotatedSpectrumMatch>> Fragments;
-        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname, Dictionary<string, List<AnnotatedSpectrumMatch>> fragments) {
+        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();
             BatchFile = batchFile;
             runVariables = variables;
             Runname = runname;
-            Fragments = fragments;
         }
     }
     /// <summary> To be a base point for any reporting options, handling all the metadata. </summary>

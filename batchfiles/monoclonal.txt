@@ -10,6 +10,7 @@ Input ->
         Name     : 01
         CutoffALC: 90
         -RawDataDirectory: R:\F1\peng0013\201912
+        -XleDisambiguation: True
     <-
 <-
 
@@ -200,9 +201,6 @@ Report ->
     Folder: ../results/{datetime} {name}/
     HTML ->
         Path: report-monoclonal.html
-    <-
-    JSON ->
-        Path: report-monoclonal.json
     <-
     FASTA ->
         Path: report-monoclonal-tm.fasta

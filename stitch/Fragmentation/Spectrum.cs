@@ -12,12 +12,27 @@ using System;
 
 namespace Stitch {
     public static class Fragmentation {
-        /// <summary> Create a dictionary of all spectra with the escaped identifier of the top level metadata construct as key. </summary>
+        public struct ASM {
+            public AnnotatedSpectrumMatch Match;
+            /// <summary> The average number of matches for the same fragments but with a randomised shift
+            /// divided by the number of matches with the actual fragments.</summary>
+            public double FDRFractionGeneral;
+            /// <summary> The average number of matches for the same fragments but with a randomised shift
+            /// divided by the number of matches with the actual fragments. Only the Xle positions w and d
+            /// ions are counted.</summary>
+            public double FDRFractionSpecific;
+
+            public ASM(AnnotatedSpectrumMatch match, double general, double specific) {
+                Match = match;
+                FDRFractionGeneral = general;
+                FDRFractionSpecific = specific;
+            }
+        }
+
+        /// <summary> Finds the supporting spectra for all reads and saves it in the reads themselves. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
-        /// <returns></returns>
-        public static Dictionary<string, List<AnnotatedSpectrumMatch>> GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
-            var fragments = new Dictionary<string, List<AnnotatedSpectrumMatch>>(peptides.Count());
+        public static void GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
             var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, s.XleDisambiguation, p)));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
@@ -53,6 +68,22 @@ namespace Stitch {
 
                     // determine the type of fragmentation used
                     var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation));
+                    if (scan.XleDisambiguation) {
+                        // Update the model to use w and d ions as well
+                        model.W = new PeptideFragment.FragmentRange {
+                            MinPos = 1,
+                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            HigherCharges = true,
+                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                        };
+                        model.D = new PeptideFragment.FragmentRange {
+                            MinPos = 1,
+                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            HigherCharges = true,
+                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                        };
+                    }
+
                     raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
                     // Default set to 20, should be lower for BU
@@ -69,24 +100,12 @@ namespace Stitch {
 
                     string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
                     string sequence = FastaParser.ParseProForma(transformedPeaksPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
-                    if (scan.XleDisambiguation) {
-                        // Update the model to use w and d ions as well
-                        model.W = new PeptideFragment.FragmentRange {
-                            MinPos = 1,
-                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
-                            HigherCharges = true,
-                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
-                        };
-                        model.D = new PeptideFragment.FragmentRange {
-                            MinPos = 1,
-                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
-                            HigherCharges = true,
-                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
-                        };
 
+                    // Do Xle disambiguation, only if this is actually used and useful
+                    if (scan.XleDisambiguation && sequence.Any(c => c == 'L' || c == 'I' || c == 'J')) {
                         // Generate sequences with only L and only I to scan for support
-                        string pureL = new String(sequence.Select(c => c == 'I' ? 'L' : c).ToArray());
-                        string pureI = new String(sequence.Select(c => c == 'L' ? 'I' : c).ToArray());
+                        string pureL = new String(sequence.Select(c => c == 'I' || c == 'J' ? 'L' : c).ToArray());
+                        string pureI = new String(sequence.Select(c => c == 'L' || c == 'J' ? 'I' : c).ToArray());
 
                         var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
                         var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
@@ -121,16 +140,11 @@ namespace Stitch {
                         // Assemble the final sequence with the disambiguated positions
                         sequence = builder.ToString();
                     }
-                    var asm = GetASM(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
+                    var asm = GetASMWithFDR(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
 
-                    if (fragments.ContainsKey(scan.EscapedIdentifier)) {
-                        fragments[scan.EscapedIdentifier].Add(asm);
-                    } else {
-                        fragments[scan.EscapedIdentifier] = new List<AnnotatedSpectrumMatch> { asm };
-                    }
+                    scan.p.SupportingSpectra.Add(asm);
                 }
             }
-            return fragments;
         }
 
         static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
@@ -150,6 +164,48 @@ namespace Stitch {
                 ScanNumber = ScanNumber,
             };
             return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
+        }
+
+        static ASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+            Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
+
+            // If not deisotoped, should be charge of the precursor
+            short maxCharge = 1;
+            maxCharge = (short)precursor.ChargeState;
+            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
+            var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
+
+            var hl_precursor = new PrecursorInfo {
+                Mz = filter.ParentMass,
+                Fragmentation = filter.Fragmentation,
+                FragmentationEnergy = filter.FragmentationEnergy,
+                RawFile = RawFile,
+                ScanNumber = ScanNumber,
+            };
+            var res = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
+
+            var actual_generic = matchedFragments.Count(i => i != null);
+            var actual_specific = matchedFragments.Count(i => i != null && (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D));
+            var total_general = 0;
+            var total_specific = 0;
+            var steps = 0;
+
+            for (var shift = 5; shift <= 25; shift += 1) {
+                if (shift == 0) continue;
+                var step = GetCounts(peptide, peptide_fragments, shift, maxCharge, model, spectrum);
+                var neg_step = GetCounts(peptide, peptide_fragments, -shift, maxCharge, model, spectrum);
+                total_general += step.DetectedGeneral + neg_step.DetectedGeneral;
+                total_specific += step.DetectedSpecific + neg_step.DetectedSpecific;
+                steps += 2;
+            }
+
+            return new ASM(res, (double)total_general / steps / actual_generic, (double)total_specific / steps / actual_specific);
+        }
+
+        static (int DetectedGeneral, int DetectedSpecific) GetCounts(Peptide peptide, PeptideFragment[] fragments, double shift, short maxCharge, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
+            var shifted_fragments = fragments.Select(f => { var p = new PeptideFragment(f); p.Mz += shift; return p; }).ToArray();
+            var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, shifted_fragments, model.tolerance, model.IsotopeError);
+            return (matchedFragments.Count(i => i != null), matchedFragments.Count(i => i != null && (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D)));
         }
     }
 }

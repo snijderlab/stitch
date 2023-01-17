@@ -22,7 +22,15 @@ namespace Stitch {
 
             var header = new List<string>() { "ReadID", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment", "CDR" };
             var data = new List<List<string>>();
-            var peaks = false;
+            var peaks = Parameters.RecombinedSegment.SelectMany(a => a.Templates).SelectMany(t => t.Matches).Any(m => m.ReadB is ReadFormat.Peaks);
+            var fdr = Parameters.RecombinedSegment.SelectMany(a => a.Templates).SelectMany(t => t.Matches).Any(m => m.ReadB.SupportingSpectra.Count() > 0);
+
+            if (peaks) {
+                header.AddRange(new List<string> { "Fraction", "Source File", "Feature", "Scan", "Denovo Score", "m/z", "z", "RT", "Predict RT", "Area", "Mass", "ppm", "PTM", "local confidence (%)", "tag (>=0%)", "mode" });
+            }
+            if (fdr) {
+                header.AddRange(new List<string> { "FDR General", "FDR Specific" });
+            }
 
             void AddLine(string group, Template template, Alignment match) {
                 var annotation = template.ConsensusSequenceAnnotation();
@@ -48,7 +56,6 @@ namespace Stitch {
                     cdr.ToString()
                     };
                 if (match.ReadB is ReadFormat.Peaks) {
-                    peaks = true;
                     var meta = (ReadFormat.Peaks)match.ReadB;
                     row.AddRange(new List<string>
                         {
@@ -69,6 +76,17 @@ namespace Stitch {
                             meta.OriginalTag,
                             meta.FragmentationMode
                         });
+                } else if (peaks) {
+                    row.AddRange(new List<string> { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" });
+                }
+                if (match.ReadB.SupportingSpectra.Count() > 0) {
+                    var avg_gen = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionGeneral).Average();
+                    var avg_spe = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionSpecific).Average();
+                    row.Add(avg_gen.ToString("P2"));
+                    if (double.IsNormal(avg_spe)) row.Add(avg_spe.ToString("P2"));
+                    else row.Add("");
+                } else if (fdr) {
+                    row.AddRange(new List<string> { "", "" });
                 }
                 data.Add(row);
             }
@@ -88,10 +106,6 @@ namespace Stitch {
                         }
                     }
                 }
-            }
-
-            if (peaks) {
-                header.AddRange(new List<string> { "Fraction", "Source File", "Feature", "Scan", "Denovo Score", "m/z", "z", "RT", "Predict RT", "Area", "Mass", "ppm", "PTM", "local confidence (%)", "tag (>=0%)", "mode" });
             }
 
             var buffer = new StringBuilder();

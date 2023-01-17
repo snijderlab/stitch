@@ -5,6 +5,7 @@ using System.Globalization;
 using HtmlGenerator;
 using System.Text.Json.Serialization;
 using System.IO;
+using static Stitch.Fragmentation;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
@@ -43,6 +44,7 @@ namespace Stitch {
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
             public abstract HtmlBuilder ToHTML();
+            public List<ASM> SupportingSpectra = new();
 
             protected NameFilter nameFilter;
 
