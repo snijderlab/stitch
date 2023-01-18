@@ -250,7 +250,7 @@ namespace Stitch {
 }}
 @font-face {{
   font-family: 'Roboto Mono';
-  src: url({link}RobotoMono-VariableFont_wght.ttf);
+  src: url({link}RobotoMono-VariableFont.ttf);
   font-weight: 100 700;
   font-style: normal;
 }}");
@@ -603,7 +603,8 @@ namespace Stitch {
             cleavages of the side chain and are thus specially suited for the disambiguation of Leucine and Isoleucine. In the overview below the mass
             differences and ions formed are displayed. The d ion is formed by fragmentation of the side chain of an a ion. The w ion is formed by side
             chain fragmentation of a z ion. Because isoleucine and threonine are doubly substituted at the beta carbon these two amino acids form two
-            different w/d ions.");
+            different w/d ions. THese ions are not formed with all fragmentation techniques though, Stitch only searches for d ions in the first amino
+            acids with CID/HCD/PQD data, and only searches for w ions in ETD/ECD/EThcD/ETciD data.");
             ions.Empty(HtmlTag.img, $"src='{AssetsFolderName}/ion_overview.svg' alt='Overview of ion fragmentation with the special fragments from w and d ions annotated.'");
             ions.OpenAndClose(HtmlTag.a, "href='http://www.matrixscience.com/help/fragmentation_help.html' target='_blank' style='max-width:500px;display:block;'", "Find more information here.");
             html.Collapsible("docs-ions", new HtmlBuilder("Ion nomenclature"), ions);
@@ -635,7 +636,7 @@ namespace Stitch {
             CopyAssetsFile("script.js");
             CopyAssetsFile("Roboto-Regular.ttf");
             CopyAssetsFile("Roboto-Medium.ttf");
-            CopyAssetsFile("RobotoMono-VariableFont_wght.ttf");
+            CopyAssetsFile("RobotoMono-VariableFont.ttf");
         }
 
         /// <summary> Creates an HTML report to view the results and metadata. </summary>
