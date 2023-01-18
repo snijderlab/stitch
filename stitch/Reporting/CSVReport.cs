@@ -29,7 +29,7 @@ namespace Stitch {
                 header.AddRange(new List<string> { "Fraction", "Source File", "Feature", "Scan", "Denovo Score", "m/z", "z", "RT", "Predict RT", "Area", "Mass", "ppm", "PTM", "local confidence (%)", "tag (>=0%)", "mode" });
             }
             if (fdr) {
-                header.AddRange(new List<string> { "FDR General", "FDR Specific" });
+                header.AddRange(new List<string> { "FDR General", "FDR Specific", "Specific Expectation" });
             }
 
             void AddLine(string group, Template template, Alignment match) {
@@ -82,11 +82,17 @@ namespace Stitch {
                 if (match.ReadB.SupportingSpectra.Count() > 0) {
                     var avg_gen = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionGeneral).Average();
                     var avg_spe = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionSpecific).Average();
+                    var avg_exp = match.ReadB.SupportingSpectra.Select(s => s.SpecificExpectationPerPosition).Average();
                     row.Add(avg_gen.ToString("P2"));
-                    if (double.IsNormal(avg_spe)) row.Add(avg_spe.ToString("P2"));
-                    else row.Add("");
+                    if (double.IsNormal(avg_spe)) {
+                        row.Add(avg_spe.ToString("P2"));
+                        row.Add(avg_exp.ToString("G2"));
+                    } else {
+                        row.Add("");
+                        row.Add("");
+                    }
                 } else if (fdr) {
-                    row.AddRange(new List<string> { "", "" });
+                    row.AddRange(new List<string> { "", "", "" });
                 }
                 data.Add(row);
             }

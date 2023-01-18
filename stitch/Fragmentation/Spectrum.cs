@@ -21,11 +21,13 @@ namespace Stitch {
             /// divided by the number of matches with the actual fragments. Only the Xle positions w and d
             /// ions are counted.</summary>
             public double FDRFractionSpecific;
+            public double SpecificExpectationPerPosition;
 
-            public ASM(AnnotatedSpectrumMatch match, double general, double specific) {
+            public ASM(AnnotatedSpectrumMatch match, double general, double specific, double expectation) {
                 Match = match;
                 FDRFractionGeneral = general;
                 FDRFractionSpecific = specific;
+                SpecificExpectationPerPosition = expectation;
             }
         }
 
@@ -68,19 +70,20 @@ namespace Stitch {
 
                     // determine the type of fragmentation used
                     var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation));
-                    if (scan.XleDisambiguation) {
-                        // Update the model to use w and d ions as well
+                    if (scan.XleDisambiguation && (filter.Fragmentation == Spectrum.FragmentationType.EThcD || filter.Fragmentation == Spectrum.FragmentationType.ETciD || filter.Fragmentation == Spectrum.FragmentationType.ETD || filter.Fragmentation == Spectrum.FragmentationType.ECD)) {
                         model.W = new PeptideFragment.FragmentRange {
                             MinPos = 1,
                             MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
                             HigherCharges = true,
                             MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
                         };
+                    }
+                    if (scan.XleDisambiguation && (filter.Fragmentation == Spectrum.FragmentationType.CID || filter.Fragmentation == Spectrum.FragmentationType.HCD || filter.Fragmentation == Spectrum.FragmentationType.PQD)) {
                         model.D = new PeptideFragment.FragmentRange {
                             MinPos = 1,
-                            MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
+                            MaxPos = 2,
                             HigherCharges = true,
-                            MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
+                            MassShifts = PeptideFragment.MASSSHIFT_NEUTRALLOSS | PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
                         };
                     }
 
@@ -192,14 +195,14 @@ namespace Stitch {
 
             for (var shift = 5; shift <= 25; shift += 1) {
                 if (shift == 0) continue;
-                var step = GetCounts(peptide, peptide_fragments, shift, maxCharge, model, spectrum);
-                var neg_step = GetCounts(peptide, peptide_fragments, -shift, maxCharge, model, spectrum);
+                var step = GetCounts(peptide, peptide_fragments, shift + 0.10411, maxCharge, model, spectrum);
+                var neg_step = GetCounts(peptide, peptide_fragments, -shift - 0.10411, maxCharge, model, spectrum);
                 total_general += step.DetectedGeneral + neg_step.DetectedGeneral;
                 total_specific += step.DetectedSpecific + neg_step.DetectedSpecific;
                 steps += 2;
             }
 
-            return new ASM(res, (double)total_general / steps / actual_generic, (double)total_specific / steps / actual_specific);
+            return new ASM(res, (double)total_general / steps / actual_generic, (double)total_specific / steps / actual_specific, (double)total_specific / steps / sequence.Count(i => i == 'I' || i == 'L'));
         }
 
         static (int DetectedGeneral, int DetectedSpecific) GetCounts(Peptide peptide, PeptideFragment[] fragments, double shift, short maxCharge, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
