@@ -13,6 +13,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
+                "run",
                 "batchfiles/monoclonal.txt"
             ],
             "cwd": "${workspaceFolder}",
@@ -35,6 +36,7 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
+                "run",
                 "batchfiles/polyclonal.txt"
             ],
             "cwd": "${workspaceFolder}",
@@ -57,7 +59,33 @@
             // If you have changed target frameworks, make sure to update the program path.
             "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
             "args": [
+                "run",
                 "batchfiles/basic.txt"
+            ],
+            "cwd": "${workspaceFolder}",
+            // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console
+            "console": "internalConsole",
+            "stopAtEntry": false,
+            "justMyCode": false,
+            "logging": {
+                "exceptions": true,
+                "programOutput": true,
+                "moduleLoad": false
+            }
+        },
+        {
+            "name": "Launch modelangelo.txt",
+            "type": "coreclr",
+            "request": "launch",
+            "preLaunchTask": "build",
+            "requireExactSource": false,
+            // If you have changed target frameworks, make sure to update the program path.
+            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "args": [
+                "run",
+                "batchfiles/modelangelo.txt",
+                "--expect",
+                "QNITEEFYQSTCSAVSKGYLSALRTGWYTSVITIELSNIKEIKCNGTDAKVKLIKQELDKYKNAVTELQLLMQSTPATNNRARRELPRFMNYTLNNAKKTNVTLSKKRKRRFLGFLLGVGSAIASGVAVSKVLHLEGEVNKIKSALLSTNKAVVSLSNGVSVLTSKVLDLKNYIDKQLLPIVNKQSCSIPNIETVIEFQQKNNRLLEITREFSVNAGVTTPVSTYMLTNSELLSLINDMPITNDQKKLMSNNVQIVRQQSYSIMSIIKEEVLAYVVQLPLYGVIDTPCWKLHTSPLCTTNTKEGSNICLTRTDRGWYCDNAGSVSFFPQAETCKVQSNRVFCDTMNSLTLPSEVNLCNVDIFNPKYDCKIMTSKTDVSSSVITSLGAIVSCYGKTKCTASNKNRGIIKTFSNGCDYVSNKGVDTVSVGNTLYYVNKQEGKSLYVKGEPIINFYDPLVFPSDEFDASISQVNEKINQSLAFIRKSDELLSAIGGYIPEAPRDGQAYVRKDGEWVLLSTFLGSLEVLFQGPGHHHHHHHHSAWSHPQFEK,QVQLVQSGSEVKKPGASVKVSCKASGYRFSNYGISWVRQAPGQGLEWMGWISAYNGNIKYGNNLQGRVTVTTDTSTATAYMEVRSLTSDDTAVYYCARDVPADGVHFMDVWGQGTLVTVSSASTKGPSVFPLAPSSKSTSGGTAALGCLVKDYFPEPVTVSWNSGALTSGVHTFPAVLQSSGLYSLSSVVTVPSSSLGTQTYICNVNHKPSNTKVDKKVEPKSCD,DVVMTQSPLSLPVTLGQPASISCRSSQSLVHSDTNTYLNWFQQRPGQSPRRLIYKVSNRDSGVPDRFSGSGSGTTFTLKISRVEAEDVGIYYCMQGSHWAPTFGQGTKVEIKRTVAAPSVFIFPPSDEQLKSGTASVVCLLNNFYPREAKVQWKVDNALQSGNSQESVTEQDSKDSTYSLSSTLTLSKADYEKHKVYACEVTHQGLSSPVTKSFNRGEC"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

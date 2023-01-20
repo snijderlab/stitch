@@ -7,6 +7,7 @@ using System.Diagnostics;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Http;
+using HeckLib.chemistry;
 
 namespace Stitch {
     /// <summary> The main class which is the entry point from the command line. </summary>
@@ -16,113 +17,59 @@ namespace Stitch {
             Console.OutputEncoding = Encoding.UTF8;
             Console.CancelKeyPress += HandleUserAbort;
 
-            static List<string> ParseArgs() {
-                string args = Environment.CommandLine.Trim();
-                string current_arg = "";
-                var output = new List<string>();
-                for (int i = 0; i < args.Length; i++) {
-                    switch (args[i]) {
-                        case ' ':
-                            output.Add(current_arg.Trim());
-                            current_arg = "";
-                            if (args[i + 1] == '-' && args[i + 2] == '-') {
-                                var end = args.IndexOf(' ', i + 1);
-                                end = end < 0 ? args.Length - 1 : end;
-                                output.Add(args.Substring(i + 1, end - i - 1));
-                            }
-                            break;
-                        case '\'':
-                            if (!string.IsNullOrEmpty(current_arg))
-                                output.Add(current_arg.Trim());
-                            current_arg = "";
-                            int next = args.IndexOf('\'', i + 1);
-                            output.Add(args.Substring(i + 1, next - i - 1).Trim());
-                            i = next + 1;
-                            break;
-                        case '\"':
-                            if (!string.IsNullOrEmpty(current_arg))
-                                output.Add(current_arg.Trim());
-                            current_arg = "";
-                            int n = args.IndexOf('\"', i + 1);
-                            output.Add(args.Substring(i + 1, n - i - 1).Trim());
-                            i = n + 1;
-                            break;
-                        default:
-                            current_arg += args[i];
-                            break;
-                    }
-                }
-                if (!string.IsNullOrEmpty(current_arg))
-                    output.Add(current_arg.Trim());
+            var cli = new CLIBuilder("Stitch", "Template-based assembly of proteomics short reads for de novo antibody sequencing and repertoire profiling.",
+            new List<Subcommand>{
+                new Subcommand("run", "Run a batchfile", new List<IArgument>{
+                    new Argument<string>("batchfile", new Option<string>(), new Option<string>(), "The path to the batchfile to run, can be escaped with \""),
+                    new Argument<string>("expect", new Option<string>("e"), new Option<string>(""), "The expected result(s) of the run as the final sequence(s) by separated commas, used for automated testing"),
+                    new Argument<bool>("open", new Option<string>("o"), new Option<bool>(false), "Open the HTML report (if available) automatically in the browser"),
+                    new Argument<int>("live", new Option<string>("l"), new Option<int>(-1), "Prepare the HTML report for use with VS Code Live Server on the given port, -1 turns it off"),
+                }),
+                new Subcommand("download", "Download annotated templates from IMGT (cleans and annotates itself)", new List<IArgument>{
+                    new Argument<string>("species", new Option<string>(), new Option<string>(), "The latin name of the animal to download the data for (as used by IMGT: http://www.imgt.org/IMGTrepertoire/Proteins/)"),
+                    new Argument<string>("segments", new Option<string>(), new Option<string>("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC"), "The segments to download, multiple segments combined with a , will be combined in a single file")
+                }),
+                new Subcommand("refine", "Use Xle disambiguation to refine raw data (can also be done in an actual run)", new List<IArgument>{
+                    new Argument<string>("input", new Option<string>(), new Option<string>(), "The peaks file to open and refine"),
+                    new Argument<string>("raw-data-dir", new Option<string>(), new Option<string>(), "The directory with raw data (can only handle Thermo)"),
+                    new Argument<string>("output", new Option<string>("o"), new Option<string>("refined_reads"), "The filename of the refined reads, the extension will be added automatically"),
+                    new Argument<string>("peaks-version", new Option<string>("p"), new Option<string>("X+"), "The version of the Peaks file format to use"),
+                }),
+                new Subcommand("clean", "Removes duplicates and incomplete sequences from fasta", new List<IArgument>{
+                    new Argument<string>("input", new Option<string>(), new Option<string>(), "The fasta file to open and clean"),
+                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, is missing will overwrite the input file"),
+                }),
+                new Subcommand("annotate", "Parses the sequences from an IMGT HTML file and creates annotated fasta files (also cleans data)", new List<IArgument>{
+                    new Argument<string>("input", new Option<string>(), new Option<string>(), "The HTML file to open and parse, example page: http://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species=human&latin=Homo%20sapiens&group=IGHV"),
+                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, is missing will overwrite the input file"),
+                })
+            },
+            new List<IArgument> { });
 
-                return output;
-            }
-
-            // Retrieve the name of the batch file to run or file to clean
-            var args = ParseArgs();
-            string filename = "";
-            string output_filename = "";
-
-            if (args.Count <= 1 || args[1] == "help" || args[1] == "?") {
-                Console.WriteLine(@"Please provide as the first and only argument the path to the batch file to be run.
-
-Or use any of the following commands:
-* clean - removes duplicates and incomplete sequences from fasta
-    1   [path] the fasta file to clean
-    2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file)
-eg: assembler.exe clean Homo_sapiens_IGHV.fasta
-
-* annotate - parses the sequences from an IMGT html file and creates annotated fasta files
-    1   [path] the html file to parse the annotated sequences from
-    2?  [path] possibly followed by the new name for the cleaned file (if missing it will overwrite the old file).
-eg: assembler.exe annotate Homo_sapiens_IGHV.html Homo_sapiens_IGHV.fasta
-note: for an example IMGT html file see: http://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species=human&latin=Homo%20sapiens&group=IGHV
-
-* download - creates annotated fasta files for the given species
-    1   [string] the latin name of the species to download (as used by IMGT: http://www.imgt.org/IMGTrepertoire/Proteins/)
-    2?  [string] the segments to download, multiple can be downloaded in one file by combining with a comma ','
-        default: ""IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC""
-eg: assembler.exe download ""Homo sapiens""
-note: IGHC is not included as this is not present in a useful form in the IMGT database, get from uniprot for the best results");
-                return 2;
-            }
+            var args = cli.Parse(Environment.CommandLine.Trim());
 
             try {
-                filename = args[1];
-                if (filename == "clean") {
-                    filename = args[2];
-                    if (args.Count > 3)
-                        output_filename = args[3];
-                    else
-                        output_filename = filename;
-                    CleanFasta(filename, output_filename);
-                } else if (filename == "annotate") {
-                    filename = args[2];
-                    if (args.Count > 3)
-                        output_filename = args[3];
-                    else
-                        output_filename = filename;
-
-                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap()).Unwrap();
-                    GenerateAnnotatedTemplate(content, output_filename);
-                } else if (filename == "download") {
-                    if (args.Count > 3)
-                        DownloadSpecies(args[2], args[3]);
-                    else
-                        DownloadSpecies(args[2]);
-                } else {
-                    filename = args[1];
-                    var location_expected = args.IndexOf("--expect");
-                    var expected = location_expected > 0 ? args[location_expected + 2].Split(',').ToList() : new List<string>();
-                    var location_live = args.IndexOf("--live");
-                    var live = "";
-                    if (location_live > 0) {
-                        if (args.Count > location_live + 2 && !args[location_live + 2].StartsWith("--"))
-                            live = args[location_live + 2];
-                        else
-                            live = "5500";
-                    }
-                    RunBatchFile(filename, new ExtraArguments(args.Contains("--open"), live, expected));
+                if (args.ContainsKey("run")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["run"].Item2;
+                    var exp = ((string)sub_args["expect"].Item2);
+                    RunBatchFile((string)sub_args["batchfile"].Item2, new ExtraArguments((bool)sub_args["open"].Item2, (int)sub_args["live"].Item2, string.IsNullOrEmpty(exp) ? new string[0] : exp.Split(',')));
+                } else if (args.ContainsKey("clean")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["clean"].Item2;
+                    var inp = (string)sub_args["input"].Item2;
+                    var ou = (string)sub_args["output"].Item2;
+                    CleanFasta(inp, string.IsNullOrEmpty(ou) ? inp : ou);
+                } else if (args.ContainsKey("annotate")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["annotate"].Item2;
+                    var inp = (string)sub_args["input"].Item2;
+                    var ou = (string)sub_args["output"].Item2;
+                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(inp).Unwrap()).Unwrap();
+                    GenerateAnnotatedTemplate(content, string.IsNullOrEmpty(ou) ? inp : ou);
+                } else if (args.ContainsKey("download")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["download"].Item2;
+                    DownloadSpecies((string)sub_args["species"].Item2, (string)sub_args["segments"].Item2);
+                } else if (args.ContainsKey("refine")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
+                    RefineRawData((string)sub_args["input"].Item2, (string)sub_args["raw-data-dir"].Item2, (string)sub_args["output"].Item2, (string)sub_args["peaks-version"].Item2);
                 }
             } catch (ParseException) {
                 return 3;
@@ -137,13 +84,13 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename, ExtraArguments runVariables) {
             ProgressBar bar = null;
-            if (runVariables.ExpectedResult.Count == 0) {
+            if (runVariables.ExpectedResult.Length == 0) {
                 bar = new ProgressBar();
                 bar.Start(5); // Max steps, can be turned down if no Recombination is done
             }
 
             var input_params = ParseCommandFile.Batch(filename);
-            if (runVariables.ExpectedResult.Count == 0) {
+            if (runVariables.ExpectedResult.Length == 0) {
                 bar.Update();
                 bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.LoadRawData ? 1 : 0));
             }
@@ -517,6 +464,135 @@ note: IGHC is not included as this is not present in a useful form in the IMGT d
                 sequences.Add(new ReadFormat.Fasta(AminoAcid.FromString(encoded_sequence.ToString(), alphabet).Unwrap(), pieces[2], pieces[2], null, name_filter));
             }
             SaveAndCleanFasta(output, sequences);
+        }
+
+        static void RefineRawData(string input, string raw_data_dir, string output, string peaks_version_h) {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
+            var filter = new NameFilter();
+            var peaks_version = PeaksFileFormat.PeaksXPlus();
+            switch (peaks_version_h.ToLower()) {
+                case "x": peaks_version = PeaksFileFormat.PeaksX(); break;
+                case "x+": peaks_version = PeaksFileFormat.PeaksXPlus(); break;
+                case "old": peaks_version = PeaksFileFormat.OldFormat(); break;
+                default: throw new Exception("Incorrect peaks file format use X+, X, or Old");
+            }
+            var peaks = new RunParameters.InputData.Peaks() {
+                FileFormat = peaks_version,
+                XleDisambiguation = true,
+                RawDataDirectory = raw_data_dir,
+                Parameter = new RunParameters.InputData.PeaksParameters(true) {
+                    CutoffALC = 0
+                },
+                File = new ReadFormat.FileIdentifier(input, "data", null)
+            };
+            var alphabet = ScoringMatrix.Blosum62();
+            var reads = OpenReads.Peaks(filter, peaks, alphabet).Unwrap();
+            Fragmentation.GetSpectra(reads, true);
+
+            // Export data
+            var header = new List<string>() { "ReadID", "Sequence", "Fraction", "Source File", "Feature", "Scan", "Denovo Score", "m/z", "z", "RT", "Predict RT", "Area", "Mass", "ppm", "PTM", "local confidence (%)", "tag (>=0%)", "mode", "PSM", "FDR General", "FDR Specific", "Found Specific", "Max Specific", "Ions" };
+            var data = new List<List<string>>();
+
+            var positions_header = new List<string>() { "ReadID", "Position", "AA", "Charge", "PSM", "Peaks Score", "Satellite Ion", "Count", "Intensity", "Base Ion", "Count", "Intensity" };
+            var positions_data = new List<List<string>>();
+
+            foreach (var r in reads) {
+                var read = r as ReadFormat.Peaks;
+                var row = new List<string> {
+                    read.Identifier,
+                    AminoAcid.ArrayToString(read.Sequence.AminoAcids),
+                    read.Fraction,
+                    read.SourceFile,
+                    read.Feature,
+                    read.ScanID,
+                    read.DeNovoScore.ToString(),
+                    read.MassOverCharge.ToString(),
+                    read.Charge.ToString(),
+                    read.RetentionTime.ToString(),
+                    read.PredictedRetentionTime,
+                    read.Area.ToString(),
+                    read.Mass.ToString(),
+                    read.PartsPerMillion.ToString(),
+                    read.Post_translational_modifications,
+                    read.Sequence.PositionalScore.Aggregate("", (acc, i) => acc + " " + i),
+                    read.OriginalTag,
+                    read.FragmentationMode
+                };
+                if (read.SupportingSpectra.Count() == 1) {
+                    var spectrum = read.SupportingSpectra[0];
+                    row.Add(spectrum.Match.Score().Score.ToString());
+                    row.Add(spectrum.FDRFractionGeneral.ToString());
+                    if (read.Sequence.AminoAcids.Contains(new AminoAcid('I')) || read.Sequence.AminoAcids.Contains(new AminoAcid('L')) || read.Sequence.AminoAcids.Contains(new AminoAcid('J'))) {
+                        row.AddRange(new List<string> {
+                            double.IsNormal(spectrum.FDRFractionSpecific) || double.IsSubnormal(spectrum.FDRFractionSpecific) ? spectrum.FDRFractionSpecific.ToString() : "",
+                            spectrum.FoundSatelliteIons.ToString(),
+                            spectrum.PossibleSatelliteIons.ToString(),
+                            read.Sequence.AminoAcids
+                                .Select((aminoacid, index) => (pos:index, aminoacid))
+                                .Where(position => position.aminoacid.Character == 'I' || position.aminoacid.Character == 'J' || position.aminoacid.Character == 'L')
+                                .Select(position =>
+                                (position.aminoacid, position.pos, ions:spectrum.Match.FragmentMatches.Zip(spectrum.Match.Spectrum.Peaks)
+                                    .Where(peak => peak.First  != null && peak.First.Position == position.pos)
+                                    .Aggregate("", (acc, peak) => acc + $"{HeckLib.chemistry.PeptideFragment.IonToString(peak.First.FragmentType)} {peak.First.Charge} {peak.Second.Intensity};")))
+                                .Aggregate("", (acc, position) => acc + $"{position.aminoacid.Character} {position.pos}: {position.ions}|")
+                        });
+                        foreach (var position in read.Sequence.AminoAcids
+                                .Select((aminoacid, index) => (pos: index, aminoacid))
+                                .Where(position => position.aminoacid.Character == 'I' || position.aminoacid.Character == 'J' || position.aminoacid.Character == 'L')) {
+                            if (read.FragmentationMode == "HCD") {
+                                positions_data.Add(
+                                    new List<string> {
+                                    read.Identifier,
+                                    (position.pos + 1).ToString(),
+                                    position.aminoacid.Character.ToString(),
+                                    read.Charge.ToString(),
+                                    spectrum.Match.Score().Score.ToString(),
+                                    read.DeNovoScore.ToString(),
+                                    "d",
+                                    spectrum.Match.FragmentMatches.Count(p => p != null && p.Position == position.pos && p.FragmentType == PeptideFragment.ION_D).ToString(),
+                                    spectrum.Match.FragmentMatches.Zip(spectrum.Match.Spectrum.Peaks).Where(p => p.First != null && p.First.Position == position.pos && p.First.FragmentType == PeptideFragment.ION_D).Select(p => p.Second.Intensity).Sum().ToString(),
+                                    "a",
+                                    spectrum.Match.FragmentMatches.Count(p => p != null && p.Position == position.pos && p.FragmentType == PeptideFragment.ION_A).ToString(),
+                                    spectrum.Match.FragmentMatches.Zip(spectrum.Match.Spectrum.Peaks).Where(p => p.First != null && p.First.Position == position.pos && p.First.FragmentType == PeptideFragment.ION_A).Select(p => p.Second.Intensity).Sum().ToString()
+                                    }
+                                );
+
+                            } else {
+                                positions_data.Add(
+                                    new List<string> {
+                                    read.Identifier,
+                                    (position.pos + 1).ToString(),
+                                    position.aminoacid.Character.ToString(),
+                                    read.Charge.ToString(),
+                                    spectrum.Match.Score().Score.ToString(),
+                                    read.DeNovoScore.ToString(),
+                                    "w",
+                                    spectrum.Match.FragmentMatches.Count(p => p != null && p.Position == position.pos && p.FragmentType == PeptideFragment.ION_W).ToString(),
+                                    spectrum.Match.FragmentMatches.Zip(spectrum.Match.Spectrum.Peaks).Where(p => p.First != null && p.First.Position == position.pos && p.First.FragmentType == PeptideFragment.ION_W).Select(p => p.Second.Intensity).Sum().ToString(),
+                                    "z",
+                                    spectrum.Match.FragmentMatches.Count(p => p != null && p.Position == position.pos && p.FragmentType == PeptideFragment.ION_Z).ToString(),
+                                    spectrum.Match.FragmentMatches.Zip(spectrum.Match.Spectrum.Peaks).Where(p => p.First != null && p.First.Position == position.pos && p.First.FragmentType == PeptideFragment.ION_Z).Select(p => p.Second.Intensity).Sum().ToString()
+                                    }
+                                );
+                            }
+                        }
+
+                    }
+                }
+                data.Add(row);
+            }
+
+            var file = new StreamWriter(output + ".csv");
+            file.WriteLine(string.Join(',', header));
+            foreach (var line in data) {
+                file.WriteLine(string.Join(',', line));
+            }
+
+            var file2 = new StreamWriter(output + "_position.csv");
+            file2.WriteLine(string.Join(',', positions_header));
+            foreach (var line in positions_data) {
+                file2.WriteLine(string.Join(',', line));
+            }
         }
     }
 }

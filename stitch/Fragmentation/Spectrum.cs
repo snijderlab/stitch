@@ -22,13 +22,8 @@ namespace Stitch {
             /// ions are counted.</summary>
             public double FDRFractionSpecific;
             public double SpecificExpectationPerPosition;
-
-            public ASM(AnnotatedSpectrumMatch match, double general, double specific, double expectation) {
-                Match = match;
-                FDRFractionGeneral = general;
-                FDRFractionSpecific = specific;
-                SpecificExpectationPerPosition = expectation;
-            }
+            public int FoundSatelliteIons;
+            public int PossibleSatelliteIons;
         }
 
         /// <summary> Finds the supporting spectra for all reads and saves it in the reads themselves. </summary>
@@ -202,7 +197,14 @@ namespace Stitch {
                 steps += 2;
             }
 
-            return new ASM(res, (double)total_general / steps / actual_generic, (double)total_specific / steps / actual_specific, (double)total_specific / steps / sequence.Count(i => i == 'I' || i == 'L'));
+            return new ASM() {
+                Match = res,
+                FDRFractionGeneral = (double)total_general / steps / actual_generic,
+                FDRFractionSpecific = (double)total_specific / steps / actual_specific,
+                SpecificExpectationPerPosition = (double)total_specific / steps / sequence.Count(i => i == 'I' || i == 'L'),
+                FoundSatelliteIons = actual_specific,
+                PossibleSatelliteIons = peptide_fragments.Count(i => (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D))
+            };
         }
 
         static (int DetectedGeneral, int DetectedSpecific) GetCounts(Peptide peptide, PeptideFragment[] fragments, double shift, short maxCharge, PeptideFragment.FragmentModel model, Centroid[] spectrum) {

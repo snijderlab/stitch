@@ -74,7 +74,7 @@ namespace Stitch {
                 var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname);
 
                 // If there is an expected outcome present to answers here
-                if (extraArguments.ExpectedResult.Count > 0) {
+                if (extraArguments.ExpectedResult.Length > 0) {
                     GenerateBenchmarkOutput(parameters);
                 } else {
                     // Generate the "base" folder path, reuse this later to enforce that all results end up in the same base folder
@@ -121,8 +121,8 @@ namespace Stitch {
                     templates = parameters.Groups.Where(s => s.Item1.ToLower() != "decoy").SelectMany(g => g.Item2.SelectMany(s => s.Templates.Select(t => (g.Item1, t))));
 
                 // See if the number of results match up
-                if (templates.Count() != extraArguments.ExpectedResult.Count) {
-                    Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({extraArguments.ExpectedResult.Count}).");
+                if (templates.Count() != extraArguments.ExpectedResult.Length) {
+                    Console.Error.WriteLine($"Number of results ({templates.Count()}) not equal to number of expected results ({extraArguments.ExpectedResult.Length}).");
                     return;
                 } else {
                     // Give the scoring result for each result

@@ -227,7 +227,7 @@ namespace Stitch {
         private HtmlBuilder CreateHeader(string title, List<string> location) {
             var link = GetLinkToFolder(new List<string>() { AssetsFolderName }, location);
             var assets_folder = link;
-            if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer))
+            if (Parameters.runVariables.LiveServer != -1)
                 link = $"http://localhost:{Parameters.runVariables.LiveServer}/assets/";
             var html = new HtmlBuilder();
             html.Open(HtmlTag.head);
@@ -631,7 +631,7 @@ namespace Stitch {
             CopyAssetsFile("export_pdf_example.png", "images");
             CopyAssetsFile("ion_overview.svg", "images");
             CopyAssetsFile("favicon.ico", "images");
-            if (!String.IsNullOrEmpty(Parameters.runVariables.LiveServer)) return;
+            if (Parameters.runVariables.LiveServer != -1) return;
             CopyAssetsFile("styles.css");
             CopyAssetsFile("script.js");
             CopyAssetsFile("Roboto-Regular.ttf");
@@ -670,7 +670,7 @@ namespace Stitch {
 
             if (Parameters.runVariables.AutomaticallyOpen) {
                 var p = new Process();
-                p.StartInfo = new ProcessStartInfo(!String.IsNullOrEmpty(Parameters.runVariables.LiveServer) ? $"http://localhost:{Parameters.runVariables.LiveServer}/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename) {
+                p.StartInfo = new ProcessStartInfo(Parameters.runVariables.LiveServer != -1 ? $"http://localhost:{Parameters.runVariables.LiveServer}/results/" + Directory.GetParent(filename).Name + "/" + Path.GetFileName(filename) : filename) {
                     UseShellExecute = true
                 };
                 p.Start();

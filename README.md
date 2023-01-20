@@ -7,30 +7,30 @@ There are distributed executable files for windows (x64, arm64), linux (x64, arm
 
 Windows:
 ```
-.\stitch.exe batchfiles\monoclonal.txt           (x64)
-.\stitch_arm.exe batchfiles\monoclonal.txt       (arm64)
+.\stitch.exe run batchfiles\monoclonal.txt           (x64)
+.\stitch_arm.exe run batchfiles\monoclonal.txt       (arm64)
 ```
 
 Linux:
 ```
 (x64, should work on most distros)
 chmod +x ./stitch.bin                      (give running permission to the binary)
-./stitch.bin batchfiles/monoclonal.txt
+./stitch.bin run batchfiles/monoclonal.txt
 
 (arm64)
 chmod +x ./stitch_arm                      (give running permission to the binary)
-./stitch_arm batchfiles/monoclonal.txt
+./stitch_arm run batchfiles/monoclonal.txt
 ```
 
 OSX:
 ```
 (x64, minimum version macOS 10.12 Sierra)
 chmod +x ./stitch                          (give running permission to the binary)
-./stitch batchfiles/monoclonal.txt
+./stitch run batchfiles/monoclonal.txt
 
 (arm64, minimum version macOS 11.0 Big Sur)
 chmod +x ./stitch_arm                      (give running permission to the binary)
-./stitch_arm batchfiles/monoclonal.txt
+./stitch_arm run batchfiles/monoclonal.txt
 ```
 
 For help creating batch files see `manual.pdf`, this is can be found on the same page.
@@ -94,7 +94,7 @@ The 'benchmarks' folder contains a set of examples with a known output which are
 
 ## Credits
 
-* Douwe Schulte - Software engineer - d.schulte[at]uu[dot]nl
+* Douwe Schulte - Software engineer - d.schulte{at}uu{dot}nl
 * Joost Snijder - Principal investigator
 * Bastiaan de Graaf - Code reviews
 * Wei Wei Peng - Testing and analysis

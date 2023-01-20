@@ -101,14 +101,16 @@ namespace Stitch {
             }
 
             // Set all symmetric similar sets, used for iso mass in the normal case
-            foreach (var super_set in symmetric_similar) {
-                foreach (var set in super_set.sets) {
-                    foreach ((var a, var b) in set.Where(s => s.Count <= size).Variations()) {
-                        var perms_a = a.Permutations();
-                        var perms_b = b.Permutations();
-                        foreach (var perm_a in perms_a) {
-                            foreach (var perm_b in perms_b) {
-                                this.SetScore(perm_a, perm_b, super_set.score);
+            if (symmetric_similar != null) {
+                foreach (var super_set in symmetric_similar) {
+                    foreach (var set in super_set.sets) {
+                        foreach ((var a, var b) in set.Where(s => s.Count <= size).Variations()) {
+                            var perms_a = a.Permutations();
+                            var perms_b = b.Permutations();
+                            foreach (var perm_a in perms_a) {
+                                foreach (var perm_b in perms_b) {
+                                    this.SetScore(perm_a, perm_b, super_set.score);
+                                }
                             }
                         }
                     }
@@ -116,15 +118,17 @@ namespace Stitch {
             }
 
             // Set all asymmetric similar sets, used for modifications in the normal case
-            foreach (var super_set in asymmetric_similar) {
-                foreach (var set in super_set.sets) {
-                    foreach (var a in set.from.Where(s => s.Count <= size)) {
-                        foreach (var b in set.to.Where(s => s.Count <= size)) {
-                            var perms_a = a.Permutations();
-                            var perms_b = b.Permutations();
-                            foreach (var perm_a in perms_a) {
-                                foreach (var perm_b in perms_b) {
-                                    this.SetScore(perm_a, perm_b, super_set.score);
+            if (asymmetric_similar != null) {
+                foreach (var super_set in asymmetric_similar) {
+                    foreach (var set in super_set.sets) {
+                        foreach (var a in set.from.Where(s => s.Count <= size)) {
+                            foreach (var b in set.to.Where(s => s.Count <= size)) {
+                                var perms_a = a.Permutations();
+                                var perms_b = b.Permutations();
+                                foreach (var perm_a in perms_a) {
+                                    foreach (var perm_b in perms_b) {
+                                        this.SetScore(perm_a, perm_b, super_set.score);
+                                    }
                                 }
                             }
                         }
@@ -189,6 +193,39 @@ namespace Stitch {
                             }
                     })
                 })}, 8, -1, -5, -5, 2, 3, '.'
+            );
+        }
+
+        public static ScoringMatrix Blosum62() {
+            return new ScoringMatrix(
+new sbyte[,] {{4, -1, -2, -2, 0, -1, -1, 0, -2, -1, -1, -1, -1, -2, -1, 1, 0, -3, -2, 0, -2, -1, 1, -4},
+{-1, 5, 0, -2, -3, 1, 0, -2, 0, -3, -2, 2, -1, -3, -2, -1, -1, -3, -2, -3, -1, 0, 1, -4},
+{-2, 0, 6, 1, -3, 0, 0, 0, 1, -3, -3, 0, -2, -3, -2, 1, 0, -4, -2, -3, 3, 0, 1, -4},
+{-2, -2, 1, 6, -3, 0, 2, -1, -1, -3, -4, -1, -3, -3, -1, 0, -1, -4, -3, -3, 4, 1, 1, -4},
+{0, -3, -3, -3, 9, -3, -4, -3, -3, -1, -1, -3, -1, -2, -3, -1, -1, -2, -2, -1, -3, -3, 1, -4},
+{-1, 1, 0, 0, -3, 5, 2, -2, 0, -3, -2, 1, 0, -3, -1, 0, -1, -2, -1, -2, 0, 3, 1, -4},
+{-1, 0, 0, 2, -4, 2, 5, -2, 0, -3, -3, 1, -2, -3, -1, 0, -1, -3, -2, -2, 1, 4, 1, -4},
+{0, -2, 0, -1, -3, -2, -2, 6, -2, -4, -4, -2, -3, -3, -2, 0, -2, -2, -3, -3, -1, -2, 1, -4},
+{-2, 0, 1, -1, -3, 0, 0, -2, 8, -3, -3, -1, -2, -1, -2, -1, -2, -2, 2, -3, 0, 0, 1, -4},
+{-1, -3, -3, -3, -1, -3, -3, -4, -3, 4, 2, -3, 1, 0, -3, -2, -1, -3, -1, 3, -3, -3, 1, -4},
+{-1, -2, -3, -4, -1, -2, -3, -4, -3, 2, 4, -2, 2, 0, -3, -2, -1, -2, -1, 1, -4, -3, 1, -4},
+{-1, 2, 0, -1, -3, 1, 1, -2, -1, -3, -2, 5, -1, -3, -1, 0, -1, -3, -2, -2, 0, 1, 1, -4},
+{-1, -1, -2, -3, -1, 0, -2, -3, -2, 1, 2, -1, 5, 0, -2, -1, -1, -1, -1, 1, -3, -1, 1, -4},
+{-2, -3, -3, -3, -2, -3, -3, -3, -1, 0, 0, -3, 0, 6, -4, -2, -2, 1, 3, -1, -3, -3, 1, -4},
+{-1, -2, -2, -1, -3, -1, -1, -2, -2, -3, -3, -1, -2, -4, 7, -1, -1, -4, -3, -2, -2, -1, 1, -4},
+{1, -1, 1, 0, -1, 0, 0, 0, -1, -2, -2, 0, -1, -2, -1, 4, 1, -3, -2, -2, 0, 0, 1, -4},
+{0, -1, 0, -1, -1, -1, -1, -2, -2, -1, -1, -1, -1, -2, -1, 1, 5, -2, -2, 0, -1, -1, 1, -4},
+{-3, -3, -4, -4, -2, -2, -3, -2, -2, -3, -2, -3, -1, 1, -4, -3, -2, 11, 2, -3, -4, -3, 1, -4},
+{-2, -2, -2, -3, -2, -1, -2, -3, 2, -1, -1, -2, -1, 3, -3, -2, -2, 2, 7, -1, -3, -2, 1, -4},
+{0, -3, -3, -3, -1, -2, -2, -3, -3, 3, 1, -2, 1, -1, -2, -2, 0, -3, -1, 4, -3, -2, 1, -4},
+{-2, -1, 3, 4, -3, 0, 1, -1, 0, -3, -4, 0, -3, -3, -2, 0, -1, -4, -3, -3, 4, 1, 1, -4},
+{-1, 0, 0, 1, -3, 3, 4, -2, 0, -3, -3, 1, -1, -3, -1, 0, -1, -3, -2, -2, 1, 4, 1, -4},
+{1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, -4},
+{-4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, -4, 1}
+    },
+                "ARNDCQEGHILKMFPSTWYVBZX.".ToList(),
+                null,
+                null, -12, -1, -1, 1, '.'
             );
         }
 

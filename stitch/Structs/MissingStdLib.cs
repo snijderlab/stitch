@@ -20,6 +20,14 @@ namespace Stitch {
             valid = true;
         }
 
+        public bool IsSome() {
+            return valid;
+        }
+
+        public bool IsNone() {
+            return !valid;
+        }
+
         /// <summary> Unwrap the option throwing an error when there is no value inside.</summary>
         /// <exception cref="NullReferenceException">When there is no value in this Option.</exception>
         /// <returns>The inner value if applicable.</returns>
@@ -32,7 +40,7 @@ namespace Stitch {
         /// <summary> Unwrap the option throwing an error when there is no value inside. With a custom message. </summary>
         /// <exception cref="NullReferenceException">When there is no value in this Option.</exception>
         /// <returns>The inner value if applicable.</returns>
-        public T Unwrap(string msg) {
+        public T Expect(string msg) {
             if (!valid)
                 throw new NullReferenceException(msg);
             return value;
@@ -65,6 +73,14 @@ namespace Stitch {
             if (!valid)
                 return f_none();
             return f_some(value);
+        }
+
+        public override string ToString() {
+            if (valid) {
+                return $"Some({value})";
+            } else {
+                return "None";
+            }
         }
     }
 }
