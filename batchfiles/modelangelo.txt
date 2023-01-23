@@ -25,8 +25,16 @@ TemplateMatching ->
 
     Segments->
         Segment->
-            Path: ../datasets/7lue.fasta
-            Name: 7lue
+            Path: ../datasets/7lue_A.fasta
+            Name: 7lue_A
+        <-
+        Segment->
+            Path: ../datasets/7lue_H.fasta
+            Name: 7lue_H
+        <-
+        Segment->
+            Path: ../datasets/7lue_L.fasta
+            Name: 7lue_L
         <-
     <-
 <-
