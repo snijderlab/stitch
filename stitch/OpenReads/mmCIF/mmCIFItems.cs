@@ -57,11 +57,11 @@ namespace Stitch {
 
         public struct Loop : DataItem {
             public List<string> Header;
-            public List<List<Value>> Data;
+            public List<Value[]> Data;
 
             public Loop() {
                 Header = new List<string>();
-                Data = new List<List<Value>>();
+                Data = new List<Value[]>();
             }
 
             public string Debug() {

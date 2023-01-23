@@ -75,10 +75,11 @@ namespace Stitch {
                     if (value.IsOk()) temp_values.Add(value.Unwrap());
                     else break;
                 }
+                var temp_values_ar = temp_values.ToArray();
                 var columns = loop.Header.Count;
-                if (temp_values.Count % columns == 0) {
-                    for (int i = 0; i < temp_values.Count / columns; i++) {
-                        loop.Data.Add(temp_values.SubList(i * columns, columns));
+                if (temp_values_ar.Length % columns == 0) {
+                    for (int i = 0; i < temp_values_ar.Length / columns; i++) {
+                        loop.Data.Add(temp_values_ar.SubArray(i * columns, columns));
                     }
                 } else {
                     foreach (var item in temp_values) {
