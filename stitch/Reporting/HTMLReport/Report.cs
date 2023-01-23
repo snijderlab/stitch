@@ -382,7 +382,6 @@ namespace Stitch {
                             html.Open(HtmlTag.h3);
                             html.OpenAndClose(HtmlTag.a, "", CommonPieces.GetAsideLinkHtml(template.MetaData, AsideType.Template, AssetsFolderName));
                             html.Close(HtmlTag.h3);
-                            html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(seq.SelectMany(i => i.Sequence)));
                             html.Open(HtmlTag.div, "class='doc-plot'");
                             html.Add(HTMLGraph.Bargraph(HTMLGraph.AnnotateDOCData(doc), new HtmlGenerator.HtmlBuilder("Depth of Coverage"), null, null, 10, template.ConsensusSequenceAnnotation()));
                             html.Close(HtmlTag.div);
