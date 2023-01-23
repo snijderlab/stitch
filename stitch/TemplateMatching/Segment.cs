@@ -64,7 +64,7 @@ namespace Stitch {
             for (int j = 0; j < sequences.Count; j++) {
                 var row = new List<(int TemplateIndex, Alignment Match)>(Templates.Count);
                 for (int i = 0; i < Templates.Count; i++) {
-                    row.Add((i, new Alignment(Templates[i].MetaData, sequences[j], Alphabet, AlignmentType.GlobalForB, i)));
+                    row.Add((i, new Alignment(Templates[i].MetaData, sequences[j], Alphabet, AlignmentType.ReadAlign, i)));
                 }
                 output.Add(row);
             }
