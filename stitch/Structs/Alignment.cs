@@ -14,6 +14,7 @@ namespace Stitch {
         Local,
         /// <summary> Align the ends of two sequences, the left sequence (1st argument) can have dangling patches of sequence on the left, but has to be fully placed on the right while the right sequence (2nd argument) works the other way around. </summary>
         EndAlignment,
+        ReadAlign,
     }
 
     public struct AlignmentPiece {
@@ -140,6 +141,13 @@ namespace Stitch {
             } else if (type == AlignmentType.EndAlignment) {
                 var value = Enumerable.Range(0, seq_b.Length + 1).Select(index => (index, matrix[seq_a.Length, index].Score)).MaxBy(v => v.Item2);
                 high = (value.Item2, seq_a.Length, value.index);
+            } else if (type == AlignmentType.ReadAlign) {
+                var axis_a = Enumerable.Range(0, seq_a.Length + 1).Select(index => (index, matrix[index, seq_b.Length].Score)).MaxBy(v => v.Item2);
+                var axis_b = Enumerable.Range(0, seq_b.Length + 1).Select(index => (index, matrix[seq_a.Length, index].Score)).MaxBy(v => v.Item2);
+                if (axis_a.Score > axis_b.Score)
+                    high = (axis_a.Score, axis_a.index, seq_b.Length);
+                else
+                    high = (axis_b.Score, seq_a.Length, axis_b.index);
             }
             this.Score = high.score;
 

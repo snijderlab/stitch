@@ -376,7 +376,7 @@ namespace HTMLNameSpace {
                     scoreList.Add(data.UniqueMaxScore);
                     scoreList.Add(data.UniqueTotalScore / data.Num);
                     areaList.Add(data.UniqueMatches);
-                    areaList.Add(data.UniqueArea);
+                    if (displayArea) areaList.Add(data.UniqueArea);
                 }
                 scoreData.Add((type, scoreList));
                 areaData.Add((type, areaList));

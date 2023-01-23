@@ -152,5 +152,38 @@ namespace StitchTest {
             Assert.AreEqual(4, result.LenB);
             Assert.AreEqual(16, result.Score);
         }
+
+        [TestMethod]
+        public void TestReadAlignmentLongRead() {
+            var alphabet = ScoringMatrix.Default();
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("FNEWAEYMELSSLRSEDTAVYYCARAFGGWFNEWAEY", alphabet).Unwrap());
+            var read_c = new ReadFormat.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
+            var result_1 = new Alignment(read_a, read_b, alphabet, AlignmentType.ReadAlign);
+            var result_2 = new Alignment(read_a, read_c, alphabet, AlignmentType.ReadAlign);
+            Console.WriteLine($"Best Alignment: {result_1.Score} at {result_1.LenA}, {result_1.LenB}");
+            Console.WriteLine($"Best Alignment: {result_2.Score} at {result_2.LenA}, {result_2.LenB}");
+            Console.WriteLine(result_1.Summary());
+            Console.WriteLine(result_2.Summary());
+            Assert.AreEqual(result_1.LenA, result_2.LenA);
+            Assert.AreEqual(result_1.LenB, result_2.LenB);
+            Assert.AreEqual(result_1.Score, result_2.Score);
+        }
+
+        [TestMethod]
+        public void TestReadAlignmentShortRead() {
+            var alphabet = ScoringMatrix.Default();
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("MELSSLRSEDTAVYYCARAFGGW", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("SSLRSEDTAVYYCAR", alphabet).Unwrap());
+            var result_1 = new Alignment(read_a, read_b, alphabet, AlignmentType.ReadAlign);
+            var result_2 = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
+            Console.WriteLine($"Best Alignment: {result_1.Score} at {result_1.LenA}, {result_1.LenB}");
+            Console.WriteLine($"Best Alignment: {result_2.Score} at {result_2.LenA}, {result_2.LenB}");
+            Console.WriteLine(result_1.Summary());
+            Console.WriteLine(result_2.Summary());
+            Assert.AreEqual(result_1.LenA, result_2.LenA);
+            Assert.AreEqual(result_1.LenB, result_2.LenB);
+            Assert.AreEqual(result_1.Score, result_2.Score);
+        }
     }
 }
