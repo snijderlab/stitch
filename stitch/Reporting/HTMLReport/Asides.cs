@@ -393,7 +393,9 @@ namespace HTMLNameSpace {
                             seq.Append(new string(non_breaking_space, Math.Max(0, gaps[pos_a] - len_start)));
                             inserted += Math.Max(0, gaps[pos_a] - len_start);
                         }
+                        if (pos_a == alignment.StartA) html.Open(HtmlTag.span, "class='insertion'");
                         html.Content(AminoAcid.ArrayToString(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB)));
+                        if (pos_a == alignment.StartA) html.Close(HtmlTag.span);
                         seq.Append(AminoAcid.ArrayToString(alignment.ReadB.Sequence.AminoAcids.SubArray(pos_b, piece.StepB)));
                         inserted += piece.StepB;
                     } else if (piece.StepB == 0) {

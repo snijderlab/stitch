@@ -153,6 +153,13 @@ namespace Stitch {
             return ret;
         }
 
+        public static double Max(this IEnumerable<double> data, double fallback) {
+            if (data.Count() > 0)
+                return data.Max();
+            else
+                return fallback;
+        }
+
         public static int SmithWatermanStrings(string template, string query) {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
             int[] indices_template = new int[template.Length];

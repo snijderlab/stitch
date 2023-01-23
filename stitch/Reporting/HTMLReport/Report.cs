@@ -433,10 +433,10 @@ namespace Stitch {
                 var bars_a = new HtmlBuilder();
                 var bars_b = new HtmlBuilder();
                 var max_doc = new double[] {
-                    set.EndAlignment.ReadA.Sequence.PositionalScore.SubArray(set.EndAlignment.StartA, set.EndAlignment.LenA).Max(),
-                    set.EndAlignment.ReadB.Sequence.PositionalScore.SubArray(set.EndAlignment.StartB, set.EndAlignment.LenB).Max(),
-                    set.SeqA.Sequence.PositionalScore.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding).Max(),
-                    set.SeqB.Sequence.PositionalScore.SubArray(set.EndAlignment.LenB, padding).Max(),
+                    set.EndAlignment.ReadA.Sequence.PositionalScore.SubArray(set.EndAlignment.StartA, set.EndAlignment.LenA).Max(0),
+                    set.EndAlignment.ReadB.Sequence.PositionalScore.SubArray(set.EndAlignment.StartB, set.EndAlignment.LenB).Max(0),
+                    set.SeqA.Sequence.PositionalScore.SubArray(set.SeqA.Sequence.Length - set.EndAlignment.LenA - padding, padding).Max(0),
+                    set.SeqB.Sequence.PositionalScore.SubArray(set.EndAlignment.LenB, padding).Max(0),
                 }.Max();
                 bars_a.Open(HtmlTag.div, $"class='joining a' style='--max:{max_doc}'");
                 bars_b.Open(HtmlTag.div, $"class='joining b' style='--max:{max_doc}'");
