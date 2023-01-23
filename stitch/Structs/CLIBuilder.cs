@@ -137,7 +137,7 @@ namespace Stitch {
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
 
                 PrettyPrintHeader("USAGE");
-                Console.Write($"\t{exe} [SUBCOMMAND] || [OPTIONS]");
+                Console.Write($"\t{exe} [SUBCOMMAND] <or> [OPTIONS]");
                 foreach (var req in required) {
                     Console.Write($" <{req.GetKey()}>");
                 }
