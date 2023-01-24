@@ -38,7 +38,7 @@ namespace Stitch {
             }
 
             try {
-                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList(), Alphabet);
+                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList());
             } catch (Exception e) {
                 (new InputNameSpace.ErrorMessage(name, "Error rendering tree", "The tree will not be available but the program will continue. Please report this including your batchfile and used templates.", "", true)).Print();
                 InputNameSpace.ErrorMessage.PrintException(e);

@@ -193,10 +193,12 @@ namespace Stitch {
                     }
                 }
 
-                foreach (var group in segments) {
-                    foreach (var segment in group.Item2) {
-                        if (segment.Hierarchy == null) continue;
-                        segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
+                if (TemplateMatching.BuildTree) {
+                    foreach (var group in segments) {
+                        foreach (var segment in group.Item2) {
+                            if (segment.Hierarchy == null) continue;
+                            segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
+                        }
                     }
                 }
 

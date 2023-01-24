@@ -476,8 +476,11 @@ namespace Stitch {
                         case "forcegermlineisoleucine":
                             output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true);
                             break;
+                        case "buildtree":
+                            output.BuildTree = ParseBool(setting, "BuildTree").UnwrapOrDefault(outEither, true);
+                            break;
                         default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', 'AmbiguityThreshold', and 'ForceGermlineIsoleucine'"));
+                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', 'AmbiguityThreshold', 'ForceGermlineIsoleucine', 'BuildTree'"));
                             break;
                     }
                 }

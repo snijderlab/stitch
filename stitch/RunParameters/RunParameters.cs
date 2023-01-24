@@ -144,6 +144,9 @@ namespace Stitch {
             /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public bool ForceGermlineIsoleucine = true;
 
+            /// <summary> Turns the tree generation on or off. </summary>
+            public bool BuildTree = true;
+
             /// <summary> The threshold which determines if a position is seen as ambiguous. Saved as fraction. </summary>
             public double AmbiguityThreshold = 0.75;
 

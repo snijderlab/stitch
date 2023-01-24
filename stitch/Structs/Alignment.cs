@@ -64,6 +64,7 @@ namespace Stitch {
         public readonly int Similar;
         public readonly int GapInA;
         public readonly int GapInB;
+        private readonly ScoringMatrix scoringMatrix;
 
         public Alignment(ReadFormat.General read_a, ReadFormat.General read_b, ScoringMatrix scoring_matrix, AlignmentType type, int readAIndex = 0) {
             var seq_a = read_a.Sequence.AminoAcids;
@@ -184,6 +185,7 @@ namespace Stitch {
                 this.LenA += piece.StepA;
                 this.LenB += piece.StepB;
             }
+            this.scoringMatrix = scoring_matrix;
         }
 
         public string ShortPath() {
@@ -272,6 +274,12 @@ namespace Stitch {
             }
 
             return output.ToArray();
+        }
+
+        public double Distance() {
+            var max_a = ReadA.Sequence.AminoAcids.Select(a => (double)scoringMatrix.Score(new AminoAcid[1] { a }, new AminoAcid[1] { a })).Sum();
+            var max_b = ReadB.Sequence.AminoAcids.Select(a => (double)scoringMatrix.Score(new AminoAcid[1] { a }, new AminoAcid[1] { a })).Sum();
+            return (max_a + max_b) / 2 - Score;
         }
     }
 }

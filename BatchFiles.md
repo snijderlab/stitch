@@ -37,7 +37,7 @@ Input ->
     -Can only be specified once
 <-
 
-TemplateMatching ->
+ing ->
     -Has parameters defining the segment matching step
     -Like scoring, alphabet and the segments itself
     -Can only be specified once
@@ -45,9 +45,9 @@ TemplateMatching ->
 
 Recombine ->
     -Has parameters defining the behaviour of the recombination step
-    -Aligns the segments from TemplateMatching with the paths from the assembler
+    -Aligns the segments from ing with the paths from the assembler
     -Can only be specified once
-    -TemplateMatching has to be specified for recombination te be specified
+    -ing has to be specified for recombination te be specified
 <-
 
 Report ->
@@ -95,7 +95,7 @@ All assets are loaded from the folder `assets` in the folder of the binary.
         * Recursive
         * Identifier
         * All Peaks parameters prefixed with `Peaks`
-* TemplateMatching
+* ing
     * CutoffScore
     * Alphabet
     * EnforceUnique
@@ -379,7 +379,7 @@ Folder ->
 <-
 ```
 
-#### TemplateMatching (m)
+#### ing (m)
 
 To determine the parameters for template matching. Can only be specified once. Often used with the reference set from IMGT (http://www.imgt.org/vquest/refseqh.html).
 
@@ -393,17 +393,21 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. If your batchfiles contains multiple segments or segment groups the best placement for the read across all of these templates is forced. Setting this options for TemplateMatching sets the default value for use in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. If your batchfiles contains multiple segments or segment groups the best placement for the read across all of these templates is forced. Setting this options for ing sets the default value for use in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Setting this options for TemplateMatching overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Setting this options for ing overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+
+##### BuildTree (s)
+
+With this option on the program will generate a very basic phylogenetic tree of the provided templates within each segment. Possible values: `True` and `False`. Default: `True`.
 
 ##### Segments (m)
 
 Defines a list of segments to match against. A single segment is defined by the parameter `Segment` which can be defined multiple times within `Segments`. Segments will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in TemplateMatching.
+`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in ing.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
@@ -482,7 +486,7 @@ Determines of the paths/reads of this segment will be forced to the best templat
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in ing which defaults to `True`.
 
 
 ###### GapHead (s)
@@ -495,7 +499,7 @@ Adds 20 gaps (`X`) at the end of all templates in this segment. This can be used
 
 #### Recombine
 
-Defines how to recombine the TemplateMatched segments, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each segment, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the segment the input matches with. Be warned, the runtime factorially increases with _n_.
+Defines how to recombine the ed segments, as such ing has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each segment, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the segment the input matches with. Be warned, the runtime factorially increases with _n_.
 
 _Example_
 ```
@@ -541,11 +545,11 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in TemplateMatching which defaults to `1.0`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in ing which defaults to `1.0`.
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in ing which defaults to `True`.
 
 ##### Decoy (s)
 
@@ -604,7 +608,7 @@ To generate a FASTA file with all paths, with a score for each path. The score i
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
 | MinimalScore    | The minimal score needed to be included in the file                                                             | 0                  |
-| OutputType      | The type of sequences to give as output, `TemplateMatching` or `Recombine`                                      | `TemplateMatching` |
+| OutputType      | The type of sequences to give as output, `ing` or `Recombine`                                      | `ing` |
 
 _Example_
 ```
@@ -622,7 +626,7 @@ To generate a CSV file with all aligned reads for the given step. It includes al
 | Inner parameter | Explanation                                                                                                     |   Default Value    |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
-| OutputType      | The type of sequences to give as output, `TemplateMatching` or `Recombine`                                      | `TemplateMatching` |
+| OutputType      | The type of sequences to give as output, `ing` or `Recombine`                                      | `ing` |
 
 _Example_
 ```
