@@ -152,7 +152,7 @@ namespace Stitch {
 
         public static ScoringMatrix Default() {
             return IdentityMatrix(
-                "ARNDCQEGHILKMFPSTWYVBZX.*".ToList(),
+                "ARNDCQEGHILJKMFPSTWYVBZX.*".ToList(),
                 new List<(sbyte score, List<List<List<char>>> sets)>{(5, new List<List<List<char>>>{
                     new List<List<char>>{
                         new List<char>{
@@ -160,6 +160,9 @@ namespace Stitch {
                         },
                         new List<char> {
                             'L'
+                        },
+                        new List<char> {
+                            'J'
                         }
                     },
                     new List<List<char>>{
@@ -179,6 +182,9 @@ namespace Stitch {
                         },
                         new List<char> {
                             'D','I'
+                        },
+                        new List<char> {
+                            'D','J'
                         }
                     }
                 })},

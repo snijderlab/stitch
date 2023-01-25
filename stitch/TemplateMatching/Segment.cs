@@ -11,7 +11,7 @@ namespace Stitch {
         public List<Template> Templates;
         public readonly double CutoffScore;
         [JsonIgnore]
-        public readonly PhylogeneticTree.Tree<string> Hierarchy;
+        public PhylogeneticTree.Tree<string> Hierarchy = null;
         public List<(int Group, int Index, Alignment EndAlignment, ReadFormat.General SeqA, ReadFormat.General SeqB, ReadFormat.General Result, int Overlap)> SegmentJoiningScores = new();
         [JsonIgnore]
         public PhylogeneticTree.ProteinHierarchyTree ScoreHierarchy;
@@ -35,13 +35,6 @@ namespace Stitch {
             for (int i = 0; i < sequences.Count; i++) {
                 var meta = sequences[i];
                 Templates.Add(new Template(name, meta.Sequence.AminoAcids, meta, this, forceGermlineIsoleucine, new TemplateLocation(index, i)));
-            }
-
-            try {
-                Hierarchy = PhylogeneticTree.CreateTree(Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList());
-            } catch (Exception e) {
-                (new InputNameSpace.ErrorMessage(name, "Error rendering tree", "The tree will not be available but the program will continue. Please report this including your batchfile and used templates.", "", true)).Print();
-                InputNameSpace.ErrorMessage.PrintException(e);
             }
         }
 
