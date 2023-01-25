@@ -69,6 +69,7 @@ namespace Stitch {
 
             public class MMCIF : Parameter {
                 public uint MinLength = 5;
+                public uint CutoffALC = 0;
             }
 
             public class PeaksParameters {

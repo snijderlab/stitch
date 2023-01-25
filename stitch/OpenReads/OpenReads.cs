@@ -429,7 +429,7 @@ namespace Stitch {
             return out_either;
         }
 
-        public static ParseResult<List<ReadFormat.General>> MMCIF(NameFilter filter, ReadFormat.FileIdentifier file, uint minimal_length, ScoringMatrix alphabet) {
+        public static ParseResult<List<ReadFormat.General>> MMCIF(NameFilter filter, RunParameters.InputData.MMCIF mmcif, ScoringMatrix alphabet) {
             var out_either = new ParseResult<List<ReadFormat.General>>();
             string[] AMINO_ACIDS = new string[]{
     "ALA", "ARG", "ASH", "ASN", "ASP", "ASX", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", "HID",
@@ -441,7 +441,7 @@ namespace Stitch {
     'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O',
             };
 
-            var loaded_file = InputNameSpace.ParseHelper.GetAllText(file).Map(c => new ParsedFile(file, c.Split(Environment.NewLine)));
+            var loaded_file = InputNameSpace.ParseHelper.GetAllText(mmcif.File).Map(c => new ParsedFile(mmcif.File, c.Split(Environment.NewLine)));
 
             if (loaded_file.IsErr()) {
                 out_either.Messages.AddRange(loaded_file.Messages);
@@ -475,7 +475,7 @@ namespace Stitch {
 
                     foreach (var row in loop.Data) {
                         if (row[chain].AsText() != current_chain) {
-                            if (current_sequence.Length >= minimal_length) {
+                            if (current_sequence.Length >= mmcif.MinLength && local_confidence.Average() * 100 >= mmcif.CutoffALC) {
                                 sequences.Add((current_chain, current_auth_chain, current_sequence, local_confidence.ToArray()));
                             }
                             local_confidence.Clear();
@@ -494,7 +494,7 @@ namespace Stitch {
                             out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid."));
                         }
                     }
-                    if (current_sequence.Length > 0 && current_sequence.Length >= minimal_length) {
+                    if (current_sequence.Length > 0 && current_sequence.Length >= mmcif.MinLength && local_confidence.Average() * 100 >= mmcif.CutoffALC) {
                         sequences.Add((current_chain, current_auth_chain, current_sequence, local_confidence.ToArray()));
                     }
 
@@ -514,7 +514,7 @@ namespace Stitch {
                 }
             }
 
-            out_either.AddMessage(new InputNameSpace.ErrorMessage(file.ToString(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
+            out_either.AddMessage(new InputNameSpace.ErrorMessage(mmcif.File.ToString(), "Could not find the atomic data loop", "The mandatory atomic data loop could not be found in this mmCIF file."));
             return out_either;
         }
 

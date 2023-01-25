@@ -350,7 +350,7 @@ namespace Stitch {
                                     foreach (var step in aligned_template.Path) {
                                         if (step.StepA == 0) {
                                             var la = aligned_template.ReadA.Sequence.PositionalScore.Length - pos_a - 1;
-                                            var doc_a = la == 0 ? 0 : aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, Math.Min(2, la)).Min();
+                                            var doc_a = la <= 0 ? 0 : aligned_template.ReadA.Sequence.PositionalScore.SubArray(pos_a, Math.Min(2, la)).Min();
                                             var doc_b = aligned_template.ReadB.Sequence.PositionalScore[pos_b];
                                             if (doc_b >= doc_a) {
                                                 s.Add(aligned_template.ReadB.Sequence.AminoAcids[pos_b]);
@@ -359,7 +359,7 @@ namespace Stitch {
                                         } else if (step.StepB == 0) {
                                             var doc_a = aligned_template.ReadA.Sequence.PositionalScore[pos_a];
                                             var lb = aligned_template.ReadB.Sequence.PositionalScore.Length - pos_b - 1;
-                                            var doc_b = lb == 0 ? 0 : aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, Math.Min(2, lb)).Min();
+                                            var doc_b = lb <= 0 ? 0 : aligned_template.ReadB.Sequence.PositionalScore.SubArray(pos_b, Math.Min(2, lb)).Min();
                                             if (doc_a >= doc_b) {
                                                 s.Add(aligned_template.ReadA.Sequence.AminoAcids[pos_a]);
                                                 overlap++;

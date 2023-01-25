@@ -39,7 +39,7 @@ namespace Stitch {
             }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
-            /// <returns>If successfull: the number (int32)</returns>
+            /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ConvertToInt(string input, FileRange pos) {
                 try {
                     return new ParseResult<int>(Convert.ToInt32(input, new System.Globalization.CultureInfo("en-US")));
@@ -188,123 +188,98 @@ namespace Stitch {
                             break;
 
                         case "reads":
-                            var rsettings = new InputData.Reads();
+                            var rsettings = new LocalParams<InputData.Reads>("Reads", new List<(string, Action<InputData.Reads, KeyValue>)>{
+                                ("Path", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                ("Name", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");})
+                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        rsettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "name":
-                                        if (!string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        rsettings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Reads", "'Path' and 'Name'"));
-                                        break;
-                                }
+                            if (rsettings.IsOk(outEither)) {
+                                if (string.IsNullOrWhiteSpace(rsettings.Value.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                                if (string.IsNullOrWhiteSpace(rsettings.Value.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                                output.Files.Add(rsettings.Value);
                             }
-
-                            if (string.IsNullOrWhiteSpace(rsettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            if (string.IsNullOrWhiteSpace(rsettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                            output.Files.Add(rsettings);
                             break;
 
                         case "novor":
-                            var novor_settings = new InputData.Novor();
                             string name = null;
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "denovo path":
-                                        if (novor_settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
-                                        break;
-                                    case "psms path":
-                                        if (novor_settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        novor_settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, ""), "", setting);
-                                        break;
-                                    case "name":
-                                        if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "separator":
-                                        var value = setting.GetValue().UnwrapOrDefault(outEither, ",");
-                                        if (value.Length != 1)
-                                            outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                        else
-                                            novor_settings.Separator = value.First();
-                                        break;
-                                    case "cutoff":
-                                        novor_settings.Cutoff = (uint)ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Novor", "'Path', 'Name' and 'Separator'"));
-                                        break;
-                                }
-                            }
+                            var novor_settings = new LocalParams<InputData.Novor>("Novor", new List<(string, Action<InputData.Novor, KeyValue>)>{
+                                ("Denovo Path", (settings, value) => {
+                                    if (settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                                ("PSMS Path", (settings, value) => {
+                                    if (settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                                ("Name", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                                ("Cutoff", (settings, value) => {
+                                    settings.Cutoff = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                                ("Separator", (settings, value) => {
+                                    var v = value.GetValue().UnwrapOrDefault(outEither, ",");
+                                    if (v.Length != 1)
+                                        outEither.AddMessage(new ErrorMessage(value.ValueRange, "Invalid Character", "The Character should be of length 1"));
+                                    else
+                                        settings.Separator = v.First();})
+                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
-                            if (novor_settings.DeNovoFile == null && novor_settings.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
-                            if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-                            if (novor_settings.DeNovoFile != null) novor_settings.DeNovoFile.Name = name;
-                            if (novor_settings.PSMSFile != null) novor_settings.PSMSFile.Name = name;
-                            output.Files.Add(novor_settings);
+                            if (novor_settings.IsOk(outEither)) {
+                                var novor = novor_settings.Value;
+                                if (novor.DeNovoFile == null && novor.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
+                                if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                                if (novor.DeNovoFile != null) novor.DeNovoFile.Name = name;
+                                if (novor.PSMSFile != null) novor.PSMSFile.Name = name;
+                                output.Files.Add(novor);
+                            }
                             break;
 
                         case "fasta":
-                            var fastasettings = new InputData.FASTA();
+                            var fastasettings = new LocalParams<InputData.FASTA>("Reads", new List<(string, Action<InputData.FASTA, KeyValue>)>{
+                                ("Path", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                ("Name", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                                ("Identifier", (settings, value) => {
+                                    settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);})
+                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fastasettings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "name":
-                                        if (!string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        fastasettings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "identifier":
-                                        fastasettings.Identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
-                                        break;
-                                }
+                            if (fastasettings.IsOk(outEither)) {
+                                if (string.IsNullOrWhiteSpace(fastasettings.Value.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                                if (string.IsNullOrWhiteSpace(fastasettings.Value.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                                output.Files.Add(fastasettings.Value);
                             }
-
-                            if (string.IsNullOrWhiteSpace(fastasettings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            if (string.IsNullOrWhiteSpace(fastasettings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                            output.Files.Add(fastasettings);
                             break;
+
                         case "mmcif":
-                            var mmcif_settings = new InputData.MMCIF();
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(mmcif_settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        mmcif_settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "name":
-                                        if (!string.IsNullOrWhiteSpace(mmcif_settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        mmcif_settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "minlength":
-                                        mmcif_settings.MinLength = (uint)ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 5);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTAInput", "'Path' and 'Name'"));
-                                        break;
-                                }
+                            var mmcif_settings = new LocalParams<InputData.MMCIF>("Reads", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
+                                ("Path", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                ("Name", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                                ("MinLength", (settings, value) => {
+                                    settings.MinLength = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                                ("CutoffALC", (settings, value) => {
+                                    settings.CutoffALC = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+
+                            if (mmcif_settings.IsOk(outEither)) {
+                                var mmcif = mmcif_settings.Value;
+                                if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                                if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                                output.Files.Add(mmcif);
                             }
-
-                            if (string.IsNullOrWhiteSpace(mmcif_settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            if (string.IsNullOrWhiteSpace(mmcif_settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                            output.Files.Add(mmcif_settings);
                             break;
+
                         case "folder":
                             // Parse files one by one
                             var folder_path = "";
@@ -401,7 +376,7 @@ namespace Stitch {
                         InputData.FASTA fasta => OpenReads.Fasta(name_filter, fasta.File, fasta.Identifier, alphabet),
                         InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alphabet),
                         InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
-                        InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif.File, mmcif.MinLength, alphabet),
+                        InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);
