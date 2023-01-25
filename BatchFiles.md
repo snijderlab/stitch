@@ -45,7 +45,7 @@ ing ->
 
 Recombine ->
     -Has parameters defining the behaviour of the recombination step
-    -Aligns the segments from ing with the paths from the assembler
+    -Aligns the segments from TemplateMatching with the paths from the assembler
     -Can only be specified once
     -ing has to be specified for recombination te be specified
 <-
@@ -335,7 +335,7 @@ If set to `True` the program will before running the template matching go throug
 
 ##### Novor (m) *
 
-A multiple valued parameter containing one or both different Novor output files and a Name, for this set to aid in recognizing where the data comes from. Either the DeNovo or PSMS files can be used on their own, but they can also be specified together to group the data together. A cutoff can be given to use all reads with a score equal or higher (`read.score >= cutoff`). As the score ranges from 0 to 100 inclusive the cutoff can only be specified within this range. THe default value is `0` which includes all reads.
+A multiple valued parameter containing one or both different Novor output files and a Name, for this set to aid in recognizing where the data comes from. Either the DeNovo or PSMS files can be used on their own, but they can also be specified together to group the data together. A cutoff can be given to use all reads with a score equal or higher (`read.score >= cutoff`). As the score ranges from 0 to 100 inclusive the cutoff can only be specified within this range. The default value is `0` which includes all reads.
 
 | Inner parameter | Explanation                                               | Default Value |
 | --------------- | --------------------------------------------------------- | ------------- |
@@ -349,6 +349,25 @@ _Example_
 ```
 Novor ->
     DeNovo Path: Path/To/My/FileWithReads.csv
+    Name: NameForMyFile
+<-
+```
+
+##### MMCIF (m) *
+
+Used to load mmCIF files from ModelAngelo, it assumes the basic structural information is in place as is the local confidence saved in the B factor ranged 0-100. When using reads from other sources than MS make sure to check that the scoring matrix used is suitable for the technique you are using. 
+
+| Inner parameter | Explanation                                               | Default Value |
+| --------------- | --------------------------------------------------------- | ------------- |
+| Path     | The path to the file.                   | (No Default)  |
+| Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
+| MinLength       | The minimal length of a chain to be included as read (inclusive).                    | 5             |
+| CutoffALC          | The average local confidence cutoff for inclusion in the used reads. \[0-100\] | 0             |
+
+_Example_
+```
+MMCIF ->
+    Path: Path/To/My/File.cif
     Name: NameForMyFile
 <-
 ```
@@ -379,7 +398,7 @@ Folder ->
 <-
 ```
 
-#### ing (m)
+#### TemplateMatching (m)
 
 To determine the parameters for template matching. Can only be specified once. Often used with the reference set from IMGT (http://www.imgt.org/vquest/refseqh.html).
 
@@ -393,11 +412,11 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. If your batchfiles contains multiple segments or segment groups the best placement for the read across all of these templates is forced. Setting this options for ing sets the default value for use in Recombine. Possible values: `True` and `False`. Default: `True`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. If your batchfiles contains multiple segments or segment groups the best placement for the read across all of these templates is forced. Setting this options for TemplateMatching sets the default value for use in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Setting this options for ing overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Setting this options for TemplateMatching overrules the value set in Recombine. Possible values: `True` and `False`. Default: `True`.
 
 ##### BuildTree (s)
 
@@ -486,7 +505,7 @@ Determines of the paths/reads of this segment will be forced to the best templat
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in ing which defaults to `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
 
 
 ###### GapHead (s)
@@ -499,7 +518,7 @@ Adds 20 gaps (`X`) at the end of all templates in this segment. This can be used
 
 #### Recombine
 
-Defines how to recombine the ed segments, as such ing has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each segment, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the segment the input matches with. Be warned, the runtime factorially increases with _n_.
+Defines how to recombine the ed segments, as such TemplateMatching has to be defined to be able to define Recombine. Recombination can be used to pick the _n_ highest scoring templates out of each segment, these will be recombined in the order provided. These recombined templates are then aligned with all paths. This should provide the opportunity to detect the placement of paths relative to each other. It also provides insight into the most likely template in the segment the input matches with. Be warned, the runtime factorially increases with _n_.
 
 _Example_
 ```
@@ -545,11 +564,11 @@ Determines the alphabet to use. See the scope Alphabet for more information abou
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in ing which defaults to `1.0`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in TemplateMatching which defaults to `1.0`.
 
 ##### ForceGermlineIsoleucine (s)
 
-With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in ing which defaults to `True`.
+With this option on the program will force an Isoleucine (I) if the consensus sequence has a Leucine (L) as highest scoring amino acid and the template (germline for antibodies) contains an Isoleucine at that position. Possible values: `True` and `False`. Default is the value in TemplateMatching which defaults to `True`.
 
 ##### Decoy (s)
 
@@ -638,9 +657,7 @@ CSV ->
 
 ##### Generating Names
 
-The path of reports can be generated dynamically, very useful if a batch files codes for many runs.
-
-The program will also create missing folders if needed.
+The path of reports can be generated dynamically. The program will also create missing folders if needed.
 
 | Key        | Explanation                                                 |
 | ---------- | ----------------------------------------------------------- |
@@ -795,7 +812,7 @@ Alphabet ->
 
 #### Input/Reads
 
-All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `2 - 1 / (log10(Area))`, and the positional score is the local confidence (localALC) as reported by Peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score). For Novor reads the intensity is calculated as `1 + score / 100`.
+All reads have an `intensity` and a `positional score`, the intensity is a single number and the positional score is a number per position of the sequence. The default values are 1 for intensity and none for positional score. For peaks reads the intensity is calculated as `(log10(Area) - log10(Min(Area))) / (log10(Max(Area)) - log10(Min(Area)))`, and the positional score is the local confidence as reported by Peaks divided by 100 to generate fractions instead of percentages and multiplied by the intensity (on the fly so later changes in intensity are reflected in this score). For Novor reads the intensity is calculated as `score / 100`. For MMCIF reads the intensity is the average local confidence.
 
 #### Template Matching
 

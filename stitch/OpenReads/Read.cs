@@ -530,7 +530,7 @@ namespace Stitch {
             /// <summary> The intensity of this read </summary>
             double intensity = 1;
             public override double Intensity {
-                get { return 1 + Score / 100; }
+                get { return Score / 100; }
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
@@ -612,7 +612,7 @@ namespace Stitch {
         }
 
         /// <summary> A metadata instance to contain reads from a structural source (mmCIF files). </summary>
-        public class StructuralRead : General {
+        public class ModelAngeloRead : General {
             /// <summary> The original chain name (_atom_site.label_asym_id). </summary>
             public string ChainName;
             /// <summary> The original chain name (_atom_site.auth_asym_id). </summary>
@@ -621,10 +621,11 @@ namespace Stitch {
             /// <summary> Create a new structural read MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public StructuralRead(AminoAcid[] sequence, double[] confidence, FileRange file, NameFilter filter, string chain_name, string auth_chain_name) : base(sequence, file, "S", filter) {
+            public ModelAngeloRead(AminoAcid[] sequence, double[] confidence, FileRange file, NameFilter filter, string chain_name, string auth_chain_name) : base(sequence, file, "S", filter) {
                 this.ChainName = chain_name;
                 this.AuthChainName = auth_chain_name;
                 this.Sequence.SetPositionalScore(confidence);
+                this.Intensity = confidence.Average();
             }
 
             /// <summary> Returns Simple MetaData to HTML. </summary>

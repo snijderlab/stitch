@@ -500,7 +500,7 @@ namespace Stitch {
 
                     var output = new List<ReadFormat.General>(sequences.Count);
                     foreach (var sequence in sequences) {
-                        var read = AminoAcid.FromString(sequence.Seq, alphabet).Map(s => new ReadFormat.StructuralRead(s, sequence.Confidence, file_range, filter, sequence.Item1, sequence.Item2));
+                        var read = AminoAcid.FromString(sequence.Seq, alphabet).Map(s => new ReadFormat.ModelAngeloRead(s, sequence.Confidence, file_range, filter, sequence.Item1, sequence.Item2));
                         if (read.IsOk())
                             output.Add(read.Unwrap());
                         else
