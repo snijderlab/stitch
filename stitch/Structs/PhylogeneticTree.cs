@@ -261,10 +261,10 @@ namespace Stitch {
             string Render(string own, string other, bool showValue, bool showLength, bool showID) {
                 if (Left == null && Right == null) {
                     // Leaf just print the info
-                    return $"{own}> {Value} ({Index}) " + (showID ? id : "");
+                    return $"{own}➤ {Value} ({Index}) " + (showID ? id : "");
                 } else {
                     // A split at the current depth
-                    var value = showValue ? Value.ToString() : "";
+                    var value = showValue && Value != null ? Value.ToString() : "";
                     var spacing = new string(' ', value.Length);
                     var id_text = showID ? id.ToString() : "";
                     var id_spacing = new string(' ', id_text.Length);
