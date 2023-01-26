@@ -63,6 +63,19 @@ namespace Stitch {
             }
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successfull: the number (int32)</returns>
+            public static ParseResult<T> ParseEnum<T>(KeyValue item) where T : struct, System.Enum {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<T>(input.Messages);
+                object result;
+                if (Enum.TryParse(typeof(T), input.Value, true, out result)) {
+                    return new ParseResult<T>((T)result);
+                } else {
+                    var best_match = Enum.GetNames(typeof(T)).Select(o => (o, HelperFunctionality.SmithWatermanStrings(o, input.Value))).OrderByDescending(o => o.Item2).First().Item1;
+                    return new ParseResult<T>(new ErrorMessage(item.ValueRange, "Not a valid option", $"Did you mean: \"{best_match}\"?", $"Valid options are: {string.Join(", ", Enum.GetNames(typeof(T)).Select(n => $"\"{n}\""))}"));
+                }
+            }
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
+            /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<double> ParseDouble(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
@@ -238,7 +251,7 @@ namespace Stitch {
                             break;
 
                         case "fasta":
-                            var fastasettings = new LocalParams<InputData.FASTA>("Reads", new List<(string, Action<InputData.FASTA, KeyValue>)>{
+                            var fastasettings = new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<InputData.FASTA, KeyValue>)>{
                                 ("Path", (settings, value) => {
                                     if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
@@ -258,7 +271,7 @@ namespace Stitch {
                             break;
 
                         case "mmcif":
-                            var mmcif_settings = new LocalParams<InputData.MMCIF>("Reads", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
+                            var mmcif_settings = new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
                                 ("Path", (settings, value) => {
                                     if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
@@ -534,125 +547,69 @@ namespace Stitch {
 
             public static ParseResult<ReportParameter> ParseReport(KeyValue key) {
                 var outEither = new ParseResult<ReportParameter>();
-                var output = new ReportParameter();
 
-                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (pair.Name) {
-                        case "folder":
-                            if (output.Folder != null) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
-                            output.Folder = Path.GetFullPath(pair.GetValue().UnwrapOrDefault(outEither, null));
-                            break;
-                        case "html":
-                            var h_settings = new RunParameters.Report.HTML();
+                var output = new LocalParams<ReportParameter>("Report", new List<(string, Action<ReportParameter, KeyValue>)>{
+                    ("Folder", (output, pair) => {
+                        if (!string.IsNullOrWhiteSpace(output.Folder)) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        output.Folder = ParseHelper.GetFullPath(pair).UnwrapOrDefault(outEither, "");}),
+                    ("Html", (output, pair) => {
+                        new LocalParams<RunParameters.Report.HTML>("Html", new List<(string, Action<RunParameters.Report.HTML, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                        }).Parse(pair, html => {
+                            if (string.IsNullOrWhiteSpace(html.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            output.Files.Add(html);
+                        }).IsOk(outEither);}),
+                    ("Json", (output, pair) => {
+                        var j_settings = new LocalParams<RunParameters.Report.JSON>("Json", new List<(string, Action<RunParameters.Report.JSON, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        h_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "HTML", "'Path'"));
-                                        break;
-                                }
-                            }
-                            if (string.IsNullOrWhiteSpace(h_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(h_settings);
-                            break;
-                        case "json":
-                            var j_settings = new RunParameters.Report.JSON();
+                        if (j_settings.IsOk(outEither)) {
+                            if (string.IsNullOrWhiteSpace(j_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        j_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "JSON", "'Path'"));
-                                        break;
-                                }
-                            }
-                            if (string.IsNullOrWhiteSpace(j_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(j_settings);
-                            break;
-                        case "fasta":
-                            var f_settings = new RunParameters.Report.FASTA();
+                            output.Files.Add(j_settings.Value);
+                        }}),
+                    ("Fasta", (output, pair) => {
+                        var f_settings = new LocalParams<RunParameters.Report.FASTA>("Fasta", new List<(string, Action<RunParameters.Report.FASTA, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("MinimalScore", (settings, value) => {
+                                settings.MinimalScore = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                            ("OutputType", (settings, value) => {
+                                settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
+                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        f_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "minimalscore":
-                                        f_settings.MinimalScore = ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                                        break;
-                                    case "outputtype":
-                                        var res = setting.GetValue();
-                                        if (res.IsOk(outEither)) {
-                                            switch (res.Unwrap().ToLower()) {
-                                                case "templatematching":
-                                                    f_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
-                                                    break;
-                                                case "recombine":
-                                                    f_settings.OutputType = RunParameters.Report.OutputType.Recombine;
-                                                    break;
-                                                default:
-                                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "FASTA OutputType", "'TemplateMatching' and 'Recombine'"));
-                                                    break;
-                                            }
-                                        }
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "FASTA", "'Path', 'MinimalScore' and 'OutputType'"));
-                                        break;
-                                }
-                            }
-                            if (string.IsNullOrWhiteSpace(f_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(f_settings);
-                            break;
-                        case "csv":
-                            var c_settings = new RunParameters.Report.CSV();
+                        if (f_settings.IsOk(outEither)) {
+                            if (string.IsNullOrWhiteSpace(f_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
 
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        if (!string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                                        c_settings.Path = setting.GetValue().UnwrapOrDefault(outEither, null);
-                                        break;
-                                    case "outputtype":
-                                        var res = setting.GetValue();
-                                        if (res.IsOk(outEither)) {
-                                            switch (res.Unwrap().ToLower()) {
-                                                case "templatematching":
-                                                    c_settings.OutputType = RunParameters.Report.OutputType.TemplateMatches;
-                                                    break;
-                                                case "recombine":
-                                                    c_settings.OutputType = RunParameters.Report.OutputType.Recombine;
-                                                    break;
-                                                default:
-                                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "CSV OutputType", "'TemplateMatching' and 'Recombine'"));
-                                                    break;
-                                            }
-                                        }
-                                        break;
-                                    default:
-                                        outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "CSV", "'Path' and 'OutputType"));
-                                        break;
-                                }
-                            }
-                            if (string.IsNullOrWhiteSpace(c_settings.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            output.Files.Add(c_settings);
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Report", "'HTML', 'FASTA' and 'CSV'"));
-                            break;
-                    }
+                            output.Files.Add(f_settings.Value);
+                        }}),
+                    ("CSV", (output, pair) => {
+                        var c_settings = new LocalParams<RunParameters.Report.CSV>("CSV", new List<(string, Action<RunParameters.Report.CSV, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("OutputType", (settings, value) => {
+                                settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
+                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+
+                        if (c_settings.IsOk(outEither)) {
+                            if (string.IsNullOrWhiteSpace(c_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+
+                            output.Files.Add(c_settings.Value);
+                        }}),
+                }).Parse(key.GetValues().UnwrapOrDefault(outEither, new()));
+
+                if (output.IsOk(outEither)) {
+                    if (output.Value.Folder == null)
+                        output.Value.Folder = Directory.GetCurrentDirectory();
+                    outEither.Value = output.Value;
                 }
-                if (output.Folder == null)
-                    output.Folder = Directory.GetCurrentDirectory();
-                outEither.Value = output;
                 return outEither;
             }
             public static ParseResult<ScoringMatrix> ParseAlphabet(KeyValue key) {

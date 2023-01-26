@@ -71,8 +71,8 @@ namespace Stitch {
             public static ErrorMessage MissingParameter(FileRange range, string parameter) {
                 return new ErrorMessage(range, $"Missing parameter: {parameter}", "", "", false);
             }
-            public static ErrorMessage UnknownKey(FileRange range, string context, string options) {
-                return new ErrorMessage(range, "Unknown key", $"Unknown key in {context} definition.", $"Valid options are: {options}.", true);
+            public static ErrorMessage UnknownKey(FileRange range, string context, string options, string possible_match = "") {
+                return new ErrorMessage(range, "Unknown key", string.IsNullOrEmpty(possible_match) ? $"Unknown key in {context} definition." : $"Did you mean \"{possible_match}\"?", $"Valid options are: {options}.", true);
             }
             public override string ToString() {
                 // Header

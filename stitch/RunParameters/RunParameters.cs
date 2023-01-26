@@ -259,7 +259,7 @@ namespace Stitch {
             }
 
             /// <summary> The type sequences in the fasta to give as output </summary>
-            public enum OutputType { TemplateMatches, Recombine }
+            public enum OutputType { TemplateMatching, Recombine }
 
             /// <summary> To indicate to return a FASTA report. </summary>
             public class FASTA : Parameter {
@@ -267,13 +267,13 @@ namespace Stitch {
                 public int MinimalScore = 0;
 
                 /// <summary> The output type of the sequences </summary>
-                public OutputType OutputType = OutputType.TemplateMatches;
+                public OutputType OutputType = OutputType.TemplateMatching;
             }
 
             /// <summary> To indicate to return a CSV report. </summary>
             public class CSV : Parameter {
                 /// <summary> The output type of the sequences </summary>
-                public OutputType OutputType = OutputType.TemplateMatches;
+                public OutputType OutputType = OutputType.TemplateMatching;
             }
         }
     }
