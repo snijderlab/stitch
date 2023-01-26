@@ -5,7 +5,7 @@ using System.Threading;
 namespace Stitch {
     public class ProgressBar : IDisposable {
         /// <summary> This turns off the entire progress bar, used to make sure it does not print any more after an error has been printed. </summary>
-        public static bool Off = false;
+        public static bool Off = !Environment.UserInteractive;
 
         /// <summary> The key to lock while updating or retrieving the value. </summary>
         readonly object ValueKey = new object();
@@ -29,7 +29,7 @@ namespace Stitch {
         int interval = 1000;
 
         /// <summary> Keeps track if the terminal currently writing too has access to certain modern features, to only raise an exception once if it does not. </summary>
-        bool terminalContact = true;
+        bool terminalContact = Environment.UserInteractive;
 
         /// <summary> Keep track of the state of this progress bar. </summary>
         bool started = false;
@@ -80,7 +80,6 @@ namespace Stitch {
             try {
                 Draw();
             } finally {
-                interval = (int)(interval * 1.05); // Slowly increase the interval to not overwhelm the console with updates.
                 timer?.Change(interval, Timeout.Infinite);
             }
         }

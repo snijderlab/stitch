@@ -312,19 +312,21 @@ namespace Stitch {
                 double supportL = 0.0;
                 combinedSequence[i].AminoAcids.TryGetValue(L, out supportL);
 
-                if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
-                    // Do not add gaps, as those are not part of the final sequence
-                } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportL > 2 * supportI) {
-                    consensus.Add(L);
-                } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportI > 2 * supportL) {
-                    consensus.Add(I);
-                } else if (ForceGermlineIsoleucine && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
-                    consensus.Add(template);
-                } else if (ForceGermlineIsoleucine && options.Count > 0 && options[0] == L && template == I) {
-                    consensus.Add(template);
-                } else if (options.Count > 0) {
-                    consensus.Add(options[0]);
-                    step = options[0].Length;
+                if (options.Count > 0) {
+                    if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
+                        // Do not add gaps, as those are not part of the final sequence
+                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportL > 2 * supportI) {
+                        consensus.Add(L);
+                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportI > 2 * supportL) {
+                        consensus.Add(I);
+                    } else if (ForceGermlineIsoleucine && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
+                        consensus.Add(template);
+                    } else if (ForceGermlineIsoleucine && options[0] == L && template == I) {
+                        consensus.Add(template);
+                    } else {
+                        consensus.Add(options[0]);
+                        step = options[0].Length;
+                    }
                 } else {
                     // There is no data from reads so take the template sequence
                     consensus.Add(template);
