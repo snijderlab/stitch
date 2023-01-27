@@ -198,13 +198,13 @@ namespace Stitch {
         public string Topology() {
             var levels = new List<int>() { 0 };
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
+            var already_scanned = new HashSet<long>();
             to_scan.Push((0, this));
             while (to_scan.Count > 0) {
                 var element = to_scan.Pop();
                 foreach (var child in element.Node.Connections) {
-                    if (already_scanned.Contains((element.Node, child.Next))) continue;
-                    already_scanned.Add((element.Node, child.Next));
+                    if (already_scanned.Contains(GetCode(element.Level, element.Node.Variant, child.Next.Variant))) continue;
+                    already_scanned.Add(GetCode(element.Level, element.Node.Variant, child.Next.Variant));
                     while (levels.Count() < element.Level + 2) {
                         levels.Add(0);
                     }
@@ -217,20 +217,24 @@ namespace Stitch {
 
         /// <summary> The total intensity of all connections in the whole DAG. </summary>
         public double TotalIntensity() {
-            double total = 0.0;
+            var total = 0.0;
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
+            var already_scanned = new HashSet<long>();
             to_scan.Push((0, this));
             while (to_scan.Count > 0) {
                 var element = to_scan.Pop();
                 foreach (var child in element.Node.Connections) {
-                    if (already_scanned.Contains((element.Node, child.Next))) continue;
-                    already_scanned.Add((element.Node, child.Next));
+                    if (already_scanned.Contains(GetCode(element.Level, element.Node.Variant, child.Next.Variant))) continue;
+                    already_scanned.Add(GetCode(element.Level, element.Node.Variant, child.Next.Variant));
                     to_scan.Push((element.Level + 1, child.Next));
                     total += child.Intensity;
                 }
             }
             return total;
+        }
+
+        private static long GetCode(int Level, AminoAcid var1, AminoAcid var2) {
+            return (long)Level * int.MaxValue + (long)var1.Character * short.MaxValue + (long)var2.Character;
         }
     }
 }
