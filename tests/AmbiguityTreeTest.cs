@@ -23,10 +23,8 @@ namespace StitchTest {
             root.AddPath(new List<AminoAcid>() { A, A, B, B }, 1.0);
             root.AddPath(new List<AminoAcid>() { A, B, B, B }, 2.0);
             Assert.AreEqual("1-2-2-2", root.Topology());
-            var intensity = root.TotalIntensity();
             root.Simplify();
             Assert.AreEqual("1-2-2-1", root.Topology());
-            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -40,10 +38,8 @@ namespace StitchTest {
             root.AddPath(new List<AminoAcid>() { B, A, A }, 1.0);
             root.AddPath(new List<AminoAcid>() { C, A, A }, 1.0);
             Assert.AreEqual("3-3-3", root.Topology());
-            var intensity = root.TotalIntensity();
             root.Simplify();
             Assert.AreEqual("3-3-1", root.Topology());
-            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -60,10 +56,8 @@ namespace StitchTest {
             root.AddPath(new List<AminoAcid>() { B, A }, 1.0);
             root.AddPath(new List<AminoAcid>() { B }, 1.0);
             Assert.AreEqual("3-4-3-3", root.Topology());
-            var intensity = root.TotalIntensity();
             root.Simplify();
             Assert.AreEqual("3-4-2-1", root.Topology());
-            Assert.AreEqual(intensity, root.TotalIntensity());
         }
 
         [TestMethod]
@@ -77,10 +71,8 @@ namespace StitchTest {
             root.AddPath(new List<AminoAcid>() { B, C, A, B, B, A, A }, 1.0);
             root.AddPath(new List<AminoAcid>() { C, A, B, C, A, A, A }, 1.0);
             Assert.AreEqual("3-3-3-3-3-3-3", root.Topology());
-            var intensity = root.TotalIntensity();
             root.Simplify();
             Assert.AreEqual("3-3-3-3-3-2-1", root.Topology());
-            Assert.AreEqual(intensity, root.TotalIntensity());
         }
     }
 }

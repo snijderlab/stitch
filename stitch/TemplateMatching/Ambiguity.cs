@@ -72,6 +72,7 @@ namespace Stitch {
         public AminoAcid Variant;
         /// <summary> All connections from this node. </summary>
         public List<(double Intensity, AmbiguityTreeNode Next)> Connections;
+        private bool simplified = true;
 
         public AmbiguityTreeNode(AminoAcid variant) {
             this.Variant = variant;
@@ -83,6 +84,7 @@ namespace Stitch {
         /// <param name="Intensity">The intensity of the path.</param>
         public void AddPath(IEnumerable<AminoAcid> Path, double Intensity, bool perfect = true) {
             if (Path.Count() == 0) return;
+            simplified = false;
             if (this.Connections.Count() == 0) {
                 var next = new AmbiguityTreeNode(Path.First());
                 next.AddPath(Path.Skip(1), Intensity, perfect);
@@ -112,6 +114,7 @@ namespace Stitch {
 
         /// <summary> Simplify the tree by joining ends with this node as the root node. The function assumes the tree is not simplified yet. </summary>
         public void Simplify() {
+            simplified = true;
             var levels = new List<List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>>() { new List<(AmbiguityTreeNode Parent, AmbiguityTreeNode Node)>() { (this, this) } };
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
             to_scan.Push((0, this));
@@ -198,13 +201,13 @@ namespace Stitch {
         public string Topology() {
             var levels = new List<int>() { 0 };
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
-            var already_scanned = new HashSet<long>();
+            var already_scanned = new HashSet<(AmbiguityTreeNode, AmbiguityTreeNode)>();
             to_scan.Push((0, this));
             while (to_scan.Count > 0) {
                 var element = to_scan.Pop();
                 foreach (var child in element.Node.Connections) {
-                    if (already_scanned.Contains(GetCode(element.Level, element.Node.Variant, child.Next.Variant))) continue;
-                    already_scanned.Add(GetCode(element.Level, element.Node.Variant, child.Next.Variant));
+                    if (already_scanned.Contains((element.Node, child.Next))) continue;
+                    already_scanned.Add((element.Node, child.Next));
                     while (levels.Count() < element.Level + 2) {
                         levels.Add(0);
                     }
@@ -215,8 +218,9 @@ namespace Stitch {
             return string.Join('-', levels.Skip(1));
         }
 
-        /// <summary> The total intensity of all connections in the whole DAG. </summary>
+        /// <summary> The total intensity of all connections in the whole DAG. Assumes to be running on a simplified graph. </summary>
         public double TotalIntensity() {
+            if (!simplified) throw new Exception("Cannot get the TotalIntensity of an ambiguity graph that is not simplified");
             var total = 0.0;
             var to_scan = new Stack<(int Level, AmbiguityTreeNode Node)>();
             var already_scanned = new HashSet<long>();
