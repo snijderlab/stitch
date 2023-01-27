@@ -8,7 +8,7 @@ namespace Stitch {
     /// <summary> A struct to function as a wrapper for AminoAcid information, so custom alphabets can
     /// be used in an efficient way. </summary>
     public struct AminoAcid : IComparable, IEquatable<AminoAcid> {
-        /// <summary> The code (index of the char in the alphabet array of the parent).
+        /// <summary> The AminoAcid character UTF16.
         /// The only way to change it is in the creator. </summary>
         /// <value> The code of this AminoAcid. </value>
         public readonly char Character;

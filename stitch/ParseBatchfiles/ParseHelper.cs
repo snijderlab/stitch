@@ -454,10 +454,11 @@ namespace Stitch {
                             var number = ParseDouble(setting);
                             if (boolean.IsOk()) {
                                 value = boolean.Unwrap() ? 1.0 : 0.0;
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Deprecated EnforceUnique definition", "Using a boolean for EnforceUnique is deprecated.", $"Instead of '{boolean.Value}' use '{value:F1}'.", true));
                             } else if (number.IsOk()) {
                                 value = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 1.0);
                             } else {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
+                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect EnforceUnique definition", "Expected a number."));
                             }
                             output.EnforceUnique = value;
                             break;
