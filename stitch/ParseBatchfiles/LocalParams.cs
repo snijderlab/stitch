@@ -47,7 +47,7 @@ namespace Stitch {
                     }
                     if (!found) {
                         var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.Name))).OrderByDescending(s => s.Item2).First().Name;
-                        outEither.AddMessage(ErrorMessage.UnknownKey(value.KeyRange.Name, Name, Options.Aggregate("", (acc, o) => $"{acc}, \"{o.Name}\"").Substring(2), best_match));
+                        outEither.AddMessage(ErrorMessage.UnknownKey(value.KeyRange.Name, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
                     }
                 }
                 outEither.Value = Aggregator;
@@ -63,5 +63,25 @@ namespace Stitch {
                 return html;
             }
         }
+
+        //interface IOption<Res> {
+        //
+        //}
+        //
+        //struct Option {
+        //    string Name;
+        //    string Description;
+        //    Option[] SubOptions;
+        //
+        //    public static ParseResult<T> Parse<T>(string name, string description, Option[] sub_options, KeyValue root, Func<T, T> post_processing) {
+        //        var values = root.GetValues();
+        //        if (values.IsOk()) {
+        //
+        //            return Parse(values.Value).Map(o => post_processing(o));
+        //        } else {
+        //            return new ParseResult<T>(values.Messages);
+        //        }
+        //    }
+        //}
     }
 }
