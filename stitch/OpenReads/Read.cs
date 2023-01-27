@@ -372,14 +372,12 @@ namespace Stitch {
 
                         if (original_offset < OriginalTag.Length - 2 && OriginalTag[original_offset + 1] == '(') {
                             html.Open(HtmlTag.p, "class='modification'");
+                            var temp = original_offset + 1;
                             original_offset += 2;
-                            while (OriginalTag[original_offset] != ')') {
-                                html.Content(OriginalTag[original_offset].ToString());
+                            while (OriginalTag[original_offset] != ')' && original_offset < OriginalTag.Length) {
                                 original_offset++;
-                                if (original_offset > OriginalTag.Length - 2) {
-                                    break;
-                                }
                             }
+                            html.Content(OriginalTag.Substring(temp, original_offset - temp));
                             html.Close(HtmlTag.p);
                         }
                         html.Close(HtmlTag.div);
@@ -646,6 +644,69 @@ namespace Stitch {
                         html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
                         html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
                         html.Close(HtmlTag.div);
+                    }
+                    html.Close(HtmlTag.div);
+                }
+
+                html.Add(Sequence.RenderToHtml());
+                html.Add(File.ToHTML());
+                return html;
+            }
+        }
+
+        /// <summary> A metadata instance to contain reads from a casanovo denovo run. </summary>
+        public class CasanovoRead : General {
+            /// <summary> The original definition with the used headers. </summary>
+            public string OriginalDefinition;
+            /// <summary> The sequence with modifications of the peptide. </summary>
+            public string OriginalTag;
+
+            /// <summary> Create a new casanovo read MetaData. </summary>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
+            public CasanovoRead(AminoAcid[] sequence, double[] confidence, FileRange file, NameFilter filter, string original_definition, string original_tag) : base(sequence, file, "C", filter) {
+                this.OriginalDefinition = original_definition;
+                this.OriginalTag = original_tag;
+                this.Sequence.SetPositionalScore(confidence);
+                this.Intensity = confidence.Average();
+            }
+
+            /// <summary> Returns casanovo MetaData to HTML. </summary>
+            public override HtmlBuilder ToHTML() {
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information");
+                html.OpenAndClose(HtmlTag.h3, "", "Original Definition");
+                html.Open(HtmlTag.table);
+                foreach (var line in this.OriginalDefinition.Split('\n')) {
+                    html.Open(HtmlTag.tr);
+                    foreach (var field in line.Split('\t')) {
+                        html.OpenAndClose(HtmlTag.td, "", field);
+                    }
+                    html.Close(HtmlTag.tr);
+                }
+
+                // Create a display of the sequence with local confidence
+                if (Sequence.PositionalScore != null) {
+                    html.OpenAndClose(HtmlTag.h3, "", $"Local Confidence");
+                    html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
+                    int original_offset = 0;
+
+                    for (int i = 0; i < this.Sequence.Length; i++) {
+                        html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
+                        html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
+
+                        if (original_offset < OriginalTag.Length - 1 && OriginalTag[original_offset + 1] == '+' || OriginalTag[original_offset + 1] == '-') {
+                            html.Open(HtmlTag.p, "class='modification'");
+                            var temp = original_offset + 1;
+                            original_offset += 2;
+                            while (char.IsDigit(OriginalTag[original_offset]) || OriginalTag[original_offset] == '.' && original_offset < OriginalTag.Length) {
+                                original_offset++;
+                            }
+                            html.Content(OriginalTag.Substring(temp, original_offset - temp));
+                            html.Close(HtmlTag.p);
+                        }
+                        html.Close(HtmlTag.div);
+                        original_offset++;
                     }
                     html.Close(HtmlTag.div);
                 }
