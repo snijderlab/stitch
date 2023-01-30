@@ -145,6 +145,8 @@ namespace Stitch {
                 Console.Write($"\n{name}: ");
                 Console.ForegroundColor = defaultColour;
                 Console.WriteLine(shortDescription);
+                var max_line_length = 80;
+                try { max_line_length = Console.WindowWidth; } catch { };
 
                 // Location
                 if (!string.IsNullOrEmpty(subject)) // Pre given location
@@ -169,12 +171,20 @@ namespace Stitch {
                     var spacing = new string(' ', number_width + 3);
                     var line = File.Lines[start_position.Value.Line];
 
-                    void print_line(int line_index) {
+                    void print_line(int line_index, int front_skip) {
                         Console.ForegroundColor = ConsoleColor.Blue;
                         Console.Write((line_index + 1).ToString().PadRight(number_width + 1, ' '));
                         Console.Write("│ ");
+                        if (front_skip > 0) Console.Write('…');
+                        var max_length = max_line_length - (front_skip > 0 ? 1 : 0) - number_width - 4;
                         Console.ForegroundColor = defaultColour;
-                        Console.Write(File.Lines[line_index]);
+                        var line = String.Join("", File.Lines[line_index].Replace('\t', ' ').Skip(front_skip).Take(max_length));
+                        Console.Write(line);
+                        if (File.Lines[line_index].Length > max_length + front_skip) {
+                            Console.ForegroundColor = ConsoleColor.Blue;
+                            Console.Write('…');
+                            Console.ForegroundColor = defaultColour;
+                        }
                         Console.Write("\n");
                     }
 
@@ -194,23 +204,24 @@ namespace Stitch {
                     print_empty(true);
 
                     for (int i = (int)contextLines; i > 0; i--)
-                        if (start_position.Value.Line - i > 0) print_line(start_position.Value.Line - i);
+                        if (start_position.Value.Line - i > 0) print_line(start_position.Value.Line - i, 0);
 
                     if (!end_position.HasValue || start_position.Value.Line > end_position.Value.Line) // Single position
                     {
                         var pos = new string(' ', start_position.Value.Column) + "───";
-                        print_line(start_position.Value.Line);
+                        print_line(start_position.Value.Line, 0);
                         print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
                         Console.Write(pos + "\n");
                         Console.ForegroundColor = defaultColour;
                     } else if (start_position.Value.Line == end_position.Value.Line) // Single line
                       {
-                        var pos = new string(' ', Math.Max(0, start_position.Value.Column)) + new string('─', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
-                        print_line(start_position.Value.Line);
+                        int skip = start_position.Value.Column > 2 * max_line_length / 3 ? start_position.Value.Column - max_line_length / 2 : 0;
+                        var pos = new string(' ', Math.Max(0, start_position.Value.Column - skip + (skip > 0 ? 1 : 0))) + new string('─', Math.Max(1, end_position.Value.Column - start_position.Value.Column));
+                        print_line(start_position.Value.Line, skip);
                         print_empty(false, '·');
                         Console.ForegroundColor = ConsoleColor.Red;
-                        Console.Write(pos + "\n");
+                        Console.WriteLine(pos);
                         Console.ForegroundColor = defaultColour;
                     } else // Multiline
                       {
@@ -220,11 +231,11 @@ namespace Stitch {
                             Console.ForegroundColor = ConsoleColor.Blue;
                             Console.Write($"{number}│");
                             Console.ForegroundColor = defaultColour;
-                            Console.Write($" {line}\n");
+                            Console.WriteLine($" {line}");
                         }
                     }
                     for (int i = 1; i <= contextLines; i++)
-                        if (endline + i < File.Lines.Length) print_line(endline + i);
+                        if (endline + i < File.Lines.Length) print_line(endline + i, 0);
                     print_empty(true, '╵');
                 }
 

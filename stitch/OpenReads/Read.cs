@@ -655,20 +655,23 @@ namespace Stitch {
         }
 
         /// <summary> A metadata instance to contain reads from a casanovo denovo run. </summary>
-        public class CasanovoRead : General {
+        public class Casanovo : General {
             /// <summary> The original definition with the used headers. </summary>
-            public string OriginalDefinition;
+            public string[] OriginalDefinition;
             /// <summary> The sequence with modifications of the peptide. </summary>
-            public string OriginalTag;
+            public string OriginalSequence;
+            public ParseMzTab.MzTabFile MzTabFile;
+
 
             /// <summary> Create a new casanovo read MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public CasanovoRead(AminoAcid[] sequence, double[] confidence, FileRange file, NameFilter filter, string original_definition, string original_tag) : base(sequence, file, "C", filter) {
+            public Casanovo(AminoAcid[] sequence, double score, double[] confidence, FileRange range, NameFilter filter, string original_sequence, string[] original_definition, ParseMzTab.MzTabFile file) : base(sequence, range, "C", filter) {
                 this.OriginalDefinition = original_definition;
-                this.OriginalTag = original_tag;
+                this.OriginalSequence = original_sequence;
                 this.Sequence.SetPositionalScore(confidence);
-                this.Intensity = confidence.Average();
+                this.Intensity = 0.5 + score / 2;
+                this.MzTabFile = file;
             }
 
             /// <summary> Returns casanovo MetaData to HTML. </summary>
@@ -677,36 +680,40 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information");
                 html.OpenAndClose(HtmlTag.h3, "", "Original Definition");
                 html.Open(HtmlTag.table);
-                foreach (var line in this.OriginalDefinition.Split('\n')) {
-                    html.Open(HtmlTag.tr);
-                    foreach (var field in line.Split('\t')) {
-                        html.OpenAndClose(HtmlTag.td, "", field);
-                    }
-                    html.Close(HtmlTag.tr);
+                html.Open(HtmlTag.tr);
+                foreach (var column in this.MzTabFile.ProteinSectionHeader) {
+                    html.OpenAndClose(HtmlTag.th, "", column);
                 }
+                html.Close(HtmlTag.tr);
+                html.Open(HtmlTag.tr);
+                foreach (var column in this.OriginalDefinition) {
+                    html.OpenAndClose(HtmlTag.td, "", column);
+                }
+                html.Close(HtmlTag.tr);
+                html.Close(HtmlTag.table);
 
                 // Create a display of the sequence with local confidence
                 if (Sequence.PositionalScore != null) {
                     html.OpenAndClose(HtmlTag.h3, "", $"Local Confidence");
                     html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
-                    int original_offset = 0;
+                    int original_location = 0;
 
                     for (int i = 0; i < this.Sequence.Length; i++) {
                         html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
                         html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
 
-                        if (original_offset < OriginalTag.Length - 1 && OriginalTag[original_offset + 1] == '+' || OriginalTag[original_offset + 1] == '-') {
+                        if (original_location < OriginalSequence.Length - 1 && OriginalSequence[original_location] == '+' || OriginalSequence[original_location] == '-') {
                             html.Open(HtmlTag.p, "class='modification'");
-                            var temp = original_offset + 1;
-                            original_offset += 2;
-                            while (char.IsDigit(OriginalTag[original_offset]) || OriginalTag[original_offset] == '.' && original_offset < OriginalTag.Length) {
-                                original_offset++;
+                            var temp = original_location + 1;
+                            original_location += 1;
+                            while (original_location < OriginalSequence.Length && (char.IsDigit(OriginalSequence[original_location]) || OriginalSequence[original_location] == '.')) {
+                                original_location++;
                             }
-                            html.Content(OriginalTag.Substring(temp, original_offset - temp));
+                            html.Content(OriginalSequence.Substring(temp, original_location - temp));
                             html.Close(HtmlTag.p);
                         }
                         html.Close(HtmlTag.div);
-                        original_offset++;
+                        original_location++;
                     }
                     html.Close(HtmlTag.div);
                 }

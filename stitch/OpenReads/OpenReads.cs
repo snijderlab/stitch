@@ -518,6 +518,70 @@ namespace Stitch {
             return out_either;
         }
 
+        public static ParseResult<List<ReadFormat.General>> Casanovo(NameFilter filter, RunParameters.InputData.Casanovo casanovo, ScoringMatrix alphabet) {
+            var reads = new List<ReadFormat.General>();
+            var out_either = new ParseResult<List<ReadFormat.General>>(reads);
+            var loaded_file = InputNameSpace.ParseHelper.GetAllText(casanovo.File).Map(c => new ParsedFile(casanovo.File, c.Split('\n')));
+
+            if (loaded_file.IsErr()) {
+                out_either.Messages.AddRange(loaded_file.Messages);
+                return out_either;
+            }
+            var maybe_lexed = ParseMzTab.MzTabFile.Parse(loaded_file.Unwrap());
+            var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
+
+            if (maybe_lexed.IsErr())
+                return new ParseResult<List<ReadFormat.General>>(maybe_lexed.Messages);
+
+            var lexed = maybe_lexed.Unwrap();
+            var mzTabFile = lexed.Item1;
+
+            var seq_idx = mzTabFile.ProteinSectionHeader.IndexOf("sequence");
+            var search_idx = mzTabFile.ProteinSectionHeader.IndexOf("search_engine");
+            var score_idx = mzTabFile.ProteinSectionHeader.IndexOf("search_engine_score[1]");
+            var id_idx = mzTabFile.ProteinSectionHeader.IndexOf("PSM_ID");
+            var spectra_idx = mzTabFile.ProteinSectionHeader.IndexOf("spectra_ref");
+            var maybe_conf_idx = mzTabFile.ProteinSectionHeader.IndexOf("opt_ms_run[1]_aa_scores");
+
+            if (seq_idx == -1) {
+                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'sequence' column is mandatory in the mzTab file definition."));
+                return out_either;
+            }
+            if (id_idx == -1) {
+                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'PSM_ID' column is mandatory in the mzTab file definition."));
+                return out_either;
+            }
+            if (search_idx == -1) {
+                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine' column is mandatory in the mzTab file definition."));
+                return out_either;
+            }
+            if (score_idx == -1) {
+                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine_score[1]' column is mandatory in the mzTab file definition when peptides are searched."));
+                return out_either;
+            }
+            if (spectra_idx == -1) {
+                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'spectra_ref' column is mandatory in the mzTab file definition."));
+                return out_either;
+            }
+
+
+            foreach (var (range, row) in lexed.Item2) {
+                if (row[search_idx].Content.Contains("MS:1003281") && !row[search_idx].Content.Contains('|')) {
+                    var original_sequence = row[seq_idx].Content;
+                    var filtered_sequence = original_sequence.Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
+                    var sequence = AminoAcid.FromString(filtered_sequence, alphabet, row[seq_idx].Location).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                    var score = InputNameSpace.ParseHelper.ConvertToDouble(row[score_idx].Content, row[score_idx].Location).UnwrapOrDefault(out_either, 0.0);
+                    var id = InputNameSpace.ParseHelper.ConvertToInt(row[id_idx].Content, row[id_idx].Location).UnwrapOrDefault(out_either, 0);
+                    var confidence = maybe_conf_idx == -1 ? new double[0] : ParseMzTab.SubString.Split(row[maybe_conf_idx].Content, ',', row[maybe_conf_idx].Location.Start).Select(i => InputNameSpace.ParseHelper.ConvertToDouble(i.Content, i.Location).UnwrapOrDefault(out_either, 0.0)).ToArray();
+
+                    if (score >= casanovo.CutoffScore)
+                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence, row.Select(i => i.Content).ToArray(), mzTabFile));
+                }
+            }
+
+            return out_either;
+        }
+
         /// <summary> Cleans up a list of input reads by removing duplicates and squashing it into a single dimension list. </summary>
         /// <param name="reads"> The input reads to clean up. </param>
         public static ParseResult<List<ReadFormat.General>> CleanUpInput(List<ReadFormat.General> reads, ScoringMatrix alp, NameFilter filter) {

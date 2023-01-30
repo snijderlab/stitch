@@ -153,6 +153,31 @@ namespace Stitch {
             return ret;
         }
 
+        /// <summary>
+        /// https://stackoverflow.com/a/9775057/5779120
+        /// </summary>
+        /// <param name="arrays"></param>
+        /// <typeparam name="T"></typeparam>
+        /// <returns></returns>
+        public static T[,] CreateRectangularArray<T>(this IEnumerable<T[]> arrays) {
+            int minorLength = arrays.Count() == 0 ? 0 : arrays.ElementAt(0).Length;
+            T[,] ret = new T[arrays.Count(), minorLength];
+            for (int i = 0; i < arrays.Count(); i++) {
+                var array = arrays.ElementAt(i);
+                if (array.Length != minorLength) {
+                    throw new ArgumentException("All arrays must be the same length");
+                }
+                for (int j = 0; j < minorLength; j++) {
+                    ret[i, j] = array[j];
+                }
+            }
+            return ret;
+        }
+
+        public static int IndexOf<T>(this T[] arr, T element) {
+            return Array.IndexOf(arr, element);
+        }
+
         public static double Max(this IEnumerable<double> data, double fallback) {
             if (data.Count() > 0)
                 return data.Max();

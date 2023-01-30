@@ -293,6 +293,27 @@ namespace Stitch {
                             }
                             break;
 
+                        case "casanovo":
+                            var casanovo_settings = new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<InputData.Casanovo, KeyValue>)>{
+                                ("Path", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                ("Name", (settings, value) => {
+                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                                ("CutoffScore", (settings, value) => {
+                                    settings.CutoffScore = (uint)ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
+                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+
+                            if (casanovo_settings.IsOk(outEither)) {
+                                var casanovo = casanovo_settings.Value;
+                                if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                                if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                                output.Files.Add(casanovo);
+                            }
+                            break;
+
                         case "folder":
                             // Parse files one by one
                             var folder_path = "";
@@ -390,6 +411,7 @@ namespace Stitch {
                         InputData.Reads simple => OpenReads.Simple(name_filter, simple.File, alphabet),
                         InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
                         InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif, alphabet),
+                        InputData.Casanovo casanovo => OpenReads.Casanovo(name_filter, casanovo, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);

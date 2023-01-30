@@ -72,6 +72,10 @@ namespace Stitch {
                 public uint CutoffALC = 0;
             }
 
+            public class Casanovo : Parameter {
+                public double CutoffScore = 0.0;
+            }
+
             public class PeaksParameters {
                 public int CutoffALC;
                 public int LocalCutoffALC;
