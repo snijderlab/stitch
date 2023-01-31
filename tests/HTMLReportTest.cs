@@ -103,7 +103,7 @@ namespace StitchTest {
             var parent = new Segment(new List<ReadFormat.General> { temp }, ScoringMatrix.Default(), "", 0.0, 0, false);
             var template = new Template("test", seq, temp, parent, false);
             template.AddMatch(new Alignment(temp, new ReadFormat.Simple(seq_r), "IIMMMMMMMIIIMMMMMMIIIS[1,2]MMMMMMMMMMMMMMMMMMMMMMMMM", 19, 0, 78));
-            var html = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(template, "01", new List<string>(), "folder", false);
+            var html = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(template, "01", new HTMLNameSpace.CommonPieces.Location(new List<string>(), "folder"), false);
             Console.WriteLine(html.Item1.ToString());
             Assert.IsFalse(html.ToString().Contains("--w:-"));
         }

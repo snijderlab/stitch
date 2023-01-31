@@ -270,17 +270,17 @@ namespace Stitch {
                     if (line.Trim().StartsWith('-'))
                         return $"<span class='comment'>{line}</span><br>";
 
-                    var open = Regex.Match(line, @"^(\s*)([\w ]+)(\s*)->$");
+                    var open = Regex.Match(line, @"^(\s*)([\w ]+)(\s*)(-|:)>$");
                     if (open.Success)
-                        return $"{open.Groups[1]}<span class='id'>{open.Groups[2]}</span>{open.Groups[3]}<span class='op'>-&gt;</span><br>";
+                        return $"{open.Groups[1]}<span class='id'>{open.Groups[2]}</span>{open.Groups[3]}<span class='op'>{open.Groups[4]}&gt;</span><br>";
 
                     var single = Regex.Match(line, @"^(\s*)([\w ]+)(\s*):(.+)$");
                     if (single.Success)
                         return $"{single.Groups[1]}<span class='id'>{single.Groups[2]}</span>{single.Groups[3]}<span class='op'>:</span><span class='value'>{single.Groups[4]}</span><br>";
 
-                    var close = Regex.Match(line, @"^(\s*)<-$");
+                    var close = Regex.Match(line, @"^(\s*)<(-|:)$");
                     if (close.Success)
-                        return $"{close.Groups[1]}<span class='op'>&lt;-</span><br>";
+                        return $"{close.Groups[1]}<span class='op'>&lt;{close.Groups[2]}</span><br>";
 
                     return line + "<br>";
                 }

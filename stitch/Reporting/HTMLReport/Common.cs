@@ -40,6 +40,9 @@ namespace HTMLNameSpace {
             html.OpenAndClose(HtmlTag.a, $"href='{GetAsideRawLink(metadata, type, AssetsFolderName, location)}{target}' class='info-link {class_name}-link' target='_blank'", GetAsideIdentifier(metadata, true));
             return html;
         }
+        public static HtmlBuilder GetAsideLinkHtml(ReadFormat.General metadata, AsideType type, Location location, string target = "") {
+            return GetAsideLinkHtml(metadata, type, location.AssetsFolderName, location.Path, target);
+        }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>
         /// <param name="metadata">The metadata for a Read or Template.</param>
@@ -49,6 +52,9 @@ namespace HTMLNameSpace {
             string id = GetAsideIdentifier(metadata);
             string class_name = GetAsideName(type);
             return GetLinkToFolder(new List<string>() { AssetsFolderName, class_name + "s" }, location) + id.Replace(':', '-') + ".html";
+        }
+        public static string GetAsideRawLink(ReadFormat.General metadata, AsideType type, Location location) {
+            return GetAsideRawLink(metadata, type, location.AssetsFolderName, location.Path);
         }
 
         public static string GetLinkToFolder(List<string> target, List<string> location) {
@@ -119,6 +125,16 @@ namespace HTMLNameSpace {
         public static string CopyData(string title, string help = null) {
             var text = help != null ? $"<p>{help}</p>" : "";
             return $"<button type='button' class='user-help copy-data'><span class='mark'>Copy Data</span><div class='content'><h3>{title}</h3>{text}<h4>Preview</h4><pre class='example'>Loading example...</pre><i>Click on the button to copy the data to your clipboard.</i></div></button>";
+        }
+
+        public struct Location {
+            public List<string> Path;
+            public string AssetsFolderName;
+
+            public Location(List<string> path, string assets_folder) {
+                Path = path;
+                AssetsFolderName = assets_folder;
+            }
         }
     }
 }
