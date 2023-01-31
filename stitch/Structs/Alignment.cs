@@ -281,5 +281,56 @@ namespace Stitch {
             var max_b = ReadB.Sequence.AminoAcids.Select(a => (double)scoringMatrix.Score(new AminoAcid[1] { a }, new AminoAcid[1] { a })).Sum();
             return (max_a + max_b) / 2 - Score;
         }
+
+        public Alignment(ReadFormat.General readA, ReadFormat.General readB, string path, int startA, int startB, int score) {
+            var pieces_path = new List<AlignmentPiece>();
+            for (int i = 0; i < path.Length; i++) {
+                if (path[i] == 'M') {
+                    pieces_path.Add(new AlignmentPiece(0, 0, 1, 1));
+                } else if (path[i] == 'I') {
+                    pieces_path.Add(new AlignmentPiece(0, 0, 0, 1));
+                } else if (path[i] == 'D') {
+                    pieces_path.Add(new AlignmentPiece(0, 0, 1, 0));
+                } else if (path[i] == '*') {
+                    pieces_path.Add(new AlignmentPiece(0, 0, 0, 0));
+                } else if (path[i] == 'S') {
+                    var end = path.IndexOf(']', i);
+                    var numbers = path.Substring(i + 2, end - i - 2).Split(',');
+                    pieces_path.Add(new AlignmentPiece(0, 0, Convert.ToByte(numbers[0]), Convert.ToByte(numbers[1])));
+                }
+            }
+
+
+            Score = score;
+            Path = pieces_path;
+            StartA = startA;
+            StartB = startB;
+            ReadA = readA;
+            ReadAIndex = -1;
+            ReadB = readB;
+            scoringMatrix = null;
+
+            // Calculate some statistics
+            this.LenA = 0;
+            this.LenB = 0;
+            this.Identical = 0;
+            this.MisMatches = 0;
+            this.Similar = 0;
+            this.GapInA = 0;
+            this.GapInB = 0;
+            foreach (var piece in Path) {
+                if (piece.StepA == 1 && piece.StepB == 1) {
+                    if (ReadA.Sequence.AminoAcids[this.LenA + this.StartA] == ReadB.Sequence.AminoAcids[this.LenB + this.StartB])
+                        this.Identical += 1;
+                    else
+                        this.MisMatches += 1;
+                }
+                if (piece.StepA != 0 && piece.StepB != 0) this.Similar += 1;
+                if (piece.StepA == 0) this.GapInA += 1;
+                if (piece.StepB == 0) this.GapInB += 1;
+                this.LenA += piece.StepA;
+                this.LenB += piece.StepB;
+            }
+        }
     }
 }

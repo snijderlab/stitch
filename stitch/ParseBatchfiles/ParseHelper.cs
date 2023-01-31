@@ -41,16 +41,13 @@ namespace Stitch {
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ConvertToInt(string input, FileRange pos) {
-                try {
-                    return new ParseResult<int>(Convert.ToInt32(input, new System.Globalization.CultureInfo("en-US")));
-                } catch (FormatException) {
+                var result = 0;
+                if (int.TryParse(input, out result)) {
+                    return new ParseResult<int>(result);
+                } else {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
                     return new ParseResult<int>(new ErrorMessage(pos, "Not a valid number", msg));
-                } catch (OverflowException) {
-                    return new ParseResult<int>(new ErrorMessage(pos, "Outside bounds"));
-                } catch {
-                    return new ParseResult<int>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
 
@@ -61,6 +58,7 @@ namespace Stitch {
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
                 return ConvertToInt(input.Unwrap(), item.ValueRange);
             }
+
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successfull: the number (int32)</returns>
             public static ParseResult<T> ParseEnum<T>(KeyValue item) where T : struct, System.Enum {
@@ -74,29 +72,29 @@ namespace Stitch {
                     return new ParseResult<T>(new ErrorMessage(item.ValueRange, "Not a valid option", $"Did you mean: \"{best_match}\"?", $"Valid options are: {string.Join(", ", Enum.GetNames(typeof(T)).Select(n => $"\"{n}\""))}"));
                 }
             }
+
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
-            /// <returns>If successfull: the number (int32)</returns>
+            /// <returns>If successfull: the number (double)</returns>
             public static ParseResult<double> ParseDouble(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
                 return ConvertToDouble(input.Unwrap(), item.ValueRange);
             }
+
             /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary>
             /// <param name="input">The string to be converted to a double.</param>
             /// <returns>If successfull: the number (double)</returns>
             public static ParseResult<double> ConvertToDouble(string input, FileRange pos) {
-                try {
-                    return new ParseResult<double>(Convert.ToDouble(input, new System.Globalization.CultureInfo("en-US")));
-                } catch (FormatException) {
+                var result = 0.0;
+                if (double.TryParse(input, out result)) {
+                    return new ParseResult<double>(result);
+                } else {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
                     return new ParseResult<double>(new ErrorMessage(pos, "Not a valid number", msg));
-                } catch (OverflowException) {
-                    return new ParseResult<double>(new ErrorMessage(pos, "Outside bounds for the underlying datatype"));
-                } catch {
-                    return new ParseResult<double>(new ErrorMessage(pos, "Unknown exception", "This is not a valid number and an unknown exception occurred."));
                 }
             }
+
             /// <summary> A number range which can be open ended or closed. </summary>
             public readonly struct NumberRange<T> where T : IComparable<T> {
                 readonly T Min;

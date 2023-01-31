@@ -27,7 +27,7 @@ namespace HTMLNameSpace {
         /// <returns>A ready for use identifier.</returns>
         public static string GetAsideIdentifier(ReadFormat.General metadata, bool human_visible = false) {
             if (human_visible) return metadata.Identifier;
-            else return metadata.EscapedIdentifier;
+            else return metadata.EscapedIdentifier ?? metadata.Identifier;
         }
 
         /// <summary>To generate an identifier ready for use in the HTML page of an element in a container in a super container.</summary>

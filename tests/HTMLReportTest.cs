@@ -95,6 +95,19 @@ namespace StitchTest {
             CompareDOC(doc_expected, doc);
         }
 
+        [TestMethod]
+        public void NegativePatchWidth() {
+            var seq = AminoAcid.FromString("LLLALWLGCPVPGRKPPFFLLMGLEDGRVYPDKGGAPARPPPGPSKTSNPLVSDLRVPRPPYFGPARWTSLEESRLLLNRKRELLRSYVTDHGPMK", ScoringMatrix.Default()).Unwrap();
+            var seq_r = AminoAcid.FromString("LLLGLGLYDYDFGLLYRDTGLGLGPGPPRPLPLPLAATLPNTLELLSR", ScoringMatrix.Default()).Unwrap();
+            var temp = new ReadFormat.Simple(seq);
+            var parent = new Segment(new List<ReadFormat.General> { temp }, ScoringMatrix.Default(), "", 0.0, 0, false);
+            var template = new Template("test", seq, temp, parent, false);
+            template.AddMatch(new Alignment(temp, new ReadFormat.Simple(seq_r), "IIMMMMMMMIIIMMMMMMIIIS[1,2]MMMMMMMMMMMMMMMMMMMMMMMMM", 19, 0, 78));
+            var html = HTMLNameSpace.HTMLAsides.CreateTemplateAlignment(template, "01", new List<string>(), "folder", false);
+            Console.WriteLine(html.Item1.ToString());
+            Assert.IsFalse(html.ToString().Contains("--w:-"));
+        }
+
         void CompareDOC(List<double> actual, List<double> expected) {
             Assert.IsNotNull(actual);
             Assert.IsNotNull(expected);

@@ -408,8 +408,7 @@ namespace HTMLNameSpace {
                         if (inserted > total_gaps) inserted = total_gaps;
                         if (pos_a == alignment.StartA) total_gaps -= gaps[pos_a];
                         var already_inserted = gaps[pos_a];
-                        html.Content(new string(positional_gap_char, gaps[pos_a]));
-                        html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - inserted - already_inserted};'", content);
+                        html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - already_inserted};'", content);
                         seq.Append(new string(positional_gap_char, gaps[pos_a]) + content);
                         inserted = 0;
                     } else {
