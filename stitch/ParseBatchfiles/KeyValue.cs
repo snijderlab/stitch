@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 
 namespace Stitch {
@@ -91,6 +92,22 @@ namespace Stitch {
                 /// <param name="values">The values.</param>
                 public Multiple(List<KeyValue> values) {
                     Values = values;
+                }
+            }
+
+            public void PrintDebug() {
+                string ShowRange(FileRange range) {
+                    return $"{range.Start.Line + 1}:{range.Start.Column}-{range.End.Line + 1}:{range.End.Column}";
+                }
+                if (Value is Single single) {
+                    Console.WriteLine($"[{ShowRange(this.KeyRange.Name)}] {this.OriginalName}: [{ShowRange(this.ValueRange)}] {single.Value}");
+                }
+                if (Value is Multiple multiple) {
+                    Console.WriteLine($"[{ShowRange(this.KeyRange.Name)}] {this.OriginalName} -> [{ShowRange(this.ValueRange)}]");
+                    foreach (var child in multiple.Values) {
+                        child.PrintDebug();
+                    }
+                    Console.WriteLine("<-");
                 }
             }
         }

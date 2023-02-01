@@ -282,7 +282,8 @@ namespace Stitch {
                 public static (string, FileRange) Value(ref string content, Counter counter) {
                     string result;
                     Position start = counter.GetPosition();
-                    Position end; int next_newline = FindNextNewLine(ref content);
+                    Position end;
+                    int next_newline = FindNextNewLine(ref content);
 
                     if (next_newline > 0) {
                         result = content.Substring(0, next_newline).TrimEnd(); // Save whitespace in front to make position work
@@ -315,13 +316,13 @@ namespace Stitch {
                 /// <param name="counter">The counter to keep track of the location</param>
                 /// <returns>The consumed part of the string.</returns>
                 public static string UntilSequence(ref string content, string sequence, Counter counter) {
-                    int next_newline = -1;
+                    int found_position = -1;
                     bool found = false;
                     var content_array = content.ToCharArray();
                     for (int pos = 0; pos <= content_array.Length - sequence.Length && !found; pos++) {
                         for (int offset = 0; offset <= sequence.Length; offset++) {
                             if (offset == sequence.Length) {
-                                next_newline = pos;
+                                found_position = pos;
                                 found = true;
                                 break;
                             }
@@ -335,9 +336,9 @@ namespace Stitch {
                     }
 
                     string value;
-                    if (next_newline > 0) {
-                        value = content.Substring(0, next_newline).Trim();
-                        content = content.Remove(0, next_newline + sequence.Length).Trim();
+                    if (found_position > 0) {
+                        value = content.Substring(0, found_position).Trim();
+                        content = content.Remove(0, found_position + sequence.Length);
                     } else {
                         value = content.Trim();
                         content = "";
