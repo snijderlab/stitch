@@ -20,6 +20,11 @@ namespace Stitch {
                 Options = options;
                 Aggregator = new();
             }
+            public LocalParams(string name, List<(string, Action<T, KeyValue>)> options, T agg) {
+                Name = name;
+                Options = options;
+                Aggregator = agg;
+            }
 
             public ParseResult<T> Parse(KeyValue key, Action<T> post_processing) {
                 var value = key.GetValues();
@@ -49,6 +54,27 @@ namespace Stitch {
                         var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.Name))).OrderByDescending(s => s.Item2).First().Name;
                         outEither.AddMessage(ErrorMessage.UnknownKey(value.KeyRange.Name, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
                     }
+                }
+                outEither.Value = Aggregator;
+                return outEither;
+            }
+
+            /// <summary> Parse a singular setting. </summary>
+            public ParseResult<T> ParseSingular(KeyValue input) {
+                var outEither = new ParseResult<T>();
+                var value = input.GetValue().UnwrapOrDefault(outEither, "");
+                if (outEither.IsErr()) return outEither;
+                bool found = false;
+                for (var i = 0; i < Options.Count && !found; i++) {
+                    var option = Options[i];
+                    if (value.ToLower() == option.Name.ToLower()) {
+                        option.Action(Aggregator, input);
+                        found = true;
+                    }
+                }
+                if (!found) {
+                    var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.ToLower()))).OrderByDescending(s => s.Item2).First().Name;
+                    outEither.AddMessage(ErrorMessage.UnknownValue(input.ValueRange, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
                 }
                 outEither.Value = Aggregator;
                 return outEither;

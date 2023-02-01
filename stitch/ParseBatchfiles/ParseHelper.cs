@@ -95,6 +95,28 @@ namespace Stitch {
                 }
             }
 
+            public static ParseResult<char> ParseChar(KeyValue item) {
+                var result = new ParseResult<char>();
+                var value = item.GetValue();
+                if (value.IsOk(result)) {
+                    if (value.Unwrap().Length != 1)
+                        result.AddMessage(new ErrorMessage(item.ValueRange, "Invalid Character", "A character should be a single character"));
+                    else
+                        result.Value = value.Unwrap().First();
+                }
+                return result;
+            }
+
+            public static void CheckDuplicate<T>(ParseResult<T> outEither, KeyValue item, string value) {
+                if (!string.IsNullOrWhiteSpace(value)) outEither.AddMessage(ErrorMessage.DuplicateValue(item.KeyRange.Name));
+            }
+            public static void CheckDuplicate<T, U>(ParseResult<T> outEither, KeyValue item, List<U> value) {
+                if (value != null && value.Count > 0) outEither.AddMessage(ErrorMessage.DuplicateValue(item.KeyRange.Name));
+            }
+            public static void CheckDuplicate<T, U>(ParseResult<T> outEither, KeyValue item, U value) {
+                if (value != null) outEither.AddMessage(ErrorMessage.DuplicateValue(item.KeyRange.Name));
+            }
+
             /// <summary> A number range which can be open ended or closed. </summary>
             public readonly struct NumberRange<T> where T : IComparable<T> {
                 readonly T Min;
@@ -167,15 +189,15 @@ namespace Stitch {
                             foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
                                 switch (setting.Name) {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        CheckDuplicate(outEither, setting, settings.File.Path);
                                         settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
                                     case "name":
-                                        if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        CheckDuplicate(outEither, setting, settings.File.Name);
                                         settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "rawdatadirectory":
-                                        if (!string.IsNullOrWhiteSpace(settings.RawDataDirectory)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        CheckDuplicate(outEither, setting, settings.RawDataDirectory);
                                         settings.RawDataDirectory = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         break;
                                     case "xledisambiguation":
@@ -201,10 +223,10 @@ namespace Stitch {
                         case "reads":
                             var rsettings = new LocalParams<InputData.Reads>("Reads", new List<(string, Action<InputData.Reads, KeyValue>)>{
                                 ("Path", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Path);
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                                 ("Name", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Name);
                                     settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");})
                             }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
@@ -220,22 +242,18 @@ namespace Stitch {
                             string name = null;
                             var novor_settings = new LocalParams<InputData.Novor>("Novor", new List<(string, Action<InputData.Novor, KeyValue>)>{
                                 ("Denovo Path", (settings, value) => {
-                                    if (settings.DeNovoFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.DeNovoFile);
                                     settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
                                 ("PSMS Path", (settings, value) => {
-                                    if (settings.PSMSFile != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.PSMSFile);
                                     settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
                                 ("Name", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, name);
                                     name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                                 ("Cutoff", (settings, value) => {
                                     settings.Cutoff = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
                                 ("Separator", (settings, value) => {
-                                    var v = value.GetValue().UnwrapOrDefault(outEither, ",");
-                                    if (v.Length != 1)
-                                        outEither.AddMessage(new ErrorMessage(value.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                                    else
-                                        settings.Separator = v.First();})
+                                    settings.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
                             }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
                             if (novor_settings.IsOk(outEither)) {
@@ -251,10 +269,10 @@ namespace Stitch {
                         case "fasta":
                             var fastasettings = new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<InputData.FASTA, KeyValue>)>{
                                 ("Path", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Path);
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                                 ("Name", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Name);
                                     settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                                 ("Identifier", (settings, value) => {
                                     settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);})
@@ -271,10 +289,10 @@ namespace Stitch {
                         case "mmcif":
                             var mmcif_settings = new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
                                 ("Path", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Path);
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                                 ("Name", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Name);
                                     settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                                 ("MinLength", (settings, value) => {
                                     settings.MinLength = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
@@ -294,10 +312,10 @@ namespace Stitch {
                         case "casanovo":
                             var casanovo_settings = new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<InputData.Casanovo, KeyValue>)>{
                                 ("Path", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Path);
                                     settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                                 ("Name", (settings, value) => {
-                                    if (!string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                    CheckDuplicate(outEither, value, settings.File.Name);
                                     settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                                 ("CutoffScore", (settings, value) => {
                                     settings.CutoffScore = (uint)ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
@@ -325,12 +343,12 @@ namespace Stitch {
                             foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
                                 switch (setting.Name) {
                                     case "path":
-                                        if (!string.IsNullOrWhiteSpace(folder_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        CheckDuplicate(outEither, setting, folder_path);
                                         folder_path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
                                         folder_range = setting.ValueRange;
                                         break;
                                     case "startswith":
-                                        if (!string.IsNullOrWhiteSpace(starts_with)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                                        CheckDuplicate(outEither, setting, starts_with);
                                         starts_with = setting.GetValue().UnwrapOrDefault(outEither, "");
                                         break;
                                     case "identifier":
@@ -433,7 +451,7 @@ namespace Stitch {
                             output.AmbiguityThreshold = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 0.5);
                             break;
                         case "segments":
-                            if (output.Segments.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, output.Segments);
                             var outer_children = new List<SegmentValue>();
                             foreach (var segment in setting.GetValues().UnwrapOrDefault(outEither, new())) {
                                 if (segment.Name == "segment") {
@@ -465,7 +483,7 @@ namespace Stitch {
                             if (outer_children.Count > 0) output.Segments.Add(("", outer_children));
                             break;
                         case "alphabet":
-                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, output.Alphabet);
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
                             break;
                         case "enforceunique":
@@ -521,7 +539,7 @@ namespace Stitch {
                             output.N = ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "order":
-                            if (order.Count != 0) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, order);
                             if (setting.IsSingle()) order.Add(setting);
                             else
                                 foreach (var group in setting.GetValues().UnwrapOrDefault(outEither, new()))
@@ -531,7 +549,7 @@ namespace Stitch {
                             output.CutoffScore = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "alphabet":
-                            if (output.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, output.Alphabet);
                             output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
                             break;
                         case "enforceunique":
@@ -571,12 +589,12 @@ namespace Stitch {
 
                 var output = new LocalParams<ReportParameter>("Report", new List<(string, Action<ReportParameter, KeyValue>)>{
                     ("Folder", (output, pair) => {
-                        if (!string.IsNullOrWhiteSpace(output.Folder)) outEither.AddMessage(ErrorMessage.DuplicateValue(pair.KeyRange.Name));
+                        CheckDuplicate(outEither, pair, output.Folder);
                         output.Folder = ParseHelper.GetFullPath(pair).UnwrapOrDefault(outEither, "");}),
                     ("Html", (output, pair) => {
                         new LocalParams<RunParameters.Report.HTML>("Html", new List<(string, Action<RunParameters.Report.HTML, KeyValue>)>{
                             ("Path", (settings, value) => {
-                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, html => {
                             if (string.IsNullOrWhiteSpace(html.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
@@ -585,7 +603,7 @@ namespace Stitch {
                     ("Json", (output, pair) => {
                         var j_settings = new LocalParams<RunParameters.Report.JSON>("Json", new List<(string, Action<RunParameters.Report.JSON, KeyValue>)>{
                             ("Path", (settings, value) => {
-                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
@@ -597,7 +615,7 @@ namespace Stitch {
                     ("Fasta", (output, pair) => {
                         var f_settings = new LocalParams<RunParameters.Report.FASTA>("Fasta", new List<(string, Action<RunParameters.Report.FASTA, KeyValue>)>{
                             ("Path", (settings, value) => {
-                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                             ("MinimalScore", (settings, value) => {
                                 settings.MinimalScore = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
@@ -613,7 +631,7 @@ namespace Stitch {
                     ("CSV", (output, pair) => {
                         var c_settings = new LocalParams<RunParameters.Report.CSV>("CSV", new List<(string, Action<RunParameters.Report.CSV, KeyValue>)>{
                             ("Path", (settings, value) => {
-                                if (!string.IsNullOrWhiteSpace(settings.Path)) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                                CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                             ("OutputType", (settings, value) => {
                                 settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
@@ -667,7 +685,7 @@ namespace Stitch {
                             }
                             break;
                         case "name":
-                            if (!string.IsNullOrEmpty(asettings.Name)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, asettings.Name);
                             asettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                             break;
                         case "gapstartpenalty":
@@ -685,7 +703,7 @@ namespace Stitch {
                             asettings.GapExtend = (sbyte)ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
                             break;
                         case "characters":
-                            if (!string.IsNullOrEmpty(identity.Item1)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, identity.Item1);
                             identity = (setting.GetValue().UnwrapOrDefault(outEither, ""), identity.Item2, identity.Item3);
                             break;
                         case "identity":
@@ -903,12 +921,12 @@ namespace Stitch {
                 foreach (var setting in node.GetValues().UnwrapOrDefault(outEither, new())) {
                     switch (setting.Name) {
                         case "path":
-                            if (!string.IsNullOrEmpty(file_path)) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, file_path);
                             file_path = GetFullPath(setting).UnwrapOrDefault(outEither, "");
                             file_pos = setting;
                             break;
                         case "name":
-                            if (tsettings.Name != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, tsettings.Name);
                             tsettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
                             break;
                         case "cutoffscore":
@@ -916,7 +934,7 @@ namespace Stitch {
                             else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
                             break;
                         case "alphabet":
-                            if (tsettings.Alphabet != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
+                            CheckDuplicate(outEither, setting, tsettings.Alphabet);
                             if (!extended) {
                                 outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
                             } else {
@@ -998,41 +1016,20 @@ namespace Stitch {
 
                 switch (name) {
                     case "format":
-                        var res = setting.GetValue();
-                        if (res.IsOk(outEither)) {
-                            switch (res.Unwrap().ToLower()) {
-                                case "old":
-                                    peaks_settings.FileFormat = PeaksFileFormat.OldFormat();
-                                    break;
-                                case "x":
-                                    peaks_settings.FileFormat = PeaksFileFormat.PeaksX();
-                                    break;
-                                case "x+":
-                                    peaks_settings.FileFormat = PeaksFileFormat.PeaksXPlus();
-                                    break;
-                                default:
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS Format", "'Old', 'X' and 'X+'"));
-                                    break;
-                            }
-                        }
+                        new LocalParams<InputData.Peaks>("Format", new List<(string, Action<InputData.Peaks, KeyValue>)>{
+                            ("Old", (settings, value) => {
+                                peaks_settings.FileFormat = PeaksFileFormat.OldFormat();}),
+                            ("X", (settings, value) => {
+                                peaks_settings.FileFormat = PeaksFileFormat.PeaksX();}),
+                            ("X+", (settings, value) => {
+                                peaks_settings.FileFormat = PeaksFileFormat.PeaksXPlus();}),
+                        }, peaks_settings).ParseSingular(setting).IsOk(outEither);
                         break;
                     case "separator":
-                        var res0 = setting.GetValue();
-                        if (res0.IsOk(outEither)) {
-                            if (res0.Unwrap().Length != 1)
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                            else
-                                peaks_settings.Separator = res0.Unwrap().First();
-                        }
+                        peaks_settings.Separator = ParseChar(setting).UnwrapOrDefault(outEither, ',');
                         break;
                     case "decimalseparator":
-                        var res1 = setting.GetValue();
-                        if (res1.IsOk(outEither)) {
-                            if (res1.Unwrap().Length != 1)
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Invalid Character", "The Character should be of length 1"));
-                            else
-                                peaks_settings.DecimalSeparator = res1.Unwrap().First();
-                        }
+                        peaks_settings.DecimalSeparator = ParseChar(setting).UnwrapOrDefault(outEither, '.');
                         break;
                     default:
                         var (parameters, success) = GetLocalPeaksParameters(setting, with_prefix, peaks_settings.Parameter).UnwrapOrDefault(outEither, (new(true), true));

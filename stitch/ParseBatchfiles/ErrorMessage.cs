@@ -74,6 +74,9 @@ namespace Stitch {
             public static ErrorMessage UnknownKey(FileRange range, string context, string options, string possible_match = "") {
                 return new ErrorMessage(range, "Unknown key", string.IsNullOrEmpty(possible_match) ? $"Unknown key in {context} definition." : $"Did you mean \"{possible_match}\"?", $"Valid options are: {options}.", true);
             }
+            public static ErrorMessage UnknownValue(FileRange range, string context, string options, string possible_match = "") {
+                return new ErrorMessage(range, $"Unknown value for {context}", string.IsNullOrEmpty(possible_match) ? $"Unknown value in {context} definition." : $"Did you mean \"{possible_match}\"?", $"Valid options are: {options}.");
+            }
             public override string ToString() {
                 // Header
                 var name = Warning ? "Warning" : "Error";
