@@ -595,7 +595,7 @@ namespace Stitch {
                         new LocalParams<RunParameters.Report.HTML>("Html", new List<(string, Action<RunParameters.Report.HTML, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
-                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, html => {
                             if (string.IsNullOrWhiteSpace(html.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             output.Files.Add(html);
@@ -604,7 +604,7 @@ namespace Stitch {
                         var j_settings = new LocalParams<RunParameters.Report.JSON>("Json", new List<(string, Action<RunParameters.Report.JSON, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
-                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
 
                         if (j_settings.IsOk(outEither)) {
@@ -616,7 +616,7 @@ namespace Stitch {
                         var f_settings = new LocalParams<RunParameters.Report.FASTA>("Fasta", new List<(string, Action<RunParameters.Report.FASTA, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
-                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("MinimalScore", (settings, value) => {
                                 settings.MinimalScore = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
                             ("OutputType", (settings, value) => {
@@ -632,7 +632,7 @@ namespace Stitch {
                         var c_settings = new LocalParams<RunParameters.Report.CSV>("CSV", new List<(string, Action<RunParameters.Report.CSV, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
-                                settings.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("OutputType", (settings, value) => {
                                 settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
                         }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
