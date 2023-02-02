@@ -57,7 +57,8 @@ namespace HTMLNameSpace {
                 html.OpenAndClose(HtmlTag.th, "", "Group");
                 html.OpenAndClose(HtmlTag.th, "", "Segment");
                 html.OpenAndClose(HtmlTag.th, "", "Template");
-                html.OpenAndClose(HtmlTag.th, "", "Location");
+                html.OpenAndClose(HtmlTag.th, "", "Template Part");
+                html.OpenAndClose(HtmlTag.th, "", "Read Part");
                 html.OpenAndClose(HtmlTag.th, "", "Score");
                 html.OpenAndClose(HtmlTag.th, "", "Unique");
                 html.Close(HtmlTag.tr);
@@ -67,7 +68,8 @@ namespace HTMLNameSpace {
                     html.OpenAndClose(HtmlTag.td, "class='center'", location.group.Item1);
                     html.OpenAndClose(HtmlTag.td, "class='center'", location.segment.Name);
                     html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(location.template.MetaData, AsideType.Template, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
-                    html.OpenAndClose(HtmlTag.td, "class='center'", location.match.StartA.ToString());
+                    html.OpenAndClose(HtmlTag.td, "class='center'", $"[{location.match.StartA}..{location.match.StartA + location.match.LenA}]");
+                    html.OpenAndClose(HtmlTag.td, "class='center'", $"[{location.match.StartB}..{location.match.StartB + location.match.LenB}]");
                     html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Score.ToString());
                     html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Unique.ToString());
                     html.Close(HtmlTag.tr);
@@ -84,14 +86,16 @@ namespace HTMLNameSpace {
                     html.Open(HtmlTag.table, "class='wide-table'");
                     html.Open(HtmlTag.tr);
                     html.OpenAndClose(HtmlTag.th, "", "Recombined");
-                    html.OpenAndClose(HtmlTag.th, "", "Location");
+                    html.OpenAndClose(HtmlTag.th, "", "Template Part");
+                    html.OpenAndClose(HtmlTag.th, "", "Read Part");
                     html.OpenAndClose(HtmlTag.th, "", "Score");
                     html.OpenAndClose(HtmlTag.th, "", "Unique");
                     html.Close(HtmlTag.tr);
                     foreach (var location in locations) {
                         html.Open(HtmlTag.tr);
                         html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(location.template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
-                        html.OpenAndClose(HtmlTag.td, "class='center'", location.match.StartA.ToString());
+                        html.OpenAndClose(HtmlTag.td, "class='center'", $"[{location.match.StartA}..{location.match.StartA + location.match.LenA}]");
+                        html.OpenAndClose(HtmlTag.td, "class='center'", $"[{location.match.StartB}..{location.match.StartB + location.match.LenB}]");
                         html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Score.ToString());
                         html.OpenAndClose(HtmlTag.td, "class='center'", location.match.Unique.ToString());
                         html.Close(HtmlTag.tr);

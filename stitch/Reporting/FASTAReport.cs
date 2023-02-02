@@ -23,14 +23,14 @@ namespace Stitch {
             var sequences = new List<(double, string)>();
 
             if (OutputType == RunParameters.Report.OutputType.Recombine) {
-                sequences.Capacity = Max(sequences.Capacity, Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum());
+                sequences.EnsureCapacity(Parameters.RecombinedSegment.Select(a => a.Templates.Count).Sum());
                 foreach (var template in Parameters.RecombinedSegment.SelectMany(a => a.Templates)) {
                     if (template.Score >= MinScore)
                         sequences.Add((template.Score, $">{template.MetaData.Identifier} score:{template.Score}\n{AminoAcid.ArrayToString(template.ConsensusSequence().Item1.SelectMany(i => i.Sequence))}"));
                 }
             } else // TemplateMatching
               {
-                sequences.Capacity = Max(sequences.Capacity, Parameters.Groups.Select(a => a.Item2.Count).Sum());
+                sequences.EnsureCapacity(Parameters.Groups.Select(a => a.Item2.Count).Sum());
                 foreach (var (group, dbs) in Parameters.Groups) {
                     foreach (var template in dbs.SelectMany(a => a.Templates)) {
                         if (template.Score >= MinScore)

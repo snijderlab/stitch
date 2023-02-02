@@ -146,6 +146,9 @@ namespace Stitch {
             /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
             public double EnforceUnique = 1.0;
 
+            /// <summary> This will enforce unique , but allows a read to be placed uniquely multiple times with different parts of its sequence. </summary>
+            public bool EnforceUniqueLocalised = true;
+
             /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public bool ForceGermlineIsoleucine = true;
 
@@ -169,6 +172,9 @@ namespace Stitch {
 
             /// <summary> Whether or not reads/paths will be forced to a single template. </summary>
             public Option<double> EnforceUnique = new Option<double>();
+
+            /// <summary> This will enforce unique , but allows a read to be placed uniquely multiple times with different parts of its sequence. </summary>
+            public bool EnforceUniqueLocalised = false;
 
             /// <summary> To force consensus Leucines to Isoleucine if the germline has an Isoleucine on that position. </summary>
             public Trilean ForceGermlineIsoleucine = Trilean.Unspecified;

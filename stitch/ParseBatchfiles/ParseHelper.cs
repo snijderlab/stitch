@@ -500,6 +500,9 @@ namespace Stitch {
                             }
                             output.EnforceUnique = value;
                             break;
+                        case "enforceuniquelocalised":
+                            output.EnforceUniqueLocalised = ParseHelper.ParseBool(setting, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, output.EnforceUniqueLocalised);
+                            break;
                         case "forcegermlineisoleucine":
                             output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true);
                             break;
@@ -564,6 +567,9 @@ namespace Stitch {
                                 outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
                             }
                             output.EnforceUnique = new Option<double>(value);
+                            break;
+                        case "enforceuniquelocalised":
+                            output.EnforceUniqueLocalised = ParseHelper.ParseBool(setting, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, output.EnforceUniqueLocalised);
                             break;
                         case "forcegermlineisoleucine":
                             output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;

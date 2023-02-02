@@ -177,13 +177,19 @@ namespace Stitch {
                         matches[read].AddRange(local_matches[read].Select(a => (i, j, a.TemplateIndex, a.Match)));
                 }
 
-                Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
+                if (jobs.Count > MaxNumberOfCPUCores) {
+                    Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
+                } else {
+                    foreach (var job in jobs) {
+                        ExecuteJob(job);
+                    }
+                }
 
                 // Save the progress, finished TemplateMatching
                 if (ProgressBar != null) ProgressBar.Update();
 
                 // Filter matches if Forced
-                EnforceUnique(matches, TemplateMatching.EnforceUnique);
+                EnforceUnique.Enforce(matches, TemplateMatching.EnforceUnique, TemplateMatching.EnforceUniqueLocalised);
 
                 // Add all matches to the right templates
                 foreach (var row in matches) {
@@ -287,7 +293,7 @@ namespace Stitch {
                 }
 
                 // Filter matches if Forced
-                EnforceUnique(matches, Recombine.EnforceUnique.Unwrap(TemplateMatching.EnforceUnique));
+                EnforceUnique.Enforce(matches, Recombine.EnforceUnique.Unwrap(TemplateMatching.EnforceUnique), Recombine.EnforceUniqueLocalised);
 
                 // Add all matches to the right templates
                 foreach (var row in matches) {
@@ -428,28 +434,6 @@ namespace Stitch {
                 }
                 parent.Templates = recombined_templates;
                 return scores;
-            }
-
-            static void EnforceUnique(List<List<(int, int, int, Alignment Match)>> matches, double unique_threshold) {
-                if (matches == null || unique_threshold == 0.0) return;
-                for (int read_index = 0; read_index < matches.Count; read_index++) {
-                    var best = new List<(int, int, int, Alignment Match)>();
-                    var best_score = 0;
-                    if (matches[read_index] == null) continue;
-                    for (int template_index = 0; template_index < matches[read_index].Count; template_index++) {
-                        var match = matches[read_index][template_index];
-                        if (match.Match.Score > best_score) {
-                            best = best.Where(m => m.Match.Score >= match.Match.Score * unique_threshold).ToList();
-                            best.Add(match);
-                            best_score = match.Match.Score;
-                        } else if (match.Match.Score >= best_score * unique_threshold) {
-                            best.Add(match);
-                        }
-                    }
-                    if (best.Count == 1) best[0].Item4.Unique = true;
-                    matches[read_index].Clear();
-                    matches[read_index].AddRange(best);
-                }
             }
         }
     }

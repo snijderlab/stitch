@@ -185,6 +185,10 @@ namespace Stitch {
                 return fallback;
         }
 
+        public static string ElementWiseToString<T>(this IEnumerable<T> data) {
+            return "[" + data.Aggregate("", (acc, i) => acc + i.ToString() + ", ") + "]";
+        }
+
         public static int SmithWatermanStrings(string template, string query) {
             var score_matrix = new (int, Direction)[template.Length + 1, query.Length + 1]; // Default value of 0
             int[] indices_template = new int[template.Length];
