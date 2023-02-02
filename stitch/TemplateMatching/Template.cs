@@ -360,12 +360,15 @@ namespace Stitch {
 
         /// <summary> Align the consensus sequence of this Template to its original sequence, in the case of a recombined sequence align with the original sequences of its templates. </summary>
         /// <returns>The sequence match containing the result</returns>
+        private Alignment AlignConsensusWithTemplateCache = null;
         public Alignment AlignConsensusWithTemplate() {
-            var consensus = new ReadFormat.Simple(this.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray());
+            if (AlignConsensusWithTemplateCache != null) return AlignConsensusWithTemplateCache;
+            var consensus = new ReadFormat.Simple(this.ConsensusSequence().Item1.SelectMany(i => i.Sequence).ToArray(), null, null, $"Consensus-{this.MetaData.Identifier}");
             if (Recombination != null)
-                return new Alignment(new ReadFormat.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
+                AlignConsensusWithTemplateCache = new Alignment(new ReadFormat.Simple(this.Recombination.SelectMany(a => a.Sequence).ToArray()), consensus, Parent.Alphabet, AlignmentType.Global);
             else
-                return new Alignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
+                AlignConsensusWithTemplateCache = new Alignment(this.MetaData, consensus, Parent.Alphabet, AlignmentType.Global);
+            return AlignConsensusWithTemplateCache;
         }
 
         /// <summary> The annotated consensus sequence given as an array with the length of the consensus sequence. </summary>

@@ -193,18 +193,18 @@ namespace Stitch {
                     }
                 }
 
-                if (TemplateMatching.BuildTree) {
-                    foreach (var group in segments) {
-                        foreach (var segment in group.Item2) {
-                            try {
-                                segment.Hierarchy = PhylogeneticTree.CreateTree(segment.Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList());
-                                segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
-                            } catch (Exception e) {
-                                (new InputNameSpace.ErrorMessage(segment.Name, "Error rendering tree", "The tree will not be available but the program will continue. Please report this including your batchfile and used templates.", "", true)).Print();
-                                InputNameSpace.ErrorMessage.PrintException(e);
-                            }
-                        }
+                void BuildTree(Segment segment) {
+                    try {
+                        segment.Hierarchy = PhylogeneticTree.CreateTree(segment.Templates.Select(a => (a.MetaData.Identifier, a.MetaData)).ToList());
+                        segment.ScoreHierarchy = new PhylogeneticTree.ProteinHierarchyTree(segment.Hierarchy, segment.Templates.SelectMany(t => t.Matches).ToList());
+                    } catch (Exception e) {
+                        (new InputNameSpace.ErrorMessage(segment.Name, "Error rendering tree", "The tree will not be available but the program will continue. Please report this including your batchfile and used templates.", "", true)).Print();
+                        InputNameSpace.ErrorMessage.PrintException(e);
                     }
+                }
+
+                if (TemplateMatching.BuildTree) {
+                    Parallel.ForEach(segments.SelectMany(group => group.Item2), new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => BuildTree(job));
                 }
 
                 return segments;
