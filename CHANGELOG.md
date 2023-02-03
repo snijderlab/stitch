@@ -2,18 +2,22 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 
 # Upcoming Release
 
-* Reimplemented Segment joining to use the same alignment scoring as template matching (#128)
-* Implemented loading of sequences from mmCIF files (#207, #217)
+* Implemented loading of sequences from mmCIF files, for ModelAngelo (#207, #217)
+* Implemented loading of sequences from mzTab files, for Casanovo (#192)
 * Implemented I/L disambiguation based on satellite ions (#193, #216, #218)
+* Reimplemented Segment joining to use the same alignment scoring as template matching (#128)
 * Removed many MS specific terms from the HTML when not applicable (#214)
-* Switched the exact scoring of reads to handle longer alignments better (#215)
+* Switched the exact scoring of reads to handle longer alignments better, as well as locally enforcing unique placement (#215)
 * Displayed leading insertions in reads placement to a different colour
 * Updated the main overview header (#212)
 * Major changes to the segment overview tree, always use Blosum62, ability to not generate it (`BuildTree: False`) (#213)
 * Fixed small remaining intensity \[1-2\] scaling for Novor reads to scale \[0-1\]
 * Fixed issues with the generation of the consensus sequences in relation to the mass alignment and I/L disambiguation (#220)
 * Reworked the command line interface (CLI) to be more friendly, *Note: calling stitch has changed to `stitch run <path>`*
-* Reworked (parts of) the batchfile parsing to provide more helpful error messages
+* Reworked the batchfile parsing to provide more helpful error messages
+* Deprecated the use of booleans with `EnforceUnique`, for now will keep working with a warning but support will be dropped at some point.
+* Fixed bug (#222)
+* Performance improvements
 
 Note
 * The benchmarks show a mostly very slightly positive result, with the caveat that I/L disambiguation is not automatically benchmarked yet because raw files are so big.
