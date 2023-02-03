@@ -177,7 +177,7 @@ namespace Stitch {
                         matches[read].AddRange(local_matches[read].Select(a => (i, j, a.TemplateIndex, a.Match)));
                 }
 
-                if (jobs.Count > MaxNumberOfCPUCores) {
+                if (jobs.Count > 1) {
                     Parallel.ForEach(jobs, new ParallelOptions { MaxDegreeOfParallelism = MaxNumberOfCPUCores }, job => ExecuteJob(job));
                 } else {
                     foreach (var job in jobs) {
