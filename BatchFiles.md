@@ -816,10 +816,10 @@ All reads have an `intensity` and a `positional score`, the intensity is a singl
 
 #### Template Matching
 
-The score of a match (read or path against a template) is calculated by the smith waterman algorithm solely based on the alphabet used. If the score of a match is bigger than or equal to the cutoff score as defined in the input batch file times the square root of the length of the template the match is added to the list of matches of the template, otherwise it is discarded.
+The score of a match (read or path against a template) is calculated by the smith waterman algorithm solely based on the alphabet used. If the score of a match is bigger than or equal to the cutoff score as defined in the input batch file times the square root of the lowest value of the length of the read and the length of the template the match is added to the list of matches of the template, otherwise it is discarded. The lowest value choosing is needed for placing very long reads on short templates.
 
 ```
-matchScore >= cutoffScore * sqrt(templateLength)
+matchScore >= cutoffScore * sqrt(min(readLength, templateLength))
 ```
 
 #### Gap detection (* in Order definition)

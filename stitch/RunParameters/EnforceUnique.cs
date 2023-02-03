@@ -5,6 +5,12 @@ using System.Linq;
 
 namespace Stitch {
     public static class EnforceUnique {
+        /// <summary>
+        /// EnforceUnique of the given matches. In place so all non-uniquely placed entries will be removed where applicable.
+        /// </summary>
+        /// <param name="matches"> All matches. </param>
+        /// <param name="unique_threshold"> The threshold for being considered unique, as fraction of the max score. </param>
+        /// <param name="localised"> Whether the unique placement should be done considering localised placement. </param>
         public static void Enforce(List<List<(int GroupIndex, int SegmentIndex, int TemplateIndex, Alignment Match)>> matches, double unique_threshold, bool localised) {
             if (matches == null || unique_threshold == 0.0) return;
             if (localised) {
@@ -68,9 +74,13 @@ namespace Stitch {
                 placed.Add((item.Item1, item.Item2, item.Item3, item.Item4));
             }
 
+            // Redo the analysis but now with this segment(s) and locations of the reads off limits
             return Localised(matches.Where(match => !placed_segments.Contains((match.GroupIndex, match.SegmentIndex)) && Fits(match.Span, open_parts)), unique_threshold, placed_segments, open_parts, placed);
         }
 
+        /// <summary>
+        /// Check if the given span fits in any of the open parts left os this read. If it fits this means that this match can be chosen without any overlap with any uniquely picked matches before.
+        /// </summary>
         public static bool Fits((int Start, int End) Span, List<(int Start, int End)> open_parts) {
             foreach (var place in open_parts) {
                 if (place.Start <= Span.Start && place.End >= Span.End)
@@ -79,6 +89,9 @@ namespace Stitch {
             return false;
         }
 
+        /// <summary>
+        /// Update the open parts of a read in place given a new placed span.
+        /// </summary>
         public static void UpdateOpenParts((int Start, int End) Span, List<(int Start, int End)> open_parts) {
             var output = new List<(int, int)>(open_parts.Count);
             foreach (var place in open_parts) {
@@ -95,16 +108,26 @@ namespace Stitch {
             }
             open_parts.Clear();
             open_parts.AddRange(output);
-            //return output;
         }
 
+        /// <summary>
+        /// Get the region of a read that this match spans. Taking care to adjust for Xs on the template (these could overlap with adjacent segments).
+        /// </summary>
         static (int Start, int End) GetSpan(Alignment match) {
-            if (match.ReadA.Sequence.Length == match.StartB + match.LenB) {
-                var count_x = match.ReadA.Sequence.AminoAcids.Reverse().TakeWhile(a => a.Character == 'X').Count();
-                return (match.StartB, Math.Max(match.StartB, match.StartB + match.LenB - count_x));
-            } else {
-                return (match.StartB, match.StartB + match.LenB);
+            var start = match.StartB;
+            if (match.StartA == 0) {
+                var count_x = match.ReadA.Sequence.AminoAcids.TakeWhile(a => a.Character == 'X').Count();
+                var insertions = Math.Min(count_x, match.Path.TakeWhile(i => i.StepB == 0).Select(i => (int)i.StepA).Sum());
+                start = start + count_x - insertions;
             }
+            var end = match.StartB + match.LenB;
+            if (match.StartA + match.LenA == match.ReadA.Sequence.Length) {
+                var count_x = match.ReadA.Sequence.AminoAcids.Reverse().TakeWhile(a => a.Character == 'X').Count();
+                var insertions = Math.Min(count_x, match.Path.AsEnumerable().Reverse().TakeWhile(i => i.StepB == 0).Select(i => (int)i.StepA).Sum());
+                end = end - count_x;
+            }
+
+            return (start, end);
         }
     }
 }

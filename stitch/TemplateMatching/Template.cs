@@ -97,7 +97,7 @@ namespace Stitch {
         /// <param name="unique">To signify if this read is only placed here (EnforceUnique) or that it is a normal placement.</param>
         public void AddMatch(Alignment match, bool unique = false) {
             lock (Matches) {
-                if (match.Score >= Parent.CutoffScore * Math.Sqrt(match.ReadB.Sequence.Length)) {
+                if (match.Score >= Parent.CutoffScore * Math.Sqrt(Math.Min(match.ReadA.Sequence.Length, match.ReadB.Sequence.Length))) {
                     score += match.Score;
                     TotalArea += match.ReadB.TotalArea;
                     Matches.Add(match);

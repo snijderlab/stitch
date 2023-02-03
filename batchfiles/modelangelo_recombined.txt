@@ -12,7 +12,7 @@ Input ->
 
 TemplateMatching ->
     EnforceUnique     : 1.0
-    CutoffScore       : 10
+    CutoffScore       : 7
     AmbiguityThreshold: 0.1
 
     Alphabet ->
