@@ -52,7 +52,7 @@ namespace Stitch {
             }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
-            /// <returns>If successfull: the number (int32)</returns>
+            /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ParseInt(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
@@ -60,7 +60,7 @@ namespace Stitch {
             }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
-            /// <returns>If successfull: the number (int32)</returns>
+            /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<T> ParseEnum<T>(KeyValue item) where T : struct, System.Enum {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<T>(input.Messages);
@@ -74,7 +74,7 @@ namespace Stitch {
             }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
-            /// <returns>If successfull: the number (double)</returns>
+            /// <returns>If successful: the number (double)</returns>
             public static ParseResult<double> ParseDouble(KeyValue item) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
@@ -83,7 +83,7 @@ namespace Stitch {
 
             /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary>
             /// <param name="input">The string to be converted to a double.</param>
-            /// <returns>If successfull: the number (double)</returns>
+            /// <returns>If successful: the number (double)</returns>
             public static ParseResult<double> ConvertToDouble(string input, FileRange pos) {
                 var result = 0.0;
                 if (double.TryParse(input, out result)) {
@@ -105,6 +105,25 @@ namespace Stitch {
                         result.Value = value.Unwrap().First();
                 }
                 return result;
+            }
+
+            public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false) {
+                var output = new ParseResult<bool>(def);
+                var res = setting.GetValue();
+                if (res.IsOk(output)) {
+                    switch (res.Unwrap().ToLower()) {
+                        case "true":
+                            output.Value = true;
+                            break;
+                        case "false":
+                            output.Value = false;
+                            break;
+                        default:
+                            output.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect Boolean definition", "Valid options are: 'True' and 'False'."));
+                            break;
+                    }
+                }
+                return output;
             }
 
             public static void CheckDuplicate<T>(ParseResult<T> outEither, KeyValue item, string value) {
@@ -181,198 +200,156 @@ namespace Stitch {
                 var outEither = new ParseResult<InputData.InputParameters>();
                 var output = new InputData.InputParameters();
 
-                foreach (var pair in key.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (pair.Name) {
-                        case "peaks":
-                            var settings = new InputData.Peaks();
-
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        CheckDuplicate(outEither, setting, settings.File.Path);
-                                        settings.File.Path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "name":
-                                        CheckDuplicate(outEither, setting, settings.File.Name);
-                                        settings.File.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "rawdatadirectory":
-                                        CheckDuplicate(outEither, setting, settings.RawDataDirectory);
-                                        settings.RawDataDirectory = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "xledisambiguation":
-                                        settings.XleDisambiguation = ParseHelper.ParseBool(setting, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);
-                                        break;
-                                    default:
-                                        var peaks = ParseHelper.GetPeaksSettings(setting, false, settings);
-                                        outEither.Messages.AddRange(peaks.Messages);
-
-                                        if (peaks.Value == false)
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "PEAKS", "'Path', 'CutoffALC', 'LocalCutoffALC', 'MinLengthPatch', 'Name', 'Separator', 'DecimalSeparator' and 'Format'"));
-
-                                        break;
-                                }
-                            }
-
+                new LocalParams<InputData.InputParameters>("Input", new List<(string, Action<InputData.InputParameters, KeyValue>)>{
+                    ("Peaks", (output, pair) => {
+                        new LocalParams<InputData.Peaks>("Peaks", new List<(string, Action<InputData.Peaks, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                    settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("XleDisambiguation", (settings, value) => {
+                                settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                        }, (settings, value) => {
+                            var peaks = ParseHelper.GetPeaksSettings(value, false, settings);
+                            outEither.Messages.AddRange(peaks.Messages);
+                            return peaks.Value;
+                        }).Parse(pair, settings => {
                             if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
                             output.Files.Add(settings);
-                            break;
+                        });
+                    }),
+                    ("Reads", (output, pair) => {
+                        new LocalParams<InputData.Reads>("Reads", new List<(string, Action<InputData.Reads, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");})
+                        }).Parse(pair, reads => {
+                            if (string.IsNullOrWhiteSpace(reads.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(reads.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        case "reads":
-                            var rsettings = new LocalParams<InputData.Reads>("Reads", new List<(string, Action<InputData.Reads, KeyValue>)>{
-                                ("Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Path);
-                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                                ("Name", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Name);
-                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");})
-                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+                            output.Files.Add(reads);
+                        });
+                    }                        ),
+                    ("Novor", (output, pair) => {
+                        string name = null;
+                        new LocalParams<InputData.Novor>("Novor", new List<(string, Action<InputData.Novor, KeyValue>)>{
+                            ("Denovo Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.DeNovoFile);
+                                settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                            ("PSMS Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.PSMSFile);
+                                settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, name);
+                                name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Cutoff", (settings, value) => {
+                                settings.Cutoff = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                            ("Separator", (settings, value) => {
+                                settings.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
+                        }).Parse(pair, novor => {
+                            if (novor.DeNovoFile == null && novor.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
+                            if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                            if (novor.DeNovoFile != null) novor.DeNovoFile.Name = name;
+                            if (novor.PSMSFile != null) novor.PSMSFile.Name = name;
+                            output.Files.Add(novor);
+                        });
+                    }),
+                    ("Fasta", (output, pair) => {
+                        new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<InputData.FASTA, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Identifier", (settings, value) => {
+                                settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);})
+                        }).Parse(pair, fasta => {
+                            if (string.IsNullOrWhiteSpace(fasta.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(fasta.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                            if (rsettings.IsOk(outEither)) {
-                                if (string.IsNullOrWhiteSpace(rsettings.Value.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                                if (string.IsNullOrWhiteSpace(rsettings.Value.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                            output.Files.Add(fasta);
+                        });
+                    }),
+                    ("MMCIF", (output, pair) => {
+                        new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("MinLength", (settings, value) => {
+                                settings.MinLength = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                            ("CutoffALC", (settings, value) => {
+                                settings.CutoffALC = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                        }).Parse(pair, mmcif => {
+                            if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                                output.Files.Add(rsettings.Value);
-                            }
-                            break;
+                            output.Files.Add(mmcif);
+                        });
+                    }),
+                    ("Casanovo", (output, pair) => {
+                        new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<InputData.Casanovo, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("CutoffScore", (settings, value) => {
+                                settings.CutoffScore = (uint)ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
+                        }).Parse(pair, casanovo => {
+                            if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
-                        case "novor":
-                            string name = null;
-                            var novor_settings = new LocalParams<InputData.Novor>("Novor", new List<(string, Action<InputData.Novor, KeyValue>)>{
-                                ("Denovo Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.DeNovoFile);
-                                    settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
-                                ("PSMS Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.PSMSFile);
-                                    settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
-                                ("Name", (settings, value) => {
-                                    CheckDuplicate(outEither, value, name);
-                                    name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                                ("Cutoff", (settings, value) => {
-                                    settings.Cutoff = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
-                                ("Separator", (settings, value) => {
-                                    settings.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
-                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+                            output.Files.Add(casanovo);
+                        });
+                    }),
+                    ("Folder", (output, pair) => {
+                        // Parse files one by one
+                        var folder_path = "";
+                        FileRange? folder_range = null;
+                        var starts_with = "";
+                        var identifier = new Regex(".*");
+                        bool recursive = false;
 
-                            if (novor_settings.IsOk(outEither)) {
-                                var novor = novor_settings.Value;
-                                if (novor.DeNovoFile == null && novor.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
-                                if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-                                if (novor.DeNovoFile != null) novor.DeNovoFile.Name = name;
-                                if (novor.PSMSFile != null) novor.PSMSFile.Name = name;
-                                output.Files.Add(novor);
-                            }
-                            break;
-
-                        case "fasta":
-                            var fastasettings = new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<InputData.FASTA, KeyValue>)>{
-                                ("Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Path);
-                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                                ("Name", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Name);
-                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                                ("Identifier", (settings, value) => {
-                                    settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);})
-                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
-
-                            if (fastasettings.IsOk(outEither)) {
-                                if (string.IsNullOrWhiteSpace(fastasettings.Value.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                                if (string.IsNullOrWhiteSpace(fastasettings.Value.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                                output.Files.Add(fastasettings.Value);
-                            }
-                            break;
-
-                        case "mmcif":
-                            var mmcif_settings = new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
-                                ("Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Path);
-                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                                ("Name", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Name);
-                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                                ("MinLength", (settings, value) => {
-                                    settings.MinLength = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
-                                ("CutoffALC", (settings, value) => {
-                                    settings.CutoffALC = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
-                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
-
-                            if (mmcif_settings.IsOk(outEither)) {
-                                var mmcif = mmcif_settings.Value;
-                                if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                                if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                                output.Files.Add(mmcif);
-                            }
-                            break;
-
-                        case "casanovo":
-                            var casanovo_settings = new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<InputData.Casanovo, KeyValue>)>{
-                                ("Path", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Path);
-                                    settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                                ("Name", (settings, value) => {
-                                    CheckDuplicate(outEither, value, settings.File.Name);
-                                    settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                                ("CutoffScore", (settings, value) => {
-                                    settings.CutoffScore = (uint)ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
-                            }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
-
-                            if (casanovo_settings.IsOk(outEither)) {
-                                var casanovo = casanovo_settings.Value;
-                                if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                                if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-
-                                output.Files.Add(casanovo);
-                            }
-                            break;
-
-                        case "folder":
-                            // Parse files one by one
-                            var folder_path = "";
-                            FileRange? folder_range = null;
-                            var starts_with = "";
-                            var identifier = new Regex(".*");
-                            bool recursive = false;
-
-                            var peaks_settings = new InputData.Peaks();
-
-                            foreach (var setting in pair.GetValues().UnwrapOrDefault(outEither, new())) {
-                                switch (setting.Name) {
-                                    case "path":
-                                        CheckDuplicate(outEither, setting, folder_path);
-                                        folder_path = ParseHelper.GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                                        folder_range = setting.ValueRange;
-                                        break;
-                                    case "startswith":
-                                        CheckDuplicate(outEither, setting, starts_with);
-                                        starts_with = setting.GetValue().UnwrapOrDefault(outEither, "");
-                                        break;
-                                    case "identifier":
-                                        identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
-                                        break;
-                                    case "recursive":
-                                        recursive = ParseHelper.ParseBool(setting, "Recursive").UnwrapOrDefault(outEither, false);
-                                        break;
-                                    default:
-                                        var peaks = ParseHelper.GetPeaksSettings(setting, true, peaks_settings);
-                                        outEither.Messages.AddRange(peaks.Messages);
-
-                                        if (peaks.Value == false)
-                                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Folder", "'Path' and 'StartsWith'"));
-
-                                        break;
-                                }
-                            }
-
+                        var peaks_settings = new InputData.Peaks();
+                        new LocalParams<int>("Folder", new List<(string, Action<int, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, folder_path);
+                                    folder_path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");
+                                    folder_range = value.ValueRange;}),
+                            ("StartsWith", (settings, value) => {
+                                CheckDuplicate(outEither, value, starts_with);
+                                    starts_with = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Identifier", (settings, value) => {
+                                identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
+                            ("Recursive", (settings, value) => {
+                                recursive = ParseHelper.ParseBool(value, "Recursive").UnwrapOrDefault(outEither, false);}),
+                        }, (settings, value) => {
+                            var peaks = ParseHelper.GetPeaksSettings(value, false, peaks_settings);
+                            outEither.Messages.AddRange(peaks.Messages);
+                            return peaks.Value;
+                        }).Parse(pair, settings => {
                             if (!folder_range.HasValue) {
                                 outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                                break;
+                                return;
                             }
-
                             var files = GetAllFilesPrivate(folder_path, recursive);
 
                             if (files.Item1.Length != 0) {
@@ -393,15 +370,9 @@ namespace Stitch {
                             } else {
                                 outEither.AddMessage(new ErrorMessage(folder_range.Value, files.Item2, files.Item3, files.Item4));
                             }
-
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(pair.KeyRange.Name, "Input", "'Peaks', 'Reads', 'Fasta', 'Novor' or 'Folder'"));
-                            break;
-                    }
-                }
-
-                outEither.Value = output;
+                        });
+                    }),
+                }).Parse(key, output => outEither.Value = output);
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
@@ -440,22 +411,39 @@ namespace Stitch {
             }
             public static ParseResult<TemplateMatchingParameter> ParseTemplateMatching(NameFilter nameFilter, KeyValue key) {
                 var outEither = new ParseResult<TemplateMatchingParameter>();
-                var output = new TemplateMatchingParameter();
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (setting.Name) {
-                        case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "ambiguitythreshold":
-                            output.AmbiguityThreshold = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 0.5);
-                            break;
-                        case "segments":
-                            CheckDuplicate(outEither, setting, output.Segments);
+                var settings = new LocalParams<TemplateMatchingParameter>("TemplateMatching", new List<(string, Action<TemplateMatchingParameter, KeyValue>)>{
+                    ("CutoffScore", (settings, value) => {
+                        settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Alphabet", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Alphabet);
+                            settings.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
+                    ("AmbiguityThreshold", (settings, value) => {
+                            settings.AmbiguityThreshold = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 0.5);}),
+                    ("EnforceUnique", (settings, value) => {
+                            var v = 1.0;
+                            var boolean = ParseBool(value, "EnforceUnique");
+                            var number = ParseDouble(value);
+                            if (boolean.IsOk()) {
+                                v = boolean.Unwrap() ? 1.0 : 0.0;
+                            } else if (number.IsOk()) {
+                                v = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 1.0);
+                            } else {
+                                outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
+                            }
+                            settings.EnforceUnique = v;}),
+                    ("EnforceUniqueLocalised", (settings, value) => {
+                        settings.EnforceUniqueLocalised = ParseHelper.ParseBool(value, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, settings.EnforceUniqueLocalised);}),
+                    ("ForceGermlineIsoleucine", (settings, value) => {
+                        settings.ForceGermlineIsoleucine = ParseBool(value, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true);}),
+                    ("BuildTree", (settings, value) => {
+                        settings.BuildTree = ParseBool(value, "BuildTree").UnwrapOrDefault(outEither, true);}),
+                    ("Segments", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Segments);
                             var outer_children = new List<SegmentValue>();
-                            foreach (var segment in setting.GetValues().UnwrapOrDefault(outEither, new())) {
+                            foreach (var segment in value.GetValues().UnwrapOrDefault(outEither, new())) {
                                 if (segment.Name == "segment") {
-                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, output.Alphabet, false).UnwrapOrDefault(outEither, new());
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, settings.Alphabet, false).UnwrapOrDefault(outEither, new());
 
                                     // Check to see if the name is valid
                                     if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
@@ -466,7 +454,7 @@ namespace Stitch {
                                 } else {
                                     var children = new List<SegmentValue>();
                                     foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new())) {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, output.Alphabet, false);
+                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, settings.Alphabet, false);
                                         if (segment_value.IsOk(outEither)) {
                                             var segment_object = segment_value.Unwrap();
                                             // Check to see if the name is valid
@@ -477,116 +465,71 @@ namespace Stitch {
                                             children.Add(segment_object);
                                         }
                                     }
-                                    output.Segments.Add((segment.OriginalName, children));
+                                    settings.Segments.Add((segment.OriginalName, children));
                                 }
                             }
-                            if (outer_children.Count > 0) output.Segments.Add(("", outer_children));
-                            break;
-                        case "alphabet":
-                            CheckDuplicate(outEither, setting, output.Alphabet);
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
-                            break;
-                        case "enforceunique":
-                            var value = 1.0;
-                            var boolean = ParseBool(setting, "EnforceUnique");
-                            var number = ParseDouble(setting);
-                            if (boolean.IsOk()) {
-                                value = boolean.Unwrap() ? 1.0 : 0.0;
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Deprecated EnforceUnique definition", "Using a boolean for EnforceUnique is deprecated.", $"Instead of '{boolean.Value}' use '{value:F1}'.", true));
-                            } else if (number.IsOk()) {
-                                value = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 1.0);
-                            } else {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect EnforceUnique definition", "Expected a number."));
-                            }
-                            output.EnforceUnique = value;
-                            break;
-                        case "enforceuniquelocalised":
-                            output.EnforceUniqueLocalised = ParseHelper.ParseBool(setting, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, output.EnforceUniqueLocalised);
-                            break;
-                        case "forcegermlineisoleucine":
-                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true);
-                            break;
-                        case "buildtree":
-                            output.BuildTree = ParseBool(setting, "BuildTree").UnwrapOrDefault(outEither, true);
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "TemplateMatching", "'CutoffScore', 'Segments', 'Alphabet', 'EnforceUnique', 'AmbiguityThreshold', 'ForceGermlineIsoleucine', 'BuildTree'"));
-                            break;
-                    }
-                }
+                            if (outer_children.Count > 0) settings.Segments.Add(("", outer_children));}),
+                }).Parse(key, settings => {
+                    if (settings.Segments.Count > 1)
+                        foreach (var db in settings.Segments)
+                            if (string.IsNullOrEmpty(db.Name))
+                                outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single segments in grouped segment list", "You cannot define a single segment when there are also segment groups defined."));
 
-                if (output.Segments.Count > 1)
-                    foreach (var db in output.Segments)
-                        if (string.IsNullOrEmpty(db.Name))
-                            outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "Single segments in grouped segment list", "You cannot define a single segment when there are also segment groups defined."));
+                    if (settings.Alphabet == null)
+                        outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Alphabet"));
 
-                if (output.Alphabet == null)
-                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Alphabet"));
+                    if (settings.Segments.Count == 0)
+                        outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any segment"));
 
-                if (output.Segments.Count == 0)
-                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any segment"));
-
-                outEither.Value = output;
+                    outEither.Value = settings;
+                });
                 return outEither;
             }
+
             public static ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)> ParseRecombine(KeyValue key) {
                 var outEither = new ParseResult<(RecombineParameter, List<KeyValue>, KeyValue)>();
-                var output = new RecombineParameter();
 
                 var order = new List<KeyValue>();
                 KeyValue readAlignmentKey = null;
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (setting.Name) {
-                        case "n":
-                            output.N = ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "order":
-                            CheckDuplicate(outEither, setting, order);
-                            if (setting.IsSingle()) order.Add(setting);
+                var settings = new LocalParams<RecombineParameter>("Recombined", new List<(string, Action<RecombineParameter, KeyValue>)>{
+                    ("N", (settings, value) => {
+                        settings.N = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Order", (settings, value) => {
+                        CheckDuplicate(outEither, value, order);
+                            if (value.IsSingle()) order.Add(value);
                             else
-                                foreach (var group in setting.GetValues().UnwrapOrDefault(outEither, new()))
-                                    order.Add(group);
-                            break;
-                        case "cutoffscore":
-                            output.CutoffScore = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "alphabet":
-                            CheckDuplicate(outEither, setting, output.Alphabet);
-                            output.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
-                            break;
-                        case "enforceunique":
-                            var value = 1.0;
-                            var boolean = ParseBool(setting, "EnforceUnique");
-                            var number = ParseDouble(setting);
+                                foreach (var group in value.GetValues().UnwrapOrDefault(outEither, new()))
+                                    order.Add(group);}),
+                    ("CutoffScore", (settings, value) => {
+                        settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Alphabet", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Alphabet);
+                            settings.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
+                    ("EnforceUnique", (settings, value) => {
+                            var v = 1.0;
+                            var boolean = ParseBool(value, "EnforceUnique");
+                            var number = ParseDouble(value);
                             if (boolean.IsOk()) {
-                                value = boolean.Unwrap() ? 1.0 : 0.0;
+                                v = boolean.Unwrap() ? 1.0 : 0.0;
                             } else if (number.IsOk()) {
-                                value = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), setting.ValueRange).UnwrapOrDefault(outEither, 1.0);
+                                v = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 1.0);
                             } else {
-                                outEither.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
+                                outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
                             }
-                            output.EnforceUnique = new Option<double>(value);
-                            break;
-                        case "enforceuniquelocalised":
-                            output.EnforceUniqueLocalised = ParseHelper.ParseBool(setting, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, output.EnforceUniqueLocalised);
-                            break;
-                        case "forcegermlineisoleucine":
-                            output.ForceGermlineIsoleucine = ParseBool(setting, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;
-                            break;
-                        case "decoy":
-                            output.Decoy = ParseBool(setting, "Decoy").UnwrapOrDefault(outEither, false);
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Recombine", "'N', 'Order', 'CutoffScore', 'Alphabet', 'Decoy', 'EnforceUnique', and 'ForceGermlineIsoleucine'"));
-                            break;
-                    }
-                }
+                            settings.EnforceUnique = new Option<double>(v);}),
+                    ("EnforceUniqueLocalised", (settings, value) => {
+                        settings.EnforceUniqueLocalised = ParseHelper.ParseBool(value, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, settings.EnforceUniqueLocalised);}),
+                    ("ForceGermlineIsoleucine", (settings, value) => {
+                        settings.ForceGermlineIsoleucine = ParseBool(value, "ForceGermlineIsoleucine").UnwrapOrDefault(outEither, true) ? Trilean.True : Trilean.False;}),
+                    ("Decoy", (settings, value) => {
+                        settings.Decoy = ParseBool(value, "Decoy").UnwrapOrDefault(outEither, false);}),
+                }).Parse(key, settings => {
+                    if (order == null)
+                        outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Order"));
 
-                if (order == null)
-                    outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Order"));
-
-                outEither.Value = (output, order, readAlignmentKey);
+                    outEither.Value = (settings, order, readAlignmentKey);
+                });
                 return outEither;
             }
 
@@ -611,15 +554,13 @@ namespace Stitch {
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+                        }).Parse(pair, json => {
+                            if (string.IsNullOrWhiteSpace(json.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
 
-                        if (j_settings.IsOk(outEither)) {
-                            if (string.IsNullOrWhiteSpace(j_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-
-                            output.Files.Add(j_settings.Value);
-                        }}),
+                            output.Files.Add(json);
+                        });}),
                     ("Fasta", (output, pair) => {
-                        var f_settings = new LocalParams<RunParameters.Report.FASTA>("Fasta", new List<(string, Action<RunParameters.Report.FASTA, KeyValue>)>{
+                        new LocalParams<RunParameters.Report.FASTA>("Fasta", new List<(string, Action<RunParameters.Report.FASTA, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
@@ -627,107 +568,80 @@ namespace Stitch {
                                 settings.MinimalScore = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
                             ("OutputType", (settings, value) => {
                                 settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
-                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+                        }).Parse(pair, fasta => {
+                            if (string.IsNullOrWhiteSpace(fasta.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
 
-                        if (f_settings.IsOk(outEither)) {
-                            if (string.IsNullOrWhiteSpace(f_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-
-                            output.Files.Add(f_settings.Value);
-                        }}),
+                            output.Files.Add(fasta);
+                        });}),
                     ("CSV", (output, pair) => {
-                        var c_settings = new LocalParams<RunParameters.Report.CSV>("CSV", new List<(string, Action<RunParameters.Report.CSV, KeyValue>)>{
+                        new LocalParams<RunParameters.Report.CSV>("CSV", new List<(string, Action<RunParameters.Report.CSV, KeyValue>)>{
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("OutputType", (settings, value) => {
                                 settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
-                        }).Parse(pair.GetValues().UnwrapOrDefault(outEither, new()));
+                        }).Parse(pair, csv => {
+                            if (string.IsNullOrWhiteSpace(csv.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
 
-                        if (c_settings.IsOk(outEither)) {
-                            if (string.IsNullOrWhiteSpace(c_settings.Value.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-
-                            output.Files.Add(c_settings.Value);
-                        }}),
-                }).Parse(key.GetValues().UnwrapOrDefault(outEither, new()));
-
-                if (output.IsOk(outEither)) {
-                    if (output.Value.Folder == null)
-                        output.Value.Folder = Directory.GetCurrentDirectory();
-                    outEither.Value = output.Value;
-                }
+                            output.Files.Add(csv);
+                        });}),
+                }).Parse(key, report => {
+                    if (report.Folder == null)
+                        report.Folder = Directory.GetCurrentDirectory();
+                    outEither.Value = report;
+                });
                 return outEither;
             }
             public static ParseResult<ScoringMatrix> ParseAlphabet(KeyValue key) {
-                var asettings = new AlphabetParameter();
                 var outEither = new ParseResult<ScoringMatrix>();
                 var identity = ("", 0, 0);
                 var symmetric_sets = new List<(sbyte, List<List<List<char>>>)>();
                 var asymmetric_sets = new List<(sbyte, List<(List<List<char>>, List<List<char>>)>)>();
-
-                if (key.GetValues().IsErr()) {
-                    outEither.AddMessage(new ErrorMessage(key.KeyRange.Full, "No arguments", "No arguments are supplied with the Alphabet definition."));
-                    return outEither;
-                }
-
                 (char[], sbyte[,]) result;
                 KeyValue path_Setting = null;
 
-                foreach (var setting in key.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (setting.Name) {
-                        case "path":
-                            if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            path_Setting = setting;
-
-                            break;
-                        case "data":
-                            if (asettings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(setting.KeyRange.Name));
-                            var res = setting.GetValue();
+                new LocalParams<AlphabetParameter>("Alphabet", new List<(string, Action<AlphabetParameter, KeyValue>)>{
+                    ("Path", (settings, value) => {
+                        if (settings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                            path_Setting = value;}),
+                    ("Data", (settings, value) => {
+                        if (settings.Alphabet != null || path_Setting != null) outEither.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
+                            var res = value.GetValue();
                             if (res.IsOk(outEither)) {
                                 var data_content = res.Unwrap().Split("\n");
-                                var counter = new Tokenizer.Counter(setting.ValueRange.Start);
-                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", setting), counter).UnwrapOrDefault(outEither, new());
-                                asettings.Alphabet = result.Item1;
-                                asettings.ScoringMatrix = result.Item2;
-                            }
-                            break;
-                        case "name":
-                            CheckDuplicate(outEither, setting, asettings.Name);
-                            asettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                            break;
-                        case "gapstartpenalty":
-                            asettings.GapStart = (sbyte)-ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapStartPenalty is deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {asettings.GapStart}", true));
-                            break;
-                        case "gapstart":
-                            asettings.GapStart = (sbyte)ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "gapextendpenalty":
-                            asettings.GapExtend = (sbyte)-ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            outEither.AddMessage(new ErrorMessage(setting.KeyRange, "GapExtendPenalty is deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {asettings.GapExtend}", true));
-                            break;
-                        case "gapextend":
-                            asettings.GapExtend = (sbyte)ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "characters":
-                            CheckDuplicate(outEither, setting, identity.Item1);
-                            identity = (setting.GetValue().UnwrapOrDefault(outEither, ""), identity.Item2, identity.Item3);
-                            break;
-                        case "identity":
-                            identity = (identity.Item1, ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0), identity.Item3);
-                            break;
-                        case "mismatch":
-                            identity = (identity.Item1, identity.Item2, ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0));
-                            break;
-                        case "patchlength":
-                            asettings.PatchLength = ParseInt(setting).RestrictRange(NumberRange<int>.Closed(0, 10), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "swap":
-                            asettings.Swap = (sbyte)ParseInt(setting).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            break;
-                        case "symmetric sets":
-                            sbyte score = 0;
+                                var counter = new Tokenizer.Counter(value.ValueRange.Start);
+                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", value), counter).UnwrapOrDefault(outEither, new());
+                                settings.Alphabet = result.Item1;
+                                settings.ScoringMatrix = result.Item2;
+                            }}),
+                    ("Name", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Name);
+                            settings.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                    ("GapStartPenalty", (settings, value) => {
+                        settings.GapStart = (sbyte)-ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                            outEither.AddMessage(new ErrorMessage(value.KeyRange, "GapStartPenalty is deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {settings.GapStart}", true));}),
+                    ("GapStart", (settings, value) => {
+                        settings.GapStart = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("GapExtendPenalty", (settings, value) => {
+                        settings.GapExtend = (sbyte)-ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                            outEither.AddMessage(new ErrorMessage(value.KeyRange, "GapExtendPenalty is deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {settings.GapExtend}", true));}),
+                    ("GapExtend", (settings, value) => {
+                        settings.GapExtend = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Characters", (settings, value) => {
+                        CheckDuplicate(outEither, value, identity.Item1);
+                            identity = (value.GetValue().UnwrapOrDefault(outEither, ""), identity.Item2, identity.Item3);}),
+                    ("Identity", (settings, value) => {
+                        identity = (identity.Item1, ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0), identity.Item3);}),
+                    ("MisMatch", (settings, value) => {
+                        identity = (identity.Item1, identity.Item2, ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0));}),
+                    ("PatchLength", (settings, value) => {
+                        settings.PatchLength = ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 10), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Swap", (settings, value) => {
+                        settings.Swap = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                    ("Symmetric sets", (settings, value) => {
+                        sbyte score = 0;
                             var sets = new List<List<List<char>>>();
-                            foreach (var inner in setting.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
+                            foreach (var inner in value.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
                                 switch (inner.Name) {
                                     case "score":
                                         score = (sbyte)ParseInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
@@ -743,14 +657,13 @@ namespace Stitch {
                                         break;
                                 }
                             }
-                            if (score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Score"));
-                            if (sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Sets"));
-                            symmetric_sets.Add((score, sets));
-                            break;
-                        case "asymmetric sets":
-                            sbyte a_score = 0;
+                            if (score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(value.ValueRange, "Score"));
+                            if (sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(value.ValueRange, "Sets"));
+                            symmetric_sets.Add((score, sets));}),
+                    ("Asymmetric sets", (settings, value) => {
+                        sbyte a_score = 0;
                             var a_sets = new List<(List<List<char>>, List<List<char>>)>();
-                            foreach (var inner in setting.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
+                            foreach (var inner in value.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
                                 switch (inner.Name) {
                                     case "score":
                                         a_score = (sbyte)ParseInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
@@ -767,67 +680,59 @@ namespace Stitch {
                                         break;
                                 }
                             }
-                            if (a_score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Score"));
-                            if (a_sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(setting.ValueRange, "Sets"));
-                            asymmetric_sets.Add((a_score, a_sets));
-                            break;
-                        default:
-                            outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Alphabet", "'Path', 'Data', 'Name', 'GapStart', 'GapExtend', 'Characters', 'Identity', 'Mismatch', 'PatchLength', 'Swap', 'Symmetric Sets', 'Asymmetric Sets'"));
-                            break;
-                    }
-                }
+                            if (a_score == 0) outEither.AddMessage(ErrorMessage.MissingParameter(value.ValueRange, "Score"));
+                            if (a_sets.Count == 0) outEither.AddMessage(ErrorMessage.MissingParameter(value.ValueRange, "Sets"));
+                            asymmetric_sets.Add((a_score, a_sets));}),
+                }).Parse(key, settings => {
+                    if (String.IsNullOrEmpty(identity.Item1)) {
+                        if (path_Setting != null) {
+                            var all_text = GetAllText(path_Setting);
 
-
-
-                if (String.IsNullOrEmpty(identity.Item1)) {
-                    if (path_Setting != null) {
-                        var all_text = GetAllText(path_Setting);
-
-                        if (all_text.IsOk(outEither)) {
-                            var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
-                            var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, asettings.Name, key);
-                            var counter = new Tokenizer.Counter(id);
-                            result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
-                            asettings.Alphabet = result.Item1;
-                            asettings.ScoringMatrix = result.Item2;
-                        } else {
-                            outEither.Value = null;
-                            return outEither; // The path is wrong so just give up
+                            if (all_text.IsOk(outEither)) {
+                                var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
+                                var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, settings.Name, key);
+                                var counter = new Tokenizer.Counter(id);
+                                result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
+                                settings.Alphabet = result.Item1;
+                                settings.ScoringMatrix = result.Item2;
+                            } else {
+                                outEither.Value = null;
+                                return; // The path is wrong so just give up
+                            }
                         }
+                    } else {
+                        settings.Alphabet = identity.Item1.ToCharArray();
                     }
-                } else {
-                    asettings.Alphabet = identity.Item1.ToCharArray();
-                }
 
-                // Detect erroneous set definitions
-                foreach (var super_set in symmetric_sets)
-                    foreach (var set in super_set.Item2)
-                        foreach (var seq in set)
-                            foreach (var aa in seq)
-                                if (!asettings.Alphabet.Contains(aa)) {
-                                    outEither.AddMessage(new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet."));
-                                    break;
-                                }
-                foreach (var super_set in asymmetric_sets)
-                    foreach (var set in super_set.Item2)
-                        foreach (var collection in new List<List<char>>[] { set.Item1, set.Item2 })
-                            foreach (var seq in collection)
+                    // Detect erroneous set definitions
+                    foreach (var super_set in symmetric_sets)
+                        foreach (var set in super_set.Item2)
+                            foreach (var seq in set)
                                 foreach (var aa in seq)
-                                    if (!asettings.Alphabet.Contains(aa)) {
+                                    if (!settings.Alphabet.Contains(aa)) {
                                         outEither.AddMessage(new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet."));
                                         break;
                                     }
-                if (outEither.IsErr()) return outEither;
+                    foreach (var super_set in asymmetric_sets)
+                        foreach (var set in super_set.Item2)
+                            foreach (var collection in new List<List<char>>[] { set.Item1, set.Item2 })
+                                foreach (var seq in collection)
+                                    foreach (var aa in seq)
+                                        if (!settings.Alphabet.Contains(aa)) {
+                                            outEither.AddMessage(new ErrorMessage(String.Join("", seq), "AminoAcid not in Alphabet", "The given set contains characters that are not included in the given alphabet."));
+                                            break;
+                                        }
+                    if (outEither.IsErr()) return;
 
-                if (String.IsNullOrEmpty(identity.Item1)) {
-                    if (asettings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
-                    if (!outEither.IsErr())
-                        outEither.Value = new ScoringMatrix(asettings.ScoringMatrix, asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength, '.');
-                } else {
-                    if (!outEither.IsErr())
-                        outEither.Value = ScoringMatrix.IdentityMatrix(asettings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, (sbyte)identity.Item2, (sbyte)identity.Item3, asettings.GapStart, asettings.GapExtend, asettings.Swap, asettings.PatchLength, '.');
-                }
-
+                    if (String.IsNullOrEmpty(identity.Item1)) {
+                        if (settings.ScoringMatrix == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Data or Path"));
+                        if (!outEither.IsErr())
+                            outEither.Value = new ScoringMatrix(settings.ScoringMatrix, settings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, settings.GapStart, settings.GapExtend, settings.Swap, settings.PatchLength, '.');
+                    } else {
+                        if (!outEither.IsErr())
+                            outEither.Value = ScoringMatrix.IdentityMatrix(settings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, (sbyte)identity.Item2, (sbyte)identity.Item3, settings.GapStart, settings.GapExtend, settings.Swap, settings.PatchLength, '.');
+                    }
+                });
                 return outEither;
             }
             public static ParseResult<(char[], sbyte[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter) {
@@ -912,101 +817,74 @@ namespace Stitch {
                 return outEither;
             }
             /// <summary> Parses a Template </summary>
-            /// <param name="node">The KeyValue to parse</param>
+            /// <param name="key">The KeyValue to parse</param>
             /// <param name="extended">To determine if it is an extended (free standing) template or a template in a recombination definition</param>
-            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue node, ScoringMatrix backup_alphabet, bool extended) {
+            public static ParseResult<SegmentValue> ParseSegment(NameFilter name_filter, KeyValue key, ScoringMatrix backup_alphabet, bool extended) {
                 // Parse files one by one
                 var file_path = "";
-                KeyValue file_pos = node;
+                KeyValue file_pos = key;
 
                 var peaks_settings = new InputData.Peaks();
 
-                var tsettings = new SegmentValue();
-                var outEither = new ParseResult<SegmentValue>(tsettings);
+                var outEither = new ParseResult<SegmentValue>();
 
-                foreach (var setting in node.GetValues().UnwrapOrDefault(outEither, new())) {
-                    switch (setting.Name) {
-                        case "path":
-                            CheckDuplicate(outEither, setting, file_path);
-                            file_path = GetFullPath(setting).UnwrapOrDefault(outEither, "");
-                            file_pos = setting;
-                            break;
-                        case "name":
-                            CheckDuplicate(outEither, setting, tsettings.Name);
-                            tsettings.Name = setting.GetValue().UnwrapOrDefault(outEither, "");
-                            break;
-                        case "cutoffscore":
-                            if (extended) tsettings.CutoffScore = ParseHelper.ParseDouble(setting).RestrictRange(NumberRange<double>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
-                            else outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));
-                            break;
-                        case "alphabet":
-                            CheckDuplicate(outEither, setting, tsettings.Alphabet);
-                            if (!extended) {
-                                outEither.AddMessage(new ErrorMessage(setting.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
-                            } else {
-                                tsettings.Alphabet = ParseHelper.ParseAlphabet(setting).UnwrapOrDefault(outEither, null);
-                            }
-                            break;
-                        case "identifier":
-                            tsettings.Identifier = ParseHelper.ParseRegex(setting).UnwrapOrDefault(outEither, null);
-                            break;
-                        case "scoring":
-                            var res = setting.GetValue();
-                            if (res.IsOk(outEither)) {
-                                var scoring = res.Unwrap().ToLower();
-                                if (scoring == "absolute") {
-                                    tsettings.Scoring = ScoringParameter.Absolute;
-                                } else if (scoring == "relative") {
-                                    tsettings.Scoring = ScoringParameter.Relative;
-                                } else {
-                                    outEither.AddMessage(ErrorMessage.UnknownKey(setting.ValueRange, "Scoring", "'Absolute' or 'Relative'"));
-                                }
-                            }
-                            break;
-                        case "gaphead":
-                            tsettings.GapHead = ParseBool(setting, "GapHead").UnwrapOrDefault(outEither, false);
-                            break;
-                        case "gaptail":
-                            tsettings.GapTail = ParseBool(setting, "GapTail").UnwrapOrDefault(outEither, false);
-                            break;
-                        default:
-                            var peaks = GetPeaksSettings(setting, true, peaks_settings);
-                            outEither.Messages.AddRange(peaks.Messages);
+                new LocalParams<SegmentValue>("Segment", new List<(string, Action<SegmentValue, KeyValue>)>{
+                    ("Path", (settings, value) => {
+                        CheckDuplicate(outEither, value, file_path);
+                        file_path = GetFullPath(value).UnwrapOrDefault(outEither, "");
+                        file_pos = value;}),
+                    ("Name", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Name);
+                        settings.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                    ("CutoffScore", (settings, value) => {
+                        if (extended) settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                        else outEither.AddMessage(new ErrorMessage(value.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));}),
+                    ("Alphabet", (settings, value) => {
+                        CheckDuplicate(outEither, value, settings.Alphabet);
+                        if (!extended) {
+                            outEither.AddMessage(new ErrorMessage(value.KeyRange.Name, "Alphabet cannot be defined here", "Inside a template in the templates list of a recombination an alphabet can not be defined."));
+                        } else {
+                            settings.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);
+                        }}),
+                    ("Identifier", (settings, value) => {
+                        settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
+                    ("Scoring", (settings, value) => {
+                        settings.Scoring =  ParseHelper.ParseEnum<ScoringParameter>(key).UnwrapOrDefault(outEither, ScoringParameter.Absolute);}),
+                    ("GapHead", (settings, value) => {
+                        settings.GapHead = ParseBool(value, "GapHead").UnwrapOrDefault(outEither, false);}),
+                    ("GapTail", (settings, value) => {
+                        settings.GapTail = ParseBool(value, "GapTail").UnwrapOrDefault(outEither, false);}),
+                }, (settings, value) => {
+                    var peaks = GetPeaksSettings(value, true, peaks_settings);
+                    outEither.Messages.AddRange(peaks.Messages);
+                    return peaks.Value;
+                }).Parse(key, settings => {
+                    if (settings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Name"));
+                    if (String.IsNullOrWhiteSpace(file_path)) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Path"));
+                    if (extended && settings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Alphabet"));
+                    if ((settings.Alphabet ?? backup_alphabet) == null) outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Alphabet"));
+                    if (outEither.IsErr()) return;
 
-                            if (!peaks.Value) {
-                                var options = "'Path', 'Type', 'Name', 'Alphabet', 'Scoring', and all PEAKS format parameters";
-                                if (!extended) options = "'Path', 'Type', 'Name' and 'Scoring'";
-                                outEither.AddMessage(ErrorMessage.UnknownKey(setting.KeyRange.Name, "Template", options));
-                            }
-                            break;
-                    }
-                }
+                    // Open the file
+                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), settings.Name, file_pos);
 
-                if (tsettings.Name == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Name"));
-                if (String.IsNullOrWhiteSpace(file_path)) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Path"));
-                if (extended && tsettings.Alphabet == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
-                if ((tsettings.Alphabet ?? backup_alphabet) == null) outEither.AddMessage(ErrorMessage.MissingParameter(node.KeyRange.Full, "Alphabet"));
-                if (outEither.IsErr()) return outEither;
+                    var folder_reads = new ParseResult<List<ReadFormat.General>>();
+                    var alphabet = settings.Alphabet ?? backup_alphabet;
 
-                // Open the file
-                var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), tsettings.Name, file_pos);
+                    if (file_path.EndsWith(".fasta"))
+                        folder_reads = OpenReads.Fasta(name_filter, fileId, settings.Identifier, alphabet);
+                    else if (file_path.EndsWith(".txt"))
+                        folder_reads = OpenReads.Simple(name_filter, fileId, alphabet);
+                    else if (file_path.EndsWith(".csv")) {
+                        peaks_settings.File = fileId;
+                        folder_reads = OpenReads.Peaks(name_filter, peaks_settings, alphabet);
+                    } else
+                        outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
 
-                var folder_reads = new ParseResult<List<ReadFormat.General>>();
-                var alphabet = tsettings.Alphabet ?? backup_alphabet;
-
-                if (file_path.EndsWith(".fasta"))
-                    folder_reads = OpenReads.Fasta(name_filter, fileId, tsettings.Identifier, alphabet);
-                else if (file_path.EndsWith(".txt"))
-                    folder_reads = OpenReads.Simple(name_filter, fileId, alphabet);
-                else if (file_path.EndsWith(".csv")) {
-                    peaks_settings.File = fileId;
-                    folder_reads = OpenReads.Peaks(name_filter, peaks_settings, alphabet);
-                } else
-                    outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
-
-                outEither.Messages.AddRange(folder_reads.Messages);
-                if (!folder_reads.IsErr()) tsettings.Templates = folder_reads.Unwrap();
-
+                    outEither.Messages.AddRange(folder_reads.Messages);
+                    if (!folder_reads.IsErr()) settings.Templates = folder_reads.Unwrap();
+                    outEither.Value = settings;
+                });
                 return outEither;
             }
             public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool with_prefix, InputData.Peaks peaks_settings) {
@@ -1077,24 +955,7 @@ namespace Stitch {
 
                 return outEither;
             }
-            public static ParseResult<bool> ParseBool(KeyValue setting, string context, bool def = false) {
-                var output = new ParseResult<bool>(def);
-                var res = setting.GetValue();
-                if (res.IsOk(output)) {
-                    switch (res.Unwrap().ToLower()) {
-                        case "true":
-                            output.Value = true;
-                            break;
-                        case "false":
-                            output.Value = false;
-                            break;
-                        default:
-                            output.AddMessage(new ErrorMessage(setting.ValueRange, "Incorrect Boolean definition", "Valid options are: 'True' and 'False'."));
-                            break;
-                    }
-                }
-                return output;
-            }
+
             public static ParseResult<string> GetFullPath(KeyValue setting) {
                 var outEither = new ParseResult<string>();
                 var res = setting.GetValue();

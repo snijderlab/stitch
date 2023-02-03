@@ -14,16 +14,25 @@ namespace Stitch {
             string Name;
             List<(string Name, Action<T, KeyValue> Action)> Options;
             T Aggregator;
+            Func<T, KeyValue, bool> CatchAll;
 
             public LocalParams(string name, List<(string, Action<T, KeyValue>)> options) {
                 Name = name;
                 Options = options;
                 Aggregator = new();
+                CatchAll = null;
+            }
+            public LocalParams(string name, List<(string, Action<T, KeyValue>)> options, Func<T, KeyValue, bool> catchAll) {
+                Name = name;
+                Options = options;
+                Aggregator = new();
+                CatchAll = catchAll;
             }
             public LocalParams(string name, List<(string, Action<T, KeyValue>)> options, T agg) {
                 Name = name;
                 Options = options;
                 Aggregator = agg;
+                CatchAll = null;
             }
 
             public ParseResult<T> Parse(KeyValue key, Action<T> post_processing) {
@@ -51,8 +60,14 @@ namespace Stitch {
                         }
                     }
                     if (!found) {
-                        var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.Name))).OrderByDescending(s => s.Item2).First().Name;
-                        outEither.AddMessage(ErrorMessage.UnknownKey(value.KeyRange.Name, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
+                        var caught_in_catch_all = false;
+                        if (CatchAll != null)
+                            caught_in_catch_all = CatchAll(Aggregator, value);
+
+                        if (!caught_in_catch_all) {
+                            var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.Name))).OrderByDescending(s => s.Item2).First().Name;
+                            outEither.AddMessage(ErrorMessage.UnknownKey(value.KeyRange.Name, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
+                        }
                     }
                 }
                 outEither.Value = Aggregator;
