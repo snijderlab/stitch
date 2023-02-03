@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 
@@ -67,6 +68,8 @@ namespace Stitch {
         private readonly ScoringMatrix scoringMatrix;
 
         public Alignment(ReadFormat.General read_a, ReadFormat.General read_b, ScoringMatrix scoring_matrix, AlignmentType type, int readAIndex = 0) {
+            var sw = new Stopwatch();
+            sw.Start();
             var seq_a = read_a.Sequence.AminoAcids;
             var seq_b = read_b.Sequence.AminoAcids;
             this.ReadA = read_a;
@@ -186,7 +189,13 @@ namespace Stitch {
                 this.LenB += piece.StepB;
             }
             this.scoringMatrix = scoring_matrix;
+            sw.Stop();
+            lock (Alignment.buffer) {
+                buffer.AppendLine($"{ReadA.Identifier}\t{AminoAcid.ArrayToString(ReadA.Sequence.AminoAcids)}\t{ReadA.Sequence.Length}\t{ReadB.Identifier}\t{AminoAcid.ArrayToString(ReadB.Sequence.AminoAcids)}\t{ReadB.Sequence.Length}\t{sw.Elapsed.Ticks}\t{VeryShortPath()}");
+            }
         }
+
+        public static StringBuilder buffer = new StringBuilder("A\tSA\tLA\tB\tSB\tLB\tTicks\tAlignment\n");
 
         public string ShortPath() {
             return String.Join("", this.Path.Select(p => p.ShortPath()));

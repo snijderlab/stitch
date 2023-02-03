@@ -73,6 +73,7 @@ namespace Stitch {
                 // Generate report parameters
                 var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname);
 
+
                 // If there is an expected outcome present to answers here
                 if (extraArguments.ExpectedResult.Length > 0) {
                     GenerateBenchmarkOutput(parameters);
@@ -104,6 +105,9 @@ namespace Stitch {
 
                 // Did reports
                 if (ProgressBar != null) ProgressBar.Update();
+                lock (Alignment.buffer) {
+                    File.WriteAllText("alignment_timing.tsv", Alignment.buffer.ToString());
+                }
             }
 
             void GenerateBenchmarkOutput(ReportInputParameters parameters) {
