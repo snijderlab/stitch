@@ -312,7 +312,7 @@ namespace Stitch {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("CutoffScore", (settings, value) => {
-                                settings.CutoffScore = (uint)ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
+                                settings.CutoffScore = ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
                         }).Parse(pair, casanovo => {
                             if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
