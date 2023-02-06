@@ -566,7 +566,8 @@ namespace Stitch {
 
 
             foreach (var (range, row) in lexed.Item2) {
-                if (row[search_idx].Content.Contains("MS:1003281") && !row[search_idx].Content.Contains('|')) {
+                // Skip any non Casanovo read (or combined with other software) and skip reads without a score.
+                if (row[search_idx].Content.Contains("MS:1003281") && !row[search_idx].Content.Contains('|') && row[score_idx].Content.ToLower() != "nan") {
                     var original_sequence = row[seq_idx].Content;
                     var filtered_sequence = original_sequence.Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
                     var sequence = AminoAcid.FromString(filtered_sequence, alphabet, row[seq_idx].Location).UnwrapOrDefault(out_either, new AminoAcid[0]);

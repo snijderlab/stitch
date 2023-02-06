@@ -878,8 +878,16 @@ namespace Stitch {
                     else if (file_path.EndsWith(".csv")) {
                         peaks_settings.File = fileId;
                         folder_reads = OpenReads.Peaks(name_filter, peaks_settings, alphabet);
+                    } else if (file_path.EndsWith(".mztab")) {
+                        var casanovo_settings = new InputData.Casanovo();
+                        casanovo_settings.File = fileId;
+                        folder_reads = OpenReads.Casanovo(name_filter, casanovo_settings, alphabet);
+                    } else if (file_path.EndsWith(".mmcif")) {
+                        var mmcif_settings = new InputData.MMCIF();
+                        mmcif_settings.File = fileId;
+                        folder_reads = OpenReads.MMCIF(name_filter, mmcif_settings, alphabet);
                     } else
-                        outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta or .csv type."));
+                        outEither.AddMessage(new ErrorMessage(file_pos.ValueRange, "Invalid file format", "The file should be of .txt, .fasta, .csv, .mztab, or .mmcif type."));
 
                     outEither.Messages.AddRange(folder_reads.Messages);
                     if (!folder_reads.IsErr()) settings.Templates = folder_reads.Unwrap();

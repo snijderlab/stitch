@@ -92,15 +92,9 @@ namespace Stitch {
                     var c = line[i];
                     if (c == pattern && max_occurrence != 0) {
                         max_occurrence -= 1; // Just assume we have less than 2 * 2 ^ 32 fields I guess, there is no saturating sub in C#, meaning that after going beyond the int.MinValue it will count from int.MaxValue to 0 and then stop.
-                        if (len > 0) {
-                            output.Add(new SubString(line.Substring(i_start, len), new FileRange(new Position(pos.Line, i_start + 1, pos.File), new Position(pos.Line, i_start + len + 1, pos.File))));
-                            i_start = i + 1;
-                            len = 0;
-                        } else {
-                            output.Add(new SubString("", new FileRange(new Position(pos.Line, i_start + 1, pos.File), new Position(pos.Line, i_start + len + 1, pos.File))));
-                            i_start = i + 1;
-                            len = 0;
-                        }
+                        output.Add(new SubString(line.Substring(i_start, len), new FileRange(new Position(pos.Line, i_start + 1, pos.File), new Position(pos.Line, i_start + len + 1, pos.File))));
+                        i_start = i + 1;
+                        len = 0;
                     } else if (char.IsWhiteSpace(c) && len == 0) {
                         i_start++;
                     } else if (char.IsWhiteSpace(c)) {
@@ -109,9 +103,7 @@ namespace Stitch {
                         len++;
                     }
                 }
-                if (len > 0) {
-                    output.Add(new SubString(line.Substring(i_start, len), new FileRange(new Position(pos.Line, i_start + 1, pos.File), new Position(pos.Line, i_start + len + 1, pos.File))));
-                }
+                output.Add(new SubString(line.Substring(i_start, len), new FileRange(new Position(pos.Line, i_start + 1, pos.File), new Position(pos.Line, i_start + len + 1, pos.File))));
                 return output;
             }
         }
