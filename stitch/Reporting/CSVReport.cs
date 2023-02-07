@@ -2,6 +2,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Linq;
 using System;
+using static Stitch.Fragmentation;
 
 namespace Stitch {
     /// <summary> A FASTA report. </summary>
@@ -80,11 +81,11 @@ namespace Stitch {
                     row.AddRange(new List<string> { "", "", "", "", "", "", "", "", "", "", "", "", "", "", "", "" });
                 }
                 if (match.ReadB.SupportingSpectra.Count() > 0) {
-                    var avg_gen = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionGeneral).Average();
-                    var avg_spe = match.ReadB.SupportingSpectra.Select(s => s.FDRFractionSpecific).Average();
-                    var avg_exp = match.ReadB.SupportingSpectra.Select(s => s.SpecificExpectationPerPosition).Average();
-                    var avg_fou = match.ReadB.SupportingSpectra.Select(s => s.FoundSatelliteIons).Average();
-                    var avg_max = match.ReadB.SupportingSpectra.Select(s => s.PossibleSatelliteIons).Average();
+                    var avg_gen = match.ReadB.SupportingSpectra.Select(s => { if (s is FdrASM f) { return f.FDRFractionGeneral; } else { return 0.0; } }).Average();
+                    var avg_spe = match.ReadB.SupportingSpectra.Select(s => { if (s is FdrASM f) { return f.FDRFractionSpecific; } else { return 0.0; } }).Average();
+                    var avg_exp = match.ReadB.SupportingSpectra.Select(s => { if (s is FdrASM f) { return f.SpecificExpectationPerPosition; } else { return 0.0; } }).Average();
+                    var avg_fou = match.ReadB.SupportingSpectra.Select(s => { if (s is FdrASM f) { return f.FoundSatelliteIons; } else { return 0.0; } }).Average();
+                    var avg_max = match.ReadB.SupportingSpectra.Select(s => { if (s is FdrASM f) { return f.PossibleSatelliteIons; } else { return 0.0; } }).Average();
                     row.Add(avg_gen.ToString("P2"));
                     if (double.IsNormal(avg_spe)) {
                         row.Add(avg_spe.ToString("P2"));

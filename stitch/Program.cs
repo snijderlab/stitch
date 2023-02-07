@@ -518,8 +518,7 @@ namespace Stitch {
                     read.OriginalTag,
                     read.FragmentationMode
                 };
-                if (read.SupportingSpectra.Count() == 1) {
-                    var spectrum = read.SupportingSpectra[0];
+                if (read.SupportingSpectra.Count() == 1 && read.SupportingSpectra[0] is Fragmentation.FdrASM spectrum) {
                     row.Add(spectrum.Match.Score().Score.ToString());
                     row.Add(spectrum.FDRFractionGeneral.ToString());
                     if (read.Sequence.AminoAcids.Contains(new AminoAcid('I')) || read.Sequence.AminoAcids.Contains(new AminoAcid('L')) || read.Sequence.AminoAcids.Contains(new AminoAcid('J'))) {

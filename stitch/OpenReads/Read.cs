@@ -44,7 +44,7 @@ namespace Stitch {
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
             public abstract HtmlBuilder ToHTML();
-            public List<ASM> SupportingSpectra = new();
+            public List<IASM> SupportingSpectra = new();
 
             protected NameFilter nameFilter;
 
@@ -179,7 +179,7 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string, int, string, bool)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers {
                 get {
                     var output = new List<(string, int, string, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))

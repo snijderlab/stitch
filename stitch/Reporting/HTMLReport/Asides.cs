@@ -25,26 +25,7 @@ namespace HTMLNameSpace {
 
             if (MetaData.SupportingSpectra.Count() > 0) {
                 foreach (var spectrum in MetaData.SupportingSpectra) {
-                    html.Add(Graph.RenderSpectrum(spectrum.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.Spectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
-                    var id = spectrum.Match.Spectrum.ScanNumber.ToString();
-                    var details = new HtmlBuilder();
-                    details.Open(HtmlTag.table);
-                    void Row(string name, HtmlBuilder help, string value) {
-                        details.Open(HtmlTag.tr);
-                        details.Open(HtmlTag.td);
-                        details.TagWithHelp(HtmlTag.p, name, help);
-                        details.Close(HtmlTag.td);
-                        details.OpenAndClose(HtmlTag.td, "", value);
-                        details.Close(HtmlTag.tr);
-                    }
-                    var matched = spectrum.Match.FragmentMatches.Count(f => f != null);
-                    var total = spectrum.Match.FragmentMatches.Count();
-                    Row("Matched peaks", new HtmlBuilder(HTMLHelp.SpectrumMatchedPeaks), $"{matched} ({(double)matched / total:P2} of {total})");
-                    Row("FDR", new HtmlBuilder(HTMLHelp.SpectrumGeneralFDR), $"{spectrum.FDRFractionGeneral:P2}");
-                    Row("Satellite FDR", new HtmlBuilder(HTMLHelp.SpectrumSatelliteFDR), double.IsNaN(spectrum.FDRFractionSpecific) ? "-" : $"{spectrum.FDRFractionSpecific:P2}");
-                    Row("PSM Score", new HtmlBuilder(HTMLHelp.SpectrumScore), spectrum.Match.Score().Score.ToString("G3"));
-                    details.Close(HtmlTag.table);
-                    html.Collapsible("spectrum-details-" + id, new HtmlBuilder("Spectrum Details"), details);
+                    html.Add(spectrum.ToHtml(MetaData));
                 }
             }
 

@@ -51,6 +51,10 @@ namespace Stitch {
                 }
             }
 
+            public static ParseResult<int> ConvertToInt((string Text, FileRange Pos) input) {
+                return ConvertToInt(input.Text, input.Pos);
+            }
+
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ParseInt(KeyValue item) {
@@ -93,6 +97,10 @@ namespace Stitch {
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
                     return new ParseResult<double>(new ErrorMessage(pos, "Not a valid number", msg));
                 }
+            }
+
+            public static ParseResult<double> ConvertToDouble((string Text, FileRange Pos) input) {
+                return ConvertToDouble(input.Text, input.Pos);
             }
 
             public static ParseResult<char> ParseChar(KeyValue item) {
@@ -212,6 +220,9 @@ namespace Stitch {
                             ("RawDataDirectory", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.RawDataDirectory);
                                     settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("DeNovoMatchIons", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.DeNovoMatchIons);
+                                    settings.DeNovoMatchIons= ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
                             ("Name", (settings, value) => {

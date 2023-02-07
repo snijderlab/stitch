@@ -4,6 +4,8 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
+using HeckLib.ConvenienceInterfaces.SpectrumMatch;
+using static Stitch.Fragmentation;
 using static Stitch.HelperFunctionality;
 
 namespace Stitch {
@@ -218,6 +220,10 @@ namespace Stitch {
         /// <param name="local">If defined the local peaks parameters to use</param>
         public static ParseResult<List<ReadFormat.General>> Peaks(NameFilter filter, RunParameters.InputData.Peaks peaks, ScoringMatrix alphabet, RunParameters.InputData.InputLocalParameters local = null, string GlobalRawDataDirectory = null) {
             var out_either = new ParseResult<List<ReadFormat.General>>();
+            var match_ions = new List<(int ScanNumber, IASM ASM)>();
+            if (peaks.DeNovoMatchIons != null) {
+                match_ions = Fragmentation.LoadPeaksSpectra(new ParsedFile(new ReadFormat.FileIdentifier(peaks.DeNovoMatchIons, "", null), InputNameSpace.ParseHelper.GetAllText(peaks.DeNovoMatchIons).UnwrapOrDefault(out_either, "").Split('\n'))).UnwrapOrDefault(out_either, new());
+            }
 
             var peaks_parameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
             if (peaks_parameters.CutoffALC == -1) peaks_parameters.CutoffALC = peaks.Parameter.CutoffALC;
@@ -246,6 +252,10 @@ namespace Stitch {
                     if (meta == null) continue; // Ignore empty lines
 
                     if (meta.Confidence >= peaks_parameters.CutoffALC) {
+                        foreach (var scan in meta.ScanNumbers)
+                            foreach (var asm in match_ions)
+                                if (scan.Scan == asm.ScanNumber && (asm.ASM is SingleASM sim && Path.GetFileName(scan.RawFile) == Path.GetFileName(sim.Match.Spectrum.Precursor.RawFile)))
+                                    meta.SupportingSpectra.Add(asm.ASM);
                         reads.Add(meta);
                     }
                     // Find local patches of high enough confidence

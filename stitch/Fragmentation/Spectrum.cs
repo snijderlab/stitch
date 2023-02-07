@@ -9,11 +9,20 @@ using System.Linq;
 using System.Collections.Generic;
 using System.Text;
 using System;
+using HtmlGenerator;
+using HTMLNameSpace;
+using static Stitch.InputNameSpace.ParseHelper;
 
 namespace Stitch {
     public static class Fragmentation {
-        public struct ASM {
+        public interface IASM {
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData);
+        }
+
+        public struct FdrASM : IASM {
             public AnnotatedSpectrumMatch Match;
+            /// <summary> If true all FDR measures are set. </summary>
+            public bool FDRSet;
             /// <summary> The average number of matches for the same fragments but with a randomised shift
             /// divided by the number of matches with the actual fragments.</summary>
             public double FDRFractionGeneral;
@@ -24,7 +33,45 @@ namespace Stitch {
             public double SpecificExpectationPerPosition;
             public int FoundSatelliteIons;
             public int PossibleSatelliteIons;
+
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData) {
+                var html = new HtmlBuilder();
+                html.Add(Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.HecklibSpectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+                var id = this.Match.Spectrum.ScanNumber.ToString();
+                var details = new HtmlBuilder();
+                details.Open(HtmlTag.table);
+                void Row(string name, HtmlBuilder help, string value) {
+                    details.Open(HtmlTag.tr);
+                    details.Open(HtmlTag.td);
+                    details.TagWithHelp(HtmlTag.p, name, help);
+                    details.Close(HtmlTag.td);
+                    details.OpenAndClose(HtmlTag.td, "", value);
+                    details.Close(HtmlTag.tr);
+                }
+                var matched = this.Match.FragmentMatches.Count(f => f != null);
+                var total = this.Match.FragmentMatches.Count();
+                Row("Matched peaks", new HtmlBuilder(HTMLHelp.SpectrumMatchedPeaks), $"{matched} ({(double)matched / total:P2} of {total})");
+                Row("FDR", new HtmlBuilder(HTMLHelp.SpectrumGeneralFDR), $"{this.FDRFractionGeneral:P2}");
+                Row("Satellite FDR", new HtmlBuilder(HTMLHelp.SpectrumSatelliteFDR), double.IsNaN(this.FDRFractionSpecific) ? "-" : $"{this.FDRFractionSpecific:P2}");
+                Row("PSM Score", new HtmlBuilder(HTMLHelp.SpectrumScore), this.Match.Score().Score.ToString("G3"));
+                details.Close(HtmlTag.table);
+                html.Collapsible("spectrum-details-" + id, new HtmlBuilder("Spectrum Details"), details);
+                return html;
+            }
         }
+
+        public struct SingleASM : IASM {
+            public AnnotatedSpectrumMatch Match;
+
+            public SingleASM(AnnotatedSpectrumMatch match) {
+                this.Match = match;
+            }
+
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData) {
+                return Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.PeaksSpectrum));
+            }
+        }
+
 
         /// <summary> Finds the supporting spectra for all reads and saves it in the reads themselves. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
@@ -164,7 +211,7 @@ namespace Stitch {
             return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
         }
 
-        static ASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+        static FdrASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
@@ -197,8 +244,9 @@ namespace Stitch {
                 steps += 2;
             }
 
-            return new ASM() {
+            return new FdrASM() {
                 Match = res,
+                FDRSet = true,
                 FDRFractionGeneral = (double)total_general / steps / actual_generic,
                 FDRFractionSpecific = (double)total_specific / steps / actual_specific,
                 SpecificExpectationPerPosition = (double)total_specific / steps / sequence.Count(i => i == 'I' || i == 'L'),
@@ -211,6 +259,62 @@ namespace Stitch {
             var shifted_fragments = fragments.Select(f => { var p = new PeptideFragment(f); p.Mz += shift; return p; }).ToArray();
             var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, shifted_fragments, model.tolerance, model.IsotopeError);
             return (matchedFragments.Count(i => i != null), matchedFragments.Count(i => i != null && (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D)));
+        }
+
+        public static ParseResult<List<(int ScanNumber, IASM ASM)>> LoadPeaksSpectra(ParsedFile file) {
+            var counter = new InputNameSpace.Tokenizer.Counter(file);
+            var output = new List<(int ScanNumber, IASM ASM)>();
+            var outEither = new ParseResult<List<(int ScanNumber, IASM ASM)>>();
+            var temp = new List<(string Ion, int Pos, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)>();
+            var temp_meta = (ScanNumber: -1, Sequence: "", Mz: 0.0, RawFile: "");
+            for (int line_number = 1; line_number < file.Lines.Length; line_number++) {
+                var pieces = SplitLine(',', line_number, file);
+                if (pieces.Count == 1) continue;
+                if (pieces.Count < 17) {
+                    outEither.AddMessage(new InputNameSpace.ErrorMessage(new Position(line_number, 1, file), "Missing columns", $"Needs at least 16 columns but only found {pieces.Count}"));
+                    continue;
+                }
+                //Peptide,Length,mass,m/z,RT,Predicted RT,z,Fraction,scan,Source File,ion,pos,ion m/z,theo m/z,m/z error,ion intensity,ion charge,modification
+                // 0      1      2    3   4  5            6 7        8    9           10  11  12      13       14        15            16         17
+                var num = ConvertToInt(pieces[8].Text.Split(':').Last(), pieces[8].Pos).UnwrapOrDefault(outEither, 0);
+                if (num != temp_meta.ScanNumber && temp_meta.ScanNumber != -1) {
+                    output.Add((temp_meta.ScanNumber, BuildASMFromTemp(temp, temp_meta)));
+                    temp.Clear();
+                    temp_meta = (-1, "", 0.0, "");
+                }
+                if (temp_meta.ScanNumber == -1) {
+                    temp_meta = (num, pieces[0].Text, ConvertToDouble(pieces[3]).UnwrapOrDefault(outEither, 0.0), pieces[9].Text);
+                }
+                temp.Add((
+                    pieces[10].Text,
+                    ConvertToInt(pieces[11]).UnwrapOrDefault(outEither, 0),
+                    ConvertToDouble(pieces[12]).UnwrapOrDefault(outEither, 0.0),
+                    ConvertToDouble(pieces[13]).UnwrapOrDefault(outEither, 0.0),
+                    ConvertToDouble(pieces[14]).UnwrapOrDefault(outEither, 0.0),
+                    ConvertToDouble(pieces[15]).UnwrapOrDefault(outEither, 0.0),
+                    (short)ConvertToInt(pieces[16]).UnwrapOrDefault(outEither, 0)
+                     ));
+            }
+            outEither.Value = output;
+            return outEither;
+        }
+
+        static IASM BuildASMFromTemp(List<(string Ion, int SeriesNumber, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)> data, (int ScanNumber, string Sequence, double Mz, string RawFile) meta) {
+            var centroids = data.Select(p => new Centroid() { Charge = p.Charge, Mz = p.Mz, Intensity = (float)p.Intensity, MinMz = (float)(p.Mz - p.MzError), MaxMz = (float)(p.Mz + p.MzError), Resolution = 0, SignalToNoise = 0 }).ToArray();
+            var precursor = new PrecursorInfo() { Mz = meta.Mz, ScanNumber = meta.ScanNumber, RawFile = meta.RawFile };
+            string transformedPeptide = meta.Sequence.Replace("(", "[").Replace(")", "]");
+            string sequence = FastaParser.ParseProForma(transformedPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
+            var peptide = new Peptide(sequence, n_term, c_term, modifications);
+            var matches = data.Select(p => {
+                var fragment = PeptideFragment.IonFromString(p.Ion.Substring(0, 1));
+                var term = Proteomics.Terminus.N;
+                if (fragment == PeptideFragment.ION_W || fragment == PeptideFragment.ION_X || fragment == PeptideFragment.ION_Y || fragment == PeptideFragment.ION_Z) term = Proteomics.Terminus.C;
+                var position = term == Proteomics.Terminus.N ? p.SeriesNumber - 1 : sequence.Length - p.SeriesNumber;
+                return new PeptideFragment(0, sequence[position], position, p.SeriesNumber, p.Mz, p.Charge, fragment, 0);
+            }).ToArray();
+            return new SingleASM(new AnnotatedSpectrumMatch(
+                new SpectrumContainer(
+                    centroids, precursor), peptide, matches));
         }
     }
 }
