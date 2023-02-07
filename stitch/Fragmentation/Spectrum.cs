@@ -311,7 +311,7 @@ namespace Stitch {
                 var term = Proteomics.Terminus.N;
                 if (fragment == PeptideFragment.ION_W || fragment == PeptideFragment.ION_X || fragment == PeptideFragment.ION_Y || fragment == PeptideFragment.ION_Z) term = Proteomics.Terminus.C;
                 var position = term == Proteomics.Terminus.N ? p.SeriesNumber - 1 : sequence.Length - p.SeriesNumber;
-                return new PeptideFragment(0, sequence[position], position, p.SeriesNumber, p.Mz, p.Charge, fragment, 0);
+                return new PeptideFragment(0, sequence[position], position, p.SeriesNumber, p.TheoreticalMz, p.Charge, fragment, 0);
             }).ToArray();
             return new SingleASM(new AnnotatedSpectrumMatch(
                 new SpectrumContainer(
