@@ -498,6 +498,7 @@ namespace Stitch {
 
             public Combined(AminoAcid[] sequence, NameFilter filter, List<General> children) : base(sequence, null, "Combined", filter) {
                 Children = children;
+                this.SupportingSpectra.AddRange(children.SelectMany(c => c.SupportingSpectra));
             }
 
             public void AddChild(General read) {

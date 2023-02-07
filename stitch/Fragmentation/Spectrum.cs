@@ -132,7 +132,7 @@ namespace Stitch {
                     raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
                     // Default set to 20, should be lower for BU
-                    model.tolerance.Value = 5;
+                    model.tolerance.Value = 20;
 
                     // Centroid the data
                     Centroid[] spectrum;
