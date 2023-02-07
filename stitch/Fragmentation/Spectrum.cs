@@ -266,7 +266,7 @@ namespace Stitch {
             var output = new List<(int ScanNumber, IASM ASM)>();
             var outEither = new ParseResult<List<(int ScanNumber, IASM ASM)>>();
             var temp = new List<(string Ion, int Pos, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)>();
-            var temp_meta = (ScanNumber: -1, Sequence: "", Mz: 0.0, RawFile: "");
+            var temp_meta = (ScanNumber: -1, FullScanNumber: "", Sequence: "", Mz: 0.0, RawFile: "");
             for (int line_number = 1; line_number < file.Lines.Length; line_number++) {
                 var pieces = SplitLine(',', line_number, file);
                 if (pieces.Count == 1) continue;
@@ -276,14 +276,15 @@ namespace Stitch {
                 }
                 //Peptide,Length,mass,m/z,RT,Predicted RT,z,Fraction,scan,Source File,ion,pos,ion m/z,theo m/z,m/z error,ion intensity,ion charge,modification
                 // 0      1      2    3   4  5            6 7        8    9           10  11  12      13       14        15            16         17
-                var num = ConvertToInt(pieces[8].Text.Split(':').Last(), pieces[8].Pos).UnwrapOrDefault(outEither, 0);
-                if (num != temp_meta.ScanNumber && temp_meta.ScanNumber != -1) {
+                var num = pieces[8].Text;
+                if (num != temp_meta.FullScanNumber && !String.IsNullOrEmpty(temp_meta.FullScanNumber)) {
                     output.Add((temp_meta.ScanNumber, BuildASMFromTemp(temp, temp_meta)));
                     temp.Clear();
-                    temp_meta = (-1, "", 0.0, "");
+                    temp_meta = (-1, "", "", 0.0, "");
                 }
-                if (temp_meta.ScanNumber == -1) {
-                    temp_meta = (num, pieces[0].Text, ConvertToDouble(pieces[3]).UnwrapOrDefault(outEither, 0.0), pieces[9].Text);
+                if (String.IsNullOrEmpty(temp_meta.FullScanNumber)) {
+                    var trimmed = ConvertToInt(pieces[8].Text.Split(':').Last(), pieces[8].Pos).UnwrapOrDefault(outEither, 0);
+                    temp_meta = (trimmed, num, pieces[0].Text, ConvertToDouble(pieces[3]).UnwrapOrDefault(outEither, 0.0), pieces[9].Text);
                 }
                 temp.Add((
                     pieces[10].Text,
@@ -299,7 +300,7 @@ namespace Stitch {
             return outEither;
         }
 
-        static IASM BuildASMFromTemp(List<(string Ion, int SeriesNumber, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)> data, (int ScanNumber, string Sequence, double Mz, string RawFile) meta) {
+        static IASM BuildASMFromTemp(List<(string Ion, int SeriesNumber, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)> data, (int ScanNumber, string FullScanNumber, string Sequence, double Mz, string RawFile) meta) {
             var centroids = data.Select(p => new Centroid() { Charge = p.Charge, Mz = p.Mz, Intensity = (float)p.Intensity, MinMz = (float)(p.Mz - p.MzError), MaxMz = (float)(p.Mz + p.MzError), Resolution = 0, SignalToNoise = 0 }).ToArray();
             var precursor = new PrecursorInfo() { Mz = meta.Mz, ScanNumber = meta.ScanNumber, RawFile = meta.RawFile };
             string transformedPeptide = meta.Sequence.Replace("(", "[").Replace(")", "]");
