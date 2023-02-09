@@ -69,6 +69,74 @@ namespace Stitch {
                     }
                 }
             }
+
+            /// <summary> Parse the original tag as kind of pro forma (using brackets '(' or without brackets altogether) and present any modifications alongside the local confidence.</summary>
+            /// <param name="read"></param>
+            /// <param name="original_tag"></param>
+            /// <param name="html"></param>
+            static protected void AnnotatedLocalScore(General read, string original_tag, HtmlBuilder html) {
+                // Create a display of the sequence with local confidence and modifications (if present)
+                html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
+                html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
+                int original_offset = 0;
+
+                bool IsInner(char c) {
+                    return char.IsDigit(c) || c == '.' || c == '+' || c == '-' || c == ')';
+                }
+                bool IsStart(char c) {
+                    return c == '(' || c == '+' || c == '-';
+                }
+
+                // Show N terminal modifications
+                if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset])) {
+                    html.Open(HtmlTag.div, $"style='--value:0'");
+                    html.OpenAndClose(HtmlTag.p, "", "⚬");
+                    html.Open(HtmlTag.p, "class='modification'");
+                    var temp = original_offset;
+                    original_offset += 1; // skip past the detected number
+                    while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
+                        original_offset++;
+                    }
+                    html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                    html.Close(HtmlTag.p);
+                    html.Close(HtmlTag.div);
+                }
+
+                for (int i = 0; i < read.Sequence.Length; i++) {
+                    html.Open(HtmlTag.div, $"style='--value:{read.Sequence.PositionalScore[i] * 100}'");
+                    html.OpenAndClose(HtmlTag.p, "", read.Sequence.AminoAcids[i].ToString());
+
+                    if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset + 1])) {
+                        html.Open(HtmlTag.p, "class='modification'");
+                        var temp = original_offset + 1;
+                        original_offset += 2; // skip past the detected number
+                        while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
+                            original_offset++;
+                        }
+                        html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                        html.Close(HtmlTag.p);
+                    } else {
+                        original_offset++;
+                    }
+                    html.Close(HtmlTag.div);
+                }
+
+                // Show C terminal modifications
+                if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset])) {
+                    html.Open(HtmlTag.div, $"style='--value:0'");
+                    html.OpenAndClose(HtmlTag.p, "", "⚬");
+                    html.Open(HtmlTag.p, "class='modification'");
+                    var temp = original_offset;
+                    original_offset += 1; // skip past the detected number
+                    while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
+                        original_offset++;
+                    }
+                    html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                    html.Close(HtmlTag.p);
+                    html.Close(HtmlTag.div);
+                }
+                html.Close(HtmlTag.div);
+            }
         }
 
         /// <summary> A metadata instance to contain no metadata so reads without metadata can also be handled. </summary>
@@ -362,28 +430,7 @@ namespace Stitch {
 
                 // Create a display of the sequence with local confidence and modifications (if present)
                 if (OriginalTag != null && Sequence.PositionalScore != null) {
-                    html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
-                    html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
-                    int original_offset = 0;
-
-                    for (int i = 0; i < this.Sequence.Length; i++) {
-                        html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
-                        html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
-
-                        if (original_offset < OriginalTag.Length - 2 && OriginalTag[original_offset + 1] == '(') {
-                            html.Open(HtmlTag.p, "class='modification'");
-                            var temp = original_offset + 1;
-                            original_offset += 2;
-                            while (OriginalTag[original_offset] != ')' && original_offset < OriginalTag.Length) {
-                                original_offset++;
-                            }
-                            html.Content(OriginalTag.Substring(temp, original_offset - temp));
-                            html.Close(HtmlTag.p);
-                        }
-                        html.Close(HtmlTag.div);
-                        original_offset++;
-                    }
-                    html.Close(HtmlTag.div);
+                    General.AnnotatedLocalScore(this, OriginalTag, html);
                 }
 
                 if (Post_translational_modifications != null) {
@@ -638,15 +685,7 @@ namespace Stitch {
 
                 // Create a display of the sequence with local confidence
                 if (Sequence.PositionalScore != null) {
-                    html.OpenAndClose(HtmlTag.h3, "", $"Local Confidence");
-                    html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
-
-                    for (int i = 0; i < this.Sequence.Length; i++) {
-                        html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
-                        html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
-                        html.Close(HtmlTag.div);
-                    }
-                    html.Close(HtmlTag.div);
+                    General.AnnotatedLocalScore(this, AminoAcid.ArrayToString(this.Sequence.AminoAcids), html);
                 }
 
                 html.Add(Sequence.RenderToHtml());
@@ -694,30 +733,8 @@ namespace Stitch {
                 html.Close(HtmlTag.table);
 
                 // Create a display of the sequence with local confidence
-                if (Sequence.PositionalScore != null) {
-                    html.OpenAndClose(HtmlTag.h3, "", $"Local Confidence");
-                    html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
-                    int original_location = 0;
-
-                    for (int i = 0; i < this.Sequence.Length; i++) {
-                        html.Open(HtmlTag.div, $"style='--value:{Sequence.PositionalScore[i] * 100}'");
-                        html.OpenAndClose(HtmlTag.p, "", this.Sequence.AminoAcids[i].ToString());
-
-                        if (original_location < OriginalSequence.Length - 1 && OriginalSequence[original_location] == '+' || OriginalSequence[original_location] == '-') {
-                            html.Open(HtmlTag.p, "class='modification'");
-                            var temp = original_location + 1;
-                            original_location += 1;
-                            while (original_location < OriginalSequence.Length && (char.IsDigit(OriginalSequence[original_location]) || OriginalSequence[original_location] == '.')) {
-                                original_location++;
-                            }
-                            html.Content(OriginalSequence.Substring(temp, original_location - temp));
-                            html.Close(HtmlTag.p);
-                        }
-                        html.Close(HtmlTag.div);
-                        original_location++;
-                    }
-                    html.Close(HtmlTag.div);
-                }
+                if (Sequence.PositionalScore != null)
+                    General.AnnotatedLocalScore(this, OriginalSequence, html);
 
                 html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());
