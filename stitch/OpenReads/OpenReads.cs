@@ -552,28 +552,21 @@ namespace Stitch {
             var id_idx = mzTabFile.ProteinSectionHeader.IndexOf("PSM_ID");
             var spectra_idx = mzTabFile.ProteinSectionHeader.IndexOf("spectra_ref");
             var maybe_conf_idx = mzTabFile.ProteinSectionHeader.IndexOf("opt_ms_run[1]_aa_scores");
+            var charge_idx = mzTabFile.ProteinSectionHeader.IndexOf("charge");
+            var mz_e_idx = mzTabFile.ProteinSectionHeader.IndexOf("exp_mass_to_charge");
+            var mz_t_idx = mzTabFile.ProteinSectionHeader.IndexOf("calc_mass_to_charge");
 
-            if (seq_idx == -1) {
-                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'sequence' column is mandatory in the mzTab file definition."));
-                return out_either;
-            }
-            if (id_idx == -1) {
-                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'PSM_ID' column is mandatory in the mzTab file definition."));
-                return out_either;
-            }
-            if (search_idx == -1) {
-                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine' column is mandatory in the mzTab file definition."));
-                return out_either;
-            }
-            if (score_idx == -1) {
-                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine_score[1]' column is mandatory in the mzTab file definition when peptides are searched."));
-                return out_either;
-            }
-            if (spectra_idx == -1) {
-                out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'spectra_ref' column is mandatory in the mzTab file definition."));
-                return out_either;
-            }
+            if (seq_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'sequence' column is mandatory in the mzTab file definition."));
+            if (id_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'PSM_ID' column is mandatory in the mzTab file definition."));
+            if (search_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine' column is mandatory in the mzTab file definition."));
+            if (score_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'search_engine_score[1]' column is mandatory in the mzTab file definition when peptides are searched."));
+            if (spectra_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'spectra_ref' column is mandatory in the mzTab file definition."));
+            if (charge_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'charge' column is mandatory in the mzTab file definition."));
+            if (mz_e_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'exp_mass_to_charge' column is mandatory in the mzTab file definition."));
+            if (mz_t_idx == -1) out_either.AddMessage(new InputNameSpace.ErrorMessage(mzTabFile.ProteinSectionHeaderLocation, "Missing column in PSM table", "The 'calc_mass_to_charge' column is mandatory in the mzTab file definition."));
 
+            if (out_either.IsErr())
+                return out_either;
 
             foreach (var (range, row) in lexed.Item2) {
                 // Skip any non Casanovo read (or combined with other software) and skip reads without a score.
@@ -584,9 +577,12 @@ namespace Stitch {
                     var score = InputNameSpace.ParseHelper.ConvertToDouble(row[score_idx].Content, row[score_idx].Location).UnwrapOrDefault(out_either, 0.0);
                     var id = InputNameSpace.ParseHelper.ConvertToInt(row[id_idx].Content, row[id_idx].Location).UnwrapOrDefault(out_either, 0);
                     var confidence = maybe_conf_idx == -1 ? new double[0] : ParseMzTab.SubString.Split(row[maybe_conf_idx].Content, ',', row[maybe_conf_idx].Location.Start).Select(i => InputNameSpace.ParseHelper.ConvertToDouble(i.Content, i.Location).UnwrapOrDefault(out_either, 0.0)).ToArray();
+                    var charge = InputNameSpace.ParseHelper.ConvertToInt(row[charge_idx].Content, row[charge_idx].Location).UnwrapOrDefault(out_either, 0);
+                    var mz_e = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_e_idx].Content, row[mz_e_idx].Location).UnwrapOrDefault(out_either, 0);
+                    var mz_t = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_t_idx].Content, row[mz_t_idx].Location).UnwrapOrDefault(out_either, 0);
 
                     if (score >= casanovo.CutoffScore)
-                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence, row.Select(i => i.Content).ToArray(), mzTabFile));
+                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence, id, row[search_idx].Content, charge, mz_e, mz_t, row[spectra_idx].Content));
                 }
             }
 

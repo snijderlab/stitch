@@ -696,45 +696,59 @@ namespace Stitch {
 
         /// <summary> A metadata instance to contain reads from a casanovo denovo run. </summary>
         public class Casanovo : General {
-            /// <summary> The original definition with the used headers. </summary>
-            public string[] OriginalDefinition;
             /// <summary> The sequence with modifications of the peptide. </summary>
             public string OriginalSequence;
-            public ParseMzTab.MzTabFile MzTabFile;
+            public int PSM_ID;
+            public string SearchEngine;
+            public double Score;
+            public int Charge;
+            public double ExperimentalMz;
+            public double TheoreticalMz;
+            public string SpectraRef;
 
 
             /// <summary> Create a new casanovo read MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Casanovo(AminoAcid[] sequence, double score, double[] confidence, FileRange range, NameFilter filter, string original_sequence, string[] original_definition, ParseMzTab.MzTabFile file) : base(sequence, range, "C", filter) {
-                this.OriginalDefinition = original_definition;
+            public Casanovo(AminoAcid[] sequence, double score, double[] confidence, FileRange range, NameFilter filter, string original_sequence, int psm_id, string search_engine, int charge, double experimental_mz, double theoretical_mz, string spectra_ref) : base(sequence, range, $"C{psm_id}", filter) {
                 this.OriginalSequence = original_sequence;
                 this.Sequence.SetPositionalScore(confidence);
                 this.Intensity = 0.5 + score / 2;
-                this.MzTabFile = file;
+                this.Score = score;
+                this.PSM_ID = psm_id;
+                this.SearchEngine = search_engine;
+                this.Charge = charge;
+                this.ExperimentalMz = experimental_mz;
+                this.TheoreticalMz = theoretical_mz;
+                this.SpectraRef = spectra_ref;
             }
 
             /// <summary> Returns casanovo MetaData to HTML. </summary>
             public override HtmlBuilder ToHTML() {
                 var html = new HtmlBuilder();
                 html.OpenAndClose(HtmlTag.h2, "", "Meta Information");
-                html.OpenAndClose(HtmlTag.h3, "", "Original Definition");
-                html.Open(HtmlTag.table);
-                html.Open(HtmlTag.tr);
-                foreach (var column in this.MzTabFile.ProteinSectionHeader) {
-                    html.OpenAndClose(HtmlTag.th, "", column);
-                }
-                html.Close(HtmlTag.tr);
-                html.Open(HtmlTag.tr);
-                foreach (var column in this.OriginalDefinition) {
-                    html.OpenAndClose(HtmlTag.td, "", column);
-                }
-                html.Close(HtmlTag.tr);
-                html.Close(HtmlTag.table);
 
                 // Create a display of the sequence with local confidence
                 if (Sequence.PositionalScore != null)
                     General.AnnotatedLocalScore(this, OriginalSequence, html);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Score");
+                html.OpenAndClose(HtmlTag.p, "", this.Score.ToString("G4"));
+
+                html.OpenAndClose(HtmlTag.h3, "", "Search Engine");
+                html.OpenAndClose(HtmlTag.p, "", this.SearchEngine);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Charge");
+                html.OpenAndClose(HtmlTag.p, "", this.Charge.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Mz");
+                html.OpenAndClose(HtmlTag.p, "", $"{this.TheoreticalMz:G4} (theoretical) {this.ExperimentalMz:G4} (experimental)");
+
+                html.OpenAndClose(HtmlTag.h3, "", "Error");
+                html.OpenAndClose(HtmlTag.p, "", $"{Math.Abs(this.TheoreticalMz - this.ExperimentalMz):G4} (Th) {Math.Abs(this.TheoreticalMz - this.ExperimentalMz) / this.TheoreticalMz * 1e6:G4} (ppm)");
+
+                html.OpenAndClose(HtmlTag.h3, "", "Spectra");
+                html.OpenAndClose(HtmlTag.p, "", this.SpectraRef);
 
                 html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());

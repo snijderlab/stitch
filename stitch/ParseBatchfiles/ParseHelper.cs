@@ -47,7 +47,7 @@ namespace Stitch {
                 } else {
                     string msg = "";
                     if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
-                    return new ParseResult<int>(new ErrorMessage(pos, "Not a valid number", msg));
+                    return new ParseResult<int>(new ErrorMessage(pos, "Not a valid integer", msg));
                 }
             }
 
