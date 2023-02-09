@@ -16,7 +16,7 @@ using static Stitch.InputNameSpace.ParseHelper;
 namespace Stitch {
     public static class Fragmentation {
         public interface IASM {
-            public HtmlBuilder ToHtml(ReadFormat.General MetaData);
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id);
         }
 
         public struct FdrASM : IASM {
@@ -34,9 +34,9 @@ namespace Stitch {
             public int FoundSatelliteIons;
             public int PossibleSatelliteIons;
 
-            public HtmlBuilder ToHtml(ReadFormat.General MetaData) {
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id) {
                 var html = new HtmlBuilder();
-                html.Add(Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.HecklibSpectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids)));
+                html.Add(Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.HecklibSpectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids), additional_id));
                 var id = this.Match.Spectrum.ScanNumber.ToString();
                 var details = new HtmlBuilder();
                 details.Open(HtmlTag.table);
@@ -67,8 +67,8 @@ namespace Stitch {
                 this.Match = match;
             }
 
-            public HtmlBuilder ToHtml(ReadFormat.General MetaData) {
-                return Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.PeaksSpectrum));
+            public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id) {
+                return Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.PeaksSpectrum), null, null, additional_id);
             }
         }
 

@@ -24,8 +24,9 @@ namespace HTMLNameSpace {
             html.OpenAndClose(HtmlTag.p, "class='aside-seq'", AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids));
 
             if (MetaData.SupportingSpectra.Count() > 0) {
-                foreach (var spectrum in MetaData.SupportingSpectra) {
-                    html.Add(spectrum.ToHtml(MetaData));
+                for (var i = 0; i < MetaData.SupportingSpectra.Count; i++) {
+                    var spectrum = MetaData.SupportingSpectra[i];
+                    html.Add(spectrum.ToHtml(MetaData, i));
                 }
             }
 
