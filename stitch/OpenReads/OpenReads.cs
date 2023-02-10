@@ -580,8 +580,9 @@ namespace Stitch {
                     var charge = InputNameSpace.ParseHelper.ConvertToInt(row[charge_idx].Content, row[charge_idx].Location).UnwrapOrDefault(out_either, 0);
                     var mz_e = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_e_idx].Content, row[mz_e_idx].Location).UnwrapOrDefault(out_either, 0);
                     var mz_t = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_t_idx].Content, row[mz_t_idx].Location).UnwrapOrDefault(out_either, 0);
+                    var error_ppm = Math.Abs(mz_e - mz_t) / mz_t * 1e6;
 
-                    if (score >= casanovo.CutoffScore)
+                    if (score >= casanovo.CutoffScore && (casanovo.FilterPPM == -1 || error_ppm <= casanovo.FilterPPM))
                         reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence, id, row[search_idx].Content, charge, mz_e, mz_t, row[spectra_idx].Content));
                 }
             }

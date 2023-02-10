@@ -362,7 +362,7 @@ Used to load mmCIF files from ModelAngelo, it assumes the basic structural infor
 | Path     | The path to the file.                   | (No Default)  |
 | Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
 | MinLength       | The minimal length of a chain to be included as read (inclusive).                    | 5             |
-| CutoffALC          | The average local confidence cutoff for inclusion in the used reads. \[0-100\] | 0             |
+| CutoffALC          | The average local confidence cutoff for inclusion in the used reads. \[0..100\] | 0             |
 
 _Example_
 ```
@@ -371,6 +371,17 @@ MMCIF ->
     Name: NameForMyFile
 <-
 ```
+
+##### Casanovo (m) *
+
+Used to load mzTab files from Casanovo.
+
+| Inner parameter | Explanation                                               | Default Value |
+| --------------- | --------------------------------------------------------- | ------------- |
+| Path        | The path to the file.                                       | (No Default)  |
+| Name        | Used to recognize the origin of reads from this file.       | (No Default)  |
+| CutoffScore | The score cutoff for inclusion in the used reads. \[-1..1\] | 0             |
+| FilterPPM   | The maximal ppm error (Abs(mz_exp - mz_the) / mz_the * 1e6) for inclusion in the used reads (inclusive). \[0..\]      | (No Default)  |
 
 ##### Folder (m) *
 

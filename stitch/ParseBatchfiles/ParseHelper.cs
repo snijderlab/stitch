@@ -62,6 +62,13 @@ namespace Stitch {
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
                 return ConvertToInt(input.Unwrap(), item.ValueRange);
             }
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
+            /// <returns>If successful: the number (int32)</returns>
+            public static ParseResult<int> ParseInt(KeyValue item, NumberRange<int> range) {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<int>(input.Messages);
+                return ConvertToInt(input.Unwrap(), item.ValueRange).RestrictRange(range, item.ValueRange);
+            }
 
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successful: the number (int32)</returns>
@@ -83,6 +90,13 @@ namespace Stitch {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<double>(input.Messages);
                 return ConvertToDouble(input.Unwrap(), item.ValueRange);
+            }
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
+            /// <returns>If successful: the number (double)</returns>
+            public static ParseResult<double> ParseDouble(KeyValue item, NumberRange<double> range) {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<double>(input.Messages);
+                return ConvertToDouble(input.Unwrap(), item.ValueRange).RestrictRange(range, item.ValueRange);
             }
 
             /// <summary> Converts a string to a double, while it generates meaningful error messages for the end user. </summary>
@@ -267,7 +281,7 @@ namespace Stitch {
                                 CheckDuplicate(outEither, value, name);
                                 name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Cutoff", (settings, value) => {
-                                settings.Cutoff = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                                settings.Cutoff = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);}),
                             ("Separator", (settings, value) => {
                                 settings.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
                         }).Parse(pair, novor => {
@@ -304,9 +318,9 @@ namespace Stitch {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("MinLength", (settings, value) => {
-                                settings.MinLength = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                                settings.MinLength = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
                             ("CutoffALC", (settings, value) => {
-                                settings.CutoffALC = (uint)ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 100), value.ValueRange).UnwrapOrDefault(outEither, 5);}),
+                                settings.CutoffALC = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 5);}),
                         }).Parse(pair, mmcif => {
                             if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -323,7 +337,9 @@ namespace Stitch {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("CutoffScore", (settings, value) => {
-                                settings.CutoffScore = ParseHelper.ParseDouble(value).UnwrapOrDefault(outEither, 0.0);}),
+                                settings.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(-1, 1)).UnwrapOrDefault(outEither, 0.0);}),
+                            ("FilterPPM", (settings, value) => {
+                                settings.FilterPPM = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                         }).Parse(pair, casanovo => {
                             if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -425,12 +441,12 @@ namespace Stitch {
 
                 var settings = new LocalParams<TemplateMatchingParameter>("TemplateMatching", new List<(string, Action<TemplateMatchingParameter, KeyValue>)>{
                     ("CutoffScore", (settings, value) => {
-                        settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.CutoffScore = ParseHelper.ParseDouble(value,NumberRange<double>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                     ("Alphabet", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Alphabet);
                             settings.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
                     ("AmbiguityThreshold", (settings, value) => {
-                            settings.AmbiguityThreshold = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 0.5);}),
+                            settings.AmbiguityThreshold = ParseHelper.ParseDouble(value,NumberRange<double>.Closed(0.0, 1.0)).UnwrapOrDefault(outEither, 0.5);}),
                     ("EnforceUnique", (settings, value) => {
                             var v = 1.0;
                             var boolean = ParseBool(value, "EnforceUnique");
@@ -505,7 +521,7 @@ namespace Stitch {
 
                 var settings = new LocalParams<RecombineParameter>("Recombined", new List<(string, Action<RecombineParameter, KeyValue>)>{
                     ("N", (settings, value) => {
-                        settings.N = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.N = ParseHelper.ParseInt(value,NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                     ("Order", (settings, value) => {
                         CheckDuplicate(outEither, value, order);
                             if (value.IsSingle()) order.Add(value);
@@ -513,7 +529,7 @@ namespace Stitch {
                                 foreach (var group in value.GetValues().UnwrapOrDefault(outEither, new()))
                                     order.Add(group);}),
                     ("CutoffScore", (settings, value) => {
-                        settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.CutoffScore = ParseHelper.ParseDouble(value,NumberRange<double>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                     ("Alphabet", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Alphabet);
                             settings.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
@@ -576,7 +592,7 @@ namespace Stitch {
                                 CheckDuplicate(outEither, value, settings.Path);
                                 settings.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("MinimalScore", (settings, value) => {
-                                settings.MinimalScore = ParseHelper.ParseInt(value).RestrictRange(NumberRange<int>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                                settings.MinimalScore = ParseHelper.ParseInt(value,NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                             ("OutputType", (settings, value) => {
                                 settings.OutputType = ParseHelper.ParseEnum<RunParameters.Report.OutputType>(value).UnwrapOrDefault(outEither, 0);}),
                         }).Parse(pair, fasta => {
@@ -629,33 +645,33 @@ namespace Stitch {
                         CheckDuplicate(outEither, value, settings.Name);
                             settings.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                     ("GapStartPenalty", (settings, value) => {
-                        settings.GapStart = (sbyte)-ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                        settings.GapStart = (sbyte)-ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);
                             outEither.AddMessage(new ErrorMessage(value.KeyRange, "GapStartPenalty is deprecated", "Use `GapStart` instead, with the inverse value.", $"GapStart: {settings.GapStart}", true));}),
                     ("GapStart", (settings, value) => {
-                        settings.GapStart = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.GapStart = (sbyte)ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);}),
                     ("GapExtendPenalty", (settings, value) => {
-                        settings.GapExtend = (sbyte)-ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                        settings.GapExtend = (sbyte)-ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);
                             outEither.AddMessage(new ErrorMessage(value.KeyRange, "GapExtendPenalty is deprecated", "Use `GapExtend` instead, with the inverse value.", $"GapExtend: {settings.GapExtend}", true));}),
                     ("GapExtend", (settings, value) => {
-                        settings.GapExtend = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.GapExtend = (sbyte)ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);}),
                     ("Characters", (settings, value) => {
                         CheckDuplicate(outEither, value, identity.Item1);
                             identity = (value.GetValue().UnwrapOrDefault(outEither, ""), identity.Item2, identity.Item3);}),
                     ("Identity", (settings, value) => {
-                        identity = (identity.Item1, ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0), identity.Item3);}),
+                        identity = (identity.Item1, ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0), identity.Item3);}),
                     ("MisMatch", (settings, value) => {
-                        identity = (identity.Item1, identity.Item2, ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0));}),
+                        identity = (identity.Item1, identity.Item2, ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0));}),
                     ("PatchLength", (settings, value) => {
-                        settings.PatchLength = ParseInt(value).RestrictRange(NumberRange<int>.Closed(0, 10), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.PatchLength = ParseInt(value,NumberRange<int>.Closed(0, 10)).UnwrapOrDefault(outEither, 0);}),
                     ("Swap", (settings, value) => {
-                        settings.Swap = (sbyte)ParseInt(value).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), value.ValueRange).UnwrapOrDefault(outEither, 0);}),
+                        settings.Swap = (sbyte)ParseInt(value,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);}),
                     ("Symmetric sets", (settings, value) => {
                         sbyte score = 0;
                             var sets = new List<List<List<char>>>();
                             foreach (var inner in value.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
                                 switch (inner.Name) {
                                     case "score":
-                                        score = (sbyte)ParseInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
+                                        score = (sbyte)ParseInt(inner,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "sets":
                                         sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => {
@@ -677,7 +693,7 @@ namespace Stitch {
                             foreach (var inner in value.GetValues().UnwrapOrDefault(outEither, new List<KeyValue>())) {
                                 switch (inner.Name) {
                                     case "score":
-                                        a_score = (sbyte)ParseInt(inner).RestrictRange(NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue), inner.ValueRange).UnwrapOrDefault(outEither, 0);
+                                        a_score = (sbyte)ParseInt(inner,NumberRange<int>.Closed(sbyte.MinValue, sbyte.MaxValue)).UnwrapOrDefault(outEither, 0);
                                         break;
                                     case "sets":
                                         a_sets = inner.GetValue().UnwrapOrDefault(outEither, "").Split('\n').Select(s => {
@@ -848,7 +864,7 @@ namespace Stitch {
                         CheckDuplicate(outEither, value, settings.Name);
                         settings.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                     ("CutoffScore", (settings, value) => {
-                        if (extended) settings.CutoffScore = ParseHelper.ParseDouble(value).RestrictRange(NumberRange<double>.Open(0), value.ValueRange).UnwrapOrDefault(outEither, 0);
+                        if (extended) settings.CutoffScore = ParseHelper.ParseDouble(value,NumberRange<double>.Open(0)).UnwrapOrDefault(outEither, 0);
                         else outEither.AddMessage(new ErrorMessage(value.KeyRange.Name, "CutoffScore cannot be defined here", "Inside a template in the templates list of a recombination a CutoffScore should not be defined."));}),
                     ("Alphabet", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Alphabet);
@@ -959,13 +975,13 @@ namespace Stitch {
 
                 switch (name) {
                     case "cutoffalc":
-                        parameters.CutoffALC = ParseInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                        parameters.CutoffALC = ParseInt(setting, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);
                         break;
                     case "localcutoffalc":
-                        parameters.LocalCutoffALC = ParseInt(setting).RestrictRange(NumberRange<int>.Closed(0, 100), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                        parameters.LocalCutoffALC = ParseInt(setting, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);
                         break;
                     case "minlengthpatch":
-                        parameters.MinLengthPatch = ParseHelper.ParseInt(setting).RestrictRange(NumberRange<int>.Open(0), setting.ValueRange).UnwrapOrDefault(outEither, 0);
+                        parameters.MinLengthPatch = ParseInt(setting, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 0);
                         break;
                     default:
                         outEither.Value = (parameters, false);

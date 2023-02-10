@@ -75,6 +75,7 @@ namespace Stitch {
 
             public class Casanovo : Parameter {
                 public double CutoffScore = 0.0;
+                public int FilterPPM = -1;
             }
 
             public class PeaksParameters {
