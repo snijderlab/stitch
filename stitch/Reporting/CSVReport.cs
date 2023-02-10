@@ -21,7 +21,7 @@ namespace Stitch {
             var culture = System.Globalization.CultureInfo.CurrentCulture;
             System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
 
-            var header = new List<string>() { "ReadID", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment", "CDR" };
+            var header = new List<string>() { "ReadID", "CombinedIDs", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment", "CDR" };
             var data = new List<List<string>>();
             var peaks = Parameters.RecombinedSegment.SelectMany(a => a.Templates).SelectMany(t => t.Matches).Any(m => m.ReadB is ReadFormat.Peaks);
             var fdr = Parameters.RecombinedSegment.SelectMany(a => a.Templates).SelectMany(t => t.Matches).Any(m => m.ReadB.SupportingSpectra.Count() > 0);
@@ -44,6 +44,7 @@ namespace Stitch {
                     }
                 var row = new List<string> {
                     match.ReadB.Identifier,
+                    match.ReadB is ReadFormat.Combined c ? c.Children.Aggregate("", (acc, i) => acc + i + ";") : "",
                     template.MetaData.Identifier,
                     template.Name,
                     group,
