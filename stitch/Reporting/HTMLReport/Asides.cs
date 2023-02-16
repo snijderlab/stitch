@@ -286,7 +286,8 @@ namespace HTMLNameSpace {
                             current_annotation = Annotation.None;
                         else if (pos > 0 && annotation_node.Previous.Value != annotation_node.Value)
                             current_annotation = Annotation.None;
-                        annotation.AddBefore(annotation_node, current_annotation);
+                        for (int c = 0; c < gaps[pos]; c++) // Add the correct number of annotations for bigger gaps
+                            annotation.AddBefore(annotation_node, current_annotation);
                         sequence.AddBefore(node, new string(gap_char, gaps[pos]));
                     }
                     node = node.Next;
