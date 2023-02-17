@@ -416,9 +416,10 @@ namespace HTMLNameSpace {
                     // Display unequal sets stretched (or squashed) including all gaps
                     if (inserted > total_gaps) inserted = total_gaps;
                     if (pos_a == alignment.StartA) total_gaps -= gaps[pos_a];
-                    var already_inserted = gaps[pos_a];
+                    var already_inserted = gaps[pos_a]; // Gaps before the start of this set
+                    html.Content(new string(positional_gap_char, already_inserted));
                     html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - already_inserted};'", content);
-                    seq.Append(new string(positional_gap_char, gaps[pos_a]) + content);
+                    seq.Append(new string(positional_gap_char, already_inserted) + content);
                     inserted = 0;
                 } else {
                     if (inserted > total_gaps) inserted = total_gaps;
