@@ -223,7 +223,7 @@ namespace HTMLNameSpace {
         /// <param name="data"></param>
         /// <param name="header"></param>
         /// <returns></returns>
-        public static HtmlBuilder GroupedPointGraph(List<(string GroupLabel, List<(string Label, List<double> Values)> Points)> data, List<string> header, string title, HtmlBuilder help, HtmlBuilder data_help) {
+        public static HtmlBuilder GroupedPointGraph(List<(string GroupLabel, List<(ReadFormat.General Label, List<double> Values)> Points)> data, List<string> header, string title, HtmlBuilder help, HtmlBuilder data_help, CommonPieces.AsideType asideType, string AssetsFolderName, List<string> location) {
             var html = new HtmlBuilder();
             if (data.Count == 0 || data.Any(a => a.Points.Count == 0)) {
                 html.OpenAndClose(HtmlTag.em, "", "No data, or a dataset contains no data.");
@@ -274,8 +274,9 @@ namespace HTMLNameSpace {
                 html.Open(HtmlTag.div, $"class='group' style='flex-grow:{group.Points.Count}'");
 
                 foreach (var point in group.Points) {
+                    var link = CommonPieces.GetAsideRawLink(point.Label, asideType, AssetsFolderName, location);
                     dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label}");
-                    html.Open(HtmlTag.a, $"href='#{identifier}_{point.Label}' class='values'");
+                    html.Open(HtmlTag.a, $"href='{link}' class='values'");
                     // Create Points
                     for (int i = 0; i < dimensions; i++) {
                         html.OpenAndClose(HtmlTag.span, $"class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[i])}'");
@@ -283,7 +284,7 @@ namespace HTMLNameSpace {
                     }
                     html.Close(HtmlTag.a);
                     html.Open(HtmlTag.span, "class='label'");
-                    html.OpenAndClose(HtmlTag.a, $"href='#{identifier}-{point.Label}'", point.Label);
+                    html.OpenAndClose(HtmlTag.a, $"href='{link}'", point.Label.Identifier);
                     html.Close(HtmlTag.span);
                 }
 

@@ -73,7 +73,7 @@ namespace HTMLNameSpace {
             }
 
             if (header)
-                html.Add(TableHeader(templates, total_reads));
+                html.Add(TableHeader(templates, total_reads, type, AssetsFolderName, null));
 
             if (tree != null)
                 html.Collapsible(name + "-tree", new HtmlBuilder("Tree"), HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName, displayArea), HtmlBuilder.CollapsibleState.Open);
@@ -289,10 +289,10 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads) {
+        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads, AsideType asideType, string AssetsFolderName, List<string> location) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='table-header'");
-            if (templates.Count > 15) html.Add(PointsTableHeader(templates));
+            if (templates.Count > 15) html.Add(PointsTableHeader(templates, asideType, AssetsFolderName, location));
             else if (templates.Count > 5) html.Add(BarTableHeader(templates));
             html.Add(TextTableHeader(templates, totalReads));
             html.Close(HtmlTag.div);
@@ -312,23 +312,23 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        static HtmlBuilder PointsTableHeader(List<Template> templates) {
+        static HtmlBuilder PointsTableHeader(List<Template> templates, AsideType asideType, string AssetsFolderName, List<string> location) {
             if (templates.Select(a => a.Score).Sum() == 0)
                 return new HtmlBuilder();
 
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
-            var data = new List<(string, List<(string, List<double>)>)>();
+            var data = new List<(string, List<(ReadFormat.General, List<double>)>)>();
 
             foreach (var template in templates) {
                 var group = data.FindIndex(a => a.Item1 == template.MetaData.ClassIdentifier);
                 if (group == -1) {
-                    data.Add((template.MetaData.ClassIdentifier, new List<(string, List<double>)>()));
+                    data.Add((template.MetaData.ClassIdentifier, new List<(ReadFormat.General, List<double>)>()));
                     group = data.Count - 1;
                 }
                 if (displayUnique)
-                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count, template.TotalArea, template.UniqueScore, template.UniqueMatches, template.TotalUniqueArea }));
+                    data[group].Item2.Add((template.MetaData, new List<double> { template.Score, template.Matches.Count, template.TotalArea, template.UniqueScore, template.UniqueMatches, template.TotalUniqueArea }));
                 else
-                    data[group].Item2.Add((template.MetaData.Identifier, new List<double> { template.Score, template.Matches.Count, template.TotalArea }));
+                    data[group].Item2.Add((template.MetaData, new List<double> { template.Score, template.Matches.Count, template.TotalArea }));
             }
 
             List<string> header;
@@ -337,7 +337,7 @@ namespace HTMLNameSpace {
             else
                 header = new List<string> { "Score", "Matches", "Area" };
 
-            return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", new HtmlBuilder(HtmlTag.p, HTMLHelp.OverviewOfScores), null);
+            return HTMLGraph.GroupedPointGraph(data, header, "Overview of scores", new HtmlBuilder(HtmlTag.p, HTMLHelp.OverviewOfScores), null, asideType, AssetsFolderName, location);
         }
 
         static HtmlBuilder BarTableHeader(List<Template> templates) {
