@@ -236,7 +236,7 @@ namespace HTMLNameSpace {
             double[] min_values = new double[dimensions];
 
             Array.Fill(max_values, Double.MinValue);
-            Array.Fill(min_values, Double.MaxValue);
+            Array.Fill(min_values, 0);
 
             foreach ((_, var group) in data) {
                 foreach ((_, var values) in group) {
@@ -278,7 +278,7 @@ namespace HTMLNameSpace {
                     html.Open(HtmlTag.a, $"href='#{identifier}_{point.Label}' class='values'");
                     // Create Points
                     for (int i = 0; i < dimensions; i++) {
-                        html.OpenAndClose(HtmlTag.span, $"class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[1])}'");
+                        html.OpenAndClose(HtmlTag.span, $"class='point' style='--x:{(point.Values[i] - min_values[i]) / (max_values[i] - min_values[i])}'");
                         dataBuffer.Append($"\t{point.Values[i]}");
                     }
                     html.Close(HtmlTag.a);
