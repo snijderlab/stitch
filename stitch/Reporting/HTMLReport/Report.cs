@@ -514,7 +514,7 @@ namespace Stitch {
             html.Close(HtmlTag.div);
             html.Open(HtmlTag.footer);
             html.Open(HtmlTag.p);
-            html.Content("Made by the Snijderlab in 2019-2022, the project is open source at ");
+            html.Content("Made by the Snijderlab in 2019-2023, the project is open source at ");
             html.OpenAndClose(HtmlTag.a, "href='https://www.github.com/snijderlab/stitch' target='_blank'", "github.com/snijderlab/stitch");
             html.Content(" licensed under the ");
             html.OpenAndClose(HtmlTag.a, "href='https://choosealicense.com/licenses/mit/' target='_blank'", "MIT license");

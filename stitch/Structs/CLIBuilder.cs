@@ -31,30 +31,34 @@ namespace Stitch {
             var defaultColour = Console.ForegroundColor;
 
             // Split the args in the correct pieces
-            var split_args = new List<string>();
+            var split_args = new List<(string, FileRange)>();
+            var full_line = new ParsedFile(new ReadFormat.FileIdentifier("CLI", "CLI", null), new string[] { args });
             var current_arg = new StringBuilder();
             bool escaped = false;
             bool first = true;
-            foreach (var c in args) {
+            int start = 0;
+            for (var i = 0; i < args.Length; i++) {
+                var c = args[i];
                 if (c == '"') {
                     escaped = !escaped;
                 } else if (c == ' ' && !escaped) {
                     var temp = current_arg.ToString();
-                    if (!string.IsNullOrWhiteSpace(temp) && !first) split_args.Add(temp);
+                    if (!string.IsNullOrWhiteSpace(temp) && !first) split_args.Add((temp, new FileRange(new Position(0, start + 1, full_line), new Position(0, i + 1, full_line))));
                     current_arg.Clear();
                     first = false;
+                    start = i + 1;
                 } else {
                     current_arg.Append(c);
                 }
             }
             var str = current_arg.ToString();
-            if (!string.IsNullOrWhiteSpace(str) && !first) split_args.Add(str);
+            if (!string.IsNullOrWhiteSpace(str) && !first) split_args.Add((str, new FileRange(new Position(0, start + 1, full_line), new Position(0, args.Length + 1, full_line))));
 
             // Parse the pieces
             var output = new Dictionary<string, (Type, object)>();
             var result = new ParseResult<Dictionary<string, (Type, object)>>(output);
-            if (split_args.Count >= 1 && Subcommands.Any(s => s.Key == split_args[0])) {
-                var system = Subcommands.Find(s => s.Key == split_args[0]);
+            if (split_args.Count >= 1 && Subcommands.Any(s => s.Key == split_args[0].Item1)) {
+                var system = Subcommands.Find(s => s.Key == split_args[0].Item1);
                 var res = system.Parse(exe, split_args);
                 if (res.IsOk(result))
                     output.Add(system.Key, (typeof(Dictionary<string, (Type, object)>), res.Unwrap()));
@@ -62,37 +66,47 @@ namespace Stitch {
                 for (int i = 0; i < split_args.Count; i++) {
                     var arg = split_args[i];
                     IArgument argument = null;
-                    string data = "";
-                    if (arg.StartsWith("--")) {
-                        argument = Arguments.Find(a => a.GetFlag().Map(s => s == arg.Substring(2)).Unwrap(false));
-                        if (argument != null && argument.GetArgumentType() != typeof(bool) && i + 1 < split_args.Count) {
-                            data = split_args[i + 1];
-                            i++;
+                    (string, FileRange) data = ("", arg.Item2);
+                    if (arg.Item1.StartsWith("--")) {
+                        argument = Arguments.Find(a => a.GetFlag().Map(s => s == arg.Item1.Substring(2)).Unwrap(false));
+                        if (argument != null && argument.GetArgumentType() != typeof(bool)) {
+                            if (i + 1 < split_args.Count) {
+                                data = split_args[i + 1];
+                                i++;
+                            } else {
+                                result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Missing argument for flag"));
+                            }
                         }
-                    } else if (arg.StartsWith("-")) {
-                        argument = Arguments.Find(a => a.GetShortFlag().Map(s => s == arg.Substring(1)).Unwrap(false));
-                        if (argument != null && argument.GetArgumentType() != typeof(bool) && i + 1 < split_args.Count) {
-                            data = split_args[i + 1];
-                            i++;
+                    } else if (arg.Item1.StartsWith("-")) {
+                        argument = Arguments.Find(a => a.GetShortFlag().Map(s => s == arg.Item1.Substring(1)).Unwrap(false));
+                        if (argument != null && argument.GetArgumentType() != typeof(bool)) {
+                            if (i + 1 < split_args.Count) {
+                                data = split_args[i + 1];
+                                i++;
+                            } else {
+                                result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Missing argument for flag"));
+                            }
                         }
                     } else {
                         argument = Arguments.Find(a => !a.IsHandled() && a.GetDefaultValue().IsNone());
                         data = arg;
                     }
                     if (argument == null) {
-                        if (arg != data)
-                            result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Flag does not exist"));
+                        if (arg.Item1 != data.Item1)
+                            result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Flag does not exist"));
                         else {
-                            result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Too many arguments passed"));
+                            result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Too many arguments passed"));
                             printUsage = true;
                         }
                     } else if (argument.IsHandled()) {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Cannot pass an argument twice"));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Cannot pass an argument twice"));
                     } else {
                         argument.MakeHandled();
-                        var parsed = argument.Parse(data);
-                        if (parsed.IsOk(result)) {
-                            output.Add(argument.GetKey(), parsed.Unwrap());
+                        if (result.IsOk()) {
+                            var parsed = argument.Parse(data);
+                            if (parsed.IsOk(result)) {
+                                output.Add(argument.GetKey(), parsed.Unwrap());
+                            }
                         }
                     }
                 }
@@ -215,7 +229,7 @@ namespace Stitch {
             Arguments.Sort((a, b) => a.GetKey().CompareTo(b.GetKey()));
         }
 
-        public ParseResult<Dictionary<string, (Type, object)>> Parse(string exe, List<string> args) {
+        public ParseResult<Dictionary<string, (Type, object)>> Parse(string exe, List<(string, FileRange)> args) {
             bool printUsage = false;
             var defaultColour = Console.ForegroundColor;
             var output = new Dictionary<string, (Type, object)>();
@@ -223,37 +237,47 @@ namespace Stitch {
             for (int i = 1; i < args.Count; i++) {
                 var arg = args[i];
                 IArgument argument = null;
-                string data = "";
-                if (arg.StartsWith("--")) {
-                    argument = Arguments.Find(a => a.GetFlag().Map(s => s == arg.Substring(2)).Unwrap(false));
-                    if (argument != null && argument.GetArgumentType() != typeof(bool) && i + 1 < args.Count) {
-                        data = args[i + 1];
-                        i++;
+                (string, FileRange) data = ("", arg.Item2);
+                if (arg.Item1.StartsWith("--")) {
+                    argument = Arguments.Find(a => a.GetFlag().Map(s => s == arg.Item1.Substring(2)).Unwrap(false));
+                    if (argument != null && argument.GetArgumentType() != typeof(bool)) {
+                        if (i + 1 < args.Count) {
+                            data = args[i + 1];
+                            i++;
+                        } else {
+                            result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Missing argument for flag"));
+                        }
                     }
-                } else if (arg.StartsWith("-")) {
-                    argument = Arguments.Find(a => a.GetShortFlag().Map(s => s == arg.Substring(1)).Unwrap(false));
-                    if (argument != null && argument.GetArgumentType() != typeof(bool) && i + 1 < args.Count) {
-                        data = args[i + 1];
-                        i++;
+                } else if (arg.Item1.StartsWith("-")) {
+                    argument = Arguments.Find(a => a.GetShortFlag().Map(s => s == arg.Item1.Substring(1)).Unwrap(false));
+                    if (argument != null && argument.GetArgumentType() != typeof(bool)) {
+                        if (i + 1 < args.Count) {
+                            data = args[i + 1];
+                            i++;
+                        } else {
+                            result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Missing argument for flag"));
+                        }
                     }
                 } else {
                     argument = Arguments.Find(a => (!a.IsHandled()) && a.GetDefaultValue().IsNone());
                     data = arg;
                 }
                 if (argument == null) {
-                    if (arg != data)
-                        result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Flag does not exist"));
+                    if (arg.Item1 != data.Item1)
+                        result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Flag does not exist"));
                     else {
-                        result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Too many arguments passed"));
+                        result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Too many arguments passed"));
                         printUsage = true;
                     }
                 } else if (argument.IsHandled()) {
-                    result.AddMessage(new InputNameSpace.ErrorMessage(arg, "Cannot pass an argument twice"));
+                    result.AddMessage(new InputNameSpace.ErrorMessage(arg.Item2, "Cannot pass an argument twice"));
                 } else {
                     argument.MakeHandled();
-                    var parsed = argument.Parse(data);
-                    if (parsed.IsOk(result)) {
-                        output.Add(argument.GetKey(), parsed.Unwrap());
+                    if (result.IsOk()) {
+                        var parsed = argument.Parse(data);
+                        if (parsed.IsOk(result)) {
+                            output.Add(argument.GetKey(), parsed.Unwrap());
+                        }
                     }
                 }
             }
@@ -317,7 +341,7 @@ namespace Stitch {
         public string GetKey();
         public Option<string> GetFlag();
         public Option<string> GetShortFlag();
-        public ParseResult<(Type, object)> Parse(string input);
+        public ParseResult<(Type, object)> Parse((string, FileRange) input);
         public Option<(Type, object)> GetDefaultValue();
         public Type GetArgumentType();
         public void MakeHandled();
@@ -362,13 +386,13 @@ namespace Stitch {
             else return new Option<string>();
         }
 
-        public ParseResult<(Type, object)> Parse(string input) {
+        public ParseResult<(Type, object)> Parse((string, FileRange) input) {
             try {
                 if (typeof(T) == typeof(bool)) return new ParseResult<(Type, object)>((typeof(T), true));
-                var p = (T)Convert.ChangeType(input, typeof(T));
+                var p = (T)Convert.ChangeType(input.Item1, typeof(T));
                 return new ParseResult<(Type, object)>((typeof(T), p));
             } catch {
-                return new ParseResult<(Type, object)>(new InputNameSpace.ErrorMessage(input, "Not the correct type", $"Expected a {typeof(T)} but this argument could not be parsed as that type."));
+                return new ParseResult<(Type, object)>(new InputNameSpace.ErrorMessage(input.Item2, "Not the correct type", $"Expected a {typeof(T)} but this argument could not be parsed as that type."));
             }
         }
         public Option<(Type, object)> GetDefaultValue() {

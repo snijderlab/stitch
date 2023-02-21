@@ -24,6 +24,7 @@ namespace Stitch {
                     new Argument<string>("expect", new Option<string>("e"), new Option<string>(""), "The expected result(s) of the run as the final sequence(s) by separated commas, used for automated testing"),
                     new Argument<bool>("open", new Option<string>("o"), new Option<bool>(false), "Open the HTML report (if available) automatically in the browser"),
                     new Argument<int>("live", new Option<string>("l"), new Option<int>(-1), "Prepare the HTML report for use with VS Code Live Server on the given port, -1 turns it off"),
+                    new Argument<bool>("quiet", new Option<string>("q"), new Option<bool>(false), "Turns off any output on the command line in normal operation"),
                 }),
                 new Subcommand("download", "Download annotated templates from IMGT (cleans and annotates itself)", new List<IArgument>{
                     new Argument<string>("species", new Option<string>(), new Option<string>(), "The latin name of the animal to download the data for (as used by IMGT: http://www.imgt.org/IMGTrepertoire/Proteins/)"),
@@ -52,7 +53,7 @@ namespace Stitch {
                 if (args.ContainsKey("run")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["run"].Item2;
                     var exp = ((string)sub_args["expect"].Item2);
-                    RunBatchFile((string)sub_args["batchfile"].Item2, new ExtraArguments((bool)sub_args["open"].Item2, (int)sub_args["live"].Item2, string.IsNullOrEmpty(exp) ? new string[0] : exp.Split(',')));
+                    RunBatchFile((string)sub_args["batchfile"].Item2, new ExtraArguments((bool)sub_args["open"].Item2, (int)sub_args["live"].Item2, string.IsNullOrEmpty(exp) ? new string[0] : exp.Split(','), (bool)sub_args["quiet"].Item2));
                 } else if (args.ContainsKey("clean")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["clean"].Item2;
                     var inp = (string)sub_args["input"].Item2;
@@ -84,13 +85,13 @@ namespace Stitch {
         /// <param name="filename"></param>
         public static void RunBatchFile(string filename, ExtraArguments runVariables) {
             ProgressBar bar = null;
-            if (runVariables.ExpectedResult.Length == 0) {
+            if (!runVariables.Quiet) {
                 bar = new ProgressBar();
                 bar.Start(5); // Max steps, can be turned down if no Recombination is done
             }
 
             var input_params = ParseCommandFile.Batch(filename);
-            if (runVariables.ExpectedResult.Length == 0) {
+            if (!runVariables.Quiet) {
                 bar.Update();
                 bar.Start(3 + (input_params.Recombine != null ? 1 : 0) + (input_params.LoadRawData ? 1 : 0));
             }
