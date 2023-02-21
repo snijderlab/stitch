@@ -17,7 +17,7 @@ namespace StitchTest {
         [DataRow("polyclonal.txt")]
         public void TestPublicExamples(string file) {
             try {
-                Stitch.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new ExtraArguments() { Quiet = true });
+                Stitch.ToRunWithCommandLine.RunBatchFile(Globals.Root + "batchfiles/" + file, new ExtraArguments(false, -1, null, true));
             } catch (Exception e) {
                 Stitch.InputNameSpace.ErrorMessage.PrintException(e);
                 Console.WriteLine($"At file {file}");
@@ -32,7 +32,7 @@ namespace StitchTest {
             foreach (var file in Directory.GetFiles(Globals.Root + "tests/test_files")) {
                 try {
                     if (file.EndsWith(".txt"))
-                        Stitch.ToRunWithCommandLine.RunBatchFile(file, new ExtraArguments() { Quiet = true });
+                        Stitch.ToRunWithCommandLine.RunBatchFile(file, new ExtraArguments(false, -1, null, true));
                 } catch {
                     Console.WriteLine($"At file {file}");
                     throw;
