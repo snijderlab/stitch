@@ -111,6 +111,7 @@ namespace Stitch {
                     }
                 }
             }
+            printUsage = output.Count == 0 ? true : printUsage;
             // Check for missing arguments and fill with the defaults
             var missing = new List<string>();
             foreach (var arg in Arguments) {
@@ -133,7 +134,9 @@ namespace Stitch {
                 }
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
                 PrettyPrintHeader("USAGE");
-                Console.WriteLine($"\t{exe}\t[SUBCOMMAND] <or> [OPTIONS]");
+                Console.WriteLine($"\t{exe} [SUBCOMMAND] <or> [OPTIONS]");
+                PrettyPrintHeader("EXAMPLE USAGE");
+                Console.WriteLine($"\t{exe} run batchfiles/monoclonal.txt --open");
                 Console.WriteLine("\nFor more information try --help");
                 Environment.Exit(0);
             }
