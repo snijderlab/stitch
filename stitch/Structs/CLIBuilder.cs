@@ -124,7 +124,7 @@ namespace Stitch {
                 }
             }
             // Print the usage
-            if (printUsage) {
+            if (printUsage && !(bool)output["help"].Item2 == true) {
                 if (missing.Count > 0) {
                     Console.WriteLine("The following required arguments were not provided:");
                     foreach (var mis in missing) {
@@ -133,11 +133,8 @@ namespace Stitch {
                 }
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
                 PrettyPrintHeader("USAGE");
-                Console.Write("\t[OPTIONS]");
-                foreach (var req in required) {
-                    Console.Write($" <{req.GetKey()}>");
-                }
-                Console.WriteLine("\n\nFor more information try --help");
+                Console.WriteLine($"\t{exe}\t[SUBCOMMAND] <or> [OPTIONS]");
+                Console.WriteLine("\nFor more information try --help");
                 Environment.Exit(0);
             }
             // Print Help
@@ -327,11 +324,12 @@ namespace Stitch {
                 }
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
                 CLIBuilder.PrettyPrintHeader("USAGE");
-                Console.Write($"\t{Key} [OPTIONS]");
+                Console.Write($"\t{exe} {Key} [OPTIONS]");
                 foreach (var req in required) {
                     Console.Write($" <{req.GetKey()}>");
                 }
                 Console.WriteLine("\n\nFor more information try --help");
+                Environment.Exit(0);
             }
             return result;
         }
