@@ -111,7 +111,13 @@ namespace Stitch {
                 }
             }
 
-            output.LoadRawData = output.LoadRawData || output.Input.Parameters.Files.Any(f => { if (f is InputData.Peaks p) { return !string.IsNullOrWhiteSpace(p.RawDataDirectory); } else { return false; } });
+            output.LoadRawData = output.LoadRawData || output.Input.Parameters.Files.Any(f => {
+                if (f is InputData.Peaks p) {
+                    return !string.IsNullOrWhiteSpace(p.RawDataDirectory);
+                } else if (f is InputData.MaxNovo m) {
+                    return !string.IsNullOrWhiteSpace(m.RawDataDirectory);
+                } else { return false; }
+            });
 
             if (outEither.IsErr()) outEither.Unwrap(); // Quit running further if any breaking changes where detected before this point. As further analysis depends on certain properties of the data.
 
@@ -224,14 +230,14 @@ namespace Stitch {
                         for (var i = 0; i < db.Templates.Count; i++) {
                             var read = db.Templates[i];
                             if (db.GapTail) {
-                                read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapTail");
+                                read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 10).ToArray(), "GapTail");
                                 if (read is ReadFormat.Fasta meta)
-                                    meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXXXXXXXXXXXX");
+                                    meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXX");
                             }
                             if (db.GapHead) {
-                                read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 20).ToArray(), "GapHead");
+                                read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 10).ToArray(), "GapHead");
                                 if (read is ReadFormat.Fasta meta)
-                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXXXXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
+                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
                             }
                             db.Templates[i] = read;
                         }

@@ -312,5 +312,57 @@ namespace Stitch {
             }
             return output;
         }
+
+        public static string FromSloppyProForma(string sequence) {
+            // Break into chunks with correct number of closed braces
+            var chunks = new List<string>();
+            int depth = 0;
+            int last_index = 1;
+            // Skip the first and last char, those are always '_'
+            for (int index = 1; index < sequence.Length - 1; index++) {
+                switch (sequence[index]) {
+                    case '(':
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
+                            last_index = index;
+                        }
+                        depth += 1;
+                        break;
+                    case ')':
+                        depth -= 1;
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                chunks.Add(sequence.Substring(last_index, index - last_index + 1)); // Including this char
+                            last_index = index + 1;
+                        }
+                        break;
+                    default:
+                        break;
+                }
+            }
+            if (sequence.Length - 1 - last_index > 0)
+                chunks.Add(sequence.Substring(last_index, sequence.Length - last_index - 1));
+
+            var final_sequence = new StringBuilder(sequence.Length);
+            var skip = 0;
+            for (var index = 0; index < chunks.Count; index++) {
+                var chunk = chunks[index];
+                if (chunk[0] == '(') {
+                    //if (chunk == "(Glu->pyro-Glu)") {
+                    //    final_sequence.Append("Q[Glu->pyro-Glu]");
+                    //    skip = 1;
+                    //} else if (chunk == "(Gln->pyro-Glu)") {
+                    //    final_sequence.Append("E[Gln->pyro-Glu]");
+                    //    skip = 1;
+                    //} else {
+                    final_sequence.Append($"[{chunk.Substring(1, chunk.Length - 2)}]");
+                    //}
+                } else {
+                    final_sequence.Append(chunk.Substring(skip, chunk.Length - skip));
+                }
+            }
+            return final_sequence.ToString();
+        }
     }
 }

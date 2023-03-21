@@ -55,6 +55,21 @@ namespace Stitch {
                 return ConvertToInt(input.Text, input.Pos);
             }
 
+            public static ParseResult<uint> ConvertToUint(string input, FileRange pos) {
+                uint result = 0;
+                if (uint.TryParse(input, out result)) {
+                    return new ParseResult<uint>(result);
+                } else {
+                    string msg = "";
+                    if (input.IndexOfAny("iIloO".ToCharArray()) != -1) msg = "It contains characters which visually resemble digits.";
+                    return new ParseResult<uint>(new ErrorMessage(pos, "Not a valid integer", msg));
+                }
+            }
+
+            public static ParseResult<uint> ConvertToUint((string Text, FileRange Pos) input) {
+                return ConvertToUint(input.Text, input.Pos);
+            }
+
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ParseInt(KeyValue item) {
@@ -347,6 +362,29 @@ namespace Stitch {
                             output.Files.Add(casanovo);
                         });
                     }),
+                    ("MaxNovo", (output, pair) => {
+                        new LocalParams<InputData.MaxNovo>("MaxNovo", new List<(string, Action<InputData.MaxNovo, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("CutoffScore", (settings, value) => {
+                                settings.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("MinLength", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                settings.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
+                        }).Parse(pair, max_novo => {
+                            if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            output.Files.Add(max_novo);
+                        });
+                    }),
                     ("Folder", (output, pair) => {
                         // Parse files one by one
                         var folder_path = "";
@@ -426,6 +464,7 @@ namespace Stitch {
                         InputData.Novor novor => OpenReads.Novor(name_filter, novor, alphabet),
                         InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif, alphabet),
                         InputData.Casanovo casanovo => OpenReads.Casanovo(name_filter, casanovo, alphabet),
+                        InputData.MaxNovo max_novo => OpenReads.MaxNovo(name_filter, max_novo, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);

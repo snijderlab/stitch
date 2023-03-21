@@ -6,6 +6,7 @@ using HtmlGenerator;
 using System.Text.Json.Serialization;
 using System.IO;
 using static Stitch.Fragmentation;
+using System.Text;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
@@ -39,7 +40,7 @@ namespace Stitch {
             public double TotalArea = 0;
 
             /// <summary> Contains the information needed to find this metadata in a raw file. </summary>
-            public virtual List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, bool)>();
+            public virtual List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, bool)>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
@@ -247,11 +248,11 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
                 get {
                     var output = new List<(string, int, string, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag, XleDisambiguation));
+                        output.Add((SourceFile, scan, OriginalTag.Replace("(", "[").Replace(")", "]"), XleDisambiguation));
                     return output;
                 }
             }
@@ -325,7 +326,7 @@ namespace Stitch {
 
                 var peaks = new Peaks(sequence, range, fields[pf.scan].Text, filter);
                 out_either.Value = peaks;
-                peaks.OriginalTag = original_peptide;
+                peaks.OriginalTag = HelperFunctionality.FromSloppyProForma(original_peptide);
                 peaks.XleDisambiguation = xleDisambiguation;
 
                 // Get all the properties of this peptide and save them in the MetaData
@@ -510,6 +511,240 @@ namespace Stitch {
             }
         }
 
+        /// <summary> A struct to hold meta information from MaxNovo data. </summary>
+        public class MaxNovo : General {
+
+            /// <summary> The source file out of which the peptide was generated. </summary>
+            public string SourceFile = null;
+
+            /// <summary> The scan identifier of the peptide. </summary>
+            public uint ScanID;
+
+            /// <summary> The sequence with modifications of the peptide. </summary>
+            public string SequenceWithModifications = null;
+
+            /// <summary> The sequence expression with modifications of the peptide. </summary>
+            public string SequenceExpression = null;
+
+            /// <summary> The Score as reported </summary>
+            public double Score = -1;
+
+            /// <summary> Mass of the peptide.</summary>
+            public double Mass = -1;
+
+            /// <summary> m/z of the peptide. </summary>
+            public double MassOverCharge = -1;
+
+            /// <summary> z of the peptide. </summary>
+            public int Charge = -1;
+
+            /// <summary> Retention time of the peptide. </summary>
+            public double RetentionTime = -1;
+
+            /// <summary> base peak intensity of the peak of the peptide, comparable to Peaks area?.</summary>
+            public double BasePeakIntensity = -1;
+
+            /// <summary> The fragmentation mode used. </summary>
+            public string FragmentationMode = null;
+
+            /// <summary> The MaxNovo experiment name. </summary>
+            public string Experiment = null;
+
+            public bool XleDisambiguation;
+
+            /// <summary> The intensity of this read. </summary>
+            double intensity = 1;
+            public override double Intensity {
+                get {
+                    return intensity;
+                }
+                set { if (!double.IsNaN(value)) intensity = value; }
+            }
+
+            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
+                get {
+                    return new List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, XleDisambiguation) };
+                }
+            }
+
+            /// <summary> To create a new empty metadata instance with this metadata. </summary>
+            /// <param name="identifier">The fasta identifier.</param>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            private MaxNovo(AminoAcid[] sequence, FileRange? file, string identifier, NameFilter filter) : base(sequence, file, identifier, filter) { }
+
+            /// <summary> Tries to create a MaxNovo struct based on a CSV line in MaxNovo format. </summary>
+            /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
+            /// <param name="linenumber"> The index of the line to be parsed. </param>
+            /// <param name="separator"> The separator used in CSV. </param>
+            /// <param name="decimalseparator"> The separator used in decimals. </param>
+            /// <param name="pf">FileFormat of the MaxNovo file.</param>
+            /// <param name="file">Identifier for the originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            /// <returns>A ParseResult with the MaxNovo metadata instance or the errors. </returns>
+            public static ParseResult<MaxNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation) {
+                var out_either = new ParseResult<MaxNovo>();
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
+
+                var fields = InputNameSpace.ParseHelper.SplitLine('\t', linenumber, parse_file);
+
+                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
+
+                if (fields.Count != 80) {
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "", ""));
+                    return out_either;
+                }
+
+                // Some helper functions
+                int ConvertToInt(int pos) {
+                    return InputNameSpace.ParseHelper.ConvertToInt(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, -1);
+                }
+
+                uint ConvertToUint(int pos) {
+                    return InputNameSpace.ParseHelper.ConvertToUint(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, 0);
+                }
+
+                double ConvertToDouble(int pos) {
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, -1);
+                }
+
+                var sequence = SimplifiedProFormaFromExpression(fields[41].Text);
+                AminoAcid[] aa_sequence = AminoAcid.FromString(sequence.PureAA, scoring_matrix, fields[41].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                var scan = ConvertToUint(1);
+
+                var output = new MaxNovo(aa_sequence, range, $"MN:{scan}", filter);
+                out_either.Value = output;
+                output.SequenceExpression = fields[41].Text;
+                output.SequenceWithModifications = sequence.Modifications;
+                output.XleDisambiguation = xleDisambiguation;
+                output.ScanID = scan;
+                output.RetentionTime = ConvertToDouble(2);
+                output.BasePeakIntensity = ConvertToDouble(7);
+                output.MassOverCharge = ConvertToDouble(16);
+                output.Mass = ConvertToDouble(17);
+                output.Charge = ConvertToInt(18);
+                output.FragmentationMode = fields[21].Text;
+                output.Score = ConvertToDouble(52);
+                output.Experiment = fields[37].Text;
+                output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[0].Text + ".raw";
+
+                return out_either;
+            }
+
+            static (string PureAA, string Modifications) SimplifiedProFormaFromExpression(string expression) {
+                var pure_aa = new StringBuilder();
+                var modifications = new StringBuilder();
+                bool inside_modification = false;
+                var open_parentheses = 0; // ()
+                var open_braces = 0; // {}
+                var must_include = 0;
+
+                for (int index = 0; index < expression.Length; index++) {
+                    switch (expression[index]) {
+                        case '(':
+                            if (open_parentheses == 0) {
+                                if (must_include == open_braces) modifications.Append('[');
+                            } else {
+                                if (must_include == open_braces) modifications.Append('(');
+                            }
+                            open_parentheses += 1;
+                            inside_modification = true;
+                            break;
+                        case ')':
+                            open_parentheses -= 1;
+                            if (open_parentheses == 0) {
+                                inside_modification = false;
+                                if (must_include == open_braces) modifications.Append(']');
+                            } else
+                                if (must_include == open_braces) modifications.Append(')');
+                            break;
+                        case '[':
+                            if (inside_modification && must_include == open_braces) modifications.Append('[');
+                            break;
+                        case ']':
+                            if (inside_modification && must_include == open_braces) modifications.Append(']');
+                            break;
+                        case '{':
+                            if (string.Compare(expression, index, "{L|I}", 0, 5) == 0) {
+                                modifications.Append('J');
+                                if (!inside_modification) pure_aa.Append('J');
+                                index += 4; // Last 1 will be done by for header
+                                break;
+                            }
+                            if (must_include == open_braces)
+                                must_include += 1;
+                            open_braces += 1;
+                            break;
+                        case '}':
+                            open_braces -= 1;
+                            break;
+                        case '|':
+                            if (must_include == open_braces)
+                                must_include -= 1;
+                            break;
+                        default:
+                            if (must_include == open_braces) {
+                                modifications.Append(expression[index]);
+                                if (!inside_modification) pure_aa.Append(expression[index]);
+                            }
+                            break;
+                    }
+                }
+
+                if (modifications.ToString().Contains("[]"))
+                    Console.WriteLine($"To {modifications} From {expression}");
+
+                return (pure_aa.ToString(), modifications.ToString());
+            }
+
+            /// <summary> Generate HTML with all meta information from the MaxNovo data. </summary>
+            /// <returns> Returns an HTML string with the meta information. </returns>
+            public override HtmlBuilder ToHTML() {
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from MaxNovo");
+
+                html.OpenAndClose(HtmlTag.h3, "", "Scan Identifier");
+                html.OpenAndClose(HtmlTag.p, "", ScanID.ToString());
+
+                General.AnnotatedLocalScore(this, SequenceWithModifications, html);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Ambiguous sequence expression");
+                html.OpenAndClose(HtmlTag.p, "", SequenceExpression);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Source File");
+                html.OpenAndClose(HtmlTag.p, "", SourceFile);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Score");
+                html.OpenAndClose(HtmlTag.p, "", Score.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "m/z");
+                html.OpenAndClose(HtmlTag.p, "", MassOverCharge.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Mass");
+                html.OpenAndClose(HtmlTag.p, "", Mass.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Charge");
+                html.OpenAndClose(HtmlTag.p, "", Charge.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Retention Time");
+                html.OpenAndClose(HtmlTag.p, "", RetentionTime.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Area");
+                html.OpenAndClose(HtmlTag.p, "", BasePeakIntensity.ToString("G4"));
+
+                html.OpenAndClose(HtmlTag.h3, "", "Fragmentation mode");
+                html.OpenAndClose(HtmlTag.p, "", FragmentationMode);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Experiment");
+                html.OpenAndClose(HtmlTag.p, "", Experiment);
+
+                html.Add(Sequence.RenderToHtml());
+                html.Add(File.ToHTML());
+
+                return html;
+            }
+        }
+
         public class Combined : General {
             /// <summary> Returns the overall intensity for this read. It is used to determine which read to
             /// choose if multiple reads exist at the same spot. </summary>
@@ -518,7 +753,7 @@ namespace Stitch {
             /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user
             /// and help him/her get a better picture of the validity of the data. </summary>
             public new double TotalArea { get => Children.Count == 0 ? 0.0 : Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, int Scan, string OriginalTag, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 

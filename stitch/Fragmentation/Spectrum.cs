@@ -12,6 +12,7 @@ using System;
 using HtmlGenerator;
 using HTMLNameSpace;
 using static Stitch.InputNameSpace.ParseHelper;
+using Stitch.InputNameSpace;
 
 namespace Stitch {
     public static class Fragmentation {
@@ -37,6 +38,7 @@ namespace Stitch {
             public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id) {
                 var html = new HtmlBuilder();
                 html.Add(Graph.RenderSpectrum(this.Match, new HtmlBuilder(HtmlTag.p, HTMLHelp.HecklibSpectrum), null, AminoAcid.ArrayToString(MetaData.Sequence.AminoAcids), additional_id));
+
                 var id = this.Match.Spectrum.ScanNumber.ToString();
                 var details = new HtmlBuilder();
                 details.Open(HtmlTag.table);
@@ -77,7 +79,9 @@ namespace Stitch {
         /// <param name="peptides">All peptides to find the spectra for.</param>
         /// <param name="directory">The directory in which to search for the raw data files.</param>
         public static void GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
-            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.OriginalTag, s.XleDisambiguation, p)));
+            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.ProForma, s.XleDisambiguation, p)));
+            var possibleModifications = Modification.Parse();
+            possibleModifications.Add("Oxidation_W", new Modification(Modification.PositionType.anywhere, Modification.TerminusType.none, 15.99940000000));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
@@ -131,7 +135,7 @@ namespace Stitch {
 
                     raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
 
-                    // Default set to 20, should be lower for BU
+                    // Default set to 20, same as default in Peaks
                     model.tolerance.Value = 20;
 
                     // Centroid the data
@@ -143,8 +147,13 @@ namespace Stitch {
                         spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
                     }
 
-                    string transformedPeaksPeptide = scan.OriginalTag.Replace("(", "[").Replace(")", "]");
-                    string sequence = FastaParser.ParseProForma(transformedPeaksPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
+                    string sequence = ""; Modification n_term; Modification c_term; Modification[] modifications;
+                    try {
+                        sequence = FastaParser.ParseProForma(scan.ProForma, possibleModifications, out n_term, out c_term, out modifications);
+                    } catch {
+                        new ErrorMessage(scan.ProForma, "Could not parse pro forma sequence", $"The program will continue but the spectra will be missing for this peptide ({scan.p.Identifier}).", "", true).Print();
+                        continue;
+                    }
 
                     // Do Xle disambiguation, only if this is actually used and useful
                     if (scan.XleDisambiguation && sequence.Any(c => c == 'L' || c == 'I' || c == 'J')) {
@@ -185,7 +194,8 @@ namespace Stitch {
                         // Assemble the final sequence with the disambiguated positions
                         sequence = builder.ToString();
                     }
-                    var asm = GetASMWithFDR(sequence, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
+                    string noJ = new String(sequence.Select(c => c == 'J' ? 'L' : c).ToArray());
+                    var asm = GetASMWithFDR(noJ, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
 
                     scan.p.SupportingSpectra.Add(asm);
                 }
@@ -261,7 +271,7 @@ namespace Stitch {
             return (matchedFragments.Count(i => i != null), matchedFragments.Count(i => i != null && (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D)));
         }
 
-        public static ParseResult<List<(int ScanNumber, IASM ASM)>> LoadPeaksSpectra(ParsedFile file) {
+        public static ParseResult<List<(int ScanNumber, IASM ASM)>> LoadPeaksSpectra(ParsedFile file, Dictionary<string, Modification> possibleModifications = null) {
             var counter = new InputNameSpace.Tokenizer.Counter(file);
             var output = new List<(int ScanNumber, IASM ASM)>();
             var outEither = new ParseResult<List<(int ScanNumber, IASM ASM)>>();
@@ -278,7 +288,7 @@ namespace Stitch {
                 // 0      1      2    3   4  5            6 7        8    9           10  11  12      13       14        15            16         17
                 var num = pieces[8].Text;
                 if (num != temp_meta.FullScanNumber && !String.IsNullOrEmpty(temp_meta.FullScanNumber)) {
-                    output.Add((temp_meta.ScanNumber, BuildASMFromTemp(temp, temp_meta)));
+                    output.Add((temp_meta.ScanNumber, BuildASMFromTemp(temp, temp_meta, possibleModifications ?? Modification.Parse())));
                     temp.Clear();
                     temp_meta = (-1, "", "", 0.0, "");
                 }
@@ -300,11 +310,10 @@ namespace Stitch {
             return outEither;
         }
 
-        static IASM BuildASMFromTemp(List<(string Ion, int SeriesNumber, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)> data, (int ScanNumber, string FullScanNumber, string Sequence, double Mz, string RawFile) meta) {
+        static IASM BuildASMFromTemp(List<(string Ion, int SeriesNumber, double Mz, double TheoreticalMz, double MzError, double Intensity, short Charge)> data, (int ScanNumber, string FullScanNumber, string Sequence, double Mz, string RawFile) meta, Dictionary<string, Modification> possibleModifications) {
             var centroids = data.Select(p => new Centroid() { Charge = p.Charge, Mz = p.Mz, Intensity = (float)p.Intensity, MinMz = (float)(p.Mz - p.MzError), MaxMz = (float)(p.Mz + p.MzError), Resolution = 0, SignalToNoise = 0 }).ToArray();
             var precursor = new PrecursorInfo() { Mz = meta.Mz, ScanNumber = meta.ScanNumber, RawFile = meta.RawFile };
-            string transformedPeptide = meta.Sequence.Replace("(", "[").Replace(")", "]");
-            string sequence = FastaParser.ParseProForma(transformedPeptide, Modification.Parse(), out Modification n_term, out Modification c_term, out Modification[] modifications);
+            string sequence = FastaParser.ParseProForma(meta.Sequence, possibleModifications, out Modification n_term, out Modification c_term, out Modification[] modifications);
             var peptide = new Peptide(sequence, n_term, c_term, modifications);
             var matches = data.Select(p => {
                 var fragment = PeptideFragment.IonFromString(p.Ion.Substring(0, 1));

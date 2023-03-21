@@ -49,6 +49,16 @@ namespace Stitch {
                 public bool XleDisambiguation = false;
             }
 
+            /// <summary> A data parameter for MaxNovo input files. </summary>
+            public class MaxNovo : Parameter {
+                public PeaksParameters Parameter = new PeaksParameters(true);
+
+                public string RawDataDirectory = null;
+                public bool XleDisambiguation = false;
+                public double CutoffScore = 0.0;
+                public int MinLength = 0;
+            }
+
             /// <summary> A parameter for simple reads files. </summary>
             public class Reads : Parameter {
             }
