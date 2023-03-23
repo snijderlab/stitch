@@ -229,15 +229,16 @@ namespace Stitch {
                     if (db.Templates != null) {
                         for (var i = 0; i < db.Templates.Count; i++) {
                             var read = db.Templates[i];
+                            const int TAIL_LENGTH = 20;
                             if (db.GapTail) {
-                                read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 10).ToArray(), "GapTail");
+                                read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), TAIL_LENGTH).ToArray(), "GapTail");
                                 if (read is ReadFormat.Fasta meta)
-                                    meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + "XXXXXXXXXX");
+                                    meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + new string('X', TAIL_LENGTH));
                             }
                             if (db.GapHead) {
-                                read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), 10).ToArray(), "GapHead");
+                                read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), TAIL_LENGTH).ToArray(), "GapHead");
                                 if (read is ReadFormat.Fasta meta)
-                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, "XXXXXXXXXX" + meta.AnnotatedSequence[0].Sequence);
+                                    meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, new string('X', TAIL_LENGTH) + meta.AnnotatedSequence[0].Sequence);
                             }
                             db.Templates[i] = read;
                         }

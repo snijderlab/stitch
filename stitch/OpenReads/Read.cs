@@ -252,7 +252,7 @@ namespace Stitch {
                 get {
                     var output = new List<(string, int, string, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag.Replace("(", "[").Replace(")", "]"), XleDisambiguation));
+                        output.Add((SourceFile, scan, OriginalTag, XleDisambiguation));
                     return output;
                 }
             }
