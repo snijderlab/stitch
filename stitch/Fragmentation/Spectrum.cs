@@ -16,14 +16,6 @@ using Stitch.InputNameSpace;
 
 namespace Stitch {
     public static class Fragmentation {
-        public enum FragmentationMethod {
-            CidHcd,
-            Ethcd,
-            Etcid,
-            Etd,
-            All
-        }
-
         public interface IASM {
             public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id);
         }
@@ -85,24 +77,37 @@ namespace Stitch {
 
         /// <summary> Finds the supporting spectra for all reads and saves it in the reads themselves. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
-        /// <param name="directory">The directory in which to search for the raw data files.</param>
-        public static void GetSpectra(IEnumerable<ReadFormat.General> peptides, bool xle_disambiguation) {
-            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.ProForma, s.XleDisambiguation, p)));
+        public static void GetSpectra(IEnumerable<ReadFormat.General> peptides) {
+            var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.ProForma, s.FragmentationHint, s.XleDisambiguation, p)));
             var possibleModifications = Modification.Parse();
             possibleModifications.Add("Oxidation_W", new Modification(Modification.PositionType.anywhere, Modification.TerminusType.none, 15.99940000000));
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
+                List<(PrecursorInfo Precursor, Centroid[] Spectrum)> spectra = new List<(PrecursorInfo, Centroid[])>();
                 var raw_file_path = group.Key;
                 var correct_path = InputNameSpace.ParseHelper.TestFileExists(raw_file_path);
+
                 if (!correct_path.IsErr()) {
-                    try {
-                        raw_file.Open(raw_file_path);
-                        raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
-                    } catch (Exception exception) {
-                        throw new RunTimeException(
-                            new InputNameSpace.ErrorMessage(raw_file_path, "Could not open raw data file", "The shown raw file could not be opened. See the error below for more information."),
-                            exception);
+                    if (group.Key.EndsWith(".raw")) {
+                        try {
+                            raw_file.Open(raw_file_path);
+                            raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
+                        } catch (Exception exception) {
+                            throw new RunTimeException(
+                                new InputNameSpace.ErrorMessage(raw_file_path, "Could not open raw data file", "The shown raw file could not be opened. See the error below for more information."),
+                                exception);
+                        }
+                    } else if (group.Key.EndsWith(".mgf")) {
+                        try {
+                            HeckLibRawFileMgf.MgfRawFile.Parse(raw_file_path, delegate (Centroid[] spectrum, PrecursorInfo precursor, string title, Spectrum.MassAnalyzer massanalyzer) {
+                                spectra.Add((precursor, spectrum));
+                            });
+                        } catch (Exception exception) {
+                            throw new RunTimeException(
+                                new InputNameSpace.ErrorMessage(raw_file_path, "Could not open mgf data file", "The shown raw file could not be opened. See the error below for more information."),
+                                exception);
+                        }
                     }
                 } else {
                     throw new RunTimeException(
@@ -110,21 +115,51 @@ namespace Stitch {
                 }
 
                 foreach (var scan in group) {
-                    // Get the information to find this peptide
-                    double[] mzs;
-                    float[] intensities;
+                    Centroid[] spectrum = new Centroid[0];
+                    PrecursorInfo precursor = null;
+                    if (group.Key.EndsWith(".raw")) {
+                        // Get the information to find this peptide
+                        double[] mzs;
+                        float[] intensities;
 
-                    // check whether we have an ms2 scan to identify
-                    var filter = raw_file.GetFilterForScanNum(scan.Scan);
+                        // check whether we have an ms2 scan to identify
+                        var filter = raw_file.GetFilterForScanNum(scan.Scan);
 
-                    // retrieve the precursor; this doesn't always work because thermo doesn't store the m/z or charge info in some cases
-                    var precursor = raw_file.GetPrecursorScanInfoForScan(scan.Scan);
-                    if (precursor.MonoIsotopicMass < 100 || precursor.ChargeState < 2)
-                        continue;
+                        // retrieve the precursor; this doesn't always work because thermo doesn't store the m/z or charge info in some cases
+                        var tr_precursor = raw_file.GetPrecursorScanInfoForScan(scan.Scan);
+                        precursor = new PrecursorInfo {
+                            Mz = filter.ParentMass,
+                            Fragmentation = filter.Fragmentation,
+                            FragmentationEnergy = filter.FragmentationEnergy,
+                            RawFile = raw_file.GetFilename(),
+                            ScanNumber = scan.Scan,
+                            Charge = (short)tr_precursor.ChargeState,
+                        };
+                        if (tr_precursor.MonoIsotopicMass < 100 || tr_precursor.ChargeState < 2)
+                            continue;
 
-                    // determine the type of fragmentation used
-                    var model = new PeptideFragment.FragmentModel(PeptideFragment.GetFragmentModel(filter.Fragmentation));
-                    if (scan.XleDisambiguation && (filter.Fragmentation == Spectrum.FragmentationType.EThcD || filter.Fragmentation == Spectrum.FragmentationType.ETciD || filter.Fragmentation == Spectrum.FragmentationType.ETD || filter.Fragmentation == Spectrum.FragmentationType.ECD)) {
+                        raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
+
+                        // Centroid the data
+                        if (filter.Format == Spectrum.ScanModeType.Centroid)
+                            spectrum = CentroidDetection.ConvertCentroids(mzs, intensities, Orbitrap.ToleranceForResolution(17500));
+                        else {
+                            // Retrieve the noise function for signal-to-noise calculations
+                            spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
+                        }
+                    } else if (group.Key.EndsWith(".mgf")) {
+                        // retrieve the precursor; this doesn't always work because thermo doesn't store the m/z or charge info in some cases
+                        precursor = spectra[scan.Scan].Precursor;
+                        precursor.ScanNumber = scan.Scan;
+                        spectrum = spectra[scan.Scan].Spectrum;
+
+                        // determine the type of fragmentation used
+                        var fragmentation_method = scan.FragmentationHint.Map<Spectrum.FragmentationType>(f => f, () => Spectrum.FragmentationType.All);
+                        precursor.Fragmentation = fragmentation_method;
+                    }
+
+                    var model = PeptideFragment.GetFragmentModel(precursor.Fragmentation);
+                    if (scan.XleDisambiguation && (precursor.Fragmentation == Spectrum.FragmentationType.EThcD || precursor.Fragmentation == Spectrum.FragmentationType.ETciD || precursor.Fragmentation == Spectrum.FragmentationType.ETD || precursor.Fragmentation == Spectrum.FragmentationType.ECD)) {
                         model.W = new PeptideFragment.FragmentRange {
                             MinPos = 1,
                             MaxPos = PeptideFragment.SEQUENCELENGTH - 1,
@@ -132,7 +167,7 @@ namespace Stitch {
                             MassShifts = PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
                         };
                     }
-                    if (scan.XleDisambiguation && (filter.Fragmentation == Spectrum.FragmentationType.CID || filter.Fragmentation == Spectrum.FragmentationType.HCD || filter.Fragmentation == Spectrum.FragmentationType.PQD)) {
+                    if (scan.XleDisambiguation && (precursor.Fragmentation == Spectrum.FragmentationType.CID || precursor.Fragmentation == Spectrum.FragmentationType.HCD || precursor.Fragmentation == Spectrum.FragmentationType.PQD)) {
                         model.D = new PeptideFragment.FragmentRange {
                             MinPos = 1,
                             MaxPos = 2,
@@ -140,20 +175,8 @@ namespace Stitch {
                             MassShifts = PeptideFragment.MASSSHIFT_NEUTRALLOSS | PeptideFragment.MASSSHIFT_WATERLOSS | PeptideFragment.MASSSHIFT_AMMONIALOSS
                         };
                     }
-
-                    raw_file.GetMassListFromScanNum(scan.Scan, false, out mzs, out intensities);
-
                     // Default set to 20, same as default in Peaks
                     model.tolerance.Value = 20;
-
-                    // Centroid the data
-                    Centroid[] spectrum;
-                    if (filter.Format == Spectrum.ScanModeType.Centroid)
-                        spectrum = CentroidDetection.ConvertCentroids(mzs, intensities, Orbitrap.ToleranceForResolution(17500));
-                    else {
-                        // Retrieve the noise function for signal-to-noise calculations
-                        spectrum = CentroidDetection.Process(mzs, intensities, raw_file.GetNoiseDistribution(scan.Scan), new CentroidDetection.Settings());
-                    }
 
                     string sequence = ""; Modification n_term; Modification c_term; Modification[] modifications;
                     try {
@@ -169,8 +192,8 @@ namespace Stitch {
                         string pureL = new String(sequence.Select(c => c == 'I' || c == 'J' ? 'L' : c).ToArray());
                         string pureI = new String(sequence.Select(c => c == 'L' || c == 'J' ? 'I' : c).ToArray());
 
-                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
-                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
+                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
+                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
 
                         // For each Xle see which version is more supported
                         var builder = new StringBuilder();
@@ -203,48 +226,30 @@ namespace Stitch {
                         sequence = builder.ToString();
                     }
                     string noJ = new String(sequence.Select(c => c == 'J' ? 'L' : c).ToArray());
-                    var asm = GetASMWithFDR(noJ, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum, filter);
+                    var asm = GetASMWithFDR(noJ, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
 
                     scan.p.SupportingSpectra.Add(asm);
                 }
             }
         }
 
-        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
-            short maxCharge = 1;
-            maxCharge = (short)precursor.ChargeState;
-            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
-            var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
+            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, hl_precursor.Charge, model);
+            var matchedFragments = SpectrumUtils.MatchFragments(peptide, hl_precursor.Charge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
 
-            var hl_precursor = new PrecursorInfo {
-                Mz = filter.ParentMass,
-                Fragmentation = filter.Fragmentation,
-                FragmentationEnergy = filter.FragmentationEnergy,
-                RawFile = RawFile,
-                ScanNumber = ScanNumber,
-            };
             return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
         }
 
-        static FdrASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, ThermoRawFile.PrecursorInfo precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, ThermoRawFile.FilterLine filter) {
+        static FdrASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
-            short maxCharge = 1;
-            maxCharge = (short)precursor.ChargeState;
-            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, maxCharge, model);
-            var matchedFragments = SpectrumUtils.MatchFragments(peptide, maxCharge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
+            PeptideFragment[] peptide_fragments = PeptideFragment.Generate(peptide, hl_precursor.Charge, model);
+            var matchedFragments = SpectrumUtils.MatchFragments(peptide, hl_precursor.Charge, spectrum, peptide_fragments, model.tolerance, model.IsotopeError);
 
-            var hl_precursor = new PrecursorInfo {
-                Mz = filter.ParentMass,
-                Fragmentation = filter.Fragmentation,
-                FragmentationEnergy = filter.FragmentationEnergy,
-                RawFile = RawFile,
-                ScanNumber = ScanNumber,
-            };
             var res = new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
 
             var actual_generic = matchedFragments.Count(i => i != null);
@@ -255,8 +260,8 @@ namespace Stitch {
 
             for (var shift = 5; shift <= 25; shift += 1) {
                 if (shift == 0) continue;
-                var step = GetCounts(peptide, peptide_fragments, shift + 0.10411, maxCharge, model, spectrum);
-                var neg_step = GetCounts(peptide, peptide_fragments, -shift - 0.10411, maxCharge, model, spectrum);
+                var step = GetCounts(peptide, peptide_fragments, shift + 0.10411, hl_precursor.Charge, model, spectrum);
+                var neg_step = GetCounts(peptide, peptide_fragments, -shift - 0.10411, hl_precursor.Charge, model, spectrum);
                 total_general += step.DetectedGeneral + neg_step.DetectedGeneral;
                 total_specific += step.DetectedSpecific + neg_step.DetectedSpecific;
                 steps += 2;

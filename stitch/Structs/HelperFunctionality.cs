@@ -313,14 +313,35 @@ namespace Stitch {
             return output;
         }
 
-        public static string FromSloppyProForma(string sequence) {
+        /// <summary> Parse the sloppy ProForma like syntax of the input files into actual pro forma sequences. </summary>
+        public static Option<string> FromSloppyProForma(string sequence) {
             // Break into chunks with correct number of closed braces
             var chunks = new List<string>();
             int depth = 0;
-            int last_index = 1;
+            int last_index = 0;
+            bool in_modification = false;
             // Skip the first and last char, those are always '_'
-            for (int index = 1; index < sequence.Length - 1; index++) {
+            for (int index = 0; index < sequence.Length; index++) {
                 switch (sequence[index]) {
+                    case '_':
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
+                            last_index = index + 1;
+                        }
+                        break;
+                    case '+':
+                    case '-':
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                if (in_modification)
+                                    return new Option<string>(); // Invalid sequence
+                                else
+                                    chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
+                            last_index = index;
+                            in_modification = true;
+                        }
+                        break;
                     case '(':
                         if (depth == 0) {
                             if (index - last_index > 0)
@@ -337,32 +358,63 @@ namespace Stitch {
                             last_index = index + 1;
                         }
                         break;
+                    case '[':
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
+                            last_index = index;
+                        }
+                        depth += 1;
+                        break;
+                    case ']':
+                        depth -= 1;
+                        if (depth == 0) {
+                            if (index - last_index > 0)
+                                chunks.Add(sequence.Substring(last_index, index - last_index + 1)); // Including this char
+                            last_index = index + 1;
+                        }
+                        break;
                     default:
+                        if (depth == 0) {
+                            if (char.IsDigit(sequence[index]) && !in_modification) {
+                                if (depth == 0) {
+                                    if (index - last_index > 0)
+                                        chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
+                                    last_index = index;
+                                    in_modification = true;
+                                }
+                            } else if (!char.IsDigit(sequence[index]) && sequence[index] != '.' && in_modification) {
+                                if (depth == 0) {
+                                    if (index - last_index > 0)
+                                        chunks.Add('[' + sequence.Substring(last_index, index - last_index) + ']'); // Not including this char
+                                    last_index = index;
+                                }
+                                in_modification = false;
+                            }
+                        }
                         break;
                 }
             }
-            if (sequence.Length - 1 - last_index > 0)
-                chunks.Add(sequence.Substring(last_index, sequence.Length - last_index - 1));
+            if (sequence.Length - last_index > 0)
+                if (in_modification)
+                    chunks.Add('[' + sequence.Substring(last_index, sequence.Length - last_index) + ']');
+                else
+                    chunks.Add(sequence.Substring(last_index, sequence.Length - last_index));
 
             var final_sequence = new StringBuilder(sequence.Length);
             var skip = 0;
             for (var index = 0; index < chunks.Count; index++) {
                 var chunk = chunks[index];
                 if (chunk[0] == '(') {
-                    //if (chunk == "(Glu->pyro-Glu)") {
-                    //    final_sequence.Append("Q[Glu->pyro-Glu]");
-                    //    skip = 1;
-                    //} else if (chunk == "(Gln->pyro-Glu)") {
-                    //    final_sequence.Append("E[Gln->pyro-Glu]");
-                    //    skip = 1;
-                    //} else {
                     final_sequence.Append($"[{chunk.Substring(1, chunk.Length - 2)}]");
-                    //}
                 } else {
                     final_sequence.Append(chunk.Substring(skip, chunk.Length - skip));
                 }
+                if (index == 0 && "([-+0123456789".Contains(chunk[0])) {
+                    final_sequence.Append('-');
+                }
             }
-            return final_sequence.ToString();
+            return new Option<string>(final_sequence.ToString());
         }
     }
 }

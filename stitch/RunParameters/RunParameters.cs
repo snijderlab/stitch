@@ -86,6 +86,9 @@ namespace Stitch {
             public class Casanovo : Parameter {
                 public double CutoffScore = 0.0;
                 public int FilterPPM = -1;
+                public string RawDataDirectory = null;
+                public bool XleDisambiguation = false;
+                public HeckLib.masspec.Spectrum.FragmentationType FragmentationMethod = HeckLib.masspec.Spectrum.FragmentationType.All;
             }
 
             public class PeaksParameters {

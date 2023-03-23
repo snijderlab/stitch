@@ -488,7 +488,7 @@ namespace Stitch {
             };
             var alphabet = ScoringMatrix.Blosum62();
             var reads = OpenReads.Peaks(filter, peaks, alphabet).Unwrap();
-            Fragmentation.GetSpectra(reads, true);
+            Fragmentation.GetSpectra(reads);
 
             // Export data
             var header = new List<string>() { "ReadID", "Sequence", "Fraction", "Source File", "Feature", "Scan", "Denovo Score", "m/z", "z", "RT", "Predict RT", "Area", "Mass", "ppm", "PTM", "local confidence (%)", "tag (>=0%)", "mode", "PSM", "FDR General", "FDR Specific", "Found Specific", "Max Specific", "Ions" };

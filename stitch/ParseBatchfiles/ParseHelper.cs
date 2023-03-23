@@ -352,6 +352,13 @@ namespace Stitch {
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.File.Path);
                                 settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("XleDisambiguation", (settings, value) => {
+                                settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
+                            ("FragmentationMethod", (settings, value) => {
+                                settings.FragmentationMethod = ParseHelper.ParseEnum<HeckLib.masspec.Spectrum.FragmentationType>(value).UnwrapOrDefault(outEither, settings.FragmentationMethod);}),
                         }).Parse(pair, casanovo => {
                             if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -375,6 +382,8 @@ namespace Stitch {
                             ("RawDataDirectory", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.RawDataDirectory);
                                 settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("XleDisambiguation", (settings, value) => {
+                                settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
                         }).Parse(pair, max_novo => {
                             if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -1041,14 +1050,17 @@ namespace Stitch {
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetFullPath(string path) {
+            public static ParseResult<string> GetFullPath(string path, FileRange? context = null) {
                 var outEither = new ParseResult<string>();
                 var res = GetFullPathPrivate(path);
 
                 if (string.IsNullOrEmpty(res.Item2)) {
                     outEither.Value = Path.GetFullPath(res.Item1);
                 } else {
-                    outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
+                    if (context == null)
+                        outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
+                    else
+                        outEither.AddMessage(new ErrorMessage(context.Value, res.Item1, res.Item2));
                 }
                 return outEither;
             }

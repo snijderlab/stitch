@@ -7,6 +7,7 @@ using System.Text.Json.Serialization;
 using System.IO;
 using static Stitch.Fragmentation;
 using System.Text;
+using static HeckLib.masspec.Spectrum;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
@@ -40,7 +41,7 @@ namespace Stitch {
             public double TotalArea = 0;
 
             /// <summary> Contains the information needed to find this metadata in a raw file. </summary>
-            public virtual List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, Option<FragmentationMethod>, bool)>();
+            public virtual List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, Option<FragmentationType>, bool)>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
@@ -248,11 +249,11 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    var output = new List<(string, int, string, Option<FragmentationMethod>, bool)>();
+                    var output = new List<(string, int, string, Option<FragmentationType>, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag, new Option<FragmentationMethod>(), XleDisambiguation));
+                        output.Add((SourceFile, scan, OriginalTag, new Option<FragmentationType>(), XleDisambiguation));
                     return output;
                 }
             }
@@ -326,7 +327,13 @@ namespace Stitch {
 
                 var peaks = new Peaks(sequence, range, fields[pf.scan].Text, filter);
                 out_either.Value = peaks;
-                peaks.OriginalTag = HelperFunctionality.FromSloppyProForma(original_peptide);
+                var parsed_tag = HelperFunctionality.FromSloppyProForma(original_peptide);
+                if (parsed_tag.IsNone()) {
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Invalid sequence definition", "The given sequence could not be made into a valid ProForma sequence.", ""));
+                    return out_either;
+                } else {
+                    peaks.OriginalTag = parsed_tag.Unwrap();
+                }
                 peaks.XleDisambiguation = xleDisambiguation;
 
                 // Get all the properties of this peptide and save them in the MetaData
@@ -561,9 +568,9 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationMethod>(), XleDisambiguation) };
+                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationType>(), XleDisambiguation) };
                 }
             }
 
@@ -753,7 +760,7 @@ namespace Stitch {
             /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user
             /// and help him/her get a better picture of the validity of the data. </summary>
             public new double TotalArea { get => Children.Count == 0 ? 0.0 : Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 
@@ -939,13 +946,21 @@ namespace Stitch {
             public int Charge;
             public double ExperimentalMz;
             public double TheoreticalMz;
-            public string SpectraRef;
+            public string SourceFile;
+            public int ScanID;
+            public bool XleDisambiguation;
+            public FragmentationType FragmentationType;
 
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
+                get {
+                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, OriginalSequence, new Option<HeckLib.masspec.Spectrum.FragmentationType>(FragmentationType), XleDisambiguation) };
+                }
+            }
 
             /// <summary> Create a new casanovo read MetaData. </summary>
             /// <param name="file">The originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier_.</param>
-            public Casanovo(AminoAcid[] sequence, double score, double[] confidence, FileRange range, NameFilter filter, string original_sequence, int psm_id, string search_engine, int charge, double experimental_mz, double theoretical_mz, string spectra_ref) : base(sequence, range, $"C{psm_id}", filter) {
+            public Casanovo(AminoAcid[] sequence, double score, double[] confidence, FileRange range, NameFilter filter, string original_sequence, int psm_id, string search_engine, int charge, double experimental_mz, double theoretical_mz, int scan_id, string source_file, bool xle_disambiguation, HeckLib.masspec.Spectrum.FragmentationType fragmentation_method) : base(sequence, range, $"C{psm_id}", filter) {
                 this.OriginalSequence = original_sequence;
                 this.Sequence.SetPositionalScore(confidence);
                 this.Intensity = 0.5 + score / 2;
@@ -955,7 +970,10 @@ namespace Stitch {
                 this.Charge = charge;
                 this.ExperimentalMz = experimental_mz;
                 this.TheoreticalMz = theoretical_mz;
-                this.SpectraRef = spectra_ref;
+                this.SourceFile = source_file;
+                this.ScanID = scan_id;
+                this.XleDisambiguation = xle_disambiguation;
+                this.FragmentationType = fragmentation_method;
             }
 
             /// <summary> Returns casanovo MetaData to HTML. </summary>
@@ -982,8 +1000,14 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h3, "", "Error");
                 html.OpenAndClose(HtmlTag.p, "", $"{Math.Abs(this.TheoreticalMz - this.ExperimentalMz):G4} (Th) {Math.Abs(this.TheoreticalMz - this.ExperimentalMz) / this.TheoreticalMz * 1e6:G4} (ppm)");
 
-                html.OpenAndClose(HtmlTag.h3, "", "Spectra");
-                html.OpenAndClose(HtmlTag.p, "", this.SpectraRef);
+                html.OpenAndClose(HtmlTag.h3, "", "Source file");
+                html.OpenAndClose(HtmlTag.p, "", this.SourceFile);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Scan ID");
+                html.OpenAndClose(HtmlTag.p, "", this.ScanID.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Fragmentation Method (set in batchfile)");
+                html.OpenAndClose(HtmlTag.p, "", this.FragmentationType.ToString());
 
                 html.Add(Sequence.RenderToHtml());
                 html.Add(File.ToHTML());

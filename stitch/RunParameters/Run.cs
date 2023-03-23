@@ -57,7 +57,7 @@ namespace Stitch {
 
                 // Raw data
                 if (this.LoadRawData) {
-                    Fragmentation.GetSpectra(Input.Data.Cleaned, true);
+                    Fragmentation.GetSpectra(Input.Data.Cleaned);
                     ProgressBar.Update();
                 }
 

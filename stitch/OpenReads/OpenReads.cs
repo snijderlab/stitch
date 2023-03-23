@@ -585,6 +585,22 @@ namespace Stitch {
             var lexed = maybe_lexed.Unwrap();
             var mzTabFile = lexed.Item1;
 
+            var raw_files = new List<string>();
+            for (int i = 1; ; i++) {
+                var key = $"ms_run[{i}]-location";
+                if (mzTabFile.MetaData.ContainsKey(key)) {
+                    var data = mzTabFile.MetaData[key];
+                    var path = data.Content;
+                    if (casanovo.RawDataDirectory != null) {
+                        var reconstituted_name = (String.IsNullOrEmpty(casanovo.RawDataDirectory) ? "./" : casanovo.RawDataDirectory + (casanovo.RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + Path.GetFileName(path);
+                        path = InputNameSpace.ParseHelper.GetFullPath(reconstituted_name, data.Location).UnwrapOrDefault(out_either, "");
+                    }
+                    raw_files.Add(path);
+                } else {
+                    break;
+                }
+            }
+
             var seq_idx = mzTabFile.ProteinSectionHeader.IndexOf("sequence");
             var search_idx = mzTabFile.ProteinSectionHeader.IndexOf("search_engine");
             var score_idx = mzTabFile.ProteinSectionHeader.IndexOf("search_engine_score[1]");
@@ -610,8 +626,13 @@ namespace Stitch {
             foreach (var (range, row) in lexed.Item2) {
                 // Skip any non Casanovo read (or combined with other software) and skip reads without a score.
                 if (row[search_idx].Content.Contains("MS:1003281") && !row[search_idx].Content.Contains('|') && row[score_idx].Content.ToLower() != "nan") {
-                    var original_sequence = row[seq_idx].Content;
-                    var filtered_sequence = original_sequence.Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
+                    var original_sequence = HelperFunctionality.FromSloppyProForma(row[seq_idx].Content);
+                    if (original_sequence.IsNone()) {
+                        //out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Invalid sequence definition", "The given sequence could not be made into a valid ProForma sequence.", "", true));
+                        // Casanovo makes so many incorrect sequences these should just be ignored
+                        continue;
+                    }
+                    var filtered_sequence = original_sequence.Unwrap().Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
                     var sequence = AminoAcid.FromString(filtered_sequence, alphabet, row[seq_idx].Location).UnwrapOrDefault(out_either, new AminoAcid[0]);
                     var score = InputNameSpace.ParseHelper.ConvertToDouble(row[score_idx].Content, row[score_idx].Location).UnwrapOrDefault(out_either, 0.0);
                     var id = InputNameSpace.ParseHelper.ConvertToInt(row[id_idx].Content, row[id_idx].Location).UnwrapOrDefault(out_either, 0);
@@ -620,9 +641,14 @@ namespace Stitch {
                     var mz_e = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_e_idx].Content, row[mz_e_idx].Location).UnwrapOrDefault(out_either, 0);
                     var mz_t = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_t_idx].Content, row[mz_t_idx].Location).UnwrapOrDefault(out_either, 0);
                     var error_ppm = Math.Abs(mz_e - mz_t) / mz_t * 1e6;
+                    var spectra_ref = row[spectra_idx].Content; // ms_run[1]:index=0
+                    var scan_id = InputNameSpace.ParseHelper.ConvertToInt(spectra_ref.Split('=', 2)[1], row[spectra_idx].Location).UnwrapOrDefault(out_either, 0);
+                    var colon_idx = spectra_ref.IndexOf(':');
+                    var source_file_idx = InputNameSpace.ParseHelper.ConvertToInt(spectra_ref.Substring(7, colon_idx - 1 - 7), row[spectra_idx].Location).UnwrapOrDefault(out_either, -1);
+                    var source_file = source_file_idx == -1 && source_file_idx <= raw_files.Count ? "Error while finding source file index" : raw_files[source_file_idx - 1];
 
                     if (score >= casanovo.CutoffScore && (casanovo.FilterPPM == -1 || error_ppm <= casanovo.FilterPPM))
-                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence, id, row[search_idx].Content, charge, mz_e, mz_t, row[spectra_idx].Content));
+                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence.Unwrap(), id, row[search_idx].Content, charge, mz_e, mz_t, scan_id, source_file, casanovo.XleDisambiguation, casanovo.FragmentationMethod));
                 }
             }
 
