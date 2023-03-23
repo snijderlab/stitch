@@ -40,7 +40,7 @@ namespace Stitch {
             public double TotalArea = 0;
 
             /// <summary> Contains the information needed to find this metadata in a raw file. </summary>
-            public virtual List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, bool)>();
+            public virtual List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers { get; protected set; } = new List<(string, int, string, Option<FragmentationMethod>, bool)>();
 
             /// <summary> To generate a HTML representation of this metadata for use in the HTML report. </summary>
             /// <returns> An HtmlBuilder containing the MetaData. </returns>
@@ -248,11 +248,11 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    var output = new List<(string, int, string, bool)>();
+                    var output = new List<(string, int, string, Option<FragmentationMethod>, bool)>();
                     foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag, XleDisambiguation));
+                        output.Add((SourceFile, scan, OriginalTag, new Option<FragmentationMethod>(), XleDisambiguation));
                     return output;
                 }
             }
@@ -561,9 +561,9 @@ namespace Stitch {
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
-            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    return new List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, XleDisambiguation) };
+                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationMethod>(), XleDisambiguation) };
                 }
             }
 
@@ -753,7 +753,7 @@ namespace Stitch {
             /// <summary> Contains the total area as measured by mass spectrometry to be able to report this back to the user
             /// and help him/her get a better picture of the validity of the data. </summary>
             public new double TotalArea { get => Children.Count == 0 ? 0.0 : Children.Sum(m => m.TotalArea); }
-            public override List<(string RawFile, int Scan, string ProForma, bool XleDisambiguation)> ScanNumbers {
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationMethod> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get => Children.SelectMany(c => c.ScanNumbers).ToList();
             }
 

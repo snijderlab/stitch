@@ -16,6 +16,14 @@ using Stitch.InputNameSpace;
 
 namespace Stitch {
     public static class Fragmentation {
+        public enum FragmentationMethod {
+            CidHcd,
+            Ethcd,
+            Etcid,
+            Etd,
+            All
+        }
+
         public interface IASM {
             public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id);
         }
