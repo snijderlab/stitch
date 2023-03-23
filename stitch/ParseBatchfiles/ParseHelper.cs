@@ -240,23 +240,20 @@ namespace Stitch {
                 new LocalParams<InputData.InputParameters>("Input", new List<(string, Action<InputData.InputParameters, KeyValue>)>{
                     ("Peaks", (output, pair) => {
                         new LocalParams<InputData.Peaks>("Peaks", new List<(string, Action<InputData.Peaks, KeyValue>)>{
-                            ("Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Path);
-                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                            ("Name", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Name);
-                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                            ("RawDataDirectory", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
-                                    settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                             ("DeNovoMatchIons", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.DeNovoMatchIons);
                                     settings.DeNovoMatchIons= ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                            ("XleDisambiguation", (settings, value) => {
-                                settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                    settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("XleDisambiguation", (settings, value) => {
+                                settings.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.XleDisambiguation);}),
                         }, (settings, value) => {
                             var peaks = ParseHelper.GetPeaksSettings(value, false, settings);
                             outEither.Messages.AddRange(peaks.Messages);
@@ -270,12 +267,12 @@ namespace Stitch {
                     }),
                     ("Reads", (output, pair) => {
                         new LocalParams<InputData.Reads>("Reads", new List<(string, Action<InputData.Reads, KeyValue>)>{
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.File.Path);
                                 settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                            ("Name", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Name);
-                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");})
                         }).Parse(pair, reads => {
                             if (string.IsNullOrWhiteSpace(reads.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(reads.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -286,17 +283,17 @@ namespace Stitch {
                     ("Novor", (output, pair) => {
                         string name = null;
                         new LocalParams<InputData.Novor>("Novor", new List<(string, Action<InputData.Novor, KeyValue>)>{
+                            ("Cutoff", (settings, value) => {
+                                settings.Cutoff = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);}),
                             ("Denovo Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.DeNovoFile);
                                 settings.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
-                            ("PSMS Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.PSMSFile);
-                                settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, name);
                                 name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                            ("Cutoff", (settings, value) => {
-                                settings.Cutoff = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);}),
+                            ("PSMS Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.PSMSFile);
+                                settings.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
                             ("Separator", (settings, value) => {
                                 settings.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
                         }).Parse(pair, novor => {
@@ -309,14 +306,14 @@ namespace Stitch {
                     }),
                     ("Fasta", (output, pair) => {
                         new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<InputData.FASTA, KeyValue>)>{
-                            ("Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Path);
-                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("Identifier", (settings, value) => {
+                                settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                            ("Identifier", (settings, value) => {
-                                settings.Identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);})
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, fasta => {
                             if (string.IsNullOrWhiteSpace(fasta.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(fasta.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -326,16 +323,16 @@ namespace Stitch {
                     }),
                     ("MMCIF", (output, pair) => {
                         new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<InputData.MMCIF, KeyValue>)>{
-                            ("Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Path);
-                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("CutoffALC", (settings, value) => {
+                                settings.CutoffALC = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 5);}),
+                            ("MinLength", (settings, value) => {
+                                settings.MinLength = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.File.Name);
                                 settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                            ("MinLength", (settings, value) => {
-                                settings.MinLength = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
-                            ("CutoffALC", (settings, value) => {
-                                settings.CutoffALC = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 5);}),
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, mmcif => {
                             if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -345,16 +342,16 @@ namespace Stitch {
                     }),
                     ("Casanovo", (output, pair) => {
                         new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<InputData.Casanovo, KeyValue>)>{
-                            ("Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Path);
-                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                            ("Name", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Name);
-                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("CutoffScore", (settings, value) => {
                                 settings.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(-1, 1)).UnwrapOrDefault(outEither, 0.0);}),
                             ("FilterPPM", (settings, value) => {
                                 settings.FilterPPM = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 0);}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, casanovo => {
                             if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -364,20 +361,20 @@ namespace Stitch {
                     }),
                     ("MaxNovo", (output, pair) => {
                         new LocalParams<InputData.MaxNovo>("MaxNovo", new List<(string, Action<InputData.MaxNovo, KeyValue>)>{
-                            ("Path", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Path);
-                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
-                            ("Name", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.File.Name);
-                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("CutoffScore", (settings, value) => {
                                 settings.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
-                            ("RawDataDirectory", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
-                                settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                             ("MinLength", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.RawDataDirectory);
                                 settings.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Name);
+                                settings.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.File.Path);
+                                settings.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.RawDataDirectory);
+                                settings.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, max_novo => {
                             if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
@@ -395,17 +392,17 @@ namespace Stitch {
 
                         var peaks_settings = new InputData.Peaks();
                         new LocalParams<int>("Folder", new List<(string, Action<int, KeyValue>)>{
+                            ("Identifier", (settings, value) => {
+                                identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, folder_path);
                                     folder_path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");
                                     folder_range = value.ValueRange;}),
+                            ("Recursive", (settings, value) => {
+                                recursive = ParseHelper.ParseBool(value, "Recursive").UnwrapOrDefault(outEither, false);}),
                             ("StartsWith", (settings, value) => {
                                 CheckDuplicate(outEither, value, starts_with);
                                     starts_with = value.GetValue().UnwrapOrDefault(outEither, "");}),
-                            ("Identifier", (settings, value) => {
-                                identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
-                            ("Recursive", (settings, value) => {
-                                recursive = ParseHelper.ParseBool(value, "Recursive").UnwrapOrDefault(outEither, false);}),
                         }, (settings, value) => {
                             var peaks = ParseHelper.GetPeaksSettings(value, false, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
