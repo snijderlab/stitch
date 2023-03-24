@@ -75,7 +75,7 @@ namespace Stitch {
                     var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
                     RefineRawData((string)sub_args["input"].Item2, (string)sub_args["raw-data-dir"].Item2, (string)sub_args["output"].Item2, (string)sub_args["peaks-version"].Item2);
                 } else if (args.ContainsKey("doc")) {
-                    var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
+                    var sub_args = (Dictionary<string, (Type, object)>)args["doc"].Item2;
                     File.WriteAllText((string)sub_args["output"].Item2, ParseCommandFile.BatchFileParser.BuildDocs(0, "docs").ToString());
                 }
             } catch (ParseException) {
