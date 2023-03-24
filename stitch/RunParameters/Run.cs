@@ -7,11 +7,16 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using HeckLib.ConvenienceInterfaces.SpectrumMatch;
 using static Stitch.Fragmentation;
+using Stitch.InputNameSpace;
 
 namespace Stitch {
     namespace RunParameters {
         /// <summary> All parameters for a single run. </summary>
         public class Run {
+            public NameFilter nameFilter = new NameFilter();
+            public bool VersionSpecified = false;
+            public List<KeyValue> order_groups = null;
+            public KeyValue readAlignmentKey = null;
             /// <summary> The name of this run. </summary>
             public string Runname = "";
 

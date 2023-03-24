@@ -10,25 +10,25 @@ using HtmlGenerator;
 namespace Stitch {
     /// <summary> To contain all input functionality </summary>
     namespace InputNameSpace {
-        struct LocalParams<T> where T : new() {
+        public struct LocalParams<T> where T : new() {
             string Name;
-            List<(string Name, Action<T, KeyValue> Action)> Options;
+            List<(string Name, Action<ParseResult<T>, KeyValue> Action)> Options;
             T Aggregator;
             Func<T, KeyValue, bool> CatchAll;
 
-            public LocalParams(string name, List<(string, Action<T, KeyValue>)> options) {
+            public LocalParams(string name, List<(string, Action<ParseResult<T>, KeyValue>)> options) {
                 Name = name;
                 Options = options;
                 Aggregator = new();
                 CatchAll = null;
             }
-            public LocalParams(string name, List<(string, Action<T, KeyValue>)> options, Func<T, KeyValue, bool> catchAll) {
+            public LocalParams(string name, List<(string, Action<ParseResult<T>, KeyValue>)> options, Func<T, KeyValue, bool> catchAll) {
                 Name = name;
                 Options = options;
                 Aggregator = new();
                 CatchAll = catchAll;
             }
-            public LocalParams(string name, List<(string, Action<T, KeyValue>)> options, T agg) {
+            public LocalParams(string name, List<(string, Action<ParseResult<T>, KeyValue>)> options, T agg) {
                 Name = name;
                 Options = options;
                 Aggregator = agg;
@@ -50,12 +50,13 @@ namespace Stitch {
 
             public ParseResult<T> Parse(List<KeyValue> input) {
                 var outEither = new ParseResult<T>();
+                outEither.Value = Aggregator;
                 foreach (var value in input) {
                     bool found = false;
                     for (var i = 0; i < Options.Count && !found; i++) {
                         var option = Options[i];
                         if (value.Name == option.Name.ToLower()) {
-                            option.Action(Aggregator, value);
+                            option.Action(outEither, value);
                             found = true;
                         }
                     }
@@ -70,20 +71,29 @@ namespace Stitch {
                         }
                     }
                 }
-                outEither.Value = Aggregator;
                 return outEither;
+            }
+
+            public ParseResult<T> Parse(T start, List<KeyValue> input, Action<T> post_processing) {
+                Aggregator = start;
+                var result = Parse(input);
+                if (result.IsOk()) {
+                    post_processing(result.Value);
+                }
+                return result;
             }
 
             /// <summary> Parse a singular setting. </summary>
             public ParseResult<T> ParseSingular(KeyValue input) {
                 var outEither = new ParseResult<T>();
+                outEither.Value = Aggregator;
                 var value = input.GetValue().UnwrapOrDefault(outEither, "");
                 if (outEither.IsErr()) return outEither;
                 bool found = false;
                 for (var i = 0; i < Options.Count && !found; i++) {
                     var option = Options[i];
                     if (value.ToLower() == option.Name.ToLower()) {
-                        option.Action(Aggregator, input);
+                        option.Action(outEither, input);
                         found = true;
                     }
                 }
@@ -91,7 +101,6 @@ namespace Stitch {
                     var best_match = Options.Select(o => (o.Name, HelperFunctionality.SmithWatermanStrings(o.Name.ToLower(), value.ToLower()))).OrderByDescending(s => s.Item2).First().Name;
                     outEither.AddMessage(ErrorMessage.UnknownValue(input.ValueRange, Name, Options.Aggregate("", (acc, o) => $"{acc}, '{o.Name}'").Substring(2), best_match));
                 }
-                outEither.Value = Aggregator;
                 return outEither;
             }
 

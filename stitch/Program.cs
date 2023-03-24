@@ -38,12 +38,15 @@ namespace Stitch {
                 }),
                 new Subcommand("clean", "Removes duplicates and incomplete sequences from fasta", new List<IArgument>{
                     new Argument<string>("input", new Option<string>(), new Option<string>(), "The fasta file to open and clean"),
-                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, is missing will overwrite the input file"),
+                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, if missing will overwrite the input file"),
                 }),
                 new Subcommand("annotate", "Parses the sequences from an IMGT HTML file and creates annotated fasta files (also cleans data)", new List<IArgument>{
                     new Argument<string>("input", new Option<string>(), new Option<string>(), "The HTML file to open and parse, example page: http://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species=human&latin=Homo%20sapiens&group=IGHV"),
-                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, is missing will overwrite the input file"),
-                })
+                    new Argument<string>("output", new Option<string>("o"), new Option<string>(""), "The output file name, if missing will overwrite the input file"),
+                }),
+                new Subcommand("doc", "Generate the docs for stitch", new List<IArgument>{
+                    new Argument<string>("output", new Option<string>(), new Option<string>(), "The output file name"),
+                }),
             },
             new List<IArgument> { });
 
@@ -71,6 +74,9 @@ namespace Stitch {
                 } else if (args.ContainsKey("refine")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
                     RefineRawData((string)sub_args["input"].Item2, (string)sub_args["raw-data-dir"].Item2, (string)sub_args["output"].Item2, (string)sub_args["peaks-version"].Item2);
+                } else if (args.ContainsKey("doc")) {
+                    var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
+                    File.WriteAllText((string)sub_args["output"].Item2, ParseCommandFile.BatchFileParser.BuildDocs(0, "docs").ToString());
                 }
             } catch (ParseException) {
                 return 3;
