@@ -72,34 +72,26 @@ namespace Stitch {
                 }
             }
 
-            /// <summary> Parse the original tag as kind of pro forma (using brackets '(' or without brackets altogether) and present any modifications alongside the local confidence.</summary>
+            /// <summary> Parse the original tag as pro forma and present any modifications alongside the local confidence.</summary>
             /// <param name="read"></param>
-            /// <param name="original_tag"></param>
+            /// <param name="pro_forma"></param>
             /// <param name="html"></param>
-            static protected void AnnotatedLocalScore(General read, string original_tag, HtmlBuilder html) {
+            static protected void AnnotatedLocalScore(General read, string pro_forma, HtmlBuilder html) {
                 // Create a display of the sequence with local confidence and modifications (if present)
                 html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
                 html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                 int original_offset = 0;
 
-                bool IsInner(char c) {
-                    return char.IsDigit(c) || c == '.' || c == '+' || c == '-' || c == ')';
-                }
-                bool IsStart(char c) {
-                    return c == '(' || c == '+' || c == '-';
-                }
-
                 // Show N terminal modifications
-                if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset])) {
+                if (original_offset < pro_forma.Length - 1 && pro_forma[original_offset] == '[') {
                     html.Open(HtmlTag.div, $"style='--value:0'");
                     html.OpenAndClose(HtmlTag.p, "", "⚬");
                     html.Open(HtmlTag.p, "class='modification'");
-                    var temp = original_offset;
-                    original_offset += 1; // skip past the detected number
-                    while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
+                    original_offset += 1; // skip past the detected opening bracket
+                    while (original_offset < pro_forma.Length && string.Compare(pro_forma, original_offset, "]-", 0, 2) != 0) { // Assume: `[modification]-`
                         original_offset++;
                     }
-                    html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                    html.Content(pro_forma.Substring(1, original_offset - 3));
                     html.Close(HtmlTag.p);
                     html.Close(HtmlTag.div);
                 }
@@ -108,14 +100,15 @@ namespace Stitch {
                     html.Open(HtmlTag.div, $"style='--value:{read.Sequence.PositionalScore[i] * 100}'");
                     html.OpenAndClose(HtmlTag.p, "", read.Sequence.AminoAcids[i].ToString());
 
-                    if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset + 1])) {
+                    if (original_offset < pro_forma.Length - 1 && pro_forma[original_offset + 1] == '[') {
                         html.Open(HtmlTag.p, "class='modification'");
-                        var temp = original_offset + 1;
-                        original_offset += 2; // skip past the detected number
-                        while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
+                        var temp = original_offset + 2;
+                        original_offset += 2; // skip past the detected opening bracket
+                        while (original_offset < pro_forma.Length && pro_forma[original_offset] != ']') {
                             original_offset++;
                         }
-                        html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                        original_offset++; // skip past detected closing bracket
+                        html.Content(pro_forma.Substring(temp, original_offset - temp - 1)); // Assume: `[modification]` with no inner brackets
                         html.Close(HtmlTag.p);
                     } else {
                         original_offset++;
@@ -124,16 +117,11 @@ namespace Stitch {
                 }
 
                 // Show C terminal modifications
-                if (original_offset < original_tag.Length - 1 && IsStart(original_tag[original_offset])) {
+                if (original_offset < pro_forma.Length - 1 && pro_forma[original_offset] == '-') {
                     html.Open(HtmlTag.div, $"style='--value:0'");
                     html.OpenAndClose(HtmlTag.p, "", "⚬");
                     html.Open(HtmlTag.p, "class='modification'");
-                    var temp = original_offset;
-                    original_offset += 1; // skip past the detected number
-                    while (original_offset < original_tag.Length && IsInner(original_tag[original_offset])) {
-                        original_offset++;
-                    }
-                    html.Content(original_tag.Substring(temp, original_offset - temp).Trim(new char[] { '(', ')' }));
+                    html.Content(pro_forma.Substring(original_offset + 2, pro_forma.Length - original_offset - 3)); // Assume: `-[modification]`
                     html.Close(HtmlTag.p);
                     html.Close(HtmlTag.div);
                 }
