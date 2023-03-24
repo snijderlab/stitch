@@ -34,6 +34,7 @@ namespace Stitch {
             public double SpecificExpectationPerPosition;
             public int FoundSatelliteIons;
             public int PossibleSatelliteIons;
+            public string MgfTitle;
 
             public HtmlBuilder ToHtml(ReadFormat.General MetaData, int additional_id) {
                 var html = new HtmlBuilder();
@@ -57,6 +58,7 @@ namespace Stitch {
                 Row("Satellite FDR", new HtmlBuilder(HTMLHelp.SpectrumSatelliteFDR), double.IsNaN(this.FDRFractionSpecific) ? "-" : $"{this.FDRFractionSpecific:P2}");
                 Row("PSM Score", new HtmlBuilder(HTMLHelp.SpectrumScore), this.Match.Score().Score.ToString("G3"));
                 details.Close(HtmlTag.table);
+                if (!string.IsNullOrEmpty(MgfTitle)) details.OpenAndClose(HtmlTag.p, "", $"MGF title: {MgfTitle}");
                 html.Collapsible("spectrum-details-" + id, new HtmlBuilder("Spectrum Details"), details);
                 return html;
             }
@@ -84,7 +86,7 @@ namespace Stitch {
 
             foreach (var group in scans.GroupBy(m => m.RawFile)) {
                 ThermoRawFile raw_file = new ThermoRawFile();
-                List<(PrecursorInfo Precursor, Centroid[] Spectrum)> spectra = new List<(PrecursorInfo, Centroid[])>();
+                List<(PrecursorInfo Precursor, Centroid[] Spectrum, string Title)> spectra = new List<(PrecursorInfo, Centroid[], string)>();
                 var raw_file_path = group.Key;
                 var correct_path = InputNameSpace.ParseHelper.TestFileExists(raw_file_path);
 
@@ -101,7 +103,7 @@ namespace Stitch {
                     } else if (group.Key.EndsWith(".mgf")) {
                         try {
                             HeckLibRawFileMgf.MgfRawFile.Parse(raw_file_path, delegate (Centroid[] spectrum, PrecursorInfo precursor, string title, Spectrum.MassAnalyzer massanalyzer) {
-                                spectra.Add((precursor, spectrum));
+                                spectra.Add((precursor, spectrum, title));
                             });
                         } catch (Exception exception) {
                             throw new RunTimeException(
@@ -117,6 +119,7 @@ namespace Stitch {
                 foreach (var scan in group) {
                     Centroid[] spectrum = new Centroid[0];
                     PrecursorInfo precursor = null;
+                    string MgfTitle = null;
                     if (group.Key.EndsWith(".raw")) {
                         // Get the information to find this peptide
                         double[] mzs;
@@ -152,6 +155,7 @@ namespace Stitch {
                         precursor = spectra[scan.Scan].Precursor;
                         precursor.ScanNumber = scan.Scan;
                         spectrum = spectra[scan.Scan].Spectrum;
+                        MgfTitle = spectra[scan.Scan].Title;
 
                         // determine the type of fragmentation used
                         var fragmentation_method = scan.FragmentationHint.Map<Spectrum.FragmentationType>(f => f, () => Spectrum.FragmentationType.All);
@@ -192,8 +196,8 @@ namespace Stitch {
                         string pureL = new String(sequence.Select(c => c == 'I' || c == 'J' ? 'L' : c).ToArray());
                         string pureI = new String(sequence.Select(c => c == 'L' || c == 'J' ? 'I' : c).ToArray());
 
-                        var asmL = GetASM(pureL, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
-                        var asmI = GetASM(pureI, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
+                        var asmL = GetASM(pureL, n_term, c_term, modifications, precursor, new PeptideFragment.FragmentModel(model), spectrum);
+                        var asmI = GetASM(pureI, n_term, c_term, modifications, precursor, new PeptideFragment.FragmentModel(model), spectrum);
 
                         // For each Xle see which version is more supported
                         var builder = new StringBuilder();
@@ -226,14 +230,14 @@ namespace Stitch {
                         sequence = builder.ToString();
                     }
                     string noJ = new String(sequence.Select(c => c == 'J' ? 'L' : c).ToArray());
-                    var asm = GetASMWithFDR(noJ, n_term, c_term, modifications, raw_file.GetFilename(), scan.Scan, precursor, new PeptideFragment.FragmentModel(model), spectrum);
+                    var asm = GetASMWithFDR(noJ, n_term, c_term, modifications, precursor, new PeptideFragment.FragmentModel(model), spectrum, MgfTitle);
 
                     scan.p.SupportingSpectra.Add(asm);
                 }
             }
         }
 
-        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
+        static AnnotatedSpectrumMatch GetASM(string sequence, Modification n_term, Modification c_term, Modification[] modifications, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
@@ -243,7 +247,7 @@ namespace Stitch {
             return new AnnotatedSpectrumMatch(new SpectrumContainer(spectrum, hl_precursor, toleranceInPpm: (int)model.tolerance.Value), peptide, matchedFragments);
         }
 
-        static FdrASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, string RawFile, int ScanNumber, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum) {
+        static FdrASM GetASMWithFDR(string sequence, Modification n_term, Modification c_term, Modification[] modifications, PrecursorInfo hl_precursor, PeptideFragment.FragmentModel model, Centroid[] spectrum, string MgfTitle) {
             Peptide peptide = new Peptide(sequence, n_term, c_term, modifications);
 
             // If not deisotoped, should be charge of the precursor
@@ -274,7 +278,8 @@ namespace Stitch {
                 FDRFractionSpecific = (double)total_specific / steps / actual_specific,
                 SpecificExpectationPerPosition = (double)total_specific / steps / sequence.Count(i => i == 'I' || i == 'L'),
                 FoundSatelliteIons = actual_specific,
-                PossibleSatelliteIons = peptide_fragments.Count(i => (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D))
+                PossibleSatelliteIons = peptide_fragments.Count(i => (i.Letter == 'I' || i.Letter == 'L') && (i.FragmentType == PeptideFragment.ION_W || i.FragmentType == PeptideFragment.ION_D)),
+                MgfTitle = MgfTitle,
             };
         }
 
