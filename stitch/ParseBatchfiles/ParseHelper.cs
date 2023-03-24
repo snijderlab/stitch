@@ -370,6 +370,34 @@ namespace Stitch {
                         new LocalParams<InputData.MaxNovo>("MaxNovo", new List<(string, Action<ParseResult<InputData.MaxNovo>, KeyValue>)>{
                             ("CutoffScore", (settings, value) => {
                                 settings.Value.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
+                            ("FixedModification", (settings, value) => {
+                                var start_offset = 0;
+                                var end_offset = 0;
+                                var text = value.GetValue().UnwrapOrDefault(outEither, "");
+                                for (int offset = 0; offset < text.Length; offset ++) {
+                                    if (char.IsWhiteSpace(text[offset]) && offset -1 == start_offset)
+                                        start_offset = offset;
+                                    if (!char.IsWhiteSpace(text[offset]))
+                                        end_offset = offset;
+                                    if (text[offset] == ',') {
+                                        // Parse
+                                        var range = new FileRange(
+                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
+                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
+                                        var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 2), value.ValueRange).UnwrapOrDefault(settings, 0.0);
+                                        settings.Value.FixedModification.Add((text[start_offset], shift));
+                                        start_offset = offset;
+                                        end_offset = offset;
+                                    }
+                                }
+                                if (end_offset - start_offset > 0) {
+                                    var range = new FileRange(
+                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
+                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
+                                    var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 1), value.ValueRange).UnwrapOrDefault(settings, 0.0);
+                                    settings.Value.FixedModification.Add((text[start_offset], shift));
+                                }
+                                }),
                             ("MinLength", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
                                 settings.Value.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),

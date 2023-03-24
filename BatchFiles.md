@@ -372,6 +372,19 @@ MMCIF ->
 <-
 ```
 
+##### MaxNovo (m) *
+
+Used to load `msmsScan.txt` files from MaxNovo.
+
+| Inner parameter | Explanation                                               | Default Value |
+| --------------- | --------------------------------------------------------- | ------------- |
+| Path        | The path to the file.                                       | (No Default)  |
+| Name        | Used to recognize the origin of reads from this file.       | (No Default)  |
+| CutoffScore | The score cutoff for inclusion in the used reads. \[0..100\] | 10             |
+| RawDataDirectory | The directory with all raw files, assumes they have the same name as present in the file.      | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
+| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548,M+15.99491` | (No Default) |
+
 ##### Casanovo (m) *
 
 Used to load mzTab files from Casanovo.
@@ -382,6 +395,9 @@ Used to load mzTab files from Casanovo.
 | Name        | Used to recognize the origin of reads from this file.       | (No Default)  |
 | CutoffScore | The score cutoff for inclusion in the used reads. \[-1..1\] | 0             |
 | FilterPPM   | The maximal ppm error (Abs(mz_exp - mz_the) / mz_the * 1e6) for inclusion in the used reads (inclusive). \[0..\]      | (No Default)  |
+| RawDataDirectory | The directory with all raw files, assumes they have the same name as present in the Casanovo mzTab file.      | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
+| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way. | `All` |
 
 ##### Folder (m) *
 

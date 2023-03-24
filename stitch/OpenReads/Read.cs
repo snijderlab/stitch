@@ -577,7 +577,7 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the MaxNovo metadata instance or the errors. </returns>
-            public static ParseResult<MaxNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation) {
+            public static ParseResult<MaxNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char, double)> fixed_modifications) {
                 var out_either = new ParseResult<MaxNovo>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
 
@@ -604,6 +604,9 @@ namespace Stitch {
                 }
 
                 var sequence = SimplifiedProFormaFromExpression(fields[41].Text);
+                foreach (var modification in fixed_modifications)
+                    sequence.Modifications = sequence.Modifications.Replace(modification.Item1.ToString(), $"{modification.Item1}[{modification.Item2}]");
+
                 AminoAcid[] aa_sequence = AminoAcid.FromString(sequence.PureAA, scoring_matrix, fields[41].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
                 var scan = ConvertToUint(1);
 

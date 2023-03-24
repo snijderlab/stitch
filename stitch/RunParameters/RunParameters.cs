@@ -57,6 +57,7 @@ namespace Stitch {
                 public bool XleDisambiguation = false;
                 public double CutoffScore = 0.0;
                 public int MinLength = 0;
+                public List<(char, double)> FixedModification = new List<(char, double)>();
             }
 
             /// <summary> A parameter for simple reads files. </summary>
