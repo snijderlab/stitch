@@ -449,13 +449,13 @@ namespace Stitch {
                                 outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                                 return;
                             }
-                            var files = GetAllFilesPrivate(folder_path, recursive);
+                            var files = GetAllFilesPrivate(folder_path, null, recursive);
 
                             if (files.Item1.Length != 0) {
                                 foreach (var file in files.Item1) {
                                     if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
 
-                                    var fileId = new ReadFormat.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file).UnwrapOrDefault(outEither, "") };
+                                    var fileId = new ReadFormat.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file, null).UnwrapOrDefault(outEither, "") };
 
                                     if (file.EndsWith(".fasta"))
                                         output.Value.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
@@ -966,7 +966,7 @@ namespace Stitch {
                     if (outEither.IsErr()) return;
 
                     // Open the file
-                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path).UnwrapOrDefault(outEither, ""), settings.Name, file_pos);
+                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path, null).UnwrapOrDefault(outEither, ""), settings.Name, file_pos);
 
                     var folder_reads = new ParseResult<List<ReadFormat.General>>();
                     var alphabet = settings.Alphabet ?? backup_alphabet;
@@ -1068,22 +1068,22 @@ namespace Stitch {
                 var outEither = new ParseResult<string>();
                 var res = setting.GetValue();
                 if (res.IsOk(outEither)) {
-                    var path = GetFullPathPrivate(res.Unwrap());
+                    var path = GetFullPathPrivate(res.Unwrap(), setting.Context);
 
                     if (string.IsNullOrEmpty(path.Item2)) {
-                        outEither.Value = Path.GetFullPath(path.Item1);
+                        outEither.Value = path.Item1;
                     } else {
                         outEither.AddMessage(new ErrorMessage(setting.ValueRange, path.Item1, path.Item2));
                     }
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetFullPath(string path, FileRange? context = null) {
+            public static ParseResult<string> GetFullPath(string path, string context_directory, FileRange? context = null) {
                 var outEither = new ParseResult<string>();
-                var res = GetFullPathPrivate(path);
+                var res = GetFullPathPrivate(path, context_directory);
 
                 if (string.IsNullOrEmpty(res.Item2)) {
-                    outEither.Value = Path.GetFullPath(res.Item1);
+                    outEither.Value = res.Item1;
                 } else {
                     if (context == null)
                         outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
@@ -1092,7 +1092,7 @@ namespace Stitch {
                 }
                 return outEither;
             }
-            static (string, string) GetFullPathPrivate(string path) {
+            static (string, string) GetFullPathPrivate(string path, string context_directory) {
                 if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
                     return ("Invalid path", "The path contains invalid characters.");
                 } else if (string.IsNullOrWhiteSpace(path)) {
@@ -1103,7 +1103,10 @@ namespace Stitch {
                         if (path.StartsWith("\"") && path.EndsWith("\"")) {
                             path = path.Substring(1, path.Length - 2);
                         }
-                        return (Path.GetFullPath(path), "");
+                        if (context_directory != null)
+                            return (Path.GetFullPath(path, context_directory), "");
+                        else
+                            return (Path.GetFullPath(path), "");
                     } catch (ArgumentException) {
                         return ("Invalid path", "The path cannot be found.");
                     } catch (System.Security.SecurityException) {
@@ -1117,8 +1120,8 @@ namespace Stitch {
                     }
                 }
             }
-            static (string[], string, string, string) GetAllFilesPrivate(string path, bool recursive) {
-                var try_path = GetFullPathPrivate(path);
+            static (string[], string, string, string) GetAllFilesPrivate(string path, string context_directory, bool recursive) {
+                var try_path = GetFullPathPrivate(path, context_directory);
 
                 try {
                     var option = SearchOption.TopDirectoryOnly;
@@ -1180,7 +1183,7 @@ namespace Stitch {
                 var outEither = new ParseResult<string>();
                 var item = setting.GetValue();
                 if (item.IsOk(outEither)) {
-                    var res = GetAllTextPrivate(item.Unwrap());
+                    var res = GetAllTextPrivate(item.Unwrap(), setting.Context);
 
                     if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
                     else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
@@ -1191,10 +1194,10 @@ namespace Stitch {
                 if (file.Origin != null) return GetAllText(file.Origin);
                 else return GetAllText(file.Path);
             }
-            public static ParseResult<string> GetAllText(string path) {
+            public static ParseResult<string> GetAllText(string path, string context_directory = null) {
                 var outEither = new ParseResult<string>();
 
-                var res = GetAllTextPrivate(path);
+                var res = GetAllTextPrivate(path, context_directory);
 
                 if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
                 else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
@@ -1212,7 +1215,7 @@ namespace Stitch {
                 return outEither;
             }
             static (string, string, string) TestReadFile(string path) {
-                var try_path = GetFullPathPrivate(path);
+                var try_path = GetFullPathPrivate(path, null);
 
                 if (string.IsNullOrEmpty(try_path.Item2)) {
                     if (Directory.Exists(try_path.Item1)) {
@@ -1288,11 +1291,16 @@ namespace Stitch {
                 }
             }
 
-            static (string, string, string) GetAllTextPrivate(string path) {
-                var res = TestReadFile(path);
-                if (string.IsNullOrEmpty(res.Item2))
-                    res.Item1 = File.ReadAllText(res.Item1);
-                return res;
+            static (string, string, string) GetAllTextPrivate(string path, string context_directory) {
+                var full_path = GetFullPathPrivate(path, context_directory);
+                if (string.IsNullOrEmpty(full_path.Item2)) {
+                    var res = TestReadFile(full_path.Item1);
+                    if (string.IsNullOrEmpty(res.Item2))
+                        res.Item1 = File.ReadAllText(res.Item1);
+                    return res;
+                } else {
+                    return (full_path.Item1, full_path.Item2, "");
+                }
             }
         }
     }

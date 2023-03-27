@@ -11,6 +11,9 @@ namespace Stitch {
             /// <summary> The name of a key with original casing. </summary>
             public string OriginalName;
 
+            /// <summary> The directory from which any content should be evaluated. </summary>
+            public string Context;
+
             /// <summary> The value for this key. </summary>
             readonly ValueType Value;
             public readonly KeyRange KeyRange;
@@ -19,10 +22,11 @@ namespace Stitch {
             /// <summary> Create a new single valued key. </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="value">The value of the key.</param>
-            public KeyValue(string name, string value, KeyRange keyRange, FileRange valueRange) {
+            public KeyValue(string name, string value, string context, KeyRange keyRange, FileRange valueRange) {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new Single(value);
+                Context = context;
                 KeyRange = keyRange;
                 ValueRange = valueRange;
             }
@@ -30,10 +34,11 @@ namespace Stitch {
             /// <summary> Create a new multiple valued key. </summary>
             /// <param name="name">The name of the key.</param>
             /// <param name="values">The list of KeyValue tree(s) that are the value of this key.</param>
-            public KeyValue(string name, List<KeyValue> values, KeyRange keyRange, FileRange valueRange) {
+            public KeyValue(string name, List<KeyValue> values, string context, KeyRange keyRange, FileRange valueRange) {
                 OriginalName = name;
                 Name = name.ToLower();
                 Value = new KeyValue.Multiple(values);
+                Context = context;
                 KeyRange = keyRange;
                 ValueRange = valueRange;
             }

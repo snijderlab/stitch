@@ -689,9 +689,6 @@ namespace Stitch {
                     }
                 }
 
-                if (modifications.ToString().Contains("[]"))
-                    Console.WriteLine($"To {modifications} From {expression}");
-
                 return (pure_aa.ToString(), modifications.ToString());
             }
 

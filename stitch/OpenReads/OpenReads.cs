@@ -593,7 +593,7 @@ namespace Stitch {
                     var path = data.Content;
                     if (casanovo.RawDataDirectory != null) {
                         var reconstituted_name = (String.IsNullOrEmpty(casanovo.RawDataDirectory) ? "./" : casanovo.RawDataDirectory + (casanovo.RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + Path.GetFileName(path);
-                        path = InputNameSpace.ParseHelper.GetFullPath(reconstituted_name, data.Location).UnwrapOrDefault(out_either, "");
+                        path = InputNameSpace.ParseHelper.GetFullPath(reconstituted_name, null, data.Location).UnwrapOrDefault(out_either, "");
                     }
                     raw_files.Add(path);
                 } else {

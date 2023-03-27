@@ -66,7 +66,7 @@ namespace Stitch {
                     var sub_args = (Dictionary<string, (Type, object)>)args["annotate"].Item2;
                     var inp = (string)sub_args["input"].Item2;
                     var ou = (string)sub_args["output"].Item2;
-                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(inp).Unwrap()).Unwrap();
+                    string content = InputNameSpace.ParseHelper.GetAllText(InputNameSpace.ParseHelper.GetFullPath(inp, null).Unwrap()).Unwrap();
                     GenerateAnnotatedTemplate(content, string.IsNullOrEmpty(ou) ? inp : ou);
                 } else if (args.ContainsKey("download")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["download"].Item2;
@@ -119,7 +119,7 @@ namespace Stitch {
 
         /// <summary> Cleans the given fasta file by deleting duplicates and removing sequences tagged as 'partial'. </summary>
         static void CleanFasta(string filename, string output) {
-            var path = InputNameSpace.ParseHelper.GetFullPath(filename).Unwrap();
+            var path = InputNameSpace.ParseHelper.GetFullPath(filename, null).Unwrap();
             var name_filter = new NameFilter();
             var alphabet = ScoringMatrix.Default();
             var reads = OpenReads.Fasta(name_filter, new ReadFormat.FileIdentifier(path, "name", null), new Regex("^[^|]*\\|([^|]*)\\*\\d\\d\\|"), alphabet).Unwrap();
@@ -164,7 +164,7 @@ namespace Stitch {
                 }
             }
 
-            File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output).Unwrap(), sb.ToString());
+            File.WriteAllText(InputNameSpace.ParseHelper.GetFullPath(output, null).Unwrap(), sb.ToString());
         }
 
         static List<(String CommonName, String ShortName, String ShortHand, String ScientificName)> predefined_species = new List<(String, String, String, String)> {

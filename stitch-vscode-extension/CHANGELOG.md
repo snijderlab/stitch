@@ -1,5 +1,5 @@
 # Change Log
-All notable changes to the "protein-assembler" extension will be documented in this file.
+All notable changes to the "stitch" extension will be documented in this file.
 
 ## [Unreleased]
 - Snippets

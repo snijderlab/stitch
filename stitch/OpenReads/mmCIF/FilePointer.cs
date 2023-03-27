@@ -82,9 +82,6 @@ namespace Stitch {
                         loop.Data.Add(temp_values_ar.SubArray(i * columns, columns));
                     }
                 } else {
-                    foreach (var item in temp_values) {
-                        Console.WriteLine(item.Debug());
-                    }
                     return new ParseResult<DataItem>(new InputNameSpace.ErrorMessage(new FileRange(start, counter.GetPosition()), "Loop with incorrect number of data items", $"A loop should have a number of data items which is divisible by the number of columns, but here there are {temp_values.Count % columns} values left."));
                 }
                 return new ParseResult<DataItem>(loop);

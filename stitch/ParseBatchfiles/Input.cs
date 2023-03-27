@@ -60,6 +60,7 @@ namespace Stitch {
         public static Run Batch(string path) {
             var output = new Run();
             var outEither = new ParseResult<Run>(output);
+            path = ParseHelper.GetFullPath(path, null).Unwrap();
 
             // Get the contents
             string batchfile_content = ParseHelper.GetAllText(path).Unwrap().Replace("\t", "    "); // Remove tabs, in tabs vs spaces obviously go for spaces ;-)

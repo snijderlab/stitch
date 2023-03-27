@@ -6,6 +6,9 @@
             "include": "#comment"
         },
         {
+            "include": "#inclusion"
+        },
+        {
             "include": "#parameter"
         }
     ],
@@ -23,13 +26,16 @@
                     "include": "#single-parameter"
                 },
                 {
+                    "include": "#inclusion"
+                },
+                {
                     "include": "#multiple-parameter"
                 }
             ]
         },
         "single-parameter": {
             "name": "entity",
-            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|segment|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|enforceunique|folder|gaptail|gaphead|ForceGermlineIsoleucine|Score|Swap|Characters|Identity|Mismatch|GapStart|GapExtend|PatchLength|ambiguitythreshold)\\s*",
+            "begin": "(?i)^\\s*(version|decoy|runname|maxcores|runtype|cutoffscore|(?:(?:peaks)?(?:path|name|cutoffalc|localcutoffalc|format|minlengthpatch|separator|decimalseparator))|startswith|start|end|step|gapstartpenalty|gapextendpenalty|segment|data|includeshortreads|scoring|n|dotdistribution|minimalscore|outputtype|identifier|classchars|enforceunique|folder|gaptail|gaphead|ForceGermlineIsoleucine|Score|Swap|Characters|Identity|Mismatch|GapStart|GapExtend|PatchLength|ambiguitythreshold|RawDataDirectory|FragmentationMethod|XleDisambiguation|FixedModification)\\s*",
             "beginCaptures": {
                 "1": {
                     "name": "entity.name.tag"
@@ -124,8 +130,30 @@
                 }
             ]
         },
+        "inclusion": {
+            "begin": "(include)(!\\()",
+            "end": "(\\))",
+            "beginCaptures": {
+                "1": {
+                    "name": "keyword.control"
+                },
+                "2": {
+                    "name": "keyword.operator"
+                }
+            },
+            "endCaptures": {
+                "1": {
+                    "name": "keyword.operator"
+                }
+            },
+            "patterns": [
+                {
+                    "include": "#path"
+                }
+            ]
+        },
         "multiple-parameter": {
-            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|alphabet|recombine|html|csv|fasta|json|segment|segments|inputparameters|input|report|templatematching|Symmetric sets|asymmetric sets)\\s*(->)",
+            "begin": "(?i)^\\s*(reads|fastainput|peaks|folder|alphabet|recombine|html|csv|fasta|json|segment|segments|inputparameters|input|report|templatematching|Symmetric sets|asymmetric sets|MaxNovo|Casanovo)\\s*(->)",
             "end": "(<-)",
             "beginCaptures": {
                 "1": {
@@ -158,6 +186,9 @@
                 },
                 {
                     "include": "#sets-parameter"
+                },
+                {
+                    "include": "#inclusion"
                 }
             ]
         },
@@ -294,6 +325,10 @@
                     "include": "#gap-constant"
                 }
             ]
+        },
+        "path": {
+            "match": "\\s*[^\\)]+\\s*",
+            "name": "markup.underline.link"
         },
         "int": {
             "match": "-?\\d+",
