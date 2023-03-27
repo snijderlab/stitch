@@ -1,0 +1,17 @@
+Homo sapiens Light Chain->
+    Segment->
+        Path      : Homo_sapiens_IGKV,IGLV.fasta
+        Name      : IGLV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Homo_sapiens_IGKJ,IGLJ.fasta
+        Name      : IGLJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Homo_sapiens_IGKC,IGLC.fasta
+        Name      : IGLC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-

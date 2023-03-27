@@ -72,12 +72,12 @@ namespace Stitch {
 
             // Save the batchfile for use in the construction of error messages
             var batchfile = new ParsedFile(path, batchfile_content.Split('\n'), "Batchfile", null);
-            output.BatchFile = batchfile;
-
             // Tokenize the file, into a key value pair tree
-            var parsed = InputNameSpace.Tokenizer.Tokenize(batchfile).Unwrap();
+            var batchfile_file = InputNameSpace.Tokenizer.Tokenize(batchfile).Unwrap();
+            output.BatchFile = batchfile;
+            output.IncludedFiles = batchfile_file.Item2;
 
-            var via_local_params = BatchFileParser.Parse(output, parsed, (args) => {
+            var via_local_params = BatchFileParser.Parse(output, batchfile_file.Item1, (args) => {
                 var output = outEither.Value;
                 var def_position = new Position(0, 1, batchfile);
                 var def_range = new FileRange(def_position, def_position);

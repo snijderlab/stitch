@@ -8,18 +8,20 @@ namespace Stitch {
             /// <summary> Tokenize the given file into the custom key value file format. </summary>
             /// <param name="file">The file to tokenize. </param>
             /// <returns> If everything went smoothly a list with all top level key value pairs, otherwise a list of error messages. </returns>
-            public static ParseResult<List<KeyValue>> Tokenize(ParsedFile file) {
-                var output = new ParseResult<List<KeyValue>>();
-                var parsed = new List<KeyValue>();
-                output.Value = parsed;
+            public static ParseResult<(List<KeyValue>, HashSet<ParsedFile>)> Tokenize(ParsedFile file) {
+                var output = new ParseResult<(List<KeyValue>, HashSet<ParsedFile>)>();
+                var values = new List<KeyValue>();
+                var files = new HashSet<ParsedFile>();
+                output.Value = (values, files);
                 var counter = new Counter(file);
                 var content = string.Join("\n", file.Lines);
 
                 while (content.Length > 0) {
                     var outcome = TokenizeHelper.MainArgument(content, counter);
                     if (outcome.IsOk(output)) {
-                        if (outcome.Unwrap().Item1 != null) parsed.Add(outcome.Unwrap().Item1);
-                        content = outcome.Unwrap().Item2;
+                        if (outcome.Unwrap().Item1 != null) values.AddRange(outcome.Unwrap().Item1);
+                        if (outcome.Unwrap().Item2 != null) files.UnionWith(outcome.Unwrap().Item2);
+                        content = outcome.Unwrap().Item3;
                     } else {
                         return output;
                     }
@@ -85,35 +87,41 @@ namespace Stitch {
             static class TokenizeHelper {
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines. </summary>
                 /// <returns>The status.</returns>
-                public static ParseResult<(KeyValue, string)> MainArgument(string content, Counter counter) {
+                public static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> MainArgument(string content, Counter counter) {
                     ParseHelper.Trim(ref content, counter);
 
                     if (content[0] == '-') {
                         // This line is a comment, skip it
                         ParseHelper.SkipLine(ref content, counter);
-                        return new ParseResult<(KeyValue, string)>((null, content));
+                        return new ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)>((new(), new(), content));
+                    } else if (content.StartsWith("include!(")) {
+                        return IncludeFile(content, counter);
                     } else {
-                        return Argument(content, counter);
+                        return Argument(content, counter).Map((item) => (new List<KeyValue> { item.Item1 }, item.Item2, item.Item3));
                     }
                 }
 
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines. </summary>
                 /// <returns>The status.</returns>
-                static ParseResult<(KeyValue, string)> Argument(string content, Counter counter) {
+                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> Argument(string content, Counter counter) {
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
-                    var outEither = new ParseResult<(KeyValue, string)>();
+                    var outEither = new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>();
                     (string name, FileRange range) = ParseHelper.Name(ref content, counter).UnwrapOrDefault(outEither, ("", new FileRange(counter.GetPosition(), counter.GetPosition())));
 
                     // Find if it is a single or multiple valued parameter
                     if (content[0] == ':' && content[1] == '>') {
-                        outEither.Value = MultilineSingleParameter(content, name, counter, range);
+                        var outcome = MultilineSingleParameter(content, name, counter, range);
+                        outEither.Value.Item1 = outcome.Item1;
+                        outEither.Value.Item3 = outcome.Item2;
                     } else if (content[0] == ':') {
-                        outEither.Value = SingleParameter(content, name, counter, range);
+                        var outcome = SingleParameter(content, name, counter, range);
+                        outEither.Value.Item1 = outcome.Item1;
+                        outEither.Value.Item3 = outcome.Item2;
                     } else if (content[0] == '-' && content[1] == '>') {
                         outEither.Value = MultiParameter(content, name, counter, range).UnwrapOrDefault(outEither, new());
                     } else if (content[0] == '<' && content[1] == '-') {
-                        return new ParseResult<(KeyValue, string)>(new ErrorMessage(range, "Unmatched closing delimiter", "There is a closing delimiter detected that was not expected.", "Make sure the number of closing delimiters is correct and your groups are opened correctly."));
+                        return new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>(new ErrorMessage(range, "Unmatched closing delimiter", "There is a closing delimiter detected that was not expected.", "Make sure the number of closing delimiters is correct and your groups are opened correctly."));
                     } else {
                         outEither.AddMessage(new ErrorMessage(range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line."));
                     }
@@ -153,19 +161,20 @@ namespace Stitch {
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static ParseResult<(KeyValue, string)> MultiParameter(string content, string name, Counter counter, FileRange name_range) {
+                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> MultiParameter(string content, string name, Counter counter, FileRange name_range) {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
                     ParseHelper.Trim(ref content, counter);
                     Position start_value = counter.GetPosition();
                     Position end_value = counter.GetPosition();
                     // Now get the multiple values
-                    var outEither = new ParseResult<(KeyValue, string)>();
+                    var outEither = new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>();
                     var values = new List<KeyValue>();
+                    var files = new HashSet<ParsedFile>();
 
                     while (true) {
                         if (content.Length == 0) {
-                            return new ParseResult<(KeyValue, string)>(new ErrorMessage(new FileRange(name_range.Start, counter.GetPosition()), "Could not find the end of the multi parameter", "", "Make sure to end the parameter with '<-'."));
+                            return new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>(new ErrorMessage(new FileRange(name_range.Start, counter.GetPosition()), "Could not find the end of the multi parameter", "", "Make sure to end the parameter with '<-'."));
                         }
                         if (content[0] == '<' && content[1] == '-') {
                             // This is the end of the multiple valued parameter
@@ -173,12 +182,21 @@ namespace Stitch {
                             counter.NextColumn(2);
                             Position end_key = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
-                            outEither.Value = (new KeyValue(name, values, new KeyRange(name_range, end_key), new FileRange(start_value, end_value)), content);
+                            outEither.Value = (new KeyValue(name, values, new KeyRange(name_range, end_key), new FileRange(start_value, end_value)), files, content);
                             return outEither;
                         } else {
                             ParseHelper.Trim(ref content, counter);
                             if (content[0] == '-' && content[1] != '>') {
                                 ParseHelper.SkipLine(ref content, counter);
+                                continue;
+                            } else if (content.StartsWith("include!(")) {
+                                var outcome = IncludeFile(content, counter);
+                                if (outcome.IsOk(outEither)) {
+                                    values.AddRange(outcome.Unwrap().Item1);
+                                    files.UnionWith(outcome.Unwrap().Item2);
+                                    content = outcome.Unwrap().Item3;
+                                }
+                                // Do not immediately quit but see if we can find more errors later
                                 continue;
                             }
 
@@ -198,18 +216,45 @@ namespace Stitch {
                                 var outcome = MultiParameter(content, inner_name, counter, inner_range);
                                 if (outcome.IsOk(outEither)) {
                                     values.Add(outcome.Unwrap().Item1);
-                                    content = outcome.Unwrap().Item2;
+                                    files.UnionWith(outcome.Unwrap().Item2);
+                                    content = outcome.Unwrap().Item3;
                                 } else {
                                     return outEither;
                                 }
                             } else if (content[0] == '-') {
                                 ParseHelper.SkipLine(ref content, counter);
                             } else {
-                                return new ParseResult<(KeyValue, string)>(new ErrorMessage(inner_range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line."));
+                                return new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>(new ErrorMessage(inner_range, "Name not followed by delimiter", "", "A name was read, but thereafter a value should be provided starting with a delimiter ':', ':>' or '->'. Or if the statement was meant as a comment a hyphen '-' should start the line."));
                             }
                             end_value = counter.GetPosition();
                             ParseHelper.Trim(ref content, counter);
                         }
+                    }
+
+                }
+                static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> IncludeFile(string content, Counter counter) {
+                    // Detected `include!(` the rest of the parsing will be done here
+                    var start_key = counter.GetPosition();
+                    // Ignore the pre ramble we already know its exact text
+                    var _ = ParseHelper.UntilOneOf(ref content, new char[] { '(' }, counter);
+                    var start_args = counter.GetPosition();
+                    var args = ParseHelper.UntilOneOf(ref content, new char[] { ')' }, counter);
+                    ParseHelper.SkipLine(ref content, counter);
+                    args = args.Substring(1, args.Length - 1).Trim();
+                    var end_args = counter.GetPosition();
+                    var key = new KeyValue("include!", args, new KeyRange(new FileRange(start_key, start_args), end_args), new FileRange(start_args, end_args));
+                    var included_text = InputNameSpace.ParseHelper.GetAllText(key);
+                    if (included_text.IsOk()) {
+                        var included_file = new ParsedFile(args, included_text.Unwrap().Split('\n'), "include!", key);
+                        return Tokenize(included_file).Map(tokens => {
+                            tokens.Item2.Add(included_file);
+                            return (tokens.Item1, tokens.Item2, content);
+                        });
+                    } else {
+                        var outEither = new ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)>((new List<KeyValue>(), new HashSet<ParsedFile>(), content));
+                        outEither.AddMessage(new ErrorMessage(key.ValueRange, "Could not load include!", "See messages for more information."));
+                        outEither.Messages.AddRange(included_text.Messages);
+                        return outEither;
                     }
                 }
             }
@@ -345,10 +390,10 @@ namespace Stitch {
                     }
                     return value;
                 }
-                /// <summary> Consumes the string until it find one of the sequences </summary>
+                /// <summary> Consumes the string until it finds one of the sequences </summary>
                 /// <param name="content">The string, assumed not to have newlines before the first occurrence of a sequence</param>
                 /// <param name="sequence">The sequences to find</param>
-                /// <returns>The consumed part of the string</returns>
+                /// <returns>The consumed part of the string excluding the sequence</returns>
                 public static string UntilOneOf(ref string content, char[] sequence, Counter counter) {
                     var dict = new HashSet<char>(sequence);
                     var pos = -1;

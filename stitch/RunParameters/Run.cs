@@ -50,6 +50,9 @@ namespace Stitch {
             /// <summary> The batchfile where this run was defined. </summary>
             public ParsedFile BatchFile;
 
+            /// <summary> The included files in the batchfile. </summary>
+            public HashSet<ParsedFile> IncludedFiles;
+
             /// <summary> Any additional variables given at the invocation of the command. </summary>
             public ExtraArguments extraArguments;
 
@@ -76,7 +79,7 @@ namespace Stitch {
                 }
 
                 // Generate report parameters
-                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.extraArguments, this.Runname);
+                var parameters = new ReportInputParameters(Input.Data.Cleaned, segments, recombined_segment, this.BatchFile, this.IncludedFiles, this.extraArguments, this.Runname);
 
                 // If there is an expected outcome present to answers here
                 if (extraArguments.ExpectedResult.Length > 0) {

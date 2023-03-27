@@ -282,6 +282,10 @@ namespace Stitch {
                     if (close.Success)
                         return $"{close.Groups[1]}<span class='op'>&lt;{close.Groups[2]}</span><br>";
 
+                    var include = Regex.Match(line, @"^(\s*)include!\((.*)\)$");
+                    if (include.Success)
+                        return $"{include.Groups[1]}<span class='directive'>include</span><span class='op'>!(</span><span class='value'>{include.Groups[2]}</span><span class='op'>)</span><br>";
+
                     return line + "<br>";
                 }
 
@@ -292,6 +296,15 @@ namespace Stitch {
                 html.Empty(HtmlTag.br);
                 foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                 html.Close(HtmlTag.code);
+
+                foreach (var file in IncludedFiles) {
+                    html.Open(HtmlTag.code);
+                    html.OpenAndClose(HtmlTag.i, "", file.Identifier.Path);
+                    html.Empty(HtmlTag.br);
+                    foreach (var line in file.Lines) html.UnsafeContent(Render(line.TrimEnd()));
+                    html.Close(HtmlTag.code);
+                }
+
                 return html;
             } else {
                 return new HtmlBuilder(HtmlTag.em, "No BatchFile");

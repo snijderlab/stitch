@@ -15,13 +15,15 @@ namespace Stitch {
         public readonly ReadOnlyCollection<(string Name, List<Segment> Segments)> Groups;
         public readonly ReadOnlyCollection<Segment> RecombinedSegment;
         public readonly ParsedFile BatchFile;
+        public readonly HashSet<ParsedFile> IncludedFiles;
         public readonly ExtraArguments runVariables;
         public readonly string Runname;
-        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, ExtraArguments variables, string runname) {
+        public ReportInputParameters(List<ReadFormat.General> input, List<(string, List<Segment>)> segments, List<Segment> recombined_segment, ParsedFile batchFile, HashSet<ParsedFile> includedFiles, ExtraArguments variables, string runname) {
             Input = input.AsReadOnly();
             Groups = segments.AsReadOnly();
             RecombinedSegment = recombined_segment.AsReadOnly();
             BatchFile = batchFile;
+            IncludedFiles = includedFiles;
             runVariables = variables;
             Runname = runname;
         }
@@ -30,12 +32,14 @@ namespace Stitch {
     public abstract class Report {
         protected readonly int MaxThreads;
         public readonly ParsedFile BatchFile;
+        public readonly HashSet<ParsedFile> IncludedFiles;
         public readonly ReportInputParameters Parameters;
         /// <summary> To create a report, gets all metadata. </summary>
         /// /// <param name="parameters">The parameters for this report.</param>
         public Report(ReportInputParameters parameters, int maxThreads) {
             MaxThreads = maxThreads;
             BatchFile = parameters.BatchFile;
+            IncludedFiles = parameters.IncludedFiles;
             Parameters = parameters;
         }
         /// <summary> Creates a report, has to be implemented by all reports. </summary>

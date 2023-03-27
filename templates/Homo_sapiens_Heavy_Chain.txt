@@ -1,0 +1,17 @@
+Homo sapiens Heavy Chain->
+    Segment->
+        Path      : Homo_sapiens_IGHV.fasta
+        Name      : IGHV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Homo_sapiens_IGHJ.fasta
+        Name      : IGHJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Homo_sapiens_IGHC.fasta
+        Name      : IGHC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-

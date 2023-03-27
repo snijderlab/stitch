@@ -1,0 +1,17 @@
+Mus musculus Light Chain->
+    Segment->
+        Path      : Mus_musculus_IGKV,IGLV.fasta
+        Name      : IGLV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Mus_musculus_IGKJ,IGLJ.fasta
+        Name      : IGLJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Mus_musculus_IGKC,IGLC.fasta
+        Name      : IGLC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-
