@@ -1,6 +1,6 @@
 -Run Info---------------
 Version         : 1.4
-Runname         : Monoclonal Herceptin
+Runname         : Monoclonal Herceptin old peaks
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
@@ -36,10 +36,8 @@ Recombine->
     -Separated by whitespace means directly attached
     -Separated by * means with a gap attached
     Order->
-        Heavy Chain: IGHV * IGHJ IGHC
-        Light Chain: IGLV IGLJ IGLC
-        Mus Heavy Chain: IGHV * IGHJ IGHC
-        Mus Light Chain: IGLV IGLJ IGLC
+        Homo sapiens Heavy Chain: IGHV * IGHJ IGHC
+        Homo sapiens Light Chain: IGLV IGLJ IGLC
     <-
 <-
 
