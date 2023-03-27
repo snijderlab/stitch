@@ -8,7 +8,7 @@ using System.Text.Json;
 using HtmlGenerator;
 
 namespace HTMLNameSpace {
-    static class HTMLGraph {
+    public static class HTMLGraph {
         public static List<(string, double)> AnnotateDOCData(List<double> data, int offset = 0, bool skipOnMagnitude = false) {
             int label = HelperFunctionality.RoundToHumanLogicalFactor(data.Count / 10);
             if (label == 0) label = 1;
@@ -465,6 +465,30 @@ namespace HTMLNameSpace {
             html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", data_buffer.ToString());
             html.Close(HtmlTag.div);
 
+            return html;
+        }
+
+        public static HtmlBuilder DensityCurve(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null) {
+            var min = data.Min();
+            var max = data.Max();
+            const int STEPS = 100;
+            double h = Math.Sqrt(data.Count);
+            var densities = new List<double>(STEPS);
+
+            double KDE(double x) {
+                return 1 / (Math.Sqrt(2 * Math.PI) * data.Count * h) * data.Select(item => Math.Exp(-1 / (2 * h * h) * Math.Pow(x - item, 2))).Sum();
+            }
+
+            var path = new StringBuilder("M 0,0");
+            for (int i = 0; i < STEPS; i++) {
+                var density = KDE(min + (max - min) / STEPS * i);
+                densities.Add(density);
+                path.Append($" L {i / STEPS},{density}");
+            }
+            path.Append(" Z");
+            var html = new HtmlBuilder();
+            html.OpenAndClose(HtmlTag.pre, "", path.ToString());
+            Console.WriteLine(path.ToString());
             return html;
         }
     }

@@ -121,6 +121,12 @@ namespace StitchTest {
             for (int index = 0; index < actual.Count; index++)
                 Assert.AreEqual(actual[index], expected[index]);
         }
+
+        [TestMethod]
+        public void DensityCurveTest() {
+            var html = HTMLNameSpace.HTMLGraph.DensityCurve(new List<double> { 0, 1, 2, 3, 4, 5, 6, 7, 8 }, new HtmlGenerator.HtmlBuilder("DATA"));
+            Assert.IsTrue(false);
+        }
     }
 
 }
