@@ -37,7 +37,7 @@ Input ->
     -Can only be specified once
 <-
 
-ing ->
+Template Matching ->
     -Has parameters defining the segment matching step
     -Like scoring, alphabet and the segments itself
     -Can only be specified once
@@ -47,7 +47,7 @@ Recombine ->
     -Has parameters defining the behaviour of the recombination step
     -Aligns the segments from TemplateMatching with the paths from the assembler
     -Can only be specified once
-    -ing has to be specified for recombination te be specified
+    -Template Matching has to be specified for recombination te be specified
 <-
 
 Report ->
@@ -66,49 +66,35 @@ All paths are specified from the directory of the batch file.
 All assets are loaded from the folder `assets` in the folder of the binary.
 
 #### The full list of all parameters
-`*` indicates that the scope or parameter can be defined multiple times.
 
 * Run Info
     * Version
     * Runname
     * MaxCores
 * Input
-    * Reads `*`
-        * Path
-        * Name
-    * FASTA `*`
-        * Path
-        * Name
-        * Identifier
-    * Peaks `*`
-        * Path
-        * CutoffALC
-        * LocalCutoffALC
-        * Format
-        * MinLengthPatch
-        * Name
-        * Separator
-        * DecimalSeparator
-    * Folder (m) `*`
-        * Path
-        * StartsWith
-        * Recursive
-        * Identifier
-        * All Peaks parameters prefixed with `Peaks`
-* ing
+    * Reads
+    * FASTA
+    * Peaks
+    * mmCIF
+    * MaxNovo
+    * Novor
+    * Casanovo
+    * Folder
+* Template Matching
     * CutoffScore
     * Alphabet
     * EnforceUnique
     * ForceGermlineIsoleucine
     * Segments
-        * Segment `*`
-            * Name
-            * Path
-            * CutoffScore
-            * Alphabet
-            * Identifier
-            * ClassChars
-            * ForceGermlineIsoleucine
+        * Group
+            * Segment
+                * Name
+                * Path
+                * CutoffScore
+                * Alphabet
+                * Identifier
+                * ClassChars
+                * ForceGermlineIsoleucine
 * Recombine
     * N
     * Order
@@ -118,12 +104,9 @@ All assets are loaded from the folder `assets` in the folder of the binary.
     * ForceGermlineIsoleucine
     * Decoy
 * Report
-    * HTML `*`
-        * Path
-    * FASTA `*`
-        * Path
-        * MinimalScore
-        * OutputType
+    * HTML
+    * FASTA
+    * CSV
 
 Recurring definitions:
 
@@ -168,7 +151,8 @@ MaxCores: 4
 MaxCores: 86
 ```
 
-##### RawDataDirectory (s)
+##### RawDataDirectory (s) (deprecated)
+***Deprecated, use the RawFileDirectory with each separate input definition.***
 
 The path to the directory that contains all raw data files. This should be the directory in which the files that are listed in the Peaks input files are located. If  any one particular file, or a particular scan could not be found this will be ignored and the output report will just not contain that spectrum. If the full directory could not be located there will be a warning, but the reports will still be generated. For now only Thermo raw files are supported. More information can be found in the library used for opening the raw files 'Hecklib.core' and 'Hecklib.rawfiles'.
 
@@ -322,7 +306,7 @@ _Note: this does not contain the `Fraction`, `Source File`, and `Feature` column
 
 ###### RawDataDirectory (s)
 
-The path to the directory that contains all raw data files. This should be the directory in which the files that are listed in the Peaks input files are located. If any one particular file, or a particular scan could not be found this will be ignored and the output report will just not contain that spectrum. If the full directory could not be located there will be a warning, but the reports will still be generated. For now only Thermo raw files are supported. More information can be found in the library used for opening the raw files 'Hecklib.core' and 'Hecklib.rawfiles'.
+The path to the directory that contains all raw data files. This should be the directory in which the files that are listed in the Peaks input files are located. If any one particular file, or a particular scan could not be found this will be ignored and the output report will just not contain that spectrum. If the full directory could not be located there will be a warning, but the reports will still be generated. For now only Thermo raw files and mgf are supported. More information can be found in the library used for opening the raw files 'Hecklib.core' and 'Hecklib.rawfiles'.
 
 _Example_
 ```
@@ -343,7 +327,7 @@ A multiple valued parameter containing one or both different Novor output files 
 | PSMS Path       | The path to the Novor `psms.csv` file                     | (No Default)  |
 | Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
 | Separator       | The separator used to separate fields.                    | ,             |
-| Cutoff          | The score cutoff for inclusion in the used reads. \[0-100\] | 0             |
+| Cutoff          | The score cutoff for inclusion in the used reads. \[0..100\] | 0             |
 
 _Example_
 ```
@@ -453,7 +437,7 @@ With this option on the program will generate a very basic phylogenetic tree of 
 
 Defines a list of segments to match against. A single segment is defined by the parameter `Segment` which can be defined multiple times within `Segments`. Segments will be read based on their extension `.txt` will be read as Simple, `.fasta` as Fasta and `.csv` as Peaks. For Peaks extra parameters can be attached. All properties used in a peaks definition can also be used in this definition, with the caveat that here they should be prefixed with `Peaks`.
 
-`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in ing.
+`CutoffScore`, `Alphabet`, `EnforceUnique`, and `Scoring` can be defined to overrule the definition of the respective parameter in Template Matching.
 
 Only when using recombination the properties `Identifier` and `ClassChars` are useful. The `Identifier` property takes a regex to parse the identifier from the full fasta header. The `ClassChars` property takes a number signifying the amount of chars that make up the name of the class (eg IgG1/IgG2/etc), these characters will be taken from the start of the identifier. When no `ClassChars` is present there will be no differentiation between classes in the results page.
 
@@ -587,11 +571,11 @@ The mean score per position needed for a path to be included in the Segment scor
 
 ##### Alphabet (m)
 
-Determines the alphabet to use. See the scope Alphabet for more information about its definition.
+Determines the alphabet to use. Defaults to the alphabet defined in Template Matching. See the scope Alphabet for more information about its definition.
 
 ##### EnforceUnique (s)
 
-Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`). Default is the value in TemplateMatching which defaults to `1.0`.
+Determines of the paths/reads of this segment will be forced to the best template(s) or just all templates which score high enough. The cutoff is specified in terms of the fraction of the highest scoring placement, so `0.95` will make all placements that score at least `0.95` times the highest placement be placed. If there is only one read that will be placed this placement is noted as unique. Possible values: a number between `0.0` and `1.0` or `True` (`1.0`) or `False` (`0.0`), but the use of booleans is deprecated. Default is the value in TemplateMatching which defaults to `1.0`.
 
 ##### ForceGermlineIsoleucine (s)
 
@@ -654,7 +638,7 @@ To generate a FASTA file with all paths, with a score for each path. The score i
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
 | MinimalScore    | The minimal score needed to be included in the file                                                             | 0                  |
-| OutputType      | The type of sequences to give as output, `ing` or `Recombine`                                      | `ing` |
+| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                      | `Template Matching` |
 
 _Example_
 ```
@@ -672,7 +656,7 @@ To generate a CSV file with all aligned reads for the given step. It includes al
 | Inner parameter | Explanation                                                                                                     |   Default Value    |
 | --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
 | Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
-| OutputType      | The type of sequences to give as output, `ing` or `Recombine`                                      | `ing` |
+| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                      | `Template Matching` |
 
 _Example_
 ```
@@ -885,13 +869,13 @@ The depth of coverage reported is the sum of all positional scores for that posi
 
 ### Example Batch Files
 
-See the files in the folder `examples\batchfiles\`.
+See the files in the folder `\batchfiles\`.
 
 ### Creating templates for a new species
 
 To create templates for a new species use the download command (see example below). The species name is the latin name or common name as used by IMGT (http://www.imgt.org/IMGTrepertoire/Proteins/). The protein displays are downloaded from IMGT in the process so make sure to have a working internet connection. If different segments are needed besides or in place of the default segments ("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC IGHC") that can be given as the second argument.  Download the sequences of the subclasses from uniprot if the IGHC results are not satisfactory. Multiple species can be downloaded at the same time by separating them by commas, for example "human,bovine,mouse,rabbit,dog".
 
 ```
-assembler.exe download "Homo sapiens"
-assembler.exe download "Cricetinae gen. sp." "IGHV IGKV,IGLV IGHJ IGLC"
+stitch download "Homo sapiens"
+stitch download "Cricetinae gen. sp." "IGHV IGKV,IGLV IGHJ IGLC"
 ```
