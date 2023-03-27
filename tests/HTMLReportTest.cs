@@ -8,6 +8,7 @@ using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Collections.Generic;
 using Stitch;
 using Stitch.RunParameters;
+using HtmlGenerator;
 
 namespace StitchTest {
     [TestClass]
@@ -124,7 +125,8 @@ namespace StitchTest {
 
         [TestMethod]
         public void DensityCurveTest() {
-            var html = HTMLNameSpace.HTMLGraph.DensityCurve(new List<double> { 0, 1, 2, 3, 4, 5, 6, 7, 8 }, new HtmlGenerator.HtmlBuilder("DATA"));
+            var html = HTMLNameSpace.HTMLGraph.DensityCurve(new List<double> { 0, 1, 2, 3, 3, 3, 3, 3, 4, 7, 7, 8, 30, 30, 30, 35, 30, 30, 30, 30, 30 }, new HtmlGenerator.HtmlBuilder("DATA"));
+            File.WriteAllText("density_curve.html", html.ToString());
             Assert.IsTrue(false);
         }
     }

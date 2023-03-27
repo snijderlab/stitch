@@ -302,7 +302,7 @@ namespace HTMLNameSpace {
         static HtmlBuilder TableHeader(string identifier, IEnumerable<double> lengths, IEnumerable<double> area = null) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, $"class='table-header-{identifier}'");
-            html.Add(HTMLGraph.Histogram(lengths.ToList(), new HtmlBuilder("Length distribution")));
+            html.Add(HTMLGraph.DensityCurve(lengths.ToList(), new HtmlBuilder("Length distribution")));
             if (area != null) {
                 html.Close(HtmlTag.div);
                 html.Open(HtmlTag.div);

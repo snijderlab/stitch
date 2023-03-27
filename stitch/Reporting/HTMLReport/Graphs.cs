@@ -469,26 +469,68 @@ namespace HTMLNameSpace {
         }
 
         public static HtmlBuilder DensityCurve(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null) {
-            var min = data.Min();
-            var max = data.Max();
-            const int STEPS = 100;
-            double h = Math.Sqrt(data.Count);
+            data.Sort();
+            var min_value = data.Min();
+            var max_value = data.Max();
+            const int STEPS = 256;
+            var mean = data.Average();
+            var stdev = Math.Sqrt(data.Select(point => Math.Pow(mean - point, 2)).Sum() / data.Count());
+            var iqr = data.TakeLast(data.Count() / 2).Average() - data.Take(data.Count() / 2).Average();
+            double h = 0.9 * Math.Min(stdev, iqr / 1.34) * Math.Pow(data.Count(), -1 / 5);
             var densities = new List<double>(STEPS);
 
             double KDE(double x) {
                 return 1 / (Math.Sqrt(2 * Math.PI) * data.Count * h) * data.Select(item => Math.Exp(-1 / (2 * h * h) * Math.Pow(x - item, 2))).Sum();
             }
 
-            var path = new StringBuilder("M 0,0");
             for (int i = 0; i < STEPS; i++) {
-                var density = KDE(min + (max - min) / STEPS * i);
+                var density = KDE((min_value + (max_value - min_value)) / STEPS * i);
                 densities.Add(density);
-                path.Append($" L {i / STEPS},{density}");
             }
-            path.Append(" Z");
+            var max_density = densities.Max();
+            var path = new StringBuilder();
+            for (int i = 0; i < STEPS; i++) {
+                if (i != 0) path.Append(" L ");
+                path.Append($"{(double)i} {(max_density - densities[i]) / max_density * 100}");
+            }
             var html = new HtmlBuilder();
-            html.OpenAndClose(HtmlTag.pre, "", path.ToString());
-            Console.WriteLine(path.ToString());
+            html.Open(HtmlTag.div, "class='graph'");
+            if (title != null)
+                if (help != null) {
+                    html.Open(HtmlTag.h2);
+                    html.Add(title);
+                    html.UserHelp("Bargraph", help);
+                    html.Close(HtmlTag.h2);
+                } else
+                    html.OpenAndClose(HtmlTag.h2, "class='title'", title);
+            html.Open(HtmlTag.div, "class='histogram density' oncontextmenu='CopyGraphData()' aria-hidden='true'");
+
+            // Y axis
+            html.OpenAndClose(HtmlTag.span, "class='y-axis'");
+            //html.OpenAndClose(HtmlTag.span, "class='max'", densities.Max().ToString("G3"));
+            //html.OpenAndClose(HtmlTag.span, "class='min'", "0");
+            //html.Close(HtmlTag.span);
+            html.OpenAndClose(HtmlTag.span, "class='empty'");
+
+            var svg = new SvgBuilder();
+            svg.Open(SvgTag.svg, $"viewbox='0 -1 {STEPS - 1} 100' preserveAspectRatio='none'");
+            svg.OpenAndClose(SvgTag.path, $"class='line' d='M {path}'");
+            svg.OpenAndClose(SvgTag.path, $"class='volume' d='M 0 100 L {path} L {STEPS - 1} 100 Z'");
+            svg.Close(SvgTag.svg);
+            html.Add(svg);
+            html.Open(HtmlTag.span, "class='x-axis'");
+            html.OpenAndClose(HtmlTag.span, "class='min'", min_value.ToString());
+            html.OpenAndClose(HtmlTag.span, "class='middle'", ((min_value * 3 + max_value) / 4).ToString());
+            html.OpenAndClose(HtmlTag.span, "class='middle'", ((min_value + max_value) / 2).ToString());
+            html.OpenAndClose(HtmlTag.span, "class='middle'", ((min_value + max_value * 3) / 4).ToString());
+            html.OpenAndClose(HtmlTag.span, "class='max'", max_value.ToString());
+            html.Close(HtmlTag.span);
+
+            html.Close(HtmlTag.div);
+            // graph data if (title != null)
+            // graph data     html.OpenAndClose(HtmlTag.textarea, "class='graph-data hidden' aria-hidden='true'", dataBuffer.ToString());
+            html.Close(HtmlTag.div);
+
             return html;
         }
     }
