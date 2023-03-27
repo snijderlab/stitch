@@ -54,13 +54,13 @@ The project is built with dotnet (.NET 6.0) development is done on windows, but 
 dotnet run --project stitch <path to batchfile>
 ```
 
-It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net6.0\&lt;platform&gt;\`) called `assets` to `.\assets`.
+It will warn you that the assets folder is missing, this can be fixed by creating a symbolic link (mklink for windows cmd) from the folder in which the dll will be placed (`stitch\bin\Debug\net7.0\`) called `assets` to `.\assets`.
 
 ```
-mklink /J stitch\bin\debug\net6.0\assets\ assets\
-mklink /J stitch\bin\debug\net6.0\images\ images\
-mklink /J stitch\bin\release\net6.0\assets\ assets\
-mklink /J stitch\bin\release\net6.0\images\ images\
+mklink /J stitch\bin\debug\net7.0\assets\ assets\
+mklink /J stitch\bin\debug\net7.0\images\ images\
+mklink /J stitch\bin\release\net7.0\assets\ assets\
+mklink /J stitch\bin\release\net7.0\images\ images\
 ```
 
 To generate a single executable run:
