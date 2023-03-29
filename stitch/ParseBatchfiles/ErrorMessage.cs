@@ -140,16 +140,23 @@ namespace Stitch {
                 return this;
             }
             public void Print() {
+                InternalPrint(false);
+            }
+            protected void InternalPrint(bool isStackTrace) {
                 var defaultColour = Console.ForegroundColor;
-
-                // Header
-                Console.ForegroundColor = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
-                var name = Warning ? "Warning" : "Error";
-                Console.Write($"\n{name}: ");
-                Console.ForegroundColor = defaultColour;
-                Console.WriteLine(shortDescription);
                 var max_line_length = 80;
                 try { max_line_length = Console.WindowWidth; } catch { };
+
+                // Header
+                if (!isStackTrace) {
+                    Console.ForegroundColor = Warning ? ConsoleColor.Blue : ConsoleColor.Red;
+                    var name = Warning ? "Warning" : "Error";
+                    Console.Write($"\n{name}: ");
+                    Console.ForegroundColor = defaultColour;
+                    Console.WriteLine(shortDescription);
+                } else {
+
+                }
 
                 // Location
                 if (!string.IsNullOrEmpty(subject)) // Pre given location
@@ -255,7 +262,17 @@ namespace Stitch {
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(": " + help);
                 }
-                Console.WriteLine("");
+                if (!isStackTrace && File?.Identifier?.Origin != null) {
+                    Console.ForegroundColor = ConsoleColor.Blue;
+                    Console.WriteLine($"\nIncluded here: ");
+                    Console.ForegroundColor = defaultColour;
+
+                    for (var i = File.Identifier.Origin.Count - 1; i >= 0; i--) {
+                        var location = File.Identifier.Origin[i];
+                        (new ErrorMessage(location.KeyRange, "Defined here", "", "", this.Warning)).InternalPrint(true);
+                    }
+                }
+                if (!isStackTrace) Console.WriteLine("");
             }
 
             /// <summary> Print an exception in a nice way. </summary>

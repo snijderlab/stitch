@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
 
 namespace Stitch {
@@ -10,6 +11,10 @@ namespace Stitch {
             /// <param name="file">The file to tokenize. </param>
             /// <returns> If everything went smoothly a list with all top level key value pairs, otherwise a list of error messages. </returns>
             public static ParseResult<(List<KeyValue>, HashSet<ParsedFile>)> Tokenize(ParsedFile file) {
+                var origin = new List<KeyValue>();
+                return InternalTokenize(file, origin);
+            }
+            private static ParseResult<(List<KeyValue>, HashSet<ParsedFile>)> InternalTokenize(ParsedFile file, List<KeyValue> origin) {
                 var output = new ParseResult<(List<KeyValue>, HashSet<ParsedFile>)>();
                 var values = new List<KeyValue>();
                 var files = new HashSet<ParsedFile>();
@@ -19,7 +24,7 @@ namespace Stitch {
                 var context = Directory.GetParent(file.Identifier.Path).FullName;
 
                 while (content.Length > 0) {
-                    var outcome = TokenizeHelper.MainArgument(content, counter, context);
+                    var outcome = TokenizeHelper.MainArgument(content, counter, context, origin);
                     if (outcome.IsOk(output)) {
                         if (outcome.Unwrap().Item1 != null) values.AddRange(outcome.Unwrap().Item1);
                         if (outcome.Unwrap().Item2 != null) files.UnionWith(outcome.Unwrap().Item2);
@@ -89,7 +94,7 @@ namespace Stitch {
             static class TokenizeHelper {
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, possibly with comments and newlines. </summary>
                 /// <returns>The status.</returns>
-                public static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> MainArgument(string content, Counter counter, string context) {
+                public static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> MainArgument(string content, Counter counter, string context, List<KeyValue> origin) {
                     ParseHelper.Trim(ref content, counter);
 
                     if (content[0] == '-') {
@@ -97,15 +102,15 @@ namespace Stitch {
                         ParseHelper.SkipLine(ref content, counter);
                         return new ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)>((new(), new(), content));
                     } else if (content.StartsWith("include!(")) {
-                        return IncludeFile(content, counter, context);
+                        return IncludeFile(content, counter, context, origin);
                     } else {
-                        return Argument(content, counter, context).Map((item) => (new List<KeyValue> { item.Item1 }, item.Item2, item.Item3));
+                        return Argument(content, counter, context, origin).Map((item) => (new List<KeyValue> { item.Item1 }, item.Item2, item.Item3));
                     }
                 }
 
                 /// <summary> Parse a single 'line' in the batchfile consisting of a single argument, without comments and newlines. </summary>
                 /// <returns>The status.</returns>
-                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> Argument(string content, Counter counter, string context) {
+                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> Argument(string content, Counter counter, string context, List<KeyValue> origin) {
                     // This is a parameter line, get the name
                     ParseHelper.Trim(ref content, counter);
                     var outEither = new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>();
@@ -121,7 +126,7 @@ namespace Stitch {
                         outEither.Value.Item1 = outcome.Item1;
                         outEither.Value.Item3 = outcome.Item2;
                     } else if (content[0] == '-' && content[1] == '>') {
-                        outEither.Value = MultiParameter(content, name, counter, range, context).UnwrapOrDefault(outEither, new());
+                        outEither.Value = MultiParameter(content, name, counter, range, context, origin).UnwrapOrDefault(outEither, new());
                     } else if (content[0] == '<' && content[1] == '-') {
                         return new ParseResult<(KeyValue, HashSet<ParsedFile>, string)>(new ErrorMessage(range, "Unmatched closing delimiter", "There is a closing delimiter detected that was not expected.", "Make sure the number of closing delimiters is correct and your groups are opened correctly."));
                     } else {
@@ -163,7 +168,7 @@ namespace Stitch {
                 /// <param name="content">The string to be parsed.</param>
                 /// <param name="name">The name of the parameter.</param>
                 /// <returns>The status.</returns>
-                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> MultiParameter(string content, string name, Counter counter, FileRange name_range, string context) {
+                static ParseResult<(KeyValue, HashSet<ParsedFile>, string)> MultiParameter(string content, string name, Counter counter, FileRange name_range, string context, List<KeyValue> origin) {
                     content = content.Remove(0, 2);
                     counter.NextColumn(2);
                     ParseHelper.Trim(ref content, counter);
@@ -192,14 +197,16 @@ namespace Stitch {
                                 ParseHelper.SkipLine(ref content, counter);
                                 continue;
                             } else if (content.StartsWith("include!(")) {
-                                var outcome = IncludeFile(content, counter, context);
+                                var outcome = IncludeFile(content, counter, context, origin);
                                 if (outcome.IsOk(outEither)) {
                                     values.AddRange(outcome.Unwrap().Item1);
                                     files.UnionWith(outcome.Unwrap().Item2);
                                     content = outcome.Unwrap().Item3;
+                                    // Do not immediately quit but see if we can find more errors later
+                                    continue;
+                                } else {
+                                    return outEither;
                                 }
-                                // Do not immediately quit but see if we can find more errors later
-                                continue;
                             }
 
                             // Match the inner parameter
@@ -215,7 +222,7 @@ namespace Stitch {
                                 values.Add(outcome.Item1);
                                 content = outcome.Item2;
                             } else if (content[0] == '-' && content[1] == '>') {
-                                var outcome = MultiParameter(content, inner_name, counter, inner_range, context);
+                                var outcome = MultiParameter(content, inner_name, counter, inner_range, context, origin);
                                 if (outcome.IsOk(outEither)) {
                                     values.Add(outcome.Unwrap().Item1);
                                     files.UnionWith(outcome.Unwrap().Item2);
@@ -234,14 +241,14 @@ namespace Stitch {
                     }
 
                 }
-                static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> IncludeFile(string content, Counter counter, string context) {
+                static ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)> IncludeFile(string content, Counter counter, string context, List<KeyValue> origin) {
                     // Detected `include!(` the rest of the parsing will be done here
                     var start_key = counter.GetPosition();
                     // Ignore the pre ramble we already know its exact text
                     var _ = ParseHelper.UntilOneOf(ref content, new char[] { '(' }, counter);
                     var start_args = counter.GetPosition();
                     var args = ParseHelper.UntilOneOf(ref content, new char[] { ')' }, counter);
-                    ParseHelper.SkipLine(ref content, counter);
+                    ParseHelper.Trim(ref content, counter);
                     args = args.Substring(1, args.Length - 1).Trim();
                     var end_args = counter.GetPosition();
                     var key = new KeyValue("include!", args, context, new KeyRange(new FileRange(start_key, start_args), end_args), new FileRange(start_args, end_args));
@@ -249,10 +256,19 @@ namespace Stitch {
                     if (included_text.IsOk() && included_text.Unwrap().Item2.IsOk()) {
                         var path = included_text.Unwrap().Item1;
                         var text = included_text.Unwrap().Item2.Unwrap();
-                        var included_file = new ParsedFile(path, text.Split('\n'), "include!", key);
+
+                        if (origin.Any(o => o.KeyRange.File.Identifier.Path == path)) {
+                            var res = new ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)>((new List<KeyValue>(), new HashSet<ParsedFile>(), content));
+                            res.AddMessage(new ErrorMessage(key.KeyRange, "Inclusion cycle detected", "Following this inclusion would create an endless loop of included files."));
+                            return res;
+                        }
+
+                        var origin_copy = new List<KeyValue>(origin);
+                        origin_copy.Add(key);
+                        var included_file = new ParsedFile(path, text.Split('\n'), "include!", origin_copy);
                         var original_working_directory = Directory.GetCurrentDirectory();
                         Directory.SetCurrentDirectory(Directory.GetParent(path).FullName);
-                        var result = Tokenize(included_file).Map(tokens => {
+                        var result = InternalTokenize(included_file, origin_copy).Map(tokens => {
                             tokens.Item2.Add(included_file);
                             return (tokens.Item1, tokens.Item2, content);
                         });

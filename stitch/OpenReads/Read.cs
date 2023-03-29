@@ -1012,13 +1012,13 @@ namespace Stitch {
             /// <summary>The name or identifier given to the file.</summary>
             public string Name;
 
-            public InputNameSpace.KeyValue Origin;
+            public List<InputNameSpace.KeyValue> Origin;
 
             /// <summary> Creating a new FileIdentifier. </summary>
             /// <param name="pathInput">The path to the file, can be a relative path.</param>
             /// <param name="name">The identifier given to the file.</param>
             /// <param name="origin">The place where is path is defined in a batchfile or derivatives.</param>
-            public FileIdentifier(string pathInput, string name, InputNameSpace.KeyValue origin) {
+            public FileIdentifier(string pathInput, string name, List<InputNameSpace.KeyValue> origin) {
                 path = System.IO.Path.GetFullPath(pathInput);
                 Name = name;
                 Origin = origin;

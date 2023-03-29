@@ -287,13 +287,13 @@ namespace Stitch {
                                 settings.Value.Cutoff = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);}),
                             ("Denovo Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.DeNovoFile);
-                                settings.Value.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                                settings.Value.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", new List<KeyValue>{value});}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, name);
                                 name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("PSMS Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.PSMSFile);
-                                settings.Value.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", value);}),
+                                settings.Value.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", new List<KeyValue>{value});}),
                             ("Separator", (settings, value) => {
                                 settings.Value.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
                         }).Parse(pair, novor => {
@@ -710,7 +710,7 @@ namespace Stitch {
                             if (res.IsOk(outEither)) {
                                 var data_content = res.Unwrap().Split("\n");
                                 var counter = new Tokenizer.Counter(value.ValueRange.Start);
-                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", value), counter).UnwrapOrDefault(outEither, new());
+                                result = ParseAlphabetData(new ParsedFile(".", data_content, "Inline Alphabet data", new List<KeyValue>{value}), counter).UnwrapOrDefault(outEither, new());
                                 settings.Value.Alphabet = result.Item1;
                                 settings.Value.ScoringMatrix = result.Item2;
                             }}),
@@ -790,7 +790,7 @@ namespace Stitch {
 
                             if (all_text.IsOk(outEither)) {
                                 var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
-                                var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, settings.Name, key);
+                                var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, settings.Name, new List<KeyValue> { key });
                                 var counter = new Tokenizer.Counter(id);
                                 result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
                                 settings.Alphabet = result.Item1;
@@ -966,7 +966,7 @@ namespace Stitch {
                     if (outEither.IsErr()) return;
 
                     // Open the file
-                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path, null).UnwrapOrDefault(outEither, ""), settings.Name, file_pos);
+                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path, null).UnwrapOrDefault(outEither, ""), settings.Name, new List<KeyValue> { file_pos });
 
                     var folder_reads = new ParseResult<List<ReadFormat.General>>();
                     var alphabet = settings.Alphabet ?? backup_alphabet;
@@ -1191,7 +1191,7 @@ namespace Stitch {
                 return outEither;
             }
             public static ParseResult<string> GetAllText(ReadFormat.FileIdentifier file) {
-                if (file.Origin != null) return GetAllText(file.Origin);
+                if (file.Origin != null) return GetAllText(file.Origin.Last());
                 else return GetAllText(file.Path);
             }
             public static ParseResult<string> GetAllText(string path, string context_directory = null) {

@@ -1,4 +1,5 @@
 using System;
+using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
 namespace Stitch {
@@ -147,7 +148,7 @@ namespace Stitch {
         /// <param name="content">The file content, as an array of all lines</param>
         /// <param name="name">The given name to the file so it is easier for users to track where the file comes from.</param>
         /// <param name="content">The original definition of this file, if given in the batchfile or derivatives.</param>
-        public ParsedFile(string path, string[] content, string name, InputNameSpace.KeyValue origin) {
+        public ParsedFile(string path, string[] content, string name, List<InputNameSpace.KeyValue> origin) {
             Identifier = new ReadFormat.FileIdentifier(path, name, origin);
             Lines = content;
         }
