@@ -6,13 +6,24 @@ using System.Text;
 
 namespace Stitch {
 
-    /// <summary> Auto generate version and help flags. </summary>
+    /// <summary> A data structure to keep a command line interface for automatic parsing, default values, required arguments, help, versions flag and much more. </summary>
     public struct CLIBuilder {
+        /// <summary> The title of the program. </summary>
         string Title;
+        /// <summary> The description of the program for the generated documentation. </summary>
         string Description;
+        /// <summary> The list of possible subcommands. </summary>
         List<Subcommand> Subcommands;
+        /// <summary> The lust of possible arguments. </summary>
         List<IArgument> Arguments;
 
+        /// <summary>
+        /// Create a new CLI builder.
+        /// </summary>
+        /// <param name="title">The title of the program.</param>
+        /// <param name="description">The description of the program for the generated documentation.</param>
+        /// <param name="subcommands">The list of possible subcommands.</param>
+        /// <param name="arguments">The lust of possible arguments.</param>
         public CLIBuilder(string title, string description, List<Subcommand> subcommands, List<IArgument> arguments) {
             Title = title;
             Description = description;
@@ -24,35 +35,18 @@ namespace Stitch {
             Subcommands.Sort((a, b) => a.Key.CompareTo(b.Key));
         }
 
+        /// <summary>
+        /// Parse the arguments into a dictionary of the arguments. To allow for the immediate return in the correct type each argument is presented as a tuple of (Type, object).
+        /// </summary>
         public Dictionary<string, (Type, object)> Parse(string args) {
             bool printUsage = false;
+            // Get the metadata of this program for generated docs
             string version = Assembly.GetExecutingAssembly().GetCustomAttribute<AssemblyInformationalVersionAttribute>().InformationalVersion;
             string exe = Assembly.GetExecutingAssembly().GetName().Name;
             var defaultColour = Console.ForegroundColor;
 
-            // Split the args in the correct pieces
-            var split_args = new List<(string, FileRange)>();
-            var full_line = new ParsedFile(new ReadFormat.FileIdentifier("CLI", "CLI", null), new string[] { args });
-            var current_arg = new StringBuilder();
-            bool escaped = false;
-            bool first = true;
-            int start = 0;
-            for (var i = 0; i < args.Length; i++) {
-                var c = args[i];
-                if (c == '"') {
-                    escaped = !escaped;
-                } else if (c == ' ' && !escaped) {
-                    var temp = current_arg.ToString();
-                    if (!string.IsNullOrWhiteSpace(temp) && !first) split_args.Add((temp, new FileRange(new Position(0, start + 1, full_line), new Position(0, i + 1, full_line))));
-                    current_arg.Clear();
-                    first = false;
-                    start = i + 1;
-                } else {
-                    current_arg.Append(c);
-                }
-            }
-            var str = current_arg.ToString();
-            if (!string.IsNullOrWhiteSpace(str) && !first) split_args.Add((str, new FileRange(new Position(0, start + 1, full_line), new Position(0, args.Length + 1, full_line))));
+            // Split the args in the correct pieces taking care of double quotes as escape characters
+            var split_args = SplitArgs(args);
 
             // Parse the pieces
             var output = new Dictionary<string, (Type, object)>();
@@ -113,23 +107,23 @@ namespace Stitch {
             }
             printUsage = output.Count == 0 ? true : printUsage;
             // Check for missing arguments and fill with the defaults
-            var missing = new List<string>();
-            foreach (var arg in Arguments) {
-                if (!output.ContainsKey(arg.GetKey())) {
-                    if (arg.GetDefaultValue().IsSome()) {
-                        output.Add(arg.GetKey(), arg.GetDefaultValue().Unwrap());
+            var missing = new List<IArgument>();
+            foreach (var argument in Arguments) {
+                if (!output.ContainsKey(argument.GetKey())) {
+                    if (argument.GetDefaultValue().IsSome()) {
+                        output.Add(argument.GetKey(), argument.GetDefaultValue().Unwrap());
                     } else {
-                        missing.Add(arg.GetKey());
+                        missing.Add(argument);
                         printUsage = true;
                     }
                 }
             }
             // Print the usage
-            if (printUsage && !(bool)output["help"].Item2 == true) {
+            if (printUsage && !(bool)output["help"].Item2 == true && result.IsOk()) {
                 if (missing.Count > 0) {
                     Console.WriteLine("The following required arguments were not provided:");
                     foreach (var mis in missing) {
-                        Console.WriteLine($"\t<{mis}>");
+                        PrettyPrintArg(mis);
                     }
                 }
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
@@ -183,6 +177,33 @@ namespace Stitch {
             return output;
         }
 
+        /// <summary> Split an argument string into its constituent parts taking care of enclosing quotes ". </summary>
+        private static List<(string, FileRange)> SplitArgs(string args) {
+            var split_args = new List<(string, FileRange)>();
+            var full_line = new ParsedFile(new ReadFormat.FileIdentifier("CLI", "CLI", null), new string[] { args });
+            var current_arg = new StringBuilder();
+            bool escaped = false;
+            bool first = true;
+            int start = 0;
+            for (var i = 0; i < args.Length; i++) {
+                var c = args[i];
+                if (c == '"') {
+                    escaped = !escaped;
+                } else if (c == ' ' && !escaped) {
+                    var temp = current_arg.ToString();
+                    if (!string.IsNullOrWhiteSpace(temp) && !first) split_args.Add((temp, new FileRange(new Position(0, start + 1, full_line), new Position(0, i + 1, full_line))));
+                    current_arg.Clear();
+                    first = false;
+                    start = i + 1;
+                } else {
+                    current_arg.Append(c);
+                }
+            }
+            var str = current_arg.ToString();
+            if (!string.IsNullOrWhiteSpace(str) && !first) split_args.Add((str, new FileRange(new Position(0, start + 1, full_line), new Position(0, args.Length + 1, full_line))));
+            return split_args;
+        }
+        /// <summary> Make a nice header with the given title. </summary>
         public static void PrettyPrintHeader(string text) {
             var defaultColour = Console.ForegroundColor;
             Console.ForegroundColor = ConsoleColor.Yellow;
@@ -190,6 +211,7 @@ namespace Stitch {
             Console.ForegroundColor = defaultColour;
             Console.WriteLine();
         }
+        /// <summary> Make a nice print of the given optional argument. </summary>
         public static void PrettyPrintOption(IArgument opt) {
             var defaultColour = Console.ForegroundColor;
             Console.Write('\t');
@@ -206,6 +228,7 @@ namespace Stitch {
             if (opt.GetArgumentType() != typeof(bool)) Console.Write($" [default: {opt.GetDefaultValue().Unwrap().Item2}]");
             Console.WriteLine();
         }
+        /// <summary> Make a nice print of the given required argument. </summary>
         public static void PrettyPrintArg(IArgument opt) {
             var defaultColour = Console.ForegroundColor;
             Console.Write('\t');
@@ -282,13 +305,13 @@ namespace Stitch {
                 }
             }
             // Check for missing arguments and fill with the defaults
-            var missing = new List<string>();
+            var missing = new List<IArgument>();
             foreach (var arg in Arguments) {
                 if (!output.ContainsKey(arg.GetKey())) {
                     if (arg.GetDefaultValue().IsSome()) {
                         output.Add(arg.GetKey(), arg.GetDefaultValue().Unwrap());
                     } else {
-                        missing.Add(arg.GetKey());
+                        missing.Add(arg);
                         printUsage = true;
                     }
                 }
@@ -322,7 +345,7 @@ namespace Stitch {
                 if (missing.Count > 0) {
                     Console.WriteLine("The following required arguments were not provided:");
                     foreach (var mis in missing) {
-                        Console.WriteLine($"\t<{mis}>");
+                        CLIBuilder.PrettyPrintArg(mis);
                     }
                 }
                 var required = Arguments.Where(a => a.GetDefaultValue().IsNone());
@@ -332,6 +355,11 @@ namespace Stitch {
                     Console.Write($" <{req.GetKey()}>");
                 }
                 Console.WriteLine("\n\nFor more information try --help");
+
+                // Print any error that also popped up to prevent having to rerun the command many times before all errors can be found.
+                result.PrintMessages();
+
+                // Done
                 Environment.Exit(0);
             }
             return result;
@@ -339,14 +367,23 @@ namespace Stitch {
     }
 
     public interface IArgument {
+        /// <summary> Get the name of the argument. </summary>
         public string GetKey();
+        /// <summary> Get the flag of the argument to be matched against the provided flag by the users, without the preceding two hyphens. </summary>
         public Option<string> GetFlag();
+        /// <summary> Get the short flag of the argument to be matched against the provided flag by the users, without the preceding hyphen. </summary>
         public Option<string> GetShortFlag();
+        /// <summary> Parse the given text in the given location into the inner type of this argument. </summary>
         public ParseResult<(Type, object)> Parse((string, FileRange) input);
+        /// <summary> Get the default value for this argument. </summary>
         public Option<(Type, object)> GetDefaultValue();
+        /// <summary> Get the inner type of this argument. </summary>
         public Type GetArgumentType();
+        /// <summary> Record that this argument has already been used, needed for duplicate definition detection and missing required argument detection. </summary>
         public void MakeHandled();
+        /// <summary> See if this argument is already handled. </summary>
         public bool IsHandled();
+        /// <summary> Get the description of this argument for the generation of documentation. </summary>
         public string GetDescription();
     }
 
