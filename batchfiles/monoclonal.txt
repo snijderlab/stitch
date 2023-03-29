@@ -1,6 +1,6 @@
 -Run Info---------------
 Version         : 1.4
-Runname         : Monoclonal Herceptin old peaks
+Runname         : Monoclonal Herceptin
 
 - Here the input can be defined, this will be used in the TemplateMatching and Recombine steps
 Input ->
@@ -14,8 +14,9 @@ Input ->
     <-
 <-
 
+- Template matching matches the reads defined in 'Input' to the given Templates defined in the different groups in the 'Segments'
 TemplateMatching ->
-    EnforceUnique      : 1.0
+    EnforceUnique      : 0.9
     CutoffScore        : 10
     AmbiguityThreshold : 0.9
 
