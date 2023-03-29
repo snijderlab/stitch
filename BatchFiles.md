@@ -85,16 +85,15 @@ All assets are loaded from the folder `assets` in the folder of the binary.
     * Alphabet
     * EnforceUnique
     * ForceGermlineIsoleucine
-    * Segments
-        * Group
-            * Segment
-                * Name
-                * Path
-                * CutoffScore
-                * Alphabet
-                * Identifier
-                * ClassChars
-                * ForceGermlineIsoleucine
+    * Segments (possibly grouped)
+        * Segment
+            * Name
+            * Path
+            * CutoffScore
+            * Alphabet
+            * Identifier
+            * ClassChars
+            * ForceGermlineIsoleucine
 * Recombine
     * N
     * Order

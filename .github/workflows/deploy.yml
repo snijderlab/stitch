@@ -8,10 +8,6 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v2
-    - name: Setup .NET
-      uses: actions/setup-dotnet@v3
-      with:
-        dotnet-version: 6.0.x
     - name: Use Pandoc
       uses: docker://pandoc/latex:2.9
       with:
@@ -32,13 +28,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Deploy
       run: |
        dotnet publish stitch -c release -r win-x64 --self-contained
        dotnet publish stitch -c release -r win-arm64 --self-contained
-       Copy-Item "stitch\bin\release\net6.0\win-x64\publish\stitch.exe" -Destination "stitch.exe" -Force
-       Copy-Item "stitch\bin\release\net6.0\win-arm64\publish\stitch.exe" -Destination "stitch_arm.exe" -Force
+       Copy-Item "stitch\bin\release\net7.0\win-x64\publish\stitch.exe" -Destination "stitch.exe" -Force
+       Copy-Item "stitch\bin\release\net7.0\win-arm64\publish\stitch.exe" -Destination "stitch_arm.exe" -Force
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -65,13 +61,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Deploy
       run: |
        dotnet publish stitch -c release -r linux-x64 --self-contained
        dotnet publish stitch -c release -r linux-arm64 --self-contained
-       cp "stitch/bin/release/net6.0/linux-x64/publish/stitch" stitch.bin -f
-       cp "stitch/bin/release/net6.0/linux-arm64/publish/stitch" stitch_arm -f
+       cp "stitch/bin/release/net7.0/linux-x64/publish/stitch" stitch.bin -f
+       cp "stitch/bin/release/net7.0/linux-arm64/publish/stitch" stitch_arm -f
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -98,13 +94,13 @@ jobs:
     - name: Setup .NET
       uses: actions/setup-dotnet@v3
       with:
-        dotnet-version: 6.0.x
+        dotnet-version: 7.0.x
     - name: Deploy
       run: |
        dotnet publish stitch -c release -r osx-x64 --self-contained
        dotnet publish stitch -c release -r osx.11.0-arm64 --self-contained
-       cp "stitch/bin/release/net6.0/osx-x64/publish/stitch" stitch
-       cp "stitch/bin/release/net6.0/osx.11.0-arm64/publish/stitch" stitch_arm
+       cp "stitch/bin/release/net7.0/osx-x64/publish/stitch" stitch
+       cp "stitch/bin/release/net7.0/osx.11.0-arm64/publish/stitch" stitch_arm
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
@@ -120,4 +116,4 @@ jobs:
         batchfiles/
         datasets/
         templates/
-       retention-days: 21         
+       retention-days: 21
