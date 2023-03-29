@@ -73,7 +73,7 @@ namespace HTMLNameSpace {
                     html.OpenAndClose(HtmlTag.th, "", "Score");
                     html.OpenAndClose(HtmlTag.th, "", "Unique");
                     html.Close(HtmlTag.tr);
-                    foreach (var location in locations) {
+                    foreach (var location in recombined_locations) {
                         html.Open(HtmlTag.tr);
                         html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(location.template.MetaData, AsideType.RecombinedTemplate, AssetsFolderName, new List<string> { "report-monoclonal", "reads" }, "aligned-" + GetAsideIdentifier(MetaData)));
                         html.OpenAndClose(HtmlTag.td, "class='center'", $"[{location.match.StartA}..{location.match.StartA + location.match.LenA}]");
