@@ -1011,6 +1011,8 @@ namespace Stitch {
 
             /// <summary>The name or identifier given to the file.</summary>
             public string Name;
+            /// <summary>The SHA256 hash of this file, for ease of detection of using the same file.</summary>
+            public string Checksum = "";
 
             public List<InputNameSpace.KeyValue> Origin;
 
@@ -1038,7 +1040,7 @@ namespace Stitch {
                 html.OpenAndClose(HtmlTag.h3, "", "Originating file");
                 html.Open(HtmlTag.p, "");
                 html.Content(Name + " ");
-                html.OpenAndClose(HtmlTag.a, $"href='file:///{path}' target='_blank'", Path);
+                html.OpenAndClose(HtmlTag.a, $"href='file:///{path}' target='_blank' title='SHA256 checksum: {Checksum}'", Path);
                 html.Close(HtmlTag.p);
                 return html;
             }

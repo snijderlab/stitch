@@ -5,6 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Text.RegularExpressions;
 using Stitch.RunParameters;
+using System.Security.Cryptography;
 
 namespace Stitch {
     /// <summary> To contain all input functionality </summary>
@@ -1291,12 +1292,18 @@ namespace Stitch {
                 }
             }
 
+            /// <summary>
+            /// Get all text for the given file. Returns (text, "", "") for that happy path and (title, short description, long description) in case of an error.
+            /// </summary>
+            /// <param name="path">The path to the file</param>
+            /// <param name="context_directory">The directory from which the path should be interpreted (can be null)</param>
             static (string, string, string) GetAllTextPrivate(string path, string context_directory) {
                 var full_path = GetFullPathPrivate(path, context_directory);
                 if (string.IsNullOrEmpty(full_path.Item2)) {
                     var res = TestReadFile(full_path.Item1);
-                    if (string.IsNullOrEmpty(res.Item2))
+                    if (string.IsNullOrEmpty(res.Item2)) {
                         res.Item1 = File.ReadAllText(res.Item1);
+                    }
                     return res;
                 } else {
                     return (full_path.Item1, full_path.Item2, "");

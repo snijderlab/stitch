@@ -1,5 +1,8 @@
 using System;
 using System.Collections.Generic;
+using System.IO;
+using System.Security.Cryptography;
+using System.Text;
 using System.Text.Json.Serialization;
 
 namespace Stitch {
@@ -145,20 +148,28 @@ namespace Stitch {
 
         /// <summary> Creates a new ParsedFile </summary>
         /// <param name="path">The filename (will be resolved to full path)</param>
-        /// <param name="content">The file content, as an array of all lines</param>
+        /// <param name="lines">The file content, as an array of all lines</param>
         /// <param name="name">The given name to the file so it is easier for users to track where the file comes from.</param>
-        /// <param name="content">The original definition of this file, if given in the batchfile or derivatives.</param>
-        public ParsedFile(string path, string[] content, string name, List<InputNameSpace.KeyValue> origin) {
+        /// <param name="lines">The original definition of this file, if given in the batchfile or derivatives.</param>
+        public ParsedFile(string path, string[] lines, string name, List<InputNameSpace.KeyValue> origin) {
             Identifier = new ReadFormat.FileIdentifier(path, name, origin);
-            Lines = content;
+            Identifier.Checksum = GetChecksum(path);
+            Lines = lines;
         }
 
         /// <summary> Creates a new ParsedFile </summary>
         /// <param name="file"> The identifier for the file. </param>
-        /// <param name="content"> The file content, as an array of all lines. </param>
-        public ParsedFile(ReadFormat.FileIdentifier file, string[] content) {
+        /// <param name="lines"> The file content, as an array of all lines. </param>
+        public ParsedFile(ReadFormat.FileIdentifier file, string[] lines) {
             Identifier = file;
-            Lines = content;
+            Identifier.Checksum = GetChecksum(file.Path);
+            Lines = lines;
+        }
+
+        private static string GetChecksum(string path) {
+            if (!File.Exists(path)) return "";
+            var stream = File.OpenRead(path);
+            return BitConverter.ToString(SHA256.Create().ComputeHash(stream)).Replace("-", null).ToLower();
         }
 
         /// <summary> Creates an empty ParsedFile </summary>

@@ -292,14 +292,14 @@ namespace Stitch {
                 var html = new HtmlBuilder();
                 var bf = BatchFile;
                 html.Open(HtmlTag.code);
-                html.OpenAndClose(HtmlTag.i, "", bf.Identifier.Path);
+                html.OpenAndClose(HtmlTag.i, $"title='SHA256 checksum: {bf.Identifier.Checksum}'", bf.Identifier.Path);
                 html.Empty(HtmlTag.br);
                 foreach (var line in bf.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                 html.Close(HtmlTag.code);
 
                 foreach (var file in IncludedFiles) {
                     html.Open(HtmlTag.code);
-                    html.OpenAndClose(HtmlTag.i, "", file.Identifier.Path);
+                    html.OpenAndClose(HtmlTag.i, $"title='SHA256 checksum: {file.Identifier.Checksum}'", file.Identifier.Path);
                     html.Empty(HtmlTag.br);
                     foreach (var line in file.Lines) html.UnsafeContent(Render(line.TrimEnd()));
                     html.Close(HtmlTag.code);
