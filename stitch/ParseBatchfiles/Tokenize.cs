@@ -248,7 +248,12 @@ namespace Stitch {
                     var _ = ParseHelper.UntilOneOf(ref content, new char[] { '(' }, counter);
                     var start_args = counter.GetPosition();
                     var args = ParseHelper.UntilOneOf(ref content, new char[] { ')' }, counter);
+
+                    // Skip the closing brace and trim all whitespace
+                    content = content.Substring(1);
+                    counter.NextColumn();
                     ParseHelper.Trim(ref content, counter);
+
                     args = args.Substring(1, args.Length - 1).Trim();
                     var end_args = counter.GetPosition();
                     var key = new KeyValue("include!", args, context, new KeyRange(new FileRange(start_key, start_args), end_args), new FileRange(start_args, end_args));
