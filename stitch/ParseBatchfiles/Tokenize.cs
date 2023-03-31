@@ -257,12 +257,12 @@ namespace Stitch {
                     args = args.Substring(1, args.Length - 1).Trim();
                     var end_args = counter.GetPosition();
                     var key = new KeyValue("include!", args, context, new KeyRange(new FileRange(start_key, start_args), end_args), new FileRange(start_args, end_args));
-                    var included_text = InputNameSpace.ParseHelper.GetFullPath(args, context, key.ValueRange).Map(path => (path, InputNameSpace.ParseHelper.GetAllText(key)));
+                    var included_text = InputNameSpace.ParseHelper.GetFullPath(args, context, "Included", origin, key.ValueRange).Map(path => (path, InputNameSpace.ParseHelper.GetAllText(path)));
                     if (included_text.IsOk() && included_text.Unwrap().Item2.IsOk()) {
                         var path = included_text.Unwrap().Item1;
                         var text = included_text.Unwrap().Item2.Unwrap();
 
-                        if (origin.Any(o => o.KeyRange.File.Identifier.Path == path)) {
+                        if (origin.Any(o => o.KeyRange.File.Identifier == path)) {
                             var res = new ParseResult<(List<KeyValue>, HashSet<ParsedFile>, string)>((new List<KeyValue>(), new HashSet<ParsedFile>(), content));
                             res.AddMessage(new ErrorMessage(key.KeyRange, "Inclusion cycle detected", "Following this inclusion would create an endless loop of included files."));
                             return res;
@@ -270,11 +270,10 @@ namespace Stitch {
 
                         var origin_copy = new List<KeyValue>(origin);
                         origin_copy.Add(key);
-                        var included_file = new ParsedFile(path, text.Split('\n'), "include!", origin_copy);
                         var original_working_directory = Directory.GetCurrentDirectory();
-                        Directory.SetCurrentDirectory(Directory.GetParent(path).FullName);
-                        var result = InternalTokenize(included_file, origin_copy).Map(tokens => {
-                            tokens.Item2.Add(included_file);
+                        Directory.SetCurrentDirectory(Directory.GetParent(path.Path).FullName);
+                        var result = InternalTokenize(text, origin_copy).Map(tokens => {
+                            tokens.Item2.Add(text);
                             return (tokens.Item1, tokens.Item2, content);
                         });
                         Directory.SetCurrentDirectory(original_working_directory);

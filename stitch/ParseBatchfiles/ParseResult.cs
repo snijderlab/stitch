@@ -119,6 +119,15 @@ namespace Stitch {
                 output.Value = f(this.Value);
             return output;
         }
+
+        public static ParseResult<List<O>> Flatten<O>(IEnumerable<ParseResult<O>> data) {
+            var output = new ParseResult<List<O>>();
+            foreach (var item in data) {
+                if (item.IsOk(output))
+                    output.Value.Add(item.Unwrap());
+            }
+            return output;
+        }
     }
     /// <summary>To save a result of a parse action, the value or a error message. </summary>
     public class RefParseResult<T> {

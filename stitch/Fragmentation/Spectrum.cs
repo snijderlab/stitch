@@ -88,7 +88,7 @@ namespace Stitch {
                 ThermoRawFile raw_file = new ThermoRawFile();
                 List<(PrecursorInfo Precursor, Centroid[] Spectrum, string Title)> spectra = new List<(PrecursorInfo, Centroid[], string)>();
                 var raw_file_path = group.Key;
-                var correct_path = InputNameSpace.ParseHelper.TestFileExists(raw_file_path);
+                var correct_path = InputNameSpace.ParseHelper.TestFileExists(new ReadFormat.FileIdentifier(raw_file_path, "RawFile", new()), false);
 
                 if (!correct_path.IsErr()) {
                     if (group.Key.EndsWith(".raw")) {

@@ -64,6 +64,51 @@ namespace Stitch {
                 File = range.File;
                 this.contextLines = contextLines;
             }
+            public ErrorMessage(ReadFormat.FileIdentifier file, string shortD, string longD = "", string help = "", bool warning = false, uint contextLines = 2) {
+                if (file.Origin.Count > 0) {
+                    var range = file.Origin.Last().KeyRange;
+                    start_position = range.Start;
+                    end_position = range.NameEnd;
+                    File = range.File;
+                } else {
+                    subject = file.Path;
+                }
+                shortDescription = shortD;
+                if (!String.IsNullOrWhiteSpace(longD)) Notes.Add(longD);
+                if (!String.IsNullOrWhiteSpace(help)) Help.Add(help);
+                Warning = warning;
+                this.contextLines = contextLines;
+            }
+            public static ErrorMessage WithContext(ErrorMessage error, string sub) {
+                var new_error = new ErrorMessage(sub, error.shortDescription, "", "", error.Warning, error.contextLines);
+                new_error.Notes.AddRange(error.Notes);
+                new_error.Help.AddRange(error.Help);
+                return new_error;
+            }
+            public static ErrorMessage WithContext(ErrorMessage error, ParsedFile sub) {
+                var new_error = new ErrorMessage(sub, error.shortDescription, "", "", error.Warning, error.contextLines);
+                new_error.Notes.AddRange(error.Notes);
+                new_error.Help.AddRange(error.Help);
+                return new_error;
+            }
+            public static ErrorMessage WithContext(ErrorMessage error, Position sub) {
+                var new_error = new ErrorMessage(sub, error.shortDescription, "", "", error.Warning, error.contextLines);
+                new_error.Notes.AddRange(error.Notes);
+                new_error.Help.AddRange(error.Help);
+                return new_error;
+            }
+            public static ErrorMessage WithContext(ErrorMessage error, FileRange sub) {
+                var new_error = new ErrorMessage(sub, error.shortDescription, "", "", error.Warning, error.contextLines);
+                new_error.Notes.AddRange(error.Notes);
+                new_error.Help.AddRange(error.Help);
+                return new_error;
+            }
+            public static ErrorMessage WithContext(ErrorMessage error, KeyRange sub) {
+                var new_error = new ErrorMessage(sub, error.shortDescription, "", "", error.Warning, error.contextLines);
+                new_error.Notes.AddRange(error.Notes);
+                new_error.Help.AddRange(error.Help);
+                return new_error;
+            }
             public static ErrorMessage DuplicateValue(FileRange range) {
                 var output = new ErrorMessage(range, "Duplicate parameter definition", "A value for this property was already defined.", "", true);
                 return output;
@@ -154,8 +199,6 @@ namespace Stitch {
                     Console.Write($"\n{name}: ");
                     Console.ForegroundColor = defaultColour;
                     Console.WriteLine(shortDescription);
-                } else {
-
                 }
 
                 // Location
@@ -179,6 +222,10 @@ namespace Stitch {
                     var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (start_position.Value.Line + 1).ToString().Length;
                     var line_number = (start_position.Value.Line + 1).ToString().PadRight(number_width + 1, ' ');
                     var spacing = new string(' ', number_width + 3);
+                    if (start_position.Value.Line > File.Lines.Length - 1) {
+                        Console.WriteLine($"Internal error please report: index:{start_position.Value.Line} lines:{File.Lines.Length} file:{File.ToString().Replace("\n", " ")}");
+                        return;
+                    }
                     var line = File.Lines[start_position.Value.Line];
 
                     void print_line(int line_index, int front_skip) {

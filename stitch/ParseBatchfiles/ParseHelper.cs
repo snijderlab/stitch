@@ -6,6 +6,7 @@ using System.Text;
 using System.Text.RegularExpressions;
 using Stitch.RunParameters;
 using System.Security.Cryptography;
+using static Stitch.ReadFormat;
 
 namespace Stitch {
     /// <summary> To contain all input functionality </summary>
@@ -243,16 +244,17 @@ namespace Stitch {
                         new LocalParams<InputData.Peaks>("Peaks", new List<(string, Action<ParseResult<InputData.Peaks>, KeyValue>)>{
                             ("DeNovoMatchIons", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.DeNovoMatchIons);
-                                    settings.Value.DeNovoMatchIons= ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.DeNovoMatchIons = new FileIdentifier();
+                                settings.Value.DeNovoMatchIons.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Name);
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("RawDataDirectory", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
-                                    settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "RawDataDirectory").Map(f => f.Path).UnwrapOrDefault(outEither, "");}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
                         }, (settings, value) => {
@@ -263,6 +265,8 @@ namespace Stitch {
                             if (string.IsNullOrWhiteSpace(settings.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(settings.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            settings.File = ParseHelper.GetFullPath(settings.File.Path, pair.Context, settings.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
+                            settings.DeNovoMatchIons = settings.DeNovoMatchIons == null ? null : ParseHelper.GetFullPath(settings.DeNovoMatchIons.Path, pair.Context, settings.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(settings);
                         });
                     }),
@@ -273,11 +277,12 @@ namespace Stitch {
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, reads => {
                             if (string.IsNullOrWhiteSpace(reads.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(reads.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            reads.File = ParseHelper.GetFullPath(reads.File.Path, pair.Context, reads.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(reads);
                         });
                     }                        ),
@@ -288,20 +293,23 @@ namespace Stitch {
                                 settings.Value.Cutoff = (uint)ParseHelper.ParseInt(value, NumberRange<int>.Closed(0, 100)).UnwrapOrDefault(outEither, 0);}),
                             ("Denovo Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.DeNovoFile);
-                                settings.Value.DeNovoFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", new List<KeyValue>{value});}),
+                                settings.Value.DeNovoFile = new FileIdentifier();
+                                settings.Value.DeNovoFile.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, name);
                                 name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("PSMS Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.PSMSFile);
-                                settings.Value.PSMSFile = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, ""), "", new List<KeyValue>{value});}),
+                                settings.Value.PSMSFile = new FileIdentifier();
+                                settings.Value.PSMSFile.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Separator", (settings, value) => {
                                 settings.Value.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');})
                         }).Parse(pair, novor => {
                             if (novor.DeNovoFile == null && novor.PSMSFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "DeNovo Path OR PSMS Path"));
                             if (string.IsNullOrWhiteSpace(name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-                            if (novor.DeNovoFile != null) novor.DeNovoFile.Name = name;
-                            if (novor.PSMSFile != null) novor.PSMSFile.Name = name;
+
+                            if (novor.DeNovoFile != null) novor.DeNovoFile = ParseHelper.GetFullPath(novor.DeNovoFile.Path, pair.Context, name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
+                            if (novor.PSMSFile != null) novor.PSMSFile = ParseHelper.GetFullPath(novor.PSMSFile.Path, pair.Context, name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(novor);
                         });
                     }),
@@ -314,11 +322,12 @@ namespace Stitch {
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, fasta => {
                             if (string.IsNullOrWhiteSpace(fasta.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(fasta.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            fasta.File = ParseHelper.GetFullPath(fasta.File.Path, pair.Context, fasta.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(fasta);
                         });
                     }),
@@ -333,11 +342,12 @@ namespace Stitch {
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }).Parse(pair, mmcif => {
                             if (string.IsNullOrWhiteSpace(mmcif.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(mmcif.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            mmcif.File = ParseHelper.GetFullPath(mmcif.File.Path, pair.Context, mmcif.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(mmcif);
                         });
                     }),
@@ -352,10 +362,10 @@ namespace Stitch {
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("RawDataDirectory", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
-                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "RawDataDirectory").Map(f => f.Path).UnwrapOrDefault(outEither, "");}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
                             ("FragmentationMethod", (settings, value) => {
@@ -364,6 +374,7 @@ namespace Stitch {
                             if (string.IsNullOrWhiteSpace(casanovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(casanovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            casanovo.File = ParseHelper.GetFullPath(casanovo.File.Path, pair.Context, casanovo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(casanovo);
                         });
                     }),
@@ -407,22 +418,23 @@ namespace Stitch {
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Path);
-                                settings.Value.File.Path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
                             ("RawDataDirectory", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
-                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");}),
+                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "RawDataDirectory").Map(f => f.Path).UnwrapOrDefault(outEither, "");}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
                         }).Parse(pair, max_novo => {
                             if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
 
+                            max_novo.File = ParseHelper.GetFullPath(max_novo.File.Path, pair.Context, max_novo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(max_novo);
                         });
                     }),
                     ("Folder", (output, pair) => {
                         // Parse files one by one
-                        var folder_path = "";
+                        string folder_path = "";
                         FileRange? folder_range = null;
                         var starts_with = "";
                         var identifier = new Regex(".*");
@@ -434,13 +446,13 @@ namespace Stitch {
                                 identifier = ParseHelper.ParseRegex(value).UnwrapOrDefault(outEither, null);}),
                             ("Path", (settings, value) => {
                                 CheckDuplicate(outEither, value, folder_path);
-                                    folder_path = ParseHelper.GetFullPath(value).UnwrapOrDefault(outEither, "");
-                                    folder_range = value.ValueRange;}),
+                                folder_path = ParseHelper.GetFullPath(value, "Folder").Map(f => f.Path).UnwrapOrDefault(outEither, "");
+                                folder_range = value.ValueRange;}),
                             ("Recursive", (settings, value) => {
                                 recursive = ParseHelper.ParseBool(value, "Recursive").UnwrapOrDefault(outEither, false);}),
                             ("StartsWith", (settings, value) => {
                                 CheckDuplicate(outEither, value, starts_with);
-                                    starts_with = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                                starts_with = value.GetValue().UnwrapOrDefault(outEither, "");}),
                         }, (settings, value) => {
                             var peaks = ParseHelper.GetPeaksSettings(value, false, peaks_settings);
                             outEither.Messages.AddRange(peaks.Messages);
@@ -450,25 +462,20 @@ namespace Stitch {
                                 outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                                 return;
                             }
-                            var files = GetAllFilesPrivate(folder_path, null, recursive);
+                            List<ParsedFile> files = GetAllFilesPrivate(folder_path, pair.Context, recursive).UnwrapOrDefault(outEither, new());
 
-                            if (files.Item1.Length != 0) {
-                                foreach (var file in files.Item1) {
-                                    if (!Path.GetFileName(file).StartsWith(starts_with)) continue;
+                            foreach (var file in files) {
+                                var name = Path.GetFileName(file.Identifier.Path);
+                                if (!name.StartsWith(starts_with)) continue;
 
-                                    var fileId = new ReadFormat.FileIdentifier() { Name = Path.GetFileNameWithoutExtension(file), Path = ParseHelper.GetFullPath(file, null).UnwrapOrDefault(outEither, "") };
-
-                                    if (file.EndsWith(".fasta"))
-                                        output.Value.Files.Add(new InputData.FASTA() { File = fileId, Identifier = identifier });
-                                    else if (file.EndsWith(".txt"))
-                                        output.Value.Files.Add(new InputData.Reads() { File = fileId });
-                                    else if (file.EndsWith(".csv"))
-                                        output.Value.Files.Add(new InputData.Peaks() { File = fileId, FileFormat = peaks_settings.FileFormat, Parameter = peaks_settings.Parameter });
-                                    else
-                                        continue;
-                                }
-                            } else {
-                                outEither.AddMessage(new ErrorMessage(folder_range.Value, files.Item2, files.Item3, files.Item4));
+                                if (name.EndsWith(".fasta"))
+                                    output.Value.Files.Add(new InputData.FASTA() { File = file.Identifier, Identifier = identifier });
+                                else if (name.EndsWith(".txt"))
+                                    output.Value.Files.Add(new InputData.Reads() { File = file.Identifier });
+                                else if (name.EndsWith(".csv"))
+                                    output.Value.Files.Add(new InputData.Peaks() { File = file.Identifier, FileFormat = peaks_settings.FileFormat, Parameter = peaks_settings.Parameter });
+                                else
+                                    continue;
                             }
                         });
                     }),
@@ -640,7 +647,7 @@ namespace Stitch {
                 var output = new LocalParams<ReportParameter>("Report", new List<(string, Action<ParseResult<ReportParameter>, KeyValue>)>{
                     ("Folder", (output, pair) => {
                         CheckDuplicate(outEither, pair, output.Value.Folder);
-                        output.Value.Folder = ParseHelper.GetFullPath(pair).UnwrapOrDefault(outEither, "");}),
+                        output.Value.Folder = ParseHelper.GetFullPath(pair, "Folder").Map(f=>f.Path).UnwrapOrDefault(outEither, "");}),
                     ("Html", (output, pair) => {
                         new LocalParams<RunParameters.Report.HTML>("Html", new List<(string, Action<ParseResult<RunParameters.Report.HTML>, KeyValue>)>{
                             ("Path", (settings, value) => {
@@ -786,14 +793,14 @@ namespace Stitch {
                             asymmetric_sets.Add((a_score, a_sets));}),
                 }).Parse(key, settings => {
                     if (String.IsNullOrEmpty(identity.Item1)) {
-                        if (path_Setting != null) {
-                            var all_text = GetAllText(path_Setting);
+                        var path = GetFullPath(path_Setting, settings.Name);
+                        if (path.IsOk()) {
+                            var all_text = GetAllText(path.Unwrap());
 
                             if (all_text.IsOk(outEither)) {
-                                var content = all_text.UnwrapOrDefault(outEither, "").Split("\n");
-                                var id = new ParsedFile(GetFullPath(path_Setting).UnwrapOrDefault(outEither, ""), content, settings.Name, new List<KeyValue> { key });
-                                var counter = new Tokenizer.Counter(id);
-                                result = ParseAlphabetData(id, counter).UnwrapOrDefault(outEither, new());
+                                var content = all_text.UnwrapOrDefault(outEither, new());
+                                var counter = new Tokenizer.Counter(content);
+                                result = ParseAlphabetData(content, counter).UnwrapOrDefault(outEither, new());
                                 settings.Alphabet = result.Item1;
                                 settings.ScoringMatrix = result.Item2;
                             } else {
@@ -932,7 +939,7 @@ namespace Stitch {
                 new LocalParams<SegmentValue>("Segment", new List<(string, Action<ParseResult<SegmentValue>, KeyValue>)>{
                     ("Path", (settings, value) => {
                         CheckDuplicate(outEither, value, file_path);
-                        file_path = GetFullPath(value).UnwrapOrDefault(outEither, "");
+                        file_path = value.GetValue().UnwrapOrDefault(outEither, "");
                         file_pos = value;}),
                     ("Name", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Value.Name);
@@ -967,7 +974,7 @@ namespace Stitch {
                     if (outEither.IsErr()) return;
 
                     // Open the file
-                    var fileId = new ReadFormat.FileIdentifier(ParseHelper.GetFullPath(file_path, null).UnwrapOrDefault(outEither, ""), settings.Name, new List<KeyValue> { file_pos });
+                    var fileId = ParseHelper.GetFullPath(file_path, file_pos.Context, settings.Name, new List<KeyValue> { file_pos }).UnwrapOrDefault(outEither, new());
 
                     var folder_reads = new ParseResult<List<ReadFormat.General>>();
                     var alphabet = settings.Alphabet ?? backup_alphabet;
@@ -1065,39 +1072,28 @@ namespace Stitch {
                 return outEither;
             }
 
-            public static ParseResult<string> GetFullPath(KeyValue setting) {
-                var outEither = new ParseResult<string>();
+            public static ParseResult<FileIdentifier> GetFullPath(KeyValue setting, string name) {
+                var outEither = new ParseResult<FileIdentifier>();
                 var res = setting.GetValue();
                 if (res.IsOk(outEither)) {
-                    var path = GetFullPathPrivate(res.Unwrap(), setting.Context);
-
-                    if (string.IsNullOrEmpty(path.Item2)) {
-                        outEither.Value = path.Item1;
-                    } else {
-                        outEither.AddMessage(new ErrorMessage(setting.ValueRange, path.Item1, path.Item2));
-                    }
+                    return GetFullPath(res.Unwrap(), setting.Context, name, setting.KeyRange.File.Identifier.Origin, setting.ValueRange);
                 }
                 return outEither;
             }
-            public static ParseResult<string> GetFullPath(string path, string context_directory, FileRange? context = null) {
-                var outEither = new ParseResult<string>();
-                var res = GetFullPathPrivate(path, context_directory);
+            public static ParseResult<FileIdentifier> GetFullPath(string path, string context_directory, string name, List<KeyValue> origin, FileRange context) {
+                var res = GetFullPath(path, context_directory, name, origin);
 
-                if (string.IsNullOrEmpty(res.Item2)) {
-                    outEither.Value = res.Item1;
+                if (res.IsOk()) {
+                    return res;
                 } else {
-                    if (context == null)
-                        outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2));
-                    else
-                        outEither.AddMessage(new ErrorMessage(context.Value, res.Item1, res.Item2));
+                    return new ParseResult<FileIdentifier>(ErrorMessage.WithContext(res.Messages[0], context));
                 }
-                return outEither;
             }
-            static (string, string) GetFullPathPrivate(string path, string context_directory) {
+            public static ParseResult<FileIdentifier> GetFullPath(string path, string context_directory, string name, List<KeyValue> origin) {
                 if (path.IndexOfAny(Path.GetInvalidPathChars()) != -1) {
-                    return ("Invalid path", "The path contains invalid characters.");
+                    return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The path contains invalid characters."));
                 } else if (string.IsNullOrWhiteSpace(path)) {
-                    return ("Invalid path", "The path is empty.");
+                    return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The path is empty."));
                 }
                 {
                     try {
@@ -1105,38 +1101,42 @@ namespace Stitch {
                             path = path.Substring(1, path.Length - 2);
                         }
                         if (context_directory != null)
-                            return (Path.GetFullPath(path, context_directory), "");
+                            return new ParseResult<FileIdentifier>(new FileIdentifier(Path.GetFullPath(path, context_directory), name, origin));
                         else
-                            return (Path.GetFullPath(path), "");
+                            return new ParseResult<FileIdentifier>(new FileIdentifier(Path.GetFullPath(path), name, origin));
                     } catch (ArgumentException) {
-                        return ("Invalid path", "The path cannot be found.");
+                        return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The path cannot be found."));
                     } catch (System.Security.SecurityException) {
-                        return ("Invalid path", "The file could not be opened because of a lack of required permissions.");
+                        return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The file could not be opened because of a lack of required permissions."));
                     } catch (NotSupportedException) {
-                        return ("Invalid path", "The path contains a colon ':' not part of a volume identifier.");
+                        return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The path contains a colon ':' not part of a volume identifier."));
                     } catch (PathTooLongException) {
-                        return ("Invalid path", "The path length exceeds the system defined width.");
+                        return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", "The path length exceeds the system defined width."));
                     } catch (Exception e) {
-                        return ("Invalid path", $"Unknown exception occurred when reading path: {e.Message}.");
+                        return new ParseResult<FileIdentifier>(new ErrorMessage(path, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}."));
                     }
                 }
             }
-            static (string[], string, string, string) GetAllFilesPrivate(string path, string context_directory, bool recursive) {
-                var try_path = GetFullPathPrivate(path, context_directory);
+            static ParseResult<List<ParsedFile>> GetAllFilesPrivate(string path, string context_directory, bool recursive) {
+                var full_path = "";
+                if (context_directory != null)
+                    full_path = Path.GetFullPath(path, context_directory);
+                else
+                    full_path = Path.GetFullPath(path);
 
                 try {
                     var option = SearchOption.TopDirectoryOnly;
                     if (recursive) option = SearchOption.AllDirectories;
-                    return (Directory.GetFiles(try_path.Item1, "*", option), "", "", "");
+                    return ParseResult<List<ParsedFile>>.Flatten(Directory.GetFiles(full_path, "*", option).Select(f => GetAllText(new FileIdentifier(f, "Loaded file from folder", new()))));
                 } catch (ArgumentException) {
-                    return (Array.Empty<string>(), "Invalid path", "The path contains invalid characters.", "");
+                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Invalid path", "The path contains invalid characters.", ""));
                 } catch (UnauthorizedAccessException) {
-                    return (Array.Empty<string>(), "Invalid path", "The file could not be opened because of a lack of required permissions.", "");
+                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Invalid path", "The file could not be opened because of a lack of required permissions.", ""));
                 } catch (PathTooLongException) {
-                    return (Array.Empty<string>(), "Invalid path", "The path length exceeds the system defined width.", "");
+                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Invalid path", "The path length exceeds the system defined width.", ""));
                 } catch (DirectoryNotFoundException) {
                     try {
-                        var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
+                        var pieces = full_path.Split(new char[] { '\\', '/' });
                         var drive = pieces[0].Split(':')[0];
                         if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
                             string current_path = $"{drive}:\\";
@@ -1162,133 +1162,92 @@ namespace Stitch {
                                         extra = $"\nDid you mean '{max_name}'?";
                                     }
 
-                                    return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
+                                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}"));
                                 }
                                 current_path = next_path;
                             }
                             // Will likely be never used because that would raise a FileNotFoundException
-                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
+                            return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'."));
                         } else {
-                            return (Array.Empty<string>(), "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
+                            return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted."));
                         }
                     } catch {
-                        return (Array.Empty<string>(), "Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
+                        return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Could not open file", "The path cannot be found, possibly on an unmapped drive.", ""));
                     }
                 } catch (IOException) {
-                    return (Array.Empty<string>(), "Invalid path", "The path is a file name or a network error has occurred.", "");
+                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Invalid path", "The path is a file name or a network error has occurred.", ""));
                 } catch (Exception e) {
-                    return (Array.Empty<string>(), "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", "");
+                    return new ParseResult<List<ParsedFile>>(new ErrorMessage(path, "Invalid path", $"Unknown exception occurred when reading path: {e.Message}.", ""));
                 }
             }
-            public static ParseResult<string> GetAllText(KeyValue setting) {
-                var outEither = new ParseResult<string>();
-                var item = setting.GetValue();
-                if (item.IsOk(outEither)) {
-                    var res = GetAllTextPrivate(item.Unwrap(), setting.Context);
-
-                    if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
-                    else outEither.AddMessage(new ErrorMessage(setting.ValueRange, res.Item1, res.Item2, res.Item3));
-                }
-                return outEither;
-            }
-            public static ParseResult<string> GetAllText(ReadFormat.FileIdentifier file) {
-                if (file.Origin != null) return GetAllText(file.Origin.Last());
-                else return GetAllText(file.Path);
-            }
-            public static ParseResult<string> GetAllText(string path, string context_directory = null) {
-                var outEither = new ParseResult<string>();
-
-                var res = GetAllTextPrivate(path, context_directory);
-
-                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
-                else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
-
-                return outEither;
-            }
-            public static ParseResult<string> TestFileExists(string path) {
-                var outEither = new ParseResult<string>();
-
-                var res = TestReadFile(path);
-
-                if (string.IsNullOrEmpty(res.Item2)) outEither.Value = res.Item1;
-                else outEither.AddMessage(new ErrorMessage(path, res.Item1, res.Item2, res.Item3));
-
-                return outEither;
-            }
-            static (string, string, string) TestReadFile(string path) {
-                var try_path = GetFullPathPrivate(path, null);
-
-                if (string.IsNullOrEmpty(try_path.Item2)) {
-                    if (Directory.Exists(try_path.Item1)) {
-                        return ("Could not open file", "The file given is a directory.", "");
-                    } else {
-                        try {
-                            File.OpenRead(try_path.Item1).Close();
-                            return (try_path.Item1, "", "");
-                        } catch (DirectoryNotFoundException) {
-                            try {
-                                var pieces = try_path.Item1.Split(new char[] { '\\', '/' });
-                                var drive = pieces[0].Split(':')[0];
-                                if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
-                                    string current_path = $"{drive}:\\";
-                                    for (int i = 1; i < pieces.Length - 1; i++) {
-                                        string next_path = current_path + pieces[i] + Path.DirectorySeparatorChar;
-
-                                        if (!Directory.Exists(next_path)) {
-                                            var directories = Directory.GetDirectories(current_path);
-                                            var extra = "";
-
-                                            if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
-                                            else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
-                                            else {
-                                                int max_value = 0;
-                                                string max_name = "";
-                                                foreach (var dir in directories) {
-                                                    int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
-                                                    if (score > max_value) {
-                                                        max_name = Path.GetFileName(dir);
-                                                        max_value = score;
-                                                    }
-                                                }
-                                                extra = $"\nDid you mean '{max_name}'?";
-                                            }
-
-                                            return ("Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}");
-                                        }
-                                        current_path = next_path;
-                                    }
-                                    // Will likely be never used because that would raise a FileNotFoundException
-                                    return ("Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'.");
-                                } else {
-                                    return ("Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted.");
-                                }
-                            } catch {
-                                return ("Could not open file", "The path cannot be found, possibly on an unmapped drive.", "");
-                            }
-                        } catch (FileNotFoundException) {
-                            int max_value = 0;
-                            string max_name = "";
-                            string name = Path.GetFileName(try_path.Item1);
-
-                            foreach (var file in Directory.GetFiles(Path.GetDirectoryName(try_path.Item1))) {
-                                int score = HelperFunctionality.SmithWatermanStrings(file, name);
-                                if (score > max_value) {
-                                    max_name = Path.GetFileName(file);
-                                    max_value = score;
-                                }
-                            }
-
-                            return ("Could not open file", "The specified file could not be found.", $"Did you mean '{max_name}'?");
-                        } catch (IOException) {
-                            return ("Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program, like Excel.");
-                        } catch (UnauthorizedAccessException) {
-                            return ("Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file.");
-                        } catch (System.Security.SecurityException) {
-                            return ("Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file.");
-                        }
-                    }
+            public static ParseResult<bool> TestFileExists(FileIdentifier file, bool no_directory = true) {
+                if (no_directory && Directory.Exists(file.Path)) {
+                    return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The file given is a directory.", ""));
                 } else {
-                    return (try_path.Item1, try_path.Item2, "");
+                    try {
+                        File.OpenRead(file.Path).Close();
+                        return new ParseResult<bool>(true);
+                    } catch (DirectoryNotFoundException) {
+                        try {
+                            var pieces = file.Path.Split(new char[] { '\\', '/' });
+                            var drive = pieces[0].Split(':')[0];
+                            if (Directory.GetLogicalDrives().Contains($"{drive}:\\")) {
+                                string current_path = $"{drive}:\\";
+                                for (int i = 1; i < pieces.Length - 1; i++) {
+                                    string next_path = current_path + pieces[i] + Path.DirectorySeparatorChar;
+
+                                    if (!Directory.Exists(next_path)) {
+                                        var directories = Directory.GetDirectories(current_path);
+                                        var extra = "";
+
+                                        if (directories.Length == 0) extra = "\nThere are no subfolders in this folder.";
+                                        else if (directories.Length == 1) extra = $"\nThe only subfolder is '{directories[0]}'.";
+                                        else {
+                                            int max_value = 0;
+                                            string max_name = "";
+                                            foreach (var dir in directories) {
+                                                int score = HelperFunctionality.SmithWatermanStrings(dir, pieces[i]);
+                                                if (score > max_value) {
+                                                    max_name = Path.GetFileName(dir);
+                                                    max_value = score;
+                                                }
+                                            }
+                                            extra = $"\nDid you mean '{max_name}'?";
+                                        }
+
+                                        return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The path cannot be found.", $"The folder '{pieces[i]}' does not exist in '{pieces[i - 1]}'.{extra}"));
+                                    }
+                                    current_path = next_path;
+                                }
+                                // Will likely be never used because that would raise a FileNotFoundException
+                                return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The path cannot be found.", $"The file '{pieces[^1]}' does not exist in '{current_path}'."));
+                            } else {
+                                return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The path cannot be found.", $"The drive '{drive}:\\' is not mounted."));
+                            }
+                        } catch {
+                            return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The path cannot be found, possibly on an unmapped drive.", ""));
+                        }
+                    } catch (FileNotFoundException) {
+                        int max_value = 0;
+                        string max_name = "";
+                        string name = Path.GetFileName(file.Path);
+
+                        foreach (var sub_file in Directory.GetFiles(Path.GetDirectoryName(file.Path))) {
+                            int score = HelperFunctionality.SmithWatermanStrings(sub_file, name);
+                            if (score > max_value) {
+                                max_name = Path.GetFileName(sub_file);
+                                max_value = score;
+                            }
+                        }
+
+                        return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The specified file could not be found.", $"Did you mean '{max_name}'?"));
+                    } catch (IOException) {
+                        return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "An IO error occurred while opening the file.", "Make sure it is not opened in another program, like Excel."));
+                    } catch (UnauthorizedAccessException) {
+                        return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "Unauthorised access.", "Make sure you have the right permissions to open this file."));
+                    } catch (System.Security.SecurityException) {
+                        return new ParseResult<bool>(new ErrorMessage(file, "Could not open file", "The caller does not have the required permission.", "Make sure you have the right permissions to open this file."));
+                    }
                 }
             }
 
@@ -1297,17 +1256,35 @@ namespace Stitch {
             /// </summary>
             /// <param name="path">The path to the file</param>
             /// <param name="context_directory">The directory from which the path should be interpreted (can be null)</param>
-            static (string, string, string) GetAllTextPrivate(string path, string context_directory) {
-                var full_path = GetFullPathPrivate(path, context_directory);
-                if (string.IsNullOrEmpty(full_path.Item2)) {
-                    var res = TestReadFile(full_path.Item1);
-                    if (string.IsNullOrEmpty(res.Item2)) {
-                        res.Item1 = File.ReadAllText(res.Item1);
-                    }
-                    return res;
+            public static ParseResult<ParsedFile> GetAllText(FileIdentifier file) {
+                var res = TestFileExists(file);
+                if (res.IsOk()) {
+                    var all_text = File.ReadAllText(file.Path);
+                    return new ParseResult<ParsedFile>(new ParsedFile(file, SplitInLines(all_text)));
                 } else {
-                    return (full_path.Item1, full_path.Item2, "");
+                    return new ParseResult<ParsedFile>(res.Messages);
                 }
+            }
+
+            static string[] SplitInLines(string text) {
+                // Detect which of these four option is the first used \n, \r\n, \n\r, or \r (two are for very niche OSes)
+                var n_index = text.IndexOf('\n');
+                var r_index = text.IndexOf('\r');
+
+                // The cases where only one type is detected or no newlines are detected at all
+                if (n_index == -1 && r_index == -1) return new string[] { text };
+                if (r_index == -1) return text.Split('\n');
+                if (n_index == -1) return text.Split('\r');
+
+                // Composite cases
+                if (n_index < r_index && text[n_index + 1] == '\r') return text.Split("\n\r");
+                if (r_index < n_index && text[r_index + 1] == '\n') return text.Split("\r\n");
+
+                // 'Incorrect' cases which have both but are not composite, the first type will be chosen as line ending
+                if (n_index < r_index) return text.Split('\n');
+                if (r_index < n_index) return text.Split('\r');
+
+                throw new Exception("Could not determine line endings for file");
             }
         }
     }

@@ -14,7 +14,7 @@ namespace Stitch {
             ("RawDataDirectory", (output, value) => {
                 if (output.Value.RawDataDirectory != null) output.AddMessage(ErrorMessage.DuplicateValue(value.KeyRange.Name));
                 output.AddMessage(new ErrorMessage(value.KeyRange, "Outer scope RawDataDirectory is deprecated", "To allow for more logical information grouping, combinations of multiple datasets, and flexibility with other input file formats the `RawDataDirectory` should be used on Input definitions instead.", "See RawDataDirectory under Input parameters.", true));
-                output.Value.RawDataDirectory = ParseHelper.GetFullPath(value).UnwrapOrDefault(output, "");
+                output.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "Global RawDataDirectory").Map(f=>f.Path).UnwrapOrDefault(output, "");
                 output.Value.LoadRawData = true;
                 if (!Directory.Exists(output.Value.RawDataDirectory)) {
                     output.AddMessage(new ErrorMessage(value.ValueRange, "Could not find RawDataDirectory.", "Execution will continue, but the spectra will be missing from all reports.", "", true));
@@ -60,10 +60,7 @@ namespace Stitch {
         public static Run Batch(string path) {
             var output = new Run();
             var outEither = new ParseResult<Run>(output);
-            path = ParseHelper.GetFullPath(path, null).Unwrap();
-
-            // Get the contents
-            string batchfile_content = ParseHelper.GetAllText(path).Unwrap().Replace("\t", "    "); // Remove tabs, in tabs vs spaces obviously go for spaces ;-)
+            var batchfile = ParseHelper.GetAllText(ParseHelper.GetFullPath(path, null, "Batchfile", new()).Unwrap()).Unwrap();
 
             // Set the working directory to the directory of the batchfile
             var original_working_directory = Directory.GetCurrentDirectory();
@@ -72,7 +69,6 @@ namespace Stitch {
             }
 
             // Save the batchfile for use in the construction of error messages
-            var batchfile = new ParsedFile(path, batchfile_content.Split('\n'), "Batchfile", null);
             // Tokenize the file, into a key value pair tree
             var batchfile_file = InputNameSpace.Tokenizer.Tokenize(batchfile).Unwrap();
             output.BatchFile = batchfile;

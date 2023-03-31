@@ -22,7 +22,7 @@ namespace Stitch {
             var possible_content = InputNameSpace.ParseHelper.GetAllText(inputFile);
 
             if (possible_content.IsOk(out_either)) {
-                var parsed = new ParsedFile(inputFile, possible_content.Unwrap().Split('\n'));
+                var parsed = possible_content.Unwrap();
                 var reads = new List<ReadFormat.General>();
                 out_either.Value = reads;
 
@@ -56,8 +56,8 @@ namespace Stitch {
             var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
-            var lines = possible_content.Unwrap().Split('\n').ToArray();
-            var parse_file = new ParsedFile(inputFile, lines);
+            var parse_file = possible_content.Unwrap();
+            var lines = parse_file.Lines;
 
             string identifierLine = "";
             int identifierLineNumber = 1;
@@ -222,7 +222,7 @@ namespace Stitch {
             var out_either = new ParseResult<List<ReadFormat.General>>();
             var match_ions = new List<(int ScanNumber, IASM ASM)>();
             if (peaks.DeNovoMatchIons != null) {
-                match_ions = Fragmentation.LoadPeaksSpectra(new ParsedFile(new ReadFormat.FileIdentifier(peaks.DeNovoMatchIons, "", null), InputNameSpace.ParseHelper.GetAllText(peaks.DeNovoMatchIons).UnwrapOrDefault(out_either, "").Split('\n'))).UnwrapOrDefault(out_either, new());
+                match_ions = InputNameSpace.ParseHelper.GetAllText(peaks.DeNovoMatchIons).Map(f => Fragmentation.LoadPeaksSpectra(f).UnwrapOrDefault(out_either, new())).UnwrapOrDefault(out_either, new());
             }
 
             var peaks_parameters = local == null ? new RunParameters.InputData.PeaksParameters(false) : local.Peaks;
@@ -237,9 +237,9 @@ namespace Stitch {
                 return out_either;
             }
 
-            List<string> lines = possible_content.Unwrap().Split('\n').ToList();
+            string[] lines = possible_content.Unwrap().Lines;
             var reads = new List<ReadFormat.General>();
-            var parse_file = new ParsedFile(peaks.File, lines.ToArray());
+            var parse_file = possible_content.Unwrap();
 
             out_either.Value = reads;
 
@@ -307,9 +307,9 @@ namespace Stitch {
                 return out_either;
             }
 
-            List<string> lines = possible_content.Unwrap().Split('\n').ToList();
+            string[] lines = possible_content.Unwrap().Lines;
             var reads = new List<ReadFormat.General>();
-            var parse_file = new ParsedFile(max_novo.File, lines.ToArray());
+            var parse_file = possible_content.Unwrap();
 
             out_either.Value = reads;
 
@@ -372,8 +372,8 @@ namespace Stitch {
             var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
-            var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file, lines);
+            string[] lines = possible_content.Unwrap().Lines;
+            var parse_file = possible_content.Unwrap();
             var linenumber = -1;
 
             foreach (var line in lines) {
@@ -434,8 +434,8 @@ namespace Stitch {
             var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
-            var lines = possible_content.Unwrap().Split('\n');
-            var parse_file = new ParsedFile(file, lines);
+            string[] lines = possible_content.Unwrap().Lines;
+            var parse_file = possible_content.Unwrap();
             var linenumber = -1;
 
             foreach (var line in lines) {
@@ -490,7 +490,7 @@ namespace Stitch {
     'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O',
             };
 
-            var loaded_file = InputNameSpace.ParseHelper.GetAllText(mmcif.File).Map(c => new ParsedFile(mmcif.File, c.Split(Environment.NewLine)));
+            var loaded_file = InputNameSpace.ParseHelper.GetAllText(mmcif.File);
 
             if (loaded_file.IsErr()) {
                 out_either.Messages.AddRange(loaded_file.Messages);
@@ -570,7 +570,7 @@ namespace Stitch {
         public static ParseResult<List<ReadFormat.General>> Casanovo(NameFilter filter, RunParameters.InputData.Casanovo casanovo, ScoringMatrix alphabet) {
             var reads = new List<ReadFormat.General>();
             var out_either = new ParseResult<List<ReadFormat.General>>(reads);
-            var loaded_file = InputNameSpace.ParseHelper.GetAllText(casanovo.File).Map(c => new ParsedFile(casanovo.File, c.Split('\n')));
+            var loaded_file = InputNameSpace.ParseHelper.GetAllText(casanovo.File);
 
             if (loaded_file.IsErr()) {
                 out_either.Messages.AddRange(loaded_file.Messages);
@@ -593,7 +593,7 @@ namespace Stitch {
                     var path = data.Content;
                     if (casanovo.RawDataDirectory != null) {
                         var reconstituted_name = (String.IsNullOrEmpty(casanovo.RawDataDirectory) ? "./" : casanovo.RawDataDirectory + (casanovo.RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + Path.GetFileName(path);
-                        path = InputNameSpace.ParseHelper.GetFullPath(reconstituted_name, null, data.Location).UnwrapOrDefault(out_either, "");
+                        path = InputNameSpace.ParseHelper.GetFullPath(reconstituted_name, null, "RawFile", new(), data.Location).Map(f => f.Path).UnwrapOrDefault(out_either, "");
                     }
                     raw_files.Add(path);
                 } else {

@@ -43,7 +43,7 @@ namespace Stitch {
                 /// <summary> The file format of the PEAKS file. </summary>
                 public PeaksFileFormat FileFormat = PeaksFileFormat.PeaksX();
                 public string RawDataDirectory = null;
-                public string DeNovoMatchIons = null;
+                public ReadFormat.FileIdentifier DeNovoMatchIons = null;
                 public char Separator = ',';
                 public char DecimalSeparator = '.';
                 public bool XleDisambiguation = false;
@@ -269,10 +269,10 @@ namespace Stitch {
                 /// <param name="r">The values for the parameters.</param>
                 /// <returns>A name.</returns>
                 public string CreateName(String folder, Run r) {
-                    if (folder != null)
-                        return System.IO.Path.GetFullPath(ReportParameter.CreateName(r, Path), folder);
-                    else
+                    if (string.IsNullOrEmpty(folder))
                         return ReportParameter.CreateName(r, Path);
+                    else
+                        return System.IO.Path.GetFullPath(ReportParameter.CreateName(r, Path), folder);
                 }
             }
 
