@@ -483,11 +483,11 @@ namespace Stitch {
             string[] AMINO_ACIDS = new string[]{
     "ALA", "ARG", "ASH", "ASN", "ASP", "ASX", "CYS", "CYX", "GLH", "GLN", "GLU", "GLY", "HID",
     "HIE", "HIM", "HIP", "HIS", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR",
-    "TRP", "TYR", "VAL", "SEC", "PYL"
+    "TRP", "TYR", "VAL", "SEC", "PYL","UNK"
             };
             char[] AMINO_ACIDS_SHORT = new char[]{
     'A', 'R', 'N', 'N', 'D', 'B', 'C', 'C', 'Q', 'Q', 'E', 'G', 'H', 'H', 'H', 'H', 'H', 'I', 'L',
-    'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O',
+    'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O','X'
             };
 
             var loaded_file = InputNameSpace.ParseHelper.GetAllText(mmcif.File);

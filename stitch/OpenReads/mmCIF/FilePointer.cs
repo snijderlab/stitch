@@ -34,7 +34,7 @@ namespace Stitch {
                 var item = ParseDataItemOrSaveFrame();
                 if (item.IsOk())
                     block.Items.Add(item.Unwrap());
-                else
+                else if (index != content.Length)
                     return new ParseResult<DataBlock>(item.Messages);
             }
             return new ParseResult<DataBlock>(block);
@@ -98,7 +98,11 @@ namespace Stitch {
             TrimCommentsAndWhitespace();
             var start = counter.GetPosition();
             if (index == content.Length) return new ParseResult<Value>(new InputNameSpace.ErrorMessage(counter.GetPosition(), "Empty value", "No text left when expecting a value."));
-            else if (StartsWith("global_") || StartsWith("data_") || StartsWith("loop_") || StartsWith("save_") || StartsWith("stop_"))
+            else if (StartsWith("global_", false)
+                    || StartsWith("data_", false)
+                    || StartsWith("loop_", false)
+                    || StartsWith("save_", false)
+                    || StartsWith("stop_", false))
                 return new ParseResult<Value>(new InputNameSpace.ErrorMessage(counter.GetPosition(), "Use of reserved word", "global_, data_, loop_, save_, and stop_ are reserved words."));
             else if (StartsWith('.')) {
                 index += 1;
@@ -229,9 +233,9 @@ namespace Stitch {
             return new ParseResult<string>(new InputNameSpace.ErrorMessage(new FileRange(start, counter.GetPosition()), "Invalid enclosing", $"The element was enclosed by {pattern} but the closing delimiter was not found before the end of the file."));
         }
 
-        bool StartsWith(string pattern) {
+        bool StartsWith(string pattern, bool consume = true) {
             var found = false;
-            for (int offset = 0; offset <= pattern.Length; offset++) {
+            for (int offset = 0; offset <= pattern.Length && index + offset < content.Length; offset++) {
                 if (offset == pattern.Length) {
                     found = true;
                     break;
@@ -241,8 +245,10 @@ namespace Stitch {
                 }
             }
             if (found) {
-                index += pattern.Length;
-                counter.NextColumn(pattern.Length);
+                if (consume) {
+                    index += pattern.Length;
+                    counter.NextColumn(pattern.Length);
+                }
                 return true;
             } else {
                 return false;
