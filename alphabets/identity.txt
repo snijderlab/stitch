@@ -1,0 +1,7 @@
+Alphabet ->
+    Characters: ARNDCQEGHILKMFPSTWYVBZX.*
+    Identity  : 8
+    Mismatch  : -1
+    GapStart  : -12
+    GapExtend : -1
+<-

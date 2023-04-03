@@ -1,0 +1,6 @@
+Alphabet ->
+    Path: blosum62.csv
+    Name: Blosum62
+    GapStart : -12
+    GapExtend: -1
+<-

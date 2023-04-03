@@ -540,7 +540,7 @@ namespace Stitch {
                             current_sequence += AMINO_ACIDS_SHORT[aa];
                             local_confidence.Add(row[confidence_score].AsNumber().Unwrap(0.0) / 100.0);
                         } else {
-                            out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid."));
+                            out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid.", "", true));
                         }
                     }
                     if (current_sequence.Length > 0 && current_sequence.Length >= mmcif.MinLength && local_confidence.Average() * 100 >= mmcif.CutoffALC) {
