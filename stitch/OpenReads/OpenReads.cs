@@ -524,7 +524,7 @@ namespace Stitch {
 
                     foreach (var row in loop.Data) {
                         if (row[chain].AsText() != current_chain) {
-                            if (current_sequence.Length >= mmcif.MinLength && local_confidence.Average() * 100 >= mmcif.CutoffALC) {
+                            if (current_sequence.Length > 0 && current_sequence.Length >= mmcif.MinLength && local_confidence.Average() * 100 >= mmcif.CutoffALC) {
                                 sequences.Add((current_chain, current_auth_chain, current_sequence, local_confidence.ToArray()));
                             }
                             local_confidence.Clear();
