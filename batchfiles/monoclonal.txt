@@ -9,8 +9,8 @@ Input ->
         Format   : X+
         Name     : 01
         CutoffALC: 90
-        -RawDataDirectory: R:\F1\peng0013\201912
-        -XleDisambiguation: True
+        RawDataDirectory: R:\F1\peng0013\201912
+        XleDisambiguation: True
     <-
 <-
 
