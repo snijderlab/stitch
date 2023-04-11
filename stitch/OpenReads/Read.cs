@@ -739,6 +739,132 @@ namespace Stitch {
                 return html;
             }
         }
+        /// <summary> A struct to hold meta information from pNovo data. </summary>
+        public class pNovo : General {
+
+            /// <summary> The source file out of which the peptide was generated. </summary>
+            public string SourceFile = null;
+
+            /// <summary> The scan identifier of the peptide. </summary>
+            public uint ScanID;
+
+            /// <summary> The sequence with modifications of the peptide. </summary>
+            public string SequenceWithModifications = null;
+
+            /// <summary> The Score as reported </summary>
+            public double Score = -1;
+
+            /// <summary> Mass error of the peptide.</summary>
+            public double PPM = -1;
+
+            public bool XleDisambiguation;
+
+            /// <summary> The intensity of this read. </summary>
+            double intensity = 1;
+            public override double Intensity {
+                get {
+                    return intensity;
+                }
+                set { if (!double.IsNaN(value)) intensity = value; }
+            }
+
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
+                get {
+                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationType>(), XleDisambiguation) };
+                }
+            }
+
+            /// <summary> To create a new empty metadata instance with this metadata. </summary>
+            /// <param name="identifier">The fasta identifier.</param>
+            /// <param name="file">The originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            private pNovo(AminoAcid[] sequence, FileRange? file, string identifier, NameFilter filter) : base(sequence, file, identifier, filter) { }
+
+            /// <summary> Tries to create a pNovo struct based on a CSV line in pNovo format. </summary>
+            /// <param name="parseFile"> The file to parse, this contains the full file bu only the designated line will be parsed. </param>
+            /// <param name="linenumber"> The index of the line to be parsed. </param>
+            /// <param name="separator"> The separator used in CSV. </param>
+            /// <param name="decimalseparator"> The separator used in decimals. </param>
+            /// <param name="pf">FileFormat of the pNovo file.</param>
+            /// <param name="file">Identifier for the originating file.</param>
+            /// <param name="filter">The NameFilter to use and filter the identifier.</param>
+            /// <returns>A ParseResult with the pNovo metadata instance or the errors. </returns>
+            public static ParseResult<pNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char, double)> fixed_modifications) {
+                var out_either = new ParseResult<pNovo>();
+                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
+                //ID  Sequence  Modifications  ALC  Score  LC  Sequence?  ??  PPM
+                //0   1         _2             _3   4      5   _6         _7  8
+                // ID: 20191211_F1_Ag5_peng0013_SA_her_tryp.3821.3821.2 File:"20191211_F1_Ag5_peng0013_SA_her_tryp.raw", NativeID:"controllerType
+
+                var fields = InputNameSpace.ParseHelper.SplitLine('\t', linenumber, parse_file);
+                foreach (var field in fields) {
+                    Console.WriteLine($"\"{field.Item1}\"");
+                }
+
+                if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
+
+                if (fields.Count != 9) {
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "", ""));
+                    return out_either;
+                }
+
+                double ConvertToDouble(int pos) {
+                    return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, -1);
+                }
+
+                var sequence = AminoAcid.FromString(fields[1].Text, scoring_matrix, fields[1].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                if (out_either.IsErr()) return out_either;
+
+                var modifications = fields[1].Text;
+                foreach (var modification in fixed_modifications)
+                    modifications = modifications.Replace(modification.Item1.ToString(), $"{modification.Item1}[{modification.Item2}]");
+                // TODO: handle the case where modifications? are defined: '0qSLQWARACCSSTLTKSK'
+
+                var scan = 0;//ConvertToUint(1); TODO: find where it is defined
+
+                var output = new pNovo(sequence, range, $"pN:{scan}", filter);
+
+                if (!output.Sequence.SetPositionalScore(fields[5].Text.Split(",".ToCharArray()).ToList().Select(x => Convert.ToDouble(x) / 100.0).ToArray()))
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+
+                out_either.Value = output;
+                output.SequenceWithModifications = modifications;
+                output.XleDisambiguation = xleDisambiguation;
+                output.ScanID = 0;//scan;
+                output.PPM = ConvertToDouble(8);
+                output.Score = ConvertToDouble(4);
+                output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[0].Text + ".raw";
+
+                return out_either;
+            }
+
+            /// <summary> Generate HTML with all meta information from the pNovo data. </summary>
+            /// <returns> Returns an HTML string with the meta information. </returns>
+            public override HtmlBuilder ToHTML() {
+                var html = new HtmlBuilder();
+                html.OpenAndClose(HtmlTag.h2, "", "Meta Information from pNovo");
+
+                html.OpenAndClose(HtmlTag.h3, "", "Scan Identifier");
+                html.OpenAndClose(HtmlTag.p, "", ScanID.ToString());
+
+                General.AnnotatedLocalScore(this, SequenceWithModifications, html);
+
+
+                html.OpenAndClose(HtmlTag.h3, "", "Source File");
+                html.OpenAndClose(HtmlTag.p, "", SourceFile);
+
+                html.OpenAndClose(HtmlTag.h3, "", "Score");
+                html.OpenAndClose(HtmlTag.p, "", Score.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Mass error (ppm)");
+                html.OpenAndClose(HtmlTag.p, "", PPM.ToString());
+
+                html.Add(Sequence.RenderToHtml());
+                html.Add(File.ToHTML());
+
+                return html;
+            }
+        }
 
         public class Combined : General {
             /// <summary> Returns the overall intensity for this read. It is used to determine which read to

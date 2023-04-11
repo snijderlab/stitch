@@ -333,6 +333,45 @@ namespace Stitch {
             return out_either;
         }
 
+        /// <summary> Open a pNovo res(tsv) file, filter the reads based on the given parameters and save the reads to be used in assembly. </summary>
+        /// <param name="filter">The name filter to use to filter the name of the reads.</param>
+        /// <param name="p_novo">The pNovo settings to use</param>
+        public static ParseResult<List<ReadFormat.General>> pNovo(NameFilter filter, RunParameters.InputData.pNovo p_novo, ScoringMatrix alphabet) {
+            var out_either = new ParseResult<List<ReadFormat.General>>();
+
+            var possible_content = InputNameSpace.ParseHelper.GetAllText(p_novo.File);
+
+            if (possible_content.IsErr()) {
+                out_either.Messages.AddRange(possible_content.Messages);
+                return out_either;
+            }
+
+            string[] lines = possible_content.Unwrap().Lines;
+            var reads = new List<ReadFormat.General>();
+            var parse_file = possible_content.Unwrap();
+
+            out_either.Value = reads;
+
+            // Parse each line, and filter for score or local patch
+            for (int linenumber = 0; linenumber < parse_file.Lines.Length; linenumber++) {
+                var parsed = ReadFormat.pNovo.ParseLine(parse_file, linenumber, filter, alphabet, p_novo.RawDataDirectory, p_novo.XleDisambiguation, p_novo.FixedModification);
+
+                if (parsed.IsOk(out_either)) {
+                    var meta = parsed.Unwrap();
+                    if (meta == null) continue; // Ignore empty lines
+
+                    if (meta.Sequence.Length >= p_novo.MinLength && meta.Score >= p_novo.CutoffScore) {
+                        reads.Add(meta);
+                    }
+                } else if (linenumber < 3) {
+                    // If the first real line already has errors it is very likely that the format is chosen wrong so it should not overload the user with errors
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Parsing stopped", "See above error messages for errors.", "", true));
+                    return out_either;
+                }
+            }
+            return out_either;
+        }
+
         /// <summary> To open a file with reads. It uses the Novor file format. Which is a
         /// character separated file format with a defined column ordering.  </summary>
         /// <param name="filter"> The name filter to use to filter the name of the reads. </param>

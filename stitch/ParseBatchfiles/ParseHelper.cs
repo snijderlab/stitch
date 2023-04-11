@@ -432,6 +432,60 @@ namespace Stitch {
                             output.Value.Files.Add(max_novo);
                         });
                     }),
+                    ("pNovo", (output, pair) => {
+                        new LocalParams<InputData.pNovo>("pNovo", new List<(string, Action<ParseResult<InputData.pNovo>, KeyValue>)>{
+                            ("CutoffScore", (settings, value) => {
+                                settings.Value.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
+                            ("FixedModification", (settings, value) => {
+                                var start_offset = 0;
+                                var end_offset = 0;
+                                var text = value.GetValue().UnwrapOrDefault(outEither, "");
+                                for (int offset = 0; offset < text.Length; offset ++) {
+                                    if (char.IsWhiteSpace(text[offset]) && offset -1 == start_offset)
+                                        start_offset = offset;
+                                    if (!char.IsWhiteSpace(text[offset]))
+                                        end_offset = offset;
+                                    if (text[offset] == ',') {
+                                        // Parse
+                                        var range = new FileRange(
+                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
+                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
+                                        var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 2), value.ValueRange).UnwrapOrDefault(settings, 0.0);
+                                        settings.Value.FixedModification.Add((text[start_offset], shift));
+                                        start_offset = offset;
+                                        end_offset = offset;
+                                    }
+                                }
+                                if (end_offset - start_offset > 0) {
+                                    var range = new FileRange(
+                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
+                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
+                                    var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 1), value.ValueRange).UnwrapOrDefault(settings, 0.0);
+                                    settings.Value.FixedModification.Add((text[start_offset], shift));
+                                }
+                                }),
+                            ("MinLength", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
+                                settings.Value.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
+                            ("Name", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.Value.File.Name);
+                                settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.Value.File.Path);
+                                settings.Value.File.Path = value.GetValue().UnwrapOrDefault(outEither, "");}),
+                            ("RawDataDirectory", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
+                                settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "RawDataDirectory").Map(f => f.Path).UnwrapOrDefault(outEither, "");}),
+                            ("XleDisambiguation", (settings, value) => {
+                                settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
+                        }).Parse(pair, max_novo => {
+                            if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+
+                            max_novo.File = ParseHelper.GetFullPath(max_novo.File.Path, pair.Context, max_novo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
+                            output.Value.Files.Add(max_novo);
+                        });
+                    }),
                     ("Folder", (output, pair) => {
                         // Parse files one by one
                         string folder_path = "";
@@ -507,6 +561,7 @@ namespace Stitch {
                         InputData.MMCIF mmcif => OpenReads.MMCIF(name_filter, mmcif, alphabet),
                         InputData.Casanovo casanovo => OpenReads.Casanovo(name_filter, casanovo, alphabet),
                         InputData.MaxNovo max_novo => OpenReads.MaxNovo(name_filter, max_novo, alphabet),
+                        InputData.pNovo p_novo => OpenReads.pNovo(name_filter, p_novo, alphabet),
                         _ => throw new ArgumentException("An unknown input format was provided to PrepareInput")
                     };
                     result.Messages.AddRange(reads.Messages);

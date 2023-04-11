@@ -51,8 +51,14 @@ namespace Stitch {
 
             /// <summary> A data parameter for MaxNovo input files. </summary>
             public class MaxNovo : Parameter {
-                public PeaksParameters Parameter = new PeaksParameters(true);
-
+                public string RawDataDirectory = null;
+                public bool XleDisambiguation = false;
+                public double CutoffScore = 0.0;
+                public int MinLength = 0;
+                public List<(char, double)> FixedModification = new List<(char, double)>();
+            }
+            /// <summary> A data parameter for pNovo input files. </summary>
+            public class pNovo : Parameter {
                 public string RawDataDirectory = null;
                 public bool XleDisambiguation = false;
                 public double CutoffScore = 0.0;
