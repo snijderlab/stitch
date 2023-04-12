@@ -78,7 +78,7 @@ namespace Stitch {
             /// <param name="html"></param>
             static protected void AnnotatedLocalScore(General read, string pro_forma, HtmlBuilder html) {
                 // Create a display of the sequence with local confidence and modifications (if present)
-                html.OpenAndClose(HtmlTag.h3, "", $"Original sequence");
+                html.OpenAndClose(HtmlTag.h3, $"title='{pro_forma}'", $"Original sequence");
                 html.Open(HtmlTag.div, "class='original-sequence' style='--max-value:100'");
                 int original_offset = 0;
 
@@ -754,6 +754,9 @@ namespace Stitch {
             /// <summary> The Score as reported </summary>
             public double Score = -1;
 
+            /// <summary> The Charge as reported </summary>
+            public int Charge = 0;
+
             /// <summary> Mass error of the peptide.</summary>
             public double PPM = -1;
 
@@ -789,18 +792,14 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the pNovo metadata instance or the errors. </returns>
-            public static ParseResult<pNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char, double)> fixed_modifications) {
+            public static ParseResult<pNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char Find, char Replace, double Shift, string Name)> fixed_modifications) {
                 var out_either = new ParseResult<pNovo>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
-                //ID  Sequence  Modifications  ALC  Score  LC  Sequence?  ??  PPM
-                //0   1         _2             _3   4      5   _6         _7  8
+                //ID  Sequence??  ??  ALC  Score  LC  Sequence  ??  PPM
+                //0   _1          _2  _3   4      5   6          _7  8
                 // ID: 20191211_F1_Ag5_peng0013_SA_her_tryp.3821.3821.2 File:"20191211_F1_Ag5_peng0013_SA_her_tryp.raw", NativeID:"controllerType
 
                 var fields = InputNameSpace.ParseHelper.SplitLine('\t', linenumber, parse_file);
-                foreach (var field in fields) {
-                    Console.WriteLine($"\"{field.Item1}\"");
-                }
-
                 if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
 
                 if (fields.Count != 9) {
@@ -812,28 +811,67 @@ namespace Stitch {
                     return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
-                var sequence = AminoAcid.FromString(fields[1].Text, scoring_matrix, fields[1].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                // Normalize the sequence into ProForma
+                var sequence = new StringBuilder();
+                var sequence_with_modifications = new StringBuilder();
+                bool n_terminal = true;
+                string make_uppercase = "";
+                // Detect for each single character if this is one that has to be replaced
+                // If it is an N terminal modification see if we are actually at the N terminus and store this fact for the next round where we ill replace the character with its upper case variant
+                // For a normal modifications get the replacement character and store the name for the modified sequence
+                // If it is just a normal AA store this in both sequences.
+                foreach (var c in fields[6].Text) {
+                    if (make_uppercase.Length != 0) { // Here the name of the detected N terminal modification of the last round is stored, or it is an empty string
+                        sequence.Append(char.ToUpper(c));
+                        sequence_with_modifications.Append(char.ToUpper(c));
+                        sequence_with_modifications.Append($"[{make_uppercase}]");
+                        make_uppercase = "";
+                        continue;
+                    }
+                    var found = false;
+                    foreach (var modification in fixed_modifications) {
+                        if (c == modification.Find) {
+                            if (modification.Replace == '\0' && n_terminal) {
+                                // terminal modification, does not support C terminal modifications
+                                make_uppercase = modification.Name;
+                                n_terminal = false;
+                                found = true;
+                            } else {
+                                sequence.Append(modification.Replace);
+                                sequence_with_modifications.Append($"{modification.Replace}[{modification.Name}]");
+                                n_terminal = false;
+                                found = true;
+                            }
+                        }
+                    }
+                    if (!found) {
+                        sequence.Append(c);
+                        sequence_with_modifications.Append(c);
+                    }
+                }
+                var aa_sequence = AminoAcid.FromString(sequence.ToString(), scoring_matrix, fields[6].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
                 if (out_either.IsErr()) return out_either;
 
-                var modifications = fields[1].Text;
-                foreach (var modification in fixed_modifications)
-                    modifications = modifications.Replace(modification.Item1.ToString(), $"{modification.Item1}[{modification.Item2}]");
-                // TODO: handle the case where modifications? are defined: '0qSLQWARACCSSTLTKSK'
+                var id = fields[0].Text;
+                var id_pieces = id.Split(' ');
+                var rev_name_pieces = id_pieces[0].ReverseString().Split('.', 4);
+                var charge = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[0].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                var scan = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[2].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                var raw_file_name = id_pieces[1].Substring(6, id_pieces[1].Length - 8);
 
-                var scan = 0;//ConvertToUint(1); TODO: find where it is defined
-
-                var output = new pNovo(sequence, range, $"pN:{scan}", filter);
+                var output = new pNovo(aa_sequence, range, $"pN:{scan}", filter);
 
                 if (!output.Sequence.SetPositionalScore(fields[5].Text.Split(",".ToCharArray()).ToList().Select(x => Convert.ToDouble(x) / 100.0).ToArray()))
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
 
                 out_either.Value = output;
-                output.SequenceWithModifications = modifications;
+                output.SequenceWithModifications = sequence_with_modifications.ToString();
                 output.XleDisambiguation = xleDisambiguation;
-                output.ScanID = 0;//scan;
+                output.Charge = (int)charge;
+                output.ScanID = scan;
                 output.PPM = ConvertToDouble(8);
                 output.Score = ConvertToDouble(4);
-                output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[0].Text + ".raw";
+                output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + raw_file_name;
 
                 return out_either;
             }
@@ -849,12 +887,14 @@ namespace Stitch {
 
                 General.AnnotatedLocalScore(this, SequenceWithModifications, html);
 
-
                 html.OpenAndClose(HtmlTag.h3, "", "Source File");
                 html.OpenAndClose(HtmlTag.p, "", SourceFile);
 
                 html.OpenAndClose(HtmlTag.h3, "", "Score");
                 html.OpenAndClose(HtmlTag.p, "", Score.ToString());
+
+                html.OpenAndClose(HtmlTag.h3, "", "Charge");
+                html.OpenAndClose(HtmlTag.p, "", Charge.ToString());
 
                 html.OpenAndClose(HtmlTag.h3, "", "Mass error (ppm)");
                 html.OpenAndClose(HtmlTag.p, "", PPM.ToString());

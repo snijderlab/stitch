@@ -469,6 +469,7 @@ namespace HTMLNameSpace {
         }
 
         public static HtmlBuilder DensityCurve(List<double> data, HtmlBuilder title, HtmlBuilder help = null, HtmlBuilder data_help = null) {
+            if (data.Count == 0) return new HtmlBuilder();
             data.Sort();
             var min_value = data.Min();
             var max_value = data.Max();

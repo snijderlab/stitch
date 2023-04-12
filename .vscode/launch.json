@@ -11,7 +11,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
                 "batchfiles/monoclonal.txt"
@@ -34,7 +34,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
                 "batchfiles/modelangelo_recombined.txt"
@@ -57,7 +57,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
                 "batchfiles/polyclonal.txt"
@@ -80,7 +80,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
                 "batchfiles/basic.txt"
@@ -103,7 +103,7 @@
             "preLaunchTask": "build",
             "requireExactSource": false,
             // If you have changed target frameworks, make sure to update the program path.
-            "program": "${workspaceFolder}/stitch/bin/Debug/net6.0/stitch.dll",
+            "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
                 "batchfiles/modelangelo.txt",

@@ -91,6 +91,17 @@ namespace Stitch {
                 data[i] = f(i);
         }
 
+        /// <summary>
+        /// string.Reverse().ToString() will always result in `System Enumerable+ReverseIterator`1` (or similar) so for anybody that actually wants a reversed string use the below.
+        /// </summary>
+        /// <param name="str">The string</param>
+        /// <returns>The reverse</returns>
+        public static string ReverseString(this string str) {
+            var chars = str.ToCharArray();
+            Array.Reverse(chars);
+            return new string(chars);
+        }
+
         /// <summary> Generate all variations of a two sized selection for the given sequence while leaving out the (A, A) case. Uses Equals inside.</summary>
         /// <param name="data">The data.</param>
         /// <typeparam name="T">The type of the elements.</typeparam>

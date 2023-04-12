@@ -436,34 +436,8 @@ namespace Stitch {
                         new LocalParams<InputData.pNovo>("pNovo", new List<(string, Action<ParseResult<InputData.pNovo>, KeyValue>)>{
                             ("CutoffScore", (settings, value) => {
                                 settings.Value.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
-                            ("FixedModification", (settings, value) => {
-                                var start_offset = 0;
-                                var end_offset = 0;
-                                var text = value.GetValue().UnwrapOrDefault(outEither, "");
-                                for (int offset = 0; offset < text.Length; offset ++) {
-                                    if (char.IsWhiteSpace(text[offset]) && offset -1 == start_offset)
-                                        start_offset = offset;
-                                    if (!char.IsWhiteSpace(text[offset]))
-                                        end_offset = offset;
-                                    if (text[offset] == ',') {
-                                        // Parse
-                                        var range = new FileRange(
-                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
-                                            new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
-                                        var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 2), value.ValueRange).UnwrapOrDefault(settings, 0.0);
-                                        settings.Value.FixedModification.Add((text[start_offset], shift));
-                                        start_offset = offset;
-                                        end_offset = offset;
-                                    }
-                                }
-                                if (end_offset - start_offset > 0) {
-                                    var range = new FileRange(
-                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + start_offset + 1, value.ValueRange.File),
-                                        new Position(value.ValueRange.Start.Line, value.ValueRange.Start.Column + end_offset - 1, value.ValueRange.File));
-                                    var shift = ParseHelper.ConvertToDouble(text.Substring(start_offset + 1, end_offset - start_offset - 1), value.ValueRange).UnwrapOrDefault(settings, 0.0);
-                                    settings.Value.FixedModification.Add((text[start_offset], shift));
-                                }
-                                }),
+                            ("Param", (settings, value) => {
+                                settings.Value.ParamFile = ParseHelper.GetFullPath(value, "Param").UnwrapOrDefault(outEither, new());}),
                             ("MinLength", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
                                 settings.Value.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
@@ -481,8 +455,11 @@ namespace Stitch {
                         }).Parse(pair, max_novo => {
                             if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                            if (max_novo.ParamFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Param"));
 
                             max_novo.File = ParseHelper.GetFullPath(max_novo.File.Path, pair.Context, max_novo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
+                            if (max_novo.ParamFile != null)
+                                max_novo.Modifications = ParseHelper.ParsePNovoParam(max_novo.ParamFile).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(max_novo);
                         });
                     }),
@@ -1340,6 +1317,37 @@ namespace Stitch {
                 if (r_index < n_index) return text.Split('\r');
 
                 throw new Exception("Could not determine line endings for file");
+            }
+
+            static ParseResult<List<(char Find, char Replace, double Shift, string Name)>> ParsePNovoParam(FileIdentifier param_file) {
+                var out_either = new ParseResult<List<(char, char, double, string)>>(new List<(char, char, double, string)>());
+                var file = GetAllText(param_file).UnwrapOrDefault(out_either, new());
+                if (out_either.IsErr()) return out_either;
+
+                for (var line_number = 0; line_number < file.Lines.Length; line_number++) {
+                    var line = file.Lines[line_number];
+                    if (line.StartsWith('#') || line.Length < 3) continue;
+                    if (line[1] == '=') {
+                        // Single character in front now find the separate pieces back.
+                        // Format:
+                        // <find>=<shift> ... <name>[...<replace>]
+                        // Examples:
+                        // C=161.014669 Carboxymethyl[C]
+                        // 0=-17.026549 N Q Gln->pyro-Glu[AnyN-termQ]
+                        // a=147.035405 Oxidation[M]
+
+                        var pieces = ParseMzTab.SubString.Split(line.Substring(2), ' ', new Position(line_number, 3, file));
+                        var shift = ConvertToDouble(pieces[0].Content, pieces[0].Location).UnwrapOrDefault(out_either, 0);
+                        var end_name = pieces.Last().Content.IndexOf('[');
+                        var name = pieces.Last().Content.Substring(0, end_name);
+                        char replace = '\0'; // Set the null character for use with terminal modifications
+                        if (pieces.Count == 2) // A normal modification, not terminal
+                            replace = pieces.Last().Content.SkipLast(1).Last();
+                        out_either.Value.Add((line[0], replace, shift, name));
+                    }
+                }
+
+                return out_either;
             }
         }
     }

@@ -60,10 +60,11 @@ namespace Stitch {
             /// <summary> A data parameter for pNovo input files. </summary>
             public class pNovo : Parameter {
                 public string RawDataDirectory = null;
+                public ReadFormat.FileIdentifier ParamFile = null;
                 public bool XleDisambiguation = false;
                 public double CutoffScore = 0.0;
                 public int MinLength = 0;
-                public List<(char, double)> FixedModification = new List<(char, double)>();
+                public List<(char Find, char Replace, double Shift, string Name)> Modifications = new();
             }
 
             /// <summary> A parameter for simple reads files. </summary>
