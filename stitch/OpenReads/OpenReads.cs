@@ -354,7 +354,7 @@ namespace Stitch {
 
             // Parse each line, and filter for score or local patch
             for (int linenumber = 0; linenumber < parse_file.Lines.Length; linenumber++) {
-                var parsed = ReadFormat.pNovo.ParseLine(parse_file, linenumber, filter, alphabet, p_novo.RawDataDirectory, p_novo.XleDisambiguation, p_novo.Modifications);
+                var parsed = ReadFormat.pNovo.ParseLine(parse_file, linenumber, filter, alphabet, p_novo.RawDataDirectory, p_novo.XleDisambiguation, p_novo.Modifications, p_novo.FragmentationMethod);
 
                 if (parsed.IsOk(out_either)) {
                     var meta = parsed.Unwrap();

@@ -452,6 +452,8 @@ namespace Stitch {
                                 settings.Value.RawDataDirectory = ParseHelper.GetFullPath(value, "RawDataDirectory").Map(f => f.Path).UnwrapOrDefault(outEither, "");}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
+                            ("FragmentationMethod", (settings, value) => {
+                                settings.Value.FragmentationMethod = ParseHelper.ParseEnum<HeckLib.masspec.Spectrum.FragmentationType>(value).UnwrapOrDefault(outEither, settings.Value.FragmentationMethod);}),
                         }).Parse(pair, max_novo => {
                             if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
                             if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));

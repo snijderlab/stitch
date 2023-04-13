@@ -108,6 +108,8 @@ namespace Stitch {
                         return !string.IsNullOrWhiteSpace(m.RawDataDirectory);
                     } else if (f is InputData.Casanovo c) {
                         return !string.IsNullOrWhiteSpace(c.RawDataDirectory);
+                    } else if (f is InputData.pNovo pn) {
+                        return !string.IsNullOrWhiteSpace(pn.RawDataDirectory);
                     } else { return false; }
                 });
 

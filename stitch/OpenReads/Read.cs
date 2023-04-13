@@ -760,6 +760,8 @@ namespace Stitch {
             /// <summary> Mass error of the peptide.</summary>
             public double PPM = -1;
 
+            public FragmentationType FragmentationHint;
+
             public bool XleDisambiguation;
 
             /// <summary> The intensity of this read. </summary>
@@ -773,7 +775,7 @@ namespace Stitch {
 
             public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationType>(), XleDisambiguation) };
+                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationType>(FragmentationHint), XleDisambiguation) };
                 }
             }
 
@@ -792,7 +794,7 @@ namespace Stitch {
             /// <param name="file">Identifier for the originating file.</param>
             /// <param name="filter">The NameFilter to use and filter the identifier.</param>
             /// <returns>A ParseResult with the pNovo metadata instance or the errors. </returns>
-            public static ParseResult<pNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char Find, char Replace, double Shift, string Name)> fixed_modifications) {
+            public static ParseResult<pNovo> ParseLine(ParsedFile parse_file, int linenumber, NameFilter filter, ScoringMatrix scoring_matrix, string RawDataDirectory, bool xleDisambiguation, List<(char Find, char Replace, double Shift, string Name)> fixed_modifications, FragmentationType fragmentationType) {
                 var out_either = new ParseResult<pNovo>();
                 var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, parse_file.Lines[linenumber].Length, parse_file));
                 //ID  Sequence??  ??  ALC  Score  LC  Sequence  ??  PPM
@@ -815,41 +817,54 @@ namespace Stitch {
                 var sequence = new StringBuilder();
                 var sequence_with_modifications = new StringBuilder();
                 bool n_terminal = true;
-                string make_uppercase = "";
+                bool make_uppercase = false;
+                string n_mod_name = "";
                 // Detect for each single character if this is one that has to be replaced
                 // If it is an N terminal modification see if we are actually at the N terminus and store this fact for the next round where we ill replace the character with its upper case variant
                 // For a normal modifications get the replacement character and store the name for the modified sequence
                 // If it is just a normal AA store this in both sequences.
-                foreach (var c in fields[6].Text) {
-                    if (make_uppercase.Length != 0) { // Here the name of the detected N terminal modification of the last round is stored, or it is an empty string
-                        sequence.Append(char.ToUpper(c));
-                        sequence_with_modifications.Append(char.ToUpper(c));
-                        sequence_with_modifications.Append($"[{make_uppercase}]");
-                        make_uppercase = "";
+                for (var character_index = 0; character_index < fields[1].Text.Length; character_index++) {
+                    var character = fields[1].Text[character_index];
+                    if (make_uppercase) { // Here the name of the detected N terminal modification of the last round is stored, or it is an empty string
+                        sequence.Append(char.ToUpper(character));
+                        if (string.IsNullOrWhiteSpace(n_mod_name))
+                            sequence_with_modifications.Append($"{char.ToUpper(character)}");
+                        else
+                            sequence_with_modifications.Append($"{char.ToUpper(character)}[{n_mod_name}]");
+                        make_uppercase = false;
                         continue;
                     }
                     var found = false;
-                    foreach (var modification in fixed_modifications) {
-                        if (c == modification.Find) {
-                            if (modification.Replace == '\0' && n_terminal) {
+                    for (var i = 0; i < fixed_modifications.Count && !found; i++) {
+                        var modification = fixed_modifications[i];
+                        if (character == modification.Find) {
+                            if (n_terminal && (char.IsDigit(character) || char.IsLower(character))) {
                                 // terminal modification, does not support C terminal modifications
-                                make_uppercase = modification.Name;
-                                n_terminal = false;
+                                if (modification.Replace == '\0')
+                                    n_mod_name = modification.Shift.ToString();
+                                // Also ignore any placement of 'simple' modifications on this position as it apparently does not mean anything (╯°□°）╯︵ ┻━┻
+                                make_uppercase = true;
+                                found = true;
+                            } else if (character_index == fields[1].Text.Length - 1 && (char.IsDigit(character) || char.IsLower(character))) {
+                                // Just ignore, apparently
                                 found = true;
                             } else {
                                 sequence.Append(modification.Replace);
-                                sequence_with_modifications.Append($"{modification.Replace}[{modification.Name}]");
-                                n_terminal = false;
+                                sequence_with_modifications.Append($"{modification.Replace}[{modification.Shift}]");
                                 found = true;
                             }
                         }
                     }
+                    n_terminal = false;
                     if (!found) {
-                        sequence.Append(c);
-                        sequence_with_modifications.Append(c);
+                        sequence.Append(character);
+                        sequence_with_modifications.Append(character);
                     }
                 }
-                var aa_sequence = AminoAcid.FromString(sequence.ToString(), scoring_matrix, fields[6].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                var aa_res = AminoAcid.FromString(sequence.ToString(), scoring_matrix, fields[1].Pos);
+                if (aa_res.IsErr())
+                    aa_res.Messages[0].AddNote($"Detected sequence: \"{sequence}\" with modifications: \"{sequence_with_modifications}\"");
+                var aa_sequence = aa_res.UnwrapOrDefault(out_either, new AminoAcid[0]);
                 if (out_either.IsErr()) return out_either;
 
                 var id = fields[0].Text;
@@ -857,12 +872,14 @@ namespace Stitch {
                 var rev_name_pieces = id_pieces[0].ReverseString().Split('.', 4);
                 var charge = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[0].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
                 var scan = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[2].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
-                var raw_file_name = id_pieces[1].Substring(6, id_pieces[1].Length - 8);
+                var raw_file_name = rev_name_pieces[3].ReverseString() + ".mgf";
+                // TODO: The first column is the start of the TITLE field from MGF, so all spectra will have to be located based on matching that...
 
                 var output = new pNovo(aa_sequence, range, $"pN:{scan}", filter);
 
-                if (!output.Sequence.SetPositionalScore(fields[5].Text.Split(",".ToCharArray()).ToList().Select(x => Convert.ToDouble(x) / 100.0).ToArray()))
-                    out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", "The length of the local confidence is not equal to the length of the sequence"));
+                var confidence = fields[5].Text.Split(",".ToCharArray()).ToList().Select(x => Convert.ToDouble(x) / 100.0).ToArray();
+                if (!output.Sequence.SetPositionalScore(confidence))
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", $"The length of the local confidence ({confidence.Length}) is not equal to the length of the sequence ({aa_sequence.Length})"));
 
                 out_either.Value = output;
                 output.SequenceWithModifications = sequence_with_modifications.ToString();
@@ -871,6 +888,7 @@ namespace Stitch {
                 output.ScanID = scan;
                 output.PPM = ConvertToDouble(8);
                 output.Score = ConvertToDouble(4);
+                output.FragmentationHint = fragmentationType;
                 output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + raw_file_name;
 
                 return out_either;
