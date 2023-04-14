@@ -35,7 +35,7 @@ namespace Stitch {
 
                 results.Add((
                     line.Substring(last_pos, line.Length - last_pos).Trim(),
-                    new FileRange(new Position(linenumber, last_pos, parse_file), new Position(linenumber, Math.Max(0, line.Length - 1), parse_file))
+                    new FileRange(new Position(linenumber, last_pos, parse_file), new Position(linenumber, Math.Max(0, line.Length), parse_file))
                 ));
                 return results;
             }
@@ -559,21 +559,21 @@ namespace Stitch {
                         settings.Value.CutoffScore = ParseHelper.ParseDouble(value,NumberRange<double>.Open(0)).UnwrapOrDefault(outEither, 0);}),
                     ("Alphabet", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Value.Alphabet);
-                            settings.Value.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
+                        settings.Value.Alphabet = ParseHelper.ParseAlphabet(value).UnwrapOrDefault(outEither, null);}),
                     ("AmbiguityThreshold", (settings, value) => {
-                            settings.Value.AmbiguityThreshold = ParseHelper.ParseDouble(value,NumberRange<double>.Closed(0.0, 1.0)).UnwrapOrDefault(outEither, 0.5);}),
+                        settings.Value.AmbiguityThreshold = ParseHelper.ParseDouble(value,NumberRange<double>.Closed(0.0, 1.0)).UnwrapOrDefault(outEither, 0.5);}),
                     ("EnforceUnique", (settings, value) => {
-                            var v = 1.0;
-                            var boolean = ParseBool(value, "EnforceUnique");
-                            var number = ParseDouble(value);
-                            if (boolean.IsOk()) {
-                                v = boolean.Unwrap() ? 1.0 : 0.0;
-                            } else if (number.IsOk()) {
-                                v = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 1.0);
-                            } else {
-                                outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
-                            }
-                            settings.Value.EnforceUnique = v;}),
+                        var v = 1.0;
+                        var boolean = ParseBool(value, "EnforceUnique");
+                        var number = ParseDouble(value);
+                        if (boolean.IsOk()) {
+                            v = boolean.Unwrap() ? 1.0 : 0.0;
+                        } else if (number.IsOk()) {
+                            v = number.RestrictRange(NumberRange<double>.Closed(0.0, 1.0), value.ValueRange).UnwrapOrDefault(outEither, 1.0);
+                        } else {
+                            outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect EnforceUnique definition", "Expected a boolean (True/False) or a number."));
+                        }
+                        settings.Value.EnforceUnique = v;}),
                     ("EnforceUniqueLocalised", (settings, value) => {
                         settings.Value.EnforceUniqueLocalised = ParseHelper.ParseBool(value, "EnforceUniqueLocalised").UnwrapOrDefault(outEither, settings.Value.EnforceUniqueLocalised);}),
                     ("ForceGermlineIsoleucine", (settings, value) => {
@@ -582,35 +582,36 @@ namespace Stitch {
                         settings.Value.BuildTree = ParseBool(value, "BuildTree").UnwrapOrDefault(outEither, true);}),
                     ("Segments", (settings, value) => {
                         CheckDuplicate(outEither, value, settings.Value.Segments);
-                            var outer_children = new List<SegmentValue>();
-                            foreach (var segment in value.GetValues().UnwrapOrDefault(outEither, new())) {
-                                if (segment.Name == "segment") {
-                                    var segment_value = ParseHelper.ParseSegment(nameFilter, segment, settings.Value.Alphabet, false).UnwrapOrDefault(outEither, new());
+                        var outer_children = new List<SegmentValue>();
+                        foreach (var segment in value.GetValues().UnwrapOrDefault(outEither, new())) {
+                            if (segment.Name == "segment") {
+                                var segment_value = ParseHelper.ParseSegment(nameFilter, segment, settings.Value.Alphabet, false).UnwrapOrDefault(outEither, null);
+                                if (segment_value == null) continue;
 
-                                    // Check to see if the name is valid
-                                    if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
-                                        outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique."));
-                                    if (segment_value.Name.Contains('*'))
-                                        outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
-                                    outer_children.Add(segment_value);
-                                } else {
-                                    var children = new List<SegmentValue>();
-                                    foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new())) {
-                                        var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, settings.Value.Alphabet, false);
-                                        if (segment_value.IsOk(outEither)) {
-                                            var segment_object = segment_value.Unwrap();
-                                            // Check to see if the name is valid
-                                            if (children.Select(db => db.Name).Contains(segment_object.Name))
-                                                outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
-                                            if (segment_object.Name.Contains('*'))
-                                                outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
-                                            children.Add(segment_object);
-                                        }
+                                // Check to see if the name is valid
+                                if (outer_children.Select(db => db.Name).Contains(segment_value.Name))
+                                    outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique."));
+                                if (segment_value.Name.Contains('*'))
+                                    outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
+                                outer_children.Add(segment_value);
+                            } else {
+                                var children = new List<SegmentValue>();
+                                foreach (var sub_segment in segment.GetValues().UnwrapOrDefault(outEither, new())) {
+                                    var segment_value = ParseHelper.ParseSegment(nameFilter, sub_segment, settings.Value.Alphabet, false);
+                                    if (segment_value.IsOk(outEither)) {
+                                        var segment_object = segment_value.Unwrap();
+                                        // Check to see if the name is valid
+                                        if (children.Select(db => db.Name).Contains(segment_object.Name))
+                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names have to be unique, within their scope."));
+                                        if (segment_object.Name.Contains('*'))
+                                            outEither.AddMessage(new ErrorMessage(segment.KeyRange.Full, "Invalid name", "Segment names cannot contain '*'."));
+                                        children.Add(segment_object);
                                     }
-                                    settings.Value.Segments.Add((segment.OriginalName, children));
                                 }
+                                settings.Value.Segments.Add((segment.OriginalName, children));
                             }
-                            if (outer_children.Count > 0) settings.Value.Segments.Add(("", outer_children));}),
+                        }
+                        if (outer_children.Count > 0) settings.Value.Segments.Add(("", outer_children));}),
                 }).Parse(key, settings => {
                     if (settings.Segments.Count > 1)
                         foreach (var db in settings.Segments)
@@ -827,6 +828,10 @@ namespace Stitch {
                             asymmetric_sets.Add((a_score, a_sets));}),
                 }).Parse(key, settings => {
                     if (String.IsNullOrEmpty(identity.Item1)) {
+                        if (path_Setting == null) {
+                            outEither.AddMessage(ErrorMessage.MissingParameter(key.ValueRange, "Path"));
+                            return; // The path is missing so just give up
+                        }
                         var path = GetFullPath(path_Setting, settings.Name);
                         if (path.IsOk()) {
                             var all_text = GetAllText(path.Unwrap());
