@@ -63,7 +63,6 @@ namespace Stitch {
                 public ReadFormat.FileIdentifier ParamFile = null;
                 public bool XleDisambiguation = false;
                 public double CutoffScore = 0.0;
-                public int MinLength = 0;
                 public List<(char Find, char Replace, double Shift, string Name)> Modifications = new();
                 public HeckLib.masspec.Spectrum.FragmentationType FragmentationMethod = HeckLib.masspec.Spectrum.FragmentationType.All;
             }

@@ -57,44 +57,43 @@ namespace Stitch {
             out_either.Value = reads;
 
             var parse_file = possible_content.Unwrap();
-            var lines = parse_file.Lines;
-
             string identifierLine = "";
             int identifierLineNumber = 1;
             var sequence = new StringBuilder();
             int linenumber = 0;
             var start_pos = new Position(linenumber, 0, parse_file);
 
-            foreach (var line in lines) {
+            void FinishSequence(FileRange range) {
+                var match = parseIdentifier.Match(identifierLine);
+                var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
+                if (!match.Success) {
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(
+                            identifier_line_range,
+                            "Header line does not match RegEx",
+                            "This header line does not match the RegEx given to parse the identifier."
+                        )
+                    );
+                } else if (match.Groups.Count == 3) {
+                    reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                } else if (match.Groups.Count == 2) {
+                    reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
+                } else {
+                    throw new RunTimeException(new InputNameSpace.ErrorMessage(
+                            identifier_line_range,
+                            "Identifier Regex has invalid number of capturing groups",
+                            "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
+                        )
+                    );
+                }
+            }
+
+            foreach (var line in parse_file.Lines) {
                 var end_pos = new Position(linenumber, line.Length, parse_file);
-                var range = new FileRange(start_pos, end_pos);
-                if (line.Length == 0) continue;
+                if (line.Length == 0) continue; // Ignore empty lines
                 if (line[0] == '>') {
+                    // A new identifier, finish the last
                     if (!string.IsNullOrEmpty(identifierLine)) {
-                        var match = parseIdentifier.Match(identifierLine);
-                        var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
-                        if (match.Success) {
-                            if (match.Groups.Count == 3) {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
-                            } else if (match.Groups.Count == 2) {
-                                reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
-                            } else {
-                                out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                                    identifier_line_range,
-                                    "Identifier Regex has invalid number of capturing groups",
-                                    "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
-                                    )
-                                );
-                                return out_either;
-                            }
-                        } else {
-                            out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                                identifier_line_range,
-                                "Header line does not match RegEx",
-                                "This header line does not match the RegEx given to parse the identifier."
-                                )
-                            );
-                        }
+                        FinishSequence(new FileRange(start_pos, end_pos));
                     }
                     identifierLine = line.Substring(1).Trim();
                     sequence = new StringBuilder();
@@ -105,35 +104,9 @@ namespace Stitch {
                 }
                 linenumber++;
             }
+            // Handle the last sequence
             if (!string.IsNullOrEmpty(identifierLine)) {
-                var end_pos = new Position(linenumber, identifierLine.Length, parse_file);
-                var range = new FileRange(start_pos, end_pos);
-                // Flush last sequence to list
-                var match = parseIdentifier.Match(identifierLine);
-                var identifier_line_range = new FileRange(new Position(identifierLineNumber, 1, parse_file), new Position(identifierLineNumber, identifierLine.Length, parse_file));
-
-                if (match.Success) {
-                    if (match.Groups.Count == 3) {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter, match.Groups[2].Value), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
-                    } else if (match.Groups.Count == 2) {
-                        reads.Add(ParseAnnotatedFasta(sequence.ToString(), new ReadFormat.Fasta(null, match.Groups[1].Value, identifierLine, range, filter), identifierLineNumber, parse_file, alphabet).UnwrapOrDefault(out_either, null));
-                    } else {
-                        out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                            identifier_line_range,
-                            "Identifier Regex has invalid number of capturing groups",
-                            "The regex to parse the identifier for Fasta headers should contain one or two capturing groups."
-                            )
-                        );
-                        return out_either;
-                    }
-                } else {
-                    out_either.AddMessage(new InputNameSpace.ErrorMessage(
-                        identifier_line_range,
-                        "Header line does not match RegEx",
-                        "This header line does not match the RegEx given to parse the identifier."
-                        )
-                    );
-                }
+                FinishSequence(new FileRange(start_pos, new Position(linenumber, identifierLine.Length, parse_file)));
             }
 
             return out_either;
@@ -143,7 +116,8 @@ namespace Stitch {
         private static string RemoveWhitespace(string input) {
             return remove_whitespace.Replace(input, "");
         }
-        private static readonly Regex check_amino_acids = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
+
+        private static readonly Regex REGEX_CHECK_AMINO_ACIDS = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
         static ParseResult<ReadFormat.General> ParseAnnotatedFasta(string line, ReadFormat.General metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
             var out_either = new ParseResult<ReadFormat.General>();
             var plain_sequence = new StringBuilder();
@@ -167,15 +141,13 @@ namespace Stitch {
                     plain_sequence.Append(seq);
                     i = close;
                     var annotated_count = annotated.Count;
-                    if (annotation.IsAnyCDR()) {
-                        if (!(annotated_count >= 3 && annotated[annotated_count - 3].Item1 == annotation && annotated[annotated_count - 2].Item1 == Annotation.PossibleGlycan)) {
-                            if (annotation == Annotation.CDR1) {
-                                cdr1 += 1;
-                            } else if (annotation == Annotation.CDR2) {
-                                cdr2 += 1;
-                            } else if (annotation == Annotation.CDR3) {
-                                cdr3 += 1;
-                            }
+                    if (annotation.IsAnyCDR() && !(annotated_count >= 3 && annotated[annotated_count - 3].Item1 == annotation && annotated[annotated_count - 2].Item1 == Annotation.PossibleGlycan)) {
+                        if (annotation == Annotation.CDR1) {
+                            cdr1 += 1;
+                        } else if (annotation == Annotation.CDR2) {
+                            cdr2 += 1;
+                        } else if (annotation == Annotation.CDR3) {
+                            cdr3 += 1;
                         }
                     }
                 } else if (!Char.IsWhiteSpace(line[i])) {
@@ -186,7 +158,7 @@ namespace Stitch {
             if (!string.IsNullOrEmpty(current_seq.Trim()))
                 annotated.Add((Annotation.None, current_seq));
             var sequence = plain_sequence.ToString();
-            var invalid_chars = check_amino_acids.Matches(sequence);
+            var invalid_chars = REGEX_CHECK_AMINO_ACIDS.Matches(sequence);
             if (invalid_chars.Count > 0) {
                 out_either.AddMessage(new InputNameSpace.ErrorMessage(
                     new Position(identifier_line_number, 1, file),
@@ -302,10 +274,8 @@ namespace Stitch {
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(max_novo.File);
 
-            if (possible_content.IsErr()) {
-                out_either.Messages.AddRange(possible_content.Messages);
+            if (!possible_content.IsOk(out_either))
                 return out_either;
-            }
 
             string[] lines = possible_content.Unwrap().Lines;
             var reads = new List<ReadFormat.General>();
@@ -313,15 +283,14 @@ namespace Stitch {
 
             out_either.Value = reads;
 
-            // Parse each line, and filter for score or local patch
+            // Parse each line, and filter for score or local patch, plus skip over the header
             for (int linenumber = 1; linenumber < parse_file.Lines.Length; linenumber++) {
                 var parsed = ReadFormat.MaxNovo.ParseLine(parse_file, linenumber, filter, alphabet, max_novo.RawDataDirectory, max_novo.XleDisambiguation, max_novo.FixedModification);
 
                 if (parsed.IsOk(out_either)) {
                     var meta = parsed.Unwrap();
-                    if (meta == null) continue; // Ignore empty lines
-
-                    if (meta.Sequence.Length >= max_novo.MinLength && meta.Score >= max_novo.CutoffScore) {
+                    // Ignore empty lines
+                    if (meta != null && meta.Sequence.Length >= max_novo.MinLength && meta.Score >= max_novo.CutoffScore) {
                         reads.Add(meta);
                     }
                 } else if (linenumber < 3) {
@@ -341,10 +310,8 @@ namespace Stitch {
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(p_novo.File);
 
-            if (possible_content.IsErr()) {
-                out_either.Messages.AddRange(possible_content.Messages);
+            if (!possible_content.IsOk(out_either))
                 return out_either;
-            }
 
             string[] lines = possible_content.Unwrap().Lines;
             var reads = new List<ReadFormat.General>();
@@ -358,9 +325,8 @@ namespace Stitch {
 
                 if (parsed.IsOk(out_either)) {
                     var meta = parsed.Unwrap();
-                    if (meta == null) continue; // Ignore empty lines
-
-                    if (meta.Sequence.Length >= p_novo.MinLength && meta.Score >= p_novo.CutoffScore) {
+                    // Ignore empty lines
+                    if (meta != null && meta.Score >= p_novo.CutoffScore) {
                         reads.Add(meta);
                     }
                 } else if (linenumber < 3) {
@@ -403,19 +369,16 @@ namespace Stitch {
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
 
-            if (possible_content.IsErr()) {
-                out_either.Messages.AddRange(possible_content.Messages);
+            if (!possible_content.IsOk(out_either))
                 return out_either;
-            }
 
             var reads = new List<ReadFormat.General>();
             out_either.Value = reads;
 
-            string[] lines = possible_content.Unwrap().Lines;
             var parse_file = possible_content.Unwrap();
             var linenumber = -1;
 
-            foreach (var line in lines) {
+            foreach (var line in parse_file.Lines) {
                 linenumber += 1;
                 if (String.IsNullOrWhiteSpace(line)) continue;
                 var split = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parse_file);
@@ -531,15 +494,12 @@ namespace Stitch {
 
             var loaded_file = InputNameSpace.ParseHelper.GetAllText(mmcif.File);
 
-            if (loaded_file.IsErr()) {
-                out_either.Messages.AddRange(loaded_file.Messages);
-                return out_either;
-            }
+            if (!loaded_file.IsOk(out_either)) return out_either;
+
             var lexed = MMCIFParser.Parse(loaded_file.Unwrap());
             var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
 
-            if (lexed.IsErr())
-                return new ParseResult<List<ReadFormat.General>>(lexed.Messages);
+            if (!lexed.IsOk(out_either)) return out_either;
 
             foreach (var item in lexed.Unwrap().Items) {
                 if (item is MMCIFItems.Loop loop && loop.Header.Contains("atom_site.group_PDB")) {
@@ -611,15 +571,12 @@ namespace Stitch {
             var out_either = new ParseResult<List<ReadFormat.General>>(reads);
             var loaded_file = InputNameSpace.ParseHelper.GetAllText(casanovo.File);
 
-            if (loaded_file.IsErr()) {
-                out_either.Messages.AddRange(loaded_file.Messages);
-                return out_either;
-            }
+            if (!loaded_file.IsOk(out_either)) return out_either;
+
             var maybe_lexed = ParseMzTab.MzTabFile.Parse(loaded_file.Unwrap());
             var file_range = new FileRange(new Position(0, 0, loaded_file.Unwrap()), new Position(0, 0, loaded_file.Unwrap()));
 
-            if (maybe_lexed.IsErr())
-                return new ParseResult<List<ReadFormat.General>>(maybe_lexed.Messages);
+            if (!maybe_lexed.IsOk(out_either)) return out_either;
 
             var lexed = maybe_lexed.Unwrap();
             var mzTabFile = lexed.Item1;
@@ -706,22 +663,17 @@ namespace Stitch {
             var filtered = new Dictionary<string, ReadFormat.General>();
             var out_either = new ParseResult<List<ReadFormat.General>>();
 
-            foreach (var set in reads) {
-                foreach (var read in set) {
-                    if (filtered.ContainsKey(AminoAcid.ArrayToString(read.Sequence.AminoAcids))) {
-                        if (filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] is ReadFormat.Combined c) {
-                            c.AddChild(read);
-                        } else {
-                            filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)] = new ReadFormat.Combined(read.Sequence.AminoAcids, filter, new List<ReadFormat.General> { filtered[AminoAcid.ArrayToString(read.Sequence.AminoAcids)], read });
-                        }
-                    } else {
-                        for (int i = 0; i < read.Sequence.Length; i++) {
-                            if (!alp.Contains(read.Sequence.AminoAcids[i].Character))
-                                out_either.AddMessage(new InputNameSpace.ErrorMessage(read.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
-                        }
-
-                        filtered.Add(AminoAcid.ArrayToString(read.Sequence.AminoAcids), read);
-                    }
+            foreach (var read in reads.SelectMany(set => set)) {
+                var key = AminoAcid.ArrayToString(read.Sequence.AminoAcids);
+                var already_present = filtered.ContainsKey(key);
+                if (already_present && filtered[key] is ReadFormat.Combined c) {
+                    c.AddChild(read);
+                } else if (already_present) {
+                    filtered[key] = new ReadFormat.Combined(read.Sequence.AminoAcids, filter, new List<ReadFormat.General> { filtered[key], read });
+                } else if (read.Sequence.AminoAcids.Any(a => !alp.Contains(a))) {
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(read.FileRange.Value, "Invalid sequence", "This sequence contains an invalid aminoacid."));
+                } else {
+                    filtered.Add(key, read);
                 }
             }
 

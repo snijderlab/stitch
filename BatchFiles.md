@@ -79,6 +79,7 @@ All assets are loaded from the folder `assets` in the folder of the binary.
     * MaxNovo
     * Novor
     * Casanovo
+    * pNovo
     * Folder
 * Template Matching
     * CutoffScore
@@ -379,6 +380,20 @@ Used to load mzTab files from Casanovo.
 | CutoffScore | The score cutoff for inclusion in the used reads. \[-1..1\] | 0             |
 | FilterPPM   | The maximal ppm error (Abs(mz_exp - mz_the) / mz_the * 1e6) for inclusion in the used reads (inclusive). \[0..\]      | (No Default)  |
 | RawDataDirectory | The directory with all raw files, assumes they have the same name as present in the Casanovo mzTab file.      | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
+| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way. | `All` |
+
+##### pNovo (m) *
+
+Used to load `result.res` files from pNovo.
+
+| Inner parameter | Explanation                                               | Default Value |
+| --------------- | --------------------------------------------------------- | ------------- |
+| Path        | The path to the `result.res` file.                            | (No Default)  |
+| Param       | The path to the `pNovo.param` file.                           | (No Default)  |
+| Name        | Used to recognize the origin of reads from this file.         | (No Default)  |
+| CutoffScore | The score cutoff for inclusion in the used reads. \[0..100\]  | 9             |
+| RawDataDirectory | The directory with all raw (thermo raw, not mgf) files, assuming the first column of the .res file contains the following format `<name>.<scan>.<scan>.<charge> File:"<name>.raw", NativeID:"...`.      | (No Default)  |
 | XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
 | FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way. | `All` |
 

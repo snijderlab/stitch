@@ -435,12 +435,9 @@ namespace Stitch {
                     ("pNovo", (output, pair) => {
                         new LocalParams<InputData.pNovo>("pNovo", new List<(string, Action<ParseResult<InputData.pNovo>, KeyValue>)>{
                             ("CutoffScore", (settings, value) => {
-                                settings.Value.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 10.0);}),
+                                settings.Value.CutoffScore = ParseHelper.ParseDouble(value, NumberRange<double>.Closed(0, 100)).UnwrapOrDefault(outEither, 90.0);}),
                             ("Param", (settings, value) => {
                                 settings.Value.ParamFile = ParseHelper.GetFullPath(value, "Param").UnwrapOrDefault(outEither, new());}),
-                            ("MinLength", (settings, value) => {
-                                CheckDuplicate(outEither, value, settings.Value.RawDataDirectory);
-                                settings.Value.MinLength = ParseHelper.ParseInt(value, NumberRange<int>.Open(0)).UnwrapOrDefault(outEither, 5);}),
                             ("Name", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.File.Name);
                                 settings.Value.File.Name = value.GetValue().UnwrapOrDefault(outEither, "");}),
