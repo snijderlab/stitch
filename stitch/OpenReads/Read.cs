@@ -8,6 +8,7 @@ using System.IO;
 using static Stitch.Fragmentation;
 using System.Text;
 using static HeckLib.masspec.Spectrum;
+using System.Text.RegularExpressions;
 
 namespace Stitch {
     /// <summary> A class to hold all metadata handling in one place. </summary>
@@ -866,14 +867,23 @@ namespace Stitch {
                     aa_res.Messages[0].AddNote($"Detected sequence: \"{sequence}\" with modifications: \"{sequence_with_modifications}\"");
                 var aa_sequence = aa_res.UnwrapOrDefault(out_either, new AminoAcid[0]);
                 if (out_either.IsErr()) return out_either;
+                uint scan = 0;
+                uint charge = 0;
+                string raw_file_name = "";
 
-                var id = fields[0].Text;
-                var id_pieces = id.Split(' ');
-                var rev_name_pieces = id_pieces[0].ReverseString().Split('.', 4);
-                var charge = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[0].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
-                var scan = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[2].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
-                var raw_file_name = rev_name_pieces[3].ReverseString() + ".mgf";
-                // TODO: The first column is the start of the TITLE field from MGF, so all spectra will have to be located based on matching that...
+                // Most files seen up till the time of writing have the exact same title, very likely this is made by the same MGF exporter.
+                // But matching this and being able to load the original RAW files instead of the MGF is quite nice.
+                if (new Regex("""\w+\.\d+\.\d+.\d File:"[\w\.]+", NativeID:"\w+""").IsMatch(fields[0].Text)) {
+                    var id = fields[0].Text;
+                    var id_pieces = id.Split(' ');
+                    var rev_name_pieces = id_pieces[0].ReverseString().Split('.', 4);
+                    charge = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[0].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                    scan = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[2].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                    raw_file_name = id_pieces[1].Substring(6, id_pieces[1].Length - 8);
+                } else {
+                    // TODO: The first column is the start of the TITLE field from MGF, so all spectra will have to be located based on matching that...
+                    // Which needs some additional ways of reporting that to the scan finder, sum types for the win...
+                }
 
                 var output = new pNovo(aa_sequence, range, $"pN:{scan}", filter);
 

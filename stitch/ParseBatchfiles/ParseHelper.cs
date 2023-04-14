@@ -268,7 +268,7 @@ namespace Stitch {
                             settings.File = ParseHelper.GetFullPath(settings.File.Path, pair.Context, settings.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             settings.DeNovoMatchIons = settings.DeNovoMatchIons == null ? null : ParseHelper.GetFullPath(settings.DeNovoMatchIons.Path, pair.Context, settings.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(settings);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("Reads", (output, pair) => {
                         new LocalParams<InputData.Reads>("Reads", new List<(string, Action<ParseResult<InputData.Reads>, KeyValue>)>{
@@ -284,7 +284,7 @@ namespace Stitch {
 
                             reads.File = ParseHelper.GetFullPath(reads.File.Path, pair.Context, reads.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(reads);
-                        });
+                        }).IsOk(outEither);
                     }                        ),
                     ("Novor", (output, pair) => {
                         string name = null;
@@ -311,7 +311,7 @@ namespace Stitch {
                             if (novor.DeNovoFile != null) novor.DeNovoFile = ParseHelper.GetFullPath(novor.DeNovoFile.Path, pair.Context, name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             if (novor.PSMSFile != null) novor.PSMSFile = ParseHelper.GetFullPath(novor.PSMSFile.Path, pair.Context, name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(novor);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("Fasta", (output, pair) => {
                         new LocalParams<InputData.FASTA>("Fasta", new List<(string, Action<ParseResult<InputData.FASTA>, KeyValue>)>{
@@ -329,7 +329,7 @@ namespace Stitch {
 
                             fasta.File = ParseHelper.GetFullPath(fasta.File.Path, pair.Context, fasta.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(fasta);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("MMCIF", (output, pair) => {
                         new LocalParams<InputData.MMCIF>("MMCIF", new List<(string, Action<ParseResult<InputData.MMCIF>, KeyValue>)>{
@@ -349,7 +349,7 @@ namespace Stitch {
 
                             mmcif.File = ParseHelper.GetFullPath(mmcif.File.Path, pair.Context, mmcif.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(mmcif);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("Casanovo", (output, pair) => {
                         new LocalParams<InputData.Casanovo>("Casanovo", new List<(string, Action<ParseResult<InputData.Casanovo>, KeyValue>)>{
@@ -376,7 +376,7 @@ namespace Stitch {
 
                             casanovo.File = ParseHelper.GetFullPath(casanovo.File.Path, pair.Context, casanovo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(casanovo);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("MaxNovo", (output, pair) => {
                         new LocalParams<InputData.MaxNovo>("MaxNovo", new List<(string, Action<ParseResult<InputData.MaxNovo>, KeyValue>)>{
@@ -430,7 +430,7 @@ namespace Stitch {
 
                             max_novo.File = ParseHelper.GetFullPath(max_novo.File.Path, pair.Context, max_novo.File.Name, new List<KeyValue>{pair}).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(max_novo);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("pNovo", (output, pair) => {
                         new LocalParams<InputData.pNovo>("pNovo", new List<(string, Action<ParseResult<InputData.pNovo>, KeyValue>)>{
@@ -463,7 +463,7 @@ namespace Stitch {
                             if (max_novo.ParamFile != null)
                                 max_novo.Modifications = ParseHelper.ParsePNovoParam(max_novo.ParamFile).UnwrapOrDefault(outEither, new());
                             output.Value.Files.Add(max_novo);
-                        });
+                        }).IsOk(outEither);
                     }),
                     ("Folder", (output, pair) => {
                         // Parse files one by one
@@ -510,9 +510,9 @@ namespace Stitch {
                                 else
                                     continue;
                             }
-                        });
+                        }).IsOk(outEither);
                     }),
-                }).Parse(key, output => outEither.Value = output);
+                }).Parse(key, output => outEither.Value = output).IsOk(outEither);
                 return outEither;
             }
             /// <param name="global">The global InputParameters, if specified, otherwise null.</param>
@@ -624,7 +624,7 @@ namespace Stitch {
                         outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Name, "Any segment"));
 
                     outEither.Value = settings;
-                });
+                }).IsOk(outEither);
                 return outEither;
             }
 
@@ -671,7 +671,7 @@ namespace Stitch {
                         outEither.AddMessage(ErrorMessage.MissingParameter(key.KeyRange.Full, "Order"));
 
                     outEither.Value = (settings, order, readAlignmentKey);
-                });
+                }).IsOk(outEither);
                 return outEither;
             }
 
@@ -731,7 +731,7 @@ namespace Stitch {
                     if (report.Folder == null)
                         report.Folder = Directory.GetCurrentDirectory();
                     outEither.Value = report;
-                });
+                }).IsOk(outEither);
                 return outEither;
             }
             public static ParseResult<ScoringMatrix> ParseAlphabet(KeyValue key) {
@@ -874,7 +874,7 @@ namespace Stitch {
                         if (!outEither.IsErr())
                             outEither.Value = ScoringMatrix.IdentityMatrix(settings.Alphabet.ToList(), symmetric_sets, asymmetric_sets, (sbyte)identity.Item2, (sbyte)identity.Item3, settings.GapStart, settings.GapExtend, settings.Swap, settings.PatchLength, '.');
                     }
-                });
+                }).IsOk(outEither);
                 return outEither;
             }
             public static ParseResult<(char[], sbyte[,])> ParseAlphabetData(ParsedFile file, Tokenizer.Counter counter) {
@@ -1034,7 +1034,7 @@ namespace Stitch {
                     outEither.Messages.AddRange(folder_reads.Messages);
                     if (!folder_reads.IsErr()) settings.Templates = folder_reads.Unwrap();
                     outEither.Value = settings;
-                });
+                }).IsOk(outEither);
                 return outEither;
             }
             public static ParseResult<bool> GetPeaksSettings(KeyValue setting, bool with_prefix, InputData.Peaks peaks_settings) {
