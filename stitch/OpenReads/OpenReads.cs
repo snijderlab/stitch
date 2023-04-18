@@ -487,6 +487,9 @@ namespace Stitch {
     "HIE", "HIM", "HIP", "HIS", "ILE", "LEU", "LYN", "LYS", "MET", "PHE", "PRO", "SER", "THR",
     "TRP", "TYR", "VAL", "SEC", "PYL","UNK"
             };
+            string[] IGNORE_RESIDUE = new string[] {
+                "NAG", "TYS"
+            };
             char[] AMINO_ACIDS_SHORT = new char[]{
     'A', 'R', 'N', 'N', 'D', 'B', 'C', 'C', 'Q', 'Q', 'E', 'G', 'H', 'H', 'H', 'H', 'H', 'I', 'L',
     'K', 'K', 'M', 'F', 'P', 'S', 'T', 'W', 'Y', 'V', 'U', 'O','X'
@@ -538,7 +541,7 @@ namespace Stitch {
                         if (aa != -1) {
                             current_sequence += AMINO_ACIDS_SHORT[aa];
                             local_confidence.Add(row[confidence_score].AsNumber().Unwrap(0.0) / 100.0);
-                        } else {
+                        } else if (Array.IndexOf(IGNORE_RESIDUE, row[residue].AsText()) == -1) {
                             out_either.AddMessage(new InputNameSpace.ErrorMessage($"Residue {row[residue].AsText()} in chain {current_chain}", "Not an AminoAcid", "This residue is not an amino acid.", "", true));
                         }
                     }
