@@ -215,7 +215,7 @@ namespace Stitch {
                 var insertion = new List<AminoAcid>();
 
                 foreach (var piece in alignment.Path) {
-                    if (alignment.LenA == 0) {
+                    if (piece.StepA == 0) {
                         insertion.Add(alignment.ReadB.Sequence.AminoAcids[pos_b]); // StepB is 1 so this works
                     } else {
                         // Handle gaps

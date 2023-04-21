@@ -113,7 +113,7 @@ namespace Stitch {
                 // Generates the following output:
                 // ----------------------------->                                                                                      |  25%  2.0 s
                 var tail = $"| {Math.Round((double)value / max_value * 100),3}% {HelperFunctionality.DisplayTime(stopwatch.ElapsedMilliseconds)}";
-                var bar_length = width - tail.Length - 1;
+                var bar_length = Math.Max(width - tail.Length - 1, 5);
                 var position = (int)Math.Round((double)value / max_value * bar_length);
                 var stem = new String('-', position);
                 var empty = new String(' ', bar_length - position);
