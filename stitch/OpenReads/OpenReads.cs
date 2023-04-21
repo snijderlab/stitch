@@ -118,7 +118,7 @@ namespace Stitch {
         }
 
         private static readonly Regex REGEX_CHECK_AMINO_ACIDS = new Regex("[^ACDEFGHIKLMNOPQRSTUVWY]", RegexOptions.IgnoreCase);
-        static ParseResult<ReadFormat.General> ParseAnnotatedFasta(string line, ReadFormat.General metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
+        public static ParseResult<ReadFormat.General> ParseAnnotatedFasta(string line, ReadFormat.General metaData, int identifier_line_number, ParsedFile file, ScoringMatrix alphabet) {
             var out_either = new ParseResult<ReadFormat.General>();
             var plain_sequence = new StringBuilder();
             var annotated = new List<(HelperFunctionality.Annotation, string)>();

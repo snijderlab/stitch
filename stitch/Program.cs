@@ -184,7 +184,7 @@ namespace Stitch {
             ("Common gibbon",              "gibbon",      "Hl",         "Hylobates lar"),
             ("Gorilla",                    "gorilla",     "Gg",         "Gorilla gorilla"),
             ("Bornean orangutan",          "orangutan",   "Pp",         "Pongo pygmaeus"),
-            ("Macaques",                   "macaque",     "Macaca",     ""),
+            ("Macaque",                   "macaque",     "Macaca",     ""),
             ("rabbit",                     "rabbit",      "Rb",         "Oryctolagus cuniculus"),
             ("platypus",                   "platypus",    "Pl",         "Ornithorhynchus anatinus"),
             ("Teleostei",                  "teleostei",   "Teleostei",  ""),
@@ -255,8 +255,9 @@ namespace Stitch {
                         download.Wait();
                         GenerateAnnotatedTemplate(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                     }
-                } catch {
+                } catch (Exception e) {
                     Console.WriteLine("   Not available");
+                    Console.WriteLine(e);
                 }
             }
             File.Delete("temp.html");
@@ -350,6 +351,7 @@ namespace Stitch {
                 content = content.Substring(newline + 1);
 
                 if (line == "<td class=\"separegroup\"></td>") continue;
+                if (line == "<td class=\"separeespece\"></td>") continue;
 
                 var pieces = line.Split("</td><td>").ToArray();
                 // 0 - nothing
@@ -468,7 +470,7 @@ namespace Stitch {
                     else
                         encoded_sequence.Append($"({piece.Type} {piece.Sequence})");
                 }
-                sequences.Add(new ReadFormat.Fasta(AminoAcid.FromString(encoded_sequence.ToString(), alphabet).Unwrap(), pieces[2], pieces[2], null, name_filter));
+                sequences.Add(OpenReads.ParseAnnotatedFasta(encoded_sequence.ToString(), new ReadFormat.Fasta(new AminoAcid[0], pieces[2], pieces[2], null, name_filter), 0, new ParsedFile(), alphabet).Unwrap());
             }
             SaveAndCleanFasta(output, sequences);
         }
