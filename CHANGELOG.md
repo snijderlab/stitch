@@ -2,26 +2,29 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 
 # Upcoming Release
 
-* Implemented loading of sequences from mmCIF files, for ModelAngelo (#207, #217)
-* Implemented loading of sequences from mzTab files, for Casanovo (#192)
-* Implemented I/L disambiguation based on satellite ions (#193, #216, #218)
-* Reimplemented Segment joining to use the same alignment scoring as template matching (#128)
-* Removed many MS specific terms from the HTML when not applicable (#214)
-* Switched the exact scoring of reads to handle longer alignments better, as well as locally enforcing unique placement (#215)
-* Displayed leading insertions in reads placement to a different colour
+* Added loading of sequences from mmCIF files, for ModelAngelo (#207, #217)
+* Added loading of sequences from Casanovo, pNovo, and MaxNovo (#192)
+* Added loading of spectra from Casanovo, pNovo, and MaxNovo (#195)
+* Added I/L disambiguation based on satellite ions (#193, #216, #218)
+* Added more customization options for peptide fragmentation
+* Added hash for all used files in the HTML report (#229)
+* Added the option to call parts of a batchfile from another file (`include!(<path>)`) see the examples (#111, #209)
 * Updated the main overview header (#212)
-* Major changes to the segment overview tree, always use Blosum62, ability to not generate it (`BuildTree: False`) (#213)
+* Updated the command line interface (CLI) to be more friendly, *Note: calling stitch has changed to `stitch run <path>`*
+* Updated the batchfile parsing to provide more helpful error messages
+* Updated the segment overview tree, always use Blosum62, ability to not generate it (`BuildTree: False`) (#213)
+* Updated the exact scoring of reads to handle longer alignments better, as well as locally enforcing unique placement (#215)
+* Updated segment joining to use the same alignment scoring as template matching (#128)
+* Deprecated the use of booleans with `EnforceUnique`, for now will keep working with a warning but support will be dropped at some point.
 * Fixed small remaining intensity \[1-2\] scaling for Novor reads to scale \[0-1\]
 * Fixed issues with the generation of the consensus sequences in relation to the mass alignment and I/L disambiguation (#220)
-* Reworked the command line interface (CLI) to be more friendly, *Note: calling stitch has changed to `stitch run <path>`*
-* Reworked the batchfile parsing to provide more helpful error messages
-* Deprecated the use of booleans with `EnforceUnique`, for now will keep working with a warning but support will be dropped at some point.
-* Fixed bug (#222)
+* Fixed leading insertions in reads placement displayed in a different colour, for more clarity in the alignment
+* Fixed bugs (#222, #230)
 * Performance improvements
 
 Note
 * The benchmarks show a mostly very slightly positive result, with the caveat that I/L disambiguation is not automatically benchmarked yet because raw files are so big.
-* Performance has been improved with a couple of tiny steps. The I/L disambiguation though adds extra work and so results in longer runs when used, but this scaling is linear with the number of input reads.
+* Performance has been improved with a couple of tiny steps. The I/L disambiguation though adds extra work and so results in longer runs when used, but this scaling is linear with the number of input reads. The move to net7.0 also gives a bit of performance improvement.
 
 Breaking changes
 * The CLI has changed: `stitch <batchfile>` has been changed to `stitch run <batchfile>` to better group the applicable arguments for all subcommands. You can use `--help` to get general help or `<subcommand> --help` to get help on that subcommand.
