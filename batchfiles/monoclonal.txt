@@ -25,6 +25,7 @@ TemplateMatching ->
     Segments->
         include!(../templates/Homo_sapiens_Heavy_Chain.txt)
         include!(../templates/Homo_sapiens_Light_Chain.txt)
+        include!(../templates/common_contaminants.txt)
     <-
 <-
 
