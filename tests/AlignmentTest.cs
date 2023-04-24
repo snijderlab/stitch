@@ -185,5 +185,22 @@ namespace StitchTest {
             Assert.AreEqual(result_1.LenB, result_2.LenB);
             Assert.AreEqual(result_1.Score, result_2.Score);
         }
+
+        [TestMethod]
+        public void PathologicalLongCase() {
+            var alphabet = ScoringMatrix.Blosum62();
+            var read_a = new ReadFormat.Simple(AminoAcid.FromString("EVQLLESGGGLVQPGGSLRLSCAASGFTFSSYAMSWVRQAPGKGLEWVSAISGSGGSTYYADSVKGRFTISRDNSKNTLYLQMNSLRAEDTAVYYCAKXXXXXXXXXXXXXXXXXXXX", alphabet).Unwrap());
+            var read_b = new ReadFormat.Simple(AminoAcid.FromString("DVQCTESGGGLVKPGGSLRLSCAASGYPFSSYKMSWVRQAPGKGLKWVASISADGTYVNYADSVKGRFTISRDLAKNSLYLQMKDLRAEDTAVYFCARDGGRELSPFEKWGQGILVVVTSV", alphabet).Unwrap());
+            var result_1 = new Alignment(read_a, read_b, alphabet, AlignmentType.ReadAlign);
+            var result_2 = new Alignment(read_a, read_b, alphabet, AlignmentType.GlobalForB);
+            Console.WriteLine($"Best Alignment: {result_1.Score} at {result_1.LenA}, {result_1.LenB}");
+            Console.WriteLine($"Best Alignment: {result_2.Score} at {result_2.LenA}, {result_2.LenB}");
+            Console.WriteLine(result_1.Summary());
+            Console.WriteLine(result_2.Summary());
+            // Not equal because in one the read is smashed to the length o the template, while the other it can overhang on the end.
+            Assert.AreNotEqual(result_1.LenA, result_2.LenA);
+            Assert.AreNotEqual(result_1.LenB, result_2.LenB);
+            Assert.AreNotEqual(result_1.Score, result_2.Score);
+        }
     }
 }

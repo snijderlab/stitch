@@ -202,22 +202,19 @@ namespace Stitch {
                 }
 
                 // Location
-                if (!string.IsNullOrEmpty(subject)) // Pre given location
-                {
+                if (!string.IsNullOrEmpty(subject)) { // Pre given location
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("\n   │ ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write(subject + "\n");
-                } else if (string.IsNullOrEmpty(File.Identifier.Path)) // No location
-                  {
-                } else if (!start_position.HasValue) // Only a file
-                  {
+                } else if (string.IsNullOrEmpty(File.Identifier.Path)) {
+                    // No location
+                } else if (!start_position.HasValue) { // Only a file
                     Console.ForegroundColor = ConsoleColor.Blue;
                     Console.Write("  --> ");
                     Console.ForegroundColor = defaultColour;
                     Console.Write($"{File.Identifier.Path}\n");
-                } else // A location in a file
-                  {
+                } else { // A location in a file
                     var endline = !end_position.HasValue ? start_position.Value.Line : end_position.Value.Line;
                     var number_width = endline < File.Lines.Length - 1 ? (endline + 1).ToString().Length : (start_position.Value.Line + 1).ToString().Length;
                     var line_number = (start_position.Value.Line + 1).ToString().PadRight(number_width + 1, ' ');

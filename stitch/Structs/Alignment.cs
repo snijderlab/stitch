@@ -99,7 +99,7 @@ namespace Stitch {
             for (int index_a = 1; index_a <= seq_a.Length; index_a++) {
                 for (int index_b = 1; index_b <= seq_b.Length; index_b++) {
                     AlignmentPiece value = new AlignmentPiece();
-                    var changed = false;
+                    var first = true; // Force the first option if not Local
                     // List all possible moves
                     for (byte len_a = 0; len_a <= scoring_matrix.PatchSize; len_a++) {
                         for (byte len_b = 0; len_b <= scoring_matrix.PatchSize; len_b++) {
@@ -118,17 +118,18 @@ namespace Stitch {
                             if (local_score == 0)
                                 continue; // Skip undefined pairs
 
-                            var total_score = previous.Score + (int)local_score;
-                            if (value.Score < total_score || !changed && type != AlignmentType.Local) {
-                                value = new AlignmentPiece(total_score, local_score, len_a, len_b);
-                                changed = true;
+                            var step_score = previous.Score + (int)local_score;
+                            // Prefer a match, otherwise only keep this step if it is better then the previous ones, or just take it regardless if it is the first and not local
+                            if ((len_a == 1 && len_b == 1 && step_score == value.Score) || step_score > value.Score || first && type != AlignmentType.Local) {
+                                value = new AlignmentPiece(step_score, local_score, len_a, len_b);
+                                first = false;
                             }
                         }
                     }
                     if (value.Score > high.score)
                         high = (value.Score, index_a, index_b);
                     if (value.Score < 0 && type == AlignmentType.Local)
-                        value = new AlignmentPiece(0, 0, 0, 0);
+                        value = new AlignmentPiece(0, 0, 0, 0); // A local alignment can start again at any point
                     matrix[index_a, index_b] = value;
                 }
             }
