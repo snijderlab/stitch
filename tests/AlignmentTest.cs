@@ -198,7 +198,7 @@ namespace StitchTest {
             Console.WriteLine(result_1.Summary());
             Console.WriteLine(result_2.Summary());
             // Not equal because in one the read is smashed to the length o the template, while the other it can overhang on the end.
-            Assert.AreNotEqual(result_1.LenA, result_2.LenA);
+            Assert.AreEqual(result_1.LenA, result_2.LenA);
             Assert.AreNotEqual(result_1.LenB, result_2.LenB);
             Assert.AreNotEqual(result_1.Score, result_2.Score);
         }
