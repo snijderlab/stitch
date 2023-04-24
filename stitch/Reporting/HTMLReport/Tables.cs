@@ -41,18 +41,18 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads) {
+        public static HtmlBuilder CreateTemplateTables(List<Segment> segments, string AssetsFolderName, int total_reads, double total_area) {
             var html = new HtmlBuilder();
 
             for (var i = 0; i < segments.Count; i++) {
                 var item = segments[i];
-                html.Collapsible(item.Name, new HtmlBuilder($"Segment {item.Name}"), CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, true));
+                html.Collapsible(item.Name, new HtmlBuilder($"Segment {item.Name}"), CreateSegmentTable(item.Name, item.Templates, item.ScoreHierarchy, AsideType.Template, AssetsFolderName, total_reads, total_area, true));
             }
 
             return html;
         }
 
-        public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, bool header = false) {
+        public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, double total_area, bool header = false) {
             table_counter++;
             var html = new HtmlBuilder();
             var culture = CultureInfo.CurrentCulture;
@@ -73,7 +73,7 @@ namespace HTMLNameSpace {
             }
 
             if (header)
-                html.Add(TableHeader(templates, total_reads, type, AssetsFolderName, null));
+                html.Add(TableHeader(templates, total_reads, total_area, type, AssetsFolderName, null, displayArea));
 
             if (tree != null)
                 html.Collapsible(name + "-tree", new HtmlBuilder("Tree"), HTMLGraph.RenderTree($"tree-{table_counter}", tree, templates, type, AssetsFolderName, displayArea), HtmlBuilder.CollapsibleState.Open);
@@ -289,12 +289,12 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads, AsideType asideType, string AssetsFolderName, List<string> location) {
+        public static HtmlBuilder TableHeader(List<Template> templates, int totalReads, double total_area, AsideType asideType, string AssetsFolderName, List<string> location, bool displayArea) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='table-header'");
             if (templates.Count > 15) html.Add(PointsTableHeader(templates, asideType, AssetsFolderName, location));
             else if (templates.Count > 5) html.Add(BarTableHeader(templates));
-            html.Add(TextTableHeader(templates, totalReads));
+            html.Add(TextTableHeader(templates, totalReads, total_area, displayArea));
             html.Close(HtmlTag.div);
             return html;
         }
@@ -400,15 +400,22 @@ namespace HTMLNameSpace {
             return html;
         }
 
-        static HtmlBuilder TextTableHeader(List<Template> templates, int total_reads) {
-            var set = new HashSet<string>();
-            var unique_set = new HashSet<string>();
+        static HtmlBuilder TextTableHeader(List<Template> templates, int total_reads, double total_area, bool displayArea) {
+            var set = new HashSet<ReadFormat.General>();
+            var unique_set = new HashSet<ReadFormat.General>();
             foreach (var template in templates) {
-                set.UnionWith(template.Matches.Select(a => a.ReadB.EscapedIdentifier));
-                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.ReadB.EscapedIdentifier));
+                set.UnionWith(template.Matches.Select(a => a.ReadB));
+                unique_set.UnionWith(template.Matches.Where(a => a.Unique == true).Select(a => a.ReadB));
             }
             var html = new HtmlBuilder();
-            html.OpenAndClose(HtmlTag.p, "class='text-header'", $"Reads matched {set.Count} ({(double)set.Count / total_reads:P2} of all input reads) of these {unique_set.Count} ({(double)unique_set.Count / set.Count:P2} of all matched reads) were matched uniquely.");
+            // TODO: give the number+area of all reads that where only placed within this group (unique to this segment), which is slightly differing from the unique number+area
+            var unique_percent = set.Count == 0 ? "" : $" ({(double)unique_set.Count / set.Count:P2} of all matched reads)";
+            var placed_area = set.Aggregate(0.0, (acc, item) => acc + item.TotalArea);
+            var unique_area = unique_set.Aggregate(0.0, (acc, item) => acc + item.TotalArea);
+            var area = displayArea ? $" The total area of all placed reads is {placed_area:G4} ({placed_area / total_area:P2} of the area of all input reads). The total area of all uniquely placed reads is {unique_area:G4} ({unique_area / placed_area:P2} of the area of all matched reads)." : "";
+            html.OpenAndClose(HtmlTag.p, "class='text-header'",
+                $"{set.Count} ({(double)set.Count / total_reads:P2} of all input reads) reads where matched to this segment of these {unique_set.Count}{unique_percent} were matched uniquely.{area}"
+                );
             return html;
         }
     }

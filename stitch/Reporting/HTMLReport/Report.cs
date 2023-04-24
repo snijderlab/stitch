@@ -480,6 +480,8 @@ namespace Stitch {
             var inner_html = new HtmlBuilder();
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
             var AssetFolderName = Path.GetFileName(FullAssetsFolderName);
+            var total_reads = Parameters.Input.Count;
+            var total_area = total_reads == 0 ? 0 : Parameters.Input.Select(r => r.TotalArea).Sum();
 
             if (Parameters.Groups != null)
                 for (int group = 0; group < Parameters.Groups.Count; group++) {
@@ -488,17 +490,21 @@ namespace Stitch {
 
                     if (Parameters.RecombinedSegment.Count != 0) {
                         if (id == "decoy" && Parameters.Groups.Count > Parameters.RecombinedSegment.Count) continue;
+
                         var recombined = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination != null).ToList();
                         var decoy = Parameters.RecombinedSegment[group].Templates.FindAll(t => t.Recombination == null).ToList();
-                        group_html.Collapsible(id + "-recombination", new HtmlBuilder("Recombination Table"), HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true));
+
+                        if (recombined.Count > 0)
+                            group_html.Collapsible(id + "-recombination", new HtmlBuilder("Recombination Table"), HTMLTables.CreateSegmentTable(id + "-recombination", recombined, null, AsideType.RecombinedTemplate, AssetFolderName, total_reads, total_area, true));
+
                         if (decoy.Count > 0)
-                            group_html.Collapsible(id + "-recombination-decoy", new HtmlBuilder("Recombination Decoy"), HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, Parameters.Input.Count, true));
+                            group_html.Collapsible(id + "-recombination-decoy", new HtmlBuilder("Recombination Decoy"), HTMLTables.CreateSegmentTable(id + "-recombination-decoy", decoy, null, AsideType.RecombinedTemplate, AssetFolderName, total_reads, total_area, true));
 
                         if (Parameters.RecombinedSegment[group].SegmentJoiningScores.Count > 0)
                             group_html.Collapsible(id + "-segment-joining", new HtmlBuilder("Segment joining"), CreateSegmentJoining(group));
                     }
 
-                    group_html.Add(HTMLTables.CreateTemplateTables(Parameters.Groups[group].Item2, AssetFolderName, Parameters.Input.Count));
+                    group_html.Add(HTMLTables.CreateTemplateTables(Parameters.Groups[group].Item2, AssetFolderName, total_reads, total_area));
 
                     group_html.Add(CreateCDROverview(id + "-cdr", Parameters.Groups[group].Item2));
 
