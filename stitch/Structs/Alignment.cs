@@ -119,8 +119,8 @@ namespace Stitch {
                                 continue; // Skip undefined pairs
 
                             var step_score = previous.Score + (int)local_score;
-                            // Prefer a match, otherwise only keep this step if it is better then the previous ones, or just take it regardless if it is the first and not local
-                            if ((len_a == 1 && len_b == 1 && step_score == value.Score) || step_score > value.Score || first && type != AlignmentType.Local) {
+                            // Only keep this step if it is better then the previous ones, or just take it regardless if it is the first and not local
+                            if (step_score > value.Score || first && type != AlignmentType.Local) {
                                 value = new AlignmentPiece(step_score, local_score, len_a, len_b);
                                 first = false;
                             }
