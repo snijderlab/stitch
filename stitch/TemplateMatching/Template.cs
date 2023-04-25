@@ -409,8 +409,8 @@ namespace Stitch {
             int pos_a = 0;
             int pos_b = 0;
             foreach (var piece in match.Path) {
-                if (piece.StepA != 0) {
-                    annotation.AddRange(Enumerable.Repeat(GetClasses(pos_a), piece.StepA));
+                if (piece.StepB != 0) {
+                    annotation.AddRange(Enumerable.Repeat(GetClasses(pos_a), piece.StepB));
                 }
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;

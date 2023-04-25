@@ -14,7 +14,7 @@
             "program": "${workspaceFolder}/stitch/bin/Debug/net7.0/stitch.dll",
             "args": [
                 "run",
-                "batchfiles/monoclonal.txt"
+                "batchfiles/test_ma.txt"
             ],
             "cwd": "${workspaceFolder}",
             // For more information about the 'console' field, see https://aka.ms/VSCode-CS-LaunchJson-Console

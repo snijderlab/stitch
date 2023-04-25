@@ -210,7 +210,8 @@ namespace HTMLNameSpace {
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;
             }
-
+            html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(',', annotated.Zip(template.ConsensusSequence().Item1).Select((an, i) => $"{i}: {AminoAcid.ArrayToString(an.Second.Sequence)} {an.First}")));
+            html.OpenAndClose(HtmlTag.pre, "", match.Summary());
             html.Open(HtmlTag.div, "class='annotated-consensus-sequence'");
             html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence.ToString()));
             html.UnsafeContent(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
@@ -541,21 +542,37 @@ namespace HTMLNameSpace {
         }
 
         static HtmlBuilder SequenceConsensusOverview(Template template, string title = null, HtmlBuilder help = null) {
-            var consensus_sequence = template.CombinedSequence();
-            var diversity = new List<Dictionary<(string, int), double>>(consensus_sequence.Count * 2);
+            var combined_sequence = template.CombinedSequence();
+            var consensus = template.ConsensusSequence();
+            var diversity = new List<Dictionary<(string, int), double>>(consensus.Item1.Count);
 
-            for (int i = 0; i < consensus_sequence.Count; i++) {
-                var items = consensus_sequence[i].AminoAcids.ToDictionary(
+            for (int i = 0; i < combined_sequence.Count; i++) {
+                var items = combined_sequence[i].AminoAcids.ToDictionary(
                     item => (AminoAcid.ArrayToString(item.Key.Sequence), item.Key.Length),
                     item => item.Value);
 
-                diversity.Add(items);
+                // If this is an empty place just ignore it
+                if (!(items.Count == 1 && items.Keys.All(k => k.Item1.Length == 0)))
+                    diversity.Add(items);
 
-                var gaps = consensus_sequence[i].Gaps.ToDictionary(
-                    item => item.Key == (Template.IGap)new Template.None() ? "~" : item.Key.ToString(),
-                    item => item.Value.Count);
+                var max = ((Template.IGap)new Template.None(), -1);
+                var gaps = combined_sequence[i].Gaps.ToDictionary(
+                    item => item.Key == (Template.IGap)new Template.None() ? ("~", 1) : (item.Key.ToString(), item.Key.ToString().Length),
+                    item => {
+                        if (item.Value.Count > max.Item2) {
+                            max = (item.Key, item.Value.Count);
+                        }
+                        return (double)item.Value.Count;
+                    });
+
+                // Add the gaps, if they score more than the empty one (so if they are included in the consensus sequence)
+                if (max.Item2 >= 1 && max.Item1.GetType() != typeof(Template.None))
+                    diversity.Add(gaps);
             }
-            return HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray(), template.Gaps());
+            var html = new HtmlBuilder();
+            html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(", ", diversity.Zip(template.ConsensusSequenceAnnotation()).Select((an, i) => $"{i}: {string.Join(';', an.First.Select((key) => $"{key.Key}=>{key.Value}"))} {an.Second}")));
+            html.Add(HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray(), template.Gaps()));
+            return html;
         }
 
         static HtmlBuilder SequenceAmbiguityOverview(Template template, int[] gaps) {
