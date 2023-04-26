@@ -325,7 +325,7 @@ namespace Stitch {
                         consensus.Add(L);
                     } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportI > 0 && supportI >= 2 * supportL) {
                         consensus.Add(I);
-                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, D) && supportN > 0.05 * supportD) {
+                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, D.Sequence) && supportN > 0.05 * supportD) {
                         // Handle deamidation, if N is detected when D is also detected assume it is N
                         consensus.Add(N);
                     } else if (ForceGermlineIsoleucine && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
