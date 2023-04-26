@@ -313,10 +313,10 @@ namespace Stitch {
                 combinedSequence[i].AminoAcids.TryGetValue(I, out supportI);
                 double supportL = 0.0;
                 combinedSequence[i].AminoAcids.TryGetValue(L, out supportL);
-                double supportN = 0.0;
-                combinedSequence[i].AminoAcids.TryGetValue(N, out supportL);
-                double supportD = 0.0;
-                combinedSequence[i].AminoAcids.TryGetValue(D, out supportL);
+                // double supportN = 0.0;
+                // combinedSequence[i].AminoAcids.TryGetValue(N, out supportN);
+                // double supportD = 0.0;
+                // combinedSequence[i].AminoAcids.TryGetValue(D, out supportD);
 
                 if (options.Count > 0) {
                     if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
@@ -325,9 +325,10 @@ namespace Stitch {
                         consensus.Add(L);
                     } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportI > 0 && supportI >= 2 * supportL) {
                         consensus.Add(I);
-                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, D.Sequence) && supportN > 0.05 * supportD) {
-                        // Handle deamidation, if N is detected when D is also detected assume it is N
-                        consensus.Add(N);
+                        // } else if (AminoAcid.ArrayEquals(options[0].Sequence, D.Sequence) && supportN > 0.375 * supportD) {
+                        // Needs some more thought, for herceptin the cutoff .25 fixes all D->N mistakes but introduces mistakes the other way (higher does not fix any of the mistakes)
+                        //     // Handle deamidation, if N is detected when D is also detected assume it is N
+                        //     consensus.Add(N);
                     } else if (ForceGermlineIsoleucine && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
                         consensus.Add(template);
                     } else if (ForceGermlineIsoleucine && options[0] == L && template == I) {
