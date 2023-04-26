@@ -307,10 +307,16 @@ namespace Stitch {
                 var J = new AminoAcid[] { new AminoAcid('J') };
                 var L = new SequenceOption(new AminoAcid[] { new AminoAcid('L') }, 1);
                 var I = new SequenceOption(new AminoAcid[] { new AminoAcid('I') }, 1);
+                var N = new SequenceOption(new AminoAcid[] { new AminoAcid('N') }, 1);
+                var D = new SequenceOption(new AminoAcid[] { new AminoAcid('D') }, 1);
                 double supportI = 0.0;
                 combinedSequence[i].AminoAcids.TryGetValue(I, out supportI);
                 double supportL = 0.0;
                 combinedSequence[i].AminoAcids.TryGetValue(L, out supportL);
+                double supportN = 0.0;
+                combinedSequence[i].AminoAcids.TryGetValue(N, out supportL);
+                double supportD = 0.0;
+                combinedSequence[i].AminoAcids.TryGetValue(D, out supportL);
 
                 if (options.Count > 0) {
                     if (options.Count == 1 && options[0].Length == 1 && options[0].Sequence.Length == 1 && options[0].Sequence[0].Character == this.Parent.Alphabet.GapChar) {
@@ -319,6 +325,9 @@ namespace Stitch {
                         consensus.Add(L);
                     } else if (AminoAcid.ArrayEquals(options[0].Sequence, J) && supportI > 0 && supportI >= 2 * supportL) {
                         consensus.Add(I);
+                    } else if (AminoAcid.ArrayEquals(options[0].Sequence, D) && supportN > 0.05 * supportD) {
+                        // Handle deamidation, if N is detected when D is also detected assume it is N
+                        consensus.Add(N);
                     } else if (ForceGermlineIsoleucine && AminoAcid.ArrayEquals(options[0].Sequence, J) && (template == L || template == I)) {
                         consensus.Add(template);
                     } else if (ForceGermlineIsoleucine && options[0] == L && template == I) {
