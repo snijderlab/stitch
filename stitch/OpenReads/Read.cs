@@ -321,7 +321,7 @@ namespace Stitch {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Invalid sequence definition", "The given sequence could not be made into a valid ProForma sequence.", ""));
                     return out_either;
                 } else {
-                    peaks.OriginalTag = parsed_tag.Unwrap();
+                    peaks.OriginalTag = parsed_tag.Unwrap().Modified;
                 }
                 peaks.XleDisambiguation = xleDisambiguation;
 
@@ -996,13 +996,18 @@ namespace Stitch {
             public double Error;
             /// <summary> The original sequence with possible modifications. </summary>
             public string OriginalSequence;
-
+            /// <summary> The raw file where this peptide originated from. </summary>
+            public string RawFile = null;
+            /// <summary> IF Xle Disambiguation should be turned on. </summary>
+            public bool XleDisambiguation;
             /// <summary> The intensity of this read </summary>
             double intensity = 1;
             public override double Intensity {
                 get { return Score / 100; }
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
+
+            public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers { get => RawFile != null ? new() { (RawFile, Scan, OriginalSequence, new Option<FragmentationType>(), XleDisambiguation) } : new(); }
 
             /// <summary> Create a new Novor MetaData. </summary>
             /// <param name="file">The originating file.</param>
@@ -1046,16 +1051,37 @@ namespace Stitch {
 
         public class NovorDeNovo : Novor {
             /// <summary> The database sequence with possible modifications. </summary>
-            public string DBSequence;
-            public NovorDeNovo(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string databaseSequence)
+            public string DBSequence = null;
+            public double PPM;
+            public double RT;
+            public uint ID;
+            public NovorDeNovo(AminoAcid[] sequence, FileRange file, NameFilter filter, string fraction, int scan, double mz, int z, double score, double mass, double error, string original_sequence, string databaseSequence = null)
             : base(sequence, file, filter, fraction, scan, mz, z, score, mass, error, original_sequence) {
                 this.DBSequence = databaseSequence;
+            }
+            public static NovorDeNovo NewFormat(AminoAcid[] sequence, FileRange file, NameFilter filter, int scan, double mz, int z, double score, double mass, double error, double rt, double ppm, uint id, string original_sequence, string raw_file_name, bool xle_disambiguation) {
+                var read = new NovorDeNovo(sequence, file, filter, null, scan, mz, z, score, mass, error, original_sequence);
+                read.PPM = ppm;
+                read.RT = rt;
+                read.ID = id;
+                read.RawFile = raw_file_name;
+                read.XleDisambiguation = xle_disambiguation;
+                return read;
             }
 
             public override HtmlBuilder ToHTML() {
                 var html = base.ToHTML();
-                html.OpenAndClose(HtmlTag.h3, "", "DBSequence");
-                html.OpenAndClose(HtmlTag.p, "", DBSequence);
+                if (DBSequence != null) {
+                    html.OpenAndClose(HtmlTag.h3, "", "DBSequence");
+                    html.OpenAndClose(HtmlTag.p, "", DBSequence);
+                } else {
+                    html.OpenAndClose(HtmlTag.h3, "", "ppm");
+                    html.OpenAndClose(HtmlTag.p, "", PPM.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.h3, "", "RT");
+                    html.OpenAndClose(HtmlTag.p, "", RT.ToString("G4"));
+                    html.OpenAndClose(HtmlTag.h3, "", "Novor ID");
+                    html.OpenAndClose(HtmlTag.p, "", ID.ToString());
+                }
                 return html;
             }
         }

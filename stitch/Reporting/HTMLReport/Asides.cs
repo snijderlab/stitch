@@ -210,8 +210,8 @@ namespace HTMLNameSpace {
                 pos_a += piece.StepA;
                 pos_b += piece.StepB;
             }
-            html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(',', annotated.Zip(template.ConsensusSequence().Item1).Select((an, i) => $"{i}: {AminoAcid.ArrayToString(an.Second.Sequence)} {an.First}")));
-            html.OpenAndClose(HtmlTag.pre, "", match.Summary());
+            //html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(", ", annotated.Zip(template.ConsensusSequence().Item1).Select((an, i) => { var a = an.First == Annotation.None ? "" : $" {an.First}"; return $"{i}: {AminoAcid.ArrayToString(an.Second.Sequence)}{a}"; })));
+            //html.OpenAndClose(HtmlTag.pre, "", match.Summary());
             html.Open(HtmlTag.div, "class='annotated-consensus-sequence'");
             html.UnsafeContent(CommonPieces.TagWithHelp("h2", "Annotated Consensus Sequence", HTMLHelp.AnnotatedConsensusSequence.ToString()));
             html.UnsafeContent(CommonPieces.CopyData("Annotated Consensus Sequence (TXT)"));
@@ -570,7 +570,7 @@ namespace HTMLNameSpace {
                     diversity.Add(gaps);
             }
             var html = new HtmlBuilder();
-            html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(", ", diversity.Zip(template.ConsensusSequenceAnnotation()).Select((an, i) => $"{i}: {string.Join(';', an.First.Select((key) => $"{key.Key}=>{key.Value}"))} {an.Second}")));
+            //html.OpenAndClose(HtmlTag.pre, "style='white-space: pre-wrap'", string.Join(", ", diversity.Zip(template.ConsensusSequenceAnnotation()).Select((an, i) => $"{i}: {string.Join(';', an.First.Select((key) => $"{key.Key}=>{key.Value}"))} {an.Second}")));
             html.Add(HTMLTables.SequenceConsensusOverview(diversity, title, help, template.ConsensusSequenceAnnotation(), template.SequenceAmbiguityAnalysis().Select(a => a.Position).ToArray(), template.Gaps()));
             return html;
         }

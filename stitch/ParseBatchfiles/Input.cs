@@ -110,6 +110,8 @@ namespace Stitch {
                         return !string.IsNullOrWhiteSpace(c.RawDataDirectory);
                     } else if (f is InputData.pNovo pn) {
                         return !string.IsNullOrWhiteSpace(pn.RawDataDirectory);
+                    } else if (f is InputData.Novor n) {
+                        return !string.IsNullOrWhiteSpace(n.RawFile);
                     } else { return false; }
                 });
 

@@ -152,6 +152,13 @@ namespace Stitch {
             return Recurse(data, new bool[data.Count()], new List<T>());
         }
 
+        /// <summary> Trim a path to remove all outer wrapping ' and ". </summary>
+        public static string TrimPath(this string path) {
+            path = path.StartsWith('\"') && path.EndsWith('\"') ? path.Substring(1, path.Length - 2) : path;
+            path = path.StartsWith('\'') && path.EndsWith('\'') ? path.Substring(1, path.Length - 2) : path;
+            return path;
+        }
+
         /// <summary> Integer exponentiation: https://stackoverflow.com/a/383596/5779120. </summary>
         public static int IntPow(int x, uint pow) {
             int ret = 1;
@@ -325,7 +332,7 @@ namespace Stitch {
         }
 
         /// <summary> Parse the sloppy ProForma like syntax of the input files into actual pro forma sequences. </summary>
-        public static Option<string> FromSloppyProForma(string sequence) {
+        public static Option<(string Modified, string Bare)> FromSloppyProForma(string sequence) {
             // Break into chunks with correct number of closed braces
             var chunks = new List<string>();
             int depth = 0;
@@ -346,7 +353,7 @@ namespace Stitch {
                         if (depth == 0) {
                             if (index - last_index > 0)
                                 if (in_modification)
-                                    return new Option<string>(); // Invalid sequence
+                                    return new Option<(string, string)>(); // Invalid sequence
                                 else
                                     chunks.Add(sequence.Substring(last_index, index - last_index)); // Not including this char
                             last_index = index;
@@ -412,6 +419,7 @@ namespace Stitch {
                 else
                     chunks.Add(sequence.Substring(last_index, sequence.Length - last_index));
 
+            var aa = new StringBuilder(sequence.Length);
             var final_sequence = new StringBuilder(sequence.Length);
             var skip = 0;
             for (var index = 0; index < chunks.Count; index++) {
@@ -420,12 +428,13 @@ namespace Stitch {
                     final_sequence.Append($"[{chunk.Substring(1, chunk.Length - 2)}]");
                 } else {
                     final_sequence.Append(chunk.Substring(skip, chunk.Length - skip));
+                    aa.Append(chunk.Substring(skip, chunk.Length - skip));
                 }
                 if (index == 0 && "([-+0123456789".Contains(chunk[0])) {
                     final_sequence.Append('-');
                 }
             }
-            return new Option<string>(final_sequence.ToString());
+            return new Option<(string, string)>((final_sequence.ToString(), aa.ToString()));
         }
     }
 }
