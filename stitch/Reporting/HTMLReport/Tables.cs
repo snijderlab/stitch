@@ -234,7 +234,7 @@ namespace HTMLNameSpace {
             if (title != null) // Bad way of only doing this in the asides and not in the CDR tables
                 html.CopyData(title + " (TSV)", new HtmlBuilder(HtmlTag.p, HTMLHelp.SequenceConsensusOverviewData));
             html.Open(HtmlTag.div, $"class='sequence-logo' style='--sequence-logo-height:{height}px;--sequence-logo-font-size:{font_size}px;'");
-            var offsets = new double[10];
+            var offsets = new double[20];
             for (int i = 0; i < diversity.Count; i++) {
                 var offset = offsets[0];
                 var Class = annotation != null && i < annotation.Length && annotation[i] != HelperFunctionality.Annotation.None ? " " + annotation[i].ToString() : "";
@@ -257,7 +257,7 @@ namespace HTMLNameSpace {
                     if (item.Key.Item1 != "~" && (double)item.Value / sum > threshold) {
                         var size = (item.Value / sum * (font_size - offset)).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
                         var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        var translate = item.Key.Item2 <= 4 ? new int[] { 0, 0, 25, 33 }[item.Key.Item2] : 0;
+                        var translate = item.Key.Item2 < 4 ? new int[] { 0, 0, 25, 33 }[item.Key.Item2] : 0;
                         html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3}) translateX({translate}%)'", item.Key.Item1);
                         placed = true;
                         if (item.Key.Item2 > 1) {

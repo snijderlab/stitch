@@ -83,7 +83,9 @@ namespace Stitch {
                 public char Separator = ',';
                 public ReadFormat.FileIdentifier DeNovoFile = null;
                 public ReadFormat.FileIdentifier PSMSFile = null;
-                public uint Cutoff = 0;
+                public string RawFile = null;
+                public bool XleDisambiguation = false;
+                public uint CutoffScore = 0;
             }
 
             public class MMCIF : Parameter {

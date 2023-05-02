@@ -349,10 +349,10 @@ namespace Stitch {
             out_either.Value = output;
 
             if (novor.DeNovoFile != null) {
-                output.AddRange(ParseNovorDeNovo(filter, novor.DeNovoFile, novor.Separator, novor.Cutoff, alphabet).UnwrapOrDefault(out_either, new()));
+                output.AddRange(ParseNovorDeNovo(filter, novor.DeNovoFile, novor.Separator, novor.CutoffScore, alphabet, novor.RawFile, novor.XleDisambiguation).UnwrapOrDefault(out_either, new()));
             }
             if (novor.PSMSFile != null) {
-                output.AddRange(ParseNovorPSMS(filter, novor.PSMSFile, novor.Separator, novor.Cutoff, alphabet).UnwrapOrDefault(out_either, new()));
+                output.AddRange(ParseNovorPSMS(filter, novor.PSMSFile, novor.Separator, novor.CutoffScore, alphabet).UnwrapOrDefault(out_either, new()));
             }
 
             return out_either;
@@ -364,7 +364,7 @@ namespace Stitch {
         /// <param name="separator">The separator to use.</param>
         /// <param name="cutoff">The score cutoff to use.</param>
         /// <returns></returns>
-        static ParseResult<List<ReadFormat.General>> ParseNovorDeNovo(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet) {
+        static ParseResult<List<ReadFormat.General>> ParseNovorDeNovo(NameFilter filter, ReadFormat.FileIdentifier file, char separator, uint cutoff, ScoringMatrix alphabet, string raw_file_name, bool xle_disambiguation) {
             var out_either = new ParseResult<List<ReadFormat.General>>();
 
             var possible_content = InputNameSpace.ParseHelper.GetAllText(file);
@@ -380,38 +380,60 @@ namespace Stitch {
 
             foreach (var line in parse_file.Lines) {
                 linenumber += 1;
-                if (String.IsNullOrWhiteSpace(line)) continue;
+                if (String.IsNullOrWhiteSpace(line) || line.StartsWith('#')) continue;
                 var split = InputNameSpace.ParseHelper.SplitLine(separator, linenumber, parse_file);
                 if (split[0].Text.ToLower() == "fraction") continue; // Header line
-                if (split.Count != 10) {
+                if (split.Count == 10) {
+                    // Old format
+                    var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
+                    var fraction = split[0].Text;
+                    var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).UnwrapOrDefault(out_either, -1);
+                    var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(out_either, -1);
+                    var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).UnwrapOrDefault(out_either, -1);
+                    var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).UnwrapOrDefault(out_either, -1);
+                    var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(out_either, -1);
+                    var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(out_either, -1);
+                    var original_peptide = split[8].Text;
+                    var db_sequence = split[9].Text;
+                    var peptide = (string)original_peptide.Clone();
+                    var final_peptide = "";
+                    while (peptide.Length > 0) {
+                        var parts = peptide.Split('(', 2);
+                        if (parts.Length == 2) {
+                            final_peptide += parts[0];
+                            peptide = parts[1].Split(')', 2).Last();
+                        } else { // Length is 1 because no separator was found
+                            final_peptide += parts[0];
+                            peptide = "";
+                        }
+                    }
+                    if (score >= cutoff)
+                        reads.Add(new ReadFormat.NovorDeNovo(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence));
+                } else if (split.Count == 11) {
+                    // New format seen in v3.36.893
+                    var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
+                    var score = InputNameSpace.ParseHelper.ConvertToDouble(split[8].Text, split[8].Pos).UnwrapOrDefault(out_either, -1);
+                    if (score < cutoff) continue; // Scores too low fast track tot the next read
+                    var id = InputNameSpace.ParseHelper.ConvertToUint(split[0].Text, split[0].Pos).UnwrapOrDefault(out_either, 0);
+                    var scan = InputNameSpace.ParseHelper.ConvertToUint(split[1].Text, split[1].Pos).UnwrapOrDefault(out_either, 0);
+                    var rt = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(out_either, -1);
+                    var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[3].Text, split[3].Pos).UnwrapOrDefault(out_either, -1);
+                    var z = InputNameSpace.ParseHelper.ConvertToInt(split[4].Text, split[4].Pos).UnwrapOrDefault(out_either, -1);
+                    var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(out_either, -1);
+                    var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(out_either, -1);
+                    var ppm = InputNameSpace.ParseHelper.ConvertToDouble(split[7].Text, split[7].Pos).UnwrapOrDefault(out_either, -1);
+                    var original_peptide = split[9].Text;
+                    var aa_score = split[10].Text.Split('-').Select(num => (double)InputNameSpace.ParseHelper.ConvertToInt(num, split[10].Pos).UnwrapOrDefault(out_either, 0) / 100.0).ToArray();
+                    var peptide = HelperFunctionality.FromSloppyProForma(original_peptide).Unwrap();
+                    var read = ReadFormat.NovorDeNovo.NewFormat(AminoAcid.FromString(peptide.Bare, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, (int)scan, mz, z, score, mass, error, ppm, rt, id, peptide.Modified, raw_file_name, xle_disambiguation);
+                    read.Sequence.SetPositionalScore(aa_score);
+                    reads.Add(read);
+                    // # id, scanNum, RT, mz(data), z, pepMass(denovo), err(data-denovo), ppm(1e6*err/(mz*z)), score, peptide, aaScore,
+                } else {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(new Position(linenumber, 1, parse_file), "Incorrect number of columns", $"Incorrect number of columns, expected 10 columns according to the Novor file format. Got {split.Count} fields."));
                     continue;
                 }
 
-                var range = new FileRange(new Position(linenumber, 0, parse_file), new Position(linenumber, line.Length, parse_file));
-                var fraction = split[0].Text;
-                var scan = InputNameSpace.ParseHelper.ConvertToInt(split[1].Text, split[1].Pos).UnwrapOrDefault(out_either, -1);
-                var mz = InputNameSpace.ParseHelper.ConvertToDouble(split[2].Text, split[2].Pos).UnwrapOrDefault(out_either, -1);
-                var z = InputNameSpace.ParseHelper.ConvertToInt(split[3].Text, split[3].Pos).UnwrapOrDefault(out_either, -1);
-                var score = InputNameSpace.ParseHelper.ConvertToDouble(split[4].Text, split[4].Pos).UnwrapOrDefault(out_either, -1);
-                var mass = InputNameSpace.ParseHelper.ConvertToDouble(split[5].Text, split[5].Pos).UnwrapOrDefault(out_either, -1);
-                var error = InputNameSpace.ParseHelper.ConvertToDouble(split[6].Text, split[6].Pos).UnwrapOrDefault(out_either, -1);
-                var original_peptide = split[8].Text;
-                var db_sequence = split[9].Text;
-                var peptide = (string)original_peptide.Clone();
-                var final_peptide = "";
-                while (peptide.Length > 0) {
-                    var parts = peptide.Split('(', 2);
-                    if (parts.Length == 2) {
-                        final_peptide += parts[0];
-                        peptide = parts[1].Split(')', 2).Last();
-                    } else { // Length is 1 because no separator was found
-                        final_peptide += parts[0];
-                        peptide = "";
-                    }
-                }
-                if (score >= cutoff)
-                    reads.Add(new ReadFormat.NovorDeNovo(AminoAcid.FromString(final_peptide, alphabet, range).UnwrapOrDefault(out_either, new AminoAcid[0]), range, filter, fraction, scan, mz, z, score, mass, error, peptide, db_sequence));
             }
 
             return out_either;
@@ -631,7 +653,7 @@ namespace Stitch {
                         // Casanovo makes so many incorrect sequences these should just be ignored
                         continue;
                     }
-                    var filtered_sequence = original_sequence.Unwrap().Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
+                    var filtered_sequence = original_sequence.Unwrap().Modified.Aggregate("", (acc, i) => char.IsLetter(i) ? acc + i : acc);
                     var sequence = AminoAcid.FromString(filtered_sequence, alphabet, row[seq_idx].Location).UnwrapOrDefault(out_either, new AminoAcid[0]);
                     var score = InputNameSpace.ParseHelper.ConvertToDouble(row[score_idx].Content, row[score_idx].Location).UnwrapOrDefault(out_either, 0.0);
                     var id = InputNameSpace.ParseHelper.ConvertToInt(row[id_idx].Content, row[id_idx].Location).UnwrapOrDefault(out_either, 0);
@@ -647,7 +669,7 @@ namespace Stitch {
                     var source_file = source_file_idx == -1 && source_file_idx <= raw_files.Count ? "Error while finding source file index" : raw_files[source_file_idx - 1];
 
                     if (score >= casanovo.CutoffScore && (casanovo.FilterPPM == -1 || error_ppm <= casanovo.FilterPPM))
-                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence.Unwrap(), id, row[search_idx].Content, charge, mz_e, mz_t, scan_id, source_file, casanovo.XleDisambiguation, casanovo.FragmentationMethod));
+                        reads.Add(new ReadFormat.Casanovo(sequence, score, confidence, range, filter, original_sequence.Unwrap().Modified, id, row[search_idx].Content, charge, mz_e, mz_t, scan_id, source_file, casanovo.XleDisambiguation, casanovo.FragmentationMethod));
                 }
             }
 
