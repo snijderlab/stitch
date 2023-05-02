@@ -99,14 +99,14 @@ jobs:
       run: |
        dotnet publish stitch -c release -r osx-x64 --self-contained
        dotnet publish stitch -c release -r osx.11.0-arm64 --self-contained
-       cp "stitch/bin/release/net7.0/osx-x64/publish/stitch" stitch
+       cp "stitch/bin/release/net7.0/osx-x64/publish/stitch" stitch.bin
        cp "stitch/bin/release/net7.0/osx.11.0-arm64/publish/stitch" stitch_arm
     - name: Upload artifact
       uses: actions/upload-artifact@v2
       with:
        name: nightly-deploy-osx
        path: |
-        stitch
+        stitch.bin
         stitch_arm
         License.md
         README.md

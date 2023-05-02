@@ -25,7 +25,7 @@ chmod +x ./stitch_arm                      (give running permission to the binar
 OSX:
 ```
 (x64, minimum version macOS 10.12 Sierra)
-chmod +x ./stitch                          (give running permission to the binary)
+chmod +x ./stitch.bin                      (give running permission to the binary)
 ./stitch run batchfiles/monoclonal.txt
 
 (arm64, minimum version macOS 11.0 Big Sur)
