@@ -18,9 +18,6 @@ namespace Stitch {
         /// <summary> Creates a CSV file with a score for each path through the graph. The lines will be sorted and the lines can be filtered for a minimal score. </summary>
         /// <returns>A string containing the file.</returns>
         public override string Create() {
-            var culture = System.Globalization.CultureInfo.CurrentCulture;
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
-
             var header = new List<string>() { "ReadID", "CombinedIDs", "TemplateID", "GroupID", "SegmentID", "Sequence", "Score", "Unique", "StartOnTemplate", "StartOnRead", "LengthOnTemplate", "Alignment", "CDR", "Identical", "Similar" };
             var data = new List<List<string>>();
             var peaks = Parameters.RecombinedSegment.SelectMany(a => a.Templates).SelectMany(t => t.Matches).Any(m => m.ReadB is ReadFormat.Peaks);
@@ -131,8 +128,6 @@ namespace Stitch {
                 buffer.AppendJoin(',', line);
                 buffer.Append('\n');
             }
-
-            System.Globalization.CultureInfo.CurrentCulture = culture;
             return buffer.ToString();
         }
     }

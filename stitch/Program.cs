@@ -14,6 +14,7 @@ namespace Stitch {
     public class ToRunWithCommandLine {
         /// <summary> The entry point. </summary>
         static int Main() {
+            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
             Console.OutputEncoding = Encoding.UTF8;
             Console.CancelKeyPress += HandleUserAbort;
 
@@ -476,7 +477,6 @@ namespace Stitch {
         }
 
         static void RefineRawData(string input, string raw_data_dir, string output, string peaks_version_h) {
-            System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
             var filter = new NameFilter();
             var peaks_version = PeaksFileFormat.PeaksXPlus();
             switch (peaks_version_h.ToLower()) {

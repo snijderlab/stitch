@@ -670,15 +670,12 @@ namespace Stitch {
             Task t = Task.Run(() => CopyAssets());
 
             try {
-                var culture = System.Globalization.CultureInfo.CurrentCulture;
-                System.Globalization.CultureInfo.CurrentCulture = System.Globalization.CultureInfo.GetCultureInfo("en-GB");
                 var html = CreateMain().ToString();
                 CreateAsides();
 
                 stopwatch.Stop();
                 html = html.Replace("REPORTGENERATETIME", $"{stopwatch.ElapsedMilliseconds}");
                 SaveAndCreateDirectories(filename, html);
-                System.Globalization.CultureInfo.CurrentCulture = culture;
             } catch (Exception e) {
                 InputNameSpace.ErrorMessage.PrintException(e);
                 return;

@@ -55,8 +55,6 @@ namespace HTMLNameSpace {
         public static HtmlBuilder CreateSegmentTable(string name, List<Template> templates, PhylogeneticTree.ProteinHierarchyTree tree, AsideType type, string AssetsFolderName, int total_reads, double total_area, bool header = false) {
             table_counter++;
             var html = new HtmlBuilder();
-            var culture = CultureInfo.CurrentCulture;
-            CultureInfo.CurrentCulture = CultureInfo.GetCultureInfo("en-GB");
             bool displayUnique = templates.Exists(a => a.ForcedOnSingleTemplate);
             bool displayOrder = templates.Exists(a => a.Recombination != null);
             bool displayArea = templates.Any(item => item.TotalArea > 0 || item.TotalUniqueArea > 0);
@@ -145,7 +143,6 @@ namespace HTMLNameSpace {
             table_buffer.Close(HtmlTag.table);
             html.Collapsible(name + "-table", new HtmlBuilder("Table"), table_buffer, templates.Count < 5 ? HtmlBuilder.CollapsibleState.Open : HtmlBuilder.CollapsibleState.Closed);
             html.Collapsible(name + "-docs", new HtmlBuilder("Depth Of Coverage Overview"), doc_buffer, templates.Count < 5 ? HtmlBuilder.CollapsibleState.Open : HtmlBuilder.CollapsibleState.Closed);
-            CultureInfo.CurrentCulture = culture;
 
             return html;
         }
@@ -255,8 +252,8 @@ namespace HTMLNameSpace {
                 bool placed = false;
                 foreach (var item in sorted) {
                     if (item.Key.Item1 != "~" && (double)item.Value / sum > threshold) {
-                        var size = (item.Value / sum * (font_size - offset)).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
-                        var inverse_size = (sum / item.Value).ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB"));
+                        var size = (item.Value / sum * (font_size - offset)).ToString();
+                        var inverse_size = (sum / item.Value).ToString();
                         var translate = item.Key.Item2 < 4 ? new int[] { 0, 0, 25, 33 }[item.Key.Item2] : 0;
                         html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3}) translateX({translate}%)'", item.Key.Item1);
                         placed = true;
@@ -266,7 +263,7 @@ namespace HTMLNameSpace {
                             }
                         }
                     }
-                    data_buffer.Append($"\t{item.Key.Item1}\t{item.Key.Item2}\t{item.Value.ToString(System.Globalization.CultureInfo.GetCultureInfo("en-GB")):G3}");
+                    data_buffer.Append($"\t{item.Key.Item1}\t{item.Key.Item2}\t{item.Value.ToString():G3}");
                 }
                 if (!placed)
                     html.OpenAndClose(HtmlTag.span, "", ".");
