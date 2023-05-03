@@ -3,7 +3,7 @@ Template-based assembly of proteomics short reads for de novo antibody sequencin
 
 ## Getting started
 
-There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). The [dotnet runtime](https://dotnet.microsoft.com/download) can be installed to run the program on almost any other platform (See ['Running with dotnet'](#building)). To use these first download the latest package, found on the [releases page](https://github.com/snijderlab/stitch/releases). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
+There are distributed executable files for windows (x64, arm64), linux (x64, arm64) and mac (x64, arm64). If you use any other platform the see ['Building'](#building). To use these first download the latest package, found on the [releases page](https://github.com/snijderlab/stitch/releases). Unpack the archive for your system and run the files from the command line with the filename of the batch file to be used.
 
 Windows:
 ```
@@ -48,7 +48,7 @@ First retrieve the source code using git clone.
 git clone https://github.com/snijderlab/stitch.git stitch
 ```
 
-The project is built with dotnet (.NET 6.0) development is done on windows, but it should work on all major platforms. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install dotnet, stay in this folder (the root) and run:
+The project is built with dotnet (.NET 7.0) development is done on windows, but it should work on all major platforms. To run the project on your own machine (not using precompiled binaries for linux or windows x64) install [dotnet](https://dotnet.microsoft.com/download), stay in this folder (the root) and run:
 
 ```
 dotnet run --project stitch <path to batchfile>
