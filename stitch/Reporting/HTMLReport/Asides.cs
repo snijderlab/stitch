@@ -317,8 +317,8 @@ namespace HTMLNameSpace {
             html.Close(HtmlTag.div);
             html.Open(HtmlTag.div, "class='alignment-wrapper'");
             html.Open(HtmlTag.div, $"class='alignment-body' style='grid-template-columns:repeat({total_length}, 1ch);{TemplateAlignmentAnnotation(annotatedSequence)}'");
-            html.OpenAndClose(HtmlTag.div, $"class='numbering' style='grid-column-end:{total_length}'", numbering.ToString());
-            html.OpenAndClose(HtmlTag.div, $"class='template' style='grid-column-end:{total_length}'", new string(non_breaking_space, max_start_insertion) + template_sequence);
+            html.OpenAndClose(HtmlTag.div, $"class='numbering'", numbering.ToString());
+            html.OpenAndClose(HtmlTag.div, $"class='template'", new string(non_breaking_space, max_start_insertion) + template_sequence);
 
             var ambiguous = template.SequenceAmbiguityAnalysis();
             for (var alignment_index = 0; alignment_index < localMatches.Count; alignment_index++) {
@@ -386,7 +386,13 @@ namespace HTMLNameSpace {
                         html.Content(new string(positional_gap_char, gaps[pos_a]));
                         seq.Append(new string(positional_gap_char, gaps[pos_a]));
                     }
-                    html.Open(HtmlTag.span, $"class='swap' style='--i:{piece.StepB + total_gaps - inserted - already_inserted};--w:{piece.StepA + total_gaps - already_inserted};'");
+
+                    var insert_size = piece.StepB + total_gaps - inserted - already_inserted;
+                    var template_size = piece.StepA + total_gaps - already_inserted;
+                    if (insert_size < 0 || template_size < 0) {
+                        Console.WriteLine($"i {insert_size} w {template_size} at {pos_a},{pos_b} {GetAsideIdentifier(alignment.ReadA)} {GetAsideIdentifier(alignment.ReadB)}");
+                    }
+                    html.Open(HtmlTag.span, $"class='swap' style='--i:{insert_size};--w:{template_size};'");
                     for (int i = 0; i < piece.StepA; i++) {
                         if (i != 0) {
                             html.Content(new string(gap_char, gaps[pos_a + i]));
