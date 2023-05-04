@@ -31,7 +31,7 @@ namespace StitchTest {
         [DataRow("_AA(Oxidation_W)A_", "AA[Oxidation_W]A")]
         [DataTestMethod]
         public void ProperCorrection(string a, string b) {
-            Assert.AreEqual(b, HelperFunctionality.FromSloppyProForma(a).Unwrap(), $"Original: {a}");
+            Assert.AreEqual(b, HelperFunctionality.FromSloppyProForma(a).Unwrap().Modified, $"Original: {a}");
         }
     }
 }
