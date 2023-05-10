@@ -100,6 +100,7 @@ namespace Stitch {
                                 new InputNameSpace.ErrorMessage(raw_file_path, "Cannot open raw files on OSX", "The ThermoFisher library used does not support OSX.", "MGF files do work on OSX.", true).Print();
                                 osx_error_shown = true;
                             }
+                            continue;
                         } else {
                             try {
                                 raw_file.Open(raw_file_path);
