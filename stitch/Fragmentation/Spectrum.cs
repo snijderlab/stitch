@@ -80,6 +80,9 @@ namespace Stitch {
         /// <summary> Finds the supporting spectra for all reads and saves it in the reads themselves. </summary>
         /// <param name="peptides">All peptides to find the spectra for.</param>
         public static void GetSpectra(IEnumerable<ReadFormat.General> peptides) {
+            bool isOSX = System.Runtime.InteropServices.RuntimeInformation.IsOSPlatform(System.Runtime.InteropServices.OSPlatform.OSX);
+            bool osx_error_shown = false;
+
             var scans = peptides.SelectMany(p => p.ScanNumbers.Select(s => (p.EscapedIdentifier, s.RawFile, s.Scan, s.ProForma, s.FragmentationHint, s.XleDisambiguation, p)));
             var possibleModifications = Modification.Parse();
             possibleModifications.Add("Oxidation_W", new Modification(Modification.PositionType.anywhere, Modification.TerminusType.none, 15.99940000000));
@@ -92,13 +95,20 @@ namespace Stitch {
 
                 if (!correct_path.IsErr()) {
                     if (group.Key.EndsWith(".raw")) {
-                        try {
-                            raw_file.Open(raw_file_path);
-                            raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
-                        } catch (Exception exception) {
-                            throw new RunTimeException(
-                                new InputNameSpace.ErrorMessage(raw_file_path, "Could not open raw data file", "The shown raw file could not be opened. See the error below for more information."),
-                                exception);
+                        if (isOSX) {
+                            if (!osx_error_shown) {
+                                new InputNameSpace.ErrorMessage(raw_file_path, "Cannot open raw files on OSX", "The ThermoFisher library used does not support OSX.", "MGF files do work on OSX.", true).Print();
+                                osx_error_shown = true;
+                            }
+                        } else {
+                            try {
+                                raw_file.Open(raw_file_path);
+                                raw_file.SetCurrentController(ThermoRawFile.CONTROLLER_MS, 1);
+                            } catch (Exception exception) {
+                                throw new RunTimeException(
+                                    new InputNameSpace.ErrorMessage(raw_file_path, "Could not open raw data file", "The shown raw file could not be opened. See the error below for more information."),
+                                    exception);
+                            }
                         }
                     } else if (group.Key.EndsWith(".mgf")) {
                         try {
