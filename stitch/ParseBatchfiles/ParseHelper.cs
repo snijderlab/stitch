@@ -631,7 +631,7 @@ namespace Stitch {
 
                 var settings = new LocalParams<RecombineParameter>("Recombined", new List<(string, Action<ParseResult<RecombineParameter>, KeyValue>)>{
                     ("N", (settings, value) => {
-                        settings.Value.N = ParseHelper.ParseInt(value,NumberRange<int>.Open(0)).UnwrapOrDefault(settings, 0);}),
+                        settings.Value.N = ParseHelper.ParseInt(value,NumberRange<int>.Open(1)).UnwrapOrDefault(settings, 1);}),
                     ("Order", (settings, value) => {
                         CheckDuplicate(outEither, value, order);
                             if (value.IsSingle()) order.Add(value);

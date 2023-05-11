@@ -556,7 +556,7 @@ Recombine->
 
 ##### N (s)
 
-The amount of templates to recombine from each segment. From every segment it will take the top N templates and join all of them together in all possible configurations, this means that the number of recombined templates factorially increases with N.
+The amount of templates to recombine from each segment. From every segment it will take the top N templates and join all of them together in all possible configurations, this means that the number of recombined templates factorially increases with N. Default is 1.
 
 ##### Order (s)
 

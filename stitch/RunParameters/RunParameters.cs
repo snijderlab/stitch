@@ -205,7 +205,7 @@ namespace Stitch {
             public Trilean ForceGermlineIsoleucine = Trilean.Unspecified;
 
             /// <summary> The amount of templates to recombine from the highest scoring Segments. </summary>
-            public int N = 0;
+            public int N = 1;
 
             /// <summary> The order in which the templates are to be recombined. The outer list contains the template matching groups in the same order as in the template matching definition. </summary>
             public List<List<RecombineOrder.OrderPiece>> Order = new List<List<RecombineOrder.OrderPiece>>();
