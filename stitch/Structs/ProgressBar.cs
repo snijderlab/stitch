@@ -117,7 +117,7 @@ namespace Stitch {
                 var position = (int)Math.Round((double)value / max_value * bar_length);
                 var stem = new String('-', position);
                 var empty = new String(' ', bar_length - position);
-                Console.Write($"{stem}>{empty}{tail}\b"); // The last \b is a backspace to make sure the cursor stays on this line and the drawing redraws over itself every update.
+                Console.Write($"{stem}>{empty}{tail}\r"); // The last \b is a backspace to make sure the cursor stays on this line and the drawing redraws over itself every update.
 
                 free = true;
             }
