@@ -254,7 +254,7 @@ namespace HTMLNameSpace {
                     if (item.Key.Item1 != "~" && (double)item.Value / sum > threshold) {
                         var size = (item.Value / sum * (font_size - offset)).ToString();
                         var inverse_size = (sum / item.Value).ToString();
-                        var translate = item.Key.Item2 < 4 ? new int[] { 0, 0, 25, 33 }[item.Key.Item2] : 0;
+                        var translate = item.Key.Item2 < 4 ? new int[] { 0, 0, 25, 33 }[item.Key.Item2] : 38;
                         html.OpenAndClose(HtmlTag.span, $"style='font-size:{size:G3}px;transform:scaleX({inverse_size:G3}) translateX({translate}%)'", item.Key.Item1);
                         placed = true;
                         if (item.Key.Item2 > 1) {

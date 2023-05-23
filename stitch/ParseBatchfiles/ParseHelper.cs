@@ -636,7 +636,7 @@ namespace Stitch {
                         CheckDuplicate(outEither, value, order);
                             if (value.IsSingle()) order.Add(value);
                             else
-                                foreach (var group in value.GetValues().UnwrapOrDefault(settings, new()))
+                                foreach (var group in value.GetValues().Unwrap())
                                     order.Add(group);}),
                     ("CutoffScore", (settings, value) => {
                         settings.Value.CutoffScore = ParseHelper.ParseDouble(value,NumberRange<double>.Open(0)).UnwrapOrDefault(settings, 0);}),

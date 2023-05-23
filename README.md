@@ -63,6 +63,13 @@ mklink /J stitch\bin\release\net7.0\assets\ assets\
 mklink /J stitch\bin\release\net7.0\images\ images\
 ```
 
+```
+ln -s assets stitch/bin/debug/net7.0/assets
+ln -s images stitch/bin/debug/net7.0/images
+ln -s assets stitch/bin/release/net7.0/assets
+ln -s images stitch/bin/release/net7.0/images
+```
+
 To generate a single executable run:
 
 ```

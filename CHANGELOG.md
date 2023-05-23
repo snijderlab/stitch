@@ -14,7 +14,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 * Updated the batchfile parsing to provide more helpful error messages
 * Updated the segment overview tree, always use Blosum62, ability to not generate it (`BuildTree: False`) (#213)
 * Updated the exact scoring of reads to handle longer alignments better, as well as locally enforcing unique placement (#215)
-* Updated segment joining to use the same alignment scoring as template matching (#128)
+* Updated segment joining to use the same alignment as template matching (#128)
 * Deprecated the use of booleans with `EnforceUnique`, for now will keep working with a warning but support will be dropped at some point.
 * Fixed small remaining intensity \[1-2\] scaling for Novor reads to scale \[0-1\]
 * Fixed issues with the generation of the consensus sequences in relation to the mass alignment and I/L disambiguation (#220)
@@ -29,6 +29,9 @@ Note
 Breaking changes
 * The CLI has changed: `stitch <batchfile>` has been changed to `stitch run <batchfile>` to better group the applicable arguments for all subcommands. You can use `--help` to get general help or `<subcommand> --help` to get help on that subcommand.
 * The CSV export has been altered by adding more columns with I/L disambiguation specific information. The order of the other columns has not been changed.
+
+Known issues
+* The segment annotation can be off by a couple of aminoacids, or it can miss segments after CDR3. 
 
 # v1.4.0
 _2022-12-20_
