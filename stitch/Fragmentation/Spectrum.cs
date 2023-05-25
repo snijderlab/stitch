@@ -329,7 +329,7 @@ namespace Stitch {
                 }
                 if (String.IsNullOrEmpty(temp_meta.FullScanNumber)) {
                     var trimmed = ConvertToInt(pieces[8].Text.Split(':').Last(), pieces[8].Pos).UnwrapOrDefault(outEither, 0);
-                    temp_meta = (trimmed, num, pieces[0].Text, ConvertToDouble(pieces[3]).UnwrapOrDefault(outEither, 0.0), pieces[9].Text);
+                    temp_meta = (trimmed, num, HelperFunctionality.FromSloppyProForma(pieces[0].Text).Unwrap().Modified, ConvertToDouble(pieces[3]).UnwrapOrDefault(outEither, 0.0), pieces[9].Text);
                 }
                 temp.Add((
                     pieces[10].Text,
