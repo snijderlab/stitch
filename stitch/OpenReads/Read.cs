@@ -1003,7 +1003,7 @@ namespace Stitch {
             /// <summary> The intensity of this read </summary>
             double intensity = 1;
             public override double Intensity {
-                get { return Score / 100; }
+                get { return intensity; }
                 set { if (!double.IsNaN(value)) intensity = value; }
             }
 
