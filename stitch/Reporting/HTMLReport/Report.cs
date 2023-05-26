@@ -603,7 +603,8 @@ namespace Stitch {
             export.OpenAndClose(HtmlTag.p, "", @"If the graphs are needed in a vector graphics format the whole page can be printed to a pdf. To do this print
              the page to a pdf file and save the generated file. These files can be imported in most vector graphics editors.
               It is best to turn on the background graphics and turn off any headers, besides this setting the margins smaller
-              and using landscape or portrait could enhance the results. See the below picture for the options.");
+              and using landscape or portrait could enhance the results. See the below picture for the options. If you want to
+              be able to edit the text as text in Adobe Illustrator we had the best results using Firefox > Print > Save as PDF.");
             export.OpenAndClose(HtmlTag.span, "onclick='window.print()' class='info-link' style='font-size:120%;margin-bottom:1em;'", "Or click here to print");
             export.Empty(HtmlTag.img, $"src='{AssetsFolderName}/export_pdf_example.png' alt='Screenshot of the operation of printing to a PDF in chrome with some extra options that could be beneficial.'");
             html.Collapsible("docs-export-svg", new HtmlBuilder("Export Graphs to Vector Graphics"), export);
