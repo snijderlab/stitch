@@ -23,7 +23,7 @@
   <ItemGroup>
       <PackageReference Include="hecklib.core" Version="2.5.*" />
       <PackageReference Include="hecklib.rawfiles.mgf" Version="6.0.*" />
-      <PackageReference Include="hecklib.html_generator" Version="0.0.16" />
+      <PackageReference Include="hecklib.html_generator" Version="0.0.17" />
   </ItemGroup>
 
   <Target Name="SetSourceRevisionId" BeforeTargets="InitializeSourceControlInformation">
