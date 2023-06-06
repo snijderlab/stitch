@@ -236,7 +236,7 @@ _Example of annotated Fasta file, Homo sapiens IGHJ_
 
 _Example of generating an annotated file from a downloaded HTML page_
 ```
->assembler.exe annotate ".\templates\IMGT Repertoire Homo sapiens IGHJ.html" .\templates\Homo_sapiens_IGHJ_annotated.fasta
+>stitch.exe annotate ".\templates\IMGT Repertoire Homo sapiens IGHJ.html" .\templates\Homo_sapiens_IGHJ_annotated.fasta
 ```
 
 ##### Peaks (m) *
@@ -887,7 +887,7 @@ See the files in the folder `\batchfiles\`.
 
 ### Creating templates for a new species
 
-To create templates for a new species use the download command (see example below). The species name is the latin name or common name as used by IMGT (http://www.imgt.org/IMGTrepertoire/Proteins/). The protein displays are downloaded from IMGT in the process so make sure to have a working internet connection. If different segments are needed besides or in place of the default segments ("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC IGHC") that can be given as the second argument.  Download the sequences of the subclasses from uniprot if the IGHC results are not satisfactory. Multiple species can be downloaded at the same time by separating them by commas, for example "human,bovine,mouse,rabbit,dog".
+To create templates for a new species use the download command (see example below). The species name is the latin name or common name as used by IMGT (http://www.imgt.org/IMGTrepertoire/Proteins/). The protein displays are downloaded from IMGT in the process so make sure to have a working internet connection. If different segments are needed besides or in place of the default segments ("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGKC,IGLC IGHC") that can be given as the second argument. Download the sequences of the subclasses from uniprot if the IGHC results are not satisfactory. Multiple species can be downloaded at the same time by separating them by commas, for example "human,bovine,mouse,rabbit,dog".
 
 ```
 stitch download "Homo sapiens"

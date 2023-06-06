@@ -8,6 +8,7 @@ using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Net.Http;
 using HeckLib.chemistry;
+using System.Globalization;
 
 namespace Stitch {
     /// <summary> The main class which is the entry point from the command line. </summary>
@@ -169,32 +170,70 @@ namespace Stitch {
         }
 
         static List<(String CommonName, String ShortName, String ShortHand, String ScientificName)> predefined_species = new List<(String, String, String, String)> {
-            ("Mammalia",                   "Mammalia",    "Ma",         ""),
-            ("human",                      "human",       "Hu",         "Homo sapiens"),
-            ("house mouse",                "mouse",       "Mu",         "Mus musculus"),
-            ("sheep",                      "sheep",       "Sh",         "Ovis aries"),
-            ("bovine",                     "Btaurus",     "Bt",         "Bos taurus"),
-            ("pig",                        "pig",         "Sc",         "Sus scrofa"),
-            ("gray short-tailed opossum",  "opossum",     "Md",         "Monodelphis domestica"),
-            ("common brush-tailed possum", "possum",      "Tv",         "Trichosurus vulpecula"),
+            ("African clawed frog",        "", "", "Xenopus laevis"),
+            ("African lungfish",           "Lungfish",    "Pa",         "Protopterus aethiopicus"),
+            ("alpaca",                     "", "", "Vicugna pacos"),
             ("Arabian camel",              "camel",       "Cd",         "Camelus dromedarius"),
-            ("domestic horse",             "horse",       "Ec",         "Equus caballus"),
-            ("dog",                        "dog",         "Cf",         "Canis lupus familiaris"),
-            ("Norway rat",                 "rat",         "Rn",         "Rattus norvegicus"),
-            ("Chimpanzee",                 "chimpanzee",  "Pt",         "Pan troglodytes"),
-            ("Common gibbon",              "gibbon",      "Hl",         "Hylobates lar"),
-            ("Gorilla",                    "gorilla",     "Gg",         "Gorilla gorilla"),
+            ("Armenian hamster",           "", "", "Cricetulus migratorius"),
+            ("Atlantic cod",               "", "", "Gadus morhua"),
+            ("Atlantic halibut",           "", "", "Hippoglossus hippoglossus"),
+            ("Atlantic salmon",            "", "", "Salmo salar"),
+            ("baboon",                     "", "", "Papio anubis anubis"),
+            ("black rat",                  "", "", "Rattus rattus"),
+            ("black rockcod",              "", "", "Notothenia coriiceps"),
+            ("blackfin icefish",           "", "", "Chaenocephalus aceratus"),
             ("Bornean orangutan",          "orangutan",   "Pp",         "Pongo pygmaeus"),
-            ("Macaque",                   "macaque",     "Macaca",     ""),
-            ("rabbit",                     "rabbit",      "Rb",         "Oryctolagus cuniculus"),
-            ("platypus",                   "platypus",    "Pl",         "Ornithorhynchus anatinus"),
-            ("Teleostei",                  "teleostei",   "Teleostei",  ""),
+            ("bovine",                     "Btaurus",     "Bt",         "Bos taurus"),
+            ("bull shark",                 "", "", "Carcharhinus leucas"),
+            ("channel catfish",            "", "", "Ictalurus punctatus"),
+            ("chicken",                    "", "", "Gallus gallus"),
+            ("Chimpanzee",                 "chimpanzee",  "Pt",         "Pan troglodytes"),
+            ("clearnose skate",            "Cskate",      "Cs",         "Raja eglanteria"),
+            ("common brush-tailed possum", "possum",      "Tv",         "Trichosurus vulpecula"),
+            ("common carp",                "", "", "Cyprinus carpio"),
+            ("Common gibbon",              "gibbon",      "Hl",         "Hylobates lar"),
+            ("crab-eating macaque",        "", "", "Macaca fascicularis"),
+            ("dog",                        "dog",         "Cf",         "Canis lupus familiaris"),
+            ("domestic cat",               "", "", "Felis catus"),
+            ("domestic guinea pig",        "", "", "Cavia porcellus"),
+            ("domestic horse",             "horse",       "Ec",         "Equus caballus"),
+            ("emerald rockcod",            "", "", "Trematomus bernacchii"),
+            ("goldfish",                   "", "", "Carassius auratus"),
+            ("Gorilla",                    "gorilla",     "Gg",         "Gorilla gorilla"),
+            ("gray short-tailed opossum",  "opossum",     "Md",         "Monodelphis domestica"),
+            ("Hamster",                    "", "", "Cricetinae gen. sp."),
             ("horn shark",                 "Hshark",      "Hs",         "Heterodontus francisci"),
+            ("house mouse",                "mouse",       "Mu",         "Mus musculus"),
+            ("human",                      "human",       "Hu",         "Homo sapiens"),
+            ("Japanese flounder",          "", "", "Paralichthys olivaceus"),
+            ("ladyfish",                   "", "", "Elops saurus"),
+            ("Little skate",               "Lskate",      "Ls",         "Leucoraja erinacea"),
+            ("llama",                      "", "", "Lama glama"),
+            ("Macaque",                    "macaque",     "Macaca",     "Macaca"),
+            ("Mammalia",                   "Mammalia",    "Ma",         ""),
+            ("marbled lungfish",           "", "", "Protopterus aethiopicus"),
+            ("Norway rat",                 "rat",         "Rn",         "Rattus norvegicus"),
+            ("nurse shark",                "", "", "Ginglymostoma cirratum"),
+            ("pig-tailed macaque",         "", "", "Macaca nemestrina"),
+            ("pig",                        "pig",         "Sc",         "Sus scrofa"),
+            ("platypus",                   "platypus",    "Pl",         "Ornithorhynchus anatinus"),
+            ("rabbit",                     "rabbit",      "Rb",         "Oryctolagus cuniculus"),
+            ("rainbow trout",              "", "", "Oncorhynchus mykiss"),
+            ("Rhesus monkey",              "", "", "Macaca mulatta"),
+            ("Ring-tailed lemur",          "", "", "Lemur catta"),
+            ("river trout",                "", "", "Salmo trutta"),
+            ("sandbar shark",              "", "", "Carcharhinus plumbeus"),
+            ("sheep",                      "sheep",       "Sh",         "Ovis aries"),
+            ("sooty mangabey",             "", "", "Cercocebus atys"),
+            ("spectacled caiman",          "", "", "Caiman crocodilus"),
             ("Spotted ratfish",            "Sratfish",    "Sr",         "Hydrolagus colliei"),
             ("Spotted wobbegong shark",    "Wshark",      "Ws",         "Orectolobus maculatus"),
-            ("clearnose skate",            "Cskate",      "Cs",         "Raja eglanteria"),
-            ("Little skate",               "Lskate",      "Ls",         "Leucoraja erinacea"),
-            ("African lungfish",           "Lungfish",    "Pa",         "Protopterus aethiopicus")
+            ("spotted wolffish",           "", "", "Anarhichas minor"),
+            ("Teleostei",                  "teleostei",   "Teleostei",  "Teleostei"),
+            ("torafugu",                   "", "", "Takifugu rubripes"),
+            ("western gorilla",            "", "", "Gorilla gorilla"),
+            ("western lowland gorilla",    "", "", "Gorilla gorilla gorilla"),
+            ("zebrafish",                  "", "", "Danio rerio"),
         };
 
         static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC") {
@@ -213,8 +252,8 @@ namespace Stitch {
             foreach (var sp in predefined_species) {
                 if (sp.ScientificName.ToLower() == name
                  || sp.CommonName.ToLower() == name
-                 || sp.ShortHand.ToLower() == name
-                 || sp.ShortName.ToLower() == name) {
+                 || !String.IsNullOrWhiteSpace(sp.ShortHand) && sp.ShortHand.ToLower() == name
+                 || !String.IsNullOrWhiteSpace(sp.ShortName) && sp.ShortName.ToLower() == name) {
                     species = sp;
                     found = true;
                     break;
@@ -224,7 +263,7 @@ namespace Stitch {
                 Console.WriteLine("Could not find given species");
                 return;
             }
-
+            //var basename = $"https://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species={new CultureInfo("en-UK", false).TextInfo.ToTitleCase(species.ShortName).Replace(" ", "%20")}&latin={species.ScientificName.Replace(" ", "%20")}&group=";
             var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={species.ScientificName.Replace(" ", "%20")}&groups=";
             HttpClient client = new();
             Console.WriteLine(species.ScientificName);
@@ -246,19 +285,21 @@ namespace Stitch {
                             try {
                                 CreateAnnotatedTemplatePre(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                             } catch {
-                                Console.WriteLine($"    Could not process IGHC file");
+                                Console.WriteLine($"   Could not process IGHC file");
                             }
                         } catch {
-                            Console.WriteLine($"    Could not download IGHC file");
+                            Console.WriteLine($"   Could not download IGHC file via Proteins/protein, trying again via general DB");
+                            var download = client.GetStringAsync(basename + segment);
+                            download.Wait();
+                            GenerateAnnotatedTemplate(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                         }
                     } else {
                         var download = client.GetStringAsync(basename + segment);
                         download.Wait();
                         GenerateAnnotatedTemplate(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                     }
-                } catch (Exception e) {
+                } catch {
                     Console.WriteLine("   Not available");
-                    Console.WriteLine(e);
                 }
             }
             File.Delete("temp.html");
