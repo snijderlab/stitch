@@ -1,0 +1,17 @@
+Rattus norvegicus Heavy Chain->
+    Segment->
+        Path      : Rattus_norvegicus_IGHV.fasta
+        Name      : IGHV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Rattus_norvegicus_IGHJ.fasta
+        Name      : IGHJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Rattus_norvegicus_IGHC.fasta
+        Name      : IGHC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-
