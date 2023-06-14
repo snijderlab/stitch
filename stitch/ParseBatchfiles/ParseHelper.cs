@@ -722,6 +722,16 @@ namespace Stitch {
 
                             output.Value.Files.Add(csv);
                         });}),
+                    ("FabLab", (output, pair) => {
+                        new LocalParams<RunParameters.Report.FabLab>("FabLab", new List<(string, Action<ParseResult<RunParameters.Report.FabLab>, KeyValue>)>{
+                            ("Path", (settings, value) => {
+                                CheckDuplicate(outEither, value, settings.Value.Path);
+                                settings.Value.Path = value.GetValue().UnwrapOrDefault(outEither, "").TrimPath();}),
+                        }).Parse(pair, fablab => {
+                            if (string.IsNullOrWhiteSpace(fablab.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+
+                            output.Value.Files.Add(fablab);
+                        });}),
                 }).Parse(key, report => {
                     if (report.Folder == null)
                         report.Folder = Directory.GetCurrentDirectory();

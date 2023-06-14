@@ -106,6 +106,10 @@ namespace Stitch {
                                 var json_report = new JSONReport(parameters, MaxNumberOfCPUCores);
                                 json_report.Save(j.CreateName(folder, this));
                                 break;
+                            case Report.FabLab j:
+                                var fablab_report = new FabLabReport(parameters, MaxNumberOfCPUCores);
+                                fablab_report.Save(j.CreateName(folder, this));
+                                break;
                         }
                     }
                 }

@@ -8,6 +8,12 @@ namespace HTMLNameSpace {
         public void ToString(StringBuilder buffer) {
             buffer.Append("undefined");
         }
+
+        public string ToString() {
+            var buffer = new StringBuilder();
+            this.ToString(buffer);
+            return buffer.ToString();
+        }
     }
 
     public struct JsonList : IJsonNode {

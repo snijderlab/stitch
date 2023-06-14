@@ -293,6 +293,10 @@ namespace Stitch {
             public class JSON : Parameter {
             }
 
+            /// <summary> To indicate to return an FabLab report. </summary>
+            public class FabLab : Parameter {
+            }
+
             /// <summary> The type sequences in the fasta to give as output </summary>
             public enum OutputType { TemplateMatching, Recombine }
 
