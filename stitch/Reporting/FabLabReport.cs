@@ -32,10 +32,10 @@ namespace Stitch {
                                     {"coverage", new JsonList(template.CombinedSequence().Select(
                                         position => (IJsonNode) new JsonList(
                                             position.AminoAcids.Select(
-                                                aa => (IJsonNode) new JsonList(
-                                                    new List<IJsonNode>{
-                                                        new JsonString(AminoAcid.ArrayToString(aa.Key.Sequence)),
-                                                        new JsonNumber(aa.Value),
+                                                aa => (IJsonNode) new JsonObject(
+                                                    new Dictionary<string, IJsonNode>{
+                                                        {"residues", new JsonString(AminoAcid.ArrayToString(aa.Key.Sequence))},
+                                                        {"depth", new JsonNumber(aa.Value)},
                                                     }
                                                 )
                                                 )
@@ -51,10 +51,10 @@ namespace Stitch {
                                 {"coverage", new JsonList(template.CombinedSequence().Select(
                                     position => (IJsonNode) new JsonList(
                                         position.AminoAcids.Select(
-                                            aa => (IJsonNode) new JsonList(
-                                                new List<IJsonNode>{
-                                                    new JsonString(AminoAcid.ArrayToString(aa.Key.Sequence)),
-                                                    new JsonNumber(aa.Value),
+                                            aa => (IJsonNode) new JsonObject(
+                                                new Dictionary<string, IJsonNode>{
+                                                    {"residues", new JsonString(AminoAcid.ArrayToString(aa.Key.Sequence))},
+                                                    {"depth", new JsonNumber(aa.Value)},
                                                 }
                                             )
                                         )

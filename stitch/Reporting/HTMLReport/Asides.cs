@@ -389,9 +389,6 @@ namespace HTMLNameSpace {
 
                     var insert_size = piece.StepB + total_gaps - inserted - already_inserted;
                     var template_size = piece.StepA + total_gaps - already_inserted;
-                    if (insert_size < 0 || template_size < 0) {
-                        Console.WriteLine($"i {insert_size} w {template_size} at {pos_a},{pos_b} {GetAsideIdentifier(alignment.ReadA)} {GetAsideIdentifier(alignment.ReadB)}");
-                    }
                     html.Open(HtmlTag.span, $"class='swap' style='--i:{insert_size};--w:{template_size};'");
                     for (int i = 0; i < piece.StepA; i++) {
                         if (i != 0) {
