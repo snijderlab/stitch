@@ -19,9 +19,10 @@ namespace Stitch {
         public override string Create() {
             var json = new JsonList();
 
-            foreach (var (tm, rec) in Parameters.Groups.Zip(Parameters.RecombinedSegment)) {
-                json.List.Add(new JsonObject(
-                    new Dictionary<string, IJsonNode>{
+            if (Parameters.RecombinedSegment.Count > 0) {
+                foreach (var (tm, rec) in Parameters.Groups.Zip(Parameters.RecombinedSegment)) {
+                    json.List.Add(new JsonObject(
+                        new Dictionary<string, IJsonNode>{
                         {"group", new JsonString(tm.Name)},
                         {"template_matching", new JsonList(
                             tm.Segments.Select(segment => (IJsonNode) new JsonObject(new Dictionary<string, IJsonNode>{
@@ -38,7 +39,7 @@ namespace Stitch {
                                                         {"depth", new JsonNumber(aa.Value)},
                                                     }
                                                 )
-                                                )
+                                            )
                                         ))
                                     )},
                                 })))},
@@ -62,8 +63,37 @@ namespace Stitch {
                                 )},
                             })
                         ))},
-                    }
-                ));
+                        }
+                    ));
+                }
+            } else {
+                foreach (var tm in Parameters.Groups) {
+                    json.List.Add(new JsonObject(
+                        new Dictionary<string, IJsonNode>{
+                        {"group", new JsonString(tm.Name)},
+                        {"template_matching", new JsonList(
+                            tm.Segments.Select(segment => (IJsonNode) new JsonObject(new Dictionary<string, IJsonNode>{
+                                {"segment", new JsonString(segment.Name)},
+                                {"children", new JsonList(segment.Templates.Select(
+                                    template => (IJsonNode) new JsonObject(new Dictionary<string, IJsonNode>{
+                                    {"template", new JsonString(template.MetaData.Identifier)},
+                                    {"coverage", new JsonList(template.CombinedSequence().Select(
+                                        position => (IJsonNode) new JsonList(
+                                            position.AminoAcids.Select(
+                                                aa => (IJsonNode) new JsonObject(
+                                                    new Dictionary<string, IJsonNode>{
+                                                        {"residues", new JsonString(AminoAcid.ArrayToString(aa.Key.Sequence))},
+                                                        {"depth", new JsonNumber(aa.Value)},
+                                                    }
+                                                )
+                                            )
+                                        ))
+                                    )},
+                                })))},
+                            }))
+                        )}}
+                    ));
+                }
             }
 
             var buffer = new StringBuilder();
