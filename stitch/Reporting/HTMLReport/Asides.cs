@@ -382,8 +382,8 @@ namespace HTMLNameSpace {
                     if (inserted > total_gaps) inserted = total_gaps;
                     // Display swaps with internal gaps
                     var already_inserted = gaps[pos_a];
-                    if (pos_a != alignment.StartA) {
-                        html.Content(new string(positional_gap_char, gaps[pos_a]));
+                    if (pos_a != alignment.StartA && gaps[pos_a] > 0) {
+                        html.OpenAndClose(HtmlTag.span, "class='template-gap'", new string(positional_gap_char, gaps[pos_a]));
                         seq.Append(new string(positional_gap_char, gaps[pos_a]));
                     }
 
@@ -413,7 +413,10 @@ namespace HTMLNameSpace {
                     inserted += piece.StepB;
                 } else if (piece.StepB == 0) {
                     if (inserted > total_gaps) inserted = total_gaps;
-                    html.Content(new string(positional_gap_char, piece.StepA + total_gaps - inserted));
+                    if (total_gaps - inserted > 0) {
+                        html.OpenAndClose(HtmlTag.span, "class='template-gap'", new string(positional_gap_char, total_gaps - inserted));
+                    }
+                    html.Content(new string(positional_gap_char, piece.StepA));
                     seq.Append(new string(positional_gap_char, piece.StepA + total_gaps - inserted));
                     inserted = 0;
                 } else if (piece.StepA != piece.StepB) {
@@ -421,14 +424,16 @@ namespace HTMLNameSpace {
                     if (inserted > total_gaps) inserted = total_gaps;
                     if (pos_a == alignment.StartA) total_gaps -= gaps[pos_a];
                     var already_inserted = gaps[pos_a]; // Gaps before the start of this set
-                    html.Content(new string(positional_gap_char, already_inserted));
+                    if (total_gaps - inserted > 0) {
+                        html.OpenAndClose(HtmlTag.span, "class='template-gap'", new string(positional_gap_char, total_gaps - inserted));
+                    }
                     html.OpenAndClose(HtmlTag.span, $"style='--i:{piece.StepB};--w:{piece.StepA + total_gaps - already_inserted};'", content);
                     seq.Append(new string(positional_gap_char, already_inserted) + content);
                     inserted = 0;
                 } else {
                     if (inserted > total_gaps) inserted = total_gaps;
-                    if (pos_a != alignment.StartA) {
-                        html.Content(new string(gap_char, total_gaps - inserted));
+                    if (pos_a != alignment.StartA && total_gaps - inserted > 0) {
+                        html.OpenAndClose(HtmlTag.span, "class='template-gap'", new string(positional_gap_char, total_gaps - inserted));
                         seq.Append(new string(gap_char, total_gaps - inserted));
                     }
                     html.Content(content);
