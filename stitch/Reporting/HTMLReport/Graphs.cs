@@ -478,15 +478,18 @@ namespace HTMLNameSpace {
             var stdev = Math.Sqrt(data.Select(point => Math.Pow(mean - point, 2)).Sum() / data.Count());
             var iqr = data.TakeLast(data.Count() / 2).Average() - data.Take(data.Count() / 2).Average();
             double h = 0.9 * Math.Min(stdev, iqr / 1.34) * Math.Pow(data.Count(), -1 / 5);
-            var densities = new List<double>(STEPS);
+            var densities = new double[STEPS];
+
+            double gaussian_kernel(double x) {
+                return 1 / Math.Sqrt(2.0 * Math.PI) * Math.Exp(-Math.Pow(x, 2) / 2);
+            }
 
             double KDE(double x) {
-                return 1 / (Math.Sqrt(2 * Math.PI) * data.Count * h) * data.Select(item => Math.Exp(-1 / (2 * h * h) * Math.Pow(x - item, 2))).Sum();
+                return 1 / (data.Count * h) * data.Select(i => gaussian_kernel((x - i) / h)).Sum();
             }
 
             for (int i = 0; i < STEPS; i++) {
-                var density = KDE((min_value + (max_value - min_value)) / STEPS * i);
-                densities.Add(density);
+                densities[i] = KDE(min_value + (max_value - min_value) / (STEPS - 1) * i);
             }
             var max_density = densities.Max();
             var path = new StringBuilder();

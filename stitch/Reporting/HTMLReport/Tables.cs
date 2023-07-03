@@ -21,8 +21,9 @@ namespace HTMLNameSpace {
             html.Open(HtmlTag.table, "id='reads-table' class='wide-table'");
             html.Open(HtmlTag.tr);
             html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 0, \"string\")' class='small-cell'", "Identifier");
-            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 1, \"string\")'", "Sequence");
-            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 2, \"number\")' class='small-cell'", "Sequence Length");
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 1, \"string\")'", "Combined IDs");
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 2, \"string\")'", "Sequence");
+            html.OpenAndClose(HtmlTag.th, "onclick='sortTable(\"reads-table\", 3, \"number\")' class='small-cell'", "Sequence Length");
             html.Close(HtmlTag.tr);
 
             string id;
@@ -31,6 +32,13 @@ namespace HTMLNameSpace {
                 id = GetAsideIdentifier(reads[i]);
                 html.Open(HtmlTag.tr, $"id='reads-{id}'");
                 html.OpenAndClose(HtmlTag.td, "class='center'", GetAsideLinkHtml(reads[i], AsideType.Read, AssetsFolderName));
+                html.Open(HtmlTag.td);
+                if (reads[i] is ReadFormat.Combined combined) {
+                    foreach (var single in combined.Children) {
+                        html.Add(GetAsideLinkHtml(single, AsideType.Read, AssetsFolderName));
+                    }
+                }
+                html.Close(HtmlTag.td);
                 html.OpenAndClose(HtmlTag.td, "class='seq'", AminoAcid.ArrayToString(reads[i].Sequence.AminoAcids));
                 html.OpenAndClose(HtmlTag.td, "class='center'", reads[i].Sequence.Length.ToString());
                 html.Close(HtmlTag.tr);
