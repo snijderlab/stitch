@@ -225,6 +225,7 @@ namespace Stitch {
             public double PartsPerMillion = -1;
 
             public bool XleDisambiguation;
+            public bool RawDataDirectorySet = false;
 
             /// <summary> The intensity of this read, find out how it should be handled if it if later updated. </summary>
             double intensity = 1;
@@ -240,10 +241,14 @@ namespace Stitch {
 
             public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    var output = new List<(string, int, string, Option<FragmentationType>, bool)>();
-                    foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
-                        output.Add((SourceFile, scan, OriginalTag, new Option<FragmentationType>(), XleDisambiguation));
-                    return output;
+                    if (RawDataDirectorySet) {
+                        var output = new List<(string, int, string, Option<FragmentationType>, bool)>();
+                        foreach (var scan in ScanID.Split(' ').Select(s => int.Parse(s.Split(':').Last())))
+                            output.Add((SourceFile, scan, OriginalTag, new Option<FragmentationType>(), XleDisambiguation));
+                        return output;
+                    } else {
+                        return new();
+                    }
                 }
             }
 
@@ -331,6 +336,9 @@ namespace Stitch {
 
                 if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
                     peaks.SourceFile = (string.IsNullOrWhiteSpace(RawDataDirectory) ? "" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[pf.source_file].Text;
+
+                if (RawDataDirectory != null)
+                    peaks.RawDataDirectorySet = true;
 
                 if (pf.feature >= 0 && CheckFieldExists(pf.feature))
                     peaks.Feature = fields[pf.feature].Text;
