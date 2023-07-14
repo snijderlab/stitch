@@ -8,7 +8,7 @@ Input ->
         Path     : ../datasets/200305_HER_test_04_DENOVO.csv
         Format   : X+
         Name     : 01
-        CutoffALC: 90
+        CutoffALC: 95
         -RawDataDirectory: R:\F1\peng0013\201912
         -XleDisambiguation: True
     <-

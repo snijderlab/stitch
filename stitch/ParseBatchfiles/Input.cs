@@ -187,13 +187,13 @@ namespace Stitch {
                                     else if (last == -2)
                                         outEither.AddMessage(new ErrorMessage(new FileRange(order.ValueRange.Start, order.ValueRange.End), "Invalid order", "An order definition cannot start with a gap (*)."));
                                     else {
-                                        output.TemplateMatching.Segments[i].Segments[last].GapTail = true;
+                                        output.TemplateMatching.Segments[i].Segments[last].GapTail = 20;
                                         last = -1;
                                     }
                                 } else {
                                     var db = ((RunParameters.RecombineOrder.Template)piece).Index;
                                     if (last == -1)
-                                        output.TemplateMatching.Segments[i].Segments[db].GapHead = true;
+                                        output.TemplateMatching.Segments[i].Segments[db].GapHead = 20;
                                     last = db;
                                 }
                             }
@@ -225,16 +225,15 @@ namespace Stitch {
                         if (db.Templates != null) {
                             for (var i = 0; i < db.Templates.Count; i++) {
                                 var read = db.Templates[i];
-                                const int TAIL_LENGTH = 20;
-                                if (db.GapTail) {
-                                    read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), TAIL_LENGTH).ToArray(), "GapTail");
+                                if (db.GapTail > 0) {
+                                    read.Sequence.UpdateSequence(read.Sequence.Length, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), (int)db.GapTail).ToArray(), "GapTail");
                                     if (read is ReadFormat.Fasta meta)
-                                        meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + new string('X', TAIL_LENGTH));
+                                        meta.AnnotatedSequence[^1] = (meta.AnnotatedSequence[^1].Type, meta.AnnotatedSequence[^1].Sequence + new string('X', (int)db.GapTail));
                                 }
-                                if (db.GapHead) {
-                                    read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), TAIL_LENGTH).ToArray(), "GapHead");
+                                if (db.GapHead > 0) {
+                                    read.Sequence.UpdateSequence(0, 0, Enumerable.Repeat(new AminoAcid(alphabet, 'X'), (int)db.GapHead).ToArray(), "GapHead");
                                     if (read is ReadFormat.Fasta meta)
-                                        meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, new string('X', TAIL_LENGTH) + meta.AnnotatedSequence[0].Sequence);
+                                        meta.AnnotatedSequence[0] = (meta.AnnotatedSequence[0].Type, new string('X', (int)db.GapHead) + meta.AnnotatedSequence[0].Sequence);
                                 }
                                 db.Templates[i] = read;
                             }

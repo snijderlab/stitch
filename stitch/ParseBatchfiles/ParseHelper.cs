@@ -81,6 +81,13 @@ namespace Stitch {
             }
             /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
             /// <returns>If successful: the number (int32)</returns>
+            public static ParseResult<uint> ParseUint(KeyValue item) {
+                var input = item.GetValue();
+                if (input.IsErr()) return new ParseResult<uint>(input.Messages);
+                return ConvertToUint(input.Unwrap(), item.ValueRange);
+            }
+            /// <summary> Converts a string to an int, while it generates meaningful error messages for the end user. </summary>
+            /// <returns>If successful: the number (int32)</returns>
             public static ParseResult<int> ParseInt(KeyValue item, NumberRange<int> range) {
                 var input = item.GetValue();
                 if (input.IsErr()) return new ParseResult<int>(input.Messages);
@@ -1002,9 +1009,29 @@ namespace Stitch {
                     ("Scoring", (settings, value) => {
                         settings.Value.Scoring =  ParseHelper.ParseEnum<ScoringParameter>(key).UnwrapOrDefault(outEither, ScoringParameter.Absolute);}),
                     ("GapHead", (settings, value) => {
-                        settings.Value.GapHead = ParseBool(value, "GapHead").UnwrapOrDefault(outEither, false);}),
+                        uint v = 0;
+                        var boolean = ParseBool(value, "GapHead");
+                        var number = ParseUint(value);
+                        if (boolean.IsOk()) {
+                            v = (uint)(boolean.Unwrap() ? 20 : 0);
+                        } else if (number.IsOk()) {
+                            v = number.UnwrapOrDefault(outEither, 0);
+                        } else {
+                            outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect GapHead definition", "Expected a boolean (True/False) or a number."));
+                        }
+                        settings.Value.GapHead = v;}),
                     ("GapTail", (settings, value) => {
-                        settings.Value.GapTail = ParseBool(value, "GapTail").UnwrapOrDefault(outEither, false);}),
+                        uint v = 0;
+                        var boolean = ParseBool(value, "GapTail");
+                        var number = ParseUint(value);
+                        if (boolean.IsOk()) {
+                            v = (uint)(boolean.Unwrap() ? 20 : 0);
+                        } else if (number.IsOk()) {
+                            v = number.UnwrapOrDefault(outEither, 0);
+                        } else {
+                            outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect GapTail definition", "Expected a boolean (True/False) or a number."));
+                        }
+                        settings.Value.GapHead = v;}),
                 }, (settings, value) => {
                     var peaks = GetPeaksSettings(value, true, peaks_settings);
                     outEither.Messages.AddRange(peaks.Messages);

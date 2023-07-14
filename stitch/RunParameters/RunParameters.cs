@@ -157,8 +157,8 @@ namespace Stitch {
 
             /// <summary> To parse the identifier from the header string in the fasta file </summary>
             public Regex Identifier = new Regex("(.*)");
-            public bool GapTail = false;
-            public bool GapHead = false;
+            public uint GapTail = 0;
+            public uint GapHead = 0;
         }
 
         public class TemplateMatchingParameter {
