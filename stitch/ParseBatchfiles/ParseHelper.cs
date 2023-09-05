@@ -1031,7 +1031,7 @@ namespace Stitch {
                         } else {
                             outEither.AddMessage(new ErrorMessage(value.ValueRange, "Incorrect GapTail definition", "Expected a boolean (True/False) or a number."));
                         }
-                        settings.Value.GapHead = v;}),
+                        settings.Value.GapTail = v;}),
                 }, (settings, value) => {
                     var peaks = GetPeaksSettings(value, true, peaks_settings);
                     outEither.Messages.AddRange(peaks.Messages);
