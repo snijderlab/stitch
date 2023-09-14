@@ -102,6 +102,36 @@ namespace Stitch {
             };
         }
 
+        /// <summary> Version Ab of PEAKS export. </summary>
+        /// <returns>The file format.</returns>
+        public static PeaksFileFormat PeaksAb() {
+            return new PeaksFileFormat {
+                scan = 0,
+                peptide = 1,
+                tag_length = 2,
+                alc = 3,
+                length = 4,
+                mz = 5,
+                z = 6,
+                rt = 7,
+                area = 8,
+                mass = 9,
+                ppm = 10,
+                // accession 11
+                ptm = 12,
+                local_confidence = 13,
+                tag = 14,
+                mode = 15,
+                fraction = -1,
+                source_file = -1,
+                feature = -1,
+                de_novo_score = -1,
+                predicted_rt = -1,
+                name = "Ab"
+            };
+        }
+
+
         /// <summary> A custom version of a PEAKS file format. </summary>
         /// <returns>The file format.</returns>
         public static PeaksFileFormat CustomFormat(int fraction, int sourceFile, int feature, int scan, int peptide, int tagLength, int deNovoScore, int alc, int length, int mz, int z, int rt, int predictedRT, int area, int mass, int ppm, int ptm, int localConfidence, int tag, int mode) {

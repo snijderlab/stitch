@@ -247,18 +247,18 @@ From this file the reads that score high enough are included (>=`CutoffALC`). As
 
 Any parameter with a default value can be left out.
 
-| Inner parameter  | Explanation         | Default Value |
-| ---------------- | ------------------- | ------------- |
-| Path             | The path to the file                                                      | (No Default)  |
-| CutoffALC        | The score a reads must at least have to be included in the list of reads  | 90            |
-| LocalCutoffALC   | The score a patch in a read should at least have to be included.          | (not used)    |
-| MinLengthPatch   | The minimal length of a patch before it is included.                      | (not used)    |
-| Format           | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `X` and `X+`. If any gives errors in reading the file maybe another one will work. | `X+`          |
-| Name             | Used to recognize the origin of reads from this file                      | (No Default)  |
-| Separator        | The separator used to separate cells in the csv                           | `,`           |
-| DecimalSeparator | The separator used to separate decimals                                   | `.`           |
-| RawDataDirectory | The directory to load raw data from (see below for more info).            | (No Default)  |
-| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
+| Inner parameter   | Explanation                                                                                                                                                                                    | Default Value |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Path              | The path to the file                                                                                                                                                                           | (No Default)  |
+| CutoffALC         | The score a reads must at least have to be included in the list of reads                                                                                                                       | 90            |
+| LocalCutoffALC    | The score a patch in a read should at least have to be included.                                                                                                                               | (not used)    |
+| MinLengthPatch    | The minimal length of a patch before it is included.                                                                                                                                           | (not used)    |
+| Format            | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `Ab`, `X` and `X+`. If any gives errors in reading the file maybe another one will work. | `X+`          |
+| Name              | Used to recognize the origin of reads from this file                                                                                                                                           | (No Default)  |
+| Separator         | The separator used to separate cells in the csv                                                                                                                                                | `,`           |
+| DecimalSeparator  | The separator used to separate decimals                                                                                                                                                        | `.`           |
+| RawDataDirectory  | The directory to load raw data from (see below for more info).                                                                                                                                 | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).                                                             | `False`       |
 
 _Examples_
 ```
@@ -321,12 +321,12 @@ If set to `True` the program will before running the template matching go throug
 
 A multiple valued parameter containing one or both different Novor output files and a Name, for this set to aid in recognizing where the data comes from. Either the DeNovo or PSMS files can be used on their own, but they can also be specified together to group the data together. A cutoff can be given to use all reads with a score equal or higher (`read.score >= cutoff`). As the score ranges from 0 to 100 inclusive the cutoff can only be specified within this range. The default value is `0` which includes all reads.
 
-| Inner parameter | Explanation                                               | Default Value |
-| --------------- | --------------------------------------------------------- | ------------- |
-| DeNovo Path     | The path to the Novor `denovo.csv` file                   | (No Default)  |
-| PSMS Path       | The path to the Novor `psms.csv` file                     | (No Default)  |
-| Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
-| Separator       | The separator used to separate fields.                    | ,             |
+| Inner parameter | Explanation                                                  | Default Value |
+| --------------- | ------------------------------------------------------------ | ------------- |
+| DeNovo Path     | The path to the Novor `denovo.csv` file                      | (No Default)  |
+| PSMS Path       | The path to the Novor `psms.csv` file                        | (No Default)  |
+| Name            | Used to recognize the origin of reads from this file.        | (No Default)  |
+| Separator       | The separator used to separate fields.                       | ,             |
 | Cutoff          | The score cutoff for inclusion in the used reads. \[0..100\] | 0             |
 
 _Example_
@@ -341,12 +341,12 @@ Novor ->
 
 Used to load mmCIF files from ModelAngelo, it assumes the basic structural information is in place as is the local confidence saved in the B factor ranged 0-100. When using reads from other sources than MS make sure to check that the scoring matrix used is suitable for the technique you are using. 
 
-| Inner parameter | Explanation                                               | Default Value |
-| --------------- | --------------------------------------------------------- | ------------- |
-| Path     | The path to the file.                   | (No Default)  |
-| Name            | Used to recognize the origin of reads from this file.     | (No Default)  |
-| MinLength       | The minimal length of a chain to be included as read (inclusive).                    | 5             |
-| CutoffALC          | The average local confidence cutoff for inclusion in the used reads. \[0..100\] | 0             |
+| Inner parameter | Explanation                                                                     | Default Value |
+| --------------- | ------------------------------------------------------------------------------- | ------------- |
+| Path            | The path to the file.                                                           | (No Default)  |
+| Name            | Used to recognize the origin of reads from this file.                           | (No Default)  |
+| MinLength       | The minimal length of a chain to be included as read (inclusive).               | 5             |
+| CutoffALC       | The average local confidence cutoff for inclusion in the used reads. \[0..100\] | 0             |
 
 _Example_
 ```
@@ -360,42 +360,42 @@ MMCIF ->
 
 Used to load `msmsScan.txt` files from MaxNovo.
 
-| Inner parameter | Explanation                                               | Default Value |
-| --------------- | --------------------------------------------------------- | ------------- |
-| Path        | The path to the file.                                       | (No Default)  |
-| Name        | Used to recognize the origin of reads from this file.       | (No Default)  |
-| CutoffScore | The score cutoff for inclusion in the used reads. \[0..100\] | 10             |
-| RawDataDirectory | The directory with all raw files, assumes they have the same name as present in the file.      | (No Default)  |
-| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
-| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548,M+15.99491` | (No Default) |
+| Inner parameter   | Explanation                                                                                                                        | Default Value |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Path              | The path to the file.                                                                                                              | (No Default)  |
+| Name              | Used to recognize the origin of reads from this file.                                                                              | (No Default)  |
+| CutoffScore       | The score cutoff for inclusion in the used reads. \[0..100\]                                                                       | 10            |
+| RawDataDirectory  | The directory with all raw files, assumes they have the same name as present in the file.                                          | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
+| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548,M+15.99491`               | (No Default)  |
 
 ##### Casanovo (m) *
 
 Used to load mzTab files from Casanovo.
 
-| Inner parameter | Explanation                                               | Default Value |
-| --------------- | --------------------------------------------------------- | ------------- |
-| Path        | The path to the file.                                       | (No Default)  |
-| Name        | Used to recognize the origin of reads from this file.       | (No Default)  |
-| CutoffScore | The score cutoff for inclusion in the used reads. \[-1..1\] | 0             |
-| FilterPPM   | The maximal ppm error (Abs(mz_exp - mz_the) / mz_the * 1e6) for inclusion in the used reads (inclusive). \[0..\]      | (No Default)  |
-| RawDataDirectory | The directory with all raw files, assumes they have the same name as present in the Casanovo mzTab file.      | (No Default)  |
-| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
-| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way. | `All` |
+| Inner parameter     | Explanation                                                                                                                        | Default Value |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Path                | The path to the file.                                                                                                              | (No Default)  |
+| Name                | Used to recognize the origin of reads from this file.                                                                              | (No Default)  |
+| CutoffScore         | The score cutoff for inclusion in the used reads. \[-1..1\]                                                                        | 0             |
+| FilterPPM           | The maximal ppm error (Abs(mz_exp - mz_the) / mz_the * 1e6) for inclusion in the used reads (inclusive). \[0..\]                   | (No Default)  |
+| RawDataDirectory    | The directory with all raw files, assumes they have the same name as present in the Casanovo mzTab file.                           | (No Default)  |
+| XleDisambiguation   | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
+| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way.                                  | `All`         |
 
 ##### pNovo (m) *
 
 Used to load `result.res` files from pNovo.
 
-| Inner parameter | Explanation                                               | Default Value |
-| --------------- | --------------------------------------------------------- | ------------- |
-| Path        | The path to the `result.res` file.                            | (No Default)  |
-| Param       | The path to the `pNovo.param` file.                           | (No Default)  |
-| Name        | Used to recognize the origin of reads from this file.         | (No Default)  |
-| CutoffScore | The score cutoff for inclusion in the used reads. \[0..100\]  | 9             |
-| RawDataDirectory | The directory with all raw (thermo raw, not mgf) files, assuming the first column of the .res file contains the following format `<name>.<scan>.<scan>.<charge> File:"<name>.raw", NativeID:"...`.      | (No Default)  |
-| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).        | `False`  |
-| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way. | `All` |
+| Inner parameter     | Explanation                                                                                                                                                                                        | Default Value |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Path                | The path to the `result.res` file.                                                                                                                                                                 | (No Default)  |
+| Param               | The path to the `pNovo.param` file.                                                                                                                                                                | (No Default)  |
+| Name                | Used to recognize the origin of reads from this file.                                                                                                                                              | (No Default)  |
+| CutoffScore         | The score cutoff for inclusion in the used reads. \[0..100\]                                                                                                                                       | 9             |
+| RawDataDirectory    | The directory with all raw (thermo raw, not mgf) files, assuming the first column of the .res file contains the following format `<name>.<scan>.<scan>.<charge> File:"<name>.raw", NativeID:"...`. | (No Default)  |
+| XleDisambiguation   | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).                                                                 | `False`       |
+| FragmentationMethod | The used fragmentation method, as mgf data does not store this information in a standardised way.                                                                                                  | `All`         |
 
 ##### Folder (m) *
 
@@ -648,11 +648,11 @@ If the graphs are needed in a vector graphics format the whole page can be print
 
 To generate a FASTA file with all paths, with a score for each path. The score is the total amount of positions from reads mapping to this path. In other words it is the total length of all parts of all reads supporting this sequence. As such a higher score indicates more support for a sequence and/or a longer sequence.
 
-| Inner parameter | Explanation                                                                                                     |   Default Value    |
-| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
-| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
-| MinimalScore    | The minimal score needed to be included in the file                                                             | 0                  |
-| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                      | `Template Matching` |
+| Inner parameter | Explanation                                                                                                     | Default Value       |
+| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)        |
+| MinimalScore    | The minimal score needed to be included in the file                                                             | 0                   |
+| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                     | `Template Matching` |
 
 _Example_
 ```
@@ -667,10 +667,10 @@ FASTA ->
 
 To generate a CSV file with all aligned reads for the given step. It includes all information about the position, alignment, and metadata (in the case of Peaks reads) for the reads. 
 
-| Inner parameter | Explanation                                                                                                     |   Default Value    |
-| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------ |
-| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)       |
-| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                      | `Template Matching` |
+| Inner parameter | Explanation                                                                                                     | Default Value       |
+| --------------- | --------------------------------------------------------------------------------------------------------------- | ------------------- |
+| Path            | The path to save the report to, this path can be made dynamically (see '[Generating Names](#generating-names)') | (No Default)        |
+| OutputType      | The type of sequences to give as output, `Template Matching` or `Recombine`                                     | `Template Matching` |
 
 _Example_
 ```
@@ -708,22 +708,22 @@ Path: Folder/{date}/{alph}/{time}.fasta
 
 Defines the alphabet used to score reads against each other. 
 
-| Inner parameter  | Explanation                                                                                                                      | Default Value |
-| ---------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Path             | The path to the alphabet (cannot be used in conjunction with `Data` or `Characters`)                                             | (No Default)  |
+| Inner parameter  | Explanation                                                                                                                                      | Default Value |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ | ------------- |
+| Path             | The path to the alphabet (cannot be used in conjunction with `Data` or `Characters`)                                                             | (No Default)  |
 | Data             | The alphabet, to allow for newlines the alphabet should be enclosed in `:>` and `<:` (cannot be used in conjunction with `Path` or `Characters`) | (No Default)  |
-| Name             | To recognize the alphabet                                                                                                        | (No Default)  |
-| GapStartPenalty  | The penalty for opening a gap in an alignment. Used in template matching. (Deprecated use GapStart)                              | 12            |
-| GapExtendPenalty | The penalty for extending a gap in an alignment. Used in template matching. (Deprecated use GapExtend)                           | 1             |
-| GapStart         | The score for opening a gap in an alignment. Used in template matching. (Inverse of GapStartPenalty)                             | -12           |
-| GapExtend        | The score for extending a gap in an alignment. Used in template matching. (Inverse of GapExtendPenalty)                          | -1            |
-| Characters       | The set of characters in this alphabet. (cannot be used with `Data` or `Path`)                                                   | (No Default)  |
-| Identity         | The score of matching two identical characters from the `Characters` set.                                                        | (No Default)  |
-| Mismatch         | The score of matching two non identical characters from the `Characters` set.                                                    | (No Default)  |
-| PatchLength      | The maximal length of patches of sequence compared to each other. (Used in swaps and sets, useful for mass based alignment)      | 1             |
-| Swap             | The score of a swap of up to `PatchLength` length patches of sequence. The score is the length of the set times the score given here. | (No Default)  |
-| Symmetric sets   | Used to define symmetric relations between sequence patches, see below.                                                          | (No Default)  |
-| Asymmetric sets  | Used to define asymmetric relations between sequence patches, see below.                                                         | (No Default)  |
+| Name             | To recognize the alphabet                                                                                                                        | (No Default)  |
+| GapStartPenalty  | The penalty for opening a gap in an alignment. Used in template matching. (Deprecated use GapStart)                                              | 12            |
+| GapExtendPenalty | The penalty for extending a gap in an alignment. Used in template matching. (Deprecated use GapExtend)                                           | 1             |
+| GapStart         | The score for opening a gap in an alignment. Used in template matching. (Inverse of GapStartPenalty)                                             | -12           |
+| GapExtend        | The score for extending a gap in an alignment. Used in template matching. (Inverse of GapExtendPenalty)                                          | -1            |
+| Characters       | The set of characters in this alphabet. (cannot be used with `Data` or `Path`)                                                                   | (No Default)  |
+| Identity         | The score of matching two identical characters from the `Characters` set.                                                                        | (No Default)  |
+| Mismatch         | The score of matching two non identical characters from the `Characters` set.                                                                    | (No Default)  |
+| PatchLength      | The maximal length of patches of sequence compared to each other. (Used in swaps and sets, useful for mass based alignment)                      | 1             |
+| Swap             | The score of a swap of up to `PatchLength` length patches of sequence. The score is the length of the set times the score given here.            | (No Default)  |
+| Symmetric sets   | Used to define symmetric relations between sequence patches, see below.                                                                          | (No Default)  |
+| Asymmetric sets  | Used to define asymmetric relations between sequence patches, see below.                                                                         | (No Default)  |
 
 _Symmetric sets_
 

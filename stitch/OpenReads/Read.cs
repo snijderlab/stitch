@@ -365,7 +365,8 @@ namespace Stitch {
                     peaks.PredictedRetentionTime = fields[pf.predicted_rt].Text;
 
                 if (pf.area >= 0 && CheckFieldExists(pf.area))
-                    peaks.Area = ConvertToDouble(pf.area);
+                    if (!InputNameSpace.ParseHelper.ConvertToDouble(fields[pf.area].Text.Replace(decimalseparator, current_decimal_separator), fields[pf.area].Pos).TryGetValue(out peaks.Area))
+                        peaks.Area = 0;
 
                 if (pf.mass >= 0 && CheckFieldExists(pf.mass))
                     peaks.Mass = ConvertToDouble(pf.mass);

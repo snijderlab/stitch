@@ -523,6 +523,7 @@ namespace Stitch {
             switch (peaks_version_h.ToLower()) {
                 case "x": peaks_version = PeaksFileFormat.PeaksX(); break;
                 case "x+": peaks_version = PeaksFileFormat.PeaksXPlus(); break;
+                case "ab": peaks_version = PeaksFileFormat.PeaksAb(); break;
                 case "old": peaks_version = PeaksFileFormat.OldFormat(); break;
                 default: throw new Exception("Incorrect peaks file format use X+, X, or Old");
             }
