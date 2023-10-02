@@ -1095,6 +1095,8 @@ namespace Stitch {
                                 peaks_settings.FileFormat = PeaksFileFormat.PeaksXPlus();}),
                             ("Ab", (settings, value) => {
                                 peaks_settings.FileFormat = PeaksFileFormat.PeaksAb();}),
+                            ("11", (settings, value) => {
+                                peaks_settings.FileFormat = PeaksFileFormat.Peaks11();}),
                         }, peaks_settings).ParseSingular(setting).IsOk(outEither);
                         break;
                     case "separator":

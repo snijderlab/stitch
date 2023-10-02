@@ -131,6 +131,34 @@ namespace Stitch {
             };
         }
 
+        /// <summary> Version 11 of PEAKS export. </summary>
+        /// <returns>The file format.</returns>
+        public static PeaksFileFormat Peaks11() {
+            return new PeaksFileFormat {
+                source_file = 0,
+                scan = 1,
+                peptide = 2,
+                tag_length = 3,
+                alc = 4,
+                length = 5,
+                mz = 6,
+                z = 7,
+                rt = 8,
+                area = 9,
+                mass = 10,
+                ppm = 11,
+                ptm = 12,
+                local_confidence = 13,
+                mode = 14,
+                tag = 15,
+                feature = 16,
+                fraction = -1,
+                de_novo_score = -1,
+                predicted_rt = -1,
+                name = "11"
+            };
+        }
+
 
         /// <summary> A custom version of a PEAKS file format. </summary>
         /// <returns>The file format.</returns>

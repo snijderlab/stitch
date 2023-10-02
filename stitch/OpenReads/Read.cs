@@ -201,7 +201,7 @@ namespace Stitch {
             public int DeNovoScore = -1;
 
             /// <summary> The confidence score of the peptide. </summary>
-            public int Confidence = -1;
+            public double Confidence = -1;
 
             /// <summary> m/z of the peptide. </summary>
             public double MassOverCharge = -1;
@@ -335,7 +335,7 @@ namespace Stitch {
                     peaks.Fraction = fields[pf.fraction].Text;
 
                 if (pf.source_file >= 0 && CheckFieldExists(pf.source_file))
-                    peaks.SourceFile = (string.IsNullOrWhiteSpace(RawDataDirectory) ? "" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[pf.source_file].Text;
+                    peaks.SourceFile = (string.IsNullOrWhiteSpace(RawDataDirectory) ? "" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[pf.source_file].Text.Trim('\"');
 
                 if (RawDataDirectory != null)
                     peaks.RawDataDirectorySet = true;
@@ -344,13 +344,13 @@ namespace Stitch {
                     peaks.Feature = fields[pf.feature].Text;
 
                 if (pf.scan >= 0 && CheckFieldExists(pf.scan))
-                    peaks.ScanID = fields[pf.scan].Text;
+                    peaks.ScanID = fields[pf.scan].Text.Split(';')[0]; // TODO: this ignores any merged scans, update to handle those
 
                 if (pf.de_novo_score >= 0 && CheckFieldExists(pf.de_novo_score))
                     peaks.DeNovoScore = ConvertToInt(pf.de_novo_score);
 
                 if (pf.alc >= 0 && CheckFieldExists(pf.alc))
-                    peaks.Confidence = ConvertToInt(pf.alc);
+                    peaks.Confidence = ConvertToDouble(pf.alc);
 
                 if (pf.mz >= 0 && CheckFieldExists(pf.mz))
                     peaks.MassOverCharge = ConvertToDouble(pf.mz);
