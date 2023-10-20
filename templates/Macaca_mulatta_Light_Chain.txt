@@ -1,0 +1,17 @@
+Macaca mulatta Light Chain->
+    Segment->
+        Path      : Macaca_mulatta_IGKV,IGLV.fasta
+        Name      : IGLV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Macaca_mulatta_IGKJ,IGLJ.fasta
+        Name      : IGLJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Macaca_mulatta_IGKC,IGLC.fasta
+        Name      : IGLC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-

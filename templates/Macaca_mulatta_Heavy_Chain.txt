@@ -1,0 +1,17 @@
+Macaca mulatta Heavy Chain->
+    Segment->
+        Path      : Macaca_mulatta_IGHV.fasta
+        Name      : IGHV
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Macaca_mulatta_IGHJ.fasta
+        Name      : IGHJ
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+    Segment->
+        Path      : Macaca_mulatta_IGHC.fasta
+        Name      : IGHC
+        Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+    <-
+<-

@@ -28,9 +28,10 @@ namespace Stitch {
                     new Argument<int>("live", new Option<string>("l"), new Option<int>(-1), "Prepare the HTML report for use with VS Code Live Server on the given port, -1 turns it off"),
                     new Argument<bool>("quiet", new Option<string>("q"), new Option<bool>(false), "Turns off any output on the command line in normal operation"),
                 }),
-                new Subcommand("download", "Download annotated templates from IMGT (cleans and annotates itself)", new List<IArgument>{
+                new Subcommand("download", "Download annotated templates from IMGT (cleans and annotates itself). NOTE: this is highly unstable and mainly intended for the maintainers of this program", new List<IArgument>{
                     new Argument<string>("species", new Option<string>(), new Option<string>(), "The latin name of the animal to download the data for (as used by IMGT: http://www.imgt.org/IMGTrepertoire/Proteins/)"),
-                    new Argument<string>("segments", new Option<string>(), new Option<string>("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC"), "The segments to download, multiple segments combined with a , will be combined in a single file")
+                    new Argument<string>("segments", new Option<string>(), new Option<string>("IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC"), "The segments to download, multiple segments combined with a , will be combined in a single file"),
+                    new Argument<bool>("debug", new Option<string>("d"), new Option<bool>(false), "Show debug info"),
                 }),
                 new Subcommand("refine", "Use Xle disambiguation to refine raw data (can also be done in an actual run)", new List<IArgument>{
                     new Argument<string>("input", new Option<string>(), new Option<string>(), "The peaks file to open and refine"),
@@ -72,7 +73,7 @@ namespace Stitch {
                     GenerateAnnotatedTemplate(content, string.IsNullOrEmpty(ou) ? inp : ou);
                 } else if (args.ContainsKey("download")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["download"].Item2;
-                    DownloadSpecies((string)sub_args["species"].Item2, (string)sub_args["segments"].Item2);
+                    DownloadSpecies((string)sub_args["species"].Item2, (string)sub_args["segments"].Item2, (bool)sub_args["debug"].Item2);
                 } else if (args.ContainsKey("refine")) {
                     var sub_args = (Dictionary<string, (Type, object)>)args["refine"].Item2;
                     RefineRawData((string)sub_args["input"].Item2, (string)sub_args["raw-data-dir"].Item2, (string)sub_args["output"].Item2, (string)sub_args["peaks-version"].Item2);
@@ -219,7 +220,7 @@ namespace Stitch {
             ("platypus",                   "platypus",    "Pl",         "Ornithorhynchus anatinus"),
             ("rabbit",                     "rabbit",      "Rb",         "Oryctolagus cuniculus"),
             ("rainbow trout",              "", "", "Oncorhynchus mykiss"),
-            ("Rhesus monkey",              "", "", "Macaca mulatta"),
+            ("Rhesus monkey",              "Rhesus monkey", "", "Macaca mulatta"),
             ("Ring-tailed lemur",          "", "", "Lemur catta"),
             ("river trout",                "", "", "Salmo trutta"),
             ("sandbar shark",              "", "", "Carcharhinus plumbeus"),
@@ -236,16 +237,16 @@ namespace Stitch {
             ("zebrafish",                  "", "", "Danio rerio"),
         };
 
-        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC") {
+        static void DownloadSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC", bool debug = false) {
             foreach (var single in name.Split(',')) {
-                DownloadSingleSpecies(single, segments);
+                DownloadSingleSpecies(single, segments, debug);
             }
         }
 
         /// <summary> Download a set of templates for a mammalian organism assuming the same structure as Homo sapiens. </summary>
         /// <param name="name"> The name of the species, it will be matched to all predefined names. It can
         /// be scientific name, common name, shorthand or short name (matched in that order). </param>
-        static void DownloadSingleSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC") {
+        static void DownloadSingleSpecies(string name, string segments = "IGHV IGKV,IGLV IGHJ IGKJ,IGLJ IGHC IGKC,IGLC", bool debug = false) {
             (string CommonName, string ShortName, string ShortHand, string ScientificName) species = ("", "", "", "");
             var found = false;
             name = name.ToLower().Trim();
@@ -263,8 +264,8 @@ namespace Stitch {
                 Console.WriteLine("Could not find given species");
                 return;
             }
-            //var basename = $"https://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species={new CultureInfo("en-UK", false).TextInfo.ToTitleCase(species.ShortName).Replace(" ", "%20")}&latin={species.ScientificName.Replace(" ", "%20")}&group=";
-            var basename = $"http://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={species.ScientificName.Replace(" ", "%20")}&groups=";
+            //var basename = $"https://www.imgt.org/IMGTrepertoire/Proteins/proteinDisplays.php?species={species.ShortName.Replace(" ", "%20")}&latin={species.ScientificName.Replace(" ", "%20")}&group=";
+            var basename = $"https://www.imgt.org/3Dstructure-DB/cgi/DomainDisplay-include.cgi?species={species.ScientificName.Replace(" ", "%20")}&groups=";
             HttpClient client = new();
             Console.WriteLine(species.ScientificName);
             foreach (var segment in segments.Split(' ')) {
@@ -295,11 +296,13 @@ namespace Stitch {
                         }
                     } else {
                         var download = client.GetStringAsync(basename + segment);
+                        if (debug) Console.WriteLine(basename + segment);
                         download.Wait();
                         GenerateAnnotatedTemplate(download.Result, species.ScientificName.Replace(' ', '_') + "_" + segment + ".fasta");
                     }
-                } catch {
+                } catch (Exception e) {
                     Console.WriteLine("   Not available");
+                    if (debug) Console.WriteLine(e);
                 }
             }
             File.Delete("temp.html");
