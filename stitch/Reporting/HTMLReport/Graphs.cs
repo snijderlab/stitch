@@ -275,7 +275,7 @@ namespace HTMLNameSpace {
 
                 foreach (var point in group.Points) {
                     var link = CommonPieces.GetAsideRawLink(point.Label, asideType, AssetsFolderName, location);
-                    dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label}");
+                    dataBuffer.Append($"\n\"{group.GroupLabel}\"\t{point.Label.Identifier}");
                     html.Open(HtmlTag.a, $"href='{link}' class='values'");
                     // Create Points
                     for (int i = 0; i < dimensions; i++) {
