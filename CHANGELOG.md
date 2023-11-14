@@ -3,6 +3,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 # Upcoming Release
 
 * Added loading of sequences from mmCIF files, for ModelAngelo (#207, #217)
+* Added loading of sequences from Peaks 11 and Peaks Ab
 * Added loading of sequences from Casanovo, pNovo, and MaxNovo (#192)
 * Added loading of spectra from Casanovo, pNovo, and MaxNovo (#195)
 * Added I/L disambiguation based on satellite ions (#193, #216, #218)
@@ -21,6 +22,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 * Fixed leading insertions in reads placement displayed in a different colour, for more clarity in the alignment
 * Fixed bugs (#222, #230)
 * Performance improvements
+* Many more small fixes and improvements
 
 Note
 * The benchmarks show a mostly very slightly positive result, with the caveat that I/L disambiguation is not automatically benchmarked yet because raw files are so big.
