@@ -21,7 +21,7 @@ namespace Stitch {
                 var tableData = new List<(FileRange, SubString[])>();
 
                 foreach (var line in file.Lines) {
-                    if (line.Length != 0) {
+                    if (line.Trim().Length != 0) {
                         var keyword = line.Split('\t', 2)[0];
                         var pos = pointer.GetPosition();
                         var point = new FileRange(new Position(pos.Line, 1, pos.File), new Position(pos.Line, 4, pos.File));
@@ -63,7 +63,6 @@ namespace Stitch {
                                 outEither.AddMessage(new ErrorMessage(point, "Unrecognised mzTab line start code", "mzTab files can only start with the following codes: 'MTD', 'PSH', 'PSM', 'PRH', 'PRT', 'PEH', 'PET', 'SMH', 'SML', 'COM'"));
                                 break;
                         }
-
                     }
                     pointer.NextLine();
                 }
