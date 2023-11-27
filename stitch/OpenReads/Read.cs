@@ -595,10 +595,11 @@ namespace Stitch {
 
                 if (String.IsNullOrWhiteSpace(parse_file.Lines[linenumber])) return out_either; // Ignore empty lines
 
-                if (fields.Count != 80) {
+                if (!(fields.Count == 80 || fields.Count == 79)) {
                     out_either.AddMessage(new InputNameSpace.ErrorMessage(range, $"Line has too low amount of fields ({fields.Count})", "", ""));
                     return out_either;
                 }
+                var missing_column_offset = 80 - fields.Count; // If MaxNovo misses the experiment column
 
                 // Some helper functions
                 int ConvertToInt(int pos) {
@@ -613,16 +614,16 @@ namespace Stitch {
                     return InputNameSpace.ParseHelper.ConvertToDouble(fields[pos].Text, fields[pos].Pos).UnwrapOrDefault(out_either, -1);
                 }
 
-                var sequence = SimplifiedProFormaFromExpression(fields[41].Text);
+                var sequence = SimplifiedProFormaFromExpression(fields[41 - missing_column_offset].Text);
                 foreach (var modification in fixed_modifications)
                     sequence.Modifications = sequence.Modifications.Replace(modification.Item1.ToString(), $"{modification.Item1}[{modification.Item2}]");
 
-                AminoAcid[] aa_sequence = AminoAcid.FromString(sequence.PureAA, scoring_matrix, fields[41].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
+                AminoAcid[] aa_sequence = AminoAcid.FromString(sequence.PureAA, scoring_matrix, fields[41 - missing_column_offset].Pos).UnwrapOrDefault(out_either, new AminoAcid[0]);
                 var scan = ConvertToUint(1);
 
                 var output = new MaxNovo(aa_sequence, range, $"MN:{scan}", filter);
                 out_either.Value = output;
-                output.SequenceExpression = fields[41].Text;
+                output.SequenceExpression = fields[41 - missing_column_offset].Text;
                 output.SequenceWithModifications = sequence.Modifications;
                 output.XleDisambiguation = xleDisambiguation;
                 output.ScanID = scan;
@@ -632,8 +633,8 @@ namespace Stitch {
                 output.Mass = ConvertToDouble(17);
                 output.Charge = ConvertToInt(18);
                 output.FragmentationMode = fields[21].Text;
-                output.Score = ConvertToDouble(52);
-                output.Experiment = fields[37].Text;
+                output.Score = ConvertToDouble(52 - missing_column_offset);
+                output.Experiment = missing_column_offset == 0 ? fields[37].Text : "";
                 output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + fields[0].Text + ".raw";
 
                 return out_either;
