@@ -1273,6 +1273,8 @@ namespace Stitch {
                     return new ParseResult<bool>(true);
                 } else if (!directory && Directory.Exists(file.Path)) {
                     return new ParseResult<bool>(new ErrorMessage(file, $"Could not open {type}", "The file given is a directory.", ""));
+                } else if (directory && !Directory.Exists(file.Path)) {
+                    return new ParseResult<bool>(new ErrorMessage(file, $"Could not open {type}", "The path given is not a valid directory.", ""));
                 } else {
                     try {
                         // TODO: the error messages for directories are not the best yet
