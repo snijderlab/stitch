@@ -893,7 +893,12 @@ namespace Stitch {
                     charge = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[0].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
                     scan = InputNameSpace.ParseHelper.ConvertToUint(rev_name_pieces[2].ReverseString(), fields[0].Pos).UnwrapOrDefault(out_either, 0);
                     raw_file_name = id_pieces[1].Substring(6, id_pieces[1].Length - 8);
-                } else {
+                } else if (new Regex("""\w+\.\d+\.\d+.\d\.\d\.dta""").IsMatch(fields[0].Text)) {
+                    var id = fields[0].Text;
+                    var name_pieces = id.Split('.', 6);
+                    charge = InputNameSpace.ParseHelper.ConvertToUint(name_pieces[3], fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                    scan = InputNameSpace.ParseHelper.ConvertToUint(name_pieces[1], fields[0].Pos).UnwrapOrDefault(out_either, 0);
+                    raw_file_name = name_pieces[0] + ".raw";
                     // TODO: The first column is the start of the TITLE field from MGF, so all spectra will have to be located based on matching that...
                     // Which needs some additional ways of reporting that to the scan finder, sum types for the win...
                 }
