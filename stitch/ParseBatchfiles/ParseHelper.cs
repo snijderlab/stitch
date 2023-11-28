@@ -312,7 +312,7 @@ namespace Stitch {
                                 settings.Value.Separator = ParseChar(value).UnwrapOrDefault(outEither, ',');}),
                             ("RawFile", (settings, value) => {
                                 CheckDuplicate(outEither, value, settings.Value.RawFile);
-                                settings.Value.RawFile = ParseHelper.GetExistingFullPath(value, "RawFile", true).Map(f => f.Path).UnwrapOrDefault(outEither, "").TrimPath();}),
+                                settings.Value.RawFile = ParseHelper.GetExistingFullPath(value, "RawFile").Map(f => f.Path).UnwrapOrDefault(outEither, "").TrimPath();}),
                             ("XleDisambiguation", (settings, value) => {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);})
                         }).Parse(pair, novor => {
@@ -456,14 +456,14 @@ namespace Stitch {
                                 settings.Value.XleDisambiguation = ParseHelper.ParseBool(value, "XleDisambiguation").UnwrapOrDefault(outEither, settings.Value.XleDisambiguation);}),
                             ("FragmentationMethod", (settings, value) => {
                                 settings.Value.FragmentationMethod = ParseHelper.ParseEnum<HeckLib.masspec.Spectrum.FragmentationType>(value).UnwrapOrDefault(outEither, settings.Value.FragmentationMethod);}),
-                        }).Parse(pair, max_novo => {
-                            if (string.IsNullOrWhiteSpace(max_novo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
-                            if (string.IsNullOrWhiteSpace(max_novo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
-                            if (max_novo.ParamFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Param"));
+                        }).Parse(pair, pnovo => {
+                            if (string.IsNullOrWhiteSpace(pnovo.File.Path)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Path"));
+                            if (string.IsNullOrWhiteSpace(pnovo.File.Name)) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Name"));
+                            if (pnovo.ParamFile == null) outEither.AddMessage(ErrorMessage.MissingParameter(pair.KeyRange.Full, "Param"));
 
-                            if (max_novo.ParamFile != null)
-                                max_novo.Modifications = ParseHelper.ParsePNovoParam(max_novo.ParamFile).UnwrapOrDefault(outEither, new());
-                            output.Value.Files.Add(max_novo);
+                            if (pnovo.ParamFile != null)
+                                pnovo.Modifications = ParseHelper.ParsePNovoParam(pnovo.ParamFile).UnwrapOrDefault(outEither, new());
+                            output.Value.Files.Add(pnovo);
                         }).IsOk(outEither);
                     }),
                     ("Folder", (output, pair) => {
@@ -1269,12 +1269,13 @@ namespace Stitch {
             public static ParseResult<bool> TestFileExists(FileIdentifier file, bool directory = false) {
                 var type = directory ? "folder" : "file";
 
-                if (directory && Directory.Exists(file.Path)) {
-                    return new ParseResult<bool>(true);
-                } else if (!directory && Directory.Exists(file.Path)) {
+                if (directory) {
+                    if (Directory.Exists(file.Path))
+                        return new ParseResult<bool>(true);
+                    else
+                        return new ParseResult<bool>(new ErrorMessage(file, $"Could not open {type}", "The path given is not a valid directory.", ""));
+                } else if (Directory.Exists(file.Path)) {
                     return new ParseResult<bool>(new ErrorMessage(file, $"Could not open {type}", "The file given is a directory.", ""));
-                } else if (directory && !Directory.Exists(file.Path)) {
-                    return new ParseResult<bool>(new ErrorMessage(file, $"Could not open {type}", "The path given is not a valid directory.", ""));
                 } else {
                     try {
                         // TODO: the error messages for directories are not the best yet

@@ -779,14 +779,17 @@ namespace Stitch {
             double intensity = 1;
             public override double Intensity {
                 get {
-                    return intensity;
+                    return this.intensity;
                 }
-                set { if (!double.IsNaN(value)) intensity = value; }
+                set { if (!double.IsNaN(value)) this.intensity = value; }
             }
 
             public override List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> ScanNumbers {
                 get {
-                    return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (SourceFile, (int)ScanID, SequenceWithModifications, new Option<FragmentationType>(FragmentationHint), XleDisambiguation) };
+                    if (this.SourceFile == null)
+                        return new();
+                    else
+                        return new List<(string RawFile, int Scan, string ProForma, Option<FragmentationType> FragmentationHint, bool XleDisambiguation)> { (this.SourceFile, (int)this.ScanID, this.SequenceWithModifications, new Option<FragmentationType>(this.FragmentationHint), this.XleDisambiguation) };
                 }
             }
 
@@ -909,8 +912,7 @@ namespace Stitch {
                 output.PPM = ConvertToDouble(8);
                 output.Score = ConvertToDouble(4);
                 output.FragmentationHint = fragmentationType;
-                output.SourceFile = (String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + raw_file_name;
-
+                output.SourceFile = String.IsNullOrEmpty(raw_file_name) ? null : (((String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory) + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + raw_file_name);
                 return out_either;
             }
 
