@@ -328,6 +328,8 @@ A multiple valued parameter containing one or both different Novor output files 
 | Name            | Used to recognize the origin of reads from this file.        | (No Default)  |
 | Separator       | The separator used to separate fields.                       | ,             |
 | Cutoff          | The score cutoff for inclusion in the used reads. \[0..100\] | 0             |
+| RawFile         | The raw file where this data originated from.                | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
 
 _Example_
 ```
@@ -367,7 +369,7 @@ Used to load `msmsScan.txt` files from MaxNovo.
 | CutoffScore       | The score cutoff for inclusion in the used reads. \[0..100\]                                                                       | 10            |
 | RawDataDirectory  | The directory with all raw files, assumes they have the same name as present in the file.                                          | (No Default)  |
 | XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
-| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548,M+15.99491`               | (No Default)  |
+| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548`               | (No Default)  |
 
 ##### Casanovo (m) *
 
