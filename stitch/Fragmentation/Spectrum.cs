@@ -163,7 +163,7 @@ namespace Stitch {
                         }
                     } else if (group.Key.EndsWith(".mgf")) {
                         // retrieve the precursor; this doesn't always work because thermo doesn't store the m/z or charge info in some cases
-                        if (scan.Scan > spectra.Count) {
+                        if (scan.Scan >= spectra.Count) {
                             new ErrorMessage(group.Key, "MGF scan out of bounds", $"The scan number {scan.Scan} does not exist in this file.", "", true).Print();
                             continue;
                         }
