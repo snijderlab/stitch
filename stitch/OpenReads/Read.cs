@@ -907,7 +907,7 @@ namespace Stitch {
 
                 var confidence = fields[5].Text.Split(",".ToCharArray()).ToList().Select(x => Convert.ToDouble(x) / 100.0).ToArray();
                 if (!output.Sequence.SetPositionalScore(confidence))
-                    out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", $"The length of the local confidence ({confidence.Length}) is not equal to the length of the sequence ({aa_sequence.Length})"));
+                    out_either.AddMessage(new InputNameSpace.ErrorMessage(fields[5].Pos, "Local confidence invalid", $"The length of the local confidence ({confidence.Length}) is not equal to the length of the sequence ({aa_sequence.Length})", "The local confidence for this peptide will be ignored", true));
 
                 out_either.Value = output;
                 output.SequenceWithModifications = sequence_with_modifications.ToString();
@@ -917,7 +917,7 @@ namespace Stitch {
                 output.PPM = ConvertToDouble(8);
                 output.Score = ConvertToDouble(4);
                 output.FragmentationHint = fragmentationType;
-                output.SourceFile = String.IsNullOrEmpty(raw_file_name) ? null : (((String.IsNullOrEmpty(RawDataDirectory) ? "./" : RawDataDirectory) + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)) + raw_file_name);
+                output.SourceFile = String.IsNullOrEmpty(raw_file_name) ? null : (((String.IsNullOrEmpty(RawDataDirectory) ? "./" : (RawDataDirectory + (RawDataDirectory.EndsWith(Path.DirectorySeparatorChar) ? "" : Path.DirectorySeparatorChar)))) + raw_file_name);
                 return out_either;
             }
 
