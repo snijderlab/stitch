@@ -4,7 +4,7 @@
     <OutputType>Exe</OutputType>
     <TargetFramework>net7.0</TargetFramework>
     <CodeAnalysisRuleSet>StandardRuleset.ruleset</CodeAnalysisRuleSet>
-    <Version>1.5.0-rc.1</Version>
+    <Version>1.5.0</Version>
   </PropertyGroup>
    <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>

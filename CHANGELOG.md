@@ -1,6 +1,6 @@
 All releases can also be found here: https://github.com/snijderlab/stitch/releases.
 
-# Upcoming Release
+# v1.5.0
 
 * Added loading of sequences from mmCIF files, for ModelAngelo (#207, #217)
 * Added loading of sequences from Peaks 11 and Peaks Ab
@@ -10,6 +10,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 * Added more customization options for peptide fragmentation
 * Added hash for all used files in the HTML report (#229)
 * Added the option to call parts of a batchfile from another file (`include!(<path>)`) see the examples (#111, #209)
+* Added depth of coverage information to the Fasta export
 * Updated the main overview header (#212)
 * Updated the command line interface (CLI) to be more friendly, *Note: calling stitch has changed to `stitch run <path>`*
 * Updated the batchfile parsing to provide more helpful error messages
@@ -20,7 +21,7 @@ All releases can also be found here: https://github.com/snijderlab/stitch/releas
 * Fixed small remaining intensity \[1-2\] scaling for Novor reads to scale \[0-1\]
 * Fixed issues with the generation of the consensus sequences in relation to the mass alignment and I/L disambiguation (#220)
 * Fixed leading insertions in reads placement displayed in a different colour, for more clarity in the alignment
-* Fixed bugs (#222, #230)
+* Fixed bugs (#193, #222, #230, #242, #243, #244)
 * Performance improvements
 * Many more small fixes and improvements
 
