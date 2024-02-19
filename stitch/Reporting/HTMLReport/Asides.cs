@@ -586,7 +586,7 @@ namespace HTMLNameSpace {
         static HtmlBuilder SequenceAmbiguityOverview(Template template, int[] gaps) {
             var html = new HtmlBuilder();
             html.Open(HtmlTag.div, "class='ambiguity-overview'");
-            html.TagWithHelp(HtmlTag.h2, "Ambiguity Overview", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", Template.AmbiguityThreshold.ToString("P0"))));
+            html.TagWithHelp(HtmlTag.h2, "Variant Graph", new HtmlBuilder(HTMLHelp.AmbiguityOverview.Replace("{threshold}", Template.AmbiguityThreshold.ToString("P0"))));
 
             var ambiguous = template.SequenceAmbiguityAnalysis();
 
@@ -598,7 +598,7 @@ namespace HTMLNameSpace {
                 // Find the position of each aminoacid node by determining the total support for that AA
                 // at that position and sorting on highest at the top.
                 var placed = new List<(AminoAcid, double)>[ambiguous.Length];
-                for (int i = 0; i < placed.Length; i++) placed[i] = new();
+                for (var i = 0; i < placed.Length; i++) placed[i] = new();
 
                 void Update(int i, AminoAcid key, double value) {
                     var pos = placed[i].FindIndex(p => p.Item1 == key);
@@ -662,7 +662,7 @@ namespace HTMLNameSpace {
                 html.Add(svg);
                 html.Close(HtmlTag.div);
                 html.Open(HtmlTag.div, $"class='higher-order-graphs'");
-                html.TagWithHelp(HtmlTag.h2, "Higher Order Ambiguity Graph", new HtmlBuilder(HTMLHelp.HigherOrderAmbiguityGraph));
+                html.TagWithHelp(HtmlTag.h2, "Higher Order Variant Graph", new HtmlBuilder(HTMLHelp.HigherOrderAmbiguityGraph));
                 for (int ambiguous_position = 0; ambiguous_position < ambiguous.Length; ambiguous_position++) {
                     var position = ambiguous[ambiguous_position];
                     var graphs = position.SupportTrees.Select(t => (RenderAmbiguityTree(t.Value), t.Value.Forward.Variant)).Select((a) => (a.Item1.Graph, a.Item1.BackwardLength, a.Variant)).ToList();
