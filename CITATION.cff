@@ -19,9 +19,12 @@ identifiers:
   - description: Release paper
     type: doi
     value: 10.1021/acs.analchem.2c01300
-  - description: Preprint
+  - description: Release paper (preprint)
     type: doi
     value: 10.1101/2022.03.07.483237
+  - description: Update paper 1.0 -> 1.5 (preprint)
+    type: url
+    value: https://www.biorxiv.org/content/10.1101/2024.02.20.581155v1
   - description: Repository
     type: url
     value: https://github.com/snijderlab/stitch
