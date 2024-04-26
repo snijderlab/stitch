@@ -657,7 +657,7 @@ namespace Stitch {
                     var sequence = AminoAcid.FromString(filtered_sequence, alphabet, row[seq_idx].Location).UnwrapOrDefault(out_either, new AminoAcid[0]);
                     var score = InputNameSpace.ParseHelper.ConvertToDouble(row[score_idx].Content, row[score_idx].Location).UnwrapOrDefault(out_either, 0.0);
                     var id = InputNameSpace.ParseHelper.ConvertToInt(row[id_idx].Content, row[id_idx].Location).UnwrapOrDefault(out_either, 0);
-                    var confidence = maybe_conf_idx == -1 ? new double[0] : ParseMzTab.SubString.Split(row[maybe_conf_idx].Content, ',', row[maybe_conf_idx].Location.Start).Select(i => InputNameSpace.ParseHelper.ConvertToDouble(i.Content, i.Location).UnwrapOrDefault(out_either, 0.0)).ToArray();
+                    var confidence = maybe_conf_idx == -1 ? new double[0] : ParseMzTab.SubString.Split(row[maybe_conf_idx].Content.Trim('\"'), ',', row[maybe_conf_idx].Location.Start).Select(i => InputNameSpace.ParseHelper.ConvertToDouble(i.Content, i.Location).UnwrapOrDefault(out_either, 0.0)).ToArray();
                     var charge = (int)Math.Round(InputNameSpace.ParseHelper.ConvertToDouble(row[charge_idx].Content, row[charge_idx].Location).UnwrapOrDefault(out_either, 0));
                     var mz_e = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_e_idx].Content, row[mz_e_idx].Location).UnwrapOrDefault(out_either, 0);
                     var mz_t = InputNameSpace.ParseHelper.ConvertToDouble(row[mz_t_idx].Content, row[mz_t_idx].Location).UnwrapOrDefault(out_either, 0);
