@@ -181,7 +181,10 @@ namespace Stitch {
             }
 
             ((ReadFormat.Fasta)metaData).AnnotatedSequence = annotated;
-            metaData.Sequence = new ReadSequence(AminoAcid.FromString(sequence, alphabet).UnwrapOrDefault(out_either, new AminoAcid[0]), Enumerable.Repeat(metaData.Intensity, sequence.Length).ToArray());
+            var aa_sequence = AminoAcid.FromString(sequence, alphabet);
+            if (aa_sequence.IsOk(out_either)) {
+                metaData.Sequence = new ReadSequence(aa_sequence.Unwrap(), Enumerable.Repeat(metaData.Intensity, sequence.Length).ToArray());
+            }
             out_either.Value = metaData;
             return out_either;
         }
