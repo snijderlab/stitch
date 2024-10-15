@@ -3,11 +3,13 @@ Homo sapiens Heavy Chain->
         Path      : Homo_sapiens_IGHV.fasta
         Name      : IGHV
         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        GapTail: 20
     <-
     Segment->
         Path      : Homo_sapiens_IGHJ.fasta
         Name      : IGHJ
         Identifier: ^(([a-zA-Z]+\d*)[\w-]*)
+        GapHead: 20
     <-
     Segment->
         Path      : Homo_sapiens_IGHC.fasta

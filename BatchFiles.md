@@ -247,18 +247,18 @@ From this file the reads that score high enough are included (>=`CutoffALC`). As
 
 Any parameter with a default value can be left out.
 
-| Inner parameter   | Explanation                                                                                                                                                                                    | Default Value |
-| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
-| Path              | The path to the file                                                                                                                                                                           | (No Default)  |
-| CutoffALC         | The score a reads must at least have to be included in the list of reads                                                                                                                       | 90            |
-| LocalCutoffALC    | The score a patch in a read should at least have to be included.                                                                                                                               | (not used)    |
-| MinLengthPatch    | The minimal length of a patch before it is included.                                                                                                                                           | (not used)    |
-| Format            | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `Ab`, `X` and `X+`. If any gives errors in reading the file maybe another one will work. | `X+`          |
-| Name              | Used to recognize the origin of reads from this file                                                                                                                                           | (No Default)  |
-| Separator         | The separator used to separate cells in the csv                                                                                                                                                | `,`           |
-| DecimalSeparator  | The separator used to separate decimals                                                                                                                                                        | `.`           |
-| RawDataDirectory  | The directory to load raw data from (see below for more info).                                                                                                                                 | (No Default)  |
-| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).                                                             | `False`       |
+| Inner parameter   | Explanation                                                                                                                                                                                                | Default Value |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| Path              | The path to the file                                                                                                                                                                                       | (No Default)  |
+| CutoffALC         | The score a reads must at least have to be included in the list of reads                                                                                                                                   | 90            |
+| LocalCutoffALC    | The score a patch in a read should at least have to be included.                                                                                                                                           | (not used)    |
+| MinLengthPatch    | The minimal length of a patch before it is included.                                                                                                                                                       | (not used)    |
+| Format            | The format of the Peaks export, this depends on the version of Peaks, now only has the options `Old`, `Ab`, `X`, `X+`, `11` and `12`. If any gives errors in reading the file maybe another one will work. | `X+`          |
+| Name              | Used to recognize the origin of reads from this file                                                                                                                                                       | (No Default)  |
+| Separator         | The separator used to separate cells in the csv                                                                                                                                                            | `,`           |
+| DecimalSeparator  | The separator used to separate decimals                                                                                                                                                                    | `.`           |
+| RawDataDirectory  | The directory to load raw data from (see below for more info).                                                                                                                                             | (No Default)  |
+| XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information).                                                                         | `False`       |
 
 _Examples_
 ```
@@ -321,14 +321,14 @@ If set to `True` the program will before running the template matching go throug
 
 A multiple valued parameter containing one or both different Novor output files and a Name, for this set to aid in recognizing where the data comes from. Either the DeNovo or PSMS files can be used on their own, but they can also be specified together to group the data together. A cutoff can be given to use all reads with a score equal or higher (`read.score >= cutoff`). As the score ranges from 0 to 100 inclusive the cutoff can only be specified within this range. The default value is `0` which includes all reads.
 
-| Inner parameter | Explanation                                                  | Default Value |
-| --------------- | ------------------------------------------------------------ | ------------- |
-| DeNovo Path     | The path to the Novor `denovo.csv` file                      | (No Default)  |
-| PSMS Path       | The path to the Novor `psms.csv` file                        | (No Default)  |
-| Name            | Used to recognize the origin of reads from this file.        | (No Default)  |
-| Separator       | The separator used to separate fields.                       | ,             |
-| Cutoff          | The score cutoff for inclusion in the used reads. \[0..100\] | 0             |
-| RawFile         | The raw file where this data originated from.                | (No Default)  |
+| Inner parameter   | Explanation                                                                                                                        | Default Value |
+| ----------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------- |
+| DeNovo Path       | The path to the Novor `denovo.csv` file                                                                                            | (No Default)  |
+| PSMS Path         | The path to the Novor `psms.csv` file                                                                                              | (No Default)  |
+| Name              | Used to recognize the origin of reads from this file.                                                                              | (No Default)  |
+| Separator         | The separator used to separate fields.                                                                                             | ,             |
+| Cutoff            | The score cutoff for inclusion in the used reads. \[0..100\]                                                                       | 0             |
+| RawFile           | The raw file where this data originated from.                                                                                      | (No Default)  |
 | XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
 
 _Example_
@@ -369,7 +369,7 @@ Used to load `msmsScan.txt` files from MaxNovo.
 | CutoffScore       | The score cutoff for inclusion in the used reads. \[0..100\]                                                                       | 10            |
 | RawDataDirectory  | The directory with all raw files, assumes they have the same name as present in the file.                                          | (No Default)  |
 | XleDisambiguation | Set to `True` to use the side chain fragments (w and d) to disambiguate Leucines and Isoleucines (see below for more information). | `False`       |
-| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548`               | (No Default)  |
+| FixedModification | The fixed modifications presented as aminoacid followed by the shift separated by commas, eg `C+58.00548`                          | (No Default)  |
 
 ##### Casanovo (m) *
 
