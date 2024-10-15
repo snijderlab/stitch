@@ -7,13 +7,13 @@ jobs:
   manual:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: Use Pandoc
       uses: docker://pandoc/latex:2.9
       with:
         args: -o stitch-manual.pdf BatchFiles.md
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
        name: manual
        path: stitch-manual.pdf
@@ -22,11 +22,11 @@ jobs:
   windows:
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: submodules
       run: git submodule update --init
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Deploy
@@ -36,7 +36,7 @@ jobs:
        Copy-Item "stitch\bin\release\net7.0\win-x64\publish\stitch.exe" -Destination "stitch.exe" -Force
        Copy-Item "stitch\bin\release\net7.0\win-arm64\publish\stitch.exe" -Destination "stitch_arm.exe" -Force
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
        name: nightly-deploy-windows
        path: |
@@ -55,11 +55,11 @@ jobs:
   linux:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: submodules
       run: git submodule update --init
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Deploy
@@ -69,7 +69,7 @@ jobs:
        cp "stitch/bin/release/net7.0/linux-x64/publish/stitch" stitch.bin -f
        cp "stitch/bin/release/net7.0/linux-arm64/publish/stitch" stitch_arm -f
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
        name: nightly-deploy-linux
        path: |
@@ -88,11 +88,11 @@ jobs:
   osx:
     runs-on: macOS-latest
     steps:
-    - uses: actions/checkout@v2
+    - uses: actions/checkout@v4
     - name: submodules
       run: git submodule update --init
     - name: Setup .NET
-      uses: actions/setup-dotnet@v3
+      uses: actions/setup-dotnet@v4
       with:
         dotnet-version: 7.0.x
     - name: Deploy
@@ -102,7 +102,7 @@ jobs:
        cp "stitch/bin/release/net7.0/osx-x64/publish/stitch" stitch.bin
        cp "stitch/bin/release/net7.0/osx.11.0-arm64/publish/stitch" stitch_arm
     - name: Upload artifact
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       with:
        name: nightly-deploy-osx
        path: |
